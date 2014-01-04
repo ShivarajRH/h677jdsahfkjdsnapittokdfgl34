@@ -1,0 +1,34 @@
+##################################################################################################
+#
+#	Critical apache config for internal redirection
+#
+##################################################################################################
+
+
+<IfModule mod_rewrite.c>
+
+  RewriteEngine on
+
+#setting base
+  RewriteBase /snapitto
+
+
+#conditions for internal redir
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+#make the redir and make it as last one
+  RewriteRule ^(.*)$ index.php/$1 [NC,L,QSA]
+
+</IfModule>
+
+#<IfModule !mod_rewrite.c>
+#  ErrorDocument 404 index.php
+#</IfModule>
+
+##################################################################################################
+#
+#	Critical apache config for internal redirection
+#
+##################################################################################################
+

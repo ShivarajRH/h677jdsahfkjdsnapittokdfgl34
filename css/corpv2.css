@@ -1,0 +1,18 @@
+@CHARSET "UTF-8";
+body{
+background:#87C8E8 url(../images/bg.jpg) no-repeat;
+}
+.headermenu, .header, .maincontainer, .bg{
+background:transparent;
+}
+.inp{border:1px solid #9BCD9B;
+width:200px;
+padding:5px;
+}
+table.hlinks td a{
+	font-size:15px;
+	font-weight:bold;
+}
+table.hlinks td a:hover{
+	color:#779900;
+}

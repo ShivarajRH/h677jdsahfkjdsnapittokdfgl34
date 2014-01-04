@@ -1,0 +1,182 @@
+<script type="text/javascript">
+<!--
+$(function(){
+	$(".deak").click(function(){
+		location="<?=site_url("saleitem")?>/"+$(this).attr("data-dealcode");
+	});
+});
+//-->
+</script>
+
+<style>
+.catlink{
+color:#606060;
+font-weight:bold;
+text-decoration:none;
+}
+.catlink:hover{
+color:#ff9900;
+}
+.deak{
+cursor:pointer;
+}
+.subcat{
+ color:#606060;font-weight:normal;text-decoration:none;font-size:12px; 
+ }
+ .subcat:hover{
+color:#ff9900;
+text-decoration:underline;
+}
+</style>
+
+<script>
+$(function(){
+	$('.cat_list').hover(function(){
+		$(this).css({'background': '#B0C436'});
+		$(this).find('a').css({'color': '#fff'});
+	},function(){
+		$(this).css({'background': '#fff'});
+		$(this).find('a').css({'color': '#1833CC'});
+	});
+});
+</script>
+
+<div style="clear:both;padding:0px 0px;">
+<div style="float:left;width:150px;overflow:hidden;border-right:1px solid #ccc;">
+<h3 style="color:#271E13;font-size:1.2em;font-weight:normal;padding:5px;text-align: left;border-bottom: 1px solid #ccc;">CATEGORIES</h3><div style="border-right:0px dashed #ccc;padding-top:0px;padding:0px 0px;">
+<?php foreach($menu[0][0] as $cat){?>
+<div class="cat_list" align="left" style="height:35px;border-bottom:1px solid #ccc;padding:5px;margin-bottom:5px;">
+<a class="catlink" href="<?=site_url("category/".$cat['name'])?>" style="color:#1833CC;font-size:14px;font-weight:bold;width:140px;"><?=$cat['name']?></a>
+<?php if(isset($menu[0][$cat['id']])){?>
+<div style="padding-top:5px;padding-bottom:3px;padding-left:20px">
+<?php foreach($menu[0][$cat['id']] as $subc){?>
+<div>
+<a class="subcat" href="<?=site_url("category/".$subc['name'])?>"><?=$subc['name']?></a>
+</div>
+<?php }?>
+</div>
+<?php }?>
+</div>
+<?php }?>
+</div>
+</div>
+<?php /*?>
+<div style="float:left;padding:5px;margin-top:20px;padding-left:10px;font-family:trebuchet ms;">
+<?php $i=0; foreach($activedeals as $deal){?>
+<div class="deak" data-dealcode="<?=$deal['itemid']?>" style="margin-bottom:10px;padding:3px;-moz-border-radius:3px;border:1px solid #C2C6C5;height:160px;<?php if($i==0) echo 'width:600px;'; else echo 'margin-left:10px;float:left;width:290px;';?><?php if($i%2==1) echo 'margin-left:0px;clear:left;';?>">
+<table cellpadding="0" cellspacing="0" style="width:100%;height:100%;background:url(<?=base_url()?>images/dealbg.gif) repeat-x top;">
+<tr>
+<td align="left" style="padding:5px;padding-top:15px;width:155px;max-width:155px;overflow:hidden;">
+<?php if($i==0){?>
+<div style="height:85px;max-height:75px;overflow:hidden;"><img src="<?=base_url()?>images/brands/<?=$deal['brandlogoid']?>.jpg"></div>
+<?php }else{?>
+<div style="text-transform:uppercase;"><?=$deal['itemname']?></div>
+<?php }?>
+<div style="padding-left:30px;color:#98002e;font-weight:bold;padding-top:0px;">
+<div style="font-size:25px;"><?=ceil(($deal['orgprice']-$deal['price'])/$deal['orgprice']*100)?>%</div>
+<div style="font-size:18px;">OFF</div>
+</div>
+</td>
+<?php if($i==0){?>
+<td align="left" valign="top" style="padding-top:30px;">
+<div style="text-transform:uppercase;"><?=$deal['itemname']?></div>
+<div style="font-size:15px;font-weight:bold;padding-top:10px;">Rs <span style="color:#98002e;"><?=$deal['price']?></span></div>
+</td>
+<?php }?>
+<td align="center" valign="middle" style="padding-top:10px;padding-right:10px;<?php if($i==0){?>width:200px<?php }?>;max-width:200px;overflow:hidden;">
+<div style="max-height:140px;overflow:hidden;">
+<a href="<?=site_url("saleitem/".$deal['itemid'])?>">
+<img src="<?=base_url()?>images/items/<?=$deal['pic']?>.jpg" style="<?php if($i==0){?>max-height:140px;<?php }else{?>max-width:160px;<?php }?>">
+</a>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<?php $i++;}?>
+</div>
+*/?>
+<style>
+td{text-align:center;}
+</style>
+<div style="float:left;width:615px;padding-left:5px;padding-right:5px;">
+<!--[if IE]>
+<style>
+.catimglink img{
+height:130px;
+}
+</style>
+<![endif]-->
+<?php $c=0; foreach($deals as $cat=>$cd){?>
+<div class="catdeal" style="<?php if($c>=3) echo "display:none;";?>font-size:13px;border:1px solid #ccc;-moz-border-radius:5px;margin-top:5px;margin-bottom:20px;">
+<div style="color:brown;margin-left:10px;padding:0px 5px;margin-top:-10px;background:#fff;float:left;font-size:15px;font-weight:bold;" align="left">
+<a href="<?=site_url("category/".$cat)?>" style="color:brown;text-decoration:none;"><?=$cat?></a>
+</div>
+<table style="clear:left;margin-top:10px;" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+<?php foreach($cd as $i=>$deal){if($i>2) break;?>
+<td width="33%">
+<table width="100%">
+<tr>
+<?php if($c<3) {?>
+<td><div align="center" style="max-height:200px;max-width:200px;overflow:hidden;">
+<a class="catimglink" href="<?=site_url("saleitem/".$deal['id'])?>">
+<img style="max-height:130px;" src="<?=base_url()?>images/items/<?=$deal['pic']?>.jpg">
+</a>
+</div>
+</td>
+<?php }?>
+</tr>
+<tr><td style="padding-top:5px;"><a href="<?=site_url("saleitem/".$deal['id'])?>" style="font-weight:bold;color:black;text-decoration:none;"><?=$deal['name']?></a></td></tr>
+<tr><td><span style="color:#ff9900">Rs</span> <b style="color:#ff9900;"><?=$deal['price']?></b> <span style="text-decoration:line-through;"><?=$deal['orgprice']?></span></td></tr>
+<tr><td style="font-size:12px;"><b><?=ceil(($deal['orgprice']-$deal['price'])/$deal['orgprice']*100)?>%</b> OFF</td></tr>
+</table>
+</td>
+<?php }?>
+</tr>
+<tr style="">
+<?php foreach($cd as $i=>$deal){if($i>2) break;?>
+<td style="padding:5px;background:#eee;<?php if($i==0) echo "-moz-border-radius-bottomleft:5px;"; elseif($i==2) echo "-moz-border-radius-bottomright:5px;";?>;">
+<a style="color:blue;" href="<?=site_url("brand/".$deal['brand'])?>"><?=$deal['brand']?></a>
+</td>
+<?php }?>
+</tr>
+</table>
+</div>
+<?php $c++;}?>
+<?php if(count($deals)>3){?>
+<div align="right">
+<a href="javascript:void(0)" onclick='$(".catdeal").show("slow");$(this).hide();' style="font-size:12px;font-weight:bold">view all</a>
+</div>
+<?php }?>
+</div>
+<!--<div style="font-family:arial;margin-top:0px;float:left;max-width:150px;width:150px;margin-left:5px;padding-left:5px;">-->
+<!--<h3 style="color:#98002e;text-align:left;margin:0px;margin-top:10px;">Brands</h3>-->
+<!--</div>-->
+<div id="branddealcont" style="border-left:1px solid #ccc;margin-top:0px;float:right;max-width:160px;width:160px;margin-left:0px;padding-left:5px;">
+<?php $c=0; foreach($brands as $name=>$brand){
+	if($c>4) break;
+?>
+<div class="branddeal" style="<?php if($c>4) echo "display:none;"?>clear:left;border-bottom:1px solid #dfdfdf;margin-bottom:10px;text-align: right" align="left">
+<div style="font-size:15px;margin:0px;padding:3px;padding-left:7px;border-bottom: 1px solid #ccc;" align="left">
+<a href="<?=site_url("brand/$name")?>" style="font-size:14px;font-weight:bold; color: #1833CC;text-decoration:none"><?=$name?></a>
+</div>
+<?php foreach($brand as $deal){?>
+<div style="padding:5px;clear:both;font-size:12px;margin-bottom: 5px;">
+<div style="float:left;height:50px;width:43px;overflow:hidden;margin-right:3px;">
+<a href="<?=site_url("saleitem/".$deal['id'])?>"><img src="<?=base_url()?>images/items/thumbs/<?=$deal['pic']?>.jpg" style="max-height:50px;"></a>
+</div>
+<a href="<?=site_url("saleitem/".$deal['id'])?>" style="color:#00008B;text-decoration: none;letter-spacing:1px;"><?=ucfirst(strtolower($deal['name']))?></a>
+<div style="padding-top:5px;">Rs <b style="color: #E31E24;font-size: 15px;font-family:'comic Sans MS'"><?=$deal['price']?></b> <span style="text-decoration: line-through"><?=$deal['orgprice']?></span></div>
+<div style="clear:left;font-size:1px;">&nbsp;</div>
+</div>
+<?php }?>
+</div>
+<?php $c++;}?>
+</div>
+<?php /* if(count($brands)>5){?>
+<div align="right" style="clear:both">
+<a href="javascript:void(0)" onclick='$("#branddealcont").css("max-height","inherit").css("overflow","visible");$(".branddeal").show("slow");$(this).hide();' style="font-size:12px;font-family:arial;font-weight:bold">view all</a>
+</div>
+<?php }*/?>
+</div>

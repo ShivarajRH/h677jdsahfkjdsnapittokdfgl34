@@ -1,0 +1,251 @@
+Sep-17
+Stream notification   is done. 
+synchronize to testing 
+dumping the repo 
+ smartgit   t o   repository to local
+Sep-18 wed
+Learnt sticky note sync
+
+mklink /j "old/folder" "other/folder"
+
+Make Link - Make shortcut to Sticky Notes:
+mklink /j "%APPDATA%\Microsoft\Sticky Notes" "C:\Users\User\Google Drive\Sticky Notes"
+Make shortcut to Downloads:
+mklink /j "C:\Users\User\Downloads" "C:\Users\User\Google Drive\Downloads"
+Stream Manager and edit option
+
+Sep-19
+working-Stream edit-done
+notify unreplied posts
+cancel btn
+stream design
+
+Sep-20
+Stream design work
+Stream date filer
+committing
+unavail_product_ageing_report() xl sheets total and category group
+
+Sep-24
+Streams done with search and infinite scroll feature
+
+Sep-25
+Added search in both stream posts and its replies
+Updates sent to shariff
+Checking bug in Order status summary
+
+Sep-26
+Fixed bug in Order status summary
+
+Sep-27
+header images changed
+started working on add product to product group...
+
+Sep-28
+Stock update 
+
+Sep-29
+Stock update - grn enry check
+
+sep-30
+Stock update - grn enry check
+
+Oct-01
+grn stack update check
+/date('Y-m-d',time()-7*24*60*60);=a week/
+Merging erp role access files
+Oct-02
+verifying the erp module
+offline_order_taking module verification
+do_pnh_offline_order() - bug fix (Member ID)
+
+Oct-03
+do_pnh_offline_order() - bug fix
+merging
+unavail_product_ageing_report()
+
+Oct-04
+Shipment Batch Process - checking
+invoice page bug fix
+invoice file merging
+
+Oct-05
+Shipment functionality check
+
+Oct-07
+streams assign user to all update
+product Ageing report with category update
+Working on Pre-allotment of orders(pnh_oofline_order())
+
+Oct-08
+Batch will be enabled for transaction only if stock<0 and qty<stock condition 
+Added batch option in order_status_summary
+
+Oct-09
+Checking code errors in redeem points
+Fixed redeem points bug
+
+Oct-10
+ERP code base file update
+Stock process validation
+Discussion on clean stocks update tables
+checking stock_ids
+
+Oct-11
+checking stock processing codebase
+Sandbox testing
+
+Oct-12
+Developer Sandbox testing - png_offline_orders()
+
+Oct-17
+Started franchise summay view page
+
+Oct-18
+admin/analytics/dashboard page updating
+
+var fullDate = new Date()
+console.log(fullDate);
+//Thu May 19 2011 17:25:38 GMT+1000 {}
+ 
+//convert month to 2 digits
+var twoDigitMonth = ((fullDate.getMonth().length+1) === 1)? (fullDate.getMonth()+1) : '0' + (fullDate.getMonth()+1);
+ 
+var currentDate = fullDate.getDate() + "/" + twoDigitMonth + "/" + fullDate.getFullYear();
+console.log(currentDate);
+//19/05/2011
+
+Oct-19
+Google maps integration for franchise
+
+Oct-21
+Google map know more popup
+
+Oct-22
+batch reservation status page created
+
+Oct-23
+23rd Oct Updates on Batch reservations
+
+Batch Reservations:
+1. Batch reservation page created (admin/trans_reservation_status)
+2. Stock batch reserved based on following constraints:
+      a). Batch Ready: If all orders of a transaction are having enough stock to process for batch
+      b). Partial Ready: If any order of a transaction is not having requested quantity of items by a franchise then transaction is considered as partially ready
+      c). Not Ready: If all orders are having zero stock  then That transaction is not at all ready for processing
+3. Showing orders under transactions
+
+Oct-24
+
+Oct-31-2013
+
+35503729
+204010284491 is 9064378
+
+Nov-06
+trans_reserve_status updation
+
+Nov-07
+Manage trans Reservations
+
+Nov-09
+GZIP Compression for CI
+Leverage browser caching for codeigniter
+
+http://gtmetrix.com/leverage-browser-caching.html
+================================
+Trillian accounts:
+
+shivaraj_storeking
+
+config.php
+$config['compress_output'] = FALSE;
+
+Nov_12_2013
+2190.83 rs - 2191
+1112643109
+
+Nov_13_2013
+Merged Server changes
+Reservation design updated
+Log message updated
+Worked on Manage Towns Couriour Priority page
+
+Nov_14
+Bloreone-080 22955400/22955401
+ShivarajRH
+kumbalgudu-pin:560074
+
+Manage Towns Courier Priority page is done
+
+Nov_15
+stream search & global search integration
+
+Following pages are updated:
+Couriers page,
+Edit Couriers page created
+
+Nov_16_2013
+admin/towns_courier_priority/ page updated
+showing courier priorities on franchise and offline orders page
+
+Nov_18_2013
+admin/product_proc_list_for_batch/4418
+
+Nov_19_2013
+Generate picklist for ready and partial  ready transactiosns is done in transaction reservations page
+
+Tows courier priority page filters are updated
+
+Nov_20_2013
+Working on reservations page for bug fixing of pending orders
+Pushed files to sandbox
+
+zero-gravity
+
+Order Status:
+0-Confirmed
+1-Processed (Batch created&stock alloted)
+2-Shipped
+3-Cancelled
+4-Returned
+
+Nov_21_2013
+Code cleaned
+
+======
+Streams
+Order status summary
+Transaction Reservation system
+Manage Couriers
+
+Nov_22_2013
+=>
+Batch creation is done based on Group config
+
+Displying the transbased on group is pending
+
+Nov_25_2013
+Reservations
+
+Nov_26_2013
+Reservations page is done but some functionality pages need to add
+
+packing page
+
+//bank ref no;0013728435
+
+Dec_02_2013
+1 .Considering  territory for creating Batch group
+2. Clearing History by picklist window
+3. Manual Testing
+4. Move all javascript code to file
+
+Dec_03_2013
+Hide picklist checks on franchise pending page
+
+new printElement jquery plugin added
+
+Showing proforma_invoice_no along with picklist
+
+disable picklist checkbox if batch is ungrouped
