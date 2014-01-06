@@ -779,7 +779,7 @@ h3 { font-size: 18px; }
 
                 if(!sel_stk_inps)
                 {
-                        alert("Problem in process");
+                        alert("Error:\nProblem in process");
                         return false;
                 }
 
@@ -791,7 +791,7 @@ h3 { font-size: 18px; }
 
                 $(".container").append(msg);
 
-                if(confirm("Confirm if Free samples for order has been added for packing ? "))
+                if(confirm("Confirm:\n Free samples for order has been added for packing ? "))
                 {
                         $("#packform").submit();
                 }
