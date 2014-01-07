@@ -15,13 +15,14 @@ $sel_terr_by_fran='<select name=\'sel_terr_id\' id=\'sel_terr_id\'></select>';
 $msg_process_by_fran .= '<div class="show_by_group_block"><label for="show_by_group">Process by franchise:</label> <input type="checkbox" value="by_group" name="show_by_group" id="show_by_group" '.($showbygrp?"checked":"").' title="Click to Show By Group"/></div>';
 
 if( $batch_type == "pending") {
-    $re_allot_all_block = '<a href="javascript:void(0);" onclick="reallot_stock_for_all_transaction('.$user['userid'].','.$pg.');" style="padding:4px 10px;">Re-Allot all pending transactions</a>';
+    $re_allot_all_block .= '<a href="javascript:void(0);" onclick="reallot_stock_for_all_transaction('.$user['userid'].','.$pg.');" class="button button-rounded button-caution">Re-Allot all pending transactions</a>';
+    $output .= '<script>$(".re_allot_all_block").css({"padding":"4px 10px"});</script>';
     //$generate_btn_link=$msg_generate_pick_list='';
 }
 else {
-    
-    $msg_generate_pick_list = '<input type="submit" value="Generate Pick List" name="btn_generate_pick_list" id="btn_generate_pick_list" title="Click to generate picklist for printing"/>';
-    $generate_btn_link .= '<input type="submit" value="Create Group Batch" name="btn_cteate_group_batch" id="btn_cteate_group_batch" title="Click to Create Group Batch"/>';
+    $output.= '<script>$(".re_allot_all_block").css({"padding":0});</script>';
+    $msg_generate_pick_list .= '<input type="submit" class="button button-rounded button-action" value="Generate Pick List" name="btn_generate_pick_list" id="btn_generate_pick_list" title="Click to generate picklist for printing"/>';
+    $generate_btn_link .= '<input type="submit" class="button button-rounded button-caution" value="Create Group Batch" name="btn_cteate_group_batch" id="btn_cteate_group_batch" title="Click to Create Group Batch"/>';
 }
 
 if($menuid!=0) {
@@ -46,7 +47,7 @@ if($terrid!=0) {
 if($total_trans_rows == 0 ) {
     $output.='<script>$(".ttl_trans_listed").html("");
                                 $(".pagination_top").html("");
-                                $(".re_allot_all_block").css({"padding":"0"});
+                                $(".re_allot_all_block").html("");
                     </script>
                     <h3 class="heading_no_results">No franchise found for selected criteria.</h3>';
 }
@@ -83,7 +84,7 @@ else
         {
             $output.='<script>$(".ttl_trans_listed").html("");
                                 $(".pagination_top").html("");
-                                $(".re_allot_all_block").css({"padding":"0"});
+                                $(".re_allot_all_block").html("");
                     </script>
                     <h3 class="heading_no_results">No franchise found for selected criteria.</h3>';
         }
@@ -122,7 +123,7 @@ else
                             $territory_name = $trans_arr['territory_name'];
                         }
                         else {
-                            $territory_name = '||';
+                            $territory_name = '';
                         }
                         
                         if(!in_array($trans_arr['town_name'], $temp_arr2)) {
@@ -130,7 +131,7 @@ else
                             $town_name = $trans_arr['town_name'];
                         }
                         else {
-                            $town_name = '||';
+                            $town_name = '';
                         }
                         
                         $output .= '<td align="center">'.$territory_name.'</td>

@@ -11,7 +11,7 @@ $output = $cond = $cond_batch = $inner_loop_cond = $re_allot_all_block=$orderby_
 $chk_box_global = '<input type="checkbox" value="" name="pick_all" id="pick_all" title="Select all transactions" />';
 
 $msg_process_by_fran = '<div class="show_by_group_block"><label for="show_by_group">Process by franchise:</label> <input type="checkbox" value="by_group" name="show_by_group" id="show_by_group" '.($showbygrp?"checked":"").' title="Click to Show By Group"/></div>';
-$batch_btn_link .= '<input type="submit" value="Create Group Batch" name="btn_cteate_group_batch" id="btn_cteate_group_batch" title="Click to Create Group Batch"/>';
+$batch_btn_link .= '<input type="submit" class="button button-rounded button-action" value="Create Group Batch" name="btn_cteate_group_batch" id="btn_cteate_group_batch" title="Click to Create Group Batch"/>';
 
 if($latest == 0)
     $orderby_cond = ' g.actiontime ASC ';
@@ -37,7 +37,7 @@ else {
         //if($user['userid']) {
             //$cond .= ' and sd.assigned_userid = '.$user['userid'].' ';
         //}
-        $msg_generate_pick_list .= '<input type="submit" value="Generate Pick List" name="btn_generate_pick_list" id="btn_generate_pick_list" title="Click to generate picklist for printing"/>';
+        $msg_generate_pick_list .= '<input type="submit" class="button button-rounded button-action" value="Generate Pick List" name="btn_generate_pick_list" id="btn_generate_pick_list" title="Click to generate picklist for printing"/>';
 }
 $cond_batch = ($cond_batch!='')? " where ".$cond_batch:"";
 
@@ -105,9 +105,9 @@ else
             if($total_trans_rows == 0 ) {
                            $output.='<script>$(".ttl_trans_listed").html("");
                                             $(".pagination_top").html("");
-                                            $(".re_allot_all_block").css({"padding":"0"});
-                                </script>
-                                <h3 class="heading_no_results">No transactions found for selected criteria.</h3>';
+                                            $(".re_allot_all_block").html("");
+                                    </script>
+                                    <h3 class="heading_no_results">No transactions found for selected criteria.</h3>';
             }
             else 
             {
@@ -213,10 +213,10 @@ else
 
                        if( $batch_type == "pending") 
                         {
-                                $trans_action_msg .= '<a href="javascript:void(0);" class="retry_link" onclick="return reserve_stock_for_trans('.$user['userid'].',\''.trim($trans_arr['transid']).'\','.$pg.');">Re-Allot</a>';
+                                $trans_action_msg .= '<a href="javascript:void(0);" class="retry_link button button-rounded button-tiny button-caution" onclick="return reserve_stock_for_trans('.$user['userid'].',\''.trim($trans_arr['transid']).'\','.$pg.');">Re-Allot</a>';
                                 $pick_list_msg .= '--';
 
-                                $re_allot_all_block = '<a href="javascript:void(0);" onclick="reallot_stock_for_all_transaction('.$user['userid'].','.$pg.');">Re-Allot all pending transactions</a>';
+                                $re_allot_all_block = '<a href="javascript:void(0);" class="button button-action  button-caution" onclick="reallot_stock_for_all_transaction('.$user['userid'].','.$pg.');">Re-Allot all pending transactions</a>';
                                 $output .= '<script>$(".re_allot_all_block").css({"padding":"4px 10px"});</script>';
 
                         }
@@ -233,8 +233,8 @@ else
                                 foreach ($arr_pinv_ids as $p_invoice_id ) {
                                     if($p_invoice_id != '' and $trans_arr['batch_id'] != GLOBAL_BATCH_ID) {
                                         $trans_action_msg .= '<div>
-                                                            <a class="proceed_link clear" href="pack_invoice/'.$p_invoice_id.'" target="_blank">Generate invoice</a><br>
-                                                            <a class="danger_link clear" href="javascript:void(0)" onclick="cancel_proforma_invoice(\''.$p_invoice_id.'\','.$user['userid'].','.$pg.')" class="">De-Allot</a>
+                                                            <a class="proceed_link button button-rounded button-tiny button-action" href="pack_invoice/'.$p_invoice_id.'" target="_blank">Generate invoice</a><br>
+                                                            <a class="danger_link button button-rounded button-tiny button-caution" href="javascript:void(0)" onclick="cancel_proforma_invoice(\''.$p_invoice_id.'\','.$user['userid'].','.$pg.')" class="">De-Allot</a>
                                                         </div>';
                                         $pick_list_msg .= '<input type="checkbox" value="'.$p_invoice_id.'" id="pick_list_trans" name="pick_list_trans[]" class="pick_list_trans_ready" title="Select this for picklist" />';
                                     }

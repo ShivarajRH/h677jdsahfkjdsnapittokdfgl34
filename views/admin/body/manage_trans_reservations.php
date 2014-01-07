@@ -1,15 +1,17 @@
 <link type="text/css" rel="stylesheet" href="<?php echo base_url();?>css/manage_reservations_style.css" />
 
 <div class="container">
-    <div class="left_block"">
-            <div>
+    <div class="container_head">
+        <div>
                 <h2>Manage Transaction Reservations</h2>
                 <div class="above_header_block_btns">
-                    <div class="re_allot_all_block"></div>
                     <div class="batch_btn_link"></div>
                     <div class="process_by_fran_link"></div>
                 </div>
             </div>
+    </div>
+    <div class="left_block">
+            
             <div class="clear"></div>
             <div id="list_wrapper">
                 <table width="100%" >
@@ -102,21 +104,30 @@
             <div class="level2_filters">
                     <div class="trans_pagination pagination_top"></div>
 
-                    <div class="btn_picklist_block"></div>
-                    <div class="oldest_newest_sel_block"><select name="sel_old_new" id="sel_old_new"><option value="1" selected>NEWEST </option><option value="0" <?=($oldest_newest=='0') ? "selected":""; ?> >OLDEST</option></select></div>
+                    
+                    <div class="oldest_newest_sel_block"><select name="sel_old_new" id="sel_old_new"><option value="1" selected>NEWEST</option><option value="0" <?=($oldest_newest=='0') ? "selected":""; ?> >OLDEST</option></select></div>
                     <div class="sel_terr_block"></div>
 
                     <span class="ttl_trans_listed dash_bar"></span>
 
-            </div>        
+            </div>
             <div id="trans_list_replace_block"></div>
     </div>
+    
     <div class="right_block">
+        <div class="right_block_head">&nbsp;</div>
+        <div class="btn_picklist_block"></div>
+        
+        <div class="re_allot_all_block"></div>
         
     </div>
+    
 </div>
-<!-- Picklist dialog block -->
+
+<!-- Dialog: Picklist dialog block -->
 <div id="show_picklist_block" style="display: none;" ></div>
+
+<!-- Dialog: -->
 <div style="display: none;">
     <div id="dlg_create_group_batch_block"  ></div>
     <div class="reservation_action_status" ></div>

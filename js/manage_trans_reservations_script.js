@@ -660,7 +660,9 @@ var pg=0;
 function loadTransactionList(pg) {
     $(".pagination_top").html("");
     $(".ttl_trans_listed").html("");
-    $(".re_allot_all_block").css({"padding":"0"});
+    
+    $(".re_allot_all_block").css({"padding":0}).html("");
+    
 
     var batch_type = $('.tab_list .selected').attr('id');
 //        var batch_type= ($("#batch_type").val() == "00")?0: $("#batch_type").val();
