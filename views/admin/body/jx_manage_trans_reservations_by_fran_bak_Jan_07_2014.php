@@ -22,7 +22,7 @@ if( $batch_type == "pending") {
 else {
     $output.= '<script>$(".re_allot_all_block").css({"padding":0});</script>';
     $msg_generate_pick_list .= '<input type="submit" class="button button-rounded button-action" value="Generate Pick List" name="btn_generate_pick_list" id="btn_generate_pick_list" title="Click to generate picklist for printing"/>';
-    $generate_btn_link .= '<input type="submit" class="button button-rounded button-tiny button-action" value="Create Batch" name="btn_cteate_group_batch" id="btn_cteate_group_batch" title="Click to Create Group Batch"/>';
+    $generate_btn_link .= '<input type="submit" class="button button-rounded button-action" value="Create Group Batch" name="btn_cteate_group_batch" id="btn_cteate_group_batch" title="Click to Create Group Batch"/>';
 }
 
 if($menuid!=0) {
@@ -122,35 +122,76 @@ else
                             $temp_arr1[$territory_name] = $territory_name;
                             $print_territory_name = $trans_arr['territory_name'];
                             
-//                            $span_terrname[$territory_name][$i] = $territory_name;
+                            $span_terrname[$territory_name][$i] = $territory_name;
                             
-                            $output .= '<td align="center">'.$print_territory_name.''.'<br><span>'.$generate_btn_link.'</span></td>';
                             
                         }
                         else {
                             
-                            $print_territory_name = '';
+                            $span_terrname[$territory_name][$i] = $territory_name;
                             
-                            $output .= '<td align="center">&hyphen;&hyphen; " &hyphen;&hyphen;</td>';
+                            /*if(count($temp_arr1[$territory_name])>0) {
+                                
+                                $ttl_terr_count = count($temp_arr1[$territory_name]);
+                                
+                                $span_terrname[$territory_name] ='';
+                                
+                            }
+                            else {
+                                $span_terrname[$territory_name] ='';
+                            }
+                            
+                            $span_terrname= " rowspan='1' ";*/
+                            $print_territory_name = '';
+                            $generate_btn_link='';
                         }
+                        // get total count
+                        if(in_array($territory_name, $temp_arr1)) {
+                            
+                            $count =$ttl_count[$territory_name]['count'] = count($span_terrname[$territory_name]);
+                            
+                        }
+                        
+                        /*$final_count='';
+                        if(1 >= $count) {
+                            $final_count=$count;
+                        }*/
+                        
+                        
+                        
                         
                         
                         if(!in_array($trans_arr['town_name'], $temp_arr2)) {
                             $temp_arr2[] = $trans_arr['town_name'];
                             $town_name = $trans_arr['town_name'];
-
+                            
+                            $span_townname[$town_name]=1;
+                            
+                            
                         }
                         else {
-                            $town_name = '&hyphen;&hyphen; " &hyphen;&hyphen;';
+                            ++$span_townname;
+                            $town_name = '';
+                        }
+                        
+                        if(count($transactions)) {
+                            foreach($ttl_count[$territory_name] as $terr_count) {
+
+                                $final_count=$terr_count;
+                            }
+                            
                         }
                         
                         
+//                        $output .= '<td align="center" colspan="0">'.$print_territory_name.''.(count($span_terrname[$territory_name])).'='.$count.'='.$ttl_count[$territory_name]['count'].'</td>';
                         
                         
-                        $output .= '<td align="center">'.$town_name.'</td>
+                        $output .= '<td align="center" colspan="0">'.$print_territory_name.''.'<br><span>'.$generate_btn_link.'</span></td>';
+                        
+                        $output .= '<td align="center"  rowspan="'.$span_townname.'">'.$town_name.'</td>
                                     <td><span class="info_links"><a href="'.site_url("admin/pnh_franchise/{$trans_arr['franchise_id']}").'"  target="_blank">'.$trans_arr['franchise_name'].'</a><br></span>
                                         <span>'.$trans_arr['ship_phone'].'<br></span><span class="fran_experience" style="background-color:'.$arr_fran['f_color'].';color: #ffffff;">'.$arr_fran['f_level'].'</span>
-                                    </td>';
+                                </td>';
                         
                         if( $batch_type == "pending") 
                         {
@@ -215,7 +256,7 @@ else
                         $(".ttl_trans_listed").html("Showing <strong>'.$total_trans_rows.'</strong> franchises '.$datefilter_msg.'");
                         $(".btn_picklist_block").html(\''.($msg_generate_pick_list).'\');
                         $(".sel_terr_block").html("'.$sel_terr_by_fran.'");
-                       // $(".batch_btn_link").html(\''.($generate_btn_link).'\');
+                        $(".batch_btn_link").html(\''.($generate_btn_link).'\');
                         $(".process_by_fran_link").html(\''.($msg_process_by_fran).'\');
                         $(".re_allot_all_block").html(\''.($re_allot_all_block).'\');
                         $("#sel_old_new").hide();

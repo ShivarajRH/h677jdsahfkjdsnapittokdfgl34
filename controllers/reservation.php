@@ -227,13 +227,13 @@ class Reservation extends Voucher {
                     $transid_msg='<a href="'.site_url('admin/trans/'.$row['transid']).'" target="_blank">'.$row['transid'].'</a>';
                     
                     if($batch_type == 'pending') {
-                            $invoice_action = '<a href="javascript:void(0);" class="retry_link" onclick="return reserve_stock_for_trans('.$user['userid'].',\''.trim($row['transid']).'\',0);">Re-Allot</a>';
+                            $invoice_action = '<a href="javascript:void(0);" class="retry_link button button-rounded button-tiny button-caution" onclick="return reserve_stock_for_trans('.$user['userid'].',\''.trim($row['transid']).'\',0);">Re-Allot</a>';
                     }
                     else {
                             if($batch_id != GLOBAL_BATCH_ID) {
                                 
-                                $invoice_action = '<a class="proceed_link clear" href="pack_invoice/'.$row['p_invoice_no'].'" target="_blank">Generate invoice</a>
-                                    <a class="danger_link clear" href="javascript:void(0)" onclick="cancel_proforma_invoice(\''.$row['p_invoice_no'].'\','.$user['userid'].',0)" class="">De-Allot</a>';
+                                $invoice_action = '<a class="proceed_link button button-rounded button-tiny button-action" href="pack_invoice/'.$row['p_invoice_no'].'" target="_blank">Generate Invoice</a>
+                                    <a class="button button-tiny button-caution" href="javascript:void(0)" onclick="cancel_proforma_invoice(\''.$row['p_invoice_no'].'\','.$user['userid'].',0)" class="">De-Allot</a>';
                                 $picklist_btn_msg = '<input type="checkbox" value="'.$row['p_invoice_no'].'" name="chk_pick_list_by_fran[]" id="chk_pick_list_by_fran" class="chk_pick_list_by_fran_'.$franchise_id.'" title="Select this for picklist" />';
                                 
                             }

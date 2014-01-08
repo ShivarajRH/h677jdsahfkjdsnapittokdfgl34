@@ -7,18 +7,25 @@
 h2 {  width: 788px; float: left;   }
 .leftcont { display: none;}
 .left_block {
-    float: left;
     width: 82%;
 }
 .right_block {
-    float: right;
-    width: 18%;
+    width: 16%;
+    height: 100%;
+/*    float: right;
+    padding: 0 0 0 5px;*/
+    text-align: right;
+    display: table;
+    /*border: 2px solid;*/
 }
 .right_block_head {
     padding-top: 25%;
-    
 }
-.btn_picklist_block { position: fixed; float: right; }
+.btn_picklist_block {position: relative; }
+.re_allot_all_block { position: relative;  }
+.batch_btn_link { position: relative;  }
+
+.process_by_fran_link { float: right; }
 
 fieldset {
     padding: 0 0px 0 12px !important;
@@ -27,7 +34,6 @@ fieldset {
 }
 select {
     margin: 10px 0 5px 5px;
-/*    width: 204px;*/
 }
 label {
     margin:10px 0 15px 5px;
@@ -41,7 +47,7 @@ table.datagridsort tbody td { padding: 4px; }
     padding: 4px 0 2px 4px !important;
     font-size: 11px !important;
     color: #130C09;
-    background-color: rgba(112, 100, 151, 0.51);
+    background-color: #AEACC2;
 }
 .subdatagrid td {
         padding: 4px !important;
@@ -92,11 +98,6 @@ table.datagridsort tbody td { padding: 4px; }
     margin-top: 0;
 }
 .retry_link {
-/*    cursor: pointer;
-    color:#f4f4f4;
-    background-color: #3B3BB9 !important;
-    padding: 5px 10px;
-    border-radius: 3px;*/
     margin: 20px 5px;
 }
 .batch_msg_enabled { margin-top:20px; cursor: pointer;color: #EC0009 !important; }
@@ -123,12 +124,6 @@ table.datagridsort tbody td { padding: 4px; }
 .small_link { font-size: 80%; color: #455566;}
 .above_header_block_btns { margin-right: 0px; margin-top: 27px;float: right; float: right; display:block; }
 
-/*.re_allot_all_block a { text-decoration: none; color: inherit;  background: transparent; }
-.re_allot_all_block  { background-color: #3B3BB9 !important; color: #f4f4f4; float:right;font-weight: bold;  border-radius: 3px;}
-.re_allot_all_block:hover {  background-color: #FA1527 !important; }*/
-
-.batch_btn_link {  float: right;}
-.process_by_fran_link { float: right; }
 
 .ttl_trans_listed {float: left; 
                 max-width: inherit;
@@ -170,7 +165,7 @@ table.datagridsort tbody td { padding: 4px; }
 h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;}
 .filters_block {
     float: left;
-    padding-bottom: 27px;
+    padding-bottom: 15px;
     width: 99%;
     display: block;
     display: none;
@@ -210,8 +205,6 @@ h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;}
 .trans_created_by { padding: 5px 0 5px; font-size: 11px; 
                    /*font-weight: bold;*/ 
 }
-/*input[type="submit"] { height: 30px; }*/
-
 .datagrid .small_text { font-size: 10px; }
 
 
@@ -220,10 +213,16 @@ h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;}
     margin: 2px 2px;
     color: #E0260D;
 }
-.show_by_group_block {padding: 5px 33px; float: left;}
+.show_by_group_block {
+    padding: 5px 33px;
+    font-size: 15px;
+    font-weight: bold;
+}
+
 .total_trans { float: left; font-weight: bold; margin: 0 0 0 38px; }
+
 .view_all_orders a {
-    margin: 70px; font-size: 11px;
+    margin: 5px 0px 8px 52px; font-size: 11px;
     text-decoration: none;
     color: #130C09;
     background-color: #E0DFDF;

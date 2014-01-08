@@ -5,12 +5,11 @@
         <div>
                 <h2>Manage Transaction Reservations</h2>
                 <div class="above_header_block_btns">
-                    <div class="batch_btn_link"></div>
                     <div class="process_by_fran_link"></div>
                 </div>
             </div>
     </div>
-    <div class="left_block">
+    <div class="left_block fl_left">
             
             <div class="clear"></div>
             <div id="list_wrapper">
@@ -35,16 +34,7 @@
                         <h3 class="filter_heading">Filters:</h3>
                     </span>
                         <div class="filters_block">
-                                <div class="date_filter">
-                                    <form id="trans_date_form" method="post">
-                                            <b>Show transactions : </b>
-                                            <label for="date_from">From :</label><input type="text" id="date_from"
-                                                    name="date_from" value="<?php //echo date('Y-m-01',time()-60*60*24*7*4*4)?>" />
-                                            <label for="date_to">To :</label><input type="text" id="date_to"
-                                                    name="date_to" value="<?php //echo date('Y-m-d',time())?>" /> 
-                                            <input type="submit" value="Submit">
-                                    </form>
-                                </div>
+                                
                                 <div class="group_filter">
                                     <select id="sel_menu" name="sel_menu" colspan="2">
                                         <option value="00">Select Menu</option>
@@ -94,6 +84,16 @@
                                             </select>
                                         items per page.
                                     </span>
+                                    <div class="date_filter">
+                                        <form id="trans_date_form" method="post">
+                                                <b>Show transactions : </b>
+                                                <label for="date_from">From :</label><input type="text" id="date_from"
+                                                        name="date_from" value="<?php //echo date('Y-m-01',time()-60*60*24*7*4*4)?>" />
+                                                <label for="date_to">To :</label><input type="text" id="date_to"
+                                                        name="date_to" value="<?php //echo date('Y-m-d',time())?>" /> 
+                                                <input type="submit" value="Submit" class="button button-tiny button-royal">
+                                        </form>
+                                    </div>
                                 </div>
 
                         </div>
@@ -114,11 +114,20 @@
             <div id="trans_list_replace_block"></div>
     </div>
     
-    <div class="right_block">
-        <div class="right_block_head">&nbsp;</div>
-        <div class="btn_picklist_block"></div>
+    <div class="right_block fl_right">
         
-        <div class="re_allot_all_block"></div>
+        <div style="position: fixed; display: table;" class="">
+            <div class="right_block_head">&nbsp;</div>
+            
+            <div class="clear">&nbsp;</div>
+            <div class="batch_btn_link"></div>
+            
+            <div class="clear">&nbsp;</div>
+            <div class="btn_picklist_block"></div>
+            
+            <div class="clear">&nbsp;</div> 
+            <div class="re_allot_all_block"></div>
+        </div>
         
     </div>
     
