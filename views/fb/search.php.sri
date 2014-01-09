@@ -1,0 +1,97 @@
+<?php if(empty($deals) && empty($brands) && empty($category)){?>
+    <h1>
+        Sorry, no results found
+    </h1>
+    <?php }?>
+        <?php if(!empty($deals)){?>
+            <div style="padding-top:10px;">
+                <div style="background:#eee;padding:5px 10px;font-size:17px;font-weight:bold;"
+                align="left">
+                    <div style="float:right;color:blue;font-size:12px;">
+                        <?=count($deals)?>
+                            deals found
+                    </div>
+                    Deals
+                </div>
+                <?php foreach($deals as $deal){?>
+                    <div class="itemcontnr" style="border:1px solid #aaa;padding:10px;float:left;margin:10px;font-size:13px; width: 45%"  align="left">
+                        <div style="max-height:200px;max-width:300px;overflow:hidden; float: left" align="center">
+                            <a href="<?=site_url("saleitem/".$deal['itemid'])?>">
+                                <img src="<?=base_url()?>images/items/<?=$deal['pic']?>.jpg" style="max-height:200px;border: 1px solid #ccc">
+                            </a>
+                        </div>
+                        <div style="margin-left: 5px;float: left; width: 260px">
+                        <div style="padding-top:10px;"  align="center">
+                            <a href="<?=site_url("saleitem/".$deal['itemid'])?>" style="color:brown;text-decoration:none;font-size:20px;">
+                                <?=$deal['itemname']?>
+                            </a>
+                        </div>
+                        <div style="padding-top:5px;text-align: right">
+                            from
+                            <?=$deal['brandname']?>
+                        </div>
+                        <div style="padding-top:50px;font-size: 15px;text-align: center">
+                            Rs
+                            <b style="font-size: 20px;color: #ff9900;font-family:'comic Sans MS'">
+                                <?=$deal['price']?>
+                            </b>
+                            <span style="text-decoration:line-through">
+                                <?=$deal['orgprice']?>
+                            </span>
+                        </div>
+                        <div style="padding-top:10px;text-align: center;color: #444;">
+                            Category: <?=$deal['category']?>
+                        </div>
+                        <?php if($deal['dealtype']==1){?>
+                            <div style="padding-top:10px;">
+                                Group Sale
+                            </div>
+                            <?php }?>
+                    	</div>
+                    </div>
+               <?php }?>
+            </div>
+            <?php }?>
+                <?php if(!empty($brands)){?>
+                    <div style="padding-top:10px;clear:both;">
+                        <div style="background:#eee;padding:5px 10px;font-size:17px;font-weight:bold;"
+                        align="left">
+                            <div style="float:right;color:blue;font-size:12px;">
+                                <?=count($brands)?>
+                                    brands found
+                            </div>
+                            Brands
+                        </div>
+                        <?php foreach($brands as $brand){?>
+                            <div style="float:left;margin:10px;">
+                                <a href="<?=site_url("brand/".$brand['name'])?>" style="font-size:20px;">
+                                    <?php if($brand[ 'logoid']!=NULL){?>
+                                        <img src="<?=base_url()?>images/brands/<?=$brand['logoid']?>.jpg">
+                                        <?php }else{?>
+                                            <?=$brand['name']?>
+                                        <?php }?>
+                                </a>
+                            </div>
+                            <?php }?>
+                    </div>
+                    <?php }?>
+                        <?php if(!empty($category)){?>
+                            <div style="padding-top:10px;clear:both;font-size:13px;">
+                                <div style="background:#eee;padding:5px 10px;font-size:17px;font-weight:bold;"
+                                align="left">
+                                    <div style="float:right;color:blue;font-size:12px;">
+                                        <?=count($deals)?>
+                                            categories found
+                                    </div>
+                                    Categories
+                                </div>
+                                <?php foreach($category as $brand){?>
+                                    <div style="float:left;margin:10px;">
+                                        <a href="<?=site_url("category/".$brand['name'])?>" style="color:blue;font-size:13px;">
+                                            <?=$brand['name']?>
+                                        </a>
+                                    </div>
+                                    <?php }?>
+                            </div>
+                            <?php }?>
+                          
