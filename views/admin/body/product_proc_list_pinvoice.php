@@ -31,7 +31,7 @@
                         <div class="print_link_block"><a href="javascript:void(0);" class="print_link" onclick="">Print</a></div>
 		</div>
 		<div class="heading2">
-			<h2 style="">Product Pick list <?=$this->uri->segment(3)?></h2>	
+			<h2 style="">Product-wise Pick slip <?=$this->uri->segment(3)?></h2>	
 		</div>
 	</div>
         <div class="clear"></div>
@@ -75,30 +75,41 @@
                     <th>#</th><th>Proforma Invoice No</th><th>Product ID</th><th>Product Name</th><th>Qty</th><Th>MRP</Th><th>Location</th>
 		</tr>
 		<?php $i=1;
-                    $tmp_arr=array();
+                    $tmp_arr=$tmp_arr2=array();
                     foreach($product as $k=>$p){
                         if($k==='menuname')  continue;
                         
                         if(!in_array($p['p_invoice_no'],$tmp_arr)) {
-                            //push to temp array
                             $tmp_arr[] = $p['p_invoice_no'];
-                            
                             array_push($pinvno_log_arr,$p['p_invoice_no']);
-                            
                             $invoice_msg = '<a target="_blank" href="'.site_url('admin/pack_invoice/'.$p['p_invoice_no']).'">'.$p['p_invoice_no'].'</a>';
-                            
                         }
                         else {
-                            $invoice_msg = '--||--';
+                            $invoice_msg = '--"--';
                         }
+                        
+                        if(!in_array($p['product_id'],$tmp_arr2)) {
+                            $tmp_arr2[] = $p['product_id'];
+                            $product_id_msg = '<a target="_blank" href="'.site_url('admin/product/'.$p['product_id']).'">'.$p['product_id'].'</a>';
+                        }
+                        else 
+                            $product_id_msg = '--"--';
+                        
+                        if(!in_array($p['product'],$tmp_arr2)) {
+                            $tmp_arr2[] = $p['product'];
+                            $product_msg = ''.$p['product'].'';
+                        }
+                        else 
+                            $product_msg = '--"--';
+                        
                         
                         
                     ?>
 			<tr <?php if($i%2==0){?>style="background:#eee;"<?php }?>>
                                 <td><?=$i?></td>
 				<td  width="80"><?=$invoice_msg;?></td>
-				<td  width="80"><a target="_blank" href="<?php echo site_url('admin/product/'.$p['product_id'])?>"><?=$p['product_id']?></a></td>
-				<td><?=$p['product']?></td>
+				<td  width="80"><?=$product_id_msg;?></td>
+				<td><?=$product_msg?></td>
 				<td width="20" align="center"><?=$p['qty']?></td>
 				<?php list($loc,$mrp) = explode('::',$p['location']);?>
 				<td width="30" ><?=$mrp?></td>

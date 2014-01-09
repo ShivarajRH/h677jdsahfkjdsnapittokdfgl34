@@ -110,8 +110,7 @@ table.datagridsort tbody td { padding: 4px; }
     border-radius: 3px; }
 .proceed_link { 
     margin: 20px 5px 5px 5px; }
-.danger_link {
-    padding: 1px 5px !important;
+.danger_link2 {
     margin: 7px;
 }
 .btn_picklist {
@@ -222,13 +221,7 @@ h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;}
 .total_trans { float: left; font-weight: bold; margin: 0 0 0 38px; }
 
 .view_all_orders a {
-    margin: 5px 0px 8px 52px; font-size: 11px;
-    text-decoration: none;
-    color: #130C09;
-    background-color: #E0DFDF;
-    border: 1px solid #D1C9C9;
-    padding: 4px 3px;
-    border-radius: 4px;
+    margin: 5px 0px 5px 2px;
 }
 .orders_info_block { margin-top: 5px; float: left; }
 .order_status_yes {

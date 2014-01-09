@@ -53,7 +53,7 @@ $("#dlg_create_group_batch_block").dialog({
                     var territory_id = $("#dlg_sel_territory").find(":selected").val();
                     var townid = 0;//$("#dlg_sel_town").find(":selected").val();
 
-                    if(sel_batch_menu == '00') { show_output("ERROR : Please Select Menu"); return false; }
+                    //if(sel_batch_menu == '00') { show_output("ERROR : Please Select Menu"); return false; }
                     if(assigned_uid == '00') { 
                         if(!confirm("Warning :\n Are you sure you do not want to assign user for this batch?")) {
                             show_output("Warning :\n Batch will not assign to any user.");
@@ -61,6 +61,7 @@ $("#dlg_create_group_batch_block").dialog({
                         }
                         assigned_uid = '0';
                     }
+                    if(sel_batch_menu == '00') {sel_batch_menu=0;  }
                     if(territory_id == '00') {territory_id=0;  }
                     if(townid == '00') {townid=0;  }
 //                            ,assigned_menuids:assigned_menuids
@@ -84,114 +85,31 @@ $("#dlg_create_group_batch_block").dialog({
 });
 
 
-$("#btn_cteate_group_batch").live("click",function(){
-   
-   $("#dlg_create_group_batch_block").html('');
-   $.post(site_url+"admin/manage_reservation_create_batch_form",{},function(hmtldata) {
-        $("#dlg_create_group_batch_block").html(hmtldata).dialog("open");
-   }).fail(fail);
-   
+/*$(".btn_cteate_group_batch").live("click",function(){
+   var territory_id = $(this).attr("territory_id");
+   var townid= $(this).attr("town_id");
+   var franchise_id= $(this).attr("franchise_id");
+});*/
+function fn_cteate_group_batch(territory_id,townid,franchise_id) {
+        batch_show_group(territory_id,townid,franchise_id);
+}
+
+function batch_show_group(territory_id,townid,franchise_id) {
+    var postData={};
+    if(territory_id != undefined) {
+        postData = {territory_id : territory_id};
+        print(postData);
+    }
+    $("#dlg_create_group_batch_block").html('');
+    $.post(site_url+"admin/manage_reservation_create_batch_form",postData,function(hmtldata) {
+         $("#dlg_create_group_batch_block").html(hmtldata).dialog("open");
+    }).fail(fail);
     return false;
-});
+}
 
 function show_output(rdata) {
     $(".create_batch_msg_block").slideDown().html(rdata);//.delay("6500").slideUp("slow");
 }
-function fail(rdata) {
-    console.log(rdata);
-}
-/*
-$("#dlg_sel_town").live("change",function() { 
-    var townid=$(this).find(":selected").val();
-    var terrid=$("#dlg_sel_territory").find(":selected").val();
-    $.post(site_url+"admin/jx_suggest_fran/"+terrid+"/"+townid,function(resp) {
-            if(resp.status=='success') {
-                 var obj = jQuery.parseJSON(resp.franchise);
-                $("#dlg_sel_franchise").html(objToOptions_franchise(obj));
-            }
-            else {
-                $("#dlg_sel_franchise").val($("#dlg_sel_franchise option:nth-child(0)").val());
-            }
-        },'json').done(done).fail(fail);
-
-    return false;
-});*/
-
- var arr_batch_size=[];
- 
-//ONCHANGE Territory
-$("#dlg_sel_territory").live("change",function() {
-    var terrid=$(this).find(":selected").val();
-//        if(terrid=='00') {          $(".sel_status").html("Please select territory."); return false;        }
-    /*$.post(site_url+"admin/jx_suggest_townbyterrid/"+terrid,function(resp) {
-        if(resp.status=='success') {
-             //print(resp.towns);
-            var obj = jQuery.parseJSON(resp.towns);
-            $("#dlg_sel_town").html(objToOptions_terr(obj));
-        }
-        else {
-            $("#dlg_sel_town").val($("#dlg_sel_town option:nth-child(0)").val());
-            $("#dlg_sel_franchise").val($("#dlg_sel_franchise option:nth-child(0)").val());
-                        //$(".sel_status").html(resp.message);
-        }
-    },'json').done(done).fail(fail);*/
-    if(terrid != 00) {
-            $.post(site_url+"admin/jx_terr_batch_group_status/"+terrid,function(resp) {
-                if(resp.status=='success') {
-//                    $(".terr_batch_group_status").html("<div>There are <b>"+resp.total_orders+"</b> orders from <b>"+resp.total_categories+"</b> menu.</div>");
-                    $(".terr_batch_group_status").html("<table class='datagrid'><th>Menu</th><th>Orders</th>"+resp.detail_category_msg+"</table>");
-                            
-                    $("#sel_batch_menu").html(objToOptions_menus(resp.arr_menus));
-                    
-                   arr_batch_size=[];
-                    $.each(resp.arr_menus,function(ii,row){
-                             arr_batch_size.push({ototal:row.ocount,menuid:row.menuid});
-                    });
-                    
-                }
-                else {
-                    $(".terr_batch_group_status").html(resp.response);
-                    $("#sel_batch_menu").html('<option value="00">No menu found</option>\n');
-                    $("#batch_size").val("");
-                }
-            },"json").done(done).fail(fail);
-    }
-    return false;
-});
-
-//ONCHANGE sel_batch_menu
-$("#sel_batch_menu").live("change",function() {
-    var sel_batch_menu=$(this).find(":selected").val();
-//        if(sel_batch_menu=='00') {          $(".sel_status").html("Please select territory."); return false;        }
-    if(sel_batch_menu!='00') {
-        $.each(arr_batch_size,function(i,val) {
-            if(sel_batch_menu == val.menuid) {
-                // print(sel_batch_menu+"="+val.menuid);
-                $("#batch_size").val(val.ototal);
-                return false;
-            }
-            else {
-                $("#batch_size").val("");
-            }
-        });
-    }
-        /*$.post(site_url+"admin/jx_suggest_menus_groupid/"+sel_batch_menu,function(resp) { 
-            if(resp.status == "success") {
-                 //var obj = jQuery.parseJSON(resp.towns);
-                $("#assigned_menuids").val(resp.assigned_menuid);
-                $("#batch_size").val(resp.batch_size);
-                //$("#assigned_uid").val(resp.assigned_uid);
-                //var getlist = getlist(resp.assigned_uid);
-                var parse_assigned_uid = jQuery.parseJSON(resp.group_assigned_uid);
-                    $("#assigned_uid").html(objToOptions_users(parse_assigned_uid));
-            } else {//$("#dlg_sel_town").val($("#dlg_sel_town option:nth-child(0)").val());
-                //$("#dlg_sel_franchise").val($("#dlg_sel_franchise option:nth-child(0)").val());
-            }
-        },'json').done(done).fail(fail);*/
-    return false;
-});
-/*** END BATCH PROCESS  **/
-
 //****PICKLIST 1 *****/
 $("#show_picklist_block").dialog({
     autoOpen: false,
@@ -286,6 +204,8 @@ $(".reservation_action_status").dialog({
     position: ['center', 'center'],
     modal: true
 });
+
+
 function reallot_stock_for_all_transaction(userid,pg) {
     if(!confirm("Are you sure you want to reserve available stock for all pending or partial transactions?")) {
         return false;
@@ -293,6 +213,7 @@ function reallot_stock_for_all_transaction(userid,pg) {
     var updated_by = userid;
     var rdata='';
     $('#trans_list_replace_block').html("<div class='loading'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Loading...</div>");
+    
     $.post(site_url+"admin/jx_reserve_avail_stock_all_transaction/"+updated_by,"",function(resp) {
             if(resp.status == 'fail') {
                         rdata = resp.response+"";
@@ -304,7 +225,7 @@ function reallot_stock_for_all_transaction(userid,pg) {
                     rdata += "<div><div class='clear'></div><h3>Following transactions alloted:</h3> <table class='subdatagrid'><tr><th>Transactions</th><th>Products</th></tr>";
                     $.each(resp.alloted_msg,function(transid,row){
                         
-                        rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
+                        rdata += "<tr><td><a href='"+site_url+"admin/trans/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
                                 rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
                         });
@@ -318,7 +239,7 @@ function reallot_stock_for_all_transaction(userid,pg) {
                     rdata += "<div><div class='clear'></div><h3>Following transactions have no stock:</h3> <table class='subdatagrid'><tr><th>Transactions</th><th>Products</th></tr>";
                     $.each(resp.nostock_msg,function(transid,row){
                         
-                        rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
+                        rdata += "<tr><td><a href='"+site_url+"admin/trans/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
                                 rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
                         });
@@ -658,6 +579,7 @@ loadTransactionList(0);
 var pg=0;
     
 function loadTransactionList(pg) {
+    
     $(".pagination_top").html("");
     $(".ttl_trans_listed").html("");
     
@@ -692,8 +614,18 @@ function loadTransactionList(pg) {
     $.post(site_url+'admin/jx_manage_trans_reservations_list/'+batch_type+'/'+date_from+'/'+date_to+'/'+terrid+'/'+townid+'/'+franchiseid+'/'+menuid+'/'+brandid+"/"+showbyfrangrp+"/"+batch_group_type+'/'+sel_latest+"/"+limit+"/"+pg+"",{},function(rdata) {
         $("#trans_list_replace_block").html(rdata);
     });
+    
 }
-
+function show_all_orders() {
+        $.each($(".view_all_link"),function() {
+            $(this).click();
+        });
+        return false;
+}
+   
+function fail(rdata) {
+    console.log(rdata);
+}
 function done(data) { }
 function fail(xhr,status) { $('#trans_list_replace_block').print("Error: "+xhr.responseText+" "+xhr+" | "+status);}
 function success(resp) {

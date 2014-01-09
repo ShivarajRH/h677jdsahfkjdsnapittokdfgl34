@@ -1093,3 +1093,8 @@ select * from t_imei_no where status=0 and product_id='8702';
 
 select * from shipment_batch_process_invoice_link;
 
+Electronics 112,118 4 1,2,37,36
+
+Beauty      100     2 1,2,37,36
+
+select * from shipment_batch_process;

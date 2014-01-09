@@ -17,12 +17,12 @@ $msg_process_by_fran .= '<div class="show_by_group_block"><label for="show_by_gr
 if( $batch_type == "pending") {
     $re_allot_all_block .= '<a href="javascript:void(0);" onclick="reallot_stock_for_all_transaction('.$user['userid'].','.$pg.');" class="button button-rounded button-caution">Re-Allot all pending transactions</a>';
     $output .= '<script>$(".re_allot_all_block").css({"padding":"0px 0px"});</script>';
-    //$generate_btn_link=$msg_generate_pick_list='';
+    $generate_btn_link=$msg_generate_pick_list='';
 }
 else {
     $output.= '<script>$(".re_allot_all_block").css({"padding":0});</script>';
     $msg_generate_pick_list .= '<input type="submit" class="button button-rounded button-action" value="Generate Pick List" name="btn_generate_pick_list" id="btn_generate_pick_list" title="Click to generate picklist for printing"/>';
-    $generate_btn_link .= '<input type="submit" class="button button-rounded button-tiny button-action" value="Create Batch" name="btn_cteate_group_batch" id="btn_cteate_group_batch" title="Click to Create Group Batch"/>';
+//    $generate_btn_link .= '<input type="submit" class="button button-rounded button-tiny button-action" value="Create Batch" name="btn_cteate_group_batch" id="btn_cteate_group_batch" title="Click to Create Group Batch"/>';
 }
 
 if($menuid!=0) {
@@ -102,16 +102,15 @@ else
                                 <th style="width:150px">Town Name</th>
                                 <th style="width:160px">Franchise</th>
                                 <th style="width:150px">Actions</th>
-                                <th style="">Total Transactions</th>
+                                <th style="width:100px">Transactions</th>
+                                <th style="" align="left">&nbsp; <a href="javascript:void(0)" id="show_all_orders" onclick="return show_all_orders();" class="fl_right button button-tiny button-rounded">Show all orders</a></th>
                             <tr>
                         </thead>
                         <tbody>';
             
-            $temp_arr1 = $temp_arr2 = $span_terrname=array();$ttl_count=array();
+            $temp_arr1 = $temp_arr2 = array();
             foreach($transactions as $i=>$trans_arr) 
             {
-                static $count=0;
-                
                 $arr_fran = $this->reservations->fran_experience_info($trans_arr['f_created_on']);
                 $output .= '<tr class="filter_terr_'.$trans_arr['territory_id'].' filter_terr">
                                 <td>'.++$i.'</td>';
@@ -122,9 +121,13 @@ else
                             $temp_arr1[$territory_name] = $territory_name;
                             $print_territory_name = $trans_arr['territory_name'];
                             
-//                            $span_terrname[$territory_name][$i] = $territory_name;
-                            
-                            $output .= '<td align="center">'.$print_territory_name.''.'<br><span>'.$generate_btn_link.'</span></td>';
+                            if( $batch_type == "pending") {
+                                $generate_btn_link_2 = '';
+                            }
+                            else {
+                                $generate_btn_link_2 = '<input type="button" class="btn_cteate_group_batch button button-rounded button-tiny button-action" value="Create Batch" name="btn_cteate_group_batch" onclick="fn_cteate_group_batch('.$trans_arr['territory_id'].',0,0);" title="Click to Create Group Batch"/>';
+                            }
+                            $output .= '<td align="center">'.$print_territory_name.''.'<br><span>'.$generate_btn_link_2.'</span></td>';
                             
                         }
                         else {
@@ -167,8 +170,8 @@ else
                                     <a href="javascript:void(0);" class="retry_link button button-rounded button-tiny button-caution" all_trans="'.$str_all_trans.'" onclick="return reallot_frans_all_trans(this,'.$user['userid'].',\''.trim($trans_arr['franchise_id']).'\','.$pg.');">Re-Allot all trans</a>
                                         </td>';
                                 $output .= '</td>
-                                         <td><span class="fl_left">'.$trans_arr['ttl_trans'].'</span>
-                                                 <div class="view_all_orders"><a href="javascript:void(0);" class="view_all_link button button-tiny glow" onclick="return show_orders_list('.$trans_arr['franchise_id'].',\''.$from.'\',\''.$to.'\',\''.$batch_type.'\')" >View Orders</a></div>
+                                         <td><span class="fl_left">'.$trans_arr['ttl_trans'].'</span></td>
+                                        <td align="left"><div class="view_all_orders"><a href="javascript:void(0);" class="view_all_link button button-tiny glow" onclick="return show_orders_list('.$trans_arr['franchise_id'].',\''.$from.'\',\''.$to.'\',\''.$batch_type.'\')" >View Orders</a></div>
                                                  <div class="orders_info_block_'.$trans_arr['franchise_id'].'" class="orders_info_block" style="display:none;"></div>
                                          </td>';
 
@@ -196,7 +199,8 @@ else
                                            </form> ';
 
                                     $output .= '</td>
-                                        <td>    <span class="total_trans fl_left">'.$trans_arr['ttl_trans'].'</span>
+                                        <td><span class="total_trans fl_left">'.$trans_arr['ttl_trans'].'</span></td>
+                                        <td align="left">
                                                 <div class="view_all_orders"><a href="javascript:void(0);" class="view_all_link button button-tiny glow" onclick="return show_orders_list('.$trans_arr['franchise_id'].',\''.$from.'\',\''.$to.'\',\''.$batch_type.'\')" >View Orders</a></div>
                                                     <div class="clear">&nbsp;</div>
                                                 <div class="orders_info_block_'.$trans_arr['franchise_id'].'" class="orders_info_block" style="display:none;"></div>
@@ -215,7 +219,7 @@ else
                         $(".ttl_trans_listed").html("Showing <strong>'.$total_trans_rows.'</strong> franchises '.$datefilter_msg.'");
                         $(".btn_picklist_block").html(\''.($msg_generate_pick_list).'\');
                         $(".sel_terr_block").html("'.$sel_terr_by_fran.'");
-                       // $(".batch_btn_link").html(\''.($generate_btn_link).'\');
+                        $(".batch_btn_link").html(\''.($generate_btn_link).'\');
                         $(".process_by_fran_link").html(\''.($msg_process_by_fran).'\');
                         $(".re_allot_all_block").html(\''.($re_allot_all_block).'\');
                         $("#sel_old_new").hide();

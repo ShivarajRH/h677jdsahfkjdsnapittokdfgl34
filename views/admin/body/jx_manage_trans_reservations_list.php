@@ -11,7 +11,7 @@ $output = $cond = $cond_batch = $inner_loop_cond = $re_allot_all_block=$orderby_
 $chk_box_global = '<input type="checkbox" value="" name="pick_all" id="pick_all" title="Select all transactions" />';
 
 $msg_process_by_fran = '<div class="show_by_group_block"><label for="show_by_group">Process by franchise:</label> <input type="checkbox" value="by_group" name="show_by_group" id="show_by_group" '.($showbygrp?"checked":"").' title="Click to Show By Group"/></div>';
-$batch_btn_link .= '<input type="submit" class="button button-rounded button-action" value="Create Group Batch" name="btn_cteate_group_batch" id="btn_cteate_group_batch" title="Click to Create Group Batch"/>';
+$batch_btn_link .= '<input type="submit" class="btn_cteate_group_batch button button-rounded button-action" value="Create Group Batch" name="btn_cteate_group_batch" onclick="fn_cteate_group_batch(0,0,0);" title="Click to Create Group Batch"/>';
 
 if($latest == 0)
     $orderby_cond = ' g.actiontime ASC ';
@@ -125,8 +125,8 @@ else
                         <th style="width:120px">Batch ID(Group)</th>
                         <th style="width:200px">Transaction Reference</th>
                         <th style="padding:0px !important;">Item details</th>
-                        <th align="center">Pick List<br> '.$chk_box_global.'</th>
                         <th>Action</th>
+                        <th align="center">Pick List<br> '.$chk_box_global.'</th>
                     </tr>
                 </thead>
                 <tbody>';
@@ -234,16 +234,16 @@ else
                                     if($p_invoice_id != '' and $trans_arr['batch_id'] != GLOBAL_BATCH_ID) {
                                         $trans_action_msg .= '<div>
                                                             <a class="proceed_link button button-rounded button-tiny button-action" href="pack_invoice/'.$p_invoice_id.'" target="_blank">Generate invoice</a><br>
-                                                            <a class="danger_link button button-rounded button-tiny button-caution" href="javascript:void(0)" onclick="cancel_proforma_invoice(\''.$p_invoice_id.'\','.$user['userid'].','.$pg.')" class="">De-Allot</a>
+                                                            <a class="danger_link2 button button-rounded button-tiny button-caution" href="javascript:void(0)" onclick="cancel_proforma_invoice(\''.$p_invoice_id.'\','.$user['userid'].','.$pg.')" class="">De-Allot</a>
                                                         </div>';
                                         $pick_list_msg .= '<input type="checkbox" value="'.$p_invoice_id.'" id="pick_list_trans" name="pick_list_trans[]" class="pick_list_trans_ready" title="Select this for picklist" />';
                                     }
                                 }
                         }
 
-                        $output .= '<td style="width:70px">'.$pick_list_msg.'</td>';
                         $output .= '<td width="200">'.$trans_action_msg.'</td>
-                        </tr>';
+                                <td style="width:70px">'.$pick_list_msg.'</td>
+                            </tr>';
 
                         $fil_territorylist[$trans_arr['territory_id']] = $trans_arr['territory_name'];
                         $fil_townlist[$trans_arr['town_id']] = $trans_arr['town_name'];
@@ -254,7 +254,7 @@ else
             }
     
     //   PAGINATION
-            $this->load->library('pagination');//
+            $this->load->library('pagination');
             $config['base_url'] = site_url("admin/jx_manage_trans_reservations_list/".$batch_type.'/'.$s.'/'.$e.'/'.$terrid.'/'.$townid.'/'.$franchiseid.'/'.$menuid.'/'.$brandid."/".$showbygrp."/".$batch_group_type."/".$latest."/".$limit); 
             $config['total_rows'] = $total_trans_rows;
             $config['per_page'] = $limit;

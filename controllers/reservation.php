@@ -56,7 +56,7 @@ class Reservation extends Voucher {
      * Get Ungrouped transaction details 
      * @param type $territory_id  int
      */
-    function jx_terr_batch_group_status($territory_id) {
+    /*function jx_terr_batch_group_status($territory_id) {
             $user=$this->auth(ORDER_BATCH_PROCESS_ROLE|OUTSCAN_ROLE|INVOICE_PRINT_ROLE);
         
             $resp=$arr_resp=$msg_category=$r_count=$arr_category=array();
@@ -126,7 +126,7 @@ class Reservation extends Voucher {
                 $resp['response'] = 'No orders found.';
             }
             echo json_encode($resp);
-    }
+    }*/
     
     /**
      * Function to process GROUP of invoices for packing, Group based on franchise
@@ -304,11 +304,27 @@ class Reservation extends Voucher {
     }
     
     function manage_reservation_create_batch_form() {
-        $user=$this->auth(PRODUCT_MANAGER_ROLE|STOCK_INTAKE_ROLE|PURCHASE_ORDER_ROLE);$output=array();
+        $user=$this->auth(PRODUCT_MANAGER_ROLE|STOCK_INTAKE_ROLE|PURCHASE_ORDER_ROLE);
+        $output=array();
+        
+        if($this->input->post("territory_id")) {
+            $data['given_terr_id'] = $this->input->post("territory_id");
+        }
+        
         $data['batch_conf']=  $this->reservations->getBatchGroupConfig();
-        $data['pnh_terr'] = $this->db->query("select * from pnh_m_territory_info order by territory_name")->result_array();
+        
+        $data['pnh_terr'] = $this->db->query("select e.* from proforma_invoices a 
+                                                        join shipment_batch_process_invoice_link b on a.p_invoice_no = b.p_invoice_no 
+                                                        join king_transactions c on c.transid = a.transid  
+                                                        join pnh_m_franchise_info d on d.franchise_id = c.franchise_id 
+                                                        join pnh_m_territory_info e on e.id = d.territory_id 
+                                                        where batch_id = ?
+                                                        group by d.territory_id 
+                                                        order by territory_name",GLOBAL_BATCH_ID)->result_array();
+        
         $data['pnh_towns']=$this->db->query("select id,town_name from pnh_towns order by town_name")->result_array();
         $data['userslist']=$this->db->query("select id,username from king_admin where account_blocked=0")->result_array();
+        
         $this->load->view("admin/body/jx_manage_reservation_create_batch_form",$data);
     }
     

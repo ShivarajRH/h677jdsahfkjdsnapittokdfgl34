@@ -124,57 +124,83 @@ class reservation_model extends Model
     }
     
     function do_create_batch_by_group_config () {
-        $output = $cond = '';
-
+//        echo (int)(ceil(1/30)); die();
+        $output = $cond = $menu_cond = $username = $territory_name = '';
+        $global_batch_id=GLOBAL_BATCH_ID;
+        
         foreach(array("sel_batch_menu","batch_size","assigned_uid","territory_id","townid") as $i) {
             $$i=$this->input->post($i);
             //echo $i.'=>'.$$i."<br>";,"assigned_menuids"
         }
         if($territory_id != 0) {
             $cond .= ' and f.territory_id = '.$territory_id.' ';
+            $territory_name=$this->db->query("select territory_name from pnh_m_territory_info where id=?",$territory_id)->row()->territory_name;
         }
-        $territory_name=$this->db->query("select territory_name from pnh_m_territory_info where id=?",$territory_id)->row()->territory_name;
-        $username=  $this->get_username_byid($assigned_uid);
         
-        //die();
-            $global_batch_id=GLOBAL_BATCH_ID;
+        if($assigned_uid!=0) {
+            $username=  $this->get_username_byid($assigned_uid);
+        }
+
+        
+        if($menu_cond != 0) {
+            $menu_cond = " and d.menuid in ($sel_batch_menu) ";
+        }
+        
+        
 
             $rslt = $this->db->query("select distinct o.itemid,d.menuid,mn.name as menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) from king_transactions tr
                                 join king_orders as o on o.transid=tr.transid
                                 join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
                                 join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
                                 join king_dealitems dl on dl.id = o.itemid
-                                join king_deals d on d.dealid = dl.dealid  and d.menuid in (?)
+                                join king_deals d on d.dealid = dl.dealid $menu_cond
                                 
                                 join pnh_menu mn on mn.id=d.menuid
                                 join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id #and f.is_suspended = 0
                                 
                                 where sd.batch_id=$global_batch_id $cond
-                                order by tr.init asc
-                                limit 0,$batch_size",array($sel_batch_menu))->result_array();
+                                order by tr.init asc")->result_array(); //limit 0,$batch_size
 
             $batch_remarks = 'By Transaction Reservation System';
             $ttl_inbatch = count($rslt);
             
             
+            
+            
             if($ttl_inbatch>0) {
-                        $output .= '<h3>Group created</h3>
-                            <table class="datagrid">
-                                    <tr>
-                                        <th>Menu Name</th>
-                                        <th>Territory</th>
-                                        <th>OrderID</th>
-                                        <th>Batch_id</th>
-                                        <th>Proforma Invoice#</th>
-                                        <th>New BatchID</th>
-                                        <th>Assign to</th>
-                                    </tr>';
-
-                        $this->db->query("insert into shipment_batch_process(num_orders,assigned_userid,territory_id,batch_configid,batch_remarks,created_on) values(?,?,?,?,?,?)",array($ttl_inbatch,$assigned_uid,$territory_id,$sel_batch_menu,$batch_remarks,date('Y-m-d H:i:s') ));
-                        $new_batch_id = $this->db->insert_id();
                 
-                foreach($rslt as $row ) {
-                                $output .= '<tr>
+                $output .= '<h3>Group created</h3>
+                        <table class="datagrid">
+                            <tr>
+                                <th>Menu Name</th>
+                                <th>Territory</th>
+                                <th>OrderID</th>
+                                <th>Batch_id</th>
+                                <th>Proforma Invoice#</th>
+                                <th>New BatchID</th>
+                                <th>Assign to</th>
+                            </tr>';
+                
+                
+                $count = (int)(ceil($ttl_inbatch/$batch_size));
+                
+                for($pg=1;$pg<$count;$pg++) {
+                            
+                            $limit = $pg*$batch_size;
+                            
+                            $this->db->query("insert into shipment_batch_process(num_orders,assigned_userid,territory_id,batch_configid,batch_remarks,created_on) values(?,?,?,?,?,?)"
+                                                            ,array($batch_size,$assigned_uid,$territory_id,$sel_batch_menu,$batch_remarks,date('Y-m-d H:i:s') ));
+                                    
+                            $new_batch_id = $this->db->insert_id();
+
+                           
+
+                        foreach($rslt as $i=>$row ) {
+                                if($i < $limit) {
+                                    
+                                    $new_batch_id += $pg;
+                                    
+                                    $output .= '<tr>
                                                 <td>'.$row['menuname'].'</td>
                                                 <td>'.$territory_name.'</td>
                                                 <td><span class="info_links"><a href="'.site_url('admin/pnh_deal/'.$row['itemid']).'" target="_blank">'.$row['id'].'</a></span></td>
@@ -183,18 +209,27 @@ class reservation_model extends Model
                                                 <td><span class="info_links"><a href="'.site_url('admin/batch/'.$new_batch_id).'" target="_blank">'.$new_batch_id.'</a></span></td>
                                                 <td><span class="info_links">'.$username.'</span></td>
                                             </tr>';
+                                }
                         }
-                        $output .= '<table>';
-                        
-                foreach ($rslt as $row) {
-                        $arr_set = array("batch_id"=>$new_batch_id);
-                        $arr_where =array("id"=>$row['id']);
+                        $output .= '</table>';
 
-                        $this->db->update("shipment_batch_process_invoice_link",$arr_set,$arr_where);
-                        //$output.= "Batch ". $new_batch_id.' is created and assigned to  '.$username.'.<br>'; //$this->db->last_query(); //
+                        foreach ($rslt as $i=>$row) {
+                            
+                                if($i < $limit) {
+                                    
+                                    $arr_set = array("batch_id"=>$new_batch_id);
+                                    $arr_where =array("id"=>$row['id']);
+
+                                    $this->db->update("shipment_batch_process_invoice_link",$arr_set,$arr_where);
+
+                                    //$output.= "Batch ". $new_batch_id.' is created and assigned to  '.$username.'.<br>'; //$this->db->last_query(); //
+                                }
+
+                        }
+
+                        $output.= '<br>Batch created with '.$ttl_inbatch.' orders.';
                 }
-                              
-                $output.= '<br>Batch created with '.$ttl_inbatch.' orders.';
+                
             }
             else {
                 $output.= 'No transactions found.'.'<br>';//$this->db->last_query()
@@ -837,6 +872,82 @@ class reservation_model extends Model
             //redirect("admin/proforma_invoice/$p_invoice");
     }
     
+    
+    /**
+     * Get Ungrouped transaction details 
+     * @param type $territory_id  int
+     */
+    function jx_terr_batch_group_status($territory_id) {
+            $user=$this->erpm->auth(ORDER_BATCH_PROCESS_ROLE|OUTSCAN_ROLE|INVOICE_PRINT_ROLE);
+            error_reporting(all);
+            $resp=$arr_resp=$msg_category=$r_count=$arr_category=array();
+            
+            echo $cond = ' and f.territory_id = '.$territory_id.' ';
+        
+            $global_batch_id=GLOBAL_BATCH_ID;
+
+            $rslt = $this->db->query("select distinct 
+                                o.itemid,
+                                d.menuid,mn.name as menuname,f.territory_id
+                                ,sd.id,sd.batch_id,sd.p_invoice_no
+                                ,from_unixtime(tr.init) as init 
+                                    from king_transactions tr
+                                    join king_orders as o on o.transid=tr.transid
+                                    join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
+                                    join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
+                                    join king_dealitems dl on dl.id = o.itemid
+                                    join king_deals d on d.dealid = dl.dealid # and d.menuid in (?)
+                                    join pnh_menu mn on mn.id=d.menuid
+                                    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
+                                    where sd.batch_id=$global_batch_id $cond
+                                    order by tr.init asc")->result_array(); //,array($assigned_menuids)
+            if(count($rslt)>0) {
+                $resp['status'] = 'success';
+                
+                $c=0;
+                foreach($rslt as $row) {
+                    $arr_resp[$row['menuid']][++$c] = $row;
+                }
+                
+                $total_orders=0;
+                foreach($arr_resp as $i=>$r) {
+                    $count = count($r);
+                    $r_count["total"][$i] =$count;
+                    
+                        foreach($arr_resp[$i] as $j=>$inner) {
+                            $r_count['menuname'][$i] = $inner['menuname'];
+                            $msg_category[$i]  = '<tr><td><b>'.$inner['menuname'].'</b></td><td><b>'.$count.'</b></td></tr>';
+                            
+                            $arr_menus[$i]["menuid"] =$i;
+                            $arr_menus[$i]["menuname"] =$inner['menuname'];
+                            $arr_menus[$i]["ocount"]=$count;
+                            
+                            //array_push($arr_category,array("menuid"=>$i,"menuname"=>$inner['menuname'],"ocount"=>$count) );
+
+                        }
+                        
+                    $total_orders+=count($r);
+
+                }
+                
+                        $total_categories= count($arr_resp);
+                        
+                        $resp["total_orders"]= $total_orders;
+                        $resp["total_categories"]= $total_categories;
+                        $resp["arr_menus"]= $arr_menus;
+                        
+                                //$resp["total_count_msg"]= 'There are <b>'.$total_orders."</b> orders of <b>".$total_categories.'</b> category.';
+                        
+                        $resp["total_count_msg"]= 'There are <b>'.$total."</b> orders of <b>".$total_categories.'</b> category.';
+                        $resp["detail_category_msg"]= ''.implode('',$msg_category);
+
+            }
+            else {
+                $resp['status'] = 'fail';
+                $resp['response'] = 'No orders found.';
+            }
+            echo json_encode($resp);
+    }
 
 }
 
