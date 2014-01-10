@@ -1098,3 +1098,131 @@ Electronics 112,118 4 1,2,37,36
 Beauty      100     2 1,2,37,36
 
 select * from shipment_batch_process;
+
+#======== Jan_09_2014 ======================
+
+set @global_batch_id=5000;
+select distinct o.itemid,d.menuid,mn.name as menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) from king_transactions tr
+                                join king_orders as o on o.transid=tr.transid
+                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
+                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
+                                join king_dealitems dl on dl.id = o.itemid
+                                join king_deals d on d.dealid = dl.dealid 
+                                
+                                join pnh_menu mn on mn.id=d.menuid
+                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id #and f.is_suspended = 0
+                                
+                                where sd.batch_id=@global_batch_id 
+                                order by tr.init asc;
+
+
+select * from shipment_batch_process;
+
+
+CREATE TABLE `pnh_m_fran_security_cheques` (             
+                               `id` int(11) NOT NULL AUTO_INCREMENT,                  
+                               `franchise_id` int(11) DEFAULT '0',                    
+                               `bank_name` varchar(255) DEFAULT NULL,                 
+                               `cheque_no` varchar(30) DEFAULT NULL,                  
+                               `cheque_date` date DEFAULT NULL,                       
+                               `collected_on` date DEFAULT NULL,                      
+                               `amount` double DEFAULT NULL,                          
+                               `returned_on` date DEFAULT NULL,                       
+                               `created_on` datetime DEFAULT NULL,                    
+                               `modified_on` datetime DEFAULT NULL,                   
+                               `created_by` int(11) DEFAULT NULL,                     
+                               `modified_by` int(11) DEFAULT NULL,                    
+                               PRIMARY KEY (`id`)                                     
+                             );
+
+set @global_batch_id=5000;
+set @batch_id=5548; #5544-48
+update shipment_batch_process_invoice_link set batch_id=@global_batch_id where batch_id=@batch_id;
+delete from shipment_batch_process where batch_id = @batch_id;
+
+
+
+set @global_batch_id=5000;
+select distinct o.itemid,d.menuid,mn.name as menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) from king_transactions tr
+                                join king_orders as o on o.transid=tr.transid
+                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
+                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
+                                join king_dealitems dl on dl.id = o.itemid
+                                join king_deals d on d.dealid = dl.dealid 
+                                
+                                join pnh_menu mn on mn.id=d.menuid
+                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id #and f.is_suspended = 0
+                                
+                                where sd.batch_id=@global_batch_id 
+-- 								group by d.menuid
+                                order by d.menuid,tr.init asc;
+
+
+select distinct 
+                                o.itemid
+--                                 bc.id as menuid,bc.batch_grp_name as menuname
+								,sd.invoice_no
+								,d.menuid
+								,f.territory_id
+                                ,sd.id,sd.batch_id,sd.p_invoice_no
+                                ,from_unixtime(tr.init) as init 
+                                    from king_transactions tr
+                                    join king_orders as o on o.transid=tr.transid
+                                    join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
+                                    join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no and sd.invoice_no=0
+                                    join king_dealitems dl on dl.id = o.itemid
+                                    join king_deals d on d.dealid = dl.dealid 
+                                    join pnh_menu mn on mn.id=d.menuid
+                                    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
+--                                     join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
+                                    where sd.batch_id=5000  and f.territory_id = 3 
+--                                         group by  bc.id
+                                    order by tr.init asc;
+
+
+select distinct 
+                            o.itemid,count(*) as ttl_orders
+                            ,bc.id as menuid,bc.batch_grp_name as menuname,f.territory_id
+                            ,sd.id,sd.batch_id,sd.p_invoice_no
+                            ,from_unixtime(tr.init) as init 
+                                from king_transactions tr
+                                join king_orders as o on o.transid=tr.transid
+                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
+                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no and sd.invoice_no=0
+                                join king_dealitems dl on dl.id = o.itemid
+                                join king_deals d on d.dealid = dl.dealid 
+                                join pnh_menu mn on mn.id=d.menuid
+                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
+                                join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
+                                where sd.batch_id=5000  and f.territory_id = 00 
+                                    group by  bc.id
+                                order by tr.init;
+
+select distinct o.itemid,d.menuid,mn.name as menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) from king_transactions tr
+                                join king_orders as o on o.transid=tr.transid
+                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
+                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no and sd.invoice_no=0
+                                join king_dealitems dl on dl.id = o.itemid
+                                join king_deals d on d.dealid = dl.dealid 
+                                 join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) and  bc.id = 1 
+                                
+                                join pnh_menu mn on mn.id=d.menuid
+                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
+                                
+                                where sd.batch_id=5000 
+                                order by d.menuid,tr.init asc
+
+#============================================================================================
+#========== BATCH RESET =====================================================================
+set @global_batch_id=5000;
+set @batch_id=5521; #5544-48
+update shipment_batch_process_invoice_link set batch_id=@global_batch_id where batch_id=@batch_id;
+delete from shipment_batch_process where batch_id = @batch_id;
+#============================================================================================
+
+
+set @global_batch_id=5000,@batch_id=5531; #,5531,5532,5533,5534,5535';
+update shipment_batch_process_invoice_link set batch_id=@global_batch_id where batch_id in (@batch_id);
+delete from shipment_batch_process where batch_id in (@batch_id);
+
+select * from shipment_batch_process_invoice_link;

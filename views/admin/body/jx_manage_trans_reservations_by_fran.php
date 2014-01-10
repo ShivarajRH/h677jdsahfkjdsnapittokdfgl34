@@ -111,6 +111,8 @@ else
             $temp_arr1 = $temp_arr2 = array();
             foreach($transactions as $i=>$trans_arr) 
             {
+                $generate_btn_link_2='';
+                
                 $arr_fran = $this->reservations->fran_experience_info($trans_arr['f_created_on']);
                 $output .= '<tr class="filter_terr_'.$trans_arr['territory_id'].' filter_terr">
                                 <td>'.++$i.'</td>';
@@ -125,7 +127,10 @@ else
                                 $generate_btn_link_2 = '';
                             }
                             else {
-                                $generate_btn_link_2 = '<input type="button" class="btn_cteate_group_batch button button-rounded button-tiny button-action" value="Create Batch" name="btn_cteate_group_batch" onclick="fn_cteate_group_batch('.$trans_arr['territory_id'].',0,0);" title="Click to Create Group Batch"/>';
+                                $ungrp_terr_status=$this->reservations->is_terri_batch_created($trans_arr['territory_id'] );
+                                if( $ungrp_terr_status ) 
+                                    $generate_btn_link_2 = '<input type="button" class="btn_cteate_group_batch button button-rounded button-tiny button-action" value="Create Batch" name="btn_cteate_group_batch" onclick="fn_cteate_group_batch('.$trans_arr['territory_id'].',0,0);" title="Click to Create Group Batch"/>';
+                                
                             }
                             $output .= '<td align="center">'.$print_territory_name.''.'<br><span>'.$generate_btn_link_2.'</span></td>';
                             

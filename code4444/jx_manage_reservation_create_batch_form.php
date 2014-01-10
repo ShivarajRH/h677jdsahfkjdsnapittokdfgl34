@@ -11,7 +11,7 @@
                         <?php  
                             foreach($pnh_terr as $terr) {
                                 
-                                if($sel_terr_id == $terr['id']) {
+                                if($given_terr_id == $terr['id']) {
                                         echo '<option value="'.$terr['id'].'" selected>'.$terr['territory_name'].'</option>';
                                 }
                                 else {
@@ -22,13 +22,13 @@
                     ?>
                     </select>
                    <?php
-                    if($given_terr_id!='') {
+                    /*if($given_terr_id!='') {
                         
                         $rdata = $this->reservations->jx_terr_batch_group_status($given_terr_id);
                         echo $given_terr_id.'=>'.$rdata;
                         print_r($rdata); die("=TESTING=");
                         echo "<table class='datagrid'><th>Menu</th><th>Orders</th>".$rdata->detail_category_msg."</table>";
-                    }
+                    }*/
                     ?>
                 </td>
             </tr>
@@ -67,7 +67,13 @@
             <tr>
                 <td>Assigned to:</td>
                 <td>
-                        <select name="assigned_uid" id="assigned_uid" style="width: 204px;"></select>
+                        <select name="assigned_uid" id="assigned_uid" style="width: 204px;">
+                            <option value="00">Choose</option>
+                            <?php
+                            foreach ($userslist as $user) {?>
+                                <option value="<?=$user['id'];?>"><?=$user['username'];?></option>
+                            <? } ?>
+                        </select>
                 </td>
             </tr>
             <tr>
@@ -82,32 +88,28 @@
 </div>
 
 <script>
+    /*
+$("#dlg_sel_town").live("change",function() { 
+    var townid=$(this).find(":selected").val();
+    var terrid=$("#dlg_sel_territory").find(":selected").val();
+    $.post(site_url+"admin/jx_suggest_fran/"+terrid+"/"+townid,function(resp) {
+            if(resp.status=='success') {
+                 var obj = jQuery.parseJSON(resp.franchise);
+                $("#dlg_sel_franchise").html(objToOptions_franchise(obj));
+            }
+            else {
+                $("#dlg_sel_franchise").val($("#dlg_sel_franchise option:nth-child(0)").val());
+            }
+        },'json').done(done).fail(fail);
+
+    return false;
+});*/
+
  var arr_batch_size=[];
  
-//ONCHANGE sel_batch_menu
-$("#sel_batch_menu").live("change",function(e) {
-        $('#assigned_uid').val("00");
-        var ele  = $(this).parent().find('option:selected');
-            $("#batch_size").val(ele.attr('default_batch_size'));
-            
-            if($(this).val() != '00')
-            {
-                $('#assigned_uid').find('option:gt(0)').hide();
-                $.each(ele.attr('batch_userids').split(','),function(a,uid){
-                    $('#assigned_uid option.bc_uid_'+uid).show();
-                });
-            }else
-            {
-                $('#assigned_uid').find('option').show();
-                
-            }
-            
-            
-});
-
 //ONCHANGE Territory
-$("#dlg_sel_territory").chosen().live("change",function() {
-    var terrid=$(this).find(":selected").val();
+/*$("#dlg_sel_territory").chosen().live("change",function() {
+    var terrid=$(this).find(":selected").val();*/
 //        if(terrid=='00') {          $(".sel_status").html("Please select territory."); return false;        }
     /*$.post(site_url+"admin/jx_suggest_townbyterrid/"+terrid,function(resp) {
         if(resp.status=='success') {
@@ -121,37 +123,65 @@ $("#dlg_sel_territory").chosen().live("change",function() {
                         //$(".sel_status").html(resp.message);
         }
     },'json').done(done).fail(fail);*/
+    /*if(terrid != 00) {
             $.post(site_url+"admin/jx_terr_batch_group_status/"+terrid,function(resp) {
                 if(resp.status=='success') {
-                    var menulist_opts = '<option value="00" default_batch_size="20" >All</option>';
-                        $.each(resp.arr_menus,function(ii,row){
-                          menulist_opts += '<option batch_userids="'+row.bc_group_uids+'" value="'+row.menuid+'" default_batch_size="'+row.batch_size+'">'+row.menuname+'</option>';
-                        });
-                        
-                        $("#sel_batch_menu").html(menulist_opts).trigger('change');
+//                    $(".terr_batch_group_status").html("<div>There are <b>"+resp.total_orders+"</b> orders from <b>"+resp.total_categories+"</b> menu.</div>");
+                    $(".terr_batch_group_status").html("<table class='datagrid'><th>Menu</th><th>Orders</th>"+resp.detail_category_msg+"</table>");
+                            
+                    $("#sel_batch_menu").html(objToOptions_menus(resp.arr_menus));
                     
-                    var userlist_opts = '<option value="00" class="" >Choose</option>';
-                        $.each(resp.bc_userids,function(uid,uname){
-                            userlist_opts += '<option value="'+uid+'" class="bc_uid_'+uid+'">'+uname+'</option>';
-                        });
-                        $("#assigned_uid").html(userlist_opts);                        
+                   arr_batch_size=[];
+                    $.each(resp.arr_menus,function(ii,row){
+                             arr_batch_size.push({ototal:row.ocount,menuid:row.menuid});
+                    });
+                    
                 }
-                else 
-                {
+                else {
+                    $(".terr_batch_group_status").html(resp.response);
                     $("#sel_batch_menu").html('<option value="00">No menu found</option>\n');
-                    $("#assigned_uid").html('<option value="00">No users found</option>');
                     $("#batch_size").val("");
                 }
-                
-                 
-                 
-            },"json");
+            },"json").done(done).fail(fail);
+    }
+    return false;
+});*/
+
+//ONCHANGE sel_batch_menu
+$("#sel_batch_menu").live("change",function() {
+    var sel_batch_menu=$(this).find(":selected").val();
+//        if(sel_batch_menu=='00') {          $(".sel_status").html("Please select menu."); return false;        }
+//    if(sel_batch_menu!='00') {
+        
+        $.each(arr_batch_size,function(i,val) {
+            if(sel_batch_menu == val.menuid) {
+                // print(sel_batch_menu+"="+val.menuid);
+                $("#batch_size").val(val.ototal);
+                return false;
+            }
+            else {
+                $("#batch_size").val("");
+            }
+        });
+//    }
+        /*$.post(site_url+"admin/jx_suggest_menus_groupid/"+sel_batch_menu,function(resp) { 
+            if(resp.status == "success") {
+                 //var obj = jQuery.parseJSON(resp.towns);
+                $("#assigned_menuids").val(resp.assigned_menuid);
+                $("#batch_size").val(resp.batch_size);
+                //$("#assigned_uid").val(resp.assigned_uid);
+                //var getlist = getlist(resp.assigned_uid);
+                var parse_assigned_uid = jQuery.parseJSON(resp.group_assigned_uid);
+                    $("#assigned_uid").html(objToOptions_users(parse_assigned_uid));
+            } else {//$("#dlg_sel_town").val($("#dlg_sel_town option:nth-child(0)").val());
+                //$("#dlg_sel_franchise").val($("#dlg_sel_franchise option:nth-child(0)").val());
+            }
+        },'json').done(done).fail(fail);*/
     return false;
 });
-
- 
-
-$("#dlg_sel_territory").trigger("change");
-
+/*** END BATCH PROCESS  **/
+function fail(rdata) {
+    console.log(rdata);
+}
+function done(data) { }
 </script>
-

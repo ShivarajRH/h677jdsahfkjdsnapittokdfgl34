@@ -144,8 +144,8 @@ class reservation_model extends Model
         }
 
         
-        if($sel_batch_menu != '00') {
-            $menu_cond = " join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) and  bc.id = $sel_batch_menu ";
+        if($menu_cond != 0) {
+            $menu_cond = " and d.menuid in ($sel_batch_menu) ";
         }
         
         $batch_remarks = 'By Transaction Reservation System';
@@ -156,8 +156,7 @@ class reservation_model extends Model
                                 join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
                                 join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
                                 join king_dealitems dl on dl.id = o.itemid
-                                join king_deals d on d.dealid = dl.dealid 
-                                $menu_cond
+                                join king_deals d on d.dealid = dl.dealid $menu_cond
                                 
                                 join pnh_menu mn on mn.id=d.menuid
                                 join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id #and f.is_suspended = 0
@@ -166,8 +165,6 @@ class reservation_model extends Model
                                 order by d.menuid,tr.init asc";
         
         $rslt_set = $this->db->query($sql,GLOBAL_BATCH_ID);
-//        echo '<pre>'.$this->db->last_query();
-        
         $ttl_inbatch = $rslt_set->num_rows(); //$ttl_inbatch = count($rslt);
         
         $menu_orders=array();
@@ -180,42 +177,118 @@ class reservation_model extends Model
                 $menu_orders[$order['menuid']]['orders'][] = $order;
             }
 //            echo '<pre>';print_r($menu_orders);
-                $ttl_batch_alloted=0;
-                // loop through menu items
-                foreach($menu_orders as $menuid=>$menu_item) {
-                    $ttl_menu_orders = count($menu_item['orders']);
-                    $ttl_pgs =  ceil($ttl_menu_orders/$batch_size);
-
-                    $remaining=$ttl_menu_orders;
-
-                    //iterate through all pages build batches
-                    for($i=0; $i<$ttl_pgs; $i++) {
-                        if($remaining<=0) 
-                            continue;
-                        //Prepare total orders in batch
-                        if($remaining>$batch_size) 
-                            $ttl_allot= $batch_size;
-                        else 
-                            $ttl_allot=$remaining;
-
-                        $remaining = $remaining-$ttl_allot;
-
-                        $start = ($i * $batch_size);
-                        $end=$start+$ttl_allot;
-
-                        // generate new batch id selected total orders
-                        $new_batch_id=  $this->insert_shipmentbatch_get_batch_id($ttl_allot,$assigned_uid,$territory_id,$menuid,$batch_remarks);
-                        $ttl_batch_alloted++;
-                        for($j=$start; $j<$end; $j++) {
-                            $arr_set = array("batch_id"=>$new_batch_id);
-                            $arr_where =array("id"=>$menu_item["orders"][$j]['id']);
-                            $this->db->update("shipment_batch_process_invoice_link",$arr_set,$arr_where);
-
-                            $menu_orders[$menuid]['orders'][$j]['new_batch_id'] = $new_batch_id;
-                        }
+            $ttl_batch_alloted=0;
+            // loop through menu items
+            foreach($menu_orders as $menuid=>$menu_item) {
+                $ttl_menu_orders = count($menu_item['orders']);
+                $ttl_pgs =  ceil($ttl_menu_orders/$batch_size);
+                
+                $remaining=$ttl_menu_orders;
+                
+                //iterate through all pages build batches
+                for($i=0; $i<$ttl_pgs; $i++) {
+                    if($remaining<=0) 
+                        continue;
+                    //Prepare total orders in batch
+                    if($remaining>$batch_size) 
+                        $ttl_allot= $batch_size;
+                    else 
+                        $ttl_allot=$remaining;
+                    
+                    $remaining = $remaining-$ttl_allot;
+                    
+                    $start = ($i * $batch_size);
+                    $end=$start+$ttl_allot;
+                    
+                    // generate new batch id selected total orders
+                    $new_batch_id=  $this->insert_shipmentbatch_get_batch_id($ttl_allot,$assigned_uid,$territory_id,$menuid,$batch_remarks);
+                    $ttl_batch_alloted++;
+                    for($j=$start; $j<$end; $j++) {
+                        $arr_set = array("batch_id"=>$new_batch_id);
+                        $arr_where =array("id"=>$menu_item["orders"][$j]['id']);
+                        $this->db->update("shipment_batch_process_invoice_link",$arr_set,$arr_where);
+                        
+                        $menu_orders[$menuid]['orders'][$j]['new_batch_id'] = $new_batch_id;
                     }
+                    
                 }
-                echo "Total ".$ttl_batch_alloted." batches created.";
+                
+            }
+            echo "Total ".$ttl_batch_alloted." created.";
+            
+            die("<br>TESTING");
+            
+                echo "<div>".$ttl_inbatch." items found.</div>";
+            
+                $ttl_pg = ( ( int )( ceil( $ttl_inbatch/$batch_size ) ) ) - 1;
+             
+                
+                for( $pg=0; $pg<$ttl_pg; $pg++ ) {
+                
+                    //if()
+                    //$curr_pg = $pg * ;
+                    
+                $rslt_a = $this->db->query($sql." limit $curr_pg,$batch_size ")->result_array(); //limit 0,$batch_size
+
+
+
+                $output .= '<h3>Group created</h3>
+                        <table class="datagrid">
+                            <tr>
+                                <th>Menu Name</th>
+                                <th>Territory</th>
+                                <th>OrderID</th>
+                                <th>Batch_id</th>
+                                <th>Proforma Invoice#</th>
+                                <th>New BatchID</th>
+                                <th>Assign to</th>
+                            </tr>';
+                
+                
+               
+                
+                    
+                    
+                            
+                            
+                            $limit = $pg*$batch_size;
+                            
+                            $batch_id=  $this->insert_shipmentbatch_get_batch_id($batch_size,$assigned_uid,$territory_id,$sel_batch_menu,$batch_remarks);
+                            
+                           
+
+                        foreach($rslt as $i=>$row ) {
+                                if($i < $limit) {
+                                    
+                                    $new_batch_id += $pg;
+                                    
+                                    $output .= '<tr>
+                                                <td>'.$row['menuname'].'</td>
+                                                <td>'.$territory_name.'</td>
+                                                <td><span class="info_links"><a href="'.site_url('admin/pnh_deal/'.$row['itemid']).'" target="_blank">'.$row['id'].'</a></span></td>
+                                                <td><span class="info_links"><a href="'.site_url('admin/batch/'.$row['batch_id']).'" target="_blank">'.$row['batch_id'].'</a></span></td>
+                                                <td><span class="info_links"><a href="'.site_url('admin/pack_invoice/'.$row['p_invoice_no']).'" target="_blank">'.$row['p_invoice_no'].'</a></span></td>
+                                                <td><span class="info_links"><a href="'.site_url('admin/batch/'.$new_batch_id).'" target="_blank">'.$new_batch_id.'</a></span></td>
+                                                <td><span class="info_links">'.$username.'</span></td>
+                                            </tr>';
+                                }
+                        }
+                        $output .= '</table>';
+
+                        foreach ($rslt as $i=>$row) {
+                            
+                                if($i < $limit) {
+                                    
+                                    $this->update_shipmentbatch_batch_id($new_batch_id,$row['id']);
+                                    
+                                    //$output.= "Batch ". $new_batch_id.' is created and assigned to  '.$username.'.<br>'; //$this->db->last_query(); //
+                                }
+
+                        }
+
+                        $output.= '<br>Batch created with '.$ttl_inbatch.' orders.';
+                }
+                
             }
             else {
                 $output.= 'No transactions found.'.'<br>';//$this->db->last_query()
@@ -952,22 +1025,7 @@ class reservation_model extends Model
             }
             echo json_encode($resp);
     }
-    
-    /**
-     * Function to check the territory is in un greouped batch
-     * @param type $territory_id int
-     * @return type boolean
-     */
-    function is_terri_batch_created($territory_id) {
-        return $this->db->query("select e.* from proforma_invoices a 
-                                                        join shipment_batch_process_invoice_link b on a.p_invoice_no = b.p_invoice_no 
-                                                        join king_transactions c on c.transid = a.transid  
-                                                        join pnh_m_franchise_info d on d.franchise_id = c.franchise_id 
-                                                        join pnh_m_territory_info e on e.id = d.territory_id 
-                                                        where batch_id = ? and d.territory_id=?
-                                                        group by d.territory_id 
-                                                        order by territory_name",array(GLOBAL_BATCH_ID,$territory_id))->num_rows();
-    }
+
 }
 
 ?>

@@ -57,60 +57,75 @@ class Reservation extends Voucher {
      * @param type $territory_id  int
      */
     function jx_terr_batch_group_status($territory_id) {
+            $user=$this->auth(ORDER_BATCH_PROCESS_ROLE|OUTSCAN_ROLE|INVOICE_PRINT_ROLE);
         
-        $user=$this->auth(ORDER_BATCH_PROCESS_ROLE|OUTSCAN_ROLE|INVOICE_PRINT_ROLE);
-        
-        $cond='';
-        if($territory_id != 00)
+            $resp=$arr_resp=$msg_category=$r_count=$arr_category=array();
+            
             $cond = ' and f.territory_id = '.$territory_id.' ';
-            
-        $rslt = $this->db->query("select distinct 
-                            o.itemid,count(*) as ttl_orders
-                            ,bc.id as menuid,bc.batch_grp_name as menuname,f.territory_id
-                            ,sd.id,sd.batch_id,sd.p_invoice_no
-                            ,from_unixtime(tr.init) as init,bc.batch_size,bc.group_assigned_uid as bc_group_uids
-                                from king_transactions tr
-                                join king_orders as o on o.transid=tr.transid
-                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
-                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no and sd.invoice_no=0
-                                join king_dealitems dl on dl.id = o.itemid
-                                join king_deals d on d.dealid = dl.dealid 
-                                join pnh_menu mn on mn.id=d.menuid
-                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
-                                join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
-                                where sd.batch_id=? $cond
-                                    group by  bc.id
-                                order by tr.init asc",GLOBAL_BATCH_ID); //,array($assigned_menuids)
-//        echo '<pre>'.$this->db->last_query(); die();
-        if($rslt->num_rows() > 0) {
-            $bc_userids = array();
-            $arr_menus=array();
-            $total_orders=0;
-            foreach($rslt->result_array() as $i=>$r) {
-                $arr_menus[$i]["menuid"] =$r['menuid'];
-                $arr_menus[$i]["menuname"] =$r['menuname']." (".$r['ttl_orders'].")";
-                $arr_menus[$i]["ocount"]=$r['ttl_orders'];
-                $arr_menus[$i]["batch_size"]=$r['batch_size'];
-                $arr_menus[$i]["bc_group_uids"]=$r['bc_group_uids'];
-                $total_orders+=$r['ttl_orders'];
+        
+            $global_batch_id=GLOBAL_BATCH_ID;
+
+            $rslt = $this->db->query("select distinct 
+                                o.itemid,
+                                d.menuid,mn.name as menuname,f.territory_id
+                                ,sd.id,sd.batch_id,sd.p_invoice_no
+                                ,from_unixtime(tr.init) as init 
+                                    from king_transactions tr
+                                    join king_orders as o on o.transid=tr.transid
+                                    join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
+                                    join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
+                                    join king_dealitems dl on dl.id = o.itemid
+                                    join king_deals d on d.dealid = dl.dealid # and d.menuid in (?)
+                                    join pnh_menu mn on mn.id=d.menuid
+                                    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
+                                    where sd.batch_id=$global_batch_id $cond
+                                    order by tr.init asc")->result_array(); //,array($assigned_menuids)
+            if(count($rslt)>0) {
+                $resp['status'] = 'success';
                 
-                foreach(explode(',',$r['bc_group_uids']) as $a_uid)
-                    $bc_userids[$a_uid] = $this->db->query("select username from king_admin where id = ? ",$a_uid)->row()->username;
+                $c=0;
+                foreach($rslt as $row) {
+                    $arr_resp[$row['menuid']][++$c] = $row;
+                }
                 
+                $total_orders=0;
+                foreach($arr_resp as $i=>$r) {
+                    $count = count($r);
+                    $r_count["total"][$i] =$count;
+                    
+                        foreach($arr_resp[$i] as $j=>$inner) {
+                            $r_count['menuname'][$i] = $inner['menuname'];
+                            $msg_category[$i]  = '<tr><td><b>'.$inner['menuname'].'</b></td><td><b>'.$count.'</b></td></tr>';
+                            
+                            $arr_menus[$i]["menuid"] =$i;
+                            $arr_menus[$i]["menuname"] =$inner['menuname'];
+                            $arr_menus[$i]["ocount"]=$count;
+                            
+                            //array_push($arr_category,array("menuid"=>$i,"menuname"=>$inner['menuname'],"ocount"=>$count) );
+
+                        }
+                        
+                    $total_orders+=count($r);
+
+                }
+                
+                        $total_categories= count($arr_resp);
+                        
+                        $resp["total_orders"]= $total_orders;
+                        $resp["total_categories"]= $total_categories;
+                        $resp["arr_menus"]= $arr_menus;
+                        
+                                //$resp["total_count_msg"]= 'There are <b>'.$total_orders."</b> orders of <b>".$total_categories.'</b> category.';
+                        
+                        $resp["total_count_msg"]= 'There are <b>'.$total."</b> orders of <b>".$total_categories.'</b> category.';
+                        $resp["detail_category_msg"]= ''.implode('',$msg_category);
+
             }
-            
-            asort($bc_userids);
-            
-            $resp['status'] = 'success';
-            $resp["total_orders"]= $total_orders;
-            $resp["bc_userids"]= $bc_userids;
-            $resp["arr_menus"]= $arr_menus;
-        }
-        else {
-            $resp['status'] = 'fail';
-            $resp['response'] = 'No orders found.';
-        }
-        echo json_encode($resp);
+            else {
+                $resp['status'] = 'fail';
+                $resp['response'] = 'No orders found.';
+            }
+            echo json_encode($resp);
     }
     
     /**

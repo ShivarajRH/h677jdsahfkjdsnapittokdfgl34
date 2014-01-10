@@ -69,6 +69,7 @@ $("#dlg_create_group_batch_block").dialog({
                     console.log(postData);
                     $.post(site_url+"admin/create_batch_by_group_config",postData,function(rdata) {
                             show_output(rdata);
+                            loadTransactionList(0);
                             //$("#sel_batch_menu").val($("#sel_batch_menu option:nth-child(0)").val());
 
                     }).fail(fail);
@@ -96,10 +97,8 @@ function fn_cteate_group_batch(territory_id,townid,franchise_id) {
 
 function batch_show_group(territory_id,townid,franchise_id) {
     var postData={};
-    if(territory_id != undefined) {
-        postData = {territory_id : territory_id};
-        print(postData);
-    }
+    postData = {territory_id : territory_id};
+    
     $("#dlg_create_group_batch_block").html('');
     $.post(site_url+"admin/manage_reservation_create_batch_form",postData,function(hmtldata) {
          $("#dlg_create_group_batch_block").html(hmtldata).dialog("open");
@@ -542,7 +541,7 @@ function objToOptions_terr(obj) {
     });
     return(output);
 }
-function objToOptions_franchise(obj) {
+/*function objToOptions_franchise(obj) {
     var output='';
         output += "<option value='00' selected>All Franchise</option>\n";
     $.each(obj,function(key,elt){
@@ -551,7 +550,7 @@ function objToOptions_franchise(obj) {
         }
     });
     return(output);
-}
+}*/
 function objToOptions_users(obj) {
     var output='';
         output += "<option value='00' selected>Assigned to</option>\n";
