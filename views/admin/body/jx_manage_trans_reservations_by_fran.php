@@ -193,16 +193,11 @@ else
                                     }
                                     $str_pinv_ids = implode(",", array_unique($arr_pinv_ids));
                                     $output .= '<a class="button button-rounded button-tiny button-action" href="javascript:void(0)" onclick="process_pinvoices_by_fran(this,'.$trans_arr['franchise_id'].')" p_invoice_ids="'.$str_pinv_ids.'">Generate invoice</a>
-                                          <form action="'.site_url('admin/pack_invoice_by_fran').'" method="post" id="pinvoices_form_'.$trans_arr['franchise_id'].'" target="_blank">
-                                                <input type="hidden" value="'.$str_pinv_ids.'" name="p_invoice_ids"/>
-                                                <input type="hidden" value="'.$trans_arr['franchise_id'].'" name="franchise_id"/>
+                                          <form action="'.site_url('admin/pack_invoice_by_fran/'.$trans_arr['batch_id'].'/'.$trans_arr['franchise_id'].'').'" method="post" id="pinvoices_form_'.$trans_arr['franchise_id'].'" target="_blank">
                                            </form>';
-                                    
-                                    $output .= '<br><a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="process_picklist_by_fran(this,'.$trans_arr['franchise_id'].')" p_invoice_ids="'.$str_pinv_ids.'">Generate Picklist</a>
-                                          <form action="">
-                                                <input type="hidden" value="'.$str_pinv_ids.'" name="pick_list_invids" id="picklist_by_fran_all_'.$trans_arr['franchise_id'].'"/>
-                                           </form> ';
-
+                                                                        
+                                    $output .= '<br><a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="process_picklist_by_fran(this,'.$trans_arr['batch_id'].','.$trans_arr['franchise_id'].')" p_invoice_ids="'.$str_pinv_ids.'">Generate Picklist</a>';
+/*<form action=""><input type="hidden" value="'.$str_pinv_ids.'" name="pick_list_invids" id="picklist_by_fran_all_'.$trans_arr['franchise_id'].'"/></form>*/
                                     $output .= '</td>
                                         <td><span class="total_trans fl_left">'.$trans_arr['ttl_trans'].'</span></td>
                                         <td align="left">
@@ -221,6 +216,7 @@ else
             $output .='</tbody>
                         </table>
                     <script>
+                        $(".level1_filters").show();
                         $(".ttl_trans_listed").html("Showing <strong>'.$total_trans_rows.'</strong> franchises '.$datefilter_msg.'");
                         $(".btn_picklist_block").html(\''.($msg_generate_pick_list).'\');
                         $(".sel_terr_block").html("'.$sel_terr_by_fran.'");

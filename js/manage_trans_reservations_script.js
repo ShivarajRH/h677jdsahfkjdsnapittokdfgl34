@@ -40,8 +40,8 @@ function show_orders_list(franid,from,to,batch_type) {
 
 $("#dlg_create_group_batch_block").dialog({
         autoOpen: false,
-        height: 650,
-        width:750,
+        height: 450,
+        width:550,
         modal: false,
         buttons: {
             "Create Batch":function() {
@@ -129,12 +129,15 @@ function chkall_fran_orders(franid) {
             checkBoxes.removeAttr("checked", checkBoxes.attr("checked"));
         }
 }
-function process_picklist_by_fran(elt,franchise_id) {    //$("#picklist_by_fran_form_"+franchise_id).submit();
-    var p_invoice_ids_str = $("#picklist_by_fran_all_"+franchise_id).val();
-    var postData = {pick_list_trans:p_invoice_ids_str};
-    $.post(site_url+"admin/p_invoice_for_picklist",postData,function(resp) {
+function process_picklist_by_fran(elt,batch_id,franchise_id) {    //$("#picklist_by_fran_form_"+franchise_id).submit();
+    //var p_invoice_ids_str = $("#picklist_by_fran_all_"+franchise_id).val();var postData = {pick_list_trans:p_invoice_ids_str};
+    
+    if(franchise_id== undefined) { franchise_id =''; }
+    
+    $.post(site_url+"admin/p_invoice_for_picklist/"+batch_id+"/"+franchise_id,{},function(resp) {
             $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Pick List');
     });
+    
 }
 $("#pick_all").live("change",function() {
     var checkBoxes=$(".pick_list_trans_ready");

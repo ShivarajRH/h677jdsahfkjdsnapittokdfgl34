@@ -116,7 +116,29 @@ class Reservation extends Voucher {
     /**
      * Function to process GROUP of invoices for packing, Group based on franchise
      */
-    function pack_invoice_by_fran() {
+    function pack_invoice_by_fran($batch_id,$franchise_id) {
+        $user=$this->auth(ORDER_BATCH_PROCESS_ROLE|OUTSCAN_ROLE|INVOICE_PRINT_ROLE);
+        
+        if(isset($_POST['pids'])) {
+            $this->erpm->do_pack(); die();
+        }
+        
+        $p_invoice_ids = $this->db->query("select group_concat(distinct sd.p_invoice_no) as p_invoice_ids
+                                            from shipment_batch_process_invoice_link sd
+                                            join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no
+                                            join king_orders o on o.id=pi.order_id
+                                            join king_transactions tr on tr.transid=o.transid
+                                            where sd.batch_id=? and tr.franchise_id=?",array($batch_id,$franchise_id))->row()->p_invoice_ids;
+        $data['invoice'] = $invoices = $this->erpm->getinvoiceforpacking($p_invoice_ids);
+        
+        $data['page']="pack_invoice";
+        $this->load->view("admin",$data);
+    }
+    
+    /**
+     * Function to process GROUP of invoices for packing, Group based on franchise
+     */
+    function pack_invoice_by_fran_old() {
         $user=$this->auth(ORDER_BATCH_PROCESS_ROLE|OUTSCAN_ROLE|INVOICE_PRINT_ROLE);
         
         if(isset($_POST['pids'])) {
@@ -315,14 +337,23 @@ class Reservation extends Voucher {
     /**
      * Process proforma ids selected 
      */
-    function p_invoice_for_picklist() {
+    function p_invoice_for_picklist($batch_id,$franchise_id='') {
         $user=$this->auth(INVOICE_PRINT_ROLE);
-        $p_invoice_ids = explode(",",$_POST['pick_list_trans']);
+        $cond='';$rslt_arr=array();
+        if($franchise_id != '')
+            $cond .=" and tr.franchise_id=".$franchise_id;
         
-        $tmp_arr=array();
-        foreach ($p_invoice_ids as $p_inv_id) {
-            
-            $arr_rslt = $arr_prod = $this->reservations->product_proc_list_for_invoice($p_inv_id);
+        /*$p_invoice_ids_list = $this->db->query("select group_concat(distinct sd.p_invoice_no) as p_invoice_ids
+                                            from shipment_batch_process_invoice_link sd
+                                            join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no
+                                            join king_orders o on o.id=pi.order_id
+                                            join king_transactions tr on tr.transid=o.transid
+                                            where sd.batch_id=? $cond ",array($batch_id))->row()->p_invoice_ids;
+        //$p_invoice_ids = explode(",",$p_invoice_ids_list);
+        //
+        //foreach ($p_invoice_ids as $p_inv_id) {*/
+            $arr_rslt = $arr_prod = $this->reservations->product_proc_list_for_invoice($batch_id);
+            $tmp_arr=array();
             foreach($arr_rslt as $row) {
                 if(!in_array($row['menuid'],$tmp_arr)) {
                     $tmp_arr[]=$row['menuid'];
@@ -335,7 +366,7 @@ class Reservation extends Voucher {
                 }
             }
             
-        }
+        //}
 //        echo '<pre>';print_r($rslt_arr);die();
         $data['prods']=$rslt_arr;
         $this->load->view("admin/body/product_proc_list_pinvoice",$data);
@@ -549,12 +580,16 @@ class Reservation extends Voucher {
         $data['latest']= $latest;
         $data['limit']=$limit;
         $data['pg']=$pg;
-//        echo '<pre>';    print_r($data);        //die();
-        if(!$showbyfrangrp)
-            $this->load->view("admin/body/jx_manage_trans_reservations_list",$data);
-        else 
-            $this->load->view("admin/body/jx_manage_trans_reservations_by_fran",$data);
-        
+//        echo '<pre>';    print_r($data);die();
+        if($batch_type=='assigned_batches') {
+            $this->load->view("admin/body/jx_manage_trans_reservations_by_batches",$data);
+        }
+        else {
+            if(!$showbyfrangrp)
+                $this->load->view("admin/body/jx_manage_trans_reservations_list",$data);
+            else 
+                $this->load->view("admin/body/jx_manage_trans_reservations_by_fran",$data);
+        }
     }
 
     
@@ -596,6 +631,37 @@ class Reservation extends Voucher {
         $rslt = $this->db->query("select employee_id,email,gender,city,contact_no,if(job_title=4,'TM','BE') as job_role from m_employee_info where job_title in (4,5) and is_suspended=0 order by job_title ASC")->result_array();
         echo json_encode($rslt);
     }*/
+    
+    /**
+     * Function to get batch orders list
+     * @param type $batch_id int
+     */
+    function jx_get_batch_order_list($batch_id) {
+        $this->erpm->auth();
+        
+        $output=array();
+        $fran_orderlist_res = $this->db->query("select f.franchise_id,f.franchise_name,count(sd.p_invoice_no) as num_orders,t.territory_name,tw.town_name,sd.batch_id
+                    from shipment_batch_process_invoice_link sd
+                    join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no
+                    join king_orders o on o.id=pi.order_id
+                    join king_transactions tr on tr.transid=o.transid
+                    join pnh_m_franchise_info f on f.franchise_id=tr.franchise_id
+                    join pnh_m_territory_info t on t.id=f.territory_id
+                    join pnh_towns tw on tw.id=f.town_id
+                    where batch_id=? and sd.invoice_no = 0
+                    group by f.franchise_id",$batch_id);
+        
+//        echo $this->db->last_query();
+        if($fran_orderlist_res->num_rows()) {
+            $output['status']='success';
+            $output['franchise_list'] = $fran_orderlist_res->result_array();
+        }
+        else {
+            $output['status']='error';
+            $output['message']='No franchise data found';
+        }
+        echo json_encode($output);
+    }
 }
 
 ?>

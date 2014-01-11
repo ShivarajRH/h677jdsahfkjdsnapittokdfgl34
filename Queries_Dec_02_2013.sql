@@ -1226,3 +1226,108 @@ update shipment_batch_process_invoice_link set batch_id=@global_batch_id where b
 delete from shipment_batch_process where batch_id in (@batch_id);
 
 select * from shipment_batch_process_invoice_link;
+
+desc m_batch_config
+
+select 
+sb.batch_id,sum(num_orders) as ttl_trans,assigned_userid,created_on,sd.id,sd.p_invoice_no,sd.invoice_no,group_concat(sd.p_invoice_no) as grp_p_invoice_no,group_concat(sd.p_invoice_no) as grp_invoice_no
+,bc.assigned_menuid,bc.batch_grp_name
+ from shipment_batch_process sb
+join shipment_batch_process_invoice_link sd on sd.batch_id = sb.batch_id and sd.invoice_no=0
+#join proforma_invoices `pi` on pi.id=sd.p_invoice_no and pi.invoice_status=1
+#join king_orders o on o.id = pi.order_id
+join m_batch_config bc on bc.id=sb.batch_configid
+where created_on between '2013-12-13 15:20:50' and '2014-01-10 15:20:50'
+group by sb.batch_id
+order by created_on desc
+
+#=>227rows
+
+select sb.batch_id,terr.territory_name,bc.batch_grp_name,sb.num_orders,sb.status,sb.created_on,a.username as assigned_to
+from shipment_batch_process sb
+join m_batch_config bc on bc.id=sb.batch_configid
+left join pnh_m_territory_info terr on terr.id=sb.territory_id
+join king_admin a on a.id=sb.assigned_userid
+where batch_id>'5000' and assigned_userid=1
+order by batch_id desc;
+
+
+
+
+desc king_transactions
+desc king_orders;
+desc proforma_invoices
+
+
+
+select f.franchise_name,count(sd.p_invoice_no) as num_orders,t.territory_name,tw.town_name
+	from shipment_batch_process_invoice_link sd
+join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no
+join king_orders o on o.id=pi.order_id
+join king_transactions tr on tr.transid=o.transid
+join pnh_m_franchise_info f on f.franchise_id=tr.franchise_id
+join pnh_m_territory_info t on t.id=f.territory_id
+join pnh_towns tw on tw.id=f.town_id
+where batch_id='5577' and sd.invoice_no = 0
+group by f.franchise_id;
+
+
+select f.franchise_id,f.franchise_name,count(sd.p_invoice_no) as num_orders,t.territory_name,tw.town_name,sd.batch_id
+                    from shipment_batch_process_invoice_link sd
+                    join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no
+                    join king_orders o on o.id=pi.order_id
+                    join king_transactions tr on tr.transid=o.transid
+                    join pnh_m_franchise_info f on f.franchise_id=tr.franchise_id
+                    join pnh_m_territory_info t on t.id=f.territory_id
+                    join pnh_towns tw on tw.id=f.town_id
+                    where batch_id='5577' and sd.invoice_no = 0
+                    group by f.franchise_id;
+
+select group_concat(distinct sd.p_invoice_no) as p_invoice_ids
+		from shipment_batch_process_invoice_link sd
+		join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no
+		join king_orders o on o.id=pi.order_id
+		join king_transactions tr on tr.transid=o.transid
+where sd.batch_id='5577' and tr.franchise_id='254';
+
+
+select group_concat(distinct sd.p_invoice_no) as p_invoice_ids from shipment_batch_process_invoice_link sd 
+join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no 
+join king_orders o on o.id=pi.order_id join king_transactions tr on tr.transid=o.transid where sd.batch_id='5578'
+
+
+
+select menuid,menuname,p_invoice_no,product_id,product,location,sum(rqty) as qty from ( 
+                select dl.menuid,mnu.name as menuname,rbs.p_invoice_no,rbs.product_id,pi.product_name as product,concat(concat(rack_name,bin_name),'::',si.mrp) as location,rbs.qty as rqty 
+                        from t_reserved_batch_stock rbs 
+                        join t_stock_info si on rbs.stock_info_id = si.stock_id 
+                        join m_product_info pi on pi.product_id = si.product_id 
+                        join m_rack_bin_info rak on rak.id = si.rack_bin_id 
+                        join shipment_batch_process_invoice_link e on e.p_invoice_no = rbs.p_invoice_no and invoice_no = 0
+                        
+                        join king_orders o on o.id = rbs.order_id
+                        join king_dealitems dlt on dlt.id = o.itemid
+			join king_deals dl on dl.dealid = dlt.dealid
+			join pnh_menu as mnu on mnu.id = dl.menuid and mnu.status=1
+                        
+                        where e.p_invoice_no='115640' 
+                group by rbs.id  ) as g 
+                group by product_id,location;
+
+
+select menuid,menuname,p_invoice_no,product_id,product,location,sum(rqty) as qty from ( 
+                select dl.menuid,mnu.name as menuname,rbs.p_invoice_no,rbs.product_id,pi.product_name as product,concat(concat(rack_name,bin_name),'::',si.mrp) as location,rbs.qty as rqty 
+                        from t_reserved_batch_stock rbs 
+                        join t_stock_info si on rbs.stock_info_id = si.stock_id 
+                        join m_product_info pi on pi.product_id = si.product_id 
+                        join m_rack_bin_info rak on rak.id = si.rack_bin_id 
+                        join shipment_batch_process_invoice_link e on e.p_invoice_no = rbs.p_invoice_no and invoice_no = 0
+                        
+                        join king_orders o on o.id = rbs.order_id
+                        join king_dealitems dlt on dlt.id = o.itemid
+			join king_deals dl on dl.dealid = dlt.dealid
+			join pnh_menu as mnu on mnu.id = dl.menuid and mnu.status=1
+                        
+                        where  e.batch_id = '5575'
+                group by rbs.id  ) as g 
+                group by product_id,location;

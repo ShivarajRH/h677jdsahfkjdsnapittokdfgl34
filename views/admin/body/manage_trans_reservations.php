@@ -21,6 +21,7 @@
                                                             <li><a class="load_type selected" id="ready" href="javascript:void(0)" title="Transactions are ready for shipping">READY</a><div class="ready_pop"></div></li>
                                                             <li><a class="load_type" id="partial" href="javascript:void(0)" title="Transactions are partial ready for shipping">PARTIAL</a><div class="partial_pop"></div></li>
                                                             <li><a class="load_type" id="pending" href="javascript:void(0)" title="Transactions are pending for shipping">PENDING</a><div class="pending_pop"></div></li>
+                                                            <li><a class="load_type" id="assigned_batches" href="javascript:void(0)" title="Transactions are batched for shipping">Assigned Batches</a><div class="batch_pop"></div></li>
                                                     </ol>
                                             </div>
                             </td>

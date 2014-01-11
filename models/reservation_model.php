@@ -80,9 +80,9 @@ class reservation_model extends Model
         }
         
         $sql = "select * from ( 
-                    select transid,TRIM(BOTH ',' FROM group_concat(p_inv_nos)) as p_inv_nos,status,count(*) as t,if(count(*)>1,'partial',(if(status,'ready','pending'))) as trans_status,franchise_id  
+                    select transid,TRIM(BOTH ',' FROM group_concat(p_inv_nos)) as p_inv_nos,batch_id,status,count(*) as t,if(count(*)>1,'partial',(if(status,'ready','pending'))) as trans_status,franchise_id  
                     from (
-                    select o.transid,ifnull(group_concat(distinct pi.p_invoice_no),'') as p_inv_nos,o.status,count(*) as ttl_o,tr.franchise_id,tr.actiontime
+                    select o.transid,ifnull(group_concat(distinct pi.p_invoice_no),'') as p_inv_nos,sd.batch_id,o.status,count(*) as ttl_o,tr.franchise_id,tr.actiontime
                             from king_orders o
                             join king_transactions tr on tr.transid=o.transid
                             left join king_invoice i on i.order_id = o.id and i.invoice_status = 1 
@@ -145,28 +145,29 @@ class reservation_model extends Model
 
         
         if($sel_batch_menu != '00') {
-            $menu_cond = " join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) and  bc.id = $sel_batch_menu ";
+            $menu_cond = " and  bc.id = $sel_batch_menu ";
         }
         
         $batch_remarks = 'By Transaction Reservation System';
                 
         
-        $sql="select distinct o.itemid,d.menuid,mn.name as menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) from king_transactions tr
+        $sql="select distinct o.itemid,bc.id as menuid,bc.batch_grp_name as menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) from king_transactions tr
                                 join king_orders as o on o.transid=tr.transid
                                 join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
                                 join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
                                 join king_dealitems dl on dl.id = o.itemid
                                 join king_deals d on d.dealid = dl.dealid 
+                                join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
                                 $menu_cond
-                                
                                 join pnh_menu mn on mn.id=d.menuid
                                 join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id #and f.is_suspended = 0
-                                
                                 where sd.batch_id=? $cond
-                                order by d.menuid,tr.init asc";
+                                group by o.transid
+                                order by menuname,tr.init asc";
         
         $rslt_set = $this->db->query($sql,GLOBAL_BATCH_ID);
 //        echo '<pre>'.$this->db->last_query();
+       
         
         $ttl_inbatch = $rslt_set->num_rows(); //$ttl_inbatch = count($rslt);
         
@@ -179,7 +180,9 @@ class reservation_model extends Model
                 $menu_orders[$order['menuid']]['menuname'] = $order['menuname'];
                 $menu_orders[$order['menuid']]['orders'][] = $order;
             }
-//            echo '<pre>';print_r($menu_orders);
+            
+            
+           
                 $ttl_batch_alloted=0;
                 // loop through menu items
                 foreach($menu_orders as $menuid=>$menu_item) {
@@ -204,13 +207,14 @@ class reservation_model extends Model
                         $end=$start+$ttl_allot;
 
                         // generate new batch id selected total orders
-                        $new_batch_id=  $this->insert_shipmentbatch_get_batch_id($ttl_allot,$assigned_uid,$territory_id,$menuid,$batch_remarks);
+                        $new_batch_id= $this->insert_shipmentbatch_get_batch_id($ttl_allot,$assigned_uid,$territory_id,$menuid,$batch_remarks);
                         $ttl_batch_alloted++;
                         for($j=$start; $j<$end; $j++) {
+                            
                             $arr_set = array("batch_id"=>$new_batch_id);
                             $arr_where =array("id"=>$menu_item["orders"][$j]['id']);
                             $this->db->update("shipment_batch_process_invoice_link",$arr_set,$arr_where);
-
+                            
                             $menu_orders[$menuid]['orders'][$j]['new_batch_id'] = $new_batch_id;
                         }
                     }
@@ -244,7 +248,7 @@ class reservation_model extends Model
         return $this->db->query("select * from m_batch_config")->result_array();
     }
     
-    function product_proc_list_for_invoice($p_invoiceid) {
+    function product_proc_list_for_invoice($batch_id) { //$p_invoiceid
         //$data['prods']=$this->erpm->getprodproclist($bid);
         $arr_rslt = $this->db->query("select menuid,menuname,p_invoice_no,product_id,product,location,sum(rqty) as qty from ( 
                 select dl.menuid,mnu.name as menuname,rbs.p_invoice_no,rbs.product_id,pi.product_name as product,concat(concat(rack_name,bin_name),'::',si.mrp) as location,rbs.qty as rqty 
@@ -259,10 +263,10 @@ class reservation_model extends Model
 			join king_deals dl on dl.dealid = dlt.dealid
 			join pnh_menu as mnu on mnu.id = dl.menuid and mnu.status=1
                         
-                        where e.p_invoice_no=? 
+                        where  e.batch_id = ?
                 group by rbs.id  ) as g 
-                group by product_id,location",$p_invoiceid)->result_array();#e.batch_id in (?)
-        //echo '<pre>'.$this->db->last_query();die();
+                group by product_id,location",$batch_id)->result_array(); //e.p_invoice_no=?$p_invoiceid
+//        echo '<pre>'.$this->db->last_query();die();
         return $arr_rslt;
     }
     
@@ -960,14 +964,37 @@ class reservation_model extends Model
      */
     function is_terri_batch_created($territory_id) {
         return $this->db->query("select e.* from proforma_invoices a 
-                                                        join shipment_batch_process_invoice_link b on a.p_invoice_no = b.p_invoice_no 
-                                                        join king_transactions c on c.transid = a.transid  
-                                                        join pnh_m_franchise_info d on d.franchise_id = c.franchise_id 
-                                                        join pnh_m_territory_info e on e.id = d.territory_id 
-                                                        where batch_id = ? and d.territory_id=?
-                                                        group by d.territory_id 
-                                                        order by territory_name",array(GLOBAL_BATCH_ID,$territory_id))->num_rows();
+                                    join shipment_batch_process_invoice_link b on a.p_invoice_no = b.p_invoice_no 
+                                    join king_transactions c on c.transid = a.transid  
+                                    join pnh_m_franchise_info d on d.franchise_id = c.franchise_id 
+                                    join pnh_m_territory_info e on e.id = d.territory_id 
+                                    where batch_id = ? and d.territory_id=?
+                                    group by d.territory_id 
+                                    order by territory_name",array(GLOBAL_BATCH_ID,$territory_id))->num_rows();
     }
+    
+    /**
+     * Function to return batched orders
+     * @return type array
+     */
+    function get_batches_details($userid) {
+        $batched_orders=array();
+        $cond='';
+        if($userid!=0)
+            $cond .=' and sb.assigned_userid = '.$userid;
+        
+                
+        $batched_orders = $this->db->query("select sb.batch_id,terr.territory_name,bc.batch_grp_name,sb.num_orders,sb.status,sb.created_on,a.username as assigned_to
+                                                        from shipment_batch_process sb
+                                                        join m_batch_config bc on bc.id=sb.batch_configid
+                                                        left join pnh_m_territory_info terr on terr.id=sb.territory_id
+                                                        join king_admin a on a.id=sb.assigned_userid
+                                                        where batch_id > ? $cond
+                                                        order by batch_id desc",array(GLOBAL_BATCH_ID))->result_array();
+//        die($this->db->last_query());
+        return $batched_orders;
+    }
+    
 }
 
 ?>

@@ -26,13 +26,15 @@ if( $batch_type == "pending") {
         $chk_box_global ='';// $generate_btn_link='';
 }
 else {
+        $cond_batch .=' g.batch_id >= '.GLOBAL_BATCH_ID." ";
         if($batch_group_type == 1) {
-            $cond_batch .= ' g.batch_id <> 5000 '; $orderby_cond = ' g.batch_id desc';
+            
+            $cond_batch .= ' and g.batch_id <> '.GLOBAL_BATCH_ID.' ' ; $orderby_cond = ' g.batch_id desc and g.batch_id >= '.GLOBAL_BATCH_ID;
         }
         elseif($batch_group_type == 2) {
-            $cond_batch .= ' g.batch_id = 5000 ';
+            $cond_batch .= ' and g.batch_id = '.GLOBAL_BATCH_ID.' and  g.batch_id >= '.GLOBAL_BATCH_ID;
         }
-                
+             
         // is batch assigned to user?
         //if($user['userid']) {
             //$cond .= ' and sd.assigned_userid = '.$user['userid'].' ';
@@ -233,10 +235,10 @@ else
                                 foreach ($arr_pinv_ids as $p_invoice_id ) {
                                     if($p_invoice_id != '' and $trans_arr['batch_id'] != GLOBAL_BATCH_ID) {
                                         $trans_action_msg .= '<div>
-                                                            <a class="proceed_link button button-rounded button-tiny button-action" href="pack_invoice/'.$p_invoice_id.'" target="_blank">Generate invoice</a><br>
-                                                            <a class="danger_link2 button button-rounded button-tiny button-caution" href="javascript:void(0)" onclick="cancel_proforma_invoice(\''.$p_invoice_id.'\','.$user['userid'].','.$pg.')" class="">De-Allot</a>
-                                                        </div>';
-                                        $pick_list_msg .= '<input type="checkbox" value="'.$p_invoice_id.'" id="pick_list_trans" name="pick_list_trans[]" class="pick_list_trans_ready" title="Select this for picklist" />';
+                                                                <a class="danger_link2 button button-rounded button-tiny button-caution" href="javascript:void(0)" onclick="cancel_proforma_invoice(\''.$p_invoice_id.'\','.$user['userid'].','.$pg.')" class="">De-Allot</a>
+                                                            </div>';
+                                        //$pick_list_msg .= '<input type="checkbox" value="'.$p_invoice_id.'" id="pick_list_trans" name="pick_list_trans[]" class="pick_list_trans_ready" title="Select this for picklist" />';
+                                        //<a class="proceed_link button button-rounded button-tiny button-action" href="pack_invoice/'.$p_invoice_id.'" target="_blank">Generate invoice</a><br>
                                     }
                                 }
                         }
@@ -275,6 +277,7 @@ else
             </form>
             <div class="trans_pagination">'.$trans_pagination.' </div>
                 <script>
+                    $(".level1_filters").show();
                     $(".pagination_top").html(\''.($trans_pagination).'\');
                     $(".ttl_trans_listed").html("Showing <strong>'.($pg+1).' - '.$endlimit.'</strong> / <strong>'.$total_trans_rows.'</strong> transactions '.$datefilter_msg.'");
                     $(".btn_picklist_block").html(\''.($msg_generate_pick_list).'\');

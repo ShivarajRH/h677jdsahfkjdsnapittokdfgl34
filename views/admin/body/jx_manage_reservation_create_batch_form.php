@@ -67,7 +67,7 @@
             <tr>
                 <td>Assigned to:</td>
                 <td>
-                        <select name="assigned_uid" id="assigned_uid" style="width: 204px;"></select>
+                        <select name="assigned_uid" id="assigned_uid" style="width: 204px;" class="assigned_uid"></select>
                 </td>
             </tr>
             <tr>
@@ -86,27 +86,29 @@
  
 //ONCHANGE sel_batch_menu
 $("#sel_batch_menu").live("change",function(e) {
-        $('#assigned_uid').val("00");
+        
         var ele  = $(this).parent().find('option:selected');
-            $("#batch_size").val(ele.attr('default_batch_size'));
-            
-            if($(this).val() != '00')
-            {
-                $('#assigned_uid').find('option:gt(0)').hide();
-                $.each(ele.attr('batch_userids').split(','),function(a,uid){
-                    $('#assigned_uid option.bc_uid_'+uid).show();
-                });
-            }else
-            {
-                $('#assigned_uid').find('option').show();
-                
-            }
-            
-            
+        $("#batch_size").val(ele.attr('default_batch_size'));
+
+        if($(this).val() != '00')
+        {
+            $('#assigned_uid').find('option:gt(0)').hide();
+            $.each(ele.attr('batch_userids').split(','),function(a,uid){
+                $('#assigned_uid option.bc_uid_'+uid).show();
+            });
+
+        }else
+        {
+            $('#assigned_uid').find('option').show();
+
+        }
+
+        
+        
 });
 
 //ONCHANGE Territory
-$("#dlg_sel_territory").chosen().live("change",function() {
+$("#dlg_sel_territory").live("change",function() {
     var terrid=$(this).find(":selected").val();
 //        if(terrid=='00') {          $(".sel_status").html("Please select territory."); return false;        }
     /*$.post(site_url+"admin/jx_suggest_townbyterrid/"+terrid,function(resp) {
@@ -128,7 +130,8 @@ $("#dlg_sel_territory").chosen().live("change",function() {
                           menulist_opts += '<option batch_userids="'+row.bc_group_uids+'" value="'+row.menuid+'" default_batch_size="'+row.batch_size+'">'+row.menuname+'</option>';
                         });
                         
-                        $("#sel_batch_menu").html(menulist_opts).trigger('change');
+                        $("#sel_batch_menu").html(menulist_opts).trigger('liszt:updated');
+                        $("#sel_batch_menu").trigger('change');
                     
                     var userlist_opts = '<option value="00" class="" >Choose</option>';
                         $.each(resp.bc_userids,function(uid,uname){
@@ -143,8 +146,8 @@ $("#dlg_sel_territory").chosen().live("change",function() {
                     $("#batch_size").val("");
                 }
                 
-                 
-                 
+                $('#dlg_sel_territory').trigger("liszt:updated");
+                
             },"json");
     return false;
 });
@@ -152,6 +155,8 @@ $("#dlg_sel_territory").chosen().live("change",function() {
  
 
 $("#dlg_sel_territory").trigger("change");
+$("#sel_batch_menu").chosen();
+$('#dlg_sel_territory').chosen();
 
 </script>
 
