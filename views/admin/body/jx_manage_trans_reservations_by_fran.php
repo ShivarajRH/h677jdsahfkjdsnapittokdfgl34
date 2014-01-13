@@ -1,5 +1,6 @@
 <?php
 $output = $cond = $cond_batch = $inner_loop_cond = $re_allot_all_block = $old_new_msg = $msg_generate_pick_list=$generate_btn_link='';
+$block_alloted_status = '';
  if($s!=0 and $e != 0) {
     $from=strtotime($s);
     $to=strtotime("23:59:59 $e");
@@ -196,7 +197,7 @@ else
                                           <form action="'.site_url('admin/pack_invoice_by_fran/'.$trans_arr['batch_id'].'/'.$trans_arr['franchise_id'].'').'" method="post" id="pinvoices_form_'.$trans_arr['franchise_id'].'" target="_blank">
                                            </form>';
                                                                         
-                                    $output .= '<br><a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="process_picklist_by_fran(this,'.$trans_arr['batch_id'].','.$trans_arr['franchise_id'].')" p_invoice_ids="'.$str_pinv_ids.'">Generate Picklist</a>';
+                                    $output .= '<br><a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="picklist_product_wise(this,'.$trans_arr['batch_id'].','.$trans_arr['franchise_id'].')" p_invoice_ids="'.$str_pinv_ids.'">Generate Picklist</a>';
 /*<form action=""><input type="hidden" value="'.$str_pinv_ids.'" name="pick_list_invids" id="picklist_by_fran_all_'.$trans_arr['franchise_id'].'"/></form>*/
                                     $output .= '</td>
                                         <td><span class="total_trans fl_left">'.$trans_arr['ttl_trans'].'</span></td>
@@ -224,6 +225,7 @@ else
                         $(".process_by_fran_link").html(\''.($msg_process_by_fran).'\');
                         $(".re_allot_all_block").html(\''.($re_allot_all_block).'\');
                         $("#sel_old_new").hide();
+                        $(".block_alloted_status").html(\''.$block_alloted_status.'\');
                     </script>';
             
            

@@ -1988,11 +1988,10 @@ courier disable ends
              error_reporting(E_ALL);
                 ini_set('display_errors',true);
                 
-//                echo '<pre>'; print_r($_POST);
-		//exit();
+                 
                 $fs_ids=$this->input->post('fs_ids');
-		$lgn_user = $this->auth();
-		$user = $this->erpm->auth();
+				$lgn_user = $this->auth();
+				$user = $this->erpm->auth();
                 $pid_list=explode(",",$this->input->post("pids"));
                 $pbcodes_list=$this->input->post("pbc");
                 $p_invoice_list = explode(',',$this->input->post("invoice"));
@@ -2012,6 +2011,7 @@ courier disable ends
                 }
                 
                 $pbcodes_list_arr = array();
+                
                 foreach($pbcodes_list as $k=>$pbcode_det)
                 {
                     list($p_invno) = explode('_',$k);
@@ -2021,23 +2021,26 @@ courier disable ends
                     
                     $pbcodes_list_arr[$p_invno][$k] = $pbcode_det;
                 }
-                
+				/*
                 $imei_list_arr = array();
                 foreach($pid_list as $pid_det)
                 {
                     list($p_invno,$prod_id) = explode('_',$pid_det);
                     
-                    /*if(!is_array($this->input->post("imei_$p_invno_$prod_id") ) ) 
-                        continue;
-                    */
+                     
                     if(!isset($imei_list_arr[$p_invno]))
                            $imei_list_arr[$p_invno] = array();
                     
-                    if(!isset($imei_list_arr[$p_invno][$prod_id]))
-                           $imei_list_arr[$p_invno][$prod_id] = array();
+					if(!isset($imei_list_arr[$p_invno][$order_id]))
+                           $imei_list_arr[$p_invno][$order_id] = array();
+					
+					
+                    if(!isset($imei_list_arr[$p_invno][$order_id][$prod_id]))
+                           $imei_list_arr[$p_invno][$order_id][$prod_id] = array();
                     
-                    $imei_list_arr[$p_invno][$prod_id] = $this->input->post("imei_{$p_invno}_{$prod_id}");
+                    $imei_list_arr[$p_invno][$order_id][$prod_id] = $this->input->post("imei_{$p_invno}_{$prod_id}_{$order_id}");
                 }
+				*/
                 
                 $new_dispatch_id = 0; 
                 
@@ -2046,7 +2049,7 @@ courier disable ends
                     $pids = $pid_list_arr[$p_invoice];
                     $pbcodes = $pbcodes_list_arr[$p_invoice];
                     
-                    $imeis = $imei_list_arr[$p_invoice];
+                    //$p_imei_list = $imei_list_arr[$p_invoice];
                     
                     if(!$pbcodes)
                     {
@@ -2098,7 +2101,8 @@ courier disable ends
                     $p_oids_stacked[0] = array();//unsplitted orders
                     $p_oids_stacked[1] = array();//splitted orders
 
-                    //print_r($pids);exit;
+                    //print_r($pids);
+                   // exit;
 
                     foreach($p_oids as $oid)
                     {
@@ -2137,8 +2141,8 @@ courier disable ends
 
 
                     $proforma_inv_id = $this->db->query("select a.id as id from proforma_invoices a 
-                                                            join king_orders b on a.order_id = b.id 
-                                                            where a.p_invoice_no = ?  ",array($p_invoice))->row()->id;
+                                                                                                                            join king_orders b on a.order_id = b.id 
+                                                                                                                            where a.p_invoice_no = ?  ",array($p_invoice))->row()->id;
 														
 		//print_r($order_list);
 		 
@@ -2151,20 +2155,27 @@ courier disable ends
 				array_push($processed_ord_ids,$p_oid);
 			
 			
+			
 			$transid = $this->db->query("select transid from king_orders where id in (".implode(',',$p_oids).") ")->row()->transid;
 		 
 			$orders=$this->db->query("select quantity as qty,itemid,id,is_ordqty_splitd from king_orders where id in ('".implode("','",$p_oids)."') and transid = ? ",$transid)->result_array();
 		 	foreach($orders as $o)
 			{
+				
 				$pls=$this->db->query("select qty,pl.product_id,p.mrp from m_product_deal_link pl join m_product_info p on p.product_id=pl.product_id where itemid=?",$o['itemid'])->result_array();
 				
 				foreach($pls as $p)
 				{
-					$imeis[$p['product_id']] = array_unique($imeis[$p['product_id']]);
-					foreach($imeis[$p['product_id']] as $il=>$imei)
-					{
-						if($imei===0)
-							continue;
+					if(!isset($_POST['imei_'.$p_invoice.'_'.$o['id'].'_'.$p['product_id']]))
+						continue;
+					
+					$imei_arr = $_POST['imei_'.$p_invoice.'_'.$o['id'].'_'.$p['product_id']];
+					$imei = $imei_arr[0];
+					if($imei === 0 || $imei === '')
+						continue;
+					
+						
+					
 						$this->db->query("update t_imei_no set order_id=?,is_returned=0,status=1 where imei_no=? and status = 0 limit 1",array($o['id'],$imei));
 						
 						$imei_upd_stat = $this->db->affected_rows();
@@ -2202,7 +2213,7 @@ courier disable ends
 							if($o['is_ordqty_splitd'] == 1)
 								break;
 						}						
-					}
+					
 				}
 			}
 			
@@ -2226,7 +2237,15 @@ courier disable ends
 				$pls=$this->db->query("select qty,pl.product_id,p.mrp from m_product_deal_link pl join m_product_info p on p.product_id=pl.product_id where itemid=?",$o['itemid'])->result_array();
 				foreach($pls as $p)
 				{
-					foreach($imeis[$p['product_id']] as $il=>$imei)
+					if(!isset($_POST['imei_'.$p_invoice.'_'.$o['id'].'_'.$p['product_id']]))
+						continue;
+					
+					$imei_arr = $_POST['imei_'.$p_invoice.'_'.$o['id'].'_'.$p['product_id']];
+					$imei = $imei_arr[0];
+					if($imei === 0 || $imei === '')
+						continue;
+					
+					if($imei)
 					{
 						if($imei===0)
 							continue;
@@ -2364,7 +2383,7 @@ courier disable ends
 			}
 			
 			// check for pending unreleased qty from stock reservation table  
-			if($batch_id)
+			if($batch_id && count($sel_oids))
 			{
 				$reserv_stk_res = $this->db->query('select a.id,a.stock_info_id,a.product_id,a.qty,a.order_id  
 															from t_reserved_batch_stock a
@@ -2630,17 +2649,17 @@ courier disable ends
                             
                             $this->session->set_flashdata("erp_pop_info","Invoice status Updated");
 
-                }else
-                {
+                    }else
+                    {
 
-                        if($this->db->query("select count(1) as l from shipment_batch_process_invoice_link where batch_id=?",$bid)->row()->l<=$this->db->query("select count(1) as l from shipment_batch_process_invoice_link where packed=1 and batch_id=$bid")->row()->l+$this->db->query("select count(1) as l from shipment_batch_process_invoice_link bi join proforma_invoices i on i.p_invoice_no=bi.p_invoice_no where bi.batch_id=$bid and bi.packed=0 and i.invoice_status=0")->row()->l)
-                                $this->db->query("update shipment_batch_process set status=2 where batch_id=? limit 1",$bid);
-                        else
-                                $this->db->query("update shipment_batch_process set status=1 where batch_id=? limit 1",$bid);
+                            if($this->db->query("select count(1) as l from shipment_batch_process_invoice_link where batch_id=?",$bid)->row()->l<=$this->db->query("select count(1) as l from shipment_batch_process_invoice_link where packed=1 and batch_id=$bid")->row()->l+$this->db->query("select count(1) as l from shipment_batch_process_invoice_link bi join proforma_invoices i on i.p_invoice_no=bi.p_invoice_no where bi.batch_id=$bid and bi.packed=0 and i.invoice_status=0")->row()->l)
+                                    $this->db->query("update shipment_batch_process set status=2 where batch_id=? limit 1",$bid);
+                            else
+                                    $this->db->query("update shipment_batch_process set status=1 where batch_id=? limit 1",$bid);
 
-                        $this->session->set_flashdata("erp_pop_info","Packed status updated");
+                            $this->session->set_flashdata("erp_pop_info","Packed status updated");
+                    }
                 }
-            }
                  
 		
 		if($new_dispatch_id)
@@ -12324,102 +12343,13 @@ order by action_date";
         return $this->db->query("select * from pnh_m_territory_info where id=?",$territory_id)->row_array();
     }
 	
-	 /**
+    /**
      * Get Username by id
      * @param type $userid int
      * @return type string
      */
     function get_username_byid($userid) {
         return $this->db->query("select username from king_admin where id=?",$userid)->row()->username;
-    }
-    
-        /**
-     * Function to note info of a transaction
-     * @param type $trans_id
-     * @return type array
-     */
-    function get_transaction_notes($p_invno_list) {
-        return $this->db->query("select tnote.note,pi.transid from king_transaction_notes tnote
-                                    join proforma_invoices `pi` on pi.transid=tnote.transid
-                                    where tnote.note_priority=1 and pi.p_invoice_no in ($p_invno_list)
-                                    group by pi.transid order by tnote.id asc limit 0,6",$trans_id)->result_array();
-    }
-
-    /**
-     * By invoice no get the free sample info
-     * @param type $p_invoice_no
-     * @return type array
-     */
-    function get_free_samples($p_invoice_no) {
-        return $this->db->query("select f.name,o.id,o.invoice_no from proforma_invoices i join king_freesamples_order o on o.transid=i.transid join king_freesamples f on f.id=o.fsid where i.p_invoice_no=? order by f.name",$p_invoice_no)->result_array();
-    }
-    
-    /**
-     * Function to check is product have serial number.
-     * @param type $product_id
-     * @return type int
-     */
-    function is_product_have_serial($product_id) {
-        return $this->db->query("select is_serial_required from m_product_info where product_id = ? ",$product_id)->row()->is_serial_required;
-    }
-
-    /**
-     * check if menu mrp is changed or not
-     * 0 - no
-     * 1 - yes
-     * @param type $menuid
-     * @return type int
-     */
-    function is_menu_mrp_changed($menuid) {
-        return $this->db->query("select consider_mrp_chng from pnh_menu where id = ? ",$menuid)->row()->consider_mrp_chng;
-    }
-    /**
-     * Get imei list for a product
-     * @param type $product_id
-     * @return type array
-     */
-    function get_imeis_by_product($product_id) {
-        return $this->db->query("select * from t_imei_no where status=0 and product_id=?",$product_id)->result_array();
-    }
-
-    /**
-     * Function to get franchise details
-     * @param type $franchise_id
-     * @return type array
-     */
-    function get_franchise_details($franchise_id) {
-        return $this->db->query("select franchise_id,franchise_name,territory_name,town_name 
-                                from pnh_m_franchise_info a 
-                                join pnh_m_territory_info b on a.territory_id = b.id 
-                                join pnh_towns c on c.id = a.town_id
-                                where franchise_id = ?  ",$franchise_id)->row_array();
-    }
-    
-    /**
-     * Get partner name
-     * @param type $partner_id
-     * @return type string
-     */
-    function get_partner_name($partner_id) {
-        return $this->db->query("select name from partner_info where id = ? ",$partner_id)->row()->name;
-    }
-    
-    /**
-     * Get transaction info by orderid
-     * @param type $order_id
-     * @return type Resultset
-     */
-    function get_order_transaction($order_id) {
-        return $this->db->query("select a.init,a.franchise_id,a.is_pnh,a.partner_id,a.transid,b.ship_person,b.ship_city from king_transactions a join king_orders b on a.transid = b.transid where b.id = ? ",$order_id)->row_array();  
-    }
-    
-    /**
-     * Get batch id from proforma invoice no
-     * @param type $p_invoice_no
-     * @return type int
-     */
-    function get_batch_id_by_invoiceno($p_invoice_no) {
-        return $this->db->query("select batch_id from shipment_batch_process_invoice_link where p_invoice_no = ? ",$p_invoice_no)->row()->batch_id;
     }
     
     /**
@@ -12430,46 +12360,6 @@ order by action_date";
      */
     function get_reserved_stock_orders($order_id,$p_invoice_no) {
         return $this->db->query("select count(*) as t from t_reserved_batch_stock where order_id = ? and p_invoice_no = ? ",array($order_id,$p_invoice_no))->row()->t;
-    }
-    
-    /**
-     * Function to get stock reservation details
-     * @param type $order_id
-     * @param type $p_invoice_no
-     * @param type $stock_id
-     * @return type
-     */
-    function get_stock_reservation_details($order_id,$p_invoice_no,$stock_id) {
-        $res = $this->db->query("select qty from t_reserved_batch_stock where order_id = ? and p_invoice_no = ? and stock_info_id = ? ",array($order_id,$p_invoice_no,$stock_id));
-        return $res;
-    }
-    
-    /**
-     * Function to get all mrp related info for packing process
-     * @param type $batch_id
-     * @param type $order_id
-     * @param type $product_id
-     * @param type $p_invoice_no
-     * @param type $stock_id
-     * @return type resultset
-     */
-    function get_mrp_alloted($batch_id,$order_id,$product_id,$p_invoice_no,$stock_id) {
-        $arr_resp = $this->db->query("select rack_name,bin_name,ifnull(a.qty,0) as qty 
-                                            from m_rack_bin_info c
-                                            join t_stock_info b on c.id = b.rack_bin_id 
-                                            left join t_reserved_batch_stock a on a.stock_info_id = b.stock_id 
-                                            and a.batch_id = ? and a.order_id = ? and a.product_id = ?  and a.p_invoice_no = ?  
-                                            where b.stock_id = ? ",array($batch_id,$order_id,$product_id,$p_invoice_no,$stock_id));
-        return $arr_resp;
-    }
-    
-        /**
-     * get packing info like stock,product,location & rackbinids
-     * @return type
-     */
-    function get_paking_info($product_id) {
-        $s = $this->db->query("select stock_id,product_id,location_id,rack_bin_id,concat(location_id,'-',rack_bin_id) as rbid,product_barcode,sum(available_qty) as s,mrp from t_stock_info where product_id={$product_id} group by rbid,mrp,product_barcode,stock_id having sum(available_qty)>=0 order by mrp asc")->result_array();
-        return $s;
     }
     
     /**

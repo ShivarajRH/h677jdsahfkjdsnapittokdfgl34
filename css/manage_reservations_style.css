@@ -254,6 +254,18 @@ h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;}
     width: 100px;
     font-weight: bold;
 }
+.block_alloted_status {
+    float: right;
+    margin: 3px 9px 0 2px;
+}
+.block_alloted_status select {
+    margin: 0;
+    width: 100px;
+    background-color: #7D7683;
+    color: whitesmoke;
+    width: 100px;
+    font-weight: bold;
+}
 .ungrouped_item {
     background-color: #7D7683;color: whitesmoke; text-align:center;
     padding: 5px; font-weight: bold;

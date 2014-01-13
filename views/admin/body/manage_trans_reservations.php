@@ -18,13 +18,31 @@
                                 <td width="60%">
                                         <div class="tab_list" style="clear: both;">
                                                     <ol>
+                                                        <?php $selected='';
+                                                        if($this->erpm->auth(true,true)) {
+                                                        ?>
                                                             <li><a class="load_type selected" id="ready" href="javascript:void(0)" title="Transactions are ready for shipping">READY</a><div class="ready_pop"></div></li>
                                                             <li><a class="load_type" id="partial" href="javascript:void(0)" title="Transactions are partial ready for shipping">PARTIAL</a><div class="partial_pop"></div></li>
                                                             <li><a class="load_type" id="pending" href="javascript:void(0)" title="Transactions are pending for shipping">PENDING</a><div class="pending_pop"></div></li>
-                                                            <li><a class="load_type" id="assigned_batches" href="javascript:void(0)" title="Transactions are batched for shipping">Assigned Batches</a><div class="batch_pop"></div></li>
+                                                            <li><a class="load_type" id="trans_disabled" href="javascript:void(0)" title="Transactions are disabled for shipping">Transaction Disabled</a></li>
+                                                        <?php
+                                                        }
+                                                        else {
+                                                            $selected=' selected ';
+                                                        }
+                                                        ?>
+                                                            <li><a class="load_type <?=$selected;?>" id="assigned_batches" href="javascript:void(0)" title="Transactions are batched for shipping">Assigned Batches</a><div class="batch_pop"></div></li>
                                                     </ol>
+                                        </div>
+                                        <!--<div id="disabled_tabs">
+                                            <div class="tab_list">
+                                                <ol>
+                                                    <li><a class="load_type" id="disabled_alloted" href="javascript:void(0)" title="Transactions are disabled and stock alloted">Alloted</a></li>
+                                                    <li><a class="load_type" id="disabled_not_alloted" href="javascript:void(0)" title="Transactions are disabled and stock not alloted">Not Alloted</a></li>
+                                                </ol>
                                             </div>
-                            </td>
+                                        </div>-->
+                                </td>
                         </tr>
                 </table>
             </div>
@@ -107,8 +125,8 @@
 
                     
                     <div class="oldest_newest_sel_block"><select name="sel_old_new" id="sel_old_new"><option value="1" selected>NEWEST</option><option value="0" <?=($oldest_newest=='0') ? "selected":""; ?> >OLDEST</option></select></div>
+                    <div class="block_alloted_status"></div>
                     <div class="sel_terr_block"></div>
-
                     <span class="ttl_trans_listed dash_bar"></span>
 
             </div>

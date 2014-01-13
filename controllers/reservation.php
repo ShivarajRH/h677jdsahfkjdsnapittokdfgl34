@@ -140,21 +140,15 @@ class Reservation extends Voucher {
      */
     function pack_invoice_by_fran_old() {
         $user=$this->auth(ORDER_BATCH_PROCESS_ROLE|OUTSCAN_ROLE|INVOICE_PRINT_ROLE);
-        
         if(isset($_POST['pids'])) {
-            $this->erpm->do_pack();
-            die();
+            $this->erpm->do_pack();die();
         }
         if(!isset($_POST['p_invoice_ids'])) { show_error("Invoices not found"); }
-        
         foreach(array("p_invoice_ids","franchise_id") as $i) 
             $$i=$this->input->post($i);
-
             //$result = $this->reservations->do_pack_invoice_by_fran();$data['invoice'] = $invoices = $this->reservations->get_packing_details($franchise_id,$p_invoice_ids);
             //$data['batch']=$this->erpm->getbatch($bid);$data['invoices']=$this->erpm->getbatchinvoices($bid);$data['bid']=$bid;
-//            $p_invoice_ids='49483';
         $data['invoice'] = $invoices = $this->erpm->getinvoiceforpacking($p_invoice_ids);
-        
         $data['page']="pack_invoice";
         $this->load->view("admin",$data);
     }
@@ -337,20 +331,18 @@ class Reservation extends Voucher {
     /**
      * Process proforma ids selected 
      */
-    function p_invoice_for_picklist($batch_id,$franchise_id='') {
+    function picklist_product_wise($batch_id,$franchise_id='') {
         $user=$this->auth(INVOICE_PRINT_ROLE);
         $cond='';$rslt_arr=array();
         if($franchise_id != '')
             $cond .=" and tr.franchise_id=".$franchise_id;
         
-        /*$p_invoice_ids_list = $this->db->query("select group_concat(distinct sd.p_invoice_no) as p_invoice_ids
-                                            from shipment_batch_process_invoice_link sd
+        /*$p_invoice_ids_list = $this->db->query("select group_concat(distinct sd.p_invoice_no) as p_invoice_ids from shipment_batch_process_invoice_link sd
                                             join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no
                                             join king_orders o on o.id=pi.order_id
                                             join king_transactions tr on tr.transid=o.transid
                                             where sd.batch_id=? $cond ",array($batch_id))->row()->p_invoice_ids;
         //$p_invoice_ids = explode(",",$p_invoice_ids_list);
-        //
         //foreach ($p_invoice_ids as $p_inv_id) {*/
             $arr_rslt = $arr_prod = $this->reservations->product_proc_list_for_invoice($batch_id);
             $tmp_arr=array();
@@ -369,7 +361,7 @@ class Reservation extends Voucher {
         //}
 //        echo '<pre>';print_r($rslt_arr);die();
         $data['prods']=$rslt_arr;
-        $this->load->view("admin/body/product_proc_list_pinvoice",$data);
+        $this->load->view("admin/body/picklist_product_wise",$data);
     }
     
     /**
@@ -552,7 +544,7 @@ class Reservation extends Voucher {
      * @param type $pg
      * @param type $limit
      */
-    function jx_manage_trans_reservations_list($batch_type,$from=0,$to=0,$terrid=0,$townid=0,$franchiseid=0,$menuid=0,$brandid=0,$showbyfrangrp=0,$batch_group_type=0,$latest=1,$limit=10,$pg=0) 
+    function jx_manage_trans_reservations_list($batch_type,$from=0,$to=0,$terrid=0,$townid=0,$franchiseid=0,$menuid=0,$brandid=0,$showbyfrangrp=0,$batch_group_type=0,$latest=1,$alloted_status=0,$limit=10,$pg=0) 
     {
         $user=$this->auth(PRODUCT_MANAGER_ROLE|STOCK_INTAKE_ROLE|PURCHASE_ORDER_ROLE);
         $this->load->model("reservation_model");
@@ -578,11 +570,15 @@ class Reservation extends Voucher {
         $data['showbygrp']=$showbyfrangrp;
         $data['batch_group_type']=$batch_group_type;
         $data['latest']= $latest;
+        $data['alloted_status']= $alloted_status;
         $data['limit']=$limit;
         $data['pg']=$pg;
 //        echo '<pre>';    print_r($data);die();
         if($batch_type=='assigned_batches') {
             $this->load->view("admin/body/jx_manage_trans_reservations_by_batches",$data);
+        }
+        elseif($batch_type=='trans_disabled') {
+            $this->load->view("admin/body/jx_manage_trans_reservations_disabled",$data);
         }
         else {
             if(!$showbyfrangrp)
@@ -617,7 +613,7 @@ class Reservation extends Voucher {
     {
         $arr_out = $this->reservations->reservation_cancel_proforma_invoice($p_invoice,$update_by,$msg);
         if($arr_out['status'] == 'success') {
-            $output = array("status"=>"success","response"=>$arr_out);
+            $output = array("status"=>"success","response"=>json_encode($arr_out));
         }
         else  {
             $output = array("status"=>"fail","response"=>$arr_out['response']);
@@ -661,6 +657,41 @@ class Reservation extends Voucher {
             $output['message']='No franchise data found';
         }
         echo json_encode($output);
+    }
+    /**
+     * Process proforma ids selected 
+     */
+    function picklist_fran_wise($batch_id,$franchise_id='') {
+        $user=$this->auth(INVOICE_PRINT_ROLE);
+        $cond='';$rslt_arr=array();
+        if($franchise_id != '')
+            $cond .=" and tr.franchise_id=".$franchise_id;
+        
+        /*$p_invoice_ids_list = $this->db->query("select group_concat(distinct sd.p_invoice_no) as p_invoice_ids from shipment_batch_process_invoice_link sd
+                                            join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no
+                                            join king_orders o on o.id=pi.order_id
+                                            join king_transactions tr on tr.transid=o.transid
+                                            where sd.batch_id=? $cond ",array($batch_id))->row()->p_invoice_ids;
+        //$p_invoice_ids = explode(",",$p_invoice_ids_list);
+        //foreach ($p_invoice_ids as $p_inv_id) {*/
+            $arr_rslt = $arr_prod = $this->reservations->product_proc_list_for_invoice($batch_id);
+            $tmp_arr=array();
+            foreach($arr_rslt as $row) {
+                if(!in_array($row['franchise_id'],$tmp_arr)) {
+                    $tmp_arr[]=$row['franchise_id'];
+                    $rslt_arr[$row['franchise_id']][] = $row;
+                    $rslt_arr[$row['franchise_id']]['franchise_name'] = $row['franchise_name'];
+                }
+                else {
+                    $rslt_arr[$row['franchise_id']][] = $row;
+                    $rslt_arr[$row['franchise_id']]['franchise_name'] = $row['franchise_name'];
+                }
+            }
+            
+        //}
+//        echo '<pre>';print_r($rslt_arr);die();
+        $data['prods']=$rslt_arr;
+        $this->load->view("admin/body/picklist_fran_wise",$data);
     }
 }
 

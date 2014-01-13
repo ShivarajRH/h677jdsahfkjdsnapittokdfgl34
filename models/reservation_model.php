@@ -7,12 +7,10 @@
  */
 class reservation_model extends Model
 {
-    
     function __construct() {
             parent::__construct();
     }
     
-
     /**
      * transaction creator name info
      * @param type $transid
@@ -23,6 +21,11 @@ class reservation_model extends Model
         return $username;
     }
     
+    /**
+     * Function to return orders of the transaction
+     * @param type $transid varchar
+     * @return type array 
+     */
     function get_orders_of_trans($transid) {
             $sql="select o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
                     ,di.name
@@ -39,7 +42,13 @@ class reservation_model extends Model
              $trans_orders = $this->db->query($sql,$transid)->result_array();
              return $trans_orders;
     }
-
+    
+    /**
+     * 
+     * @param type $fid
+     * @param type $p_invoice_ids string
+     * @return type array
+     */
     function get_packing_details($fid=0,$p_invoice_ids) 
     {
         $param=array();
@@ -66,6 +75,16 @@ class reservation_model extends Model
         return $result;
     }
     
+    /**
+     * Function to return transaction list of batch type
+     * @param type $batch_type string
+     * @param type $from date
+     * @param type $to date
+     * @param type $franchise_id int
+     * @param type $userid int
+     * @param type $oldest_newest int
+     * @return type array
+     */
     function get_trans_list($batch_type,$from=0,$to=0,$franchise_id=0,$userid=0,$oldest_newest='new') {
         
         
@@ -100,6 +119,15 @@ class reservation_model extends Model
         return $rslt;
         
     }
+    
+    /**
+     * Function to get total orders
+     * @param type $trans null
+     * @param type $franchise_id int
+     * @param type $from date
+     * @param type $to date
+     * @return type int
+     */
     function getTotalOrderDetails($trans,$franchise_id,$from,$to) {
             $arr_rslt = array();
             
@@ -114,6 +142,7 @@ class reservation_model extends Model
             return $arr_rslt;
             
     }
+    
     /**
      * Get Username by id
      * @param type $userid int
@@ -181,8 +210,6 @@ class reservation_model extends Model
                 $menu_orders[$order['menuid']]['orders'][] = $order;
             }
             
-            
-           
                 $ttl_batch_alloted=0;
                 // loop through menu items
                 foreach($menu_orders as $menuid=>$menu_item) {
@@ -210,11 +237,7 @@ class reservation_model extends Model
                         $new_batch_id= $this->insert_shipmentbatch_get_batch_id($ttl_allot,$assigned_uid,$territory_id,$menuid,$batch_remarks);
                         $ttl_batch_alloted++;
                         for($j=$start; $j<$end; $j++) {
-                            
-                            $arr_set = array("batch_id"=>$new_batch_id);
-                            $arr_where =array("id"=>$menu_item["orders"][$j]['id']);
-                            $this->db->update("shipment_batch_process_invoice_link",$arr_set,$arr_where);
-                            
+                            $this->update_shipmentbatch_batch_id($new_batch_id,$menu_item["orders"][$j]['id']);
                             $menu_orders[$menuid]['orders'][$j]['new_batch_id'] = $new_batch_id;
                         }
                     }
@@ -227,14 +250,27 @@ class reservation_model extends Model
             return '<pre>'.$output.'</pre>';
     }
     
+    /**
+     * Function to update batch id in invoice link table
+     * @param type $new_batch_id
+     * @param type $tbl_id
+     */
     function update_shipmentbatch_batch_id($new_batch_id,$tbl_id) {
-
             $arr_set = array("batch_id"=>$new_batch_id);
             $arr_where =array("id"=>$tbl_id);
             $this->db->update("shipment_batch_process_invoice_link",$arr_set,$arr_where);
             echo "Success";
     }
     
+    /**
+     * Function to insert batch information and return created batch id
+     * @param type $batch_size int
+     * @param type $assigned_uid int
+     * @param type $territory_id int
+     * @param type $sel_batch_menu int
+     * @param type $batch_remarks string
+     * @return type int
+     */
     function insert_shipmentbatch_get_batch_id($batch_size,$assigned_uid,$territory_id,$sel_batch_menu,$batch_remarks) {
 
             $this->db->query("insert into shipment_batch_process(num_orders,assigned_userid,territory_id,batch_configid,batch_remarks,created_on) values(?,?,?,?,?,?)"
@@ -244,28 +280,40 @@ class reservation_model extends Model
             return $new_batch_id;
     }
     
+    /**
+     * Function to return Batch config table data
+     * @return type array
+     */
     function getBatchGroupConfig() {
         return $this->db->query("select * from m_batch_config")->result_array();
     }
     
+    /**
+     * Function to get product list for pickslip
+     * @param type $batch_id int
+     * @return type array
+     */
     function product_proc_list_for_invoice($batch_id) { //$p_invoiceid
         //$data['prods']=$this->erpm->getprodproclist($bid);
-        $arr_rslt = $this->db->query("select menuid,menuname,p_invoice_no,product_id,product,location,sum(rqty) as qty from ( 
-                select dl.menuid,mnu.name as menuname,rbs.p_invoice_no,rbs.product_id,pi.product_name as product,concat(concat(rack_name,bin_name),'::',si.mrp) as location,rbs.qty as rqty 
-                        from t_reserved_batch_stock rbs 
-                        join t_stock_info si on rbs.stock_info_id = si.stock_id 
-                        join m_product_info pi on pi.product_id = si.product_id 
-                        join m_rack_bin_info rak on rak.id = si.rack_bin_id 
-                        join shipment_batch_process_invoice_link e on e.p_invoice_no = rbs.p_invoice_no and invoice_no = 0
-                        
-                        join king_orders o on o.id = rbs.order_id
-                        join king_dealitems dlt on dlt.id = o.itemid
-			join king_deals dl on dl.dealid = dlt.dealid
-			join pnh_menu as mnu on mnu.id = dl.menuid and mnu.status=1
-                        
-                        where  e.batch_id = ?
-                group by rbs.id  ) as g 
-                group by product_id,location",$batch_id)->result_array(); //e.p_invoice_no=?$p_invoiceid
+        $arr_rslt = $this->db->query("select franchise_id,franchise_name,batch_id,menuid,menuname,p_invoice_no,product_id,product,location,sum(rqty) as qty from ( 
+                                            select tr.franchise_id,f.franchise_name,e.batch_id,dl.menuid,mnu.name as menuname,rbs.p_invoice_no,rbs.product_id,pi.product_name as product,concat(concat(rack_name,bin_name),'::',si.mrp) as location,rbs.qty as rqty 
+                                                    from t_reserved_batch_stock rbs 
+                                                    join t_stock_info si on rbs.stock_info_id = si.stock_id 
+                                                    join m_product_info pi on pi.product_id = si.product_id 
+                                                    join m_rack_bin_info rak on rak.id = si.rack_bin_id 
+                                                    join shipment_batch_process_invoice_link e on e.p_invoice_no = rbs.p_invoice_no and invoice_no = 0
+
+                                                    join king_orders o on o.id = rbs.order_id
+                                                    join king_transactions tr on tr.transid = o.transid
+                                                    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
+                                                    
+                                                    join king_dealitems dlt on dlt.id = o.itemid
+                                                    join king_deals dl on dl.dealid = dlt.dealid
+                                                    join pnh_menu as mnu on mnu.id = dl.menuid and mnu.status=1
+
+                                                    where  e.batch_id = ?
+                                            group by rbs.id  ) as g 
+                                            group by product_id,location",$batch_id)->result_array(); //e.p_invoice_no=?$p_invoiceid
 //        echo '<pre>'.$this->db->last_query();die();
         return $arr_rslt;
     }
@@ -294,8 +342,7 @@ class reservation_model extends Model
         }
         return array("f_level"=>$fr_reg_level,"f_color"=>$fr_reg_level_color);
     }
-    
-    
+        
     /**
      * Process the transactions to batch and generates  performa invoice for Batch enabled trans
      * @param type $transid
@@ -728,7 +775,13 @@ class reservation_model extends Model
             return $output;
     }
     
-    
+    /**
+     * Function to cancel proforma invoice
+     * @param type $p_invoice int
+     * @param type $update_by int
+     * @param type $msg string
+     * @return type array
+     */
     function reservation_cancel_proforma_invoice($p_invoice,$update_by=1,$msg) {
             $output=array();
             $invoice=$this->db->query("select transid,order_id,p_invoice_no,p_invoice_no as invoice_no from proforma_invoices where p_invoice_no=? and invoice_status=1",$p_invoice)->result_array();
@@ -985,16 +1038,168 @@ class reservation_model extends Model
         
                 
         $batched_orders = $this->db->query("select sb.batch_id,terr.territory_name,bc.batch_grp_name,sb.num_orders,sb.status,sb.created_on,a.username as assigned_to
-                                                        from shipment_batch_process sb
-                                                        join m_batch_config bc on bc.id=sb.batch_configid
-                                                        left join pnh_m_territory_info terr on terr.id=sb.territory_id
-                                                        join king_admin a on a.id=sb.assigned_userid
-                                                        where batch_id > ? $cond
-                                                        order by batch_id desc",array(GLOBAL_BATCH_ID))->result_array();
+                                                from shipment_batch_process sb
+                                                join m_batch_config bc on bc.id=sb.batch_configid
+                                                left join pnh_m_territory_info terr on terr.id=sb.territory_id
+                                                join king_admin a on a.id=sb.assigned_userid
+                                                where batch_id > ? $cond
+                                                order by batch_id desc",array(GLOBAL_BATCH_ID))->result_array();
 //        die($this->db->last_query());
         return $batched_orders;
     }
     
+    /**
+     * Function to return orders of the transaction
+     * @param type $transid varchar
+     * @return type array 
+     */
+    function get_cancelled_orders_of_trans($transid) {
+            $sql="select o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
+                    ,di.name
+                    ,tr.init,tr.actiontime,tr.status tr_status,tr.is_pnh,tr.batch_enabled
+                    ,pi.p_invoice_no
+                    from king_orders o
+                    join king_transactions tr on tr.transid = o.transid 
+                    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
+                    left join king_invoice i on o.id = i.order_id 
+                    left join proforma_invoices `pi` on pi.order_id = o.id
+                    join king_dealitems di on di.id = o.itemid
+                    where i.id is null and tr.transid = ?
+                    order by tr.init,di.name ";
+             $trans_orders = $this->db->query($sql,$transid)->result_array();
+             return $trans_orders;
+    }
+    
+    
+    /**
+     * Get transaction info by orderid
+     * @param type $order_id
+     * @return type Resultset
+     */
+    function get_order_transaction($order_id) {
+        return $this->db->query("select a.init,a.franchise_id,a.is_pnh,a.partner_id,a.transid,b.ship_person,b.ship_city from king_transactions a join king_orders b on a.transid = b.transid where b.id = ? ",$order_id)->row_array();  
+    }
+    
+    /**
+     * Function to get franchise details
+     * @param type $franchise_id
+     * @return type array
+     */
+    function get_franchise_details($franchise_id) {
+        return $this->db->query("select franchise_id,franchise_name,territory_name,town_name 
+                                from pnh_m_franchise_info a 
+                                join pnh_m_territory_info b on a.territory_id = b.id 
+                                join pnh_towns c on c.id = a.town_id
+                                where franchise_id = ?  ",$franchise_id)->row_array();
+    }
+    
+    /**
+     * Get partner name
+     * @param type $partner_id
+     * @return type string
+     */
+    function get_partner_name($partner_id) {
+        return $this->db->query("select name from partner_info where id = ? ",$partner_id)->row()->name;
+    }
+    
+    /**
+     * check if menu mrp is changed or not
+     * 0 - no
+     * 1 - yes
+     * @param type $menuid
+     * @return type int
+     */
+    function is_menu_mrp_changed($menuid) {
+        return $this->db->query("select consider_mrp_chng from pnh_menu where id = ? ",$menuid)->row()->consider_mrp_chng;
+    }
+            /**
+     * Function to note info of a transaction
+     * @param type $trans_id
+     * @return type array
+     */
+    function get_transaction_notes($p_invno_list) {
+        return $this->db->query("select tnote.note,pi.transid from king_transaction_notes tnote
+                                    join proforma_invoices `pi` on pi.transid=tnote.transid
+                                    where tnote.note_priority=1 and pi.p_invoice_no in ($p_invno_list)
+                                    group by pi.transid order by tnote.id asc limit 0,6",$trans_id)->result_array();
+    }
+
+    /**
+     * By invoice no get the free sample info
+     * @param type $p_invoice_no
+     * @return type array
+     */
+    function get_free_samples($p_invoice_no) {
+        return $this->db->query("select f.name,o.id,o.invoice_no from proforma_invoices i join king_freesamples_order o on o.transid=i.transid join king_freesamples f on f.id=o.fsid where i.p_invoice_no=? order by f.name",$p_invoice_no)->result_array();
+    }
+    
+    /**
+     * Function to check is product have serial number.
+     * @param type $product_id
+     * @return type int
+     */
+    function is_product_have_serial($product_id) {
+        return $this->db->query("select is_serial_required from m_product_info where product_id = ? ",$product_id)->row()->is_serial_required;
+    }
+
+    /**
+     * Function to get all mrp related info for packing process
+     * @param type $batch_id
+     * @param type $order_id
+     * @param type $product_id
+     * @param type $p_invoice_no
+     * @param type $stock_id
+     * @return type resultset
+     */
+    function get_mrp_alloted($batch_id,$order_id,$product_id,$p_invoice_no,$stock_id) {
+        $arr_resp = $this->db->query("select rack_name,bin_name,ifnull(a.qty,0) as qty 
+                                            from m_rack_bin_info c
+                                            join t_stock_info b on c.id = b.rack_bin_id 
+                                            left join t_reserved_batch_stock a on a.stock_info_id = b.stock_id 
+                                            and a.batch_id = ? and a.order_id = ? and a.product_id = ?  and a.p_invoice_no = ?  
+                                            where b.stock_id = ? ",array($batch_id,$order_id,$product_id,$p_invoice_no,$stock_id));
+        return $arr_resp;
+    }
+    
+    /**
+     * get packing info like stock,product,location & rackbinids
+     * @return type
+     */
+    function get_paking_info($product_id) {
+        $s = $this->db->query("select stock_id,product_id,location_id,rack_bin_id,concat(location_id,'-',rack_bin_id) as rbid,product_barcode,sum(available_qty) as s,mrp from t_stock_info where product_id={$product_id} group by rbid,mrp,product_barcode,stock_id having sum(available_qty)>=0 order by mrp asc")->result_array();
+        return $s;
+    }
+    
+    /**
+     * Get batch id from proforma invoice no
+     * @param type $p_invoice_no
+     * @return type int
+     */
+    function get_batch_id_by_invoiceno($p_invoice_no) {
+        return $this->db->query("select batch_id from shipment_batch_process_invoice_link where p_invoice_no = ? ",$p_invoice_no)->row()->batch_id;
+    }
+    
+    /**
+     * Function to get stock reservation details
+     * @param type $order_id
+     * @param type $p_invoice_no
+     * @param type $stock_id
+     * @return type
+     */
+    function get_stock_reservation_details($order_id,$p_invoice_no,$stock_id) {
+        $res = $this->db->query("select qty from t_reserved_batch_stock where order_id = ? and p_invoice_no = ? and stock_info_id = ? ",array($order_id,$p_invoice_no,$stock_id));
+        return $res;
+    }
+     
+    /**
+     * Get imei list for a product
+     * @param type $product_id
+     * @return type array
+     */
+    function get_imeis_by_product($product_id) {
+        return $this->db->query("select * from t_imei_no where status=0 and product_id=?",$product_id)->result_array();
+    }
+
 }
 
 ?>

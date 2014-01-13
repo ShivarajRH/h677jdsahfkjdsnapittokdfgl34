@@ -30,9 +30,8 @@ h3 { font-size: 18px; }
     padding: 22px; 
     font-size: 16px;
     text-align: center;
-    float: left;
     font-weight: bold;
-    margin-left: 38px;
+    width:auto;
 }
 .packing_status {
     margin: 6px 6px; font-weight: bold; text-align: center;
@@ -80,6 +79,8 @@ h3 { font-size: 18px; }
 }
 .left_container { display:table;float: left; width: 82%; }
 
+
+
 .img_block { width:120px;float: left; }
 .product_title a { font-size: 13px; text-decoration: none; font-weight: bold; color: #443266; }
 .imei_inp_txt1,.imei_inp_txt2 {
@@ -112,13 +113,13 @@ h3 { font-size: 18px; }
     $p_invno_list = array();
     $prod_imei_list = array();
 
-	$batch_id = $this->erpm->get_batch_id_by_invoiceno($invoice[0]['p_invoice_no']);
+	$batch_id = $this->reservations->get_batch_id_by_invoiceno($invoice[0]['p_invoice_no']);
 	$p_inv_no = $invoice[0]['p_invoice_no']; 
 	
-	$t_order_det = $this->erpm->get_order_transaction($invoice[0]['order_id']);
+	$t_order_det = $this->reservations->get_order_transaction($invoice[0]['order_id']);
 	if($t_order_det['partner_id']) 
 	{
-		$order_placed_by = $this->erpm->get_partner_name($t_order_det['partner_id']);
+		$order_placed_by = $this->reservations->get_partner_name($t_order_det['partner_id']);
 	}else
 	{
 		if($t_order_det['is_pnh'])
@@ -130,26 +131,28 @@ h3 { font-size: 18px; }
 		}
 	}
 	?>
-	<div class="fl_right">
+	
+    <div class="fl_right">
+	<?php $heading_fran_text = '';
+		if($t_order_det['is_pnh'])
+		{
+			$fr_det = $this->reservations->get_franchise_details($t_order_det['franchise_id']);
+			$heading_fran_text .=  '<h3 style="margin-bottom:3px;font-size:130%"><a target="_blank" href="'.site_url('admin/pnh_franchise/'.$fr_det['franchise_id']).'">'.$fr_det['franchise_name'].'</a></h3>'.''.$fr_det['town_name'].', '.$fr_det['territory_name'];
+		}else 
+		{ 
+			$heading_fran_text .=  '<h3 style="margin-bottom:3px;">'.$t_order_det['ship_person'].'</h3>'.''.ucfirst($t_order_det['ship_city']).'';
+		}
+        echo $heading_fran_text; ?>
+    </div>
+    <div class="fl_left">
 	<?php
 	if($t_order_det['is_pnh']) { ?>
-                <h2 class="pnh_head">Scan &amp; Pack </h2>
+                <h2 style="margin-top: 3px;" class="pnh_head">Scan &amp; Pack Proforma</h2>
+                <b><?php echo $order_placed_by; ?> Order</b> 
     <?php }else { ?>
                 <h2 class="other_head">Scan &amp; pack proforma invoice : <?=$p_inv_no; ?></h2>
     <?php } ?>
 	</div>
-    <div class="fl_left">
-	<?php $heading_fran_text = '';
-		if($t_order_det['is_pnh'])
-		{
-			$fr_det = $this->erpm->get_franchise_details($t_order_det['franchise_id']);
-			$heading_fran_text .=  '<h3>'.$fr_det['franchise_name'].'</h3>'.''.$fr_det['town_name'].', '.$fr_det['territory_name'];
-		}else 
-		{ 
-			$heading_fran_text .=  '<h3>'.$t_order_det['ship_person'].'</h3>'.''.ucfirst($t_order_det['ship_city']).'';
-		}
-        echo $heading_fran_text; ?>
-    </div>
 </div>
 
 <div class="clear"></div>
@@ -159,13 +162,13 @@ h3 { font-size: 18px; }
 	<thead>
 		<tr>
 			<th width="20">#</th>
-			<th width="120">Deal Picture</th>
-			<th width="150">Trans ID</th>
+			<th width="120" style="text-align: center">Deal Picture</th>
+			<th width="80">Trans ID</th>
 			<?php //echo ($mlt)?'<th width="5%">Transactions details</th>':'';?>
-			<th width="450">Product name</th>
-			<th width="150">Required &AMP; Scanned Qty</th>
+			<th >Product name</th>
+			<th width="150" style="text-align: center">Required &AMP; Scanned Qty</th>
 <!--		<th>MRP</th><th>Order MRP</th><th>Status</th<th>Deal</th>-->
-                    <th>
+                    <th width="300">
                         <div>Stock MRPs</div>
 <!--			    <table class="subgrid" cellpadding="0" cellspacing="0" style="border: 0px !important; width: 100%; background: #fcfcfc !important; font-size: 11px;">
                             <tr><td style="background: #fcfcfc !important; vertical-align: middle; color: #000"><div style="width: 60px; text-align: center;">MRP</div></td>
@@ -174,7 +177,7 @@ h3 { font-size: 18px; }
                                     <td style="background: #fcfcfc !important; vertical-align: middle; width: 30px !important; color: #000" width="10"><div style="width: 30px; text-align: center;">Scan</div></td></tr>
                         </table>-->
                     </th>
-                    <th width="60">
+                    <th width="60" style="text-align: center">
                             <div class="refund_block"><span>Refund Amount</span></div>
                     </th>
             </tr>
@@ -183,27 +186,24 @@ h3 { font-size: 18px; }
         <?php
 		$sindx = 1;
 		$has_imei_scan = 0;
-		foreach($invoice as $i)
-		{
-			
-				array_push($p_invno_list,$i['p_invoice_no']);
-				$consider_for_refund = 0;
-					if($i['is_pnh'])
-						$consider_for_refund = $this->erpm->is_menu_mrp_changed($i['menuid']);
-
-					$p_has_imei_scan = $this->erpm->is_product_have_serial($i['product_id']);
-
-					$has_imei_scan += $p_has_imei_scan;
-		?>
-		<tr class="bars bar<?=$i['barcode']?> prod_scan">
+foreach($invoice as $i)
+{
+                array_push($p_invno_list,$i['p_invoice_no']);
+                $consider_for_refund = 0;
+                
+                if($i['is_pnh'])
+                    $consider_for_refund = $this->reservations->is_menu_mrp_changed($i['menuid']);
+                
+                $p_has_imei_scan = $this->reservations->is_product_have_serial($i['product_id']);
+                
+                $has_imei_scan += $p_has_imei_scan;
+?>
+		<tr class="bars bc<?=$i['barcode']?> prod_scan">
 			<td valign="middle">
 				<input type="hidden" name="p_invno[]" value="<?php echo $i['p_invoice_no']?>" /> <b><?=$sindx++;?></b>
 			</td>
 			<td><div class="img_block"><a target="_blank" href="<?php echo IMAGES_URL.'/items/big/'.$i['pic'].'.jpg'?>"><img width="100%" src="<?php echo IMAGES_URL.'/items/small/'.$i['pic'].'.jpg'?>" /></a></div></td>
-			<td>
-                <a href="<?=site_url("admin/trans/".$i['transid']);?>" target="_blank"><?=$i['transid'];?></a>
-                
-                <div><br><b>Ordered On:</b></div>
+			<td><a href="<?=site_url("admin/trans/".$i['transid']);?>" target="_blank"><?=$i['transid'];?></a><div><br><b>Ordered On:</b></div>
                 <div><?=date("d/m/Y",$i['time']);?></div>
             </td>
 			<?php echo ($mlt)?'<td>'.anchor('admin/proforma_invoice/'.$i['p_invoice_no'],$i['p_invoice_no'],'target=_"blank"').'<br>'.anchor('admin/trans/'.$i['transid'],$i['transid'],"target=_'blank'").'</td>':'';?>
@@ -229,7 +229,7 @@ h3 { font-size: 18px; }
                             <?php 
                             $prd_id = $i['product_id'];  
                             $mrp_stock_det = array();
-                            $packinfo = $this->erpm->get_paking_info($prd_id);
+                            $packinfo = $this->reservations->get_paking_info($prd_id);
                         
                             foreach($packinfo as $s)
                             {
@@ -242,11 +242,11 @@ h3 { font-size: 18px; }
                                     $rb_name = '';
                                     //$mrp_alloted_res = $this->db->query("select rack_name,bin_name,a.qty from t_reserved_batch_stock a join t_stock_info b on a.stock_info_id = b.stock_id join m_rack_bin_info c on c.id = b.rack_bin_id where a.batch_id = ? and a.order_id = ? and a.product_id = ? and b.stock_id = ? ",array($batch_id,$i['order_id'],$i['product_id'],$s['stock_id']));
 
-                                    $mrp_alloted_res = $this->erpm->get_mrp_alloted($batch_id,$i['order_id'],$i['product_id'],$i['p_invoice_no'],$s['stock_id']);
+                                    $mrp_alloted_res = $this->reservations->get_mrp_alloted($batch_id,$i['order_id'],$i['product_id'],$i['p_invoice_no'],$s['stock_id']);
 
                                     if($mrp_alloted_res->num_rows())
                                     {
-                                            $reserv_res = $this->erpm->get_stock_reservation_details($i['order_id'],$i['p_invoice_no'],$s['stock_id']);
+                                            $reserv_res = $this->reservations->get_stock_reservation_details($i['order_id'],$i['p_invoice_no'],$s['stock_id']);
                                             if($reserv_res->num_rows())
                                             {
                                                     $mrp_alloted_qty = $reserv_res->row()->qty;
@@ -260,30 +260,30 @@ h3 { font-size: 18px; }
                                                     }
                                             }
                                     }else{ 
-                                            if(!$this->erpm->get_reserved_stock_orders($i['order_id'],$i['p_invoice_no']))
+                                            if(!$this->reservations->get_reserved_stock_orders($i['order_id'],$i['p_invoice_no']))
                                             {
                                                     $mrp_alloted_qty = $i['qty'];
                                             }
                                     }
                                     array_push($mrp_stock_det[$s['mrp'].'_'.$s['rbid']]['det'],array($s['product_barcode'],$s['s'],$s['location_id'],$s['rack_bin_id'],'reserv_qty'=>$mrp_alloted_qty,'rb_name'=>$rb_name,'stock_id'=>$s['stock_id']));
                             }
-			
-						// IMEI Code:
-                                    $imeis=$this->erpm->get_imeis_by_product($i['product_id']);
-                                    //echo '<pre>'.$i['product_id'];print_r($imeis);die();
-                                    if($p_has_imei_scan)
-                                    {
+
+
+							// IMEI Code:
+                                    $imeis=$this->reservations->get_imeis_by_product($i['product_id']);
+//                                    echo '<pre>'.$i['product_id'];print_r($imeis);die();
+                                    if($p_has_imei_scan)  {
                                             // prepare imeino list for allotment 
                                             foreach($imeis as $im)
                                                     $prod_imei_list[$im['imei_no']] = array($i['product_id'],$im['stock_id']);
                                             
-                                            //echo '<pre>'.$i['product_id']."-".$im['stock_id']; print_r($prod_imei_list);die();
+//                                            echo '<pre>'; print_r($prod_imei_list); echo "</pre>";//$i['product_id']."-".$im['stock_id']; print_r($prod_imei_list);die();
                                             
                                             echo '<ol class="imei_inp_list">';
                                             for($p=0;$p<$i['qty'];$p++)
                                             {
                             ?>
-                                                    <li><span class="imei_inp_txt1">IMEI no: </span>
+                                                    <li><span class="imei_inp_txt1">IMEI Number : </span>
                                                         <!--<span class="imei_inp_txt2">7824389572893748</span>-->
                                                         <input type="text" readonly="readonly" 
                                                                itemid="<?php echo $i['itemid'] ?>" 
@@ -294,8 +294,8 @@ h3 { font-size: 18px; }
                                                     </li>
                             <?php           }
                                             echo '</ol>';
-                                    }
-
+                                    } 
+							
 							?>
 							<table class="subdatagrid" cellpadding="0" cellspacing="0" style="border: 0px !important; width: 100%; background: #f9f9f9; font-size: 13px;">
                                 <tr>
@@ -305,6 +305,7 @@ h3 { font-size: 18px; }
 									<th>Scan</th>
 								</tr>
 							<?php
+							
                             $stk_i=0;
                             foreach($mrp_stock_det as $mrp_rb=>$mrp_list) {
                                     list($mrp,$l_rb_id) = explode('_',$mrp_rb);
@@ -321,18 +322,18 @@ h3 { font-size: 18px; }
                                     if(!round($mrp_list['stk']+$ttl_reserved_qty))
                                             continue;
 
-                                     ?>
+                                    ?>
 
                             
                                 <tr>
 									<td style="vertical-align: middle;" align="center"><?php echo round($mrp,2);?></td>
-					     			<td style="vertical-align: middle; text-align: center;">
-                                            <b><?=round($mrp_list['stk']+$ttl_reserved_qty)?></b>
+									<td style="vertical-align: middle; text-align: center;">
+                                    	<b><?=round($mrp_list['stk']+$ttl_reserved_qty)?></b>
 									</td>
 									<td style="vertical-align: middle; text-align: center;">
                                     	<div class="reserv_qty_summ"><?php echo $reserv_qty_summ;?></div>
 									</td>
-									<td style="vertical-align: middle; text-align: center;">
+                                    <td style="vertical-align: middle; text-align: center;">
                                             <div class="scan_proditems">
                                                 <?php
                                                 $show_add_btn = 0;
@@ -399,32 +400,46 @@ h3 { font-size: 18px; }
     </table>
     <!--<div style="margin-top: 20px;"><input type="button" value="Check" style="padding: 7px 10px;" onclick='checknprompt()'><input type="button" value="Process Invoice" style="float: right; padding: 7px 10px;" onclick='process_invoice(1);'> -->
     	
-    <div class="clearboth">
-		<table class="datagrid nofooter">
-        	<thead><th>Free Samples with this order</th></thead>
+    <div class="clearboth " style="padding:10px;margin:5px 0px;">
+    	<h3 style="margin:0px;">Free Samples</th></h3>
+    	<table class="datagrid nofooter" style="margin:0px;">
+			<thead>
+				<th>Transid</th>
+				<th>Free Sample</th>
+			</thead>
         	<tbody>
         <?php
         	$p_invoice_list_arr = array(); 
+			
         	foreach($invoice as $i)
-            	array_push($p_invoice_list_arr,$i['p_invoice_no']);
-			
-			$p_invoice_list = array_filter(array_unique($p_invoice_list_arr));
-			
-			if(count($p_invoice_list))
 			{
-				foreach($p_invoice_list as $inv)
+				$p_invoice_list_arr[$i['p_invoice_no']] = $i['transid']; 
+			}
+			
+            $p_invoice_list_arr2 = array_keys($p_invoice_list_arr);
+			
+			$has_freesamples = 0;
+			if(count($p_invoice_list_arr2))
+			{
+				foreach($p_invoice_list_arr2 as $pinvno)
 				{
-	            	$samps = $this->erpm->get_free_samples($inv);
-	                foreach($samps as $s) 
-	                {
-	    ?>
-	                	<tr><td class="free-samples-data"><?=$s['name']?></td></tr>
-		<?php 
-	        		}
+					echo '<tr><td>'.($p_invoice_list_arr[$pinvno]).'</td><td>';
+	            	$samps = $this->reservations->get_free_samples($pinvno);
+					if(count($samps))
+					{
+						echo '<ol>';
+						foreach($samps as $s) 
+		                {
+		                	$has_freesamples = 1;
+		    				echo '<li>'.$s['name'].'</li>'; 
+		        		}
+						echo '</ol>';	
+					}else
+					{
+						echo 'No freesamples found';
+					}
+	        		echo '</td></tr>';
 				}
-			}else
-			{
-				echo '<tr><td>No Free samples selected</td></tr>';
 			}
 		?>
 			</tbody>
@@ -444,7 +459,7 @@ h3 { font-size: 18px; }
                     <?php 
                     $trans_note_msgs = array();
                      
-                    $user_note_arr=$this->erpm->get_transaction_notes(implode(",",$p_invno_list));
+                    $user_note_arr=$this->reservations->get_transaction_notes(implode(",",$p_invno_list));
                     foreach($user_note_arr as $user_msg) {
                     	if(!isset($trans_note_msgs[$user_msg['transid']]))
                     		$trans_note_msgs[$user_msg['transid']] = array();
@@ -500,58 +515,57 @@ h3 { font-size: 18px; }
                 
         </div>
     </form>
-
 <!-- Dialog Holders Start -->
 <div style="display: none">
-	<div id="mutiple_mrp_barcodes" title="Choose Stock from Multiple Mrps">
-	    <div id="bc_mrp_list">
-	            <table class="subdatagrid" cellpadding="0" cellspacing="0">
-	                    <thead>
-	                        <th><b>Deal</b></th>	
-	                        <th><b>MRP</b></th>
-	                        <th><b>RackBin</b></th>
-	                        <th><b>Reserved Qty</b></th>
-	                        <th>&nbsp;</th>
-	                    </thead>
-	                    <tbody></tbody>
-	            </table>
-	    </div>
-	</div>
-	
-	<div id="freesample_list_dlg" title="Free Samples with this order">
-	        <table class="subdatagrid" width="100%">
-	                <thead>
-	                        <tr>
-	                                <th>Free Samples</th>
-	                                <th align="center" style="text-align: center;"><input type="checkbox" id="fs_check_list_all"></th>
-	                        </tr>
-	                </thead>
-	                <tbody>
-	                        <?php //$samps=$this->db->query("select f.name from proforma_invoices i join king_freesamples_order o on o.transid=i.transid join king_freesamples f on f.id=o.fsid where i.p_invoice_no=? order by f.name",$i['p_invoice_no'])->result_array();
-	                                if($samps)
-	                                        foreach($samps as $s)
-	                                        {
-	                        ?>
-	                                        <tr>
-	                                                <td><?=$s['name']?></td>
-	                                                <td align="center">
-	                                                        <?php if($s['invoice_no'])
-	                                                                {
-	                                                                        echo $s['invoice_no'];
-	                                                                }else{
-	                                                        ?>
-	                                                                <input type="checkbox"  name="fs_ids" value="<?php echo $s['id'];?>" class="sel fs_ids">
-	                                                        <?php }?>
-	                                                </td>
-	                                        </tr>
-	                        <?php 
-	                                        }
-	                        ?>
-	                </tbody>
-	        </table>
-	</div>
+<div id="mutiple_mrp_barcodes" title="Choose Stock from Multiple Mrps">
+    <div id="bc_mrp_list">
+            <table class="subdatagrid" cellpadding="0" cellspacing="0">
+                    <thead>
+                        <th><b>Deal</b></th>	
+                        <th><b>MRP</b></th>
+                        <th><b>RackBin</b></th>
+                        <th><b>Reserved Qty</b></th>
+                        <th>&nbsp;</th>
+                    </thead>
+                    <tbody></tbody>
+            </table>
+    </div>
 </div>
-<!-- Dialog Holders End --> 
+
+<div id="freesample_list_dlg" title="Free Samples with this order">
+        <table class="subdatagrid" width="100%">
+                <thead>
+                        <tr>
+                                <th>Free Samples</th>
+                                <th align="center" style="text-align: center;"><input type="checkbox" id="fs_check_list_all"></th>
+                        </tr>
+                </thead>
+                <tbody>
+                        <?php //$samps=$this->db->query("select f.name from proforma_invoices i join king_freesamples_order o on o.transid=i.transid join king_freesamples f on f.id=o.fsid where i.p_invoice_no=? order by f.name",$i['p_invoice_no'])->result_array();
+                                if($samps)
+                                        foreach($samps as $s)
+                                        {
+                        ?>
+                                        <tr>
+                                                <td><?=$s['name']?></td>
+                                                <td align="center">
+                                                        <?php if($s['invoice_no'])
+                                                                {
+                                                                        echo $s['invoice_no'];
+                                                                }else{
+                                                        ?>
+                                                                <input type="checkbox"  name="fs_ids" value="<?php echo $s['id'];?>" class="sel fs_ids">
+                                                        <?php }?>
+                                                </td>
+                                        </tr>
+                        <?php 
+                                        }
+                        ?>
+                </tbody>
+        </table>
+</div>
+</div>
+<!-- Dialog Holders End -->
 </div>
 <?php
 //print_r($prod_imei_list);die();
@@ -705,7 +719,7 @@ h3 { font-size: 18px; }
                         {
                                 fs_id_list=fs_id_list_arr.join(',');
                         }
-                }
+              }
 
                 if(pmp==1 && !confirm("Are you sure want to partially process this proforma invoice?"))
                         return;
@@ -723,7 +737,7 @@ h3 { font-size: 18px; }
                         if($(this).val()==0)
                         {
                                 f=false;
-                                alert("Error:\n Please provide IMEI numbers for required mobile products.");
+                                alert("Error:\n All electronic items require a serial number");
                                 //alert("One of the serial No is not selected. Serial nos are mandatory to select against quantity");
                                 return false;
                         }
@@ -737,12 +751,11 @@ h3 { font-size: 18px; }
                                 return;
                         var imeis=[];
 
-                        $(".imeis",p).each(function() {
+                        $(".imeis",p).each(function(){
                                 if($.inArray($(this).val(),imeis)!=-1)
                                 {
                                         f=false;
-                                        alert("Error:\n Duplicate IMEI number! Same IMEI already entered.");
-                                        
+                                        alert("Duplicate serial nos! Check serial nos");
                                         return false;
                                 }
                                 imeis.push($(this).val());
@@ -762,36 +775,31 @@ h3 { font-size: 18px; }
                 imei_payload="";
                 for(i=0;i<done_pids.length;i++)
                 {
-                        if($("tr.done .imei"+done_pids[i]).length!=0)
-                                {
-                                        $(".imei"+done_pids[i]).each(function(){
-                                                imei_payload=imei_payload+'<input type="hidden" name="imei_'+$(this).attr('p_invno')+'_'+done_pids[i]+'[]" value="'+$(this).val()+'">';
-                                        });
-                                }
+                    if($("tr.done .imei"+done_pids[i]).length!=0)
+                    {
+                        $(".imei"+done_pids[i]).each(function(){
+                                imei_payload=imei_payload+'<input type="hidden" name="imei_'+$(this).attr('p_invno')+'_'+$(this).attr('order_id')+'_'+done_pids[i]+'[]" value="'+$(this).val()+'">';
+                        });
+                    }
                 }
 
                 var sel_pids = new Array();
                 var sel_stk_inps = '';
-                $('tr.done .sel_stk').each(function(){
-                        sel_stk_inps += '<input type="hidden" name="'+$(this).attr("name")+'"  value="'+$(this).val()+'_'+$(this).attr("mrp")+'_'+$(this).attr("stk_info_id")+'" >';
-                        sel_pids.push($(this).attr('p_invno')+'_'+$(this).attr('pid')); 
-                });
+	                $('tr.done .sel_stk').each(function(){
+	                        sel_stk_inps += '<input type="hidden" name="'+$(this).attr("name")+'"  value="'+$(this).val()+'_'+$(this).attr("mrp")+'_'+$(this).attr("stk_info_id")+'" >';
+	                        sel_pids.push($(this).attr('p_invno')+'_'+$(this).attr('pid')); 
+	                });
 
                 if(!sel_stk_inps)
                 {
-                        alert("Error:\nProblem in process");
+                        alert("Problem in process");
                         return false;
-                }
+                }	
 
-                msg='<form id="packform" method="post"><?php $r=rand(303,34243234);?><input type="hidden" name="fs_ids" value="'+fs_id_list+'">\n\
-                        <input type="hidden" name="pids" value="'+sel_pids.join(",")+'">\n\
-                        <input type="hidden" name="pass" value="<?=md5("$r {$invoice[0]['p_invoice_no']} svs snp33tdy")?>">\n\
-                        <input type="hidden" name="key" value="<?=$r?>">\n\
-                        <input type="hidden" name="invoice" value="<?=implode(',',$p_invno_list)?>">'+imei_payload+' '+sel_stk_inps+'</form>';
-
+                msg='<form id="packform" method="post"><?php $r=rand(303,34243234);?><input type="hidden" name="fs_ids" value="'+fs_id_list+'"><input type="hidden" name="pids" value="'+sel_pids.join(",")+'"<input type="hidden" name="pass" value="<?=md5("$r {$invoice[0]['p_invoice_no']} svs snp33tdy")?>">	<input type="hidden" name="key" value="<?=$r?>"><input type="hidden" name="invoice" value="<?=implode(',',$p_invno_list)?>">'+imei_payload+' '+sel_stk_inps+'	</form>';
                 $(".container").append(msg);
 
-                if(confirm("Confirm:\n Free samples for order has been added for packing ? "))
+                if(confirm("Confirm if Free samples for order has been added for packing ? "))
                 {
                         $("#packform").submit();
                 }
@@ -850,7 +858,7 @@ h3 { font-size: 18px; }
                                 }else if(prod_imeino_list[s_imei] == undefined)
                                 {
 
-                                        $.post(site_url+'admin/jx_get_imei_stockdet',"imei="+s_imei,function(resp) {
+                                        $.post(site_url+'admin/jx_get_imei_stockdet',"imei="+s_imei,function(resp){
                                             
                                                 if(resp.status == 'success')
                                                 {
@@ -859,7 +867,7 @@ h3 { font-size: 18px; }
                                                         // allot imeino to pending list
                                                         var ttl_imeireq = $('.imei'+i_prod_id).length; 
                                                         var ttl_imeiscanned = $('.imei'+i_prod_id+'_scanned').length;
-                                                        
+
                                                                 if(ttl_imeireq <= ttl_imeiscanned)
                                                                 {
                                                                         alert("Required Qty of Imei is already scanned...");

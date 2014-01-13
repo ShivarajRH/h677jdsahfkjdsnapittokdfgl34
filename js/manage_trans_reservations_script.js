@@ -74,7 +74,7 @@ $("#dlg_create_group_batch_block").dialog({
 
                     }).fail(fail);
             },
-            Cancel: function() { 
+            Close: function() { 
               $(this).dialog( "close" );
             }
         },
@@ -129,16 +129,23 @@ function chkall_fran_orders(franid) {
             checkBoxes.removeAttr("checked", checkBoxes.attr("checked"));
         }
 }
-function process_picklist_by_fran(elt,batch_id,franchise_id) {    //$("#picklist_by_fran_form_"+franchise_id).submit();
+
+function picklist_product_wise(elt,batch_id,franchise_id) {    //$("#picklist_by_fran_form_"+franchise_id).submit();
     //var p_invoice_ids_str = $("#picklist_by_fran_all_"+franchise_id).val();var postData = {pick_list_trans:p_invoice_ids_str};
-    
     if(franchise_id== undefined) { franchise_id =''; }
-    
-    $.post(site_url+"admin/p_invoice_for_picklist/"+batch_id+"/"+franchise_id,{},function(resp) {
+    $.post(site_url+"admin/picklist_product_wise/"+batch_id+"/"+franchise_id,{},function(resp) {
             $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Pick List');
     });
-    
 }
+
+function picklist_fran_wise(elt,batch_id,franchise_id) {    //$("#picklist_by_fran_form_"+franchise_id).submit();
+    //var p_invoice_ids_str = $("#picklist_by_fran_all_"+franchise_id).val();var postData = {pick_list_trans:p_invoice_ids_str};
+    if(franchise_id== undefined) { franchise_id =''; }
+    $.post(site_url+"admin/picklist_fran_wise/"+batch_id+"/"+franchise_id,{},function(resp) {
+            $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Pick List');
+    });
+}
+
 $("#pick_all").live("change",function() {
     var checkBoxes=$(".pick_list_trans_ready");
     if($(this).is(":checked")) {
@@ -166,7 +173,7 @@ $("#btn_generate_pick_list").live("click",function(){
 //               $("#show_picklist_block input[name='pick_list_trans']").val(p_invoice_ids_str);$("#show_picklist_block").dialog("open").dialog('option', 'title', 'Pick List for '+p_invoice_ids.length+" proforma invoice/s");
 
                 var postData = {pick_list_trans:p_invoice_ids_str};
-                $.post(site_url+"admin/p_invoice_for_picklist",postData,function(resp) {
+                $.post(site_url+"admin/picklist_product_wise",postData,function(resp) {
                         $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Pick List for '+p_invoice_ids.length+" proforma invoice/s");
                 });
                 return false;
@@ -188,7 +195,7 @@ $("#btn_generate_pick_list").live("click",function(){
                 var p_invoice_ids_str = p_invoice_ids.join(",");
                 
                 var postData = {pick_list_trans:p_invoice_ids_str};
-                $.post(site_url+"admin/p_invoice_for_picklist",postData,function(resp) {
+                $.post(site_url+"admin/picklist_product_wise",postData,function(resp) {
                         $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Pick List for '+p_invoice_ids.length+" proforma invoice/s");
                 });
                 //$("#show_picklist_block input[name='pick_list_trans']").val(p_invoice_ids_str);$("#show_picklist_block").dialog("open").dialog('option', 'title', 'Pick List for '+p_invoice_ids.length+" proforma invoice/s");
@@ -466,6 +473,11 @@ $("#sel_brands").live("change",function() {
     loadTransactionList(0);
     return false;
 });
+
+$("#sel_alloted_status").live("change",function() {
+    loadTransactionList(0);
+    return false;
+});
 $("#sel_franchise").live("change",function() {
             /*var franchiseid=($("#sel_franchise").val()=='00')? 00 :$("#sel_franchise").val();
             if(franchiseid==00) {
@@ -611,9 +623,11 @@ function loadTransactionList(pg) {
     var batch_group_type=($("#sel_batch_group_type").val()=='00')? 0:$("#sel_batch_group_type").val();
 
     var sel_latest=($("#sel_old_new").find(":selected").val()==0) ? 0 : $("#sel_old_new").find(":selected").val();
-
+    
+    var sel_alloted_status = ($("#sel_alloted_status").find(":selected").val()==0) ? 0 : $("#sel_alloted_status").find(":selected").val();
+    
     $('#trans_list_replace_block').html("<div class='loading'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Loading...</div>"); 
-    $.post(site_url+'admin/jx_manage_trans_reservations_list/'+batch_type+'/'+date_from+'/'+date_to+'/'+terrid+'/'+townid+'/'+franchiseid+'/'+menuid+'/'+brandid+"/"+showbyfrangrp+"/"+batch_group_type+'/'+sel_latest+"/"+limit+"/"+pg+"",{},function(rdata) {
+    $.post(site_url+'admin/jx_manage_trans_reservations_list/'+batch_type+'/'+date_from+'/'+date_to+'/'+terrid+'/'+townid+'/'+franchiseid+'/'+menuid+'/'+brandid+"/"+showbyfrangrp+"/"+batch_group_type+'/'+sel_latest+"/"+sel_alloted_status+"/"+limit+"/"+pg+"",{},function(rdata) {
         $("#trans_list_replace_block").html(rdata);
     });
     

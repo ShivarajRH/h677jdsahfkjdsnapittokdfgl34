@@ -1,55 +1,27 @@
 <?php
-$output = $cond = $cond_batch = $inner_loop_cond = $re_allot_all_block=$orderby_cond = $datefilter_msg =$msg_generate_pick_list='';
-$block_alloted_status = '';
- if($s!=0 and $e != 0) {
+$msg_generate_pick_list = '';
+$msg_process_by_fran = '';
+$re_allot_all_block = '';
+$generate_btn_link='';
+$msg_process_by_fran='';
+$ttl_trans_listed='';
+$output = $cond =  $inner_loop_cond = $re_allot_all_block=$orderby_cond = $datefilter_msg =$msg_generate_pick_list='';
+
+$block_alloted_status = '<select id="sel_alloted_status" name="sel_alloted_status"><option value="0" '.(!$$alloted_status ?'selected':'').'>Not Alloted</option><option value="1"'.( ($alloted_status)?'selected':'').'>Alloted</option></select>';
+
+if($s!=0 and $e != 0) {
     $from=strtotime($s);
     $to=strtotime("23:59:59 $e");
     $cond .= ' and tr.actiontime between '.$from.' and '.$to.' ';
     $datefilter_msg .= ' from <strong>'.date("m-d-Y",$from).'</strong> to <strong>'.date("m-d-Y",$to).'</strong> ';
  }
-
+ 
 $msg_process_by_fran = '<div class="show_by_group_block"><label for="show_by_group">Process by franchise:</label> <input type="checkbox" value="by_group" name="show_by_group" id="show_by_group" '.($showbygrp?"checked":"").' title="Click to Show By Group"/></div>';
 
-
 if($latest == 0)
-    $orderby_cond = ' g.actiontime ASC ';
+    $orderby_cond = ' tr.actiontime ASC ';
 else
-    $orderby_cond = ' g.actiontime DESC ';
-
-//$chk_box_global = '<input type="checkbox" value="" name="pick_all" id="pick_all" title="Select all transactions" />';
-//$old_new_msg = '<option value="1" selected>NEWEST </option><option value="0" '.($oldest_newest=='0' ? "selected":"").'>OLDEST</option>';
-//$orderby_cond .='g.init';
-
-if( $batch_type == "pending") {
-        //$chk_box_global =''; $generate_btn_link='';
-}
-elseif($batch_type == 'partial') {
-        //$cond_batch .= ' ( g.batch_id is null ) ';// or g.batch_id >= '.GLOBAL_BATCH_ID." ";
-        if($batch_group_type == 1) {
-            $cond_batch .= ' and g.batch_id <> '.GLOBAL_BATCH_ID.' ' ; $orderby_cond = ' g.batch_id desc and g.batch_id >= '.GLOBAL_BATCH_ID;
-        }
-        elseif($batch_group_type == 2) {
-            $cond_batch .= ' and g.batch_id = '.GLOBAL_BATCH_ID.' and  g.batch_id >= '.GLOBAL_BATCH_ID;
-        }
-        $batch_btn_link .= '<input type="submit" class="btn_cteate_group_batch button button-rounded button-action" value="Create Group Batch" name="btn_cteate_group_batch" onclick="fn_cteate_group_batch(0,0,0);" title="Click to Create Group Batch"/>';
-}
-elseif($batch_type == 'ready') {
-        $cond_batch .=' g.batch_id >= '.GLOBAL_BATCH_ID." ";
-        if($batch_group_type == 1) {
-            $cond_batch .= ' and g.batch_id <> '.GLOBAL_BATCH_ID.' ' ; $orderby_cond = ' g.batch_id desc and g.batch_id >= '.GLOBAL_BATCH_ID;
-        }
-        elseif($batch_group_type == 2) {
-            $cond_batch .= ' and g.batch_id = '.GLOBAL_BATCH_ID.' and  g.batch_id >= '.GLOBAL_BATCH_ID;
-        }
- 
-        // is batch assigned to user?
-        //if($user['userid']) {
-            //$cond .= ' and sd.assigned_userid = '.$user['userid'].' ';
-        //}
-        $batch_btn_link .= '<input type="submit" class="btn_cteate_group_batch button button-rounded button-action" value="Create Group Batch" name="btn_cteate_group_batch" onclick="fn_cteate_group_batch(0,0,0);" title="Click to Create Group Batch"/>';
-//        $msg_generate_pick_list .= '<input type="submit" class="button button-rounded button-action" value="Generate Pick List" name="btn_generate_pick_list" id="btn_generate_pick_list" title="Click to generate picklist for printing"/>';
-}
-$cond_batch = ($cond_batch!='')? " where ".$cond_batch : "";
+    $orderby_cond = ' tr.actiontime DESC ';
 
 if($menuid!=0) {
      $cond .= ' and dl.menuid='.$menuid; 
@@ -59,33 +31,25 @@ if($brandid!=0) {
  }
 if($terrid!=0) {
      $cond .= ' and f.territory_id='.$terrid;
- }
- if($townid!=0) {
-     $cond .= ' and f.town_id='.$townid;
- }
- if($franchiseid!=0) {
-     $cond .= ' and f.franchise_id='.$franchiseid;
- }
-
-$arr_trans_set = $this->reservations->get_trans_list($batch_type,$from,$to,0,$user['userid']); //,$oldest_newestecho '<pre>'.count($arr_trans_set['result']);die();
-//echo '<pre>'.$arr_trans_set['last_query'];die();
-if(count($arr_trans_set['result']) == 0 ) {
-    $output.='<h3 class="heading_no_results">No transactions found for selected criteria.</h3>';
 }
-else 
-{
-        
-            foreach ($arr_trans_set['result'] as $i=>$arr_trans) { $all_trans[$i] = "'".$arr_trans['transid']."'";  }
-            $str_all_trans = implode(",",$all_trans);
+if($townid!=0) {
+    $cond .= ' and f.town_id='.$townid;
+}
+if($franchiseid!=0) {
+    $cond .= ' and f.franchise_id='.$franchiseid;
+}
+if($alloted_status == 1) {
+    $cond .= ' and  i.id is not null and o.status = 1 ';
+}
+else {
+    $cond .= ' and  i.id is null and  o.status = 0 ';
+}
 
-            $transid = $trans_array['transid'];
-            $sql="select * from (
-            select distinct from_unixtime(tr.init,'%D %M %Y') as str_date,from_unixtime(tr.init,'%h:%i:%s %p') as str_time, count(tr.transid) as total_trans,tr.transid
+ $sql = "select distinct from_unixtime(tr.init,'%D %M %Y') as str_date,from_unixtime(tr.init,'%h:%i:%s %p') as str_time, count(tr.transid) as total_trans,tr.transid
                     ,o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
                     ,tr.init,tr.actiontime,tr.status tr_status,tr.is_pnh,tr.batch_enabled
                     ,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,f.created_on as f_created_on
-                    ,ter.territory_name
-                    ,twn.town_name
+                    ,ter.territory_name,twn.town_name
                     ,dl.menuid,m.name as menu_name,bs.name as brand_name
                     ,sd.batch_id
             from king_transactions tr
@@ -95,13 +59,13 @@ else
                     join pnh_menu m on m.id = dl.menuid
                     join king_brands bs on bs.id = o.brandid
             join pnh_m_franchise_info  f on f.franchise_id=tr.franchise_id  and f.is_suspended = 0
-            join pnh_m_territory_info ter on ter.id = f.territory_id 
+            join pnh_m_territory_info ter on ter.id = f.territory_id
             join pnh_towns twn on twn.id=f.town_id
                     left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
                     left join proforma_invoices pi on pi.order_id = o.id and pi.invoice_status = 1 
                     left join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no
-            WHERE o.status in (0,1) and tr.batch_enabled=1 and i.id is null $cond and tr.transid in ($str_all_trans)
-            group by o.transid) as g $cond_batch group by transid order by $orderby_cond";
+            WHERE tr.batch_enabled=0 $cond
+            group by tr.transid order by $orderby_cond";
             
 
 //             echo "<p><pre>".$sql.'</pre></p>';die(); 
@@ -187,12 +151,7 @@ else
                                 <th>Alloted</th>
                             </tr>';
 
-                            /*<th>Alloted/Status?</th><th>Stock</th>
-                            $stockinfo = $this->reservations->get_stock_from_orderid($order_i['id']);$status=array("Confirmed","Processed","Shipped","Cancelled","Returned");
-                            <td style="width:20px">'.($order_i['status']?"Yes":"No").' | '.$status[$trans_arr['shipped']].' </td>
-                            <td style="width:20px"><a href="'.site_url("admin/product/".$stockinfo['product_id']).'" target="_blank">'.$stockinfo['stock'].'</a></td>*/
-
-                        $trans_orders = $this->reservations->get_orders_of_trans($trans_arr['transid']);
+                        $trans_orders = $this->reservations->get_cancelled_orders_of_trans($trans_arr['transid']);
                         foreach($trans_orders as $j=>$order_i)  {
 
 
@@ -216,7 +175,7 @@ else
                         $output .= '</table></td>';
 
 
-                       if( $batch_type == "pending") 
+                        if( $batch_type == "pending") 
                         {
                                 $trans_action_msg .= '<a href="javascript:void(0);" class="retry_link button button-rounded button-tiny button-caution" onclick="return reserve_stock_for_trans('.$user['userid'].',\''.trim($trans_arr['transid']).'\','.$pg.');">Re-Allot</a>';
 //                                $pick_list_msg .= '--';
@@ -226,7 +185,7 @@ else
 
                         }
 //                        else {
-                                $arr_pinv_ids =array();
+                                /*$arr_pinv_ids =array();
                                 foreach ($arr_trans_set['result'] as $i=>$arr_trans) { 
                                     if($trans_arr['transid'] == $arr_trans['transid']) {
                                         $arr_pinv_ids[] = $arr_trans['p_inv_nos'];
@@ -238,11 +197,11 @@ else
                                         //$pick_list_msg .= '<input type="checkbox" value="'.$p_invoice_id.'" id="pick_list_trans" name="pick_list_trans[]" class="pick_list_trans_ready" title="Select this for picklist" />';
                                         //<a class="proceed_link button button-rounded button-tiny button-action" href="pack_invoice/'.$p_invoice_id.'" target="_blank">Generate invoice</a><br>
                                     }
-                                }
+                                }*/
 //                        }
 
                         $output .= '<td width="200">'.$trans_action_msg.'</td>
-                            </tr>';//<td style="width:70px">'.$pick_list_msg.'</td>
+                            </tr>';
 
                         $fil_territorylist[$trans_arr['territory_id']] = $trans_arr['territory_name'];
                         $fil_townlist[$trans_arr['town_id']] = $trans_arr['town_name'];
@@ -272,7 +231,7 @@ else
             $output .= '</tbody>
                 </table>
             </form>
-            <div class="trans_pagination">'.$trans_pagination.' </div>
+                <div class="trans_pagination">'.$trans_pagination.' </div>
                 <script>
                     $(".level1_filters").show();
                     $(".pagination_top").html(\''.($trans_pagination).'\');
@@ -285,50 +244,6 @@ else
                     $(".block_alloted_status").html(\''.$block_alloted_status.'\');
                 </script>';
         }
-        // //$("#sel_old_new").html(\''.$old_new_msg.'\');
-}
-echo $output;
-//===========
-#Other functions
-$resonse2='';
-if(count($fil_menulist) && $menuid==0) {
-    asort($fil_menulist);
-    $menulist = '<option value="00">All Menu</option>';
-    foreach($fil_menulist as $fmenu_id=>$fmenu_name) {
-        $menulist .= '<option value="'.$fmenu_id.'">'.$fmenu_name.'</option>';   
-    }
-    $resonse2.='<script>$("#sel_menu").html(\''.$menulist.'\');</script>';
-}
-if(count($fil_brandlist) && $brandid==0) {
-    asort($fil_brandlist);
-    $brandlist = '<option value="00">All Brands</option>';
-    foreach($fil_brandlist as $fbrandid=>$fbrand_name) {
-        $brandlist .= '<option value="'.$fbrandid.'">'.$fbrand_name.'</option>';   
-    }
-    $resonse2.='<script>$("#sel_brands").html(\''.$brandlist.'\');</script>';
-}
-if(count($fil_territorylist) && $terrid==0) {
-    asort($fil_territorylist);
-    $territory_list = '<option value="00">All Territory</option>';
-    foreach($fil_territorylist as $fterrid=>$fterritory_name) {
-        $territory_list .= '<option value="'.$fterrid.'">'.$fterritory_name.'</option>';   
-    }
-    $resonse2.='<script>$("#sel_territory").html(\''.$territory_list.'\');</script>';
-}
-if(count($fil_townlist) && $townid==0) {
-    asort($fil_townlist);
-    $town_list = '<option value="00">All Towns</option>';
-    foreach($fil_townlist as $ftownid=>$ftown_name) {
-        $town_list .= '<option value="'.$ftownid.'">'.$ftown_name.'</option>';   
-    }
-    $resonse2.='<script>$("#sel_town").html(\''.$town_list.'\');</script>';
-}
-if(count($fil_franchiselist) && $franchiseid==0) {
-    asort($fil_franchiselist);
-    $franchise_list = '<option value="00">All Franchise</option>';
-    foreach($fil_franchiselist as $franchiseid=>$franchise_name) {
-        $franchise_list .= '<option value="'.$franchiseid.'">'.$franchise_name.'</option>';   
-    }
-    $resonse2.='<script>$("#sel_franchise").html(\''.$franchise_list.'\');</script>';
-}
-echo $resonse2;
+        echo $output;
+        
+?>

@@ -4,6 +4,9 @@ $msg_process_by_fran = '';
 $re_allot_all_block = '';
 $generate_btn_link='';
 $msg_process_by_fran='';
+$ttl_trans_listed='';
+$block_alloted_status = '';
+
 $output='';
 if($s!=0 and $e != 0) {
     $from=date("Y-m-d H:i:s",strtotime($s));
@@ -20,72 +23,81 @@ if($this->erpm->auth(true,true)) {
 else {
     $batches_det = $this->reservations->get_batches_details($user['userid']);
 }
-$datefilter_msg .= ' from <strong>'.date("m-d-Y",$s).'</strong> to <strong>'.date("m-d-Y",$e).'</strong> ';
-$total_trans_rows = count($batches_det);
+
 //echo $total_trans_rows.'<br><pre>';print_r($batches_det);echo '</pre>';
-$output .='';
-
-$batch_status=array(0=>'Pending',2=>'Partial',3=>'Cancelled');
-?>
-<table class="datagrid" width="100%">
-    <tr>
-        <th width="15">#</th>
-        <th width="150">Date</th>
-        <th>Batch Number</th>
-        <th>Group Menu</th>
-        <th>Territory</th>
-        <th width="60">Total Orders</th>
-        <th width="35">Status</th>
-        <th>Assigned to</th>
-        <th>Action</th>
-    </tr>
-    <?php
-    foreach ($batches_det as $i=>$batch_item) { ?>
-    <tr>
-        <td><?=++$i;?></td>
-        <td><div class="str_time"><?=format_datetime($batch_item['created_on']);?></div></td>
-        <td><?=$batch_item['batch_id'];?></td>
-        <td><?=$batch_item['batch_grp_name'];?></td>
-        <td><?=$batch_item['territory_name'];?></td>
-        <td><?=$batch_item['num_orders'];?></td>
-        <td><?=$batch_status[$batch_item['status']];?></td>
-        <td><?=ucfirst($batch_item['assigned_to']); ?></td>
-        <td>
-            <a class="packthis button button-rounded button-tiny button-action" href="javascript:void(0)" batch_id="<?=$batch_item['batch_id'];?>">Pack This Batch</a>
-            <a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="process_picklist_by_fran(this,<?=$batch_item['batch_id'];?>)">Generate Pickslip</a>
-        </td>
-    </tr>
-    <?php } ?>
-</table>
-
-<div id="dlg_batch_order_list">
-    <div id="batch_order_list_overview">
-        <h3>Batch:#<span></span></h3>
-    </div>
-    <div id="batch_order_list">
-    <table class='datagrid' width='100%'>
-        <thead>
+$total_trans_rows = count($batches_det);
+if($total_trans_rows<=0) { ?>
+    <h3 align="center">No assigned batches.</h3>
+    <?php 
+}
+else {
+    $ttl_trans_listed .= 'Showing <strong> '.$total_trans_rows.' </strong> batched process from <strong>'.date("m-d-Y",$s).'</strong> to <strong>'.date("m-d-Y",$e).'</strong> ';
+    $batch_status=array(0=>'Pending',2=>'Partial',3=>'Cancelled');
+    ?>
+    <table class="datagrid" width="100%">
         <tr>
-                <th>#</th>
-                <th>Franchise</th>
-                <th>Total Orders</th>
-                <th>Territory name</th>
-                <th>Town name</th>
-                <th>Actions</th>
+            <th width="15">#</th>
+            <th width="150">Date</th>
+            <th>Batch Number</th>
+            <th>Group Menu</th>
+            <th>Territory</th>
+            <th width="60">Total Orders</th>
+            <th width="35">Status</th>
+            <th>Assigned to</th>
+            <th>Action</th>
         </tr>
-        </thead>
-        <tbody></tbody>
+        <?php
+        foreach ($batches_det as $i=>$batch_item) { ?>
+        <tr>
+            <td><?=++$i;?></td>
+            <td><div class="str_time"><?=format_datetime($batch_item['created_on']);?></div></td>
+            <td><?=$batch_item['batch_id'];?></td>
+            <td><?=$batch_item['batch_grp_name'];?></td>
+            <td><?=$batch_item['territory_name'];?></td>
+            <td><?=$batch_item['num_orders'];?></td>
+            <td><?=$batch_status[$batch_item['status']];?></td>
+            <td><?=ucfirst($batch_item['assigned_to']); ?></td>
+            <td>
+                <a class="packthis button button-rounded button-tiny button-action" href="javascript:void(0)" batch_id="<?=$batch_item['batch_id'];?>">Pack This Batch</a>
+                <a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="picklist_product_wise(this,<?=$batch_item['batch_id'];?>)">Generate Product Pickslip</a>
+                <a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="picklist_fran_wise(this,<?=$batch_item['batch_id'];?>)">Franchise-wise Pick Slip</a>
+            </td>
+        </tr>
+        <?php } ?>
     </table>
-    </div>
-</div>
 
+    <div style="display:none;" id="dlg_batch_order_list">
+        <div id="batch_order_list_overview">
+            <h3>Batch:#<span></span></h3>
+        </div>
+        <div id="batch_order_list">
+        <table class='datagrid' width='100%'>
+            <thead>
+            <tr>
+                    <th>#</th>
+                    <th>Franchise</th>
+                    <th>Total Orders</th>
+                    <th>Territory name</th>
+                    <th>Town name</th>
+                    <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        </div>
+    </div>
+<?php
+    }
+?>
 <script>
     $(".level1_filters").hide();
-    $(".ttl_trans_listed").html("Showing <strong><?=$total_trans_rows;?></strong> batched process <?=$datefilter_msg;?>");
+    $(".ttl_trans_listed").html('<?=$ttl_trans_listed;?>');
     $(".btn_picklist_block").html('<?=$msg_generate_pick_list;?>');
     $(".batch_btn_link").html('<?=$generate_btn_link;?>');
     $(".re_allot_all_block").html('<?=$re_allot_all_block?>');
     $(".process_by_fran_link").html('<?=$msg_process_by_fran;?>');
+    $(".block_alloted_status").html('<?=$block_alloted_status;?>');
+    
     $("#dlg_batch_order_list").dialog({
         modal:true
         ,autoOpen:false
@@ -111,7 +123,7 @@ $batch_status=array(0=>'Pending',2=>'Partial',3=>'Cancelled');
                                         <td>"+(fran_det.num_orders)+"</td>\n\
                                         <td>"+(fran_det.territory_name)+"</td>\n\
                                         <td>"+(fran_det.town_name)+"</td>\n\
-                                        <td><a class='packthis button button-rounded button-tiny button-action' href='"+site_url+"/admin/pack_invoice_by_fran/"+fran_det.batch_id+"/"+fran_det.franchise_id+"' target='_blank'>Pack This Batch</a></td>\n\
+                                        <td><a style='color:#ffffff;' class='packthis button button-rounded button-tiny button-action' href='"+site_url+"/admin/pack_invoice_by_fran/"+fran_det.batch_id+"/"+fran_det.franchise_id+"' target='_blank'>Pack This Batch</a></td>\n\
                                 </tr>";
                             
                         });
