@@ -75,10 +75,10 @@ else {
             <thead>
             <tr>
                     <th>#</th>
-                    <th>Franchise</th>
-                    <th>Total Orders</th>
                     <th>Territory name</th>
                     <th>Town name</th>
+                    <th>Franchise</th>
+                    <th>Total Orders</th>
                     <th>Actions</th>
             </tr>
             </thead>
@@ -96,7 +96,7 @@ else {
     $(".batch_btn_link").html('<?=$generate_btn_link;?>');
     $(".re_allot_all_block").html('<?=$re_allot_all_block?>');
     $(".process_by_fran_link").html('<?=$msg_process_by_fran;?>');
-    $(".block_alloted_status").html('<?=$block_alloted_status;?>');
+    $(".block_alloted_status").hide();
     
     $("#dlg_batch_order_list").dialog({
         modal:true
@@ -119,10 +119,10 @@ else {
                         $.each(resp.franchise_list,function(i,fran_det) {
                             html +="<tr>\n\
                                         <td>"+(++i)+"</td>\n\
-                                        <td>"+(fran_det.franchise_name)+"</td>\n\
-                                        <td>"+(fran_det.num_orders)+"</td>\n\
                                         <td>"+(fran_det.territory_name)+"</td>\n\
                                         <td>"+(fran_det.town_name)+"</td>\n\
+                                        <td>"+(fran_det.franchise_name)+"</td>\n\
+                                        <td>"+(fran_det.num_orders)+"</td>\n\
                                         <td><a style='color:#ffffff;' class='packthis button button-rounded button-tiny button-action' href='"+site_url+"/admin/pack_invoice_by_fran/"+fran_det.batch_id+"/"+fran_det.franchise_id+"' target='_blank'>Pack This Batch</a></td>\n\
                                 </tr>";
                             

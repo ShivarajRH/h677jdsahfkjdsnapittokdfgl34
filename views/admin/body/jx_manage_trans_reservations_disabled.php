@@ -7,7 +7,7 @@ $msg_process_by_fran='';
 $ttl_trans_listed='';
 $output = $cond =  $inner_loop_cond = $re_allot_all_block=$orderby_cond = $datefilter_msg =$msg_generate_pick_list='';
 
-$block_alloted_status = '<select id="sel_alloted_status" name="sel_alloted_status"><option value="0" '.(!$$alloted_status ?'selected':'').'>Not Alloted</option><option value="1"'.( ($alloted_status)?'selected':'').'>Alloted</option></select>';
+//$block_alloted_status = '';
 
 if($s!=0 and $e != 0) {
     $from=strtotime($s);
@@ -16,7 +16,7 @@ if($s!=0 and $e != 0) {
     $datefilter_msg .= ' from <strong>'.date("m-d-Y",$from).'</strong> to <strong>'.date("m-d-Y",$to).'</strong> ';
  }
  
-$msg_process_by_fran = '<div class="show_by_group_block"><label for="show_by_group">Process by franchise:</label> <input type="checkbox" value="by_group" name="show_by_group" id="show_by_group" '.($showbygrp?"checked":"").' title="Click to Show By Group"/></div>';
+//$msg_process_by_fran = '<div class="show_by_group_block"><label for="show_by_group">Process by franchise:</label> <input type="checkbox" value="by_group" name="show_by_group" id="show_by_group" '.($showbygrp?"checked":"").' title="Click to Show By Group"/></div>';
 
 if($latest == 0)
     $orderby_cond = ' tr.actiontime ASC ';
@@ -25,7 +25,7 @@ else
 
 if($menuid!=0) {
      $cond .= ' and dl.menuid='.$menuid; 
- }
+}
 if($brandid!=0) {
      $cond .= ' and dl.brandid='.$brandid;
  }
@@ -115,7 +115,10 @@ else {
                                 $trans_created_by = '<div class="trans_created_by"> by '.($trans_created_by).'';
 
                         $arr_fran = $this->reservations->fran_experience_info($trans_arr['f_created_on']);
-
+                        
+                       if($trans_arr['batch_enabled']!=1)
+                            $batch_enabled='<div style="margin-top:20px;background-color:#504952; float:left;"><span style="color:#f8f8f8;padding:2px 3px;">Batch disabled</span></div>';
+                        
                         if($trans_arr['batch_id'] != '') { 
                             //$batch_id_msg = '<a href="'.site_url("admin/batch/".$trans_arr['batch_id']).'" target="_blank">B'.$trans_arr['batch_id'].'</a>';
                             if($trans_arr['batch_id'] == GLOBAL_BATCH_ID) {
@@ -125,12 +128,14 @@ else {
                                 $batch_id_msg = '<a href="'.site_url("admin/batch/".$trans_arr['batch_id']).'" target="_blank">B'.$trans_arr['batch_id'].'</a>';
                             }
                         }
-
+                        
                         $output .= '<tr class="'.$batch_type.'_ord">
-                            <td>'.++$c.'</td>
-                            <td>'.$trans_arr['str_date'].'<div class="str_time">'.($trans_arr['str_time']).'</div>'.$trans_created_by.'</td>
-                            <td>'.$batch_id_msg.'</td>
-                            <td>
+                            <td align="center">'.++$c.'</td>
+                            <td align="center">'.$trans_arr['str_date'].'<div class="str_time">'.($trans_arr['str_time']).'</div>'.$trans_created_by.'</td>
+                            <td align="center">
+                                '.$batch_enabled.'
+                                '.$batch_id_msg.'</td>
+                            <td align="center">
                                 <span class="info_links"><a href="trans/'.$trans_arr['transid'].'" target="_blank">'.$trans_arr['transid'].'</span><br></a>
                                 <span class="info_links"><a href="'.site_url("admin/pnh_franchise/{$trans_arr['franchise_id']}").'"  target="_blank">'.$trans_arr['bill_person'].'</a><br></span>
                                 <span class="info_links">'.$trans_arr['town_name'].'</span>,
@@ -241,7 +246,7 @@ else {
                     $(".process_by_fran_link").html(\''.($msg_process_by_fran).'\');
                     $(".re_allot_all_block").html(\''.($re_allot_all_block).'\');
                     $(".sel_terr_block").html("");
-                    $(".block_alloted_status").html(\''.$block_alloted_status.'\');
+                    $(".block_alloted_status").show(); //html(\''.$block_alloted_status.'\');
                 </script>';
         }
         echo $output;

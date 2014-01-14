@@ -1,6 +1,9 @@
 //var GM_TIMING_END_CHUNK1=(new Date).getTime();
 /**** CREATE BATCH PROCESS **/
 
+ //By default load lists
+loadTransactionList(0);
+var pg=0;
 
 //ONCHANGE TERRITORY IN BATCH GROUP CREATION
 $("#sel_terr_id").live("change",function() {
@@ -231,7 +234,7 @@ function reallot_stock_for_all_transaction(userid,pg) {
                 rdata += "<div class='dash_bar'>Alloted : "+resp.alloted+"</div><div class='dash_bar_red'>No Stock : "+resp.nostock+"</div>";
                 if(resp.alloted!=0) {
                     
-                    rdata += "<div><div class='clear'></div><h3>Following transactions alloted:</h3> <table class='subdatagrid'><tr><th>Transactions</th><th>Products</th></tr>";
+                    rdata += "<div><div class='clear'></div><h3>Following transactions alloted:</h3> <table class='datagrid'><tr><th>Transactions</th><th>Products</th></tr>";
                     $.each(resp.alloted_msg,function(transid,row){
                         
                         rdata += "<tr><td><a href='"+site_url+"admin/trans/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
@@ -242,10 +245,9 @@ function reallot_stock_for_all_transaction(userid,pg) {
                     });
                     rdata += "</table></div>";
                     
-                    
                 }
                 else if(resp.nostock!=0){
-                    rdata += "<div><div class='clear'></div><h3>Following transactions have no stock:</h3> <table class='subdatagrid'><tr><th>Transactions</th><th>Products</th></tr>";
+                    rdata += "<div><div class='clear'></div><h3>Following transactions have no stock:</h3> <table class='datagrid'><tr><th>Transactions</th><th>Products</th></tr>";
                     $.each(resp.nostock_msg,function(transid,row){
                         
                         rdata += "<tr><td><a href='"+site_url+"admin/trans/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
@@ -265,7 +267,7 @@ function reallot_stock_for_all_transaction(userid,pg) {
 }
  
 function reserve_stock_for_trans(userid,transid,pg) {
-    if(!confirm("Are you sure you want to process \nthis transaction for batch?")) {
+    if(!confirm("Are you sure you want to re-allot this transaction?")) {
         return false;
         //var batch_remarks=prompt("Enter remarks?");
     }
@@ -273,18 +275,19 @@ function reserve_stock_for_trans(userid,transid,pg) {
     var batch_remarks='';
     var updated_by = userid;
     var rdata='';
-    $.post('reserve_stock_for_trans/'+transid+'/'+ttl_num_orders+'/'+batch_remarks+'/'+updated_by+'',"",function(resp) {
+    $.post(site_url+'/admin/reserve_stock_for_trans/'+transid+'/'+ttl_num_orders+'/'+batch_remarks+'/'+updated_by+'',"",function(resp) {
         
             if(resp.status == 'fail') {
                     rdata = resp.response+"";
             }
-            else {
-                rdata += "<div class='dash_bar'>Alloted : "+resp.alloted+"</div><div class='dash_bar_red'>No Stock : "+resp.nostock+"</div>";
-                if(resp.alloted!=0) {
+            else {  //alert(resp.alloted);
+                //rdata += "<div class='dash_bar'><b>"+resp.alloted+"</b> transaction alloted</div>";
+                rdata += "Total "+resp.alloted+" transactions alloted.";
+                /*if(resp.alloted>0) {
                     
                     rdata += "<div><div class='clear'></div><h3>Following transactions alloted:</h3> <table class='subdatagrid'><tr><th>Transactions</th><th>Products</th></tr>";
                     $.each(resp.alloted_msg,function(transid,row){
-                        
+
                         rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
                                 rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
@@ -292,10 +295,9 @@ function reserve_stock_for_trans(userid,transid,pg) {
                         rdata += "</td></tr>";
                     });
                     rdata += "</table></div>";
-                    
-                    
-                }
-                else if(resp.nostock!=0){
+
+                }*/
+                /*else if(resp.nostock!=0){
                     rdata += "<div><div class='clear'></div><h3>Following transactions have no stock:</h3> <table class='subdatagrid'><tr><th>Transactions</th><th>Products</th></tr>";
                     $.each(resp.nostock_msg,function(transid,row){
                         
@@ -306,12 +308,13 @@ function reserve_stock_for_trans(userid,transid,pg) {
                         rdata += "</td></tr>";
                     });
                     rdata += "</table></div>";
-                }
+                }*/
 //                $.each(resp.result,function(i,val_arr){$.each(val_arr,function(i,row){rdata += row;});});
             }
             
             loadTransactionList(pg);
-            $(".reservation_action_status").html(rdata).dialog("open").dialog('option', 'title', 'Re-allot Transaction Reservation report');
+            alert(rdata);
+            //$(".reservation_action_status").html(rdata).dialog("open").dialog('option', 'title', 'Re-allot Transaction Reservation report');
 
     },"json");
     return false;
@@ -335,7 +338,7 @@ function reallot_frans_all_trans(elt,userid,franchise_id,pg) {
             else {
                 rdata += "<div class='dash_bar'>Alloted : "+resp.alloted+"</div><div class='dash_bar_red'>No Stock : "+resp.nostock+"</div>";
                 if(resp.alloted != 0) {   
-                    rdata += "<div><div class='clear'></div><h3>Following transactions alloted:</h3> <table class='subdatagrid'><tr><th>Transactions</th><th>Products</th></tr>";
+                    rdata += "<div><div class='clear'></div><h3>Following transactions alloted:</h3> <table class='datagrid'><tr><th>Transactions</th><th>Products</th></tr>";
                     $.each(resp.alloted_msg,function(transid,row){
                         
                         rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
@@ -349,7 +352,7 @@ function reallot_frans_all_trans(elt,userid,franchise_id,pg) {
                     
                 }
                 else if(resp.nostock!=0){
-                    rdata += "<div><div class='clear'></div><h3>Following transactions have no stock:</h3> <table class='subdatagrid'><tr><th>Transactions</th><th>Products</th></tr>";
+                    rdata += "<div><div class='clear'></div><h3>Following transactions have no stock:</h3> <table class='datagrid'><tr><th>Transactions</th><th>Products</th></tr>";
                     $.each(resp.nostock_msg,function(transid,row){
                         
                         rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
@@ -376,16 +379,21 @@ function cancel_proforma_invoice(p_invoice_no,userid,pg) {
     var rdata='';
     $.post(site_url+"admin/cancel_reserved_proforma_invoice/"+p_invoice_no+"/"+userid,{},function(resp) {
             if(resp.status == 'success') {
-                rdata = "Proforma invoice has cancelled. <br>Proforma Invoice Number: "+resp.p_invoice_no+" <br> Transid: "+resp.transid;
-                //rdata=("Unable to cancel the proforma.");
+                /*rdata = "<div>\n\
+                            <h4>Proforma invoice has been cancelled</h4>\n\
+                            <p>Proforma Invoice#: <a href='"+site_url+"/admin/proforma_invoice/"+resp.p_invoice_no+"' target='_blank'>" +resp.p_invoice_no+ "</a> \n\
+                            and Transid# <a href='"+site_url+"/admin/trans/"+resp.transid+"' target='_blank'>"+resp.transid+"</a></p>\n\
+                        </div>";*/
+                        rdata = "Transactoion de-alloted successfully.";
             }
             else {
                 rdata = resp.response;
             }
-            rdata="<div class='block_info'>"+rdata+"</div>";
-            $(".reservation_action_status").html(rdata).dialog("open").dialog('option', 'title', 'Cancel proforma invoice report');
+            //rdata="<div class='block_info'>"+rdata+"</div>";
+            alert(rdata);
+            //$(".reservation_action_status").html(rdata).dialog("open").dialog('option', 'title', 'Cancel proforma invoice report');
             loadTransactionList(pg);
-    });
+    },'json');
     return false;
 }
 // Auto center the dialog boxes
@@ -587,10 +595,6 @@ function objToOptions_menus(obj) {
 
     return(output);
 }
-
- //By default load lists
-loadTransactionList(0);
-var pg=0;
     
 function loadTransactionList(pg) {
     

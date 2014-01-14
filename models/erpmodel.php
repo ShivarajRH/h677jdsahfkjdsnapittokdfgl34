@@ -8436,9 +8436,10 @@ order by p.product_name asc
 			$item['name'] = $this->db->query("select name from king_dealitems where id = ? ",$item['itemid'])->row()->name;
 			
 			// check if belongs to split invoice condiciton config
-			$split_trans=$this->db->query("SELECT i.*,d.publish,c.loyality_pntvalue FROM king_dealitems i JOIN king_deals d ON d.dealid=i.dealid JOIN pnh_menu c ON c.id = d.menuid WHERE i.is_pnh=1 AND  i.pnh_id=? AND i.pnh_id!=0 AND c.id IN(112,118,122)",$item['pid'])->row_array();
+                        //Transaction splitting
+                        //$split_trans=$this->db->query("SELECT i.*,d.publish,c.loyality_pntvalue FROM king_dealitems i JOIN king_deals d ON d.dealid=i.dealid JOIN pnh_menu c ON c.id = d.menuid WHERE i.is_pnh=1 AND  i.pnh_id=? AND i.pnh_id!=0 AND c.id IN(112,118,122)",$item['pid'])->row_array();
 			//$split_order = 0;
-			$item['split_order'] = 0;
+			/*$item['split_order'] = 0;
 			if($split_trans)
 			{
 				$ttl_qty = $item['qty'];
@@ -8449,9 +8450,9 @@ order by p.product_name asc
 					$transids[1][] = $item;
 				}
 			}else
-			{
+			{*/
 				$transids[0][] = $item;
-			}
+			/*}*/
 		}
 		
 		$split_transid_list = array();

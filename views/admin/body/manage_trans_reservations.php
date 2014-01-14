@@ -125,7 +125,7 @@
 
                     
                     <div class="oldest_newest_sel_block"><select name="sel_old_new" id="sel_old_new"><option value="1" selected>NEWEST</option><option value="0" <?=($oldest_newest=='0') ? "selected":""; ?> >OLDEST</option></select></div>
-                    <div class="block_alloted_status"></div>
+                    <div class="block_alloted_status"><select id="sel_alloted_status" name="sel_alloted_status"><option value="0" <?=( $alloted_status == 0 ? 'selected' : "" ); ?> >Not Alloted</option><option value="1" <?= ( $alloted_status===1 ? 'selected':'') ?> >Alloted</option></select></div>
                     <div class="sel_terr_block"></div>
                     <span class="ttl_trans_listed dash_bar"></span>
 

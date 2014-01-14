@@ -498,41 +498,31 @@ class Reservation extends Voucher {
         $batch_remarks=$batch_remarks=='' ? 'by transaction reservation system' : $batch_remarks ;
         
         // Process to batch this transaction
-        $arr_result[$transid] = $this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
-        
-        ////===============================
-//                    print_r($arr_result); //die();
+        $rslt[$transid] = $this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
+//        echo '<pre>';print_r($rslt); die();
+
+        if(isset($rslt[$transid]["nostock"])) {
+                    $arr_result2['nostock'][$transid] = $rslt["nostock"];
+                    /*foreach($rslt["products"] as $prodduct_id=>$stock) {
+                        $nostock_msg[$transid][] = array("product_id"=>$prodduct_id,"stock"=>$stock);
+                    }*/
+        }
+        elseif(isset($rslt[$transid]["alloted"])) {
             
-            foreach ($arr_result as $transid=>$rslt) {
-                    if($rslt["nostock"] == 0 ) {
-                        $arr_result2['nostock'][$transid] = $rslt["nostock"];
-                        
-                        foreach($rslt["products"] as $prodduct_id=>$stock) {
-                            $nostock_msg[$transid][] = array("product_id"=>$prodduct_id,"stock"=>$stock);
-                        }
-                        
-                    }
-                    elseif(isset($rslt["alloted"])) {
-                        $arr_result2['alloted'][$transid] = $rslt["alloted"];
-                        
-                        foreach($rslt["products"] as $prodduct_id=>$stock) {
-                            $allotedstock_msg[$transid][] = array("product_id"=>$prodduct_id,"stock"=>$stock);;
-                        }
-                        
-                    }
-                    elseif($rslt["error"] != '') {
-                        $errors[$transid] = $rslt["error"];
-                    }
-            }
-                $count_alloted = count($arr_result2["alloted"]);
-                $count_notalloted = count($arr_result2['nostock']); //count($count_stock['alloted']);count($arr_result2["alloted"]);
-                
-//                $output['result'] = array("alloted"=>$count_alloted);
-//                print_r($count_stock);
-                $output = array("status"=>"success","alloted"=>$count_alloted,"alloted_msg"=>$allotedstock_msg,"nostock"=>$count_notalloted,"nostock_msg"=>$nostock_msg,"error"=>$errors);
-        
-        
-        
+                $arr_result2['alloted'][$transid] = $rslt["alloted"];
+                /*foreach($rslt[$transid]["products"] as $prodduct_id=>$stock) {
+                    $allotedstock_msg[$transid][] = array("product_id"=>$prodduct_id,"stock"=>$stock);;
+                }*/
+        }
+        elseif($rslt["error"] != '') {
+            $errors[$transid] = $rslt["error"];
+        }
+
+        $count_alloted = count($arr_result2["alloted"]);
+        $count_notalloted = count($arr_result2['nostock']); //count($count_stock['alloted']);count($arr_result2["alloted"]);
+
+        $output = array("status"=>"success","alloted"=>$count_alloted,"alloted_msg"=>$allotedstock_msg,"nostock"=>$count_notalloted,"nostock_msg"=>$nostock_msg,"error"=>$errors);
+
         echo json_encode($output);
     }
        
@@ -612,8 +602,9 @@ class Reservation extends Voucher {
     function cancel_reserved_proforma_invoice($p_invoice,$update_by=1,$msg="Proforma cancelled by reservation system")
     {
         $arr_out = $this->reservations->reservation_cancel_proforma_invoice($p_invoice,$update_by,$msg);
+//        echo '<pre>';print_r($arr_out);die();
         if($arr_out['status'] == 'success') {
-            $output = array("status"=>"success","response"=>json_encode($arr_out));
+            $output = $arr_out;//array("status"=>"success","response"=>json_encode($arr_out));
         }
         else  {
             $output = array("status"=>"fail","response"=>$arr_out['response']);

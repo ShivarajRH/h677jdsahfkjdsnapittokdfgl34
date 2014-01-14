@@ -31,7 +31,7 @@
                         <div class="print_link_block"><a href="javascript:void(0);" class="print_link" onclick="">Print</a></div>
 		</div>
 		<div class="heading2">
-			<h2 style="">Franchise wise pick slip for #<?=$this->uri->segment(3)?></h2>	
+			<h2 style="">Franchisewise pick slip for #<?=$this->uri->segment(3)?></h2>	
 		</div>
 	</div>
         <div class="clear"></div>

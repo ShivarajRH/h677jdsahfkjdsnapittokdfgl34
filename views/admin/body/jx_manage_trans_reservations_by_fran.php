@@ -225,7 +225,7 @@ else
                         $(".process_by_fran_link").html(\''.($msg_process_by_fran).'\');
                         $(".re_allot_all_block").html(\''.($re_allot_all_block).'\');
                         $("#sel_old_new").hide();
-                        $(".block_alloted_status").html(\''.$block_alloted_status.'\');
+                        $(".block_alloted_status").hide();
                     </script>';
             
            

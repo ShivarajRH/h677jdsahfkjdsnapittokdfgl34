@@ -402,7 +402,6 @@ class reservation_model extends Model
                     $raw_trans=$this->db->query("select o.*,t.partner_reference_no from king_transactions t join king_orders o on o.transid=t.transid and o.status=0 join king_dealitems di on di.id = o.itemid join king_deals d on d.dealid = di.dealid  where t.batch_enabled=1 and t.is_pnh=$is_pnh $cond order by t.priority desc, t.init asc")->result_array();
                     
 
-            
             $v_transids=array();
             foreach($raw_trans as $t)
             {
@@ -589,8 +588,9 @@ class reservation_model extends Model
                             $s = $b*$num;
                             $ttl_inbatch = ((($s+$num) > $ttl_invoices)?$ttl_invoices-$s:$num);
 
-                            //$this->db->query("insert into shipment_batch_process(num_orders,batch_remarks,created_on) values(?,?,?)",array($ttl_inbatch,$batch_remarks,date('Y-m-d H:i:s')));
-                            $batch_id='5000';//$this->db->insert_id();
+                            //$this->db->query("insert into shipment_batch_process(num_orders,batch_remarks,created_on) values(?,?,?)",array($ttl_inbatch,$batch_remarks,date('Y-m-d H:i:s')));$batch_id = $this->db->insert_id();
+                            $batch_id='5000';
+                            
                             for($k=$s;$k<$s+$ttl_inbatch;$k++)
                             {
                                     $inv = $p_invoices[$k];
@@ -719,7 +719,7 @@ class reservation_model extends Model
                             {
                                     foreach($alloted_stock as $allot_stk)
                                             $this->db->insert("t_reserved_batch_stock",$allot_stk);
-                                    
+
                                     $tot_qty=array();
                                     foreach($alloted_stock2 as $stk_prod)
                                     {
@@ -738,7 +738,6 @@ class reservation_model extends Model
                                             }else {
                                                 $output['error'] = "<br>Transaction Stock log not updated.";
                                             }
-
                                     }
                                     
                                     $output['alloted'] = count($alloted_stock); //'<br>STOCK ALLOTED - '.$i_transid.' with '.count($alloted_stock).' product'.$stk_movtype_msg.'';
@@ -783,6 +782,7 @@ class reservation_model extends Model
      * @return type array
      */
     function reservation_cancel_proforma_invoice($p_invoice,$update_by=1,$msg) {
+        
             $output=array();
             $invoice=$this->db->query("select transid,order_id,p_invoice_no,p_invoice_no as invoice_no from proforma_invoices where p_invoice_no=? and invoice_status=1",$p_invoice)->result_array();
             
@@ -894,16 +894,12 @@ class reservation_model extends Model
                                     }
                                     **/
                             }
-
-
-
                     }
 
             }
 
-
             $this->db->query("update king_orders set status=0 where id in ('".implode("','",$oids)."') and transid=? ",$transid);
-            $this->db->query("update proforma_invoices set invoice_status=0 where p_invoice_no=? and transid = ? ",array($p_invoice,$transid));
+            $this->db->query("update proforma_invoices set invoice_status=0 and cancelled_on=unix_timestamp() where p_invoice_no=? and transid = ? ",array($p_invoice,$transid));
             $this->erpm->do_trans_changelog($transid,"Proforma Invoice no $p_invoice cancelled");
 //                $this->session->set_flashdata("erp_pop_info","Proforma Invoice cancelled");
             
@@ -924,7 +920,7 @@ class reservation_model extends Model
                             $this->db->query("update shipment_batch_process set status=1 where batch_id=? limit 1",$bid);
                     else
                             $this->db->query("update shipment_batch_process set status=2 where batch_id=? limit 1",$bid);
-            
+
             $output['status'] = "success";
             $output['p_invoice_no'] = $p_invoice;
             $output['transid'] = $transid;
@@ -932,7 +928,6 @@ class reservation_model extends Model
             return $output;
             //redirect("admin/proforma_invoice/$p_invoice");
     }
-    
     
     /**
      * Get Ungrouped transaction details 
@@ -972,8 +967,8 @@ class reservation_model extends Model
                 
                 $total_orders=0;
                 foreach($arr_resp as $i=>$r) {
-                    $count = count($r);
-                    $r_count["total"][$i] =$count;
+                        $count = count($r);
+                        $r_count["total"][$i] =$count;
                     
                         foreach($arr_resp[$i] as $j=>$inner) {
                             $r_count['menuname'][$i] = $inner['menuname'];
@@ -986,9 +981,7 @@ class reservation_model extends Model
                             //array_push($arr_category,array("menuid"=>$i,"menuname"=>$inner['menuname'],"ocount"=>$count) );
 
                         }
-                        
-                    $total_orders+=count($r);
-
+                        $total_orders+=count($r);
                 }
                 
                         $total_categories= count($arr_resp);
@@ -997,11 +990,10 @@ class reservation_model extends Model
                         $resp["total_categories"]= $total_categories;
                         $resp["arr_menus"]= $arr_menus;
                         
-                                //$resp["total_count_msg"]= 'There are <b>'.$total_orders."</b> orders of <b>".$total_categories.'</b> category.';
+//                        $resp["total_count_msg"]= 'There are <b>'.$total_orders."</b> orders of <b>".$total_categories.'</b> category.';
                         
                         $resp["total_count_msg"]= 'There are <b>'.$total."</b> orders of <b>".$total_categories.'</b> category.';
                         $resp["detail_category_msg"]= ''.implode('',$msg_category);
-
             }
             else {
                 $resp['status'] = 'fail';
@@ -1042,7 +1034,7 @@ class reservation_model extends Model
                                                 join m_batch_config bc on bc.id=sb.batch_configid
                                                 left join pnh_m_territory_info terr on terr.id=sb.territory_id
                                                 join king_admin a on a.id=sb.assigned_userid
-                                                where batch_id > ? $cond
+                                                where batch_id > ? and sb.status in (0) $cond
                                                 order by batch_id desc",array(GLOBAL_BATCH_ID))->result_array();
 //        die($this->db->last_query());
         return $batched_orders;

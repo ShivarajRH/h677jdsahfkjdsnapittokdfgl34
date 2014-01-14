@@ -25,8 +25,7 @@
                     if($given_terr_id!='') {
                         
                         $rdata = $this->reservations->jx_terr_batch_group_status($given_terr_id);
-                        echo $given_terr_id.'=>'.$rdata;
-                        print_r($rdata); die("=TESTING=");
+//                        echo $given_terr_id.'=>'.$rdata;print_r($rdata); die("=TESTING=");
                         echo "<table class='datagrid'><th>Menu</th><th>Orders</th>".$rdata->detail_category_msg."</table>";
                     }
                     ?>
@@ -55,7 +54,13 @@
                 </td>
             </tr>
             <tr>
-                <td>Number of orders:</td>
+                <td>Total number of orders:</td>
+                <td>
+                    <div class="batch_enable_all_orders">0</div>
+                </td>
+            </tr>
+            <tr>
+                <td>Max batch size:</td>
                 <td>
                     <!--<input type="hidden" name="assigned_menuids" id="assigned_menuids" value="" />-->
                     
@@ -137,7 +142,9 @@ $("#dlg_sel_territory").live("change",function() {
                         $.each(resp.bc_userids,function(uid,uname){
                             userlist_opts += '<option value="'+uid+'" class="bc_uid_'+uid+'">'+uname+'</option>';
                         });
-                        $("#assigned_uid").html(userlist_opts);                        
+                        $("#assigned_uid").html(userlist_opts);      
+                        
+                        $(".batch_enable_all_orders").html(resp.total_orders);
                 }
                 else 
                 {

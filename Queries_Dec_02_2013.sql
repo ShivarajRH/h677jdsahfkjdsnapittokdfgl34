@@ -1449,3 +1449,28 @@ select o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_perso
                     order by tr.init,di.name;
 
 select * from king_transactions where transid='PNH97446';
+
+-- =============================================================================
+update t_imei_no set status=0 and order_id=0 where imei_no = '355681050857489';
+-- =============================================================================
+
+# Jan_13_2014
+select * from proforma_invoices
+
+select * from shipment_batch_process;
+
+select * 
+from king_orders o
+join proforma_invoices pi on pi.transid=o.transid
+where o.transid='PNHKWQ67556';
+
+
+select unix_timestamp(now())
+
+select from_unixtime('1389609882');
+
+error: PNH22377
+
+select * from king_invoice;
+
+

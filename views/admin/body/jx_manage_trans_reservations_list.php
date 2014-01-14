@@ -21,12 +21,12 @@ else
 //$orderby_cond .='g.init';
 
 if( $batch_type == "pending") {
-        //$chk_box_global =''; $generate_btn_link='';
+        //$orderby_cond = ' g.actiontime ASC ';
 }
 elseif($batch_type == 'partial') {
         //$cond_batch .= ' ( g.batch_id is null ) ';// or g.batch_id >= '.GLOBAL_BATCH_ID." ";
         if($batch_group_type == 1) {
-            $cond_batch .= ' and g.batch_id <> '.GLOBAL_BATCH_ID.' ' ; $orderby_cond = ' g.batch_id desc and g.batch_id >= '.GLOBAL_BATCH_ID;
+            $cond_batch .= ' and g.batch_id <> '.GLOBAL_BATCH_ID.'and g.batch_id >= '.GLOBAL_BATCH_ID; $orderby_cond = ' g.batch_id desc ';
         }
         elseif($batch_group_type == 2) {
             $cond_batch .= ' and g.batch_id = '.GLOBAL_BATCH_ID.' and  g.batch_id >= '.GLOBAL_BATCH_ID;
@@ -36,7 +36,7 @@ elseif($batch_type == 'partial') {
 elseif($batch_type == 'ready') {
         $cond_batch .=' g.batch_id >= '.GLOBAL_BATCH_ID." ";
         if($batch_group_type == 1) {
-            $cond_batch .= ' and g.batch_id <> '.GLOBAL_BATCH_ID.' ' ; $orderby_cond = ' g.batch_id desc and g.batch_id >= '.GLOBAL_BATCH_ID;
+            $cond_batch .= ' and g.batch_id <> '.GLOBAL_BATCH_ID.' and g.batch_id >= '.GLOBAL_BATCH_ID; $orderby_cond = ' g.batch_id desc ';
         }
         elseif($batch_group_type == 2) {
             $cond_batch .= ' and g.batch_id = '.GLOBAL_BATCH_ID.' and  g.batch_id >= '.GLOBAL_BATCH_ID;
@@ -88,6 +88,7 @@ else
                     ,twn.town_name
                     ,dl.menuid,m.name as menu_name,bs.name as brand_name
                     ,sd.batch_id
+                    ,pi.cancelled_on
             from king_transactions tr
                     join king_orders o on o.transid=tr.transid
                     join king_dealitems di on di.id=o.itemid
@@ -144,6 +145,7 @@ else
                         $invoice_infos=array();
                         $trans_action_msg = '';
                         $batch_id_msg='--';
+                        $batch_enabled='';
                         $trans_action_msg='';//$pick_list_msg='';
 
                         $trans_created_by = $this->reservations->get_trans_created_by($trans_arr['transid']);
@@ -151,7 +153,10 @@ else
                                 $trans_created_by = '<div class="trans_created_by"> by '.($trans_created_by).'';
 
                         $arr_fran = $this->reservations->fran_experience_info($trans_arr['f_created_on']);
-
+                        
+                        if($trans_arr['batch_enabled']!=1)
+                            $batch_enabled='<div class="clear" style="margin-top:20px;background-color:#504952;"><span style="color: #8C489F;padding:2px 3px;">Batch disabled</span></div>';
+                        
                         if($trans_arr['batch_id'] != '') { 
                             //$batch_id_msg = '<a href="'.site_url("admin/batch/".$trans_arr['batch_id']).'" target="_blank">B'.$trans_arr['batch_id'].'</a>';
                             if($trans_arr['batch_id'] == GLOBAL_BATCH_ID) {
@@ -163,10 +168,12 @@ else
                         }
 
                         $output .= '<tr class="'.$batch_type.'_ord">
-                            <td>'.++$c.'</td>
-                            <td>'.$trans_arr['str_date'].'<div class="str_time">'.($trans_arr['str_time']).'</div>'.$trans_created_by.'</td>
-                            <td>'.$batch_id_msg.'</td>
-                            <td>
+                            <td align="center">'.++$c.'</td>
+                            <td align="center">'.$trans_arr['str_date'].'<div class="str_time">'.($trans_arr['str_time']).'</div>'.$trans_created_by.'</td>
+                            <td align="center">
+                                    '.$batch_id_msg.'
+                                    '.$batch_enabled.'</td>
+                            <td align="center">
                                 <span class="info_links"><a href="trans/'.$trans_arr['transid'].'" target="_blank">'.$trans_arr['transid'].'</span><br></a>
                                 <span class="info_links"><a href="'.site_url("admin/pnh_franchise/{$trans_arr['franchise_id']}").'"  target="_blank">'.$trans_arr['bill_person'].'</a><br></span>
                                 <span class="info_links">'.$trans_arr['town_name'].'</span>,
@@ -177,15 +184,15 @@ else
 
 
                         $output .='<table class="subdatagrid" cellpadding="0" cellspacing="0">
-                            <tr>
-                                <th>Slno</th>
-                                <th>Order id</th>
-                                <th>Deal Name</th>
-                                <th>Quantity</th>
-                                <th>MRP</th>
-                                <th>Amount</th>
-                                <th>Alloted</th>
-                            </tr>';
+                                        <tr>
+                                            <th>Slno</th>
+                                            <th>Order id</th>
+                                            <th>Deal Name</th>
+                                            <th>Quantity</th>
+                                            <th>MRP</th>
+                                            <th>Amount</th>
+                                            <th>Alloted</th>
+                                        </tr>';
 
                             /*<th>Alloted/Status?</th><th>Stock</th>
                             $stockinfo = $this->reservations->get_stock_from_orderid($order_i['id']);$status=array("Confirmed","Processed","Shipped","Cancelled","Returned");
@@ -195,26 +202,24 @@ else
                         $trans_orders = $this->reservations->get_orders_of_trans($trans_arr['transid']);
                         foreach($trans_orders as $j=>$order_i)  {
 
+                                    $output .='<input type="hidden" size="2" class="'.$trans_arr['transid'].'_total_orders" value="'.count($trans_orders).'" />';
 
-                            $output .='<input type="hidden" size="2" class="'.$trans_arr['transid'].'_total_orders" value="'.count($trans_orders).'" />';
+                                    $amount=round($order_i['i_orgprice']-($order_i['i_coup_discount']+$order_i['i_discount']),2);
 
-                                        $amount=round($order_i['i_orgprice']-($order_i['i_coup_discount']+$order_i['i_discount']),2);
-                                        
-                                        $o_status = ($order_i['status']?"yes":"no");
-                                            
-                                        $output .= '<tr class="order_status_'.$o_status.'">
-                                            <td style="width:25px">'.++$j.'</td>
-                                            <td style="width:50px"><span class="info_links"><a href="pnh_deal/'.$order_i['itemid'].'" target="_blank">'.$order_i['id'].'</a></span></td>
-                                            <td style="width:200px"><span class="info_links"><a href="pnh_deal/'.$order_i['itemid'].'" target="_blank">'.$order_i['name'].'</a></span></td>
-                                            <td style="width:50px">'.$order_i['quantity'].'</td>
-                                            <td style="width:50px">'.$order_i['i_orgprice'].'</td>
-                                            <td style="width:50px">'.$amount.'</td>
-                                            <td style="width:20px">'.ucfirst($o_status).' </td>
-                                        </tr>';
+                                    $o_status = ($order_i['status']?"yes":"no");
+
+                                    $output .= '<tr class="order_status_'.$o_status.'">
+                                        <td style="width:25px">'.++$j.'</td>
+                                        <td style="width:50px"><span class="info_links"><a href="pnh_deal/'.$order_i['itemid'].'" target="_blank">'.$order_i['id'].'</a></span></td>
+                                        <td style="width:200px"><span class="info_links"><a href="pnh_deal/'.$order_i['itemid'].'" target="_blank">'.$order_i['name'].'</a></span></td>
+                                        <td style="width:50px">'.$order_i['quantity'].'</td>
+                                        <td style="width:50px">'.$order_i['i_orgprice'].'</td>
+                                        <td style="width:50px">'.$amount.'</td>
+                                        <td style="width:20px">'.ucfirst($o_status).' </td>
+                                    </tr>';
                         }
 
                         $output .= '</table></td>';
-
 
                        if( $batch_type == "pending") 
                         {
@@ -249,43 +254,41 @@ else
                         $fil_menulist[$trans_arr['menuid']] = $trans_arr['menu_name'];
                         $fil_brandlist[$trans_arr['brandid']] = $trans_arr['brand_name'];
                         $fil_franchiselist[$trans_arr['franchise_id']] = $trans_arr['franchise_name'];
+                }
 
+            //   PAGINATION
+                $this->load->library('pagination');
+                $config['base_url'] = site_url("admin/jx_manage_trans_reservations_list/".$batch_type.'/'.$s.'/'.$e.'/'.$terrid.'/'.$townid.'/'.$franchiseid.'/'.$menuid.'/'.$brandid."/".$showbygrp."/".$batch_group_type."/".$latest."/".$alloted_status."/".$limit); 
+                $config['total_rows'] = $total_trans_rows;
+                $config['per_page'] = $limit;
+                $config['uri_segment'] = 16;
+                $config['num_links'] = 5;
+                $config['cur_tag_open'] = '<span class="curr_pg_link">';
+                $config['cur_tag_close'] = '</span>';
+                $this->config->set_item('enable_query_strings',false); 
+                $this->pagination->initialize($config); 
+                $trans_pagination = $this->pagination->create_links();
+                $this->config->set_item('enable_query_strings',TRUE);
+            //   PAGINATION ENDS
+                $endlimit=($pg+1*$limit);
+                $endlimit=($endlimit>$total_trans_rows)?$total_trans_rows : $endlimit;
+
+                $output .= '</tbody>
+                    </table>
+                </form>
+                <div class="trans_pagination">'.$trans_pagination.' </div>
+                    <script>
+                        $(".level1_filters").show();
+                        $(".pagination_top").html(\''.($trans_pagination).'\');
+                        $(".ttl_trans_listed").html("Showing <strong>'.($pg+1).' - '.$endlimit.'</strong> / <strong>'.$total_trans_rows.'</strong> transactions '.$datefilter_msg.'");
+                        $(".btn_picklist_block").html(\''.($msg_generate_pick_list).'\');
+                        $(".batch_btn_link").html(\''.($batch_btn_link).'\');
+                        $(".process_by_fran_link").html(\''.($msg_process_by_fran).'\');
+                        $(".re_allot_all_block").html(\''.($re_allot_all_block).'\');
+                        $(".sel_terr_block").html("");
+                        $(".block_alloted_status").hide(); 
+                    </script>';
             }
-    
-    //   PAGINATION
-            $this->load->library('pagination');
-            $config['base_url'] = site_url("admin/jx_manage_trans_reservations_list/".$batch_type.'/'.$s.'/'.$e.'/'.$terrid.'/'.$townid.'/'.$franchiseid.'/'.$menuid.'/'.$brandid."/".$showbygrp."/".$batch_group_type."/".$latest."/".$alloted_status."/".$limit); 
-            $config['total_rows'] = $total_trans_rows;
-            $config['per_page'] = $limit;
-            $config['uri_segment'] = 16;
-            $config['num_links'] = 5;
-            $config['cur_tag_open'] = '<span class="curr_pg_link">';
-            $config['cur_tag_close'] = '</span>';
-            $this->config->set_item('enable_query_strings',false); 
-            $this->pagination->initialize($config); 
-            $trans_pagination = $this->pagination->create_links();
-            $this->config->set_item('enable_query_strings',TRUE);
-    //   PAGINATION ENDS
-            $endlimit=($pg+1*$limit);
-            $endlimit=($endlimit>$total_trans_rows)?$total_trans_rows : $endlimit;
-            
-            $output .= '</tbody>
-                </table>
-            </form>
-            <div class="trans_pagination">'.$trans_pagination.' </div>
-                <script>
-                    $(".level1_filters").show();
-                    $(".pagination_top").html(\''.($trans_pagination).'\');
-                    $(".ttl_trans_listed").html("Showing <strong>'.($pg+1).' - '.$endlimit.'</strong> / <strong>'.$total_trans_rows.'</strong> transactions '.$datefilter_msg.'");
-                    $(".btn_picklist_block").html(\''.($msg_generate_pick_list).'\');
-                    $(".batch_btn_link").html(\''.($batch_btn_link).'\');
-                    $(".process_by_fran_link").html(\''.($msg_process_by_fran).'\');
-                    $(".re_allot_all_block").html(\''.($re_allot_all_block).'\');
-                    $(".sel_terr_block").html("");
-                    $(".block_alloted_status").html(\''.$block_alloted_status.'\');
-                </script>';
-        }
-        // //$("#sel_old_new").html(\''.$old_new_msg.'\');
 }
 echo $output;
 //===========
