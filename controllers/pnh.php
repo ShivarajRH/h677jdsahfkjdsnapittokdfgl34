@@ -476,7 +476,16 @@ class Pnh extends Controller{
 			$billno=$nbill['bill_no']+1;
 		$inp=array("bill_no"=>$billno,"franchise_id"=>$franid,"transid"=>$transid,"user_id"=>$userid,"status"=>1);
 		$this->db->insert("pnh_cash_bill",$inp);
-		$this->erpm->do_trans_changelog($transid,"PNH Order placed through SMS by $from");
+                
+                //do packing process
+                $ttl_num_orders=count($items);
+                $batch_remarks="PNH Order placed through SMS by $from";
+                $updated_by=$userid;
+
+                // Process to batch this transaction
+                $this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
+                
+		$this->erpm->do_trans_changelog($transid,$batch_remarks);
 		
 	}
 

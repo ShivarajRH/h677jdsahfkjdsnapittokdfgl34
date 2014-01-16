@@ -7437,8 +7437,16 @@ group by g.product_id ");
 				$billno=$nbill['bill_no']+1;
 			$inp=array("bill_no"=>$billno,"franchise_id"=>$franid,"transid"=>$transid,"user_id"=>$userid,"status"=>1);
 			$this->db->insert("pnh_cash_bill",$inp);
-			$this->erpm->do_trans_changelog($transid,"PNH offline Order placed using vouchers ",$userid);
-
+                        
+                        //do packing process
+                        $ttl_num_orders=count($items);
+                        $trans_remarks="PNH offline Order placed using vouchers ";
+                        $updated_by=$userid;
+			$this->erpm->do_trans_changelog($transid,$trans_remarks,$userid);
+                        
+                        // Process to batch this transaction
+                        $this->reservations->do_batching_process($transid,$ttl_num_orders,$trans_remarks,$updated_by);
+                        
 			$v_balamt=$this->db->query("SELECT SUM(customer_value) AS voucher_bal FROM pnh_t_voucher_details WHERE STATUS in(3,5) AND member_id=?",$is_strkng_membr['pnh_member_id'])->row()->voucher_bal;
 			$from=trim($mem_det['mobile']);
 			if( $voucher_code_used['othr_secretcode'])
@@ -24268,7 +24276,7 @@ die; */
 		}else
 		{
 			$output['status'] = 'error';
-			$output['message'] = 'Invalid IMEI Entered';
+			$output['message'] = 'Invalid IMEI or Barcode entered.';
 		}
 		echo json_encode($output);
 	}

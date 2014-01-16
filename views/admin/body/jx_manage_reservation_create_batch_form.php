@@ -2,7 +2,7 @@
     <!--<input type="radio" value="by_terr" name/>Process by franchise?-->
     
     <form method="post" action="">
-        <table width="100%" border="0" cellspacing="4">
+        <table width="100%" border="0" cellspacing="0" cellpadding="5">
            <tr>
                <td>Select Territory:</td>
                <td>
@@ -54,13 +54,13 @@
                 </td>
             </tr>
             <tr>
-                <td>Total number of orders:</td>
+                <td>Available transactions:</td>
                 <td>
-                    <div class="batch_enable_all_orders">0</div>
+                    <span class="batch_enable_all_orders">0</span>
                 </td>
             </tr>
             <tr>
-                <td>Max batch size:</td>
+                <td>Max Batch Size:</td>
                 <td>
                     <!--<input type="hidden" name="assigned_menuids" id="assigned_menuids" value="" />-->
                     

@@ -41,8 +41,8 @@ else {
             <th>Batch Number</th>
             <th>Group Menu</th>
             <th>Territory</th>
-            <th width="60">Total Orders</th>
-            <th width="35">Status</th>
+            <th width="60">No. Transactions</th>
+            <th width="35">Packing Status</th>
             <th>Assigned to</th>
             <th>Action</th>
         </tr>
@@ -56,7 +56,7 @@ else {
             <td><?=$batch_item['territory_name'];?></td>
             <td><?=$batch_item['num_orders'];?></td>
             <td><?=$batch_status[$batch_item['status']];?></td>
-            <td><?=ucfirst($batch_item['assigned_to']); ?></td>
+            <td align="center"><b><?=ucfirst($batch_item['assigned_to']); ?></b></td>
             <td>
                 <a class="packthis button button-rounded button-tiny button-action" href="javascript:void(0)" batch_id="<?=$batch_item['batch_id'];?>">Pack This Batch</a>
                 <a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="picklist_product_wise(this,<?=$batch_item['batch_id'];?>)">Generate Product Pickslip</a>

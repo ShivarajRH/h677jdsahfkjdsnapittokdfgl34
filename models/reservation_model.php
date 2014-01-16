@@ -151,7 +151,10 @@ class reservation_model extends Model
     function get_username_byid($userid) {
         return $this->db->query("select username from king_admin where id=?",$userid)->row()->username;
     }
-    
+    /**
+     * Function to create batches by batch config settings
+     * @return type string
+     */
     function do_create_batch_by_group_config () {
         
         error_reporting(E_ALL);
@@ -195,7 +198,7 @@ class reservation_model extends Model
                                 order by menuname,tr.init asc";
         
         $rslt_set = $this->db->query($sql,GLOBAL_BATCH_ID);
-//        echo '<pre>'.$this->db->last_query();
+//        echo '<pre>'.$this->db->last_query();die();
        
         
         $ttl_inbatch = $rslt_set->num_rows(); //$ttl_inbatch = count($rslt);
@@ -209,7 +212,7 @@ class reservation_model extends Model
                 $menu_orders[$order['menuid']]['menuname'] = $order['menuname'];
                 $menu_orders[$order['menuid']]['orders'][] = $order;
             }
-            
+//            echo '<pre>'.$menu_orders;die();
                 $ttl_batch_alloted=0;
                 // loop through menu items
                 foreach($menu_orders as $menuid=>$menu_item) {
@@ -222,12 +225,22 @@ class reservation_model extends Model
                     for($i=0; $i<$ttl_pgs; $i++) {
                         if($remaining<=0) 
                             continue;
+                        
                         //Prepare total orders in batch
-                        if($remaining>$batch_size) 
-                            $ttl_allot= $batch_size;
-                        else 
+                        if($remaining>$batch_size) {
+                            
+                                if(($remaining-($batch_size/2))>$batch_size) {
+                                     $ttl_allot= $batch_size;
+                                }
+                                else {
+                                     $ttl_allot= $remaining;
+                                }
+                               
+                        }
+                        else {
                             $ttl_allot=$remaining;
-
+                        }
+                        
                         $remaining = $remaining-$ttl_allot;
 
                         $start = ($i * $batch_size);
@@ -242,7 +255,7 @@ class reservation_model extends Model
                         }
                     }
                 }
-                echo "Total ".$ttl_batch_alloted." batches created.";
+                $output.= "Total ".$ttl_batch_alloted." batches created.";
             }
             else {
                 $output.= 'No transactions found.'.'<br>';//$this->db->last_query()
@@ -259,7 +272,7 @@ class reservation_model extends Model
             $arr_set = array("batch_id"=>$new_batch_id);
             $arr_where =array("id"=>$tbl_id);
             $this->db->update("shipment_batch_process_invoice_link",$arr_set,$arr_where);
-            echo "Success";
+//            echo "Success";
     }
     
     /**

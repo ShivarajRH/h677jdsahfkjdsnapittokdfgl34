@@ -22,7 +22,7 @@ if( $batch_type == "pending") {
 }
 else {
     $output.= '<script>$(".re_allot_all_block").css({"padding":0});</script>';
-    $msg_generate_pick_list .= '<input type="submit" class="button button-rounded button-action" value="Generate Pick List" name="btn_generate_pick_list" id="btn_generate_pick_list" title="Click to generate picklist for printing"/>';
+    //$msg_generate_pick_list .= '<input type="submit" class="button button-rounded button-action" value="Generate Pick List" name="btn_generate_pick_list" id="btn_generate_pick_list" title="Click to generate picklist for printing"/>';
 //    $generate_btn_link .= '<input type="submit" class="button button-rounded button-tiny button-action" value="Create Batch" name="btn_cteate_group_batch" id="btn_cteate_group_batch" title="Click to Create Group Batch"/>';
 }
 
@@ -184,7 +184,8 @@ else
                         }
                         else
                         {
-                                    $output .= '<td>';
+                                    $output .= '<td> --';
+                                    /*
                                     $arr_pinv_ids =array();
                                     foreach ($arr_trans_set['result'] as $arr_trans) { 
                                         if($trans_arr['franchise_id'] == $arr_trans['franchise_id']) {
@@ -194,11 +195,11 @@ else
                                     }
                                     $str_pinv_ids = implode(",", array_unique($arr_pinv_ids));
                                     $output .= '<a class="button button-rounded button-tiny button-action" href="javascript:void(0)" onclick="process_pinvoices_by_fran(this,'.$trans_arr['franchise_id'].')" p_invoice_ids="'.$str_pinv_ids.'">Generate invoice</a>
-                                          <form action="'.site_url('admin/pack_invoice_by_fran/'.$trans_arr['batch_id'].'/'.$trans_arr['franchise_id'].'').'" method="post" id="pinvoices_form_'.$trans_arr['franchise_id'].'" target="_blank">
-                                           </form>';
+                                                    <form action="'.site_url('admin/pack_invoice_by_fran/'.$trans_arr['batch_id'].'/'.$trans_arr['franchise_id'].'').'" method="post" id="pinvoices_form_'.$trans_arr['franchise_id'].'" target="_blank">
+                                           </form>';*/
                                                                         
-                                    $output .= '<br><a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="picklist_product_wise(this,'.$trans_arr['batch_id'].','.$trans_arr['franchise_id'].')" p_invoice_ids="'.$str_pinv_ids.'">Generate Picklist</a>';
-/*<form action=""><input type="hidden" value="'.$str_pinv_ids.'" name="pick_list_invids" id="picklist_by_fran_all_'.$trans_arr['franchise_id'].'"/></form>*/
+//                                    $output .= '<br><a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="picklist_product_wise(this,'.$trans_arr['batch_id'].','.$trans_arr['franchise_id'].')" p_invoice_ids="'.$str_pinv_ids.'">Generate Picklist</a>';
+                                        /*<form action=""><input type="hidden" value="'.$str_pinv_ids.'" name="pick_list_invids" id="picklist_by_fran_all_'.$trans_arr['franchise_id'].'"/></form>*/
                                     $output .= '</td>
                                         <td><span class="total_trans fl_left">'.$trans_arr['ttl_trans'].'</span></td>
                                         <td align="left">

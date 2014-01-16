@@ -65,7 +65,7 @@ class Reservation extends Voucher {
             $cond = ' and f.territory_id = '.$territory_id.' ';
             
         $rslt = $this->db->query("select distinct 
-                            o.itemid,count(*) as ttl_orders
+                            o.itemid,count(distinct tr.transid) as ttl_orders
                             ,bc.id as menuid,bc.batch_grp_name as menuname,f.territory_id
                             ,sd.id,sd.batch_id,sd.p_invoice_no
                             ,from_unixtime(tr.init) as init,bc.batch_size,bc.group_assigned_uid as bc_group_uids

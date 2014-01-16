@@ -64,6 +64,7 @@ $("#dlg_create_group_batch_block").dialog({
                         }
                         assigned_uid = '0';
                     }
+                    if(batch_size==0) { show_output("Batch size should be greater than 0.");return false; }
                     if(sel_batch_menu == '00') {sel_batch_menu=0;  }
                     if(territory_id == '00') {territory_id=0;  }
                     if(townid == '00') {townid=0;  }

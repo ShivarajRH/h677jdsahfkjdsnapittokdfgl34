@@ -94,7 +94,7 @@ h3 { font-size: 18px; }
     background-color: transparent;
     color: #130C09;
 }
-.process_btn { text-align: center; margin: 180px 0 0 0; }
+.process_btn { text-align: center}
 
 
 .scan_barcode_block { margin: 5px 0 14px 0; padding: 5px 10px; background:#F7F5FC;  font-weight: bold;}
@@ -351,35 +351,35 @@ foreach($invoice as $i)
                                                                 $scan_by_bc = 1;
                                                         }
                                                         ?>
-                                                        <input rb_id="<?php echo $mrp_b[2].'_'.$mrp_b[3]?>" rb_name="<?php echo $mrp_b['rb_name']?>"
-                                                                dealname="<?php echo addslashes($i['deal'])?>" 
-                                                                itemid="<?php echo $i['itemid']?>"
-                                                                p_invno="<?php echo $i['p_invoice_no']?>"
-                                                                order_id="<?php echo $i['order_id']?>" 
-                                                                consider_for_refund="<?php echo $consider_for_refund;?>"
-                                                                disc="<?php echo $i['discount']?>"
-                                                                ordmrp="<?php echo $i['order_mrp'];?>"
-                                                                stk_info_id="<?php echo $mrp_b['stock_id'] ?>"
-                                                                mrp="<?php echo $mrp ?>"
-                                                                reserv_qty = "<?php echo $mrp_b['reserv_qty'] ?>" 
-                                                                stk="<?php echo $mrp_b[1]+$mrp_b['reserv_qty'];?>" type="hidden"
-                                                                pid="<?php echo $prd_id;?>"
-                                                                name="pbc[<?php echo $i['p_invoice_no'].'_'.$i['itemid'].'_'.$prd_id.'_'.($mrp_b[0]?$mrp_b[0]:'BLANK').'_'.$mrp_b['stock_id'].'_'.$i['order_id'];?>]" value="0"
-                                                                class="scan_proditem <?php echo $scan_by_bc?'scan_bybc':'' ?> pbcode_<?php echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?> pbcode_<?php echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?>_<?php echo (double)$mrp;?>_<?php echo $mrp_b[2].'_'.$mrp_b[3];?> pbcode_<?php echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?>_<?php echo (double)$mrp;?>_<?php echo $mrp_b[2].'_'.$mrp_b[3];?>_<?php echo $mrp_b['stock_id'];?>_<?php echo $i['itemid'];?>_<?php echo $i['order_id'];?>"
+                                                        <input rb_id="<?= $mrp_b[2].'_'.$mrp_b[3]?>" rb_name="<?= $mrp_b['rb_name']?>"
+                                                                dealname="<?= addslashes($i['deal'])?>" 
+                                                                itemid="<?= $i['itemid']?>"
+                                                                p_invno="<?= $i['p_invoice_no']?>"
+                                                                order_id="<?= $i['order_id']?>" 
+                                                                consider_for_refund="<?= $consider_for_refund;?>"
+                                                                disc="<?= $i['discount']?>"
+                                                                ordmrp="<?= $i['order_mrp'];?>"
+                                                                stk_info_id="<?= $mrp_b['stock_id'] ?>"
+                                                                mrp="<?= $mrp ?>"
+                                                                reserv_qty = "<?= $mrp_b['reserv_qty'] ?>" 
+                                                                stk="<?= $mrp_b[1]+$mrp_b['reserv_qty'];?>" type="hidden"
+                                                                pid="<?= $prd_id;?>"
+                                                                name="pbc[<?= $i['p_invoice_no'].'_'.$i['itemid'].'_'.$prd_id.'_'.($mrp_b[0]?$mrp_b[0]:'BLANK').'_'.$mrp_b['stock_id'].'_'.$i['order_id'];?>]" value="0"
+                                                                class="scan_proditem <?=$scan_by_bc?'scan_bybc':'' ?> pbcode_<?=$mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?> pbcode_<?=$mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?>_<?=(double)$mrp;?>_<?=$mrp_b[2].'_'.$mrp_b[3];?> pbcode_<?=$mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?>_<?=(double)$mrp;?>_<?=$mrp_b[2].'_'.$mrp_b[3];?>_<?=$mrp_b['stock_id'];?>_<?=$i['itemid'];?>_<?=$i['order_id'];?>"
                                                                 style="width: 20px !important;" />
 
-                                                        <lable><?php //echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?></lable>
+                                                        <lable><?= $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?></lable>
                                                         <?php 		
                                                 }
                                                 ?>
-                                                        <input mrp="<?php echo $mrp ?>" stk_i="<?php echo $stk_i;?>"
-                                                                itemid="<?php echo $i['itemid']?>" 
-                                                                p_invno="<?php echo $i['p_invoice_no']?>"
-                                                                pid="<?php echo $prd_id;?>"
+                                                        <input mrp="<?=$mrp; ?>" stk_i="<?= $stk_i;?>"
+                                                                itemid="<?=$i['itemid']?>" 
+                                                                p_invno="<?= $i['p_invoice_no']?>"
+                                                                pid="<?=$prd_id;?>"
                                                                 title="Scan to update via barcode or click here"
-                                                                class="prod_stkselprev <?php echo !$show_add_btn?'disabled':"";?>"
-                                                                ttl_stk="<?php echo $mrp_list['stk'];?>"
-                                                                onclick="upd_selprodstk(this)" type="button" <?php echo !$show_add_btn?'disabled':"";?> value="0">
+                                                                class="prod_stkselprev <?= !$show_add_btn?'disabled':"";?>"
+                                                                ttl_stk="<?=$mrp_list['stk'];?>"
+                                                                onclick="upd_selprodstk(this)" type="button" <?= !$show_add_btn?'disabled':"";?> value="0">
                                             </div>
                                         </td>
                                     </tr>
@@ -449,7 +449,7 @@ foreach($invoice as $i)
     	 
     </div>
     <!-- End of LEFT container -->
-    </form>
+    
     <?php $p_invno_list = array_unique($p_invno_list);    ?>
     
     <div class="right_container">
@@ -500,12 +500,19 @@ foreach($invoice as $i)
                         <div class="scanned_summ_stats"><span style="font-size: 13px;">Products </span> : <span class="ttl_num" id="summ_ttl_scanned_prod">0</span></div>	
                 </div>
         
-                <div class="scan_barcode_block">
-                    <label for="scan_barcode">Scan Barcode/IMEI :</label><br>
-                    <input class="inp" id="scan_barcode" style="padding: 5px;"> <input type="button" value="Go" onclick='return validate_barcode(0);'>
+               <div class="scan_barcode_block">
+                    <label for="scan_barcode_imei">Scan Barcode/IMEI :</label><br>
+                    <input class="inp" id="scan_barcode_imei" style="padding: 5px;"> <input type="button" value="Go" onclick='validate_barcode_imei()'>
                 </div>
-                
-                
+
+<!--                <div class="scan_barcode_block">
+                    <label for="scan_barcode">Scan Barcode :</label><br>
+                    <input class="inp" id="scan_barcode" style="padding: 5px;"> <input type="button" value="Go" onclick='validate_barcode()'>
+                </div>
+                <div class="scanbyimei_block" id="scanbyimei">
+                    <label for="scan_imeino">Scan IMEI # :</label><br>
+                    <input class="inp" id="scan_imeino" style="padding: 5px;"> <input type="button" value="Go" onclick='validate_imeino()'>
+                </div>-->
                 
                 <div class="process_btn">
                         <input type="button" value="Process Invoice" class="button button-large button-action" onclick='process_invoice(1);'/>
@@ -513,7 +520,7 @@ foreach($invoice as $i)
                 
                 
         </div>
-    
+    </form>
 <!-- Dialog Holders Start -->
 <div style="display: none">
 <div id="mutiple_mrp_barcodes" title="Choose Stock from Multiple Mrps">
@@ -648,7 +655,7 @@ foreach($invoice as $i)
                 sel_bcstk_ele = $(ele).parent().find('.pbcode_'+stk_i+'_nobc');
                 p=sel_bcstk_ele.parents('tr:eq(1)');
 
-                $("#scan_barcode").val("");
+                $("#scan_barcode_imei").val("");
                 if(p.length==0)
                 {
                         alert("The product is not in invoice.");
@@ -838,6 +845,38 @@ foreach($invoice as $i)
                 alert("'"+prod+"' is insufficient");
         }
 	
+        function validate_barcode_imei()
+        {
+            //if input is empty
+            if($("#scan_barcode_imei").val().length==0)
+            {
+                    alert("Enter Barcode/IMEI number.");
+                    return;
+            }
+            
+            var sbc = $.trim($("#scan_barcode_imei").val());
+            
+            //check is there in barcode list
+            var sel_bcstk_ele = $('tr.prod_scan:not(".done") .pbcode_'+sbc);
+            if(sel_bcstk_ele.length > 1) {
+                //alert(sbc);
+                validate_barcode(sbc);
+            }
+            else {
+                //else check with imei list
+                /*if(prod_imeino_list[sbc] == 0)
+                {
+                                alert("IMEI number already alloted.");
+                                return false;
+                }*/
+                validate_imeino(sbc);
+            }
+            
+
+            
+            
+        }
+        
         function validate_imeino(s_imei)
         {
                 /*if($("#scan_imeino").val().length==0)
@@ -846,110 +885,100 @@ foreach($invoice as $i)
                         return;
                 }
                 var s_imei = $.trim($("#scan_imeino").val());
-                */
+                
+                // check if valid imei no 
+                if(1)
+                {*/ alert(s_imei+"....2");
+                        if(prod_imeino_list[s_imei] == 0)
+                        {
+                                        alert("IMEI number already alloted.");
+                                        return false;
+                        }else if(prod_imeino_list[s_imei] == undefined)
+                        {
 
-                if(prod_imeino_list[s_imei] == 0)
-                {
-                                alert("IMEI number already alloted.");
-                                return false;
-                }else if(prod_imeino_list[s_imei] == undefined)
-                {
+                                $.post(site_url+'admin/jx_get_imei_stockdet',"imei="+s_imei,function(resp){
 
-                        $.post(site_url+'admin/jx_get_imei_stockdet',"imei="+s_imei,function(resp){
+                                        if(resp.status == 'success')
+                                        {
+                                                var i_prod_id = resp.stk.product_id;
 
-                                if(resp.status == 'success')
-                                {
-                                        var i_prod_id = resp.stk.product_id;
+                                                // allot imeino to pending list
+                                                var ttl_imeireq = $('.imei'+i_prod_id).length; 
+                                                var ttl_imeiscanned = $('.imei'+i_prod_id+'_scanned').length;
 
-                                        // allot imeino to pending list
-                                        var ttl_imeireq = $('.imei'+i_prod_id).length; 
-                                        var ttl_imeiscanned = $('.imei'+i_prod_id+'_scanned').length;
+                                                        if(ttl_imeireq <= ttl_imeiscanned)
+                                                        {
+                                                                alert("Required Qty of Imei is already scanned...");
+                                                                return false;
+                                                        }else
+                                                        {
 
-                                                if(ttl_imeireq <= ttl_imeiscanned)
-                                                {
-                                                        alert("Required Qty of Imei is already scanned...");
-                                                        return false;
-                                                }else
-                                                {
+                                                                    var sel_imei_inpele = $('.imei'+i_prod_id+'_unscanned:eq(0)');
 
-                                                            var sel_imei_inpele = $('.imei'+i_prod_id+'_unscanned:eq(0)');
+                                                                    if(sel_imei_inpele.length)
+                                                                    {
+                                                                            sel_imei_inpele.parent().append('<a class="remove_scanned" prod_id="'+i_prod_id+'" href="javascript:void(0)" onclick="clear_scannedimeino(this)""><b>X</b></a>');
+                                                                            sel_imei_inpele.val(s_imei).removeClass('imei'+i_prod_id+'_unscanned').addClass('imei'+i_prod_id+'_scanned');
 
-                                                            if(sel_imei_inpele.length)
-                                                            {
-                                                                    sel_imei_inpele.parent().append('<a class="remove_scanned" prod_id="'+i_prod_id+'" href="javascript:void(0)" onclick="clear_scannedimeino(this)""><b>X</b></a>');
-                                                                    sel_imei_inpele.val(s_imei).removeClass('imei'+i_prod_id+'_unscanned').addClass('imei'+i_prod_id+'_scanned');
-
-                                                                    prod_imeino_list[s_imei] = 0;
-
-
-
-
-                                                                    $.post(site_url+'admin/jx_get_imei_stockdet','imei='+s_imei+'&p_invno='+sel_imei_inpele.attr('p_invno')+'&order_id='+sel_imei_inpele.attr('order_id'),function(resp){
-                                                                            if(resp.status == 'success')
-                                                                            {	
-                                                                                    var imei_map_str = new Array();
-                                                                                    if(resp.stk.product_barcode.length)
-                                                                                            imei_map_str.push(resp.stk.product_barcode); 
-                                                                                    else
-                                                                                            imei_map_str.push('0_nobc');
-
-                                                                                    imei_map_str.push((resp.stk.mrp)*1);
-                                                                                    imei_map_str.push(resp.stk.location_id);
-                                                                                    imei_map_str.push(resp.stk.rack_bin_id);
-                                                                                    imei_map_str.push(resp.stk.stock_id);
-                                                                                    imei_map_str.push(sel_imei_inpele.attr('itemid'));
-                                                                                    imei_map_str.push(sel_imei_inpele.attr('order_id'));
+                                                                            prod_imeino_list[s_imei] = 0;
 
 
 
 
-                                                                                                    print(imei_map_str.join('_'));
-                                                                                                    $('#scan_barcode').val(imei_map_str.join('_'));									
-                                                                                                    //6438158558441_1249_1_10_158214_9763765471_7172369123
-                                                                                                    validate_barcode(1);		
+                                                                            $.post(site_url+'admin/jx_get_imei_stockdet','imei='+s_imei+'&p_invno='+sel_imei_inpele.attr('p_invno')+'&order_id='+sel_imei_inpele.attr('order_id'),function(resp){
+                                                                                    if(resp.status == 'success')
+                                                                                    {	
+                                                                                            var imei_map_str = new Array();
+                                                                                            if(resp.stk.product_barcode.length)
+                                                                                                    imei_map_str.push(resp.stk.product_barcode); 
+                                                                                            else
+                                                                                                    imei_map_str.push('0_nobc');
 
-                                                                            }
-                                                                    },'json');
+                                                                                            imei_map_str.push((resp.stk.mrp)*1);
+                                                                                            imei_map_str.push(resp.stk.location_id);
+                                                                                            imei_map_str.push(resp.stk.rack_bin_id);
+                                                                                            imei_map_str.push(resp.stk.stock_id);
+                                                                                            imei_map_str.push(sel_imei_inpele.attr('itemid'));
+                                                                                            imei_map_str.push(sel_imei_inpele.attr('order_id'));
 
-                                                            }else
-                                                            {
-                                                                    alert("IMEI not found in this proforma for packing.");	
-                                                            }
-                                                }
-                                }else
-                                {
-                                        alert("Error:\n"+resp.message);	
+
+
+
+                                                                                                            print(imei_map_str.join('_'));
+                                                                                                            $('#scan_barcode_imei').val(imei_map_str.join('_'));									
+                                                                                                            //6438158558441_1249_1_10_158214_9763765471_7172369123
+                                                                                                            validate_barcode();		
+
+                                                                                    }
+                                                                            },'json');
+
+                                                                    }else
+                                                                    {
+                                                                            alert("IMEI not found in this proforma for packing.");	
+                                                                    }
+                                                        }
+                                        }else
+                                        {
+                                                alert("Error:\n"+resp.message);	
+                                        }
+
+                                        $("#scan_barcode_imei").val('').focus();
+
+                                },'json');
                                 }
 
-                                $("#scan_imeino").val('').focus();
-
-                        },'json');
-                }
-
+                        //}
 
         }
-		
-        function clear_scannedimeino(ele)
+
+        function validate_barcode()
         {
-                var imei_ele = $(ele).parent().find('.imeis');
-                var i_prod_id = $(ele).attr('prod_id');
-
-                        prod_imeino_list[imei_ele.val()] = undefined;
-
-                        imei_ele.val('');
-                        imei_ele.removeClass('imei'+i_prod_id+'_scanned').addClass('imei'+i_prod_id+'_unscanned');
-
-                        $(ele).remove();
-        }
-
-        function validate_barcode(status)
-        {
-                if($("#scan_barcode").val().length==0) {
+                /*if($("#scan_barcode").val().length==0) {
                         alert("Enter barcode");
                         return;
                 }
                 var sbc = $.trim($("#scan_barcode").val());
-
+                */
                 var sel_bcstk_ele = $('tr.prod_scan:not(".done") .pbcode_'+sbc);
 
                 if(sel_bcstk_ele.length > 1 && sbc.split('_').length == 1)
@@ -959,18 +988,11 @@ foreach($invoice as $i)
                 }
                 //print(sel_bcstk_ele);
                 p=sel_bcstk_ele.parents('tr:eq(1)');
-                $("#scan_barcode").val("");
+                $("#scan_barcode_imei").val("");
                 if(p.length==0)
                 {
-                        validate_imeino(sbc);
-                        //alert("The product is not in invoice");
+                        alert("The product is not in invoice");
                         return false;
-                }
-                else {
-                    if($(".imei_inp_list",p).length && status==0) {
-                        alert("Please scan imei number.");
-                        return;
-                    }
                 }
                 needed=parseInt($(".qty",p).html());
                 have=parseInt($(".have",p).html());
@@ -1013,6 +1035,19 @@ foreach($invoice as $i)
                 $('#mutiple_mrp_barcodes').dialog("close");		 
                 $(document).scrollTop(p.offset().top);		 
                 validate_item(p);
+        }
+		
+        function clear_scannedimeino(ele)
+        {
+                var imei_ele = $(ele).parent().find('.imeis');
+                var i_prod_id = $(ele).attr('prod_id');
+
+                        prod_imeino_list[imei_ele.val()] = undefined;
+
+                        imei_ele.val('');
+                        imei_ele.removeClass('imei'+i_prod_id+'_scanned').addClass('imei'+i_prod_id+'_unscanned');
+
+                        $(ele).remove();
         }
 
         var done_pids=[];
@@ -1090,14 +1125,15 @@ foreach($invoice as $i)
                         p=$(this).parents(".bars").get(0);
                         validate_item($(p));
 		});
-		$("#scan_barcode").keyup(function(e){
-                        e.preventDefault();
-                        if((e.which || e.keyCode)==13) {
-                            validate_barcode(0);
-                        }
-                        return false;
+		$("#scan_barcode_imei").keyup(function(e){
+                        if(e.which==13)
+                            validate_barcode();
 		});
 		
+		/*$("#scan_imeino").keyup(function(e){
+			if(e.which==13)
+                           validate_imeino();
+		});*/	
 		
 	});
 
@@ -1157,13 +1193,18 @@ foreach($invoice as $i)
         });
 
         $('input[name="sel_bc_mrp"]').live('click',function(){
-                $('#scan_barcode').val($(this).val());
-                validate_barcode(0);
+                $('#scan_barcode_imei').val($(this).val());
+                validate_barcode();
         });
 
-        $('#scan_barcode').focus();
+        $('#scan_barcode_imei').focus();
        
-
+		
+    	 <?php if($has_imei_scan) { ?>
+    	 	//$('#scanbyimei').show();
+    	 <?php }else{ ?>
+    	 	//$('#scanbyimei').hide();
+    	 <?php } ?>
     	 
   	
         /* FREE SAMPLE CODE */

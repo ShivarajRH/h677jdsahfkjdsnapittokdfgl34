@@ -1212,14 +1212,6 @@ select distinct o.itemid,d.menuid,mn.name as menuname,f.territory_id,sd.id,sd.ba
                                 where sd.batch_id=5000 
                                 order by d.menuid,tr.init asc
 
-#============================================================================================
-#========== BATCH RESET =====================================================================
-set @global_batch_id=5000;
-set @batch_id=5521; #5544-48
-update shipment_batch_process_invoice_link set batch_id=@global_batch_id where batch_id=@batch_id;
-delete from shipment_batch_process where batch_id = @batch_id;
-#============================================================================================
-
 
 set @global_batch_id=5000,@batch_id=5531; #,5531,5532,5533,5534,5535';
 update shipment_batch_process_invoice_link set batch_id=@global_batch_id where batch_id in (@batch_id);
@@ -1450,9 +1442,6 @@ select o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_perso
 
 select * from king_transactions where transid='PNH97446';
 
--- =============================================================================
-update t_imei_no set status=0 and order_id=0 where imei_no = '355681050857489';
--- =============================================================================
 
 # Jan_13_2014
 select * from proforma_invoices
@@ -1473,4 +1462,54 @@ error: PNH22377
 
 select * from king_invoice;
 
+
+# Jan_14_2014
+
+-- =============================================================================
+update t_imei_no set status=0 and order_id=0 where imei_no = '354619056098758';
+-- =============================================================================
+
+select (100*40)/100;
+
+select ceil(50/2);
+
+#============================================================================================
+#========== BATCH RESET =====================================================================
+set @global_batch_id=5000;
+set @batch_id=5521; #5544-48
+update shipment_batch_process_invoice_link set batch_id=@global_batch_id where batch_id=@batch_id;
+delete from shipment_batch_process where batch_id = @batch_id;
+#============================================================================================
+
+select ceil(66/20) =>4
+select 66%20 6
+select ceil(20/2) 10
+6<=10
+26-26 = 0
+batches 3
+
+select * from king_deals d
+join king_dealitems di on di.dealid=d.dealid where id='9953912416';
+
+select * from king_dealitems;
+
+deal edit:dealid=9953912416
+<div class="extra_text"> <table>  <tr>      <td>     <ul class="fk-ul-disc">      <li>14.2 Megapixels</li>      <li>Optical Zoom: 5x</li>     </ul>    </td>    <td>     <ul class="fk-ul-disc">            <li>CCD Image Sensor</li>            <li>with 
+
+select * from pnh_m_voucher;
+
+
+select distinct o.itemid,bc.id as menuid,bc.batch_grp_name as menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) from king_transactions tr
+                                join king_orders as o on o.transid=tr.transid
+                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
+                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
+                                join king_dealitems dl on dl.id = o.itemid
+                                join king_deals d on d.dealid = dl.dealid 
+                                join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
+                                
+                                join pnh_menu mn on mn.id=d.menuid
+                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id #and f.is_suspended = 0
+                                where sd.batch_id=5000  and f.territory_id = 11 
+                                group by o.transid
+                                order by menuname,tr.init asc
 
