@@ -156,9 +156,22 @@ else
                         
                         
                         
-                        $output .= '<td align="center">'.$town_name.'</td>
-                                    <td><span class="info_links"><a href="'.site_url("admin/pnh_franchise/{$trans_arr['franchise_id']}").'"  target="_blank">'.$trans_arr['franchise_name'].'</a><br></span>
-                                        <span>'.$trans_arr['ship_phone'].'<br></span><span class="fran_experience" style="background-color:'.$arr_fran['f_color'].';color: #ffffff;">'.$arr_fran['f_level'].'</span>
+                        $output .= '<td align="center">'.$town_name.'</td>';
+                        
+                        if( $batch_type == "pending") {
+                            $generate_btn_link_3 = '';
+                        }
+                        else {
+                            $ungrp_terr_status=$this->reservations->is_terri_batch_created($trans_arr['territory_id'] );
+                            if( $ungrp_terr_status ) 
+                                $generate_btn_link_3 = '<input type="button" class="btn_cteate_group_batch button button-rounded button-tiny button-action" value="Create Batch" name="btn_cteate_group_batch" onclick="fn_cteate_group_batch('.$trans_arr['territory_id'].',0,'.$trans_arr['franchise_id'].');" title="Click to Create Group Batch"/>';
+
+                        }
+                        $output.='<td><span class="info_links"><a href="'.site_url("admin/pnh_franchise/{$trans_arr['franchise_id']}").'"  target="_blank">'.$trans_arr['franchise_name'].'</a></span>
+                                            <br><span>'.$generate_btn_link_3.'</span>';
+                        
+                        
+                        $output .= '<span>'.$trans_arr['ship_phone'].'<br></span><span class="fran_experience" style="background-color:'.$arr_fran['f_color'].';color: #ffffff;">'.$arr_fran['f_level'].'</span>
                                     </td>';
                         
                         if( $batch_type == "pending") 

@@ -1085,7 +1085,7 @@ foreach($invoice as $i)
                 },1000);
         }
 
-        $(function(){
+        $(function() {
 		$(".nobarcode").click(function(){
                         p=$(this).parents(".bars").get(0);
                         validate_item($(p));
@@ -1097,8 +1097,6 @@ foreach($invoice as $i)
                         }
                         return false;
 		});
-		
-		
 	});
 
 

@@ -1,6 +1,8 @@
 <div>
     <!--<input type="radio" value="by_terr" name/>Process by franchise?-->
-    
+    <p>Town selected:<?=$sel_town_id;?><br>
+    Franchise selected:<?=$sel_fran_id;?>
+    </p>
     <form method="post" action="">
         <table width="100%" border="0" cellspacing="0" cellpadding="5">
            <tr>
@@ -31,7 +33,8 @@
                     ?>
                 </td>
             </tr>
-            <?php /* <tr>
+            <?php
+            /* <tr>
                 <td>Un-Group Orders status :</td>
                 <td> <div class="terr_batch_group_status">
                         

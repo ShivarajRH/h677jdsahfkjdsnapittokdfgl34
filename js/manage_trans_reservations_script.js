@@ -100,8 +100,9 @@ function fn_cteate_group_batch(territory_id,townid,franchise_id) {
 }
 
 function batch_show_group(territory_id,townid,franchise_id) {
+    
     var postData={};
-    postData = {territory_id : territory_id};
+    postData = {territory_id : territory_id,townid:townid,franchise_id:franchise_id};
     
     $("#dlg_create_group_batch_block").html('');
     $.post(site_url+"admin/manage_reservation_create_batch_form",postData,function(hmtldata) {

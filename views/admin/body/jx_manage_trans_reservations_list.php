@@ -26,10 +26,10 @@ if( $batch_type == "pending") {
 elseif($batch_type == 'partial') {
         //$cond_batch .= ' ( g.batch_id is null ) ';// or g.batch_id >= '.GLOBAL_BATCH_ID." ";
         if($batch_group_type == 1) {
-            $cond_batch .= ' and g.batch_id <> '.GLOBAL_BATCH_ID.'and g.batch_id >= '.GLOBAL_BATCH_ID; $orderby_cond = ' g.batch_id desc ';
+            $cond_batch .= ' g.batch_id <> '.GLOBAL_BATCH_ID.' and g.batch_id >= '.GLOBAL_BATCH_ID; $orderby_cond = ' g.batch_id desc ';
         }
         elseif($batch_group_type == 2) {
-            $cond_batch .= ' and g.batch_id = '.GLOBAL_BATCH_ID.' and  g.batch_id >= '.GLOBAL_BATCH_ID;
+            $cond_batch .= ' g.batch_id = '.GLOBAL_BATCH_ID.' and  g.batch_id >= '.GLOBAL_BATCH_ID;
         }
         $batch_btn_link .= '<input type="submit" class="btn_cteate_group_batch button button-rounded button-action" value="Create Group Batch" name="btn_cteate_group_batch" onclick="fn_cteate_group_batch(0,0,0);" title="Click to Create Group Batch"/>';
 }

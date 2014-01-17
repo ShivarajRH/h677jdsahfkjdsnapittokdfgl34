@@ -1513,3 +1513,41 @@ select distinct o.itemid,bc.id as menuid,bc.batch_grp_name as menuname,f.territo
                                 group by o.transid
                                 order by menuname,tr.init asc
 
+# Jan_16_2014 ===========
+
+select * from king_admin
+m_batch_config
+
+select * from king_menu;
+select * from pnh_menu
+
+-- -- -- -- -- -- //===============================================
+alter table `snapittoday_db_jan_2014`.`king_orders` add index `status` (`status`);
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+
+select distinct from_unixtime(tr.init,'%D %M %Y') as str_date,from_unixtime(tr.init,'%h:%i:%s %p') as str_time, count(tr.transid) as total_trans,tr.transid
+                    ,o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
+                    ,tr.init,tr.actiontime,tr.status tr_status,tr.is_pnh,tr.batch_enabled
+                    ,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,f.created_on as f_created_on
+                    ,ter.territory_name
+                    ,twn.town_name
+                    ,dl.menuid,m.name as menu_name,bs.name as brand_name
+                    ,sd.batch_id
+                    ,pi.cancelled_on
+            from king_transactions tr
+                    join king_orders o on o.transid=tr.transid
+                    join king_dealitems di on di.id=o.itemid
+                    join king_deals dl on dl.dealid=di.dealid
+                    join pnh_menu m on m.id = dl.menuid
+                    join king_brands bs on bs.id = o.brandid
+            join pnh_m_franchise_info  f on f.franchise_id=tr.franchise_id  and f.is_suspended = 0
+            join pnh_m_territory_info ter on ter.id = f.territory_id 
+            join pnh_towns twn on twn.id=f.town_id
+                    left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
+                    left join proforma_invoices pi on pi.order_id = o.id and pi.invoice_status = 1 
+                    left join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no
+            WHERE o.status in (0,1) and tr.batch_enabled=1 and i.id is null  and tr.transid in ('PNH22839','PNH33295','PNH35578','PNH35818','PNH71847','PNH93611','PNHAXG89881','PNHBQV35115','PNHCXE88342'
+,'PNHDJX75781','PNHEHA75287','PNHESP26174','PNHFMK39418','PNHGJL64274','PNHGQR82517','PNHHCP63831','PNHIHX16957','PNHIYC47867','PNHJGC19279','PNHJSM35174','PNHNVQ34988','PNHQQK26697','PNHQSG33417','PNHRAL44539'
+,'PNHSCD99697','PNHSZZ72836','PNHTMP33937','PNHTRW66732','PNHTWJ53918','PNHUEA37733','PNHURC82659','PNHVSE94433','PNHVVX36284','PNHWTN26375','PNHWTW35421','PNHWUI91457','PNHWUM95923','PNHWZM23398','PNHXJC33559'
+,'PNHZEV97667','PNHZQI66535')
+            group by o.transid asc) as g  where  and g.batch_id = 5000 and  g.batch_id >= 5000 group by transid order by  g.actiontime DESC

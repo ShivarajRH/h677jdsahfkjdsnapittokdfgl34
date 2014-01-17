@@ -51,7 +51,7 @@ else {
         <tr>
             <td><?=++$i;?></td>
             <td><div class="str_time"><?=format_datetime($batch_item['created_on']);?></div></td>
-            <td><?=$batch_item['batch_id'];?></td>
+            <td><b><?=$batch_item['batch_id'];?></b></td>
             <td><?=$batch_item['batch_grp_name'];?></td>
             <td><?=$batch_item['territory_name'];?></td>
             <td><?=$batch_item['num_orders'];?></td>

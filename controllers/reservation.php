@@ -309,6 +309,8 @@ class Reservation extends Voucher {
         $output=array();
         
         $data['sel_terr_id'] = $this->input->post("territory_id");
+        $data['sel_town_id'] = $this->input->post("townid");
+        $data['sel_fran_id'] = $this->input->post("franchise_id");
         
         
         $data['batch_conf']=  $this->reservations->getBatchGroupConfig();
