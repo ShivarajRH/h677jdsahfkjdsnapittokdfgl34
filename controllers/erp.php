@@ -927,10 +927,10 @@ class Erp extends Stream
 		$this->load->view("admin",$data);
 	}
 	
-	function purchaseorders($s=false,$e=false,$vid=false,$status="0",$pg=0)
+	function purchaseorders($s=0,$e=0,$vid=0,$status="0",$pg=0)
 	{
 		$user=$this->auth(PURCHASE_ORDER_ROLE|FINANCE_ROLE);
-		if($s!=false && $e!=false && (strtotime($s)<=0 || strtotime($e)<=0))
+		if($s!=0 && $e!=0 && (strtotime($s)<=0 || strtotime($e)<=0))
 			show_404();
 		
 		if($status == -1)	
@@ -939,6 +939,9 @@ class Erp extends Stream
 		$data['pos']=$this->erpm->getpos_date_range($s,$e,$vid,$status);
 		$data['total_po']=$total_po=$this->erpm->getpos_date_range_total($s,$e,$vid,$status,$pg);
 		
+		if($status == '')	
+			$status = '-1';
+
 		$data['pagination']=$this->_prepare_pagination(site_url("admin/purchaseorders/$s/$e/$vid/$status"), $total_po, 50, 7);
 		
 		$data['sdate']=$sdate?$sdate:'';
@@ -22416,6 +22419,7 @@ die; */
 		$this->erpm->auth();
 		
 		$fid = $this->input->post('fid');
+		$date_type = $this->input->post('date_type');
 		$imei_active_ondate = $this->input->post('active_ondate');
 		$imei_active_endate = $this->input->post('active_ondate_end');
 		$imei_srch_kwd = $this->input->post('imei_srch_kwd');
@@ -22430,8 +22434,14 @@ die; */
 			$cond.= 'and t.franchise_id='.$fid;
 		if($imei_srch_kwd)
 				$cond .= '  and ( inv.invoice_no = "'.$imei_srch_kwd.'" or imei_no = "'.$imei_srch_kwd.'") ';
-		if($imei_active_ondate && $imei_active_endate)
-			$cond .= ' and (date(imei_activated_on) >= date("'.$imei_active_ondate.'") and date(imei_activated_on) <= date("'.$imei_active_endate.'"))';
+		if($imei_active_ondate && $imei_active_endate )
+		{
+			if($date_type)
+				$cond .= ' and ( date(from_unixtime(t.init)) >= date("'.$imei_active_ondate.'") and date(from_unixtime(t.init)) <= date("'.$imei_active_endate.'") )';
+			else
+				$cond .= ' and ( date(imei_activated_on) >= date("'.$imei_active_ondate.'") and date(imei_activated_on) <= date("'.$imei_active_endate.'") )';
+		}
+			
 
 		if($imei_status>=1)
 		{
@@ -24156,9 +24166,13 @@ die; */
 	{
 		$this->erpm->auth();
 
-		$st_date=$this->input->post('st_dt');
-		$en_date=$this->input->post('en_dt');
-		$manifestoid=$this->input->post('srch_manifesto');
+		if(isset($_POST['st_dt']))
+		{
+			$st_date=$this->input->post('st_dt');
+			$en_date=$this->input->post('en_dt');
+			$manifestoid=$this->input->post('srch_manifesto');
+		}
+		
 		$data['pagetitle'] = '';
 		$cond='';
 		if($st_date!=0 && $en_date!=0)
@@ -24182,7 +24196,7 @@ die; */
 			$manifestoid = 0;
 		}
 			
-		$limit=20;
+		$limit=50;
 		$ttl_data=$this->db->query("select group_concat(a.id) as id,lrno,lrn_updated_on,amount,no_ofboxes,modified_on,b.username as updated_by
 												from pnh_m_manifesto_sent_log a
 												join king_admin b on a.modified_by = b.id 

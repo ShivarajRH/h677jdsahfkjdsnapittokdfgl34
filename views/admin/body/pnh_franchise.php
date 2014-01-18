@@ -530,22 +530,30 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 				//$ttl_activated_msch=$this->db->QUERY("SELECT COUNT(DISTINCT i.id) AS active_msch FROM king_orders o JOIN king_transactions t ON t.transid=o.transid JOIN t_imei_no i ON i.order_id=o.id WHERE is_imei_activated=1 AND o.imei_scheme_id > 0 AND t.franchise_id=? ",$f['franchise_id'])->ROW()->active_msch;
 				//$ttl_inactiv_msch=$this->db->QUERY("SELECT COUNT(DISTINCT i.id) AS inactive_msch FROM king_orders o JOIN king_transactions t ON t.transid=o.transid JOIN t_imei_no i ON i.order_id=o.id WHERE is_imei_activated=0 AND o.imei_scheme_id > 0 AND t.franchise_id=?",$f['franchise_id'])->ROW()->inactive_msch;
 				
-				$ttl_imei_activation_credit=$this->db->QUERY("select sum(imei_reimbursement_value_perunit) as imei_credit  
+				$ttl_imei_activated_credit=$this->db->QUERY("select sum(imei_reimbursement_value_perunit) as imei_credit  
 																from king_orders a 
 																join t_imei_no b on a.id = b.order_id 
 																join king_transactions c on c.transid = a.transid
 																where is_imei_activated = 1 and franchise_id = ? ",$f['franchise_id'])->ROW()->imei_credit;  
+				$ttl_imei_pending_credit=$this->db->QUERY("select sum(imei_reimbursement_value_perunit) as imei_credit
+						from king_orders a
+						join t_imei_no b on a.id = b.order_id
+						join king_transactions c on c.transid = a.transid
+						where is_imei_activated = 0 and franchise_id = ? ",$f['franchise_id'])->ROW()->imei_credit;
+				
 			?>
 		<div class="module_cont">
 			<!--  <h3 class="module_cont_title">IMEI List</h3>-->
 			<div class="module_cont_block">
 				<div class="module_cont_block_grid_total fl_left" style="padding:5px;">
-						<span class="stat total">Total Purchased : <b><?php echo  $ttl_purchased ;?></b></span> 
-						<span class="stat total">Active : <b><?php echo $ttl_activated_msch?></b></span> 
-						<span class="stat total">Inactive : <b><?php echo $ttl_inactiv_msch?></b></span> 
+						<span class="stat total">Total Purchased : <b><?php echo  $ttl_purchased*1 ;?></b></span> 
+						<span class="stat total">&nbsp;&nbsp;Active : <b><?php echo $ttl_activated_msch*1?></b></span> 
+						<span class="stat total">&nbsp;&nbsp;Inactive : <b><?php echo $ttl_inactiv_msch*1?></b></span> 
 				</div>
 				<div class="module_cont_block_grid_total fl_right" style="padding:5px;">
-						<span class="stat total  fl_right">Total Credit On activation : <b><?php echo 'Rs '.format_price($ttl_imei_activation_credit)?></b></span> 
+					<span class="stat total " >Total Credit : <b style="background: #F3EE81;padding:3px 6px;border-radius:3px;"><?php echo 'Rs '.format_price($ttl_imei_activated_credit+$ttl_imei_pending_credit)?></b> &nbsp;&nbsp;</span>
+					<span class="stat total " >Activated : <b style="background: #95DB95;padding:3px 6px;border-radius:3px;"><?php echo 'Rs '.format_price($ttl_imei_activated_credit)?></b>&nbsp;&nbsp;</span>
+					<span class="stat total " >Pending : <b style="background: #F39381;padding:3px 6px;border-radius:3px;"><?php echo 'Rs '.format_price($ttl_imei_pending_credit)?></b>&nbsp;&nbsp;</span>
 				</div>
 				
 				<div class="module_cont_block_filters clearboth" style="background: #f5f5f5;margin:0px;height: 27px;padding:3px;">
@@ -556,7 +564,11 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 					</span>
 					
 					<span style="margin-right:10px;padding:5px;font-size:12px;" >
-						<b>Filter IMEI By</b>&nbsp;Activated Date : 
+						<b>Filter IMEI By</b>&nbsp; : 
+						<select name="date_type">
+							<option value="0" selected>Activated Date</option>
+							<option value="1">Ordered Date</option>
+						</select>
 						<input type="text" name="active_ondate" style="font-size: 12px;padding:3px 7px;width: 80px;" value="" placeholder="" >
 						to 
 						<input type="text" name="active_ondate_end" style="font-size: 12px;padding:3px 7px;width: 80px;" value="" placeholder="" >
@@ -3012,13 +3024,22 @@ $("#pnh_membersch").dialog({
 			},'json');
 		}*/
 
-	$('input[name="active_ondate"],input[name="active_ondate_end"]').datepicker();
+		$('input[name="active_ondate"],input[name="active_ondate_end"]').datepicker();
 
-		$('input[name="active_ondate"],input[name="active_ondate_end"],select[name="imei_status"]').change(function(){
-			$('input[name="imei_srch_kwd"]').val('');
+		$('input[name="active_ondate"],input[name="active_ondate_end"],select[name="date_type"]').change(function(){
+			if($('input[name="active_ondate"]').val() != '' && $('input[name="active_ondate_end"]').val() != '')
+			{
 				load_shipped_imei(0);
+				$('input[name="imei_srch_kwd"]').val('');
+			}
 		});
 
+		$('select[name="imei_status"]').change(function(){
+				load_shipped_imei(0);
+				$('input[name="imei_srch_kwd"]').val('');
+		});
+
+		
 		
 
 	function load_allshipped_imei(pg)
@@ -3036,6 +3057,7 @@ $("#pnh_membersch").dialog({
 		var imei_params = {};
 		
 			imei_params.fid = "<?php echo $f['franchise_id'] ?>";
+			imei_params.date_type = $('select[name="date_type"]').val();
 			imei_params.imei_status = $('select[name="imei_status"]').val();
 			imei_params.active_ondate = $('input[name="active_ondate"]').val();
 			imei_params.active_ondate_end = $('input[name="active_ondate_end"]').val();

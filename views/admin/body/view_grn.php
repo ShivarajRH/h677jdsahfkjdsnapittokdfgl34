@@ -62,42 +62,63 @@
 </div>
 
 <div class="clear"></div>
-
-<h3>Products in this stock intake</h3>
-<table id="grn_prod_list" class="datagrid nofooter">
+<h4 style="margin-bottom:3px;">GRN Product list</h4>
+<table id="grn_prod_list" class="datagrid nofooter" style="width:100%">
 <thead>
-<tr><th>Sno</th><th>Product</th><th>PO</th><th>Invoiced Qty</th><th>Received Qty</th><th>MRP</th><th>DP Price</th><th>Base Price</th><th>Tax</th><th>Purchase Price</th><th>Margin</th><th>Scheme discount</th><th>FOC</th><th>Has Offer</th></tr>
+<tr><th>Sno</th><th width="250" style="text-align:left">Product Name</th><th>POID</th><th>Invoiced <br>Qty</th><th>Received <br>Qty</th><th>MRP</th><th>DP Price</th><th>Base <br>Price</th><th>Tax</th><th>Purchase <br>Price</th><th>Margin</th><th>Scheme <br>discount</th><th>FOC</th><th>Has Offer</th></tr>
 </thead>
 <tbody>
-<?php $sno=0; foreach($prods as $p){?>
+<?php $sno=0; 
+		$total_inv_qty = 0;
+		$total_rcvd_qty = 0;
+		$total_pprice = 0;
+
+	foreach($prods as $p){
+		$total_inv_qty += $p['invoice_qty'];
+		$total_rcvd_qty += $p['received_qty'];
+		$total_pprice += $p['received_qty']*$p['purchase_price'];
+	?>
 <tr>
-<td><?=++$sno?></td>
-<td><a target="_blank" href="<?php echo site_url('admin/product/'.$p['product_id']) ?>"><?=$p['product_name']?></a></td>
-<td><a href="<?=site_url("admin/viewpo/{$p['po_id']}")?>" target="_blank">PO<?=$p['po_id']?></a></td>
-<td><?=$p['invoice_qty']?></td>
-<td><?=$p['received_qty']?></td>
-<td><?=$p['mrp']?></td>
-<td><?=$p['dp_price']?></td>
-<td class="hide"><?=$p['purchase_price']-($p['purchase_price']*$p['tax_percent']/100)?></td>
-<td><?=$p['tax_percent']?></td>
-<td ><?=$p['purchase_price']?></td>
-<td><?=$p['margin']?></td>
-<td><?=$p['scheme_discunt_type']==2?"Rs":""?><?=$p['scheme_discount_value']?><?=$p['scheme_discunt_type']==1?"":"%"?></td>
-<td><?=$p['is_foc']==2?"YES":"NO"?></td>
-<td><?=$p['has_offer']==2?"Yes":"NO"?></td>
+	<td><?=++$sno?></td>
+	<td><a target="_blank" href="<?php echo site_url('admin/product/'.$p['product_id']) ?>"><?=$p['product_name']?></a></td>
+	<td><a href="<?=site_url("admin/viewpo/{$p['po_id']}")?>" target="_blank">PO<?=$p['po_id']?></a></td>
+	<td align="right"><?=$p['invoice_qty']?></td>
+	<td align="right"><?=$p['received_qty']?></td>
+	<td align="right"><?=$p['mrp']?></td>
+	<td align="right"><?=$p['dp_price']?></td>
+	<td class="hide" align="right"><?=$p['purchase_price']-($p['purchase_price']*$p['tax_percent']/100)?></td>
+	<td align="right"><?=$p['tax_percent']?></td>
+	<td align="right"><?=$p['purchase_price']?></td>
+	<td align="right"><?=$p['margin']?></td>
+	<td align="right"><?=$p['scheme_discunt_type']==2?"Rs":""?><?=$p['scheme_discount_value']?><?=$p['scheme_discunt_type']==1?"":"%"?></td>
+	<td align="right"><?=$p['is_foc']==2?"YES":"NO"?></td>
+	<td align="right"><?=$p['has_offer']==2?"Yes":"NO"?></td>
 </tr>
 <?php }?>
+
+	<tr class="tbl_stats_row">
+		<td colspan="3" align="right">Total</td>
+		<td align="right"><?php echo $total_inv_qty; ?></td>
+		<td align="right"><?php echo $total_rcvd_qty; ?></td>
+		<td colspan="4">&nbsp;</td>
+		<td align="right"><?php echo format_price($total_pprice,4); ?></td>
+		<td colspan="4">&nbsp;</td>
+	</tr>
 </tbody>
 
-<tr class="hideinprint">
-	<td colspan="15" style="text-align: right">
-		<a href="javascript:void(0)" onclick="print_grndoc()">Print Document</a>
-	</td>
-</tr>
 
 </table>
 
+<div style="text-align: right;padding-top:5px;">
+	<a href="javascript:void(0)" class="button button-tiny button-info" onclick="print_grndoc()">Print</a> 
 </div>
+
+</div>
+
+<style>
+#grn_prod_list th{text-align:right;}
+.tbl_stats_row td{background:#ffffD0 !important}
+</style>
 
 <script>
 	
@@ -106,11 +127,15 @@ function print_grndoc()
 	$('#grn_inv_list tfoot').hide();
 	var grninvhtml = '<table border=1 cellpadding=2 cellspacing=0 style="font-size:10px;">'+$('#grn_inv_list').html()+'</table>';
 	$('#grn_inv_list tfoot').show();
-	var html = '<div><style> body{font-size:12px;font-family:arial;} .hideinprint{display:none}</style> <h2 align="center">GRN Document</h2> <div> <b style="float:right"> <br> Printed On : <?php echo format_datetime_ts(time());?> <br> '+grninvhtml+'  </b> <b style="font-size:14px;">GRN: #<?=$grn['grn_id']?> - (<?php echo format_datetime($grn_date); ?>) <br> Vendor: #<?=$grn['vendor_name']?> <br> PO: #<?=$grn['po_id']?> </b>  </div><table cellpadding=5 cellspacing=0 border=1 width="100%" style="font-size:12px;font-family:arial;">'+$('#grn_prod_list').html()+'</table></div>';
+	var html = '<div><style> body{font-size:12px;font-family:arial;} .hideinprint{display:none}</style> <h2 align="center">GRN Document</h2> <div> <b style="float:right"> <br> Printed On : <?php echo format_datetime_ts(time());?> <br> '+grninvhtml+'  </b> <b style="font-size:14px;">GRN: #<?=$grn['grn_id']?> - (<?php echo format_datetime($grn_date); ?>) <br> Vendor: <?=$grn['vendor_name']?> <br> PO: #<?=$grn['po_id']?> </b>  </div><table cellpadding=5 cellspacing=0 border=1 width="100%" style="font-size:12px;font-family:arial;">'+$('#grn_prod_list').html()+'</table></div>';
 		prw=window.open("",'');
 		prw.document.write(html);
 		prw.focus();
 		prw.print();
 }
+
+$(function(){
+	$('#grn_prod_list').jq_fix_header_onscroll();
+});
 </script>
 <?php

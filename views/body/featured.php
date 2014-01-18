@@ -38,14 +38,15 @@
 
 
 <div class="featuredbanners">
+	
 	<div class="banner">
-		<a href="<?=site_url("Pre-seed--Multiuse-Lubricant-40g,-9-applicators-p37t")?>"><img src="<?=IMAGES_URL?>featured_banners/pre-seed_homecheck_offer.png"></a>
+		<a href="<?=site_url("Olay")?>"><img src="<?=IMAGES_URL?>featured_banners/20140111/olay.png"></a>
 	</div>
 	<div class="banner">
-		<a href="<?=site_url("Nuzen-Gold-Herbal-Hair-Oil---100ml-FREE-Proteion-Shampoo-p39t")?>"><img src="<?=IMAGES_URL?>featured_banners/nuzen_gold.png"></a>
+		<a href="<?=site_url("Indulekha")?>"><img src="<?=IMAGES_URL?>featured_banners/20140111/indulekha.png"></a>
 	</div>
 	<div class="banner">
-		<a href="<?=site_url("Lotus-herbals")?>"><img src="<?=IMAGES_URL?>featured_banners/lotus_herbals.png"></a>
+		<a href="<?=site_url("Vega")?>"><img src="<?=IMAGES_URL?>featured_banners/20140111/vega.png"></a>
 	</div>
 	<div class="clear"></div>
 </div>

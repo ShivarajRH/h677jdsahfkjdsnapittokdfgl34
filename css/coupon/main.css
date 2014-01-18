@@ -1,0 +1,104 @@
+@CHARSET "UTF-8";
+
+* {
+	padding: 0px;
+	margin: 0px;
+}
+
+body {
+	margin: 0px;
+	padding: 0px;
+	background: #F0F7E4;
+}
+
+a {
+	color: blue;
+}
+
+a img {
+	border: 0px;
+}
+
+form {
+	margin: 0px;
+}
+
+ul {
+	text-align: left;
+	list-style: none outside;
+	margin-top: 5px;
+	padding-left: 20px;
+}
+
+ul li {
+	background: url("../images/blue.gif") no-repeat scroll 0 5px transparent
+		;
+	padding: 0px 0px 3px 14px;
+}
+
+#main_container {
+	width: 960px;
+	text-align: left;
+	font-family: arial;
+	color: #303030;
+	margin-top: 10px;
+}
+
+* {
+	margin: 0px;
+	padding: 0px;
+}
+
+#footer {
+	font-size: 11px;
+	text-align: center;
+}
+
+#footer dt {
+	float: left;
+	width: 7em;
+	font-size: 12px;
+}
+
+#footer a {
+	color: #006699;
+}
+
+#footer dl dd {
+	font-size: 12px;
+	display: inline;
+}
+
+.headerlinks {
+	float: right;
+	font-family: arial;
+	font-size: 13px;
+}
+
+.headerlinks a {
+	color: blue;
+	margin: 5px;
+}
+
+#header {
+	margin-bottom:15px;
+	margin-top:10px;
+	padding:9px 10px;
+}
+
+#content {
+	-moz-box-shadow:4px 4px 4px #CCCCCC;
+	-moz-border-radius:5px;
+	background:#FFFFFF none repeat scroll 0 0;
+	margin-bottom:10px;
+	padding:10px;
+}
+
+.doclink {
+	text-decoration: none;
+	color: #006699;
+}
+
+.doclink:hover {
+	text-decoration: underline;
+}

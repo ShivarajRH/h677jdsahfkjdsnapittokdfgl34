@@ -1,0 +1,573 @@
+/*************** Common Css Start ******************/
+
+
+/*
+ * Loader  Image Css
+ */
+/* 
+Set the container for the bar
+*/
+.anmtd_loading_img 
+{
+	  background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 20px 20px 20px 20px;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 1px 0 rgba(0, 0, 0, 0.1) inset;
+    height: 20px;
+    margin: 66px auto 68px;
+    padding: 10px;
+    width: 200px;
+}
+
+/* 
+This is the actual bar with stripes
+*/	
+.anmtd_loading_img span {
+	display:inline-block;
+	height:100%;
+	width:100%;
+	border:1px solid #ff9a1a;
+	border-bottom-color:#ff6201;
+	background-color:#d3d3d3;
+	-webkit-border-radius:20px;
+	-moz-border-radius:20px;
+	-ms-border-radius:20px;
+	border-radius:20px;
+	-webkit-box-sizing:border-box;
+	-moz-box-sizing:border-box;
+	-ms-box-sizing:border-box;
+	box-sizing:border-box;
+	background-image:
+		-webkit-linear-gradient(
+		-45deg,
+		rgba(255, 154, 26, 1) 25%,
+		transparent 25%,
+		transparent 50%,
+		rgba(255, 154, 26, 1) 50%,
+		rgba(255, 154, 26, 1) 75%,
+		transparent 75%,
+		transparent
+	);
+	background-image:
+		-moz-linear-gradient(
+		-45deg,
+		rgba(255, 154, 26, 1) 25%,
+		transparent 25%,
+		transparent 50%,
+		rgba(255, 154, 26, 1) 50%,
+		rgba(255, 154, 26, 1) 75%,
+		transparent 75%,
+		transparent
+	);
+	background-image:
+		-ms-linear-gradient(
+		-45deg,
+		rgba(255, 154, 26, 1) 25%,
+		transparent 25%,
+		transparent 50%,
+		rgba(255, 154, 26, 1) 50%,
+		rgba(255, 154, 26, 1) 75%,
+		transparent 75%,
+		transparent
+	);
+	background-image:
+		linear-gradient(
+		-45deg,
+		rgba(255, 154, 26, 1) 25%,
+		transparent 25%,
+		transparent 50%,
+		rgba(255, 154, 26, 1) 50%,
+		rgba(255, 154, 26, 1) 75%,
+		transparent 75%,
+		transparent
+	);
+	-webkit-background-size:50px 50px;
+	-moz-background-size:50px 50px;
+	-ms-background-size:50px 50px;
+	background-size:50px 50px;
+	-webkit-animation:move 2s linear infinite;
+	-moz-animation:move 2s linear infinite;
+	-ms-animation:move 2s linear infinite;
+	animation:move 2s linear infinite;
+	-webkit-border-radius:20px;
+	-moz-border-radius:20px;
+	-ms-border-radius:20px;
+	border-radius:20px;
+	overflow: hidden;
+	-webkit-box-shadow:inset 0 10px 0 rgba(255,255,255,.2);
+	-moz-box-shadow:inset 0 10px 0 rgba(255,255,255,.2);
+	-ms-box-shadow:inset 0 10px 0 rgba(255,255,255,.2);
+	box-shadow:inset 0 10px 0 rgba(255,255,255,.2);
+}
+
+/*
+Animate the stripes
+*/	
+@-webkit-keyframes move{
+  0% {
+  	background-position: 0 0;
+  }
+  100% {
+  	background-position: 50px 50px;
+  }
+}	
+@-moz-keyframes move{
+  0% {
+  	background-position: 0 0;
+  }
+  100% {
+  	background-position: 50px 50px;
+  }
+}	
+@-ms-keyframes move{
+  0% {
+  	background-position: 0 0;
+  }
+  100% {
+  	background-position: 50px 50px;
+  }
+}	
+@keyframes move{
+  0% {
+  	background-position: 0 0;
+  }
+  100% {
+  	background-position: 50px 50px;
+  }
+}
+
+/*
+ * 
+ * Button Css
+ */
+.sbutton {
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    -moz-user-select: none;
+    background: -moz-linear-gradient(center top , rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.1) 100%) repeat scroll 0 0 rgba(0, 0, 0, 0);
+    border-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.4);
+    border-image: none;
+    border-style: solid;
+    border-width: 1px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    line-height: 1em;
+    margin-right:7px;
+    outline: medium none;
+    overflow: visible;
+    position: relative;
+    white-space: nowrap;
+}
+
+.sbutton.green {
+    background-color: #91BD09;
+}
+.sbutton.yellow {
+    background-color:#faba3e;padding: 3px;
+}
+.sbutton, .sbutton span {
+    border-radius: 4px;
+    display: inline-block;
+} 
+.green
+{
+	padding:2px;
+}
+.popclose_button.b-close, .popclose_button.bClose {
+    border-radius: 7px;
+    box-shadow: none;
+    font: bold 131% sans-serif;
+   padding: 6px 10px 5px;
+    position: absolute;
+    right: -7px;
+    top: -7px;
+}
+.popclose_button > span {
+    font-size: 84%;
+}
+.popclose_button {
+    background-color: #2B91AF;
+    border-radius: 10px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+    color: #FFFFFF;
+    cursor: pointer;
+    display: inline-block;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+}
+
+/*
+ * 
+ * Page Tabs Css
+ */
+ul.tabs 
+{
+	margin: 0;
+	padding: 0;
+	
+	list-style: none;
+	width: 100%;
+	border:none;
+	margin-top:20px;
+}
+
+ul.tabs li 
+{
+	float: left;
+	margin: 0;
+	cursor: pointer;
+	padding: 3px 20px;
+	line-height: 25px;
+	border: 1px solid #f8f8f8;
+	font-weight: bold;
+	background: #EEEEEE;
+	position: relative;
+	border-bottom:0px;
+	border-radius:5px 5px 0px 0px;
+	margin-right:3px;
+}
+ul.tabs li:hover 
+{
+	background: #CCCCCC;
+}	
+ul.tabs li.active
+{
+	background: #FAFAF5;
+	border: 1px solid #FAFAF5;
+}
+.tab_container 
+{
+	
+	border-top: none;
+	clear: both;
+	float: left; 
+	width: 100%;
+	background: #FAFAF5;
+}
+.tabcontent 
+{
+    padding: 10px;
+	display: none;
+}
+.tabs
+{
+	border-radius : 0px !important;
+}
+
+/*************** Common Css End ******************/
+
+/************** State analytics Start **************/
+#st_state_sales
+{
+    width: 100%;
+}
+#st_top_sale_det
+{
+	float: left;
+    margin: 25px 0px 0px 18px;
+    width: 544px;
+}
+#st_top_prd_brand_det
+{
+	float: left;
+     margin: 28px 22px;
+    width: 530px;
+}
+.sbutton span {
+    color: #FFFFFF;
+
+}
+#st_stat_frm_to
+{
+	float: right;
+	width:315px;
+}
+.st_heading_wrapper
+{
+	
+}
+#st_terr_stat
+{
+	width:100%;
+}
+#st_franch_stat
+{
+	width:100%;
+}
+#st_cat_stat
+{
+	width:100%;
+}
+#st_town_stat
+{
+	width:100%;margin-top:15px;
+}
+#st_brand_stat
+{
+	width:100%;margin-top:15px;
+}
+.st_sales_view
+{
+	margin-top:32px;
+}
+.st_terr_stat_view
+{
+	margin-top:32px;
+}
+.st_town_stat_view
+{
+	margin-top:32px;
+}
+.st_brand_stat_view
+{
+	margin-top:32px;
+}
+.st_franch_stat_view
+{
+	margin-top:32px;
+}
+.st_cat_stat_view
+{
+	margin-top:32px;
+}
+.st_alert_wrap
+{
+	text-align: center;color:#FF0000;font-weight: bold;font-size: 13px;
+}
+.st_alert_wrap_text
+{
+	text-align: center;
+	color: #FF0000;
+	font-weight: bold;
+	padding-top: 164px;
+	font-size: 13px;
+}
+.st_scroll_wrap
+{
+	overflow:auto;float:left;height:265px;width:200px;
+}
+.st_left_blk_wrap
+{
+	margin-top: 25px;float: left;
+}
+.anal_head_wrap
+{
+	 
+}
+.st_brand_popup,.st_franch_popup
+{
+	float:right;margin:16px;cursor:pointer;font-size: 12px;
+}
+
+#st_brand_popup,#st_franch_popup {
+    min-height: 250px;
+}
+#st_brand_popup,#st_franch_popup{
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    box-shadow: 0 0 25px 5px #999999;
+    color: #111111;
+    display: none;
+    min-width: 450px;
+    padding: 25px;
+}
+
+.st_header_wrap 
+{
+	background-color: #CCCCCC;
+    border-bottom: 1px solid #AAAAAA;
+    border-top: 1px solid #AAAAAA;
+    color: #000;
+    font-size: 14px;
+    margin-top:0px;
+  	width: 100%;
+	float: left;
+}
+.st_header_wrap_content
+{
+	margin-left: 10px;
+}
+.st_header_wrap.is-active 
+{
+background-color: #fff;color:#000;
+}
+#st_more_wrap1,#st_more_wrap2
+{
+	margin-left:5px;font-size: 11px !important;
+}
+.st_max_height_wrap
+{
+	overflow:auto;float:left;height:265px;width:490px;
+}
+/************** State analytics End **************/
+
+
+/*************  Brand Analytics Start ************/
+
+.br_alert_wrap
+{
+	text-align: center;color:#FF0000;font-weight: bold;font-size: 13px;
+}
+.br_alert_wrap_text
+{
+	text-align: center;
+	color: #FF0000;
+	font-weight: bold;
+	padding-top: 120px;
+	font-size: 13px;
+}
+
+#br_cat_stat
+{
+	float:left;
+	width:647px;
+}
+.br_top_category_list
+{
+	overflow:auto;height:270px;background: #eaeaea;margin-top: 10px;
+}
+.br_cat_stat_view
+{
+	background:none repeat scroll 0 0 #EAEAEA;
+}
+.br_vendors_det_view
+{
+	background:none repeat scroll 0 0 #EAEAEA;margin-left:10px;
+}
+.br_top_product_list
+{
+	overflow:auto;height:270px;background: #eaeaea;margin-top: 10px;
+}
+.br_franchise_list
+{
+	overflow:auto;height:270px;background: #eaeaea;margin-top: 10px;
+}
+#br_top_sale_terr_stat
+{
+	float:left;width:100%;
+}
+#br_town_stat
+{
+	float:left;width:48%;margin-top:15px;
+}
+#br_franch_stat
+{
+	float:left;width:48%;margin-left:15px;margin-top:15px;
+}
+.br_franch_popup
+{
+	margin:16px;float:right;cursor:pointer;
+}
+.br_vendors_head
+{
+	margin-left:10px;
+}
+.br_franch_stat_view,.br_town_stat_view
+{
+	margin-top:32px;
+}
+#br_franch_popup 
+{
+    min-height: 250px;
+}
+#br_franch_popup
+{
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    box-shadow: 0 0 25px 5px #999999;
+    color: #111111;
+    display: none;
+    min-width: 450px;
+    padding: 25px;
+}
+
+#br_vendors_det
+{
+	width: 647px;float:left;
+}
+#br_brand_popup a
+{
+    min-height: 250px;
+}
+#br_brand_popup
+{
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    box-shadow: 0 0 25px 5px #999999;
+    color: #111111;
+    display: none;
+    min-width: 450px;
+    padding: 25px;
+}
+.br_heading_wrapper
+{
+	margin: 11px 6px 0;float:left;
+}
+.br_vendor_head
+{
+	clear:both;margin-left:10px;
+}
+.br_sub_blk_wrap
+{
+	float: left;
+    width: 424px;
+}
+.br_max_height_wrap
+{
+	max-height:300px;overflow:auto;width:400px;
+}
+/*************  Brand Analytics End ************/
+
+
+/*************  Franchisee Analytics Start ************/
+
+li.required
+{
+	color: #cd0000;list-style: none
+}
+
+#fr_det_popup 
+{
+    min-height: 250px;
+}
+#fr_det_popup
+{
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    box-shadow: 0 0 25px 5px #999999;
+    color: #111111;
+    display: none;
+    min-width: 450px;
+    padding: 25px;
+}
+.fr_top_sold
+{
+float:left;max-height: 400px;overflow:auto;
+}
+
+#fr_order_stat
+{
+	width:400px;
+}
+.fr_alert_wrap
+{
+	text-align: center;color:#FF0000;font-weight: bold;font-size: 13px;
+}
+.fr_order_barstat_view
+{
+	 float: right;
+    width:870px;
+}
+.fr_brand_stat_view
+{
+	height:400px;width: 870px;float:right;
+}
+.fr_menu_by_mn
+{
+	   float: right;
+    text-align: right;
+    width: 100%;margin:7px;
+}
+/*************  Franchisee Analytics End ************/

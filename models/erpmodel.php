@@ -7043,7 +7043,7 @@ order by p.product_name asc
 	 * @param unknown_type $tid
 	 * @return unknown
 	 */
-	function pnh_getreceiptttl_valuebytypeterry($type=0,$tid=false)
+	function terry($type=0,$tid=false)
 	{
 		if($type==0)
 			$total_value=$this->db->query("SELECT r.*,sum(receipt_amount) as total,f.franchise_name,a.name AS admin FROM pnh_t_receipt_info r JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id LEFT OUTER JOIN king_admin a ON a.id=r.created_by WHERE r.status=0 AND r.is_active=1  and is_submitted=0 and f.territory_id=?   ORDER BY instrument_date DESC",$tid)->row_array();
@@ -7179,7 +7179,7 @@ order by p.product_name asc
 	
 	// function to get total amount value by type
 	 
-	function pnh_getreceiptttl_valuebytype($type=0)
+	function pnh_getreceiptttl_valuebytype_old1($type=0)
 	{
 		if($type==0)
 			$total_value=$this->db->query("SELECT r.*,f.franchise_name,a.name AS admin,sum(receipt_amount) as total FROM pnh_t_receipt_info r JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id LEFT OUTER JOIN king_admin a ON a.id=r.created_by WHERE r.status=0 AND r.is_active=1  and is_submitted=0 ")->row_array();
@@ -7203,6 +7203,35 @@ order by p.product_name asc
 						ORDER BY cancelled_on DESC";
 			$total_value=$this->db->query($sql,$tid)->row_array();
 		}	
+		return $total_value;
+	}
+
+
+	function pnh_getreceiptttl_valuebytype($type=0)
+	{
+		if($type==0)
+			$total_value=$this->db->query("SELECT r.*,f.franchise_name,a.name AS admin,sum(receipt_amount) as total FROM pnh_t_receipt_info r JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id LEFT OUTER JOIN king_admin a ON a.id=r.created_by WHERE r.status=0 AND r.is_active=1  and is_submitted=0 ")->row_array();
+		if($type==1 )
+			$total_value=$this->db->query("SELECT r.*,f.franchise_name,a.name AS admin,sum(receipt_amount) as total FROM pnh_t_receipt_info r JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id LEFT OUTER JOIN king_admin a ON a.id=r.created_by WHERE r.status=0 AND r.is_active=1 AND date(from_unixtime(instrument_date)) <= curdate()and is_submitted=0  ORDER BY instrument_date asc")->row_array();
+		if($type==2 )
+			$total_value=$this->db->query("SELECT r.*,f.franchise_name,a.name AS admin,sum(receipt_amount) as total FROM pnh_t_receipt_info r JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id LEFT OUTER JOIN king_admin a ON a.id=r.created_by WHERE r.status=0 AND r.is_active=1 AND date(from_unixtime(instrument_date)) > curdate()and is_submitted=0  ORDER BY instrument_date asc")->row_array();
+		if($type==3)
+			$total_value=$this->db->query("SELECT r.*,SUM(receipt_amount) AS total,f.franchise_name,a.name AS admin,d.username AS activated_by FROM pnh_t_receipt_info r JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id LEFT OUTER JOIN king_admin a ON a.id=r.created_by LEFT OUTER JOIN king_admin d ON d.id=r.activated_by WHERE r.status=1 AND r.is_active=1 AND f.is_suspended=0 AND (is_submitted=1 OR r.activated_on!=0) AND r.is_active=1  ORDER BY activated_on DESC")->row_array();
+		if($type==4)
+			$total_value=$this->db->query("SELECT r.*,SUM(r.receipt_amount) AS total,b.bank_name AS submit_bankname,s.name AS submittedby,a.name AS admin,f.franchise_name,d.remarks AS submittedremarks,DATE(d.submitted_on) AS submitted_on,r.created_on  FROM pnh_t_receipt_info r LEFT JOIN `pnh_m_deposited_receipts`d ON d.receipt_id=r.receipt_id LEFT JOIN `pnh_m_bank_info` b ON b.id=d.bank_id LEFT JOIN king_admin s ON s.id=d.submitted_by JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id LEFT OUTER JOIN king_admin a ON a.id=r.created_by WHERE  f.is_suspended=0 AND r.is_submitted=1 AND r.status=0  AND r.is_active=1  ORDER BY d.submitted_on DESC")->row_array();
+	
+		if($type==5)
+		{
+			$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on,sum(receipt_amount) as total
+			FROM pnh_t_receipt_info r
+			JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id
+			left JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
+			LEFT OUTER JOIN king_admin a ON a.id=r.created_by
+			LEFT OUTER JOIN king_admin d ON d.id=r.activated_by
+			WHERE r.status in (2,3) AND  r.is_active=1 AND r.is_active=1
+			ORDER BY cancelled_on DESC";
+			$total_value=$this->db->query($sql,$tid)->row_array();
+		}
 		return $total_value;
 	}
 	
