@@ -169,15 +169,15 @@ else
 
                         $output .= '<tr class="'.$batch_type.'_ord">
                             <td align="center">'.++$c.'</td>
-                            <td align="center">'.$trans_arr['str_date'].'<div class="str_time">'.($trans_arr['str_time']).'</div>'.$trans_created_by.'</td>
+                            <td align="left">'.$trans_arr['str_date'].'<div class="str_time">'.($trans_arr['str_time']).'</div>'.$trans_created_by.'</td>
                             <td align="center">
                                     '.$batch_id_msg.'
                                     '.$batch_enabled.'</td>
-                            <td align="center">
-                                <span class="info_links"><a href="trans/'.$trans_arr['transid'].'" target="_blank">'.$trans_arr['transid'].'</span><br></a>
-                                <span class="info_links"><a href="'.site_url("admin/pnh_franchise/{$trans_arr['franchise_id']}").'"  target="_blank">'.$trans_arr['bill_person'].'</a><br></span>
-                                <span class="info_links">'.$trans_arr['town_name'].'</span>,
-                                <span class="info_links">'.$trans_arr['territory_name'].'<br></span>
+                            <td align="left">
+                                <span class="info_links"><a href="trans/'.$trans_arr['transid'].'" target="_blank">'.$trans_arr['transid'].'</span></a>
+                                <br><br>
+                                <span style="padding-top:12px;" class="info_links"><a href="'.site_url("admin/pnh_franchise/{$trans_arr['franchise_id']}").'"  target="_blank">'.$trans_arr['bill_person'].'</a><br></span>
+                                <span class="info_links"><b>'.$trans_arr['territory_name'].' :</b> '.$trans_arr['town_name'].'<br></span>
                                 <span>'.$trans_arr['ship_phone'].'<br></span><span class="fran_experience" style="background-color:'.$arr_fran['f_color'].';color: #ffffff;">'.$arr_fran['f_level'].'</span>
                             </td>
                             <td>';

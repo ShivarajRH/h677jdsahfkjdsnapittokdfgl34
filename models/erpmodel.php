@@ -8437,9 +8437,9 @@ order by p.product_name asc
 			
 			// check if belongs to split invoice condiciton config
                         //Transaction splitting
-                        //$split_trans=$this->db->query("SELECT i.*,d.publish,c.loyality_pntvalue FROM king_dealitems i JOIN king_deals d ON d.dealid=i.dealid JOIN pnh_menu c ON c.id = d.menuid WHERE i.is_pnh=1 AND  i.pnh_id=? AND i.pnh_id!=0 AND c.id IN(112,118,122)",$item['pid'])->row_array();
-			//$split_order = 0;
-			/*$item['split_order'] = 0;
+                        $split_trans=$this->db->query("SELECT i.*,d.publish,c.loyality_pntvalue FROM king_dealitems i JOIN king_deals d ON d.dealid=i.dealid JOIN pnh_menu c ON c.id = d.menuid WHERE i.is_pnh=1 AND  i.pnh_id=? AND i.pnh_id!=0 AND c.id IN(112,118,122)",$item['pid'])->row_array();
+			$split_order = 0;
+			$item['split_order'] = 0;
 			if($split_trans)
 			{
 				$ttl_qty = $item['qty'];
@@ -8447,21 +8447,22 @@ order by p.product_name asc
 				{
 					$item['split_order'] = 1;
 					$item['qty'] = 1;
-					$transids[1][] = $item;
+					//$transids[1][] = $item;
+					$transids[0][] = $item;
 				}
 			}else
-			{*/
+			{
 				$transids[0][] = $item;
-			/*}*/
+			}
 		}
 		
 		$split_transid_list = array();
 		if(count($transids[0]))
 			$split_transid_list[] = $transids[0];
 		
-		if(count($transids[1]))
+		/*if(count($transids[1]))
 			foreach($transids[1] as $tr_items)
-				$split_transid_list[] = array($tr_items);	
+				$split_transid_list[] = array($tr_items);	*/
 		
             $batch_enabled=1;
 		$trans_grp_ref_no = ($this->db->query("select if(max(trans_grp_ref_no),max(trans_grp_ref_no)+1,400001) as n from king_transactions where trans_grp_ref_no >= 0")->row()->n);

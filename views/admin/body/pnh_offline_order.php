@@ -152,18 +152,25 @@
 
 <input type="hidden" name="fid" id="i_fid">
 
-<table class="datagrid" width="100%" id="prods_order">
+<table class="datagrid nofooter" width="100%" id="prods_order" border="0">
 <thead><tr><th>Sno</th><th>Product Image-PID</th><th>Product Name</th><th>MRP</th><th>Offer price / <br> DP price</th>
 			<th>MemberShip Fee</th>
 			<th>Qty</th>
 			<th>Sub Total</th><th>Quote</th><th>Actions</th></tr></thead>
 <tbody>
 </tbody>
+<tfoot>
+    <tr>
+        <td colspan="7" style="text-align:right;">Sub Total Amount :</td>
+        <td><span style="font-weight: bold;" class="ttl_subtotal">0</span></td>
+        <td colspan="2"></td>
+    </tr>
+</tfoot>
 </table>
 
 <div style="padding:5px 0px 0px 0px;">
-<div style="float:right;"><input type="submit" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;background: #68a54b;color: #FFF;cursor: pointer" id="pnh_ordeR_submit" value="Place order"  class="myButton_placeorder1"></div>
-<div><input type="button" value="Request From Franchisee" id="reqq_but" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;cursor: pointer;background: #68a54b;color: #FFF" onclick='request_quote()' class="myButton_reqfran1" style="font-size:12px;">
+    <div style="float:right;"><input type="submit" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;background: #68a54b;color: #FFF;cursor: pointer" id="pnh_ordeR_submit" value="Place order"  class="myButton_placeorder1"></div>
+    <div><input type="button" value="Request From Franchisee" id="reqq_but" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;cursor: pointer;background: #68a54b;color: #FFF" onclick='request_quote()' class="myButton_reqfran1" style="font-size:12px;">
 </div>
 
 <div class="clear"></div>
@@ -250,8 +257,8 @@ text-align: center;width: 60px;"><b>OldMRP:</b> <span style="color: #cd0000;font
 	{
 		var sel_pid = $(ele).parents("tr:first").attr('pid');
 			$($(ele).parents("tr").get(0)).remove();
-		remove_pid(sel_pid);
-		
+                remove_pid(sel_pid);
+                
 		$('#prods_order tbody tr').each(function(i,itm){
 			$('td:first',this).text(i+1);
 		});
@@ -895,6 +902,8 @@ function remove_pid(pid)
 	for(i=0;i<t_pids.length;i++)
 		if(pid!=t_pids[i])
 			pids.push(t_pids[i]);
+                    
+        change_total_subtotal(); 
 }
 
 function load_franchisebyid()
@@ -978,7 +987,7 @@ $('#reg_mem_dlg').dialog({
 					},
 					'Cancel':function(){
 						$(this).dialog('close');
-					},
+					}
 				}
 });
 
@@ -1178,7 +1187,7 @@ $(function(){
 		}
 		return false;
 	});
-
+        
 	$("#prods_order .qty").live("change",function(){
 		p=$(this).parents("tr").get(0);
 		
@@ -1211,9 +1220,11 @@ $(function(){
 		
 		//$(".stotal",p).html(parseInt($(".price",p).html())*parseInt($(".qty",p).val()));
 		//$(".landing_cost",p).html(parseInt($(".lcost",p).html())*parseInt($(".qty",p).val()));
-		$(".stotal",p).html(parseFloat($(".lcost",p).text())*parseInt($(".qty",p).val()));
+                var sub_total = parseFloat($(".lcost",p).text())*parseInt($(".qty",p).val());
+		$(".stotal",p).html(sub_total);
+                change_total_subtotal();
 	});
-
+        
 	$("#p_srch").keyup(function(){
 		fid=$("#fid_inp").val();
 		q=$(this).val();
@@ -1332,6 +1343,9 @@ $(function(){
 			pids.push(p.pid);
 			
 			show_prev_orderd();
+                        
+                        change_total_subtotal();
+                        
 			show_prevorderd_unshipped();
 			
 		});
@@ -1356,6 +1370,20 @@ $(".mid").change(function(){
 			$("#mem_fran").html(data).show();
 		});
 	});
+
+
+function change_total_subtotal() {
+    var ttl_subtotal=0;
+    if($("#prods_order .stotal").html() == '') {
+        ttl_subtotal=0;
+    }
+    else {
+        $("#prods_order .stotal").each(function(){
+                ttl_subtotal += parseFloat($(this).html());
+        });
+    }
+    $(".ttl_subtotal").html(ttl_subtotal);
+}
 
 function trig_loadpnh(pid)
 {

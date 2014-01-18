@@ -151,9 +151,10 @@ class reservation_model extends Model
     function get_username_byid($userid) {
         return $this->db->query("select username from king_admin where id=?",$userid)->row()->username;
     }
+    
     /**
      * Function to create batches by batch config settings
-     * @return type string
+     * @return type array
      */
     function do_create_batch_by_group_config () {
         
@@ -161,21 +162,23 @@ class reservation_model extends Model
         ini_set("display_errors",true);
         
         $output = $cond = $menu_cond = $username = $territory_name = '';
+        $result = array();
         
-        foreach(array("sel_batch_menu","batch_size","assigned_uid","territory_id","townid") as $i) {
+        foreach(array("sel_batch_menu","batch_size","assigned_uid","territory_id","townid","franchise_id") as $i) {
             $$i=$this->input->post($i);
             //echo $i.'=>'.$$i."<br>";,"assigned_menuids"
         }
         if($territory_id != 0) {
             $cond .= ' and f.territory_id = '.$territory_id.' ';
-            $territory_name=$this->db->query("select territory_name from pnh_m_territory_info where id=?",$territory_id)->row()->territory_name;
+            //$territory_name=$this->db->query("select territory_name from pnh_m_territory_info where id=?",$territory_id)->row()->territory_name;
         }
-        
+        if($franchise_id != 0) {
+            $cond .= ' and f.franchise_id = '.$franchise_id.' ';
+            //$franchise_name=$this->db->query("select territory_name from pnh_m_territory_info where id=?",$territory_id)->row()->franchise_name;
+        }
         if($assigned_uid!=0) {
             $username=  $this->get_username_byid($assigned_uid);
         }
-
-        
         if($sel_batch_menu != '00') {
             $menu_cond = " and  bc.id = $sel_batch_menu ";
         }
@@ -198,7 +201,7 @@ class reservation_model extends Model
                                 order by menuname,tr.init asc";
         
         $rslt_set = $this->db->query($sql,GLOBAL_BATCH_ID);
-//        echo '<pre>'.$this->db->last_query();die();
+        $result['lst_qry'] = $this->db->last_query(); 
        
         
         $ttl_inbatch = $rslt_set->num_rows(); //$ttl_inbatch = count($rslt);
@@ -217,10 +220,9 @@ class reservation_model extends Model
                 // loop through menu items
                 foreach($menu_orders as $menuid=>$menu_item) {
                     $ttl_menu_orders = count($menu_item['orders']);
-                    $ttl_pgs =  ceil($ttl_menu_orders/$batch_size);
-
-                    $remaining=$ttl_menu_orders;
-
+                   $ttl_pgs =  ceil($ttl_menu_orders/$batch_size);
+                    
+                   $remaining=$ttl_menu_orders;
                     //iterate through all pages build batches
                     for($i=0; $i<$ttl_pgs; $i++) {
                         if($remaining<=0) 
@@ -228,19 +230,16 @@ class reservation_model extends Model
                         
                         //Prepare total orders in batch
                         if($remaining>$batch_size) {
-                            
                                 if(($remaining-($batch_size/2))>$batch_size) {
                                      $ttl_allot= $batch_size;
                                 }
                                 else {
                                      $ttl_allot= $remaining;
                                 }
-                               
                         }
                         else {
                             $ttl_allot=$remaining;
                         }
-                        
                         $remaining = $remaining-$ttl_allot;
 
                         $start = ($i * $batch_size);
@@ -255,12 +254,14 @@ class reservation_model extends Model
                         }
                     }
                 }
-                $output.= "Total ".$ttl_batch_alloted." batches created.";
+                $result["status"]='success';
+                $result["response"]="Total ".$ttl_batch_alloted." batches created.";
             }
             else {
-                $output.= 'No transactions found.'.'<br>';//$this->db->last_query()
+                $result["status"]='fail';
+                $result['response']="No transactions found.";
             }
-            return '<pre>'.$output.'</pre>';
+            return $result;
     }
     
     /**

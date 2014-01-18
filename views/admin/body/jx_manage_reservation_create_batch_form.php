@@ -1,13 +1,21 @@
 <div>
     <!--<input type="radio" value="by_terr" name/>Process by franchise?-->
-    <p>Town selected:<?=$sel_town_id;?><br>
-    Franchise selected:<?=$sel_fran_id;?>
-    </p>
+    <?php
+    if($sel_town_id!=0)
+        echo "Town : <b>".$this->db->query("select town_name from pnh_towns where id = ? ",$sel_town_id)->row()->town_name.'</b>';
+//    else echo '-Not set-';
+    if($sel_fran_id!=0)
+        echo "<div>Franchise selected : <b>".$this->db->query("select franchise_name from pnh_m_franchise_info where franchise_id = ? ",$sel_fran_id)->row()->franchise_name."</b></div>";
+    ?>
+    
     <form method="post" action="">
         <table width="100%" border="0" cellspacing="0" cellpadding="5">
            <tr>
                <td>Select Territory:</td>
                <td>
+                   <input type="hidden" name="dlg_sel_town" id="dlg_sel_town" value="<?=$sel_town_id;?>" />
+                   <input type="hidden" name="dlg_sel_franchise" id="dlg_sel_franchise" value="<?=$sel_fran_id;?>" />
+                   
                     <select id="dlg_sel_territory" name="dlg_sel_territory" style="width: 204px;">
                         <option value="00">All</option>
                         <?php  
@@ -27,7 +35,6 @@
                     if($given_terr_id!='') {
                         
                         $rdata = $this->reservations->jx_terr_batch_group_status($given_terr_id);
-//                        echo $given_terr_id.'=>'.$rdata;print_r($rdata); die("=TESTING=");
                         echo "<table class='datagrid'><th>Menu</th><th>Orders</th>".$rdata->detail_category_msg."</table>";
                     }
                     ?>
@@ -37,9 +44,6 @@
             /* <tr>
                 <td>Un-Group Orders status :</td>
                 <td> <div class="terr_batch_group_status">
-                        
-                            
-                        
                     </div></td>
             </tr> */ ?>
             <tr>
@@ -49,7 +53,6 @@
                         <option value="00">All</option>
                         <?php
                         foreach ($batch_conf as $conf) { 
-                            
                             ?>
                             <option value="<?=$conf['id'];?>"><?=$conf['batch_grp_name'];?></option>
                         <? } ?>
@@ -59,21 +62,18 @@
             <tr>
                 <td>Available transactions:</td>
                 <td>
-                    <span class="batch_enable_all_orders">0</span>
+                    <span style="margin:10px 0 5px 5px; font-weight: bold;" class="batch_enable_all_orders">0</span>
                 </td>
             </tr>
             <tr>
                 <td>Max Batch Size:</td>
                 <td>
-                    <!--<input type="hidden" name="assigned_menuids" id="assigned_menuids" value="" />-->
-                    
-                    <input type="text" name="batch_size" id="batch_size" value="20" style="width: 30px;margin:10px 0 5px 5px" />
-                    
-                    <!--<input type="hidden" name="assigned_uid" id="assigned_uid" value="" />-->
+                    <!--<input type="hidden" name="assigned_menuids" id="assigned_menuids" value="" /><input type="hidden" name="assigned_uid" id="assigned_uid" value="" />-->
+                    <span style="margin:10px 0 5px 5px;"><input type="text" name="batch_size" id="batch_size" value="20" style="width: 30px;" /></span>
                 </td>
             </tr>
             <tr>
-                <td>Assigned to:</td>
+                <td>Assigned to a user:</td>
                 <td>
                         <select name="assigned_uid" id="assigned_uid" style="width: 204px;" class="assigned_uid"></select>
                 </td>
@@ -86,7 +86,6 @@
             </tr>
         </table>
     </form>
-
 </div>
 
 <script>
@@ -97,7 +96,7 @@ $("#sel_batch_menu").live("change",function(e) {
         
         var ele  = $(this).parent().find('option:selected');
         $("#batch_size").val(ele.attr('default_batch_size'));
-
+        $(".batch_enable_all_orders").html(ele.attr('ordcount'));
         if($(this).val() != '00')
         {
             $('#assigned_uid').find('option:gt(0)').hide();
@@ -135,10 +134,10 @@ $("#dlg_sel_territory").live("change",function() {
                 if(resp.status=='success') {
                     var menulist_opts = '<option value="00" default_batch_size="20" >All</option>';
                         $.each(resp.arr_menus,function(ii,row){
-                          menulist_opts += '<option batch_userids="'+row.bc_group_uids+'" value="'+row.menuid+'" default_batch_size="'+row.batch_size+'">'+row.menuname+'</option>';
+                          menulist_opts += '<option batch_userids="'+row.bc_group_uids+'" value="'+row.menuid+'" ordcount="'+row.ordcount+'" default_batch_size="'+row.batch_size+'">'+row.menuname+'</option>';
                         });
                         
-                        $("#sel_batch_menu").html(menulist_opts).trigger('liszt:updated');
+                        $("#sel_batch_menu").html(menulist_opts);//.trigger('liszt:updated');
                         $("#sel_batch_menu").trigger('change');
                     
                     var userlist_opts = '<option value="00" class="" >Choose</option>';
@@ -149,7 +148,7 @@ $("#dlg_sel_territory").live("change",function() {
                         
                         $(".batch_enable_all_orders").html(resp.total_orders);
                 }
-                else 
+                else
                 {
                     $("#sel_batch_menu").html('<option value="00">No menu found</option>\n');
                     $("#assigned_uid").html('<option value="00">No users found</option>');
@@ -162,11 +161,10 @@ $("#dlg_sel_territory").live("change",function() {
     return false;
 });
 
- 
 
 $("#dlg_sel_territory").trigger("change");
-$("#sel_batch_menu").chosen();
-$('#dlg_sel_territory').chosen();
+//$("#sel_batch_menu").chosen();
+//$('#dlg_sel_territory').chosen();
 
 </script>
 

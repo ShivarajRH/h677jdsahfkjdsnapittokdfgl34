@@ -89,7 +89,7 @@ class Reservation extends Voucher {
             foreach($rslt->result_array() as $i=>$r) {
                 $arr_menus[$i]["menuid"] =$r['menuid'];
                 $arr_menus[$i]["menuname"] =$r['menuname']." (".$r['ttl_orders'].")";
-                $arr_menus[$i]["ocount"]=$r['ttl_orders'];
+                $arr_menus[$i]["ordcount"]=$r['ttl_orders'];
                 $arr_menus[$i]["batch_size"]=$r['batch_size'];
                 $arr_menus[$i]["bc_group_uids"]=$r['bc_group_uids'];
                 $total_orders+=$r['ttl_orders'];
@@ -275,9 +275,10 @@ class Reservation extends Voucher {
      */
     function create_batch_by_group_config() {
         $user=$this->auth(PRODUCT_MANAGER_ROLE|STOCK_INTAKE_ROLE|PURCHASE_ORDER_ROLE); $output=array();
-        echo $this->reservations->do_create_batch_by_group_config();
+        $output = $this->reservations->do_create_batch_by_group_config();
+        echo json_encode($output);
     }
-    
+
     /**
      * Suggest menu id under batch groupid
      * @param type $batchgroupid
@@ -318,9 +319,9 @@ class Reservation extends Voucher {
         $data['pnh_terr'] = $this->db->query("select e.* from proforma_invoices a 
                                                         join shipment_batch_process_invoice_link b on a.p_invoice_no = b.p_invoice_no 
                                                         join king_transactions c on c.transid = a.transid  
-                                                        join pnh_m_franchise_info d on d.franchise_id = c.franchise_id 
+                                                        join pnh_m_franchise_info d on d.franchise_id = c.franchise_id and d.is_suspended = 0
                                                         join pnh_m_territory_info e on e.id = d.territory_id 
-                                                        where batch_id = ?
+                                                        where a.invoice_status = 1 and batch_id = ?
                                                         group by d.territory_id 
                                                         order by territory_name",GLOBAL_BATCH_ID)->result_array();
         
@@ -338,7 +339,6 @@ class Reservation extends Voucher {
         $cond='';$rslt_arr=array();
         if($franchise_id != '')
             $cond .=" and tr.franchise_id=".$franchise_id;
-        
         /*$p_invoice_ids_list = $this->db->query("select group_concat(distinct sd.p_invoice_no) as p_invoice_ids from shipment_batch_process_invoice_link sd
                                             join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no
                                             join king_orders o on o.id=pi.order_id
@@ -361,7 +361,6 @@ class Reservation extends Voucher {
             }
             
         //}
-//        echo '<pre>';print_r($rslt_arr);die();
         $data['prods']=$rslt_arr;
         $this->load->view("admin/body/picklist_product_wise",$data);
     }
@@ -394,21 +393,21 @@ class Reservation extends Voucher {
                         // Process to batch this transaction
                         $arr_result[$transid] = $this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
 
-        //                    print_r($arr_result); //die();
+//                            print_r($arr_result); //die();
 
                     foreach ($arr_result as $transid=>$rslt) {
-                            if($rslt["nostock"] == 0 ) {
+                            if(isset($rslt["nostock"]) ) {
                                 $arr_result2['nostock'][$transid] = $rslt["nostock"];
 
                                 foreach($rslt["products"] as $prodduct_id=>$stock) {
-                                    $nostock_msg[$transid][] = array("product_id"=>$prodduct_id,"stock"=>$stock);
+                                    $nostock_msg[$transid][] = array("product_id"=>$prodduct_id,'product_name'=>$this->get_product_name_byid($prodduct_id),"stock"=>$stock);
                                 }
                             }
                             elseif(isset($rslt["alloted"])) {
                                 $arr_result2['alloted'][$transid] = $rslt["alloted"];
 
                                 foreach($rslt["products"] as $prodduct_id=>$stock) {
-                                    $allotedstock_msg[$transid][] = array("product_id"=>$prodduct_id,"stock"=>$stock);;
+                                    $allotedstock_msg[$transid][] = array("product_id"=>$prodduct_id,'product_name'=>$this->get_product_name_byid($prodduct_id),"stock"=>$stock);;
                                 }
                             }
                             elseif($rslt["error"] != '') {
@@ -426,6 +425,7 @@ class Reservation extends Voucher {
         }
         echo json_encode($output);
     }
+    
     /**
      * Check and reserve available stock for all transactions
      * @param string $batch_remarks
@@ -455,11 +455,11 @@ class Reservation extends Voucher {
 //            print_r($arr_result); //die();
             
             foreach ($arr_result as $transid=>$rslt) {
-                    if($rslt["nostock"] == 0 ) {
+                    if( isset($rslt["nostock"]) ) {
                         $arr_result2['nostock'][$transid] = $rslt["nostock"];
                         
                         foreach($rslt["products"] as $prodduct_id=>$stock) {
-                            $nostock_msg[$transid][] = array("product_id"=>$prodduct_id,"stock"=>$stock);
+                            $nostock_msg[$transid][] = array("product_id"=>$prodduct_id,'product_name'=>$this->get_product_name_byid($prodduct_id),"stock"=>$stock);
                         }
                         
                     }
@@ -467,7 +467,7 @@ class Reservation extends Voucher {
                         $arr_result2['alloted'][$transid] = $rslt["alloted"];
                         
                         foreach($rslt["products"] as $prodduct_id=>$stock) {
-                            $allotedstock_msg[$transid][] = array("product_id"=>$prodduct_id,"stock"=>$stock);;
+                            $allotedstock_msg[$transid][] = array("product_id"=>$prodduct_id,'product_name'=>$this->get_product_name_byid($prodduct_id),"stock"=>$stock);;
                         }
                         
                     }
@@ -487,7 +487,7 @@ class Reservation extends Voucher {
         }
         echo json_encode($output);
     }
-    
+
     /**
      * Make transaction enabled for batch and allot stock
      * @param type $trans
@@ -685,6 +685,15 @@ class Reservation extends Voucher {
 //        echo '<pre>';print_r($rslt_arr);die();
         $data['prods']=$rslt_arr;
         $this->load->view("admin/body/picklist_fran_wise",$data);
+    }
+    
+    /**
+     * Function to return product name
+     * @param type $prodduct_id int
+     * @return type string
+     */
+    function get_product_name_byid($prodduct_id) {
+        return $this->db->query("select product_name from m_product_info where product_id=?",$prodduct_id)->row()->product_name;
     }
 }
 

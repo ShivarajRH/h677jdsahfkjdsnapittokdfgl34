@@ -43,8 +43,8 @@ function show_orders_list(franid,from,to,batch_type) {
 
 $("#dlg_create_group_batch_block").dialog({
         autoOpen: false,
-        height: 450,
-        width:550,
+        height: 350,
+        width:400,
         modal: false,
         buttons: {
             "Create Batch":function() {
@@ -54,29 +54,38 @@ $("#dlg_create_group_batch_block").dialog({
                     var batch_size = $("#batch_size").val();
                     var assigned_uid = $("#assigned_uid").find(":selected").val();
                     var territory_id = $("#dlg_sel_territory").find(":selected").val();
-                    var townid = 0;//$("#dlg_sel_town").find(":selected").val();
+                    var townid = $("#dlg_sel_town").val();//.find(":selected")
+                    var franchise_id = $("#dlg_sel_franchise").val();//.find(":selected")
 
                     //if(sel_batch_menu == '00') { show_output("ERROR : Please Select Menu"); return false; }
-                    if(assigned_uid == '00') { 
-                        if(!confirm("Warning :\n Are you sure you do not want to assign user for this batch?")) {
+                    if(assigned_uid == '00') {
+                        /*if(!confirm("Warning :\n Are you sure you do not want to assign user for this batch?")) {
                             show_output("Warning :\n Batch will not assign to any user.");
                             return false;
-                        }
-                        assigned_uid = '0';
+                        }assigned_uid = '0';*/
+                        show_output("Assign to user field is required!"); return false;
                     }
                     if(batch_size==0) { show_output("Batch size should be greater than 0.");return false; }
                     if(sel_batch_menu == '00') {sel_batch_menu=0;  }
                     if(territory_id == '00') {territory_id=0;  }
-                    if(townid == '00') {townid=0;  }
+                    //if(townid == '00') {townid=0;  }
 //                            ,assigned_menuids:assigned_menuids
-                    var postData = {sel_batch_menu:sel_batch_menu,batch_size:batch_size,assigned_uid:assigned_uid,territory_id:territory_id,townid:townid};
-                    console.log(postData);
-                    $.post(site_url+"admin/create_batch_by_group_config",postData,function(rdata) {
-                            show_output(rdata);
-                            loadTransactionList(0);
+                    var postData = {sel_batch_menu:sel_batch_menu,batch_size:batch_size,assigned_uid:assigned_uid,territory_id:territory_id,townid:townid,franchise_id:franchise_id};
+                    //print(postData);
+                    $.post(site_url+"admin/create_batch_by_group_config",postData,function(resp) {
+                            print(resp);
+                            if(resp.status == 'success') {
+                                loadTransactionList(0);
+                                $("#dlg_create_group_batch_block").dialog( "close" );
+                                alert(resp.response);
+                                
+                            }
+                            else {
+                                show_output(resp.response);
+                                loadTransactionList(0);
+                            }
                             //$("#sel_batch_menu").val($("#sel_batch_menu option:nth-child(0)").val());
-
-                    }).fail(fail);
+                    },'json').fail(fail);
             },
             Close: function() { 
               $(this).dialog( "close" );
@@ -112,7 +121,7 @@ function batch_show_group(territory_id,townid,franchise_id) {
 }
 
 function show_output(rdata) {
-    $(".create_batch_msg_block").slideDown().html(rdata);//.delay("6500").slideUp("slow");
+    $(".create_batch_msg_block").slideDown().html(rdata);//.delay("8500").slideUp("slow");
 }
 //****PICKLIST 1 *****/
 $("#show_picklist_block").dialog({
@@ -139,7 +148,7 @@ function picklist_product_wise(elt,batch_id,franchise_id) {    //$("#picklist_by
     //var p_invoice_ids_str = $("#picklist_by_fran_all_"+franchise_id).val();var postData = {pick_list_trans:p_invoice_ids_str};
     if(franchise_id== undefined) { franchise_id =''; }
     $.post(site_url+"admin/picklist_product_wise/"+batch_id+"/"+franchise_id,{},function(resp) {
-            $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Pick List');
+            $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Productwise pick slip for #'+batch_id);
     });
 }
 
@@ -147,7 +156,7 @@ function picklist_fran_wise(elt,batch_id,franchise_id) {    //$("#picklist_by_fr
     //var p_invoice_ids_str = $("#picklist_by_fran_all_"+franchise_id).val();var postData = {pick_list_trans:p_invoice_ids_str};
     if(franchise_id== undefined) { franchise_id =''; }
     $.post(site_url+"admin/picklist_fran_wise/"+batch_id+"/"+franchise_id,{},function(resp) {
-            $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Pick List');
+            $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Franchisewise pick slip for #'+batch_id);
     });
 }
 
@@ -241,7 +250,7 @@ function reallot_stock_for_all_transaction(userid,pg) {
                         
                         rdata += "<tr><td><a href='"+site_url+"admin/trans/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
-                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
+                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_name+"</a>"+"("+val.stock+"), ";
                         });
                         rdata += "</td></tr>";
                     });
@@ -254,7 +263,7 @@ function reallot_stock_for_all_transaction(userid,pg) {
                         
                         rdata += "<tr><td><a href='"+site_url+"admin/trans/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
-                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
+                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_name+"</a>"+"("+val.stock+"), ";
                         });
                         rdata += "</td></tr>";
                     });
@@ -292,7 +301,7 @@ function reserve_stock_for_trans(userid,transid,pg) {
 
                         rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
-                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
+                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_name+"</a>"+"("+val.stock+"), ";
                         });
                         rdata += "</td></tr>";
                     });
@@ -305,7 +314,7 @@ function reserve_stock_for_trans(userid,transid,pg) {
                         
                         rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
-                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
+                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_name+"</a>"+"("+val.stock+"), ";
                         });
                         rdata += "</td></tr>";
                     });
@@ -345,7 +354,7 @@ function reallot_frans_all_trans(elt,userid,franchise_id,pg) {
                         
                         rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
-                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
+                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_name+"</a>"+"("+val.stock+"), ";
                         });
                         rdata += "</td></tr>";
                     });
@@ -359,7 +368,7 @@ function reallot_frans_all_trans(elt,userid,franchise_id,pg) {
                         
                         rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
-                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
+                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_name+"</a>"+"("+val.stock+"), ";
                         });
                         rdata += "</td></tr>";
                     });
@@ -386,7 +395,7 @@ function cancel_proforma_invoice(p_invoice_no,userid,pg) {
                             <p>Proforma Invoice#: <a href='"+site_url+"/admin/proforma_invoice/"+resp.p_invoice_no+"' target='_blank'>" +resp.p_invoice_no+ "</a> \n\
                             and Transid# <a href='"+site_url+"/admin/trans/"+resp.transid+"' target='_blank'>"+resp.transid+"</a></p>\n\
                         </div>";*/
-                        rdata = "Transactoion de-alloted successfully.";
+                        rdata = "Transaction de-alloted successfully.";
             }
             else {
                 rdata = resp.response;

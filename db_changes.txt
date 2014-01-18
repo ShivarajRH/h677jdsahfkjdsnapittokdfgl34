@@ -1055,3 +1055,5 @@ create table `acknowledgement_print_log` (  `sno` bigint NOT NULL AUTO_INCREMENT
 , `created_on` varchar (50) , `created_by` int (30) , `status` int (10) DEFAULT '0', `count` int (100) DEFAULT '0', PRIMARY KEY ( `sno`));
 
 alter table `king_orders` add index `status` (`status`);
+
+alter table `m_product_info` add index `product_id` (`product_id`);

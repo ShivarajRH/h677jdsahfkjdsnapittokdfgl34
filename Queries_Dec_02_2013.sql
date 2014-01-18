@@ -1466,7 +1466,7 @@ select * from king_invoice;
 # Jan_14_2014
 
 -- =============================================================================
-update t_imei_no set status=0 and order_id=0 where imei_no = '354619056098758';
+update t_imei_no set status=0 and order_id=0 where imei_no = '911208355656643';
 -- =============================================================================
 
 select (100*40)/100;
@@ -1550,4 +1550,53 @@ select distinct from_unixtime(tr.init,'%D %M %Y') as str_date,from_unixtime(tr.i
 ,'PNHDJX75781','PNHEHA75287','PNHESP26174','PNHFMK39418','PNHGJL64274','PNHGQR82517','PNHHCP63831','PNHIHX16957','PNHIYC47867','PNHJGC19279','PNHJSM35174','PNHNVQ34988','PNHQQK26697','PNHQSG33417','PNHRAL44539'
 ,'PNHSCD99697','PNHSZZ72836','PNHTMP33937','PNHTRW66732','PNHTWJ53918','PNHUEA37733','PNHURC82659','PNHVSE94433','PNHVVX36284','PNHWTN26375','PNHWTW35421','PNHWUI91457','PNHWUM95923','PNHWZM23398','PNHXJC33559'
 ,'PNHZEV97667','PNHZQI66535')
-            group by o.transid asc) as g  where  and g.batch_id = 5000 and  g.batch_id >= 5000 group by transid order by  g.actiontime DESC
+            group by o.transid asc) as g  where  and g.batch_id = 5000 and  g.batch_id >= 5000 group by transid order by  g.actiontime DESC;
+
+# Jan_17_2014
+
+-- =============================================================================
+update t_imei_no set status=0 and order_id=0 where imei_no = '911208355656643';
+-- =============================================================================
+
+select * from t_imei_no
+select * from m_batch_config
+
+desc m_batch_config;
+
+select e.*,b.batch_id from proforma_invoices a 
+			join shipment_batch_process_invoice_link b on a.p_invoice_no = b.p_invoice_no 
+			join king_transactions c on c.transid = a.transid  
+			join pnh_m_franchise_info d on d.franchise_id = c.franchise_id  and d.is_suspended = 0
+			join pnh_m_territory_info e on e.id = d.territory_id 
+			where  a.invoice_status = 1 and batch_id = '5000'
+			group by d.territory_id 
+			order by territory_name;
+
+select * from pnh_m_territory_info;
+
+select distinct o.itemid,bc.id as menuid,bc.batch_grp_name as menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) from king_transactions tr
+                                join king_orders as o on o.transid=tr.transid
+                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
+                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
+                                join king_dealitems dl on dl.id = o.itemid
+                                join king_deals d on d.dealid = dl.dealid 
+                                join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
+                                
+                                join pnh_menu mn on mn.id=d.menuid
+                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id #and f.is_suspended = 0
+                                where sd.batch_id=5000  and f.franchise_id = 31 
+                                group by o.transid
+                                order by menuname,tr.init asc;
+
+
+G1 -
+112,118,122 - Mobiles & Tablets,Computers & Peripherals,Cameras & Accessories
+
+select * from pnh_member_info where first_name = 'shivraj'
+
+select * from king_admin
+select * from m_batch_config
+
+select product_name from m_product_info where product_id='8583';
+
+

@@ -271,3 +271,7 @@ h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;}
     padding: 5px; font-weight: bold;
 }
 .block_info { padding: 5px; background: #ffffd0; padding: 5px; font-size: 12px;line-height: 20px;}
+.create_batch_msg_block {
+    width: 100%;
+    height: auto;
+}

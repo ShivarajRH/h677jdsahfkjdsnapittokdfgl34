@@ -26,8 +26,8 @@
 <div class="onscreen">
         <div class="blockonscreen">
 		<div class="head_right_block">
-                        <div><b>Date : </b><?=Date('d-m-Y'); ?></div>
-                        <div><b>By : </b><?php echo $user['username']; ?></div>
+                        <div>Printed On : <b><?=Date('d/m/Y'); ?></b></div>
+                        <div>Printed By : <b><?php echo $user['username']; ?></b></div>
                         <div class="print_link_block"><a href="javascript:void(0);" class="print_link" onclick="">Print</a></div>
 		</div>
 		<div class="heading2">
