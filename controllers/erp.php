@@ -8530,7 +8530,8 @@ group by product_id,location",$bid)->result_array();
 			$from=strtotime($s);
 			$to=strtotime("23:59:59 $e");
 		}
-		$sql="select s.*,f.franchise_name,a.name as created_by from pnh_sch_discount_track s join pnh_m_franchise_info f on f.franchise_id=s.franchise_id left outer join king_admin a on a.id=s.created_by where 1 ";
+	//	$sql="select s.*,f.franchise_name,a.name as created_by from pnh_sch_discount_track s join pnh_m_franchise_info f on f.franchise_id=s.franchise_id left outer join king_admin a on a.id=s.created_by where 1 ";
+		$sql="SELECT s.*,f.franchise_name,a.name AS created_by ,d.name AS deal FROM pnh_sch_discount_track s JOIN pnh_m_franchise_info f ON f.franchise_id=s.franchise_id  LEFT JOIN king_dealitems d ON d.id=s.dealid LEFT OUTER JOIN king_admin a ON a.id=s.created_by WHERE 1 ";
 		$title="Scheme discounts added";
 		if($fid)
 			$sql.=" and s.franchise_id=?";
@@ -8543,6 +8544,7 @@ group by product_id,location",$bid)->result_array();
 		$data['pagetitle']=$title;
 		$data['discs']=$this->db->query($sql,$fid)->result_array();
 		$data['page']="pnh_sch_discounts";
+		
 		$this->load->view("admin",$data);
 	}
 	
@@ -8724,8 +8726,9 @@ group by product_id,location",$bid)->result_array();
 		$user=$this->auth(SPECIAL_MARGIN_UPDATE);
 		if($_POST)
 		{
-			foreach(array("discount","start","end","reason","menu","brand","cat","fids","bulk_schtype","target_value","credit_prc","credit_value","mscheme_type","mscheme_val","msch_applyfrm","expire_prevsch") as $i)
+			foreach(array("discount","start","end","reason","menu","brand","cat","fids","bulk_schtype","target_value","credit_prc","credit_value","mscheme_type","mscheme_val","msch_applyfrm","expire_prevsch","disc_ondeal","dealids") as $i)
 				$$i=$this->input->post($i);
+			
 			if(empty($fids))
 				show_error("No Franchises selected");
 			$start=strtotime($start);
@@ -8738,34 +8741,56 @@ group by product_id,location",$bid)->result_array();
 			{
 				if($bulk_schtype==1)//if scheme discount
 				{
-					if($brand==0)
+					
+					
+					if($brand==0 &&  !$disc_ondeal)
 					{
-						$fran_sch=$this->db->query('select * from pnh_sch_discount_brands where franchise_id=? and menuid like ?  and catid like ? and is_sch_enabled=1 ',array($fid,'%'.$menu.'%','%'.$cat.'%'))->result_array();
+						$fran_sch=$this->db->query('select * from pnh_sch_discount_brands where franchise_id=? and menuid like ?  and catid like ? and is_sch_enabled=1 and dealid=0',array($fid,'%'.$menu.'%','%'.$cat.'%'))->result_array();
 						foreach($fran_sch as $fransch)
 						{
-							$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0 where franchise_id=? and menuid=? and catid=?",array($fid,$menu,$cat));
+							$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0 where franchise_id=? and menuid=? and catid=? and dealid=0",array($fid,$menu,$cat));
 							$this->db->query("update pnh_franchise_menu_link set sch_discount=?,sch_discount_start=?,sch_discount_end=?,is_sch_enabled=0 where fid=? and menuid=?",array($discount,$start,$end,$fid,$menu));
 						}
 					}
-					else
+					else if(!$disc_ondeal)
 					 
-					 {	
-						$fran_sch=$this->db->query('select * from pnh_sch_discount_brands where franchise_id=? and menuid like ? and brandid like ? and catid like ? and is_sch_enabled=1 ',array($fid,'%'.$menu.'%','%'.$brand.'%','%'.$cat.'%'))->result_array();
-						foreach($fran_sch as $fransch)
-						{
-							if($fransch['valid_from']<time() && $fransch['valid_to']>time() && $fransch['is_sch_enabled']==1)
+					 {
+						$fran_sch=$this->db->query('select * from pnh_sch_discount_brands where franchise_id=? and menuid like ? and brandid like ? and catid like ? and is_sch_enabled=1 and dealid=0',array($fid,'%'.$menu.'%','%'.$brand.'%','%'.$cat.'%'))->result_array();
+						
+							foreach($fran_sch as $fransch)
 							{
-								$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0 where franchise_id=? and menuid=? and brandid=? and catid=? ",array($fid,$menu,$brand,$cat));
-								$this->db->query("update pnh_franchise_menu_link set sch_discount=?,sch_discount_start=?,sch_discount_end=?,is_sch_enabled=0 where fid=? and menuid=?",array($discount,$start,$end,$fid,$menu));
+								if($fransch['valid_from']<time() && $fransch['valid_to']>time() && $fransch['is_sch_enabled']==1)
+								{
+									$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0 where franchise_id=? and menuid=? and brandid=? and catid=? and dealid=0",array($fid,$menu,$brand,$cat));
+									$this->db->query("update pnh_franchise_menu_link set sch_discount=?,sch_discount_start=?,sch_discount_end=?,is_sch_enabled=0 where fid=? and menuid=?",array($discount,$start,$end,$fid,$menu));
+								}
+									
 							}
-								
-						}
+						
 					 }
-					$inp=array("franchise_id"=>$fid,"sch_menu"=>$menu,"catid"=>$cat,"brandid"=>$brand,"sch_discount"=>$discount,"sch_discount_start"=>$start,"sch_discount_end"=>$end,'reason'=>$reason,"created_by"=>$user['userid'],"created_on"=>time(),"sch_type"=>1);
-					$this->db->insert("pnh_sch_discount_track",$inp);
-					$inp=array("franchise_id"=>$fid,"menuid"=>$menu,"discount"=>$discount,"valid_from"=>$start,"valid_to"=>$end,"brandid"=>$brand,"created_on"=>time(),"created_by"=>$user['userid'],"catid"=>$cat,"is_sch_enabled"=>1,"sch_type"=>1);
-					$this->db->insert("pnh_sch_discount_brands",$inp);
-					
+					 
+					 if($disc_ondeal)
+					 {
+					 	foreach($dealids as $dealid)
+					 	{
+					 		$fran_sch=$this->db->query('select * from pnh_sch_discount_brands where franchise_id=? and menuid like ? and brandid like ? and catid like ? and is_sch_enabled=1 and dealid=?',array($fid,'%'.$menu.'%','%'.$brand.'%','%'.$cat.'%',$dealid))->row_array();
+					 		if($fran_sch['valid_from']<time() && $fran_sch['valid_to']>time() && $fran_sch['is_sch_enabled']==1)
+								{
+									$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0 where franchise_id=? and menuid=? and brandid=? and catid=? and dealid=?",array($fid,$menu,$brand,$cat,$dealid));
+									//$this->db->query("update pnh_sch_discount_track set is_sch_enabled=0 where franchise_id=? and sch_menu=? and brandid=? and catid=? and dealid=?",array($fid,$menu,$brand,$cat,$dealid));
+								}
+					 		$inp=array("franchise_id"=>$fid,"sch_menu"=>$menu,"catid"=>$cat,"brandid"=>$brand,"sch_discount"=>$discount,"sch_discount_start"=>$start,"sch_discount_end"=>$end,'reason'=>$reason,"created_by"=>$user['userid'],"created_on"=>time(),"sch_type"=>1,"dealid"=>$dealid);
+					 		$this->db->insert("pnh_sch_discount_track",$inp);
+					 		$inp=array("franchise_id"=>$fid,"menuid"=>$menu,"discount"=>$discount,"valid_from"=>$start,"valid_to"=>$end,"brandid"=>$brand,"created_on"=>time(),"created_by"=>$user['userid'],"catid"=>$cat,"is_sch_enabled"=>1,"sch_type"=>1,"dealid"=>$dealid);
+					 		$this->db->insert("pnh_sch_discount_brands",$inp);
+					 	}
+					 }else 
+					 {
+						$inp=array("franchise_id"=>$fid,"sch_menu"=>$menu,"catid"=>$cat,"brandid"=>$brand,"sch_discount"=>$discount,"sch_discount_start"=>$start,"sch_discount_end"=>$end,'reason'=>$reason,"created_by"=>$user['userid'],"created_on"=>time(),"sch_type"=>1);
+						$this->db->insert("pnh_sch_discount_track",$inp);
+						$inp=array("franchise_id"=>$fid,"menuid"=>$menu,"discount"=>$discount,"valid_from"=>$start,"valid_to"=>$end,"brandid"=>$brand,"created_on"=>time(),"created_by"=>$user['userid'],"catid"=>$cat,"is_sch_enabled"=>1,"sch_type"=>1);
+						$this->db->insert("pnh_sch_discount_brands",$inp);
+					 }
 				
 				}
 				
@@ -18996,56 +19021,98 @@ order by action_date";
 		 * load all franchise by menuid and territory
 		 * @param unknown_type $menu_id
 		 */
-		function get_franchisebymenu_id($menu_id=0,$territory_id=0,$townid=0)
+		function get_franchisebymenu_id($menu_id=0,$territory_id=0,$townid=0,$sch_type=0)
 		{
 			$cond='';
-			
+			$output=array();
+		
 			if(!$territory_id)
 			{
 				$territory_id=$this->input->post('territoryid');
 				if($territory_id)
 					if(is_array($territory_id))
-						$territory_id=implode(',',array_filter($territory_id));
+					$territory_id=implode(',',array_filter($territory_id));
 			}
-			
+		
 			if(!$townid)
 			{
 				$townid=$this->input->post('townid');
 				if($townid)
 					if(is_array($townid))
-						$townid=implode(',',array_filter($townid));
+					$townid=implode(',',array_filter($townid));
 			}
-			
+		
 			if(!$menu_id)
 			{
 				$menu_id=$this->input->post('menuid');
 				if($menu_id)
 					if(is_array($menu_id))
-						$menu_id=implode(',',array_filter($menu_id));
+					$menu_id=implode(',',array_filter($menu_id));
 			}
-			
+		
 			if($menu_id)
 				$cond.=" and a.menuid in ($menu_id)";
 		
 			if($territory_id )
 				$cond.=" and b.territory_id in ($territory_id)";
-			
+		
 			if($townid)
 				$cond.=" and b.town_id in ($townid) ";
-			
-
+		
+		
 			$user=$this->auth_pnh_employee();
-			$franchise_list = $this->db->query("SELECT a.fid,b.franchise_name,is_suspended
-													FROM `pnh_franchise_menu_link`a
-													JOIN pnh_m_franchise_info b ON b.franchise_id=a.fid
-													WHERE b.is_suspended != 1 AND a.status=1 $cond
-													group by a.fid									
-													order by b.franchise_name asc ");
-			$output=array();
+		
+			$franchise_list = $this->db->query("SELECT a.fid,b.franchise_name,is_suspended,b.territory_id,t.territory_name,b.town_id,tw.town_name
+					FROM `pnh_franchise_menu_link`a
+					JOIN pnh_m_franchise_info b ON b.franchise_id=a.fid
+					JOIN pnh_m_territory_info t ON t.id=b.territory_id
+					JOIN pnh_towns tw ON tw.id=b.town_id
+					WHERE b.is_suspended != 1 AND a.status=1 $cond
+					GROUP BY a.fid
+					ORDER BY b.franchise_name ASC ");
+		
+					$fran_schstatus=array();
+					$fran_schstatus['has_nosch']=array();
+		
+			//check if scheme is not alloted
+			if($franchise_list)
+			{
+				foreach($franchise_list->result_array() as $fran_schdisc)
+				{
+					if($sch_type==1)
+					{
+						if($this->db->query("select DISTINCT franchise_id from  pnh_sch_discount_brands where franchise_id=? and ? between valid_from and valid_to and is_sch_enabled=1",array($fran_schdisc['fid'],time()))->num_rows()!=0)
+						{
+							array_push($fran_schstatus['has_nosch'], $fran_schdisc['fid']);
+						}
+					}
+					if($sch_type==3)
+					{
+						if($this->db->query("select DISTINCT franchise_id from  imei_m_scheme where franchise_id=? and ? between sch_apply_from and scheme_to and is_active=1",array($fran_schdisc['fid'],time()))->num_rows()!=0)
+						{
+							array_push($fran_schstatus['has_nosch'], $fran_schdisc['fid']);
+						}
+					}
+					if($sch_type==2)
+					{
+						if($this->db->query("select DISTINCT franchise_id from  pnh_super_scheme where franchise_id=? and ? between valid_from and valid_to and is_active=1",array($fran_schdisc['fid'],time()))->num_rows()!=0)
+						{
+							array_push($fran_schstatus['has_nosch'], $fran_schdisc['fid']);
+						}
+					}
+				}
+			}
+		
+		
 			if($franchise_list ->num_rows())
 			{
-				$output['menu_fran_list'] = $franchise_list->result_array();
-				$output['status']='success';
+					$output['menu_fran_list'] = $franchise_list->result_array();
+					$output['status']='success';
+					$output['has_nosch']=$fran_schstatus['has_nosch'];
+					/*$output['has_nombrsch']=$fran_schstatus['has_nombrsch'];
+					$output['has_nosuprsch']=$fran_schstatus['has_nosupersch'];
+					$output['new_fran']=$fran_schstatus['new_fran'];*/
+		
 			}
 			else
 			{
@@ -19053,6 +19120,52 @@ order by action_date";
 				$output['message']='No franchise Found';
 			}
 			echo json_encode($output);
+		}
+		
+		
+		function jx_check_has_scheme($menuid=0,$catid=0,$brandid=0,$sch_type=0)
+		{
+			$output=array();
+			$fran_schstatus=array();
+			$fran_schstatus['has_schdisc']=array();
+			$fran_schstatus['has_mbrsch']=array();
+			$fran_schstatus['has_supersch']=array();
+		
+			if($sch_type==1)
+			{
+				$has_sch_disc=$this->db->query("select distinct franchise_id  from  pnh_sch_discount_brands where menuid=? and catid=? and brandid=? and ? between valid_from and valid_to and is_sch_enabled=1",array($menuid,$catid,$brandid,time()));
+				if($has_sch_disc)
+				{
+		
+					$output['status']='success';
+					$output['has_sch_disc']=$has_sch_disc->result_array();
+				}
+		
+			}
+		
+			if($sch_type==3)
+			{
+				$has_mbr_sch = $this->db->query("select distinct franchise_id from  imei_m_scheme where menuid=? and categoryid=? and brandid=? and ? between sch_apply_from and scheme_to and is_active=1",array($menuid,$catid,$brandid,time()));
+		
+				if($has_mbr_sch)
+				{
+					$output['status']='success';
+					$output['has_sch_disc']=$has_mbr_sch->result_array();
+				}
+			}
+			if($sch_type==2)
+			{
+				$has_spr_sch=$this->db->query("select distinct franchise_id from  pnh_super_scheme where menu_id=? and cat_id=? and brand_id=? and ? between valid_from and valid_to and is_active=1",array($menuid,$catid,$brandid,time()));
+				if($has_spr_sch)
+				{
+		
+					$output['status']='success';
+					$output['has_sch_disc']=$has_spr_sch->result_array();
+				}
+			}
+		
+			echo json_encode($output);
+		
 		}
 		
 		function get_franchisemenuby_twnid($town_id=0)
@@ -24625,5 +24738,40 @@ die; */
 			echo "No Franchises Found";
 		} 
 		
+	}
+	
+	/**
+	 * function to get all deals for category brand menu
+	 * @param unknown_type $menu
+	 * @param unknown_type $brand
+	 * @param unknown_type $cat
+	 */
+	function jx_to_getdeals_bybrandcatmenu($menu=0,$brand=0,$cat=0)
+	{
+		$is_sorceble_deal=array();
+		$is_sorceble_deal['sourceable']=array();
+		$is_sorceble_deal['nonsourceable']=array();
+	
+		$output=array();
+		$deal_list=$this->db->query("SELECT DISTINCT i.id,i.dealid,i.name,f.is_sourceable FROM king_dealitems i
+				JOIN king_deals d ON d.dealid=i.dealid
+				JOIN king_brands b ON b.id=d.brandid
+				JOIN king_categories c ON c.id=d.catid
+				JOIN pnh_menu m ON m.id=d.menuid
+				JOIN m_product_deal_link p ON p.itemid=i.id
+				JOIN m_product_info f ON f.product_id=p.product_id
+				WHERE d.menuid=? AND brandid=? AND catid=?",array($menu,$brand,$cat));
+	
+		if($deal_list)
+		{
+			$output['status']='success';
+			$output['deal_list']=$deal_list->result_array();
+		}
+		else
+		{
+			$output['status']='error';
+			$output['message']='No Deals Found';
+		}
+		echo json_encode($output);
 	}
 }

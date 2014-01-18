@@ -1,0 +1,2 @@
+ALTER TABLE `pnh_sch_discount_track` ADD COLUMN `dealid` BIGINT(0) NULL AFTER `catid`; 
+ALTER TABLE `pnh_sch_discount_brands` ADD COLUMN `dealid` BIGINT(11) DEFAULT 0 NULL AFTER `discount`;  
