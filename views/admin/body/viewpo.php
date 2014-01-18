@@ -6,7 +6,7 @@
 <h2>Purchase Order : <?=$po['po_id']?></h2>
 <table class="datagrid" style="float:left">
 <tr><td>Vendor :</td><td><a href="<?=site_url("admin/vendor/{$po['vendor_id']}")?>"><?=$po['vendor_name']?></a></td></tr>
-<tr><td>Total Value :</td><td>Rs <b><?=number_format($po['total_value'])?></b></td></tr>
+<tr><td>Total Value :</td><td>Rs <b><?=format_price($po['total_value'])?></b></td></tr>
 <tr><td>Remarks :</td><td><?=$po['remarks']?></td></tr>
 
 <tr><td>Created on :</td><td><?=date("d/m/Y g:ia",strtotime($po['created_on']))?></td></tr>
@@ -96,13 +96,12 @@ switch($po['po_status']){
 
 
 <div style="padding:20px 0px;">
-<h4>Products in PO</h4>
-
-<table id="po_prod_list" class="datagrid nofooter">
+<h4 style="margin-bottom:3px;">PO Product list</h4>
+<table id="po_prod_list" class="datagrid nofooter" style="width:100%">
 <thead>
 <tr>
 <th>Sno</th>
-<th>Product</th>
+<th width="250" style="text-align:left">Product Name</th>
 <th>Available Qty</th>
 <th style="text-align: left" width="50">Last <br> 30 Days Sales</th>
 <th style="text-align: left" width="50">Required <br> Qty</th>
@@ -119,7 +118,12 @@ switch($po['po_status']){
 </tr>
 </thead>
 <tbody>
-<?php $sno=1; foreach($items as $i){
+<?php $sno=1; 
+
+	$total_item_qty = 0;
+	$total_item_rcvd_qty = 0;
+	$total_pprice = 0;
+foreach($items as $i){
 	
 	$i['sales_30days']=$this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_deal_link l join king_orders o on o.itemid=l.itemid where l.product_id=? and o.time>".(time()-(24*60*60*30)).' and o.time < ?  ',array($i['product_id'],strtotime($po['created_on'])))->row()->s;
 	$i['sales_30days'] += $this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_group_deal_link l join king_orders o on o.itemid=l.itemid join products_group_orders pgo on pgo.order_id = o.id where pgo.product_id=? and o.time>".(time()-(24*60*60*30)).' and o.time < ?  ',array($i['product_id'],strtotime($po['created_on'])))->row()->s;
@@ -128,38 +132,55 @@ switch($po['po_status']){
 
 	$i['cur_avail_qty'] = $this->db->query("select current_stock from t_stock_update_log where product_id = ?  order by id desc limit 1 ",array($i['product_id']))->row()->current_stock;
 	
+	$total_item_qty += $i['order_qty'];
+	$total_item_rcvd_qty += $i['received_qty'];
+
+	$total_pprice += $i['order_qty']*$i['purchase_price'];
 ?>
 <tr>
-<td><?=$sno++?></td>
-<td><a href="<?=site_url("admin/product/{$i['product_id']}")?>"><?=$i['product_name']?></a></td>
-<td><?=$i['cur_avail_qty']?></td>
-<td><?=$i['sales_30days']?></td>
-<td><?=$i['pen_ord_qty']?></td>
-<td><?=$i['order_qty']?></td>
-<td><?=$i['received_qty']?></td>
-<td class="hideinprint"><?=$i['mrp']?></td>
-<td class="hideinprint"><?=$i['dp_price']?></td>
-<td class="hideinprint"><?=$i['margin']?> <?=($i['scheme_discount_value']==1?'%':'')?></td>
-<td class="hideinprint"><?=$i['scheme_discount_value']?></td>
-<td class="hideinprint"><?=$i['purchase_price']?></td>
-<td class="hideinprint hideinprint1"><?=$i['is_foc']?"YES":"NO"?></td>
-<td class="hideinprint hideinprint1"><?=$i['has_offer']?"YES":"NO"?></td>
-<td class="hideinprint hideinprint1"><?=$i['special_note']?></td>
+	<td><?=$sno++?></td>
+	<td align="left"><a href="<?=site_url("admin/product/{$i['product_id']}")?>"><?=$i['product_name']?></a></td>
+	<td align="right"><?=$i['cur_avail_qty']*1?></td>
+	<td align="right"><?=$i['sales_30days']*1?></td>
+	<td align="right"><?=$i['pen_ord_qty']*1?></td>
+	<td align="right"><?=$i['order_qty']*1?></td>
+	<td align="right"><?=$i['received_qty']?></td>
+	<td class="hideinprint" align="right"><?=$i['mrp']?></td>
+	<td class="hideinprint" align="right"><?=$i['dp_price']?></td>
+	<td class="hideinprint" align="right"><?=$i['margin']?> <?=($i['scheme_discount_value']==1?'%':'')?></td>
+	<td class="hideinprint" align="right"><?=$i['scheme_discount_value']?></td>
+	<td class="hideinprint" align="right"><?=$i['purchase_price']?></td>
+	<td class="hideinprint hideinprint1"><?=$i['is_foc']?"YES":"NO"?></td>
+	<td class="hideinprint hideinprint1"><?=$i['has_offer']?"YES":"NO"?></td>
+	<td	class="hideinprint hideinprint1"><?=$i['special_note']?></td>
 </tr>
 <?php }?>
-
-	<tr class="hideinprint">
-		<td colspan="14" style="text-align: right">
-			<a href="javascript:void(0)" onclick="print_poaccdoc()">Print Accounts Copy</a> &nbsp;&nbsp;&nbsp; <a href="javascript:void(0)" onclick="print_podoc()">Print Vendor Copy</a>
-		</td>
+	
+	<tr class="tbl_stats_row">
+		<td colspan="5" align="right">Total</td>
+		<td align="right"><?php echo $total_item_qty; ?></td>
+		<td align="right"><?php echo $total_item_rcvd_qty; ?></td>
+		<td colspan="4">&nbsp;</td>
+		<td align="right"><?php echo format_price($total_pprice,4); ?></td>
+		<td colspan="3">&nbsp;</td>
 	</tr>
-
 </tbody>
 </table>
+
+<div style="text-align: right;padding-top:5px;">
+	<a href="javascript:void(0)" class="button button-tiny button-info" onclick="print_poaccdoc()">Print Accounts Copy</a> 
+	<a href="javascript:void(0)" class="button button-tiny button-info" onclick="print_podoc()">Print Vendor Copy</a>
 </div>
 
 </div>
 
+</div>
+
+
+<style>
+#po_prod_list th{text-align:right;}
+.tbl_stats_row td{background:#ffffD0 !important}
+</style>
 
 
 <script>
@@ -174,7 +195,7 @@ if("#po_deliverydate_button").click(function(){
 
 function print_podoc()
 {
-	var html = '<div><style> body{font-size:12px;font-family:arial;} .hideinprint{display:none}</style> <h2 align="center">PO Product List</h2> <div> <b style="float:right">Printed By : <?php echo $user['username'];?> <br> Printed On : <?php echo format_datetime_ts(time());?>  </b> <b style="font-size:14px;">PO: #<?=$po['po_id']?></b> <br><b style="font-size:14px;">Vendor: <?=$po_ven_name;?></b>  </div><table cellpadding=5 cellspacing=0 border=1 width="100%" style="font-size:12px;font-family:arial;">'+$('#po_prod_list').html()+'</table></div>';
+	var html = '<div><style> body{font-size:12px;font-family:arial;} .hideinprint{display:none}</style> <h2 align="center">Purchase Order Product List</h2> <div> <b style="float:right">Printed By : <?php echo $user['username'];?> <br> Printed On : <?php echo format_datetime_ts(time());?>  </b> <b style="font-size:14px;">PO: #<?=$po['po_id']?></b><br><b style="font-size:14px;">PO Date:<?=date("d/m/Y g:ia",strtotime($po['created_on']))?></b><br><b style="font-size:14px;">Vendor: <?=$po_ven_name;?></b>  </div><table cellpadding=5 cellspacing=0 border=1 width="100%" style="font-size:12px;font-family:arial;">'+$('#po_prod_list').html()+'</table></div>';
 		prw=window.open("",'');
 		prw.document.write(html);
 		prw.focus();
@@ -183,7 +204,7 @@ function print_podoc()
 
 function print_poaccdoc()
 {
-	var html = '<div><style> body{font-size:12px;font-family:arial;} .hideinprint1{display:none}</style> <h2 align="center">PO Product List</h2> <div> <b style="float:right">Printed By : <?php echo $user['username'];?> <br> Printed On : <?php echo format_datetime_ts(time());?>  </b> <b style="font-size:14px;">PO: #<?=$po['po_id']?></b> <br><b style="font-size:14px;">Vendor: <?=$po_ven_name;?></b> </div><table cellpadding=5 cellspacing=0 border=1 width="100%" style="font-size:12px;font-family:arial;">'+$('#po_prod_list').html()+'</table></div>';
+	var html = '<div><style> body{font-size:12px;font-family:arial;} .hideinprint1{display:none}</style> <h2 align="center">PO Product List</h2> <div> <b style="float:right">Printed By : <?php echo $user['username'];?> <br> Printed On : <?php echo format_datetime_ts(time());?>  </b> <b style="font-size:14px;">PO: #<?=$po['po_id']?></b><br><b style="font-size:14px;">PO Date:<?=date("d/m/Y g:ia",strtotime($po['created_on']))?></b><br><b style="font-size:14px;">Vendor: <?=$po_ven_name;?></b> </div><table cellpadding=5 cellspacing=0 border=1 width="100%" style="font-size:12px;font-family:arial;">'+$('#po_prod_list').html()+'</table></div>';
 		prw=window.open("",'');
 		prw.document.write(html);
 		prw.focus();
@@ -206,6 +227,12 @@ function updateexpected_podeliverydate()
 	if(confirm("Are you sure?"))
 		location="<?=site_url("admin/updatedeliverydate/{$po['po_id']}")?>";
 }
+
+$(function(){
+	$('#po_prod_list').jq_fix_header_onscroll();
+});
+
+
 </script>
 
 <?php
