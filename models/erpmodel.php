@@ -7662,38 +7662,36 @@ order by p.product_name asc
 	function get_pnh_margin($fid,$pid)
 	{
 		$itemid=$this->db->query("select id from king_dealitems where pnh_id=?",$pid)->row()->id;
-		
-		//$menuid=$this->db->query("select d.menuid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.is_pnh=1 and i.pnh_id=?",$pid)->row()->menuid;
-		
+	
+	
 		$menuid=$this->db->query("select d.menuid,m.default_margin as margin from king_dealitems i join king_deals d on d.dealid=i.dealid JOIN pnh_menu m ON m.id=d.menuid where i.is_pnh=1 and i.pnh_id=?",$pid)->row_array();
-		
-		//print_r($menuid);
+	
+	
 		$brandid=$this->db->query("select d.brandid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.is_pnh=1 and i.pnh_id=?",$pid)->row()->brandid;
-		
+	
 		$catid=$this->db->query("select d.catid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.is_pnh=1 and i.pnh_id=?",$pid)->row()->catid;
-		
+	
 		$fran=$this->db->query("select * from pnh_m_franchise_info where franchise_id=?",$fid)->row_array();
-		
-		//$fran1=$this->db->query("select * from pnh_franchise_menu_link where fid=? and menuid=?",array($fid,$menuid['menuid']))->row_array();
-		
+	
+	
 		$fran1=$this->db->query("select * from pnh_sch_discount_brands where franchise_id=? and menuid=? and brandid=? and is_sch_enabled = 1 ",array($fid,$menuid['menuid'],$brandid))->row_array();
-		 
+	
 		$margin=$this->db->query("select margin,combo_margin,less_margin_brands from pnh_m_class_info where id=?",$fran['class_id'])->row_array();
-
+	
 		$margin['base_margin']=$menuid['margin'];
 		$margin['margin']=$menuid['margin'];
 		$has_special_margin = 0;
 		$has_super_scheme=0;
-		 
+	
 		//check for super scheme
 		$super_scheme=$this->db->query("select * from pnh_super_scheme where menu_id=? and is_active=1",$menuid['menuid'])->result_array();
-		
+	
 		if($super_scheme)
 		{
 			if($super_scheme['valid_from']<time() && $super_scheme['valid_to']>time() && $super_scheme['is_sch_enabled']==1)
 				$has_super_scheme=1;
-		} 
-		
+		}
+	
 		$prod_margin=$this->db->query("select * from pnh_special_margin_deals where is_active=1 and itemid=? and ? between `from` and `to` order by id desc limit 1",array($itemid,time()))->row_array();
 		$chk_brand_marg = 1;
 		if(!empty($prod_margin))
@@ -7705,43 +7703,46 @@ order by p.product_name asc
 				$has_special_margin = 1;
 			}
 		}
-		if($chk_brand_marg)	
+		if($chk_brand_marg)
 			if($this->db->query("select 1 from pnh_less_margin_brands where brandid=?",$brandid)->num_rows()!=0)
-				$margin['margin']=$margin['less_margin_brands'];
-		
+			$margin['margin']=$margin['less_margin_brands'];
+	
 		$margin['base_margin']=$margin['margin'];
 		$margin['sch_margin']=0;
 		$margin['bal_discount']=0;
-		$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=? and ? between valid_from and valid_to and brandid=? and catid=? and menuid=? and is_sch_enabled = 1  order by id desc limit 1",array($fid,time(),$brandid,$catid,$menuid['menuid']))->row()->discount;
-		
+	
+		$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=?  and ? between valid_from and valid_to and catid=? and brandid=? and menuid=? and is_sch_enabled = 1 and dealid=? order by id desc limit 1",array($fid,time(),$catid,$brandid,$menuid['menuid'],$itemid))->row()->discount;
 		if(empty($bmargin))
-			$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=?  and ? between valid_from and valid_to and brandid=? and catid=0 and menuid=? and is_sch_enabled = 1 order by id desc limit 1",array($fid,time(),$brandid,$menuid['menuid']))->row()->discount;
+			$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=? and ? between valid_from and valid_to and brandid=? and catid=? and menuid=? and is_sch_enabled = 1 and dealid=0 order by id desc limit 1",array($fid,time(),$brandid,$catid,$menuid['menuid']))->row()->discount;
+	
 		if(empty($bmargin))
-			$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=?  and ? between valid_from and valid_to and catid=? and brandid=0 and menuid=? and is_sch_enabled = 1 order by id desc limit 1",array($fid,time(),$catid,$menuid['menuid']))->row()->discount;
+			$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=?  and ? between valid_from and valid_to and brandid=? and catid=0 and menuid=? and is_sch_enabled = 1 and dealid=0 order by id desc limit 1",array($fid,time(),$brandid,$menuid['menuid']))->row()->discount;
 		if(empty($bmargin))
-			$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=?  and ? between valid_from and valid_to and catid=0 and brandid=0 and menuid=? and is_sch_enabled = 1 order by id desc limit 1",array($fid,time(),$menuid['menuid']))->row()->discount;
-		
-		//echo $this->db->last_query();
+			$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=?  and ? between valid_from and valid_to and catid=? and brandid=0 and menuid=? and is_sch_enabled = 1 and dealid=0 order by id desc limit 1",array($fid,time(),$catid,$menuid['menuid']))->row()->discount;
+		if(empty($bmargin))
+			$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=?  and ? between valid_from and valid_to and catid=0 and brandid=0 and menuid=? and is_sch_enabled = 1 and dealid=0 order by id desc limit 1",array($fid,time(),$menuid['menuid']))->row()->discount;
+	
+	
 		if(!$has_special_margin)
 		{
 			if(empty($bmargin))
 			{
 				if($fran1['sch_discount_start']<time() && $fran1['sch_discount_end']>time() && $fran1['is_sch_enabled'])
 				{
-						$margin['margin']+=$fran1['sch_discount'];
-						$margin['sch_margin']=$fran1['sch_discount'];
+					$margin['margin']+=$fran1['sch_discount'];
+					$margin['sch_margin']=$fran1['sch_discount'];
 				}
 			}else{
 				$margin['margin']+=$bmargin;
 				$margin['sch_margin']=$bmargin;
 			}
 		}
-		
+	
 		$c_balance_det = $this->db->query("select min_balance_value,bal_discount from king_dealitems a join king_deals b on a.dealid = b.dealid join pnh_menu c on c.id = b.menuid where a.pnh_id = ? ",$pid)->row_array();
 		if($c_balance_det['min_balance_value'])
 		{
 			$acc_statement = $this->erpm->get_franchise_account_stat_byid($fran['franchise_id']);
-			
+	
 			//$balance=$this->db->query("select current_balance from pnh_m_franchise_info where franchise_id=?",$fran['franchise_id'])->row()->current_balance;
 			$balance = ($acc_statement['shipped_tilldate']-($acc_statement['paid_tilldate']+$acc_statement['acc_adjustments_val']+$acc_statement['credit_note_amt']))*-1;
 			if($balance >= $c_balance_det['min_balance_value'])
@@ -7750,10 +7751,10 @@ order by p.product_name asc
 				$margin['bal_discount']+=$c_balance_det['bal_discount']*1;
 			}
 		}
-		
+	
 		unset($margin['less_margin_brands']);
 		return $margin;
-		
+	
 	}
 
 	/**

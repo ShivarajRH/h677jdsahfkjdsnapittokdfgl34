@@ -896,6 +896,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 													<th>Menu</th>
 													<th>Brand</th>
 													<th>Category</th>
+													<th>Deals</th>
 													<th>Discount</th>
 													<th>Valid from</th>
 													<TH>Valid upto</TH>
@@ -905,8 +906,9 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 												</tr>
 											</thead>
 											<tbody>
-												<?php foreach($this->db->query("select s.*,a.name as admin,b.name as brand,c.name as category,s.menuid,i.name AS menu from pnh_sch_discount_brands s left outer join king_brands b on b.id=s.brandid left outer join king_categories c on c.id=s.catid join king_admin a on a.id=s.created_by JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id JOIN pnh_menu i ON i.id=s.menuid where s.franchise_id=? and ? between s.valid_from and s.valid_to and sch_type=1 GROUP BY s.id order by id desc ",array($fran['franchise_id'],time()))->result_array() as $s){
-														if(!$s['is_sch_enabled'])
+												<?php foreach($this->db->query("select s.*,a.name as admin,b.name as brand,c.name as category,s.menuid,i.name AS menu,d.name AS deal from pnh_sch_discount_brands s left outer join king_brands b on b.id=s.brandid left outer join king_categories c on c.id=s.catid join king_admin a on a.id=s.created_by JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id JOIN pnh_menu i ON i.id=s.menuid LEFT JOIN king_dealitems d ON d.id=s.dealid where s.franchise_id=? and ? between s.valid_from and s.valid_to and sch_type=1 GROUP BY s.id order by id desc ",array($fran['franchise_id'],time()))->result_array() as $s){
+													
+													if(!$s['is_sch_enabled'])
 															continue;
 												?>
 												<?php// foreach($this->db->query("select h.*,a.name as admin,m.name AS menu  from pnh_sch_discount_track h left outer join king_admin a on a.id=h.created_by LEFT JOIN pnh_menu m ON m.id=h.sch_menu where franchise_id=? and ? between valid_from and valid_to and sch_type=1 order by h.id desc",array($fran['franchise_id'],time()))->result_array()  as $s){?>
@@ -915,6 +917,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 													<td><?=empty($s['brand'])?"All brands":$s['brand']?></td>
 													<td><?=empty($s['category'])?"All categories":$s['category']?>
 													</td>
+													<td><?=empty($s['deal'])?"All deals":$s['deal']?></td>
 													<td><?=$s['discount']?>%</td>
 													<td><?=date("d/m/Y",$s['valid_from'])?></td>
 													<td><?=date("d/m/Y",$s['valid_to'])?></td>
@@ -1330,7 +1333,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 									<thead><th>Slno</th><th>Cheque no</th><th>Bank name</th><th>Cheque Date</th><th>Amount(Rs)</th><th>Collected on</th></thead>
 									<tbody>
 								<?php
-									$v_fran_security_chq_res = $this->db->query("select * from pnh_m_fran_security_cheques where franchise_id = ? ",$f['franchise_id']);
+									$v_fran_security_chq_res = @$this->db->query("select * from pnh_m_fran_security_cheques where franchise_id = ? ",$f['franchise_id']);
 									if($v_fran_security_chq_res->num_rows())
 									{
 								?>
