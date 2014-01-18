@@ -168,7 +168,9 @@ class Erpmodel extends Model
 		$config['charset'] = 'utf8';
 		$config['wordwrap'] = TRUE;
 		*/
-		
+		if($_SERVER['HTTP_HOST']!="snapittoday.com")
+			return;
+
 		$this->email->clear();
 		
 		$config = array(
@@ -7402,7 +7404,7 @@ order by p.product_name asc
 			$this->db->insert("pnh_sms_log_sent",$inp);
 			$sms_log_id = $this->db->insert_id();
 		}
-		if($_SERVER['HTTP_HOST']=="localhost")
+		if($_SERVER['HTTP_HOST']!="snapittoday.com")
 			return;
 		$exotel_sid="snapittoday";
 		$exotel_token="491140e9fbe5c507177228cf26cf2f09356e042c";
