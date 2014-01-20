@@ -242,6 +242,10 @@ h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;}
 .sel_terr_block select {
     margin: 0;
 }
+.chk_latest_batch {
+    float: right;
+    margin: 3px 9px 0 2px;
+}
 .oldest_newest_sel_block {
     float: right;
     margin: 3px 9px 0 2px;

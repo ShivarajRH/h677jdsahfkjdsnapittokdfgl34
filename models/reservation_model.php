@@ -154,9 +154,10 @@ class reservation_model extends Model
     
     /**
      * Function to create batches by batch config settings
+     * @param type $userid int
      * @return type array
      */
-    function do_create_batch_by_group_config () {
+    function do_create_batch_by_group_config ($userid) {
         
         error_reporting(E_ALL);
         ini_set("display_errors",true);
@@ -249,7 +250,7 @@ class reservation_model extends Model
                         $new_batch_id= $this->insert_shipmentbatch_get_batch_id($ttl_allot,$assigned_uid,$territory_id,$menuid,$batch_remarks);
                         $ttl_batch_alloted++;
                         for($j=$start; $j<$end; $j++) {
-                            $this->update_shipmentbatch_batch_id($new_batch_id,$menu_item["orders"][$j]['id']);
+                            $this->update_shipmentbatch_batch_id($new_batch_id,$menu_item["orders"][$j]['id'],$userid);
                             $menu_orders[$menuid]['orders'][$j]['new_batch_id'] = $new_batch_id;
                         }
                     }
@@ -269,8 +270,8 @@ class reservation_model extends Model
      * @param type $new_batch_id
      * @param type $tbl_id
      */
-    function update_shipmentbatch_batch_id($new_batch_id,$tbl_id) {
-            $arr_set = array("batch_id"=>$new_batch_id);
+    function update_shipmentbatch_batch_id($new_batch_id,$tbl_id,$userid) {
+            $arr_set = array("batch_id"=>$new_batch_id,"batched_on"=> time(),"batched_by"=>$userid);
             $arr_where =array("id"=>$tbl_id);
             $this->db->update("shipment_batch_process_invoice_link",$arr_set,$arr_where);
 //            echo "Success";
@@ -288,7 +289,7 @@ class reservation_model extends Model
     function insert_shipmentbatch_get_batch_id($batch_size,$assigned_uid,$territory_id,$sel_batch_menu,$batch_remarks) {
 
             $this->db->query("insert into shipment_batch_process(num_orders,assigned_userid,territory_id,batch_configid,batch_remarks,created_on) values(?,?,?,?,?,?)"
-                                    ,array($batch_size,$assigned_uid,$territory_id,$sel_batch_menu,$batch_remarks,date('Y-m-d H:i:s') ));
+                                    ,array($batch_size,$assigned_uid,$territory_id,$sel_batch_menu,$batch_remarks,date('Y-m-d H:i:s',time()) ));
 
             $new_batch_id = $this->db->insert_id();
             return $new_batch_id;
@@ -603,7 +604,7 @@ class reservation_model extends Model
                             $ttl_inbatch = ((($s+$num) > $ttl_invoices)?$ttl_invoices-$s:$num);
 
                             //$this->db->query("insert into shipment_batch_process(num_orders,batch_remarks,created_on) values(?,?,?)",array($ttl_inbatch,$batch_remarks,date('Y-m-d H:i:s')));$batch_id = $this->db->insert_id();
-                            $batch_id='5000';
+                            $batch_id = GLOBAL_BATCH_ID;
                             
                             for($k=$s;$k<$s+$ttl_inbatch;$k++)
                             {
@@ -631,7 +632,7 @@ class reservation_model extends Model
                                     $p_ttl_inv_ords = $p_ttl_inv_ords*1;					
 
                                     for($k1=0;$k1<$p_ttl_inv_ords;$k1++) 
-                                            $this->db->query("insert into shipment_batch_process_invoice_link(batch_id,p_invoice_no,courier_id,awb) values(?,?,?,?)",array($batch_id,$inv,$cid,$awb));
+                                            $this->db->query("insert into shipment_batch_process_invoice_link(batch_id,p_invoice_no,courier_id,awb,batched_on,batched_by) values(?,?,?,?,?,?)",array($batch_id,$inv,$cid,$awb,time(),$updated_by));
 
                             }
                     }
@@ -913,7 +914,7 @@ class reservation_model extends Model
             }
 
             $this->db->query("update king_orders set status=0 where id in ('".implode("','",$oids)."') and transid=? ",$transid);
-            $this->db->query("update proforma_invoices set invoice_status=0 and cancelled_on=unix_timestamp() where p_invoice_no=? and transid = ? ",array($p_invoice,$transid));
+            $this->db->query("update proforma_invoices set invoice_status=0 and cancelled_on=? where p_invoice_no=? and transid = ? ",array(time(),$p_invoice,$transid));
             $this->erpm->do_trans_changelog($transid,"Proforma Invoice no $p_invoice cancelled");
 //                $this->session->set_flashdata("erp_pop_info","Proforma Invoice cancelled");
             
@@ -1036,20 +1037,24 @@ class reservation_model extends Model
      * Function to return batched orders
      * @return type array
      */
-    function get_batches_details($userid) {
+    function get_batches_details($userid,$latest) {
         $batched_orders=array();
         $cond='';
         if($userid!=0)
             $cond .=' and sb.assigned_userid = '.$userid;
         
-                
+        if($latest == 0)
+            $orderby_cond = ' sb.batch_id ASC ';
+        else
+            $orderby_cond = ' sb.batch_id DESC ';
+        
         $batched_orders = $this->db->query("select sb.batch_id,terr.territory_name,bc.batch_grp_name,sb.num_orders,sb.status,sb.created_on,a.username as assigned_to
                                                 from shipment_batch_process sb
                                                 join m_batch_config bc on bc.id=sb.batch_configid
                                                 left join pnh_m_territory_info terr on terr.id=sb.territory_id
                                                 join king_admin a on a.id=sb.assigned_userid
-                                                where batch_id > ? and sb.status in (0) $cond
-                                                order by batch_id desc",array(GLOBAL_BATCH_ID))->result_array();
+                                                where sb.batch_id > ? and sb.status in (0) $cond
+                                                order by $orderby_cond",array(GLOBAL_BATCH_ID))->result_array();
 //        die($this->db->last_query());
         return $batched_orders;
     }
@@ -1205,7 +1210,11 @@ class reservation_model extends Model
     function get_imeis_by_product($product_id) {
         return $this->db->query("select * from t_imei_no where status=0 and product_id=?",$product_id)->result_array();
     }
-
+    
+    function get_batch_print_count($batch_id) {
+        $printcount = $this->db->query("select printcount from picklist_log_reservation where batch_id=?",$batch_id)->row()->printcount;
+        return $printcount;
+    }
 }
 
 ?>

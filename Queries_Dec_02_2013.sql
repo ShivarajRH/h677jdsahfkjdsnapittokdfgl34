@@ -1522,7 +1522,8 @@ select * from king_menu;
 select * from pnh_menu
 
 -- -- -- -- -- -- //===============================================
-alter table `snapittoday_db_jan_2014`.`king_orders` add index `status` (`status`);
+alter table `king_orders` add index `status` (`status`);
+alter table `m_product_info` add index `product_id` (`product_id`);
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 
 select distinct from_unixtime(tr.init,'%D %M %Y') as str_date,from_unixtime(tr.init,'%h:%i:%s %p') as str_time, count(tr.transid) as total_trans,tr.transid
@@ -1599,4 +1600,38 @@ select * from m_batch_config
 
 select product_name from m_product_info where product_id='8583';
 
+### Jan_18_2014 ###
+select * from shipment_batch_process
+
+select * from king_transactions where transid='PNH43375';
+
+select * from t_stock_info
+
+-- #================================================================
+
+#new fields added
+alter table `shipment_batch_process_invoice_link` add column `batched_on` bigint (20)  NULL  after `delivered_by`, add column `batched_by` int (11)  NULL  after `batched_on`;
+DROP TABLE IF EXISTS `picklist_log_reservation`;
+
+CREATE TABLE `picklist_log_reservation` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `batch_id` bigint(20) DEFAULT NULL,
+  `created_by` int(11) DEFAULT '0',
+  `createdon` datetime DEFAULT NULL,
+  `printcount` int(100) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
+
+-- #================================================================
+select * from shipment_batch_process_invoice_link
+
+B5595
+PNHWZM23398
+
+select * from proforma_invoices where transid='PNHWZM23398'
+
+select printcount from picklist_log_reservation where p_inv_no='116095';
+
+
+##### 116 - TV, washing machine
 

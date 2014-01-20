@@ -126,12 +126,18 @@ function show_output(rdata) {
 //****PICKLIST 1 *****/
 $("#show_picklist_block").dialog({
     autoOpen: false,
-    open:function() {      //$("form",this).submit();  
-    },
     height: 650,
     width:950,
     position: ['center', 'center'],
     modal: true
+    ,buttons: {
+        Print:function() {
+            print_preview();
+        }
+        ,Close:function() {
+            $(this).dialog("close");
+        }
+    }
 });
 //CHECK OR UNCHECK TRANS FOR PICKLIST
 function chkall_fran_orders(franid) {
@@ -157,7 +163,22 @@ function picklist_fran_wise(elt,batch_id,franchise_id) {    //$("#picklist_by_fr
     if(franchise_id== undefined) { franchise_id =''; }
     $.post(site_url+"admin/picklist_fran_wise/"+batch_id+"/"+franchise_id,{},function(resp) {
             $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Franchisewise pick slip for #'+batch_id);
+            /*$("#show_picklist_block").html(resp).dialog({
+                autoOpen:true
+                ,open:function() {
+                }
+                ,title:  'Franchisewise pick slip for #'+batch_id
+                ,buttons: {
+                    Print:function() {
+                        
+                    }
+                    ,Close:function() {
+                        
+                    }
+                }
+            });*/
     });
+    
 }
 
 $("#pick_all").live("change",function() {
@@ -626,7 +647,6 @@ function loadTransactionList(pg) {
     var date_from= ($("#date_from").val() == '')?0:$("#date_from").val();
     var date_to= ($("#date_to").val() == '')?0:$("#date_to").val();
 
-
     var limit= $("#limit_filter").val();
 
     if(typeof pg != 'undefined')
@@ -640,9 +660,10 @@ function loadTransactionList(pg) {
     var sel_latest=($("#sel_old_new").find(":selected").val()==0) ? 0 : $("#sel_old_new").find(":selected").val();
     
     var sel_alloted_status = ($("#sel_alloted_status").find(":selected").val()==0) ? 0 : $("#sel_alloted_status").find(":selected").val();
+    var chk_latest_batches = ( $("#latest_batches").is(":checked")? 1 : 0);
     
     $('#trans_list_replace_block').html("<div class='loading'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Loading...</div>"); 
-    $.post(site_url+'admin/jx_manage_trans_reservations_list/'+batch_type+'/'+date_from+'/'+date_to+'/'+terrid+'/'+townid+'/'+franchiseid+'/'+menuid+'/'+brandid+"/"+showbyfrangrp+"/"+batch_group_type+'/'+sel_latest+"/"+sel_alloted_status+"/"+limit+"/"+pg+"",{},function(rdata) {
+    $.post(site_url+'admin/jx_manage_trans_reservations_list/'+batch_type+'/'+date_from+'/'+date_to+'/'+terrid+'/'+townid+'/'+franchiseid+'/'+menuid+'/'+brandid+"/"+showbyfrangrp+"/"+batch_group_type+'/'+sel_latest+"/"+sel_alloted_status+"/"+chk_latest_batches+"/"+limit+"/"+pg+"",{},function(rdata) {
         $("#trans_list_replace_block").html(rdata);
     });
     
@@ -684,3 +705,7 @@ function success(resp) {
     });
 /*function batch_enable_disable(transid,flag,pg) {    var d_msg=(flag==1)?"enable":"disable";    if(confirm("Are you sure you want to "+d_msg+" for batch?")) { $.post(site_url+"admin/jx_batch_enable_disable/"+transid+"/"+flag,{},function(rdata) { loadTransactionList(pg);  }).done(done).fail(fail); } }
 function f1(){var data = '21/12/2013';var pat= /[0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4}/;if (data.match(re));}*/
+$("#latest_batches").live("change",function() {
+    loadTransactionList(0);
+    return false;
+});

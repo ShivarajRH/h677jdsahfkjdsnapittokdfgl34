@@ -26111,7 +26111,7 @@ function polist_byvendor()
                 }
                 echo json_encode($data);
         }
-
+        
         /**
         * function to generate bulk invoice acknowledgement by date range 
         */

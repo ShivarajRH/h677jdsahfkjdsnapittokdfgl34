@@ -17,11 +17,12 @@ if($s!=0 and $e != 0) {
      $from=date("Y-m-d H:i:s",$s);
      $to=date("Y-m-d H:i:s",$e); //("23:59:59 $e"));
 }
+
 if($this->erpm->auth(true,true)) {
-    $batches_det = $this->reservations->get_batches_details(0);
+    $batches_det = $this->reservations->get_batches_details(0,$latest);
 }
 else {
-    $batches_det = $this->reservations->get_batches_details($user['userid']);
+    $batches_det = $this->reservations->get_batches_details($user['userid'],$latest);
 }
 
 //echo $total_trans_rows.'<br><pre>';print_r($batches_det);echo '</pre>';
@@ -31,7 +32,7 @@ if($total_trans_rows<=0) { ?>
     <?php 
 }
 else {
-    $ttl_trans_listed .= 'Showing <strong> '.$total_trans_rows.' </strong> batched process from <strong>'.date("m-d-Y",$s).'</strong> to <strong>'.date("m-d-Y",$e).'</strong> ';
+    $ttl_trans_listed .= 'Showing <strong> '.$total_trans_rows.' </strong> batched process from <strong>'.date("d/m/Y",$s).'</strong> to <strong>'.date("M/d/Y",$e).'</strong> ';
     $batch_status=array(0=>'Pending',2=>'Partial',3=>'Cancelled');
     ?>
     <table class="datagrid" width="100%">
@@ -59,8 +60,8 @@ else {
             <td align="center"><b><?=ucfirst($batch_item['assigned_to']); ?></b></td>
             <td>
                 <a class="packthis button button-rounded button-tiny button-action" href="javascript:void(0)" batch_id="<?=$batch_item['batch_id'];?>">Pack This Batch</a>
-                <a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="picklist_product_wise(this,<?=$batch_item['batch_id'];?>)">Generate Product Pickslip</a>
-                <a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="picklist_fran_wise(this,<?=$batch_item['batch_id'];?>)">Franchise-wise Pick Slip</a>
+                <a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="picklist_product_wise(this,<?=$batch_item['batch_id'];?>)">Product Pickslip</a>
+                <a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="picklist_fran_wise(this,<?=$batch_item['batch_id'];?>)">By Franchise Pick Slip</a>
             </td>
         </tr>
         <?php } ?>
@@ -97,6 +98,7 @@ else {
     $(".re_allot_all_block").html('<?=$re_allot_all_block?>');
     $(".process_by_fran_link").html('<?=$msg_process_by_fran;?>');
     $(".block_alloted_status").hide();
+    $(".chk_latest_batch").hide();
     
     $("#dlg_batch_order_list").dialog({
         modal:true
@@ -121,7 +123,7 @@ else {
                                         <td>"+(++i)+"</td>\n\
                                         <td>"+(fran_det.territory_name)+"</td>\n\
                                         <td>"+(fran_det.town_name)+"</td>\n\
-                                        <td>"+(fran_det.franchise_name)+"</td>\n\
+                                        <td><a href='"+site_url+"/admin/pnh_franchise/"+fran_det.franchise_id+"' target='_blank'>"+(fran_det.franchise_name)+"</a></td>\n\
                                         <td>"+(fran_det.num_orders)+"</td>\n\
                                         <td><a style='color:#ffffff;' class='packthis button button-rounded button-tiny button-action' href='"+site_url+"/admin/pack_invoice_by_fran/"+fran_det.batch_id+"/"+fran_det.franchise_id+"' target='_blank'>Pack This Batch</a></td>\n\
                                 </tr>";

@@ -1054,6 +1054,6 @@ alter table `shipment_batch_process_invoice_link` drop column `is_acknowlege_pri
 create table `acknowledgement_print_log` (  `sno` bigint NOT NULL AUTO_INCREMENT ,`log_id` varchar (150), `tm_emp_id` varchar (100) NULL, `be_emp_id` varchar (100) , `p_inv_no` varchar (100) NOT NULL 
 , `created_on` varchar (50) , `created_by` int (30) , `status` int (10) DEFAULT '0', `count` int (100) DEFAULT '0', PRIMARY KEY ( `sno`));
 
-alter table `king_orders` add index `status` (`status`);
-
-alter table `m_product_info` add index `product_id` (`product_id`);
+Jan_16: alter table `king_orders` add index `status` (`status`);
+Jan_17: alter table `m_product_info` add index `product_id` (`product_id`);
+Jan_18: alter table `shipment_batch_process_invoice_link` add column `batched_on` bigint (20)  NULL  after `delivered_by`, add column `batched_by` int (11)  NULL  after `batched_on`;

@@ -12271,6 +12271,7 @@ order by action_date";
         $output = $data_arr;
         return $data_arr;
     }
+    
     /**
      * Check is acknowledgement printed and printed count info
      * @param type $invoice_no_str string
@@ -12336,6 +12337,7 @@ order by action_date";
 //             $rdata['result'] = echo ''.  json_encode($rdata);
         return $rdata;
     }
+    
     /**
      * Get the territory details
      * @param type $territory_id int

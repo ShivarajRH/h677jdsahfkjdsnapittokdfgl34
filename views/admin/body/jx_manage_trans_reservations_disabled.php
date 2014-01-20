@@ -44,7 +44,7 @@ else {
     $cond .= ' and  i.id is null and  o.status = 0 ';
 }
 
- $sql = "select distinct from_unixtime(tr.init,'%D %M %Y') as str_date,from_unixtime(tr.init,'%h:%i:%s %p') as str_time, count(tr.transid) as total_trans,tr.transid
+ $sql = "select distinct from_unixtime(tr.init,'%d/%m/%Y') as str_date,from_unixtime(tr.init,'%h:%i:%s %p') as str_time, count(tr.transid) as total_trans,tr.transid
                     ,o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
                     ,tr.init,tr.actiontime,tr.status tr_status,tr.is_pnh,tr.batch_enabled
                     ,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,f.created_on as f_created_on
@@ -200,10 +200,10 @@ else {
     
     //   PAGINATION
             $this->load->library('pagination');
-            $config['base_url'] = site_url("admin/jx_manage_trans_reservations_list/".$batch_type.'/'.$s.'/'.$e.'/'.$terrid.'/'.$townid.'/'.$franchiseid.'/'.$menuid.'/'.$brandid."/".$showbygrp."/".$batch_group_type."/".$latest."/".$alloted_status."/".$limit); 
+            $config['base_url'] = site_url("admin/jx_manage_trans_reservations_list/".$batch_type.'/'.$s.'/'.$e.'/'.$terrid.'/'.$townid.'/'.$franchiseid.'/'.$menuid.'/'.$brandid."/".$showbygrp."/".$batch_group_type."/".$latest."/".$alloted_status."/".$orderby_cond."/".$limit); 
             $config['total_rows'] = $total_trans_rows;
             $config['per_page'] = $limit;
-            $config['uri_segment'] = 16;
+            $config['uri_segment'] = 17;
             $config['num_links'] = 5;
             $config['cur_tag_open'] = '<span class="curr_pg_link">';
             $config['cur_tag_close'] = '</span>';
@@ -230,6 +230,7 @@ else {
                 $(".re_allot_all_block").html('<?=($re_allot_all_block);?>');
                 $(".sel_terr_block").html("");
                 $(".block_alloted_status").show(); //html(\''.$block_alloted_status.'\');
+                $(".chk_latest_batch").hide();
             </script>
     <?php
     }

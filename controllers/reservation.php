@@ -13,43 +13,43 @@ class Reservation extends Voucher {
     {
         $user=$this->auth(ORDER_BATCH_PROCESS_ROLE|OUTSCAN_ROLE|INVOICE_PRINT_ROLE);
         
-            $all_inv_list = $this->input->post('all_inv_list');
-            if($all_inv_list) {
-                $all_inv_list_arr=explode(',',$all_inv_list);
-                
-                $group_no = time();
-                foreach($all_inv_list_arr as $invno) {
-                    $printcount=0;
-                    
-                    $this->db->where(array("p_inv_no"=>$invno));
-                    //$this->db->select("id,printcount");
-                    $row=$this->db->get('picklist_log_reservation')->row_array();
-//                    echo '<pre>';echo ''.$this->db->last_query();
-//                     print_r($row);
-                    $id=$row['id'];
-                    $printcount=$row['printcount'];
-                    if(count($row)>0) {
+            //$all_inv_list = $this->input->post('all_inv_list');
+            $batch_id = $this->input->post('batch_id');
+            if($batch_id) {
+                //$all_inv_list_arr=explode(',',$all_inv_list);
+                //foreach($all_inv_list_arr as $invno) {
+                    $this->db->where(array("batch_id"=>$batch_id));
+                    $rslt= $this->db->get('picklist_log_reservation');//$this->db->select("id,printcount");
+                    if($rslt->num_rows() > 0) {
+                        $row = $rslt->row_array();
+                        $id=$row['id'];
+                        $printcount=$row['printcount'];
                         $this->db->query('update picklist_log_reservation set printcount = `printcount` + 1 where id = '.$id.' limit 1');
+                        
+                        $output['printcount'] = $printcount + 1;
+                        $output['response'] = 'Log updated.';
                     }
                     else {
                         //update to process_invoice table
                         $field_arr=array(
-                            "group_no"=>$group_no
-                            ,"p_inv_no"=>$invno
+                            "batch_id"=>$batch_id
                             ,"created_by"=>$user['userid']
                             ,"createdon"=> date("Y-m-d h:i:s",time())
                             ,"printcount"=>1
                         );
                         $this->db->insert("picklist_log_reservation",$field_arr);
-
+                        $output['printcount'] = $this->db->insert_id();
+                        $output['response'] = 'Log created.';
                     }
-//                    echo ''.$this->db->last_query();//print_r($row);
-                                        
-                       
-                        
+                    
+                    $output['status'] = 'success';
+                    $output['lst_qry'] = $this->db->last_query();
                 }
-            }
-            echo 'Log updated.';
+                else {
+                    $output['status']= "fail";
+                    $output['response']= "Provide batchid.";
+                }
+            echo json_encode($output);
     }
     
     /**
@@ -275,7 +275,7 @@ class Reservation extends Voucher {
      */
     function create_batch_by_group_config() {
         $user=$this->auth(PRODUCT_MANAGER_ROLE|STOCK_INTAKE_ROLE|PURCHASE_ORDER_ROLE); $output=array();
-        $output = $this->reservations->do_create_batch_by_group_config();
+        $output = $this->reservations->do_create_batch_by_group_config($user['userid']);
         echo json_encode($output);
     }
 
@@ -536,7 +536,7 @@ class Reservation extends Voucher {
      * @param type $pg
      * @param type $limit
      */
-    function jx_manage_trans_reservations_list($batch_type,$from=0,$to=0,$terrid=0,$townid=0,$franchiseid=0,$menuid=0,$brandid=0,$showbyfrangrp=0,$batch_group_type=0,$latest=1,$alloted_status=0,$limit=10,$pg=0) 
+    function jx_manage_trans_reservations_list($batch_type,$from=0,$to=0,$terrid=0,$townid=0,$franchiseid=0,$menuid=0,$brandid=0,$showbyfrangrp=0,$batch_group_type=0,$latest=1,$alloted_status=0,$latest_batches,$limit=10,$pg=0) 
     {
         $user=$this->auth(PRODUCT_MANAGER_ROLE|STOCK_INTAKE_ROLE|PURCHASE_ORDER_ROLE);
         $this->load->model("reservation_model");
@@ -563,6 +563,7 @@ class Reservation extends Voucher {
         $data['batch_group_type']=$batch_group_type;
         $data['latest']= $latest;
         $data['alloted_status']= $alloted_status;
+        $data['latest_batches']= $latest_batches;
         $data['limit']=$limit;
         $data['pg']=$pg;
 //        echo '<pre>';    print_r($data);die();
@@ -640,9 +641,9 @@ class Reservation extends Voucher {
                     where batch_id=? and sd.invoice_no = 0
                     group by f.franchise_id",$batch_id);
         
-//        echo $this->db->last_query();
         if($fran_orderlist_res->num_rows()) {
             $output['status']='success';
+            $output['lst_qry']=$this->db->last_query();
             $output['franchise_list'] = $fran_orderlist_res->result_array();
         }
         else {
@@ -651,6 +652,7 @@ class Reservation extends Voucher {
         }
         echo json_encode($output);
     }
+    
     /**
      * Process proforma ids selected 
      */
