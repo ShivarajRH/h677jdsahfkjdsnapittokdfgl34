@@ -897,7 +897,17 @@ fieldset{border-color:#eee;background:#FAFAFA}
 .clearboth{clear:both}
 	
 .page_wrap{width: 99%;}
-.page_wrap .page_title{margin:7px 0px}
+.page_wrap .page_title{  
+	float: left;
+    margin: 7px 0;
+    width: 76%;}
+.page_wrap .stock_wrap
+{
+	float: right;
+    margin-top: 17px;
+    text-align: right;
+    width: 15%;
+}
 .page_wrap .page_topbar{clear: both;}
 	
 .page_wrap .page_topbar .page_topbar_left{width: 49%;}

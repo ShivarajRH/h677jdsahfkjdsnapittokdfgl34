@@ -178,7 +178,6 @@
 		<span id="sc_preview_avail_qty" style="color: green;font-size: 10px;font-weight: bold;">0 Available</span>
 </td></tr>
 
-
 <tr class="stk_transfer_blk" id="stk_transfer_cnfrm" >
 	<td>Stock Transfer:</td>
 	<td>
@@ -324,6 +323,7 @@
 	
 	
 </script>
+
 <?php 
 	if($only_superadmin  || 1){
 ?>
@@ -773,6 +773,8 @@
 	});
 	
 </script>
+
+
 <style>
 	#prod_fea_tab h4{margin:4px 0px;}
 	.imei_stat_error{font-size: 10px;color: #cd0000;display: block;}

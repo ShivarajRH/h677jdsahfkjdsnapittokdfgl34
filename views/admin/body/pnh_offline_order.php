@@ -207,7 +207,7 @@
 <tr pid="%pid%"  pimage="%pimage% %pid%" pname="%pname%" mrp="%mrp%" price="%price%" lcost="%lcost%" margin="%margin%" >
 <td>%sno%</td>
 <td style="text-align: center;padding:10px 0px 0px;width: 100px;background: #FFF;"><img alt="" height="100" src="<?=IMAGES_URL?>items/%pimage%.jpg"><b style="display: block;background: #f7f7f7;padding:2px;;text-align: center">%pid%</b></td>
-<td><input class="pids" type="hidden" name="pid[]" value="%pid%"><span>%pname%</span>
+<td><input class="pids" type="hidden" name="pid[]" value="%pid%"><span class="title"><a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">%pname%</a></span>
 <input type="hidden" name="menu[]" value="%menuid%" class="menuids">
 <div style="margin-top: 5px;font-size: 12px;">
 	<div class="p_extra"><b>Category :</b> %cat%</div>
@@ -246,7 +246,7 @@ text-align: center;width: 60px;"><b>OldMRP:</b> <span style="color: #cd0000;font
 <td><span class="stotal">%lcost%</span></td>
 <td><input type="text" name="quote[]" size=4></td>
 <td><a href="javascript:void(0)" onclick='remove_psel(this)'>remove</a><br>
-<a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">view</a>
+<!--<a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">view</a>-->
 </td>
 </tr>
 </tbody> 
@@ -651,7 +651,7 @@ $('#req_quote_dlg').dialog({
 												req_plist += '	<td>'+$(this).attr('pname')+'</td>';
 												req_plist += '	<td>'+$(this).attr('mrp')+'</td>';
 												req_plist += '	<td>'+$(this).attr('price')+'</td>';
-												req_plist += '	<td><span style="background-color:#89c403;">'+$(this).attr('lcost')+'</span></td>';
+												req_plist += '	<td><span style="background-color:#89c403;">'+format_number($(this).attr('lcost'))+'</span></td>';
 												req_plist += '	<td><input type="text" size="4" name="qty[]" value="'+$('input[name="qty[]"]',this).val()+'"></td>';
 												req_plist += '	<td><input type="text" size="4" name="quote[]" value="'+$('input[name="quote[]"]',this).val()+'"></td>';
 												req_plist += '	<td><a href="javascript:void(0)" class="remove_btn"><b>[X]</b></a> </td>';
@@ -796,7 +796,7 @@ function select_fran(fid)
 	$.post("<?=site_url("admin/pnh_jx_getfranbalance")?>",{id:fid},function(data){
 		o=$.parseJSON(data);
 		credit=parseInt(o.credit);
-		balance=parseFloat(o.balance);
+		balance= format_number(o.balance);
 		if(balance < 5000)
 			$("#fran_balance").addClass('warning');
 		else
@@ -1108,7 +1108,7 @@ $(function(){
 		menuids=[];
 		
 		$("#prods_order .stotal").each(function(){
-			total+=parseFloat($(this).html());
+			total+= format_number( $(this).html() );
 		});
 		
 		$("#prods_order .pids").each(function(){
@@ -1164,7 +1164,7 @@ $(function(){
 				if(obj.e==0)
 				{
 					goodtogo=1;
-					$("#final_amount").text(obj.total);
+					$("#final_amount").text( format_number(obj.total) );
 					$("#final_ded").text(obj.d_total);
 					$("#final_com").text(obj.com);
 					$("#final_bal").text(obj.bal);
@@ -1187,6 +1187,7 @@ $(function(){
 		}
 		return false;
 	});
+        
         
 	$("#prods_order .qty").live("change",function(){
 		p=$(this).parents("tr").get(0);
@@ -1220,8 +1221,8 @@ $(function(){
 		
 		//$(".stotal",p).html(parseInt($(".price",p).html())*parseInt($(".qty",p).val()));
 		//$(".landing_cost",p).html(parseInt($(".lcost",p).html())*parseInt($(".qty",p).val()));
-                var sub_total = parseFloat($(".lcost",p).text())*parseInt($(".qty",p).val());
-		$(".stotal",p).html(sub_total);
+                var sub_total = parseFloat( $(".lcost",p).text())*parseInt($(".qty",p).val() ) ;
+		$(".stotal",p).html( format_number( sub_total ) );
                 change_total_subtotal();
 	});
         
@@ -1379,7 +1380,7 @@ function change_total_subtotal() {
     }
     else {
         $("#prods_order .stotal").each(function(){
-                ttl_subtotal += parseFloat($(this).html());
+                ttl_subtotal += format_number($(this).html());
         });
     }
     $(".ttl_subtotal").html(ttl_subtotal);
@@ -1616,6 +1617,13 @@ $("#show_scheme_details").dialog({
 		}
 });
 
+function format_number(num,decimal) {
+    var deci = (decimal === undefined || decimal === null ) ? 2 : decimal;
+    num = parseFloat(num);
+    
+    var final_num = ( num.toString().indexOf(".") !== -1) ? num.toFixed(deci) : num;
+    return parseFloat(final_num);
+}
 
 
 </script>
@@ -1665,7 +1673,7 @@ overflow:auto;
 	background:#fafafa;
 	position: fixed;
 	right: 18px;
-	top: 64px;
+	top: 76px;
 }
 
 .ui-widget-header{background: none;}
@@ -1816,7 +1824,6 @@ background-color:#89c403;display:block;padding:12px 15px;
 .offn_courier_detail span {
     margin:0 10px;
 }
+.title a { text-decoration: none; color: #161EE7; }
 </style>
-
-
 <?php

@@ -1,16 +1,29 @@
 <style>
-.container_div{visibility:hidden}
-.leftcont{display: none}.fran_suspendlink{
-border-radius:5px;
-background:#f77;
-display:inline-block;
-padding:3px 7px;
-color:#fff;
-cursor: pointer;
+.container_div
+{
+	visibility:hidden
 }
-.fran_suspendlink:hover{
-background:#f00;
-text-decoration:none;
+.leftcont
+{
+	display: none
+}
+.fran_suspendlink
+{
+	border-radius:5px;
+	background:#f77;
+	display:inline-block;
+	padding:3px 7px;
+	color:#fff;
+	cursor: pointer;
+}
+.fran_suspendlink:hover
+{
+	background:#f00;
+	text-decoration:none;
+}
+li.required
+{
+	color: #cd0000;list-style: none
 }
 li.required{color: #cd0000;list-style: none}
 .jqplot-highlighter-tooltip, .jqplot-canvasOverlay-tooltip
@@ -311,12 +324,16 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 			</div>
 	<!-- franchise status log END -->
 	
-	<!-- Analytics graph section start ---->
+		<!-- Analytics graph section start ---->
 		<div id="analytics">
 			<table width="100%">
 				<tr>
 					<td width="50%">
-						<h4><div class="head_wrap"></div></h4>
+						<div style="float:left;width:100%">
+							<span id="ttl_order_amt"></span>
+							<span id="shipped_order_amt"></span>
+							<span id="paymrent_order_amt"></span>
+						</div>
 					</td>
 					<td width="50%">
 						<div class="fr_menu_by_mn">
@@ -526,22 +543,30 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 				//$ttl_activated_msch=$this->db->QUERY("SELECT COUNT(DISTINCT i.id) AS active_msch FROM king_orders o JOIN king_transactions t ON t.transid=o.transid JOIN t_imei_no i ON i.order_id=o.id WHERE is_imei_activated=1 AND o.imei_scheme_id > 0 AND t.franchise_id=? ",$f['franchise_id'])->ROW()->active_msch;
 				//$ttl_inactiv_msch=$this->db->QUERY("SELECT COUNT(DISTINCT i.id) AS inactive_msch FROM king_orders o JOIN king_transactions t ON t.transid=o.transid JOIN t_imei_no i ON i.order_id=o.id WHERE is_imei_activated=0 AND o.imei_scheme_id > 0 AND t.franchise_id=?",$f['franchise_id'])->ROW()->inactive_msch;
 				
-				$ttl_imei_activation_credit=$this->db->QUERY("select sum(imei_reimbursement_value_perunit) as imei_credit  
+				$ttl_imei_activated_credit=$this->db->QUERY("select sum(imei_reimbursement_value_perunit) as imei_credit  
 																from king_orders a 
 																join t_imei_no b on a.id = b.order_id 
 																join king_transactions c on c.transid = a.transid
 																where is_imei_activated = 1 and franchise_id = ? ",$f['franchise_id'])->ROW()->imei_credit;  
+				$ttl_imei_pending_credit=$this->db->QUERY("select sum(imei_reimbursement_value_perunit) as imei_credit
+						from king_orders a
+						join t_imei_no b on a.id = b.order_id
+						join king_transactions c on c.transid = a.transid
+						where is_imei_activated = 0 and franchise_id = ? ",$f['franchise_id'])->ROW()->imei_credit;
+				
 			?>
 		<div class="module_cont">
 			<!--  <h3 class="module_cont_title">IMEI List</h3>-->
 			<div class="module_cont_block">
 				<div class="module_cont_block_grid_total fl_left" style="padding:5px;">
-						<span class="stat total">Total Purchased : <b><?php echo  $ttl_purchased ;?></b></span> 
-						<span class="stat total">Active : <b><?php echo $ttl_activated_msch?></b></span> 
-						<span class="stat total">Inactive : <b><?php echo $ttl_inactiv_msch?></b></span> 
+						<span class="stat total">Total Purchased : <b><?php echo  $ttl_purchased*1 ;?></b></span> 
+						<span class="stat total">&nbsp;&nbsp;Active : <b><?php echo $ttl_activated_msch*1?></b></span> 
+						<span class="stat total">&nbsp;&nbsp;Inactive : <b><?php echo $ttl_inactiv_msch*1?></b></span> 
 				</div>
 				<div class="module_cont_block_grid_total fl_right" style="padding:5px;">
-						<span class="stat total  fl_right">Total Credit On activation : <b><?php echo 'Rs '.format_price($ttl_imei_activation_credit)?></b></span> 
+					<span class="stat total " >Total Credit : <b style="background: #F3EE81;padding:3px 6px;border-radius:3px;"><?php echo 'Rs '.format_price($ttl_imei_activated_credit+$ttl_imei_pending_credit)?></b> &nbsp;&nbsp;</span>
+					<span class="stat total " >Activated : <b style="background: #95DB95;padding:3px 6px;border-radius:3px;"><?php echo 'Rs '.format_price($ttl_imei_activated_credit)?></b>&nbsp;&nbsp;</span>
+					<span class="stat total " >Pending : <b style="background: #F39381;padding:3px 6px;border-radius:3px;"><?php echo 'Rs '.format_price($ttl_imei_pending_credit)?></b>&nbsp;&nbsp;</span>
 				</div>
 				
 				<div class="module_cont_block_filters clearboth" style="background: #f5f5f5;margin:0px;height: 27px;padding:3px;">
@@ -552,7 +577,11 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 					</span>
 					
 					<span style="margin-right:10px;padding:5px;font-size:12px;" >
-						<b>Filter IMEI By</b>&nbsp;Activated Date : 
+						<b>Filter IMEI By</b>&nbsp; : 
+						<select name="date_type">
+							<option value="0" selected>Activated Date</option>
+							<option value="1">Ordered Date</option>
+						</select>
 						<input type="text" name="active_ondate" style="font-size: 12px;padding:3px 7px;width: 80px;" value="" placeholder="" >
 						to 
 						<input type="text" name="active_ondate_end" style="font-size: 12px;padding:3px 7px;width: 80px;" value="" placeholder="" >
@@ -880,6 +909,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 													<th>Menu</th>
 													<th>Brand</th>
 													<th>Category</th>
+													<th>Deals</th>
 													<th>Discount</th>
 													<th>Valid from</th>
 													<TH>Valid upto</TH>
@@ -889,8 +919,9 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 												</tr>
 											</thead>
 											<tbody>
-												<?php foreach($this->db->query("select s.*,a.name as admin,b.name as brand,c.name as category,s.menuid,i.name AS menu from pnh_sch_discount_brands s left outer join king_brands b on b.id=s.brandid left outer join king_categories c on c.id=s.catid join king_admin a on a.id=s.created_by JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id JOIN pnh_menu i ON i.id=s.menuid where s.franchise_id=? and ? between s.valid_from and s.valid_to and sch_type=1 GROUP BY s.id order by id desc ",array($fran['franchise_id'],time()))->result_array() as $s){
-														if(!$s['is_sch_enabled'])
+												<?php foreach($this->db->query("select s.*,a.name as admin,b.name as brand,c.name as category,s.menuid,i.name AS menu,d.name AS deal from pnh_sch_discount_brands s left outer join king_brands b on b.id=s.brandid left outer join king_categories c on c.id=s.catid join king_admin a on a.id=s.created_by JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id JOIN pnh_menu i ON i.id=s.menuid LEFT JOIN king_dealitems d ON d.id=s.dealid where s.franchise_id=? and ? between s.valid_from and s.valid_to and sch_type=1 GROUP BY s.id order by id desc ",array($fran['franchise_id'],time()))->result_array() as $s){
+													
+													if(!$s['is_sch_enabled'])
 															continue;
 												?>
 												<?php// foreach($this->db->query("select h.*,a.name as admin,m.name AS menu  from pnh_sch_discount_track h left outer join king_admin a on a.id=h.created_by LEFT JOIN pnh_menu m ON m.id=h.sch_menu where franchise_id=? and ? between valid_from and valid_to and sch_type=1 order by h.id desc",array($fran['franchise_id'],time()))->result_array()  as $s){?>
@@ -899,6 +930,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 													<td><?=empty($s['brand'])?"All brands":$s['brand']?></td>
 													<td><?=empty($s['category'])?"All categories":$s['category']?>
 													</td>
+													<td><?=empty($s['deal'])?"All deals":$s['deal']?></td>
 													<td><?=$s['discount']?>%</td>
 													<td><?=date("d/m/Y",$s['valid_from'])?></td>
 													<td><?=date("d/m/Y",$s['valid_to'])?></td>
@@ -1314,7 +1346,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 									<thead><th>Slno</th><th>Cheque no</th><th>Bank name</th><th>Cheque Date</th><th>Amount(Rs)</th><th>Collected on</th></thead>
 									<tbody>
 								<?php
-									$v_fran_security_chq_res = $this->db->query("select * from pnh_m_fran_security_cheques where franchise_id = ? ",$f['franchise_id']);
+									$v_fran_security_chq_res = @$this->db->query("select * from pnh_m_fran_security_cheques where franchise_id = ? ",$f['franchise_id']);
 									if($v_fran_security_chq_res->num_rows())
 									{
 								?>
@@ -3002,13 +3034,22 @@ $("#pnh_membersch").dialog({
 			},'json');
 		}*/
 
-	$('input[name="active_ondate"],input[name="active_ondate_end"]').datepicker();
+		$('input[name="active_ondate"],input[name="active_ondate_end"]').datepicker();
 
-		$('input[name="active_ondate"],input[name="active_ondate_end"],select[name="imei_status"]').change(function(){
-			$('input[name="imei_srch_kwd"]').val('');
+		$('input[name="active_ondate"],input[name="active_ondate_end"],select[name="date_type"]').change(function(){
+			if($('input[name="active_ondate"]').val() != '' && $('input[name="active_ondate_end"]').val() != '')
+			{
 				load_shipped_imei(0);
+				$('input[name="imei_srch_kwd"]').val('');
+			}
 		});
 
+		$('select[name="imei_status"]').change(function(){
+				load_shipped_imei(0);
+				$('input[name="imei_srch_kwd"]').val('');
+		});
+
+		
 		
 
 	function load_allshipped_imei(pg)
@@ -3026,6 +3067,7 @@ $("#pnh_membersch").dialog({
 		var imei_params = {};
 		
 			imei_params.fid = "<?php echo $f['franchise_id'] ?>";
+			imei_params.date_type = $('select[name="date_type"]').val();
 			imei_params.imei_status = $('select[name="imei_status"]').val();
 			imei_params.active_ondate = $('input[name="active_ondate"]').val();
 			imei_params.active_ondate_end = $('input[name="active_ondate_end"]').val();
@@ -3187,18 +3229,22 @@ $("#pnh_membersch").dialog({
 			$('#payment_stat .payment_stat_view').html('<div class="anmtd_loading_img"><span></span></div>'); 
 			$.getJSON(site_url+'/admin/jx_order_payment_det/'+start_date+'/'+end_date+'/'+franid,'',function(resp)
 	    	{
-	    		if(resp.summary == 0 && resp.payment == 0)
+	    		if(resp.summary == 0 && resp.payment == 0 && shipped==0)
 				{
 					$('#payment_stat .payment_stat_view').html("<div class='fr_alert_wrap' style='padding:113px 0px'>No Sales statisticks found between "+start_date+" and "+end_date+"</div>" );	
 				}
 				else
 				{
 					// reformat data ;
-					 var types = ['Order Placed', 'Payment'];
+					$('#ttl_order_amt').html("Total Ordered : "+resp.ttl_summary);
+					$('#paymrent_order_amt').html("Total Paid : "+resp.ttl_payment);
+					$('#shipped_order_amt').html("Total Shipped : "+resp.ttl_shipped);
+					 var types = ['Order Placed', 'Payment','shipped'];
 					$('#payment_stat .payment_stat_view').empty();
 					var summary=resp.summary;
 					var payment=resp.payment;
-					plot2 = $.jqplot('payment_stat .payment_stat_view', [summary,payment], {
+					var shipped=resp.shipped;
+					plot2 = $.jqplot('payment_stat .payment_stat_view', [summary,payment,shipped], {
 				       	seriesDefaults: {
 				        showMarker:true,
 				        pointLabels: { show:true }

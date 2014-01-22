@@ -46,8 +46,10 @@ $("#dlg_create_group_batch_block").dialog({
         height: 350,
         width:400,
         modal: false,
-        buttons: {
-            "Create Batch":function() {
+        buttons: [
+            {
+                text:"Create Batch"
+                ,click:function() {
                     //$("form",this).submit();
                     var sel_batch_menu = $("#sel_batch_menu").find(":selected").val();
 //                            var assigned_menuids = $("#assigned_menuids").val();
@@ -86,15 +88,25 @@ $("#dlg_create_group_batch_block").dialog({
                             }
                             //$("#sel_batch_menu").val($("#sel_batch_menu option:nth-child(0)").val());
                     },'json').fail(fail);
-            },
-            Close: function() { 
-              $(this).dialog( "close" );
+                }
+                ,"class" : "button button-tiny button-rounded button-action"
             }
-        },
-        close: function() {
+            ,
+            {
+                text:"Close"
+                ,click: function() { 
+                    $(this).dialog( "close" );
+                }
+                ,"class":"button button-rounded button-tiny button-caution"
+            }
+        ]
+        /*,close: function() {
             $(this).dialog("close");
         },
-        position: ['center', 'center'],
+        ,open:function() {
+            //$('dlg_create_group_batch_block').find('button:contains("Close")').addClass('button button-caution button-tiny');
+        }*/
+        ,position: ['center', 'center'],
         title: "Create Group Batch"
 });
 
@@ -679,33 +691,57 @@ function fail(rdata) {
     console.log(rdata);
 }
 function done(data) { }
-function fail(xhr,status) { $('#trans_list_replace_block').print("Error: "+xhr.responseText+" "+xhr+" | "+status);}
+//function fail(xhr,status) { $('#trans_list_replace_block').print("Error: "+xhr.responseText+" "+xhr+" | "+status);}
 function success(resp) {
         $('#trans_list_replace_block').html(resp);
 }
- $(document).ready(function() {
-        //FIRST RUN
-        $( "#date_from").datepicker({
-             changeMonth: true,
-             dateFormat:'yy-mm-dd',
-             numberOfMonths: 1,
-             maxDate:0,// minDate: new Date(reg_date),
-               onClose: function( selectedDate ) {
-                 $( "#date_to" ).datepicker( "option", "minDate", selectedDate ); //selectedDate
-             }
-           });
-        $( "#date_to" ).datepicker({
-            changeMonth: true,
-             dateFormat:'yy-mm-dd',// numberOfMonths: 1,
-             maxDate:0,
-             onClose: function( selectedDate ) {
-               $( "#date_from" ).datepicker( "option", "maxDate", selectedDate );
-             }
-        });
+$(document).ready(function() {
+    //FIRST RUN
+    $( "#date_from").datepicker({
+         changeMonth: true,
+         dateFormat:'yy-mm-dd',
+         numberOfMonths: 1,
+         maxDate:0,// minDate: new Date(reg_date),
+           onClose: function( selectedDate ) {
+             $( "#date_to" ).datepicker( "option", "minDate", selectedDate ); //selectedDate
+         }
+       });
+    $( "#date_to" ).datepicker({
+        changeMonth: true,
+         dateFormat:'yy-mm-dd',// numberOfMonths: 1,
+         maxDate:0,
+         onClose: function( selectedDate ) {
+           $( "#date_from" ).datepicker( "option", "maxDate", selectedDate );
+         }
     });
+});
 /*function batch_enable_disable(transid,flag,pg) {    var d_msg=(flag==1)?"enable":"disable";    if(confirm("Are you sure you want to "+d_msg+" for batch?")) { $.post(site_url+"admin/jx_batch_enable_disable/"+transid+"/"+flag,{},function(rdata) { loadTransactionList(pg);  }).done(done).fail(fail); } }
 function f1(){var data = '21/12/2013';var pat= /[0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4}/;if (data.match(re));}*/
 $("#latest_batches").live("change",function() {
     loadTransactionList(0);
     return false;
 });
+
+$.fn.clearForm = function() {
+  return this.each(function() {
+    var type = this.type, tag = this.tagName.toLowerCase();
+    if (tag == 'form')
+      return $(':input',this).clearForm();
+    if (type == 'text' || type == 'password' || tag == 'textarea')
+      this.value = '';
+    else if (type == 'checkbox' || type == 'radio')
+      this.checked = false;
+    else if (tag == 'select')
+      this.selectedIndex = 0;//this.selectedIndex = -1;
+  });
+};
+
+function btn_fn_reset_filters() 
+{
+    $("#head_filter_form").clearForm();
+    $("#form_filters").clearForm();
+    $("#trans_date_form").clearForm();
+    $("#form_filters_2").clearForm();
+    loadTransactionList(0);
+    return false;
+}

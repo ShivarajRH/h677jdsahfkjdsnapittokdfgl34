@@ -580,7 +580,6 @@ $('.add_product_row').live('click',function(e){
 		
 });
 
-
 $('.remove_product_row').live('click',function(e){
 	e.preventDefault();
 	$(this).parents('tr:first').fadeOut().remove();
@@ -987,7 +986,6 @@ $(function(){
 	});
 });
 
-
 function check_dup_imei(imei,prodid)
 {
 	
@@ -1058,6 +1056,7 @@ function calc_rec_value()
 	$("#grn_ttl_rqty").html(r_total_qty);
 	$("#value_receiving").html("Rs "+r_total.toFixed(2));
 }
+
 var dpi=0,dpe=0;
 function cloneinvoice()
 {
@@ -1191,7 +1190,6 @@ function loadpo(pids)
 			opacity: .5,
 			hideAfter: 200,
 		});
-
 	});
 }
 

@@ -14,7 +14,37 @@
 		<div align="center" style="page-break-after: always">
 			<br >
 			<h1 style="font-size:260%;line-height: 100%"><?php echo $details['franchise_name']; ?></h1>
-			<br >
+			
+			<?php
+				$courier_res = $this->db->query('select a.*,b.courier_name as courier_name_pro_1,c.courier_name as courier_name_pro_2,d.courier_name as courier_name_pro_3
+														from pnh_town_courier_priority_link a 
+														left join m_courier_info b on a.courier_priority_1 = b.courier_id
+														left join m_courier_info c on a.courier_priority_2 = c.courier_id
+														left join m_courier_info d on a.courier_priority_3 = d.courier_id
+														where town_id = ? and a.is_active = 1 order by a.id desc limit 1 
+								',$details['town_id']);
+				
+				if($courier_res->num_rows())
+				{
+					$courier_det = $courier_res->row_array();
+					if($courier_det['courier_priority_1'])
+					{
+						echo '<h3 style="margin:10px 0px">Courier : '.$courier_det['courier_name_pro_1'].' - Mode : '.(($courier_det['delivery_type_priority1']==0)?'By Hand':'To Door').' - Delivery in '.($courier_det['delivery_hours_1']).'Hrs </h3>';
+					}else if($courier_det['courier_priority_2'])
+					{
+						echo '<h3 style="margin:10px 0px">Courier : '.$courier_det['courier_name_pro_2'].' - Mode : '.(($courier_det['delivery_type_priority2']==0)?'By Hand':'To Door').' - Delivery in '.($courier_det['delivery_hours_2']).'Hrs </h3>';
+					}else if($courier_det['courier_priority_3'])
+					{
+						echo '<h3 style="margin:10px 0px">Courier : '.$courier_det['courier_name_pro_3'].' - Mode : '.(($courier_det['delivery_type_priority3']==0)?'By Hand':'To Door').' - Delivery in '.($courier_det['delivery_hours_3']).'Hrs </h3>';
+					}else
+					{
+						echo '<br>';
+					} 
+				}else
+				{
+					echo '<br>';
+				}
+			?>
 			
 			<div style="width: 100%">
 				<fieldset style="padding:3%;border:2px solid #000;">

@@ -57,7 +57,6 @@
 	</div>
 
 </div>
-
 <script>
 $(".datagrid").tablesorter({sortList: [[0,0]]});
 $(function(){

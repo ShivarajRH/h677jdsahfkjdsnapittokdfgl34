@@ -476,14 +476,14 @@ class Pnh extends Controller{
 			$billno=$nbill['bill_no']+1;
 		$inp=array("bill_no"=>$billno,"franchise_id"=>$franid,"transid"=>$transid,"user_id"=>$userid,"status"=>1);
 		$this->db->insert("pnh_cash_bill",$inp);
-                
-                //do packing process
-                $ttl_num_orders=count($items);
-                $batch_remarks="PNH Order placed through SMS by $from";
-                $updated_by=$userid;
 
-                // Process to batch this transaction
-                $this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
+        //do packing process
+        $ttl_num_orders=count($items);
+        $batch_remarks="PNH Order placed through SMS by $from";
+        $updated_by=$userid;
+
+        // Process to batch this transaction
+        $this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
                 
 		$this->erpm->do_trans_changelog($transid,$batch_remarks);
 		
@@ -720,7 +720,7 @@ class Pnh extends Controller{
 						// Insert into sms_invoice_log table	
 						$this->db->query("insert into sms_invoice_log(type,fid,invoice_no,emp_id1,emp_id2,status,logged_on,logged_by)values(1,?,?,?,0,1,now(),?)",array($f_id,$invno,$emp_id,$emp_id));
 						
-						$this->db->query("insert into pnh_invoice_transit_log(sent_log_id,invoice_no,ref_id,status,logged_on,logged_by)values(?,?,?,3,now(),0)",array($inv_transit_det['sent_log_id'],$invno,$emp_id));
+						$this->db->query("insert into pnh_invoice_transit_log(sent_log_id,invoice_no,ref_id,status,logged_on,logged_by,received_on)values(?,?,?,3,now(),0,now())",array($inv_transit_det['sent_log_id'],$invno,$emp_id));
 						
 						$log_prm2=array();
 						$log_prm2['emp_id']=$emp_id;

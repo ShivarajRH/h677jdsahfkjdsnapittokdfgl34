@@ -18,7 +18,6 @@ $is_fran_suspended = @$this->db->query("select is_suspended from pnh_m_franchise
 if($is_fran_suspended)
 	$tran['batch_enabled'] = 0;
 
-
 $pbatch=$this->db->query("select i.p_invoice_no,c.courier_name as courier,bi.shipped,bi.shipped_on,bi.awb,bi.courier_id,bi.batch_id,bi.packed,bi.shipped,i.createdon,i.invoice_status,bi.p_invoice_no from proforma_invoices i left outer join shipment_batch_process_invoice_link bi on bi.p_invoice_no=i.p_invoice_no left outer join m_courier_info c on c.courier_id=bi.courier_id where i.transid=? group by i.p_invoice_no",$transid)->result_array();
 
 foreach($batch as $b)
@@ -65,7 +64,7 @@ Prepaid Voucher used : <?=$c?>
 	<input type="submit" class="button button-tiny button-flat-caution button-rounded " value="<?=$tran['batch_enabled']?"Dis":"En"?>able for Batch">
 </form>
 </div>
-<?php if($tran['batch_enabled']){?>
+<?php if($tran['batch_enabled'] && ($tran['is_pnh'] == 0)?1:0){ ?>
 <div style="float:right;padding-right:20px;" id="process_fulltrans">
 <form method="post" onsubmit='return confirm("Are you sure want to process this transaction for batch?")' action="<?=site_url("admin/add_batch_process")?>">
 <input type="hidden" name="num_orders" value="1">

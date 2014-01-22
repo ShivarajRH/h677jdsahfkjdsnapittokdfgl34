@@ -120,9 +120,6 @@
 	</div>
 </div>
 
-
-
-
 <form id="src_form" action="<?=site_url("admin/mark_src_products")?>" method="post">
 	<input type="hidden" name="pids" class="pids">
 	<input type="hidden" name="action" class="action" value="1">
@@ -520,6 +517,8 @@ function loadbrandproducts()
 	$("#sl_products .datagrid tbody").html("");
 	$("#sl_products").dialog('close');
 }
+
+
 
 var p_brand_list = [];
 var added_po=[];

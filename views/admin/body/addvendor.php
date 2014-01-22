@@ -40,9 +40,10 @@
 		<div id="v_financials">
 			<table>
 			<tr><td>Ledger ID :</td><td><input type="text" name="ledger" class="inp" value="<?=$v?"{$v['ledger_id']}":""?>"></td></tr>
-			<tr><td>Credit Limit :</td><td><input type="text" name="credit_limit" class="inp" value="<?=$v?"{$v['credit_limit_amount']}":""?>"></td></tr>
-			<tr><td>Credit Days :</td><td><input type="text" name="credit_days" class="inp" value="<?=$v?"{$v['credit_days']}":""?>"></td></tr>
+			<tr><td>Credit Limit :<span class="red_star">*</span></td><td><input type="text" name="credit_limit" class="inp" value="<?=$v?"{$v['credit_limit_amount']}":""?>"></td></tr>
+			<tr><td>Credit Days :<span class="red_star">*</span></td><td><input type="text" name="credit_days" class="inp" value="<?=$v?"{$v['credit_days']}":""?>"></td></tr>
 			<tr><td>Payment Advance :</td><td><input type="text" name="advance" class="inp" size=3 value="<?=$v?"{$v['require_payment_advance']}":""?>">%</td></tr>
+			<tr><td>Payment Terms :<span class="red_star">*</span></td><td><select name="payterms"><option value="">Select</option><option value="1">Cheque</option><option value="2">Cash</option><option value="3">DD</option></select></td></tr>
 			<tr><td>CST :</td><td><input type="text" name="cst" class="inp" value="<?=$v?"{$v['cst_no']}":""?>"></td></tr>
 			<tr><td>PAN :</td><td><input type="text" name="pan" class="inp" value="<?=$v?"{$v['pan_no']}":""?>"></td></tr>
 			<tr><td>VAT :</td><td><input type="text" name="vat" class="inp" value="<?=$v?"{$v['vat_no']}":""?>"></td></tr>
@@ -53,7 +54,7 @@
 		<div id="v_extra">
 			<table>
 			<tr><td>Return Policy :</td><td><textarea class="inp" name="rpolicy"><?=$v?"{$v['return_policy_msg']}":""?></textarea></td></tr>
-			<tr><td>Payment Terms :</td><td><textarea class="inp" name="payterms"><?=$v?"{$v['payment_terms_msg']}":""?></textarea></td></tr>
+			<!--  <tr><td>Payment Terms :</td><td><textarea class="inp" name="payterms"><?=$v?"{$v['payment_terms_msg']}":""?></textarea></td></tr>-->
 			<tr><td>Remarks :</td><td><textarea class="inp" name="remarks"><?=$v?"{$v['remarks']}":""?></textarea></td></tr>
 			</table>
 		</div>
@@ -66,7 +67,7 @@
 					<td>Designation : </td><td><input type="text" class="inp" name="cnt_desgn[]" value="<?=$c['contact_designation']?>"></td>
 					</tr>
 					<tr>
-					<td>Mobile 1 : </td><td><input type="text" class="inp" name="cnt_mob1[]" value="<?=$c['mobile_no_1']?>"></td>
+					<td>Mobile 1 :<span class="red_star">*</span> </td><td><input type="text" class="inp" name="cnt_mob1[]" value="<?=$c['mobile_no_1']?>"></td>
 					<td>Mobile 2 : </td><td><input type="text" class="inp" name="cnt_mob2[]" value="<?=$c['mobile_no_2']?>"></td>
 					</tr>
 					<tr>
@@ -134,16 +135,20 @@
 			</thead>
 			<tbody>
 			<?php if($v){ foreach($cat_brands as $i=>$b){
+				$no_days = date_diff_days(date('Y-m-d'),$b['applicable_till']);
+				$is_exp = 0;
+				if($no_days>0)
+					$is_exp = 1;
 				
 			?>
-				<tr class="brands_cat_det">
+				<tr class="brands_cat_det <?php echo $is_exp?'warn':''?>">
 					<td><input type="checkbox" class="edit_vblink_chk" ></td>
 					<td><input type="hidden" disabled="disabled" class="inp" name="l_brand[]" value="<?=$b['brand_id']?>"><?=$b['brand_name']?></td>
 					<td>
 					<input type="hidden" disabled="disabled" class="inp" name="l_catid[]" value="<?=$b['cat_id']?>"><?=$b['category_name']? $b['category_name'] :'All'?>&nbsp;<a style=" font-size: 10px;"id="show_cat" href="javascript:void(0)" onclick="load_allcatsofbrand(<?php echo $b['brand_id']?>)">edit cat</a></td>
 					<td><input type="text" disabled="disabled" class="inp " name="l_margin[]" value="<?=$b['brand_margin']?>"></td>
-					<td><input type="text" disabled="disabled"  class="inp  datepic lb_date lb_date<?=$i?>" name="l_from[]" value="<?php echo $b['applicable_from']!=0 ? $b['applicable_from']:0;?>" ></td>
-					<td><input type="text" disabled="disabled"  class="inp  datepic lb_date lb_date<?=$i?>t" name="l_until[]" value="<?php echo $b['applicable_till']!=0 ? $b['applicable_till']:0;?>"></td>
+					<td><input type="text" disabled="disabled"  class="inp  datepic lb_date lb_date<?=$i?>" name="l_from[]" value="<?php echo $b['applicable_from']!=0 ? $b['applicable_from']:0;?>" readonly="readonly"></td>
+					<td><input type="text" disabled="disabled"  class="inp  datepic lb_date lb_date<?=$i?>t" name="l_until[]" value="<?php echo $b['applicable_till']!=0 ? $b['applicable_till']:0;?>"readonly="readonly"></td>
 					<td><a href="javascript:void(0)" onclick="remove_catbrandvblink(this)" >remove</a></td>
 				</tr>
 			<?php }}?>
@@ -187,8 +192,8 @@
 <td><input type="hidden" name="l_cat[]" value="%catid%">%cat%</td>
 
 <td><input type="text" class="inp" name="l_margin[]" value="10"></td>
-<td><input type="text" class="inp lb_date lb_date%di%" name="l_from[]"></td>
-<td><input type="text" class="inp lb_date lb_date%di%t" name="l_until[]"></td>
+<td><input type="text" class="inp lb_date lb_date%di%" name="l_from[]" readonly="readonly"></td>
+<td><input type="text" class="inp lb_date lb_date%di%t" name="l_until[]" readonly="readonly"></td>
 <td><a href="javascript:void(0)" onclick="remove_catbrandvblink(this)" >remove</a>
 </tr>
 </tbody>
@@ -212,7 +217,6 @@
 <td>Email 2 : </td><td><input type="text" class="inp" name="cnt_email2[]"></td>
 </tr>
 </table>
-
 
 <style>
 #cnt_clone{
@@ -359,8 +363,8 @@ $('.fil_cat').change(function(){
 							+"<td><input type='hidden'  class='inp' name='l_brand[]' value='"+c.brandid+"'>"+c.brand_name+"</td>"
 							+"<td><input type='hidden'  class='inp' name='l_catid[]' value='"+c.catid+"'>"+c.category_name+"</td>"
 							+"<td><input type='text'   class='inp' name='l_margin[]' value='"+c.brand_margin+"'></td>"
-							+"<td><input type='text'   class='inp datepic lb_date' name='l_from[]' value='"+c.applicable_from+"'></td>"
-							+"<td><input type='text'   class='inp datepic lb_date' name='l_until[]' value='"+c.applicable_till+"'></td>"
+							+"<td><input type='text'   class='inp datepic lb_date' name='l_from[]' value='"+c.applicable_from+"' readonly='readonly'></td>"
+							+"<td><input type='text'   class='inp datepic lb_date' name='l_until[]' value='"+c.applicable_till+"' readonly='readonly'></td>"
 							+"<td><a href='javascript:void(0)' onclick='remove_catbrandvblink(this)' >remove</a>"
 							+"</tr>";
 				
@@ -443,8 +447,8 @@ $('.fil_brand').change(function(){
 							+"<td><input type='hidden'  class='inp' name='l_brand[]' value='"+c.brandid+"'>"+c.brand_name+"</td>"
 							+"<td><input type='hidden'  class='inp' name='l_catid[]' value='"+c.catid+"'>"+c.category_name+"</td>"
 							+"<td><input type='text'   class='inp' name='l_margin[]' value='"+c.brand_margin+"'></td>"
-							+"<td><input type='text'   class='inp datepic lb_date' name='l_from[]' value='"+c.applicable_from+"'></td>"
-							+"<td><input type='text'   class='inp datepic lb_date' name='l_until[]' value='"+c.applicable_till+"'></td>"
+							+"<td><input type='text'   class='inp datepic lb_date' name='l_from[]' value='"+c.applicable_from+"'readonly='readonly'></td>"
+							+"<td><input type='text'   class='inp datepic lb_date' name='l_until[]' value='"+c.applicable_till+"'readonly='readonly'></td>"
 							+"<td><a href='javascript:void(0)' onclick='remove_catbrandvblink(this)' >remove</a>"
 							+"</tr>";
 			});
@@ -491,6 +495,9 @@ $('.select_cat').change(function(){
 	}
 	
 });
+
+
+
 $('#venfrm').submit(function()
 {
 	$('.val_req',this).each(function(){
@@ -501,6 +508,7 @@ $('#venfrm').submit(function()
 		else
 			$(this).addClass('required_inp');
 	});
+
 
 	if($('.required_inp',this).length)
 	{
@@ -513,7 +521,7 @@ $('#venfrm').submit(function()
 		alert("Link atlease one brand for this vendor");
 		return false;
 	}
-
+	
 	var bm_error_status = 0;
 	$('.edit_vblink_chk:checked').each(function(){
 		var $r = $(this).parents('tr:first');
@@ -541,6 +549,7 @@ $('#venfrm').submit(function()
 				bm_error_status = 1;
 				$('input[name="l_until[]"]',$r).addClass('error_inp');
 			}
+			
 	});
 
 	if(bm_error_status)
@@ -575,8 +584,8 @@ function update_new_cat(){
 							+"<td><input type='hidden'  class='inp' name='l_brand[]' value='"+c.brandid+"'>"+c.brand_name+"</td>"
 							+"<td><input type='hidden'  class='inp' name='l_catid[]' value='"+c.catid+"'>"+c.category_name+"</td>"
 							+"<td><input type='text'   class='inp' name='l_margin[]' value=''></td>"
-							+"<td><input type='text'   class='inp datepic lb_date' name='l_from[]' value=''></td>"
-							+"<td><input type='text'   class='inp datepic lb_date' name='l_until[]' value=''></td>"
+							+"<td><input type='text'   class='inp datepic lb_date' name='l_from[]' value='' readonly='readonly'></td>"
+							+"<td><input type='text'   class='inp datepic lb_date' name='l_until[]' value=''readonly='readonly'></td>"
 							+"<td><a href='javascript:void(0)' onclick='remove_catbrandvblink(this)' >remove</a>"
 							+"</tr>"
 				$(template).prependTo(".v_lbtable tbody");
@@ -623,7 +632,8 @@ function remove_vblink(ele){
 	if(ven_id)
 	{
 		
-		if(confirm("Want to remove "+$('td:eq(1)',trEle).text()+" from this vendor ?"))
+		//if(confirm("Want to remove "+$('td:eq(1)',trEle).text()+" from this vendor ?"))
+			if(confirm("Are you sure want to remove?"))
 		{
 			brand_id = $('input[name="l_brand[]"]',trEle).val();
 			$.post(site_url+'/admin/jx_remove_vendor_brand_link','vendor_id='+ven_id+'&brand_id='+brand_id,function(resp){
@@ -649,7 +659,8 @@ function remove_catbrandvblink(ele)
 	if(ven_id)
 	{
 		
-		if(confirm("Want to remove "+$('td:eq(2)',trEle).text() +" category " +$('td:eq(1)',trEle).text() + " Brand  from this vendor ?"))
+		//if(confirm("Want to remove "+$('td:eq(2)',trEle).text()+" category" +$('td:eq(1)',trEle).text() +" Brand  from this vendor ?"))
+		if(confirm("Are you sure want to remove ?"))
 		{
 			brand_id = $('input[name="l_brand[]"]',trEle).val();
 			cat_id = $('input[name="l_catid[]"]',trEle).val();
@@ -692,7 +703,6 @@ function addproduct(id,name,mrp,tax)
 	$("#v_lpsearch").val("");
 }
 
-
 $(function(){
 	
 	$(".lb_date").each(function(){
@@ -706,7 +716,6 @@ $(function(){
 			$("#v_searchres").html(data).show();
 		});
 	});
-
 	$("#v_lbsearch").keyup(function(){
 		$.post("<?=site_url("admin/jx_searchcategory")?>",{q:$(this).val()},function(data){
 			$("#v_searchresb").html(data).show();
@@ -747,14 +756,14 @@ $("#all_catdiv").dialog({
 					$.each(resp.cat_list,function(i,c){
 						
 						var	cat_tbl_html =""
-										+"<tr>"
-										+"<td><input type='checkbox' checked='checked' class='edit_vblink_chk'></td>"
-										+"<td><input type='hidden' class='inp' name='l_brand[]' value='"+c.brandid+"'>"+resp.brand_name+"</td>"
-										+"<td><input type='hidden'  class='inp' name='l_catid[]' value='"+c.catid+"'>"+c.cat_name+"</td>"
-										+"<td><input type='text'    class='inp' name='l_margin[]' value='"+resp.brand_margin+"'></td>"
-										+"<td><input type='text'  class='inp datepic from_date' name='l_from[]' value='"+resp.from_dt+"'></td>"
-										+"<td><input type='text'   class='inp datepic to_date' name='l_until[]' value='"+resp.to_dt+"'></td>"
-										+"<td><a href='javascript:void(0)' onclick='remove_catbrandvblink(this)' >remove</a>"
+										+"<tr >"
+										+"<td class='selected'><input type='checkbox' checked='checked' class='edit_vblink_chk'></td>"
+										+"<td class='selected'><input type='hidden' class='inp' name='l_brand[]' value='"+c.brandid+"'>"+resp.brand_name+"</td>"
+										+"<td class='selected'><input type='hidden'  class='inp' name='l_catid[]' value='"+c.catid+"'>"+c.cat_name+"</td>"
+										+"<td class='selected'><input type='text'    class='inp' name='l_margin[]' value='"+resp.brand_margin+"'></td>"
+										+"<td class='selected'><input type='text'  class='inp datepic from_date' name='l_from[]' value='"+resp.from_dt+"'readonly='readonly'></td>"
+										+"<td class='selected'><input type='text'   class='inp datepic to_date' name='l_until[]' value='"+resp.to_dt+"' readonly='readonly'></td>"
+										+"<td class='selected'><a href='javascript:void(0)' onclick='remove_catbrandvblink(this)' >remove</a>"
 										+"</tr>"
 										$("#cat_brandtable tbody").append(cat_tbl_html);
 							 //$(cat_tbl_html).appendTo("#cat_brandtable tbody");	
@@ -774,9 +783,6 @@ $("#all_catdiv").dialog({
 			},'json');
 			},
 			buttons:{
-				'Cancel' :function(){
-					$(this).dialog('close');
-				},
 				'Submit':function(){
 					var bm_error_status = 0;
 					
@@ -857,8 +863,6 @@ if(location.hash)
 {
 	$('a[href="'+location.hash+'"]').trigger('click');	
 }
-
-
 </script>
 
 <style>
@@ -928,5 +932,7 @@ h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;font-size: 11
 
 .leftcont{display:none;}
 .error_inp{border:1px solid #cd0000 !important;}
+
+.warn td{background: #FDD2D2 !important;}
 </style>
 <?php

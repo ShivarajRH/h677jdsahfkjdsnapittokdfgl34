@@ -2,6 +2,7 @@
 	$user = $this->erpm->auth();
         $batch_id = $this->uri->segment(3);
         $print_count = $this->reservations->get_batch_print_count($batch_id);
+        echo "==>".$print_count."=asdkjaskdljasd<br>";
 ?>
 <!--<title>Product procurement list</title>-->
 <style>

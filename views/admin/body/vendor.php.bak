@@ -111,7 +111,9 @@ Total PO value
 <?php $i++; }?>
 </tbody>
 </table>
+
 </div>
+
 
 
 <div id="v_pos">
@@ -264,6 +266,7 @@ $('.leftcont').hide();
 </script>
 
 <style>
+
 #v_contact_cont table{
 margin:10px;
 border:1px solid #ccc;

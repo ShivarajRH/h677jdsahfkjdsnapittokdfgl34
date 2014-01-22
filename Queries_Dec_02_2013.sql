@@ -1476,7 +1476,7 @@ select ceil(50/2);
 #============================================================================================
 #========== BATCH RESET =====================================================================
 set @global_batch_id=5000;
-set @batch_id=5521; #5544-48
+set @batch_id=5714; #5544-48
 update shipment_batch_process_invoice_link set batch_id=@global_batch_id where batch_id=@batch_id;
 delete from shipment_batch_process where batch_id = @batch_id;
 #============================================================================================
@@ -1556,7 +1556,7 @@ select distinct from_unixtime(tr.init,'%D %M %Y') as str_date,from_unixtime(tr.i
 # Jan_17_2014
 
 -- =============================================================================
-update t_imei_no set status=0 and order_id=0 where imei_no = '911208355656643';
+update t_imei_no set status=0 and order_id=0 where imei_no = '355681050857430';
 -- =============================================================================
 
 select * from t_imei_no
@@ -1635,3 +1635,145 @@ select printcount from picklist_log_reservation where p_inv_no='116095';
 
 ##### 116 - TV, washing machine
 
+
+c.id IN(112,118,122)
+Mobiles & Tablets
+Computers & Peripherals
+Cameras & Accessories
+
+110,112,116,118,122,124,125,126
+
+Mobiles & Tablets
+TV, Audio, Video & Gaming
+Computers & Peripherals
+Cameras & Accessories
+StoreKing Vouchers
+Company Assets
+Watches
+
+
+Beauty
+100,101,102,103,104,105,106,107,108,109,110,111,120
+
+Electronics
+112,113,115,116,117,118,122,126
+
+Footwear & Clothing
+114,119,121
+
+Company Assets
+124,125
+
+
+
+select t.* from proforma_invoices pi 
+		join shipment_batch_process_invoice_link sd on pi.p_invoice_no = sd.p_invoice_no 
+		join king_transactions tr on tr.transid = pi.transid  
+		join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
+		join pnh_m_territory_info t on t.id = f.territory_id 
+		where pi.invoice_status = 1 and sd.batch_id = '5000'
+		group by f.territory_id 
+		order by t.territory_name
+
+# Jan_21_2014
+
+-- ALTER TABLE `m_vendor_brand_link` ADD COLUMN `cat_id` bigint(11) DEFAULT 0 NULL AFTER `brand_id`;
+
+-- ALTER TABLE `t_po_info` ADD COLUMN `status_remarks` Varchar(2555) NULL AFTER `modified_on`; 
+
+-- XXXXX alter table `shipment_batch_process_invoice_link` drop column `is_acknowlege_printed`;
+
+-- XXXXX create table `acknowledgement_print_log` (  `sno` bigint NOT NULL AUTO_INCREMENT ,`log_id` varchar (150), `tm_emp_id` varchar (100) NULL, `be_emp_id` varchar (100) , `p_inv_no` varchar (100) NOT NULL 
+, `created_on` varchar (50) , `created_by` int (30) , `status` int (10) DEFAULT '0', `count` int (100) DEFAULT '0', PRIMARY KEY ( `sno`));
+
+-- ALTER TABLE `pnh_sch_discount_track` ADD COLUMN `dealid` BIGINT(0) NULL AFTER `catid`; 
+-- ALTER TABLE `pnh_sch_discount_brands` ADD COLUMN `dealid` BIGINT(11) DEFAULT 0 NULL AFTER `discount`;  
+
+Jan_21_2014 drop table `acknowledgement_print_log`
+
+
+
+
+
+select t.* from proforma_invoices pi 
+		join shipment_batch_process_invoice_link sd on pi.p_invoice_no = sd.p_invoice_no 
+		join king_transactions tr on tr.transid = pi.transid  
+		join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
+		join pnh_m_territory_info t on t.id = f.territory_id 
+		join king_orders o on o.transid=tr.transid
+		left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
+		where pi.invoice_status = 1 and sd.batch_id = '5000' and tr.batch_enabled=1 and i.id is null
+		group by f.territory_id 
+		order by t.territory_name
+
+
+select distinct 
+		o.itemid,count(distinct tr.transid) as ttl_trans,group_concat(distinct tr.transid) as grp_trans
+		,bc.id as menuid,bc.batch_grp_name as menuname,group_concat(distinct d.menuid) as actualmenus,f.territory_id
+		,sd.id,sd.batch_id,sd.p_invoice_no
+		,from_unixtime(tr.init) as init,bc.batch_size,bc.group_assigned_uid as bc_group_uids
+			from king_transactions tr
+			join king_orders as o on o.transid=tr.transid
+			join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
+			join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no and sd.invoice_no=0 
+			join king_dealitems dl on dl.id = o.itemid
+			join king_deals d on d.dealid = dl.dealid 
+			join pnh_menu mn on mn.id=d.menuid
+			join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
+			join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
+			where   f.territory_id = '2' and sd.batch_id = 5000 and tr.batch_enabled=1
+				group by  bc.id
+			order by tr.init asc
+
+#PNH55415,PNH24756
+
+select * from (
+            select distinct from_unixtime(tr.init,'%d/%m/%Y') as str_date,from_unixtime(tr.init,'%h:%i:%s %p') as str_time, count(tr.transid) as total_trans,tr.transid
+                    ,o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
+                    ,tr.init,tr.actiontime,tr.status tr_status,tr.is_pnh,tr.batch_enabled
+                    ,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,f.created_on as f_created_on
+                    ,ter.territory_name
+                    ,twn.town_name
+                    ,dl.menuid,m.name as menu_name,bs.name as brand_name
+                    ,sd.batch_id,sd.batched_on
+                    ,pi.cancelled_on
+            from king_transactions tr
+                    join king_orders o on o.transid=tr.transid
+                    join king_dealitems di on di.id=o.itemid
+                    join king_deals dl on dl.dealid=di.dealid
+                    join pnh_menu m on m.id = dl.menuid
+                    join king_brands bs on bs.id = o.brandid
+            join pnh_m_franchise_info  f on f.franchise_id=tr.franchise_id  and f.is_suspended = 0
+            join pnh_m_territory_info ter on ter.id = f.territory_id 
+            join pnh_towns twn on twn.id=f.town_id
+                    left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
+                    left join proforma_invoices pi on pi.order_id = o.id and pi.invoice_status = 1 
+                    left join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no
+            WHERE o.status in (0,1) and tr.batch_enabled=1 and i.id is null  and tr.transid  = 'PNH24756' #tr.transid in ('PNH24756','PNH11768','PNH11769','PNH14153','PNH16531','PNH16758','PNH16829','PNH18499','PNH18613','PNH18694','PNH19988','PNH21379','PNH22377','PNH24756','PNH24973','PNH25135','PNH25654','PNH25842','PNH26544','PNH26765','PNH26782','PNH26895','PNH27179','PNH28758','PNH28935','PNH29347','PNH29776','PNH32855','PNH33145','PNH33191','PNH34632','PNH35578','PNH36978','PNH37124','PNH38468','PNH38666','PNH39728','PNH39841','PNH43375','PNH45122','PNH45598','PNH45771','PNH46113','PNH46474','PNH46595','PNH49892','PNH51259','PNH52451','PNH52959','PNH54347','PNH54546','PNH55285','PNH55415','PNH55963','PNH57714','PNH59216','PNH61185','PNH61811','PNH62431','PNH62792','PNH62894','PNH63543','PNH64597','PNH64835','PNH65361','PNH65422','PNH65711','PNH66479','PNH66571','PNH66924','PNH68492','PNH68863','PNH68996','PNH69272','PNH71162','PNH71171','PNH73246','PNH73648','PNH74896','PNH75579','PNH76542','PNH76553','PNH76695','PNH77194','PNH78763','PNH78771','PNH79767','PNH81262','PNH81424','PNH82245','PNH82796','PNH83136','PNH83532','PNH84494','PNH84838','PNH84978','PNH85514','PNH85534','PNH86684','PNH86879','PNH86943','PNH87251','PNH87352','PNH87866','PNH87895','PNH88261','PNH88784','PNH89294','PNH91142','PNH91414','PNH92727','PNH93167','PNH93343','PNH93391','PNH93714','PNH94121','PNH95855','PNH97158','PNH97261','PNH97446','PNH98427','PNH99546','PNH99823','PNHADS69161','PNHAED74212','PNHAGH88692','PNHAGN36664','PNHAHR92662','PNHANH58567','PNHANP18692','PNHARM33812','PNHAUT82647','PNHAVY15723','PNHAWP81139','PNHAXZ95887','PNHBCQ31955','PNHBDQ46772','PNHBIC14589','PNHBJX88262','PNHBQY95588','PNHBTY26342','PNHBUG92628','PNHBVZ88616','PNHBXL77127','PNHCBX23293','PNHCIK77141','PNHCIQ31331','PNHCMG84238','PNHCNI94123','PNHCUC68876','PNHDAC33555','PNHDAZ29396','PNHDHN67744','PNHDKQ83788','PNHDLH38581','PNHDLU22337','PNHDRB84232','PNHDRN86616','PNHDXQ59712','PNHEBM77371','PNHEDE76659','PNHEEA25773','PNHEKI99239','PNHEKN99876','PNHEKQ79585','PNHEMC36338','PNHEUC28782','PNHEVL56344','PNHEWD63196','PNHEWS63546','PNHEXJ46975','PNHFDQ39861','PNHFEP19358','PNHFGH39552','PNHFJJ89521','PNHFJW85241','PNHFMC31231','PNHFNJ93618','PNHFPD52595','PNHFQW52357','PNHFRK85831','PNHGBA81545','PNHGBW42171','PNHGCN55994','PNHGDB83273','PNHGFX26856','PNHGGV79376','PNHGIA46937','PNHGPD98365','PNHGPK52349','PNHGQW98992','PNHGRK87445','PNHGSP85927','PNHGTD69361','PNHGZG96317','PNHGZK66297','PNHGZX93525','PNHHAM59938','PNHHDV12858','PNHHFN96199','PNHHJT55225','PNHHKV17658','PNHHLJ32837','PNHHLK63918','PNHHPL57445','PNHIBP85449','PNHIEK31187','PNHIKZ84631','PNHINL91791','PNHITM15567','PNHJHY22236','PNHJIG23987','PNHJJW49978','PNHJPK79588','PNHJUB83444','PNHJUR83585','PNHJWH19378','PNHJXM54977','PNHJYI53269','PNHJYR49625','PNHKBX34595','PNHKFE84894','PNHKHA69179','PNHKHF18118','PNHKIU86986','PNHKJX49398','PNHKKW32568','PNHKMH14852','PNHKMP39512','PNHKRI73163','PNHKRJ67714','PNHKSE17358','PNHKSH76263','PNHKVE56634','PNHKVK83266','PNHKWQ67556','PNHKWT97949','PNHKWV36154','PNHKXY29712','PNHKZZ52757','PNHLCH25589','PNHLFZ38473','PNHLGE26468','PNHLGR41262','PNHLHF23981','PNHLJU53973','PNHLPT92586','PNHLUD18722','PNHLVQ28751','PNHLXS47336','PNHMCZ13697','PNHMGI67624','PNHMIQ71617','PNHMIT85823','PNHMQG96137','PNHMTK76282','PNHMUN63624','PNHMXM72843','PNHNBH61653','PNHNEF55642','PNHNES62472','PNHNFQ43361','PNHNHM42857','PNHNJW86618','PNHNLX33758','PNHNMW22688','PNHNPZ32251','PNHNQS25748','PNHNRI89691','PNHNRN27821','PNHNTL29354','PNHPJJ83597','PNHPLJ53135','PNHPLQ52878','PNHPNE57734','PNHPNV48628','PNHPWK16236','PNHPWN91691','PNHQJM28368','PNHQKF47245','PNHQMA88926','PNHQQA12834','PNHQRF86241','PNHQSN62741','PNHQVP81358','PNHQXN83166','PNHRCX12337','PNHRCX79657','PNHRGH56152','PNHRLJ44264','PNHRML93953','PNHRRA11758','PNHRRS58716','PNHRSM64458','PNHRSR33587','PNHRUV64528','PNHRUZ38876','PNHRVS63522','PNHRYS25414','PNHRZV84351','PNHSDG26737','PNHSII24313','PNHSJS19152','PNHSML27435','PNHSNN13966','PNHSQW37875','PNHSSH26593','PNHSYN46875','PNHTID81523','PNHTJC71133','PNHTRE43287','PNHTRL83653','PNHTRN68473','PNHTVC97613','PNHUCU43371','PNHUQC77913','PNHURC82659','PNHVMJ76716','PNHVPZ83614','PNHVQB23439','PNHVRS64166','PNHVXV45964','PNHWAV76894','PNHWJA56139','PNHWJW38128','PNHWWP64836','PNHWZH17882','PNHWZM23398','PNHXEN58219','PNHXFM55127','PNHXGX78951','PNHXMN52299','PNHXMS97273','PNHXQH46883','PNHXQP58382','PNHXUQ31412','PNHYAQ29515','PNHYCC44768','PNHYLV31787','PNHYMX51367','PNHYSG22114','PNHYSG25161','PNHYVR76171','PNHZFL18126','PNHZHW58257','PNHZIP31262','PNHZMD85141','PNHZQE12455','PNHZRT64433','PNHZVC56319')
+            group by o.transid) as g  where  g.batch_id >= 5000  group by transid order by  g.actiontime DESC 
+
+select * from shipment_batch_process_invoice_link where batch_id='5714'
+5719
+#=================================================================================================
+#============== BATCH RESET ======================================================================
+set @global_batch_id=5000;
+set @batch_id=5729; #5544-48
+update shipment_batch_process_invoice_link set batch_id=@global_batch_id where batch_id=@batch_id;
+delete from shipment_batch_process where batch_id = @batch_id;
+#=================================================================================================
+
+Beauty
+100,101,102,103,104,105,106,107,108,109,110,111,120
+
+Electronics
+112,113,115,116,117,118,122,126
+
+Footwear & Clothing
+114,119,121
+
+Company Assets
+124,125
+
+select printcount from picklist_log_reservation where batch_id='5730'
+
+select status,product_id from t_imei_no where imei_no = '355681053892715'; 51084_4090_1_1_163256_4271887558_5649623681'

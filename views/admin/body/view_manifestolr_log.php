@@ -35,39 +35,35 @@
 	<div class="page_content">
 		<table class="datagrid" width="100%" cellpading="5">
 		<?php if($manifesto_lr_res){?>
-		<thead><th>Slno</th><th>Destination</th><th>Manifesto Id</th><th>Lr Number</th><th>No of boxes</th><th>Shipment Charges (Rs)</th><th>Updated on</th><th>Updated By</th></thead>
+		<thead><th>Slno</th><th>Destination</th><th>Manifesto Id</th><th>Lr Number</th><th>No of boxes</th><th>Weight (Kg)</th><th>Shipment Charges (Rs)</th><th>Updated on</th><th>Updated By</th></thead>
 		<tbody>
 		<?php $i=1; foreach($manifesto_lr_res->result_array() as $m_lr_det){?>
-		
 		<tr>
-		<td><?php echo $i;?></td>
-		<td style="max-width: 300px">
-			<?php
-				 
-			
-			
-			$hub_name = $this->db->query("select group_concat(distinct d.hub_name) as hub_names 
-																			from pnh_m_manifesto_sent_log a 
-																			join pnh_t_tray_invoice_link b on find_in_set(b.invoice_no,a.sent_invoices)
-																			left join pnh_t_tray_territory_link c on c.tray_terr_id = b.tray_terr_id    
-																			join pnh_deliveryhub d on d.id = c.territory_id 
-																			where  a.id in (".$m_lr_det['id'].") ",$sent_det['id'])->row()->hub_names;
-																			
-				echo str_replace(',', ', ', $hub_name);
-			?>
-		</td>
-		<td>
-			<?php foreach(explode(',',$m_lr_det['id']) as $mid){  ?>
-			<a target="_blank" href="<?php echo site_url('admin/view_manifesto_sent_log/'.$mid.'/0000-00-00/0000-00-00/0/0/1');?>"><?php echo $mid ;?></a>
-			<?php } ?>
-		</td>
-		<td><?php echo $m_lr_det['lrno'] ;?></td>
-		<td><?php echo $m_lr_det['no_ofboxes'] ;?></td>
-		<td><?php echo $m_lr_det['amount']?></td>
-		<td><?php echo format_datetime($m_lr_det['lrn_updated_on']) ;?></td>
-		<td><?php echo $m_lr_det['updated_by']?></td>
+			<td><?php echo $i;?></td>
+			<td style="max-width: 300px">
+				<?php				
+				$hub_name = $this->db->query("select group_concat(distinct d.hub_name) as hub_names 
+																				from pnh_m_manifesto_sent_log a 
+																				join pnh_t_tray_invoice_link b on find_in_set(b.invoice_no,a.sent_invoices)
+																				left join pnh_t_tray_territory_link c on c.tray_terr_id = b.tray_terr_id    
+																				join pnh_deliveryhub d on d.id = c.territory_id 
+																				where  a.id in (".$m_lr_det['id'].") ",$sent_det['id'])->row()->hub_names;
+																				
+					echo str_replace(',', ', ', $hub_name);
+				?>
+			</td>
+			<td>
+				<?php foreach(explode(',',$m_lr_det['id']) as $mid){  ?>
+				<a target="_blank" href="<?php echo site_url('admin/view_manifesto_sent_log/'.$mid.'/0000-00-00/0000-00-00/0/0/1');?>"><?php echo $mid ;?></a>
+				<?php } ?>
+			</td>
+			<td><?php echo $m_lr_det['lrno'] ;?></td>
+			<td><?php echo $m_lr_det['no_ofboxes'] ;?></td>
+			<td><?php echo $m_lr_det['weight'] ;?></td>
+			<td><?php echo $m_lr_det['amount']?></td>
+			<td><?php echo format_datetime($m_lr_det['lrn_updated_on']) ;?></td>
+			<td><?php echo $m_lr_det['updated_by']?></td>
 		</tr>
-			
 		<?php $i++; }?>
 		</tbody>
 		

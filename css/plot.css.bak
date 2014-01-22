@@ -7,7 +7,7 @@
 /* 
 Set the container for the bar
 */
-.bar 
+.anmtd_loading_img 
 {
 	  background-color: rgba(0, 0, 0, 0.1);
     border-radius: 20px 20px 20px 20px;
@@ -21,7 +21,7 @@ Set the container for the bar
 /* 
 This is the actual bar with stripes
 */	
-.bar span {
+.anmtd_loading_img span {
 	display:inline-block;
 	height:100%;
 	width:100%;
@@ -261,8 +261,7 @@ ul.tabs li.active
 /************** State analytics Start **************/
 #st_state_sales
 {
-	width: 100%;
-    
+    width: 100%;
 }
 #st_top_sale_det
 {
@@ -359,7 +358,7 @@ ul.tabs li.active
 }
 .st_brand_popup,.st_franch_popup
 {
-	float:right;margin:16px;cursor:pointer;
+	float:right;margin:16px;cursor:pointer;font-size: 12px;
 }
 
 #st_brand_popup,#st_franch_popup {

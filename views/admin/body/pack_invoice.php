@@ -271,8 +271,9 @@ foreach($invoice as $i)
 
 							// IMEI Code:
                                     $imeis=$this->reservations->get_imeis_by_product($i['product_id']);
-//                                    echo '<pre>'.$i['product_id'];print_r($imeis);die();
+                                    //echo '<pre>'.$i['product_id']; print_r($imeis);//die();
                                     if($p_has_imei_scan)  {
+                                            
                                             // prepare imeino list for allotment 
                                             foreach($imeis as $im)
                                                     $prod_imei_list[$im['imei_no']] = array($i['product_id'],$im['stock_id']);
@@ -294,6 +295,7 @@ foreach($invoice as $i)
                                                     </li>
                             <?php           }
                                             echo '</ol>';
+                                            echo 'IMEI# '.$imeis[0]['imei_no'];
                                     } 
 							
 							?>
@@ -368,7 +370,7 @@ foreach($invoice as $i)
                                                                 class="scan_proditem <?php echo $scan_by_bc?'scan_bybc':'' ?> pbcode_<?php echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?> pbcode_<?php echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?>_<?php echo (double)$mrp;?>_<?php echo $mrp_b[2].'_'.$mrp_b[3];?> pbcode_<?php echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?>_<?php echo (double)$mrp;?>_<?php echo $mrp_b[2].'_'.$mrp_b[3];?>_<?php echo $mrp_b['stock_id'];?>_<?php echo $i['itemid'];?>_<?php echo $i['order_id'];?>"
                                                                 style="width: 20px !important;" />
 
-                                                        <lable><?php //echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?></lable>
+                                                        <lable><?php echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?></lable>
                                                         <?php 		
                                                 }
                                                 ?>
@@ -847,14 +849,14 @@ foreach($invoice as $i)
                 }
                 var s_imei = $.trim($("#scan_imeino").val());
                 */
-
+               
                 if(prod_imeino_list[s_imei] == 0)
                 {
                                 alert("IMEI number already alloted.");
                                 return false;
                 }else if(prod_imeino_list[s_imei] == undefined)
                 {
-
+                        //alert(s_imei);
                         $.post(site_url+'admin/jx_get_imei_stockdet',"imei="+s_imei,function(resp){
 
                                 if(resp.status == 'success')
@@ -919,6 +921,7 @@ foreach($invoice as $i)
                                 }else
                                 {
                                         alert("Error:\n"+resp.message);	
+                                        print(resp.lst_qry);
                                 }
 
                                 $("#scan_imeino").val('').focus();
@@ -967,10 +970,10 @@ foreach($invoice as $i)
                         return false;
                 }
                 else {
-                    if($(".imei_inp_list",p).length && status==0) {
-                        alert("Please scan imei number.");
-                        return;
-                    }
+                        if($(".imei_inp_list",p).length && status==0) {
+                            alert("Please scan imei number.");
+                            return;
+                        }
                 }
                 needed=parseInt($(".qty",p).html());
                 have=parseInt($(".have",p).html());

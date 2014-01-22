@@ -138,7 +138,11 @@ $(function(){
 		}
 	});
 	$(".ajax_loadresult a").live("click",function(){
-		$(this).addClass("selected");
+		 if(!$(this).hasClass('selected'))
+			 $(this).addClass("selected");
+		else
+			 $(this).removeClass("selected");
+
 	});
 	$("ul.menu ul li").hover(function(){
 		if($(".submenuright",$(this)).length==0)

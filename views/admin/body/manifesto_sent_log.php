@@ -194,9 +194,11 @@
 										
 										if($sent_det['hndlby_type']==3)
 										{
-											echo '<div><a href="javascript:void(0)" onclick="print_del_label('.$sent_det['id'].')" >Print Delivery Label : </a></div>';	
+											echo '<div><a href="javascript:void(0)" onclick="print_del_label('.$sent_det['id'].')" >Print Delivery Label </a></div>';	
 										}
-										echo '<div><a href="javascript:void(0)" onclick="print_franchise_label('.$sent_det['id'].')" >Print Franchise Labels : </a></div>';
+										
+										echo '<div><a href="javascript:void(0)" onclick="print_franchise_label('.$sent_det['id'].')" >Print Franchise Labels </a></div>';
+										
 										
 									?>	
 								</td>
@@ -266,7 +268,12 @@
 												<input type="button" value="Update vehicle details" onclick="show_driver_details(<?php echo $sent_det['id'].','.$mobile.",'".strip_tags($tranporter_link)."'".','.$sent_det['job_title2']; ?>)" <?php echo ($sent_det['status']==3)?'class="hide"' :'""'; ?>>
 										<?php }else if($sent_det['status']==2 && ($sent_det['bus_id']!=0 || $sent_det['hndlby_type']==4 ) && ($sent_det['office_pickup_empid'] || $sent_det['hndleby_courier_id'] )  ){
 												echo '<br><b>LR number needed</b>';?>
+												<br>
+												<a href="<?php echo site_url('admin/update_bulk_lrdetails');?>">Update LR number</a>
+												<?php /*
 												<input type="button" value="Update LR number" onclick="show_lr_update_form(<?php echo $sent_det['id'].','.$sent_det['hndleby_courier_id']; ?>)"><br>
+												 */?>
+												 
 										<!-- update vehicle details button and lr number update button-->		
 										<?php }
 										
@@ -409,6 +416,7 @@
 	</form>
 </div>
 
+<style>.error_inp{border:2px solid #cd0000 !important;}</style>
 <!-- add alternative number end -->
 
 <script>
@@ -1443,7 +1451,7 @@ function print_del_label(man_id)
 
 function print_franchise_label(man_id)
 {
-	$('#print_del_label_frm').html('<iframe src="'+site_url+'/admin/print_deliverylabel/'+man_id+'"></iframe>');	
+	$('#print_del_label_frm').html('<iframe src="'+site_url+'/admin/print_fran_deliverylabelby_manid/'+man_id+'"></iframe>');	
 }
 
 
@@ -1578,29 +1586,46 @@ $("#mark_delivered_courier_transport").dialog({
 $("#mark_delivered_courier_transport_form").submit(function(){
 	var mobile=$("input[name='contact_no[]']",this).val();
 	var delivered_status=0;
+	var ship_date=$("input[name='received_on[]']",this);
+	var error=0;
+
+	$('.error_inp',this).removeClass('error_inp');
 	
-	$("input[name='delivered[]']",this).each(function(){
-		if($(this).attr("checked") && !$(this).is(":disabled"))
+	$("input[name='delivered[]']:checked",this).each(function(a,b){
+		if(!$(this).attr('disabled'))
 		{
-			delivered_status=1;
+			var trEle = $(this).parents('tr:first');
+			
+			var rcvd_by = $("input[name='received_by[]']",trEle).val();
+			var rcvd_on = $("input[name='received_on[]']",trEle).val();
+			var contact_no = $("input[name='contact_no[]']",trEle).val();
+				if(contact_no.length!=0)
+				{
+					if(contact_no.length<10 || isNaN(contact_no*1))
+					{
+						$("input[name='contact_no[]']",trEle).addClass('error_inp');
+					}
+				}
+
+				if(rcvd_on == "")
+					$("input[name='received_on[]']",trEle).addClass('error_inp');
+				delivered_status = 1;
+			
 		}
 	});
 
 	if(delivered_status==0)
 	{
-		alert('Select atleast one innoice');
+		alert('Select atleast one invoice');
+		return false;
+	}
+
+	if($('.error_inp',this).length)
+	{
+		alert("Please enter valid data to submit");
 		return false;
 	}
 	
-	if(mobile.length!=0)
-	{
-		if(mobile.length<10 || isNaN(mobile))
-		{
-			alert('Invalid contact number');
-			return false;
-		}	
-	}
-	return true;
 });
 
 $("#add_alternative_nukber").click(function(){

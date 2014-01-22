@@ -67,9 +67,11 @@ table.datagridsort tbody td { padding: 4px; }
     color: #606EBD;
     background: #C3C3E5;
     padding: 1px 5px;
+    text-decoration: none;
 }
 .trans_pagination a:hover {
-    background: #EFEFF5;
+/*    color: #f1f1f1;
+    background: #443266;*/
 }
 .pagination_top {
     padding-top: 0px;
@@ -128,8 +130,10 @@ table.datagridsort tbody td { padding: 4px; }
                 max-width: inherit;
                 min-width: inherit;
                 margin: 0 0 7px;}
-.level1_filters { float:left;margin-top: 5px; width: 100%;
-                 /*margin-right: 5px; */ 
+.level1_filters {float: left;
+            margin-top: -3px;
+            width: 98%;
+            margin-left: 1%;
 }
 .fran_experience {
     font-weight:bold;font-size:10px;padding: 2px 3px;border-radius: 3px; margin-top:5px;
@@ -198,7 +202,7 @@ h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;}
 /*  Start - filters code      */
 .partial_ready { color:#cd0000;font-weight:bold; padding:4px 6px; }
 .heading_no_results { margin:2px;text-align:center }
-#date_from,#date_to {width: 90px;}
+#date_from,#date_to {width: 70px;}
 #trans_list_replace_block {padding:1px 0px; clear: both;}
 .str_time { padding: 5px 0 5px; }
 .trans_created_by { padding: 5px 0 5px; font-size: 11px; 
@@ -279,3 +283,4 @@ h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;}
     width: 100%;
     height: auto;
 }
+.reset_all {cursor:pointer; text-decoration: none; margin: 5px 0 0 0; }

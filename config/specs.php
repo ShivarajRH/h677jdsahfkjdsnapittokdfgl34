@@ -5,7 +5,7 @@ define('COUPON_EXP_DAYS',30);
 
 define('COUPON_REFERRAL_VALUE',50);
 define('COUPON_REFERRAL_MIN',500);
-define('COUPON_REFERRAL_RE_VALUE',75);
+define('COUPON_REFERRAL_RE_VALUE',50);
 define('COUPON_REFERRAL_RE_MIN',500);
 define('COUPON_REFERRAL_VALIDITY',30);
 
@@ -34,9 +34,9 @@ define("PRODUCT_SERVICE_TAX",12.36);
 
 define("MAX_QTY",2);
 
-define("BODYPARTS_MALE",1000);
+define("BODYPARTS_MALE",800);
 
-define("BODYPARTS_FEMALE",1000);
+define("BODYPARTS_FEMALE",1200);
 
 define('NEWSLETTER_BANNERS','./images/newsletter/banners');
 
@@ -50,13 +50,15 @@ define('SUBSCRIBE_COUPON_VALID',40);
 
 define('POINTS_REDEEMABLE_MIN',200);
 
-define("ORDER_MONTH_COUPON","MyValentine");
+define("ORDER_MONTH_COUPON","SNPSAD34D");
 
-define("PAGED_LIMIT",12);
+define("PAGED_LIMIT",15);
 
+define("THUMBS_UP_POINTS",3);
 
+define("MIN_COUPON_VAL_FOR_NOSHIPCHARGE",400);
 
-
+define("VOUCHERMENU",124);
 
 define("PNH_MEMBER_FEE",50);
 
@@ -64,8 +66,9 @@ define("PNH_MEMBER_BONUS",25);
 
 define("MAX_ROWS_DISP",10);
 
-define('BLOCK_MEMBER_IMEI_ACTIVATION_DAYS',60);
-define('MAX_MEMBER_IMEI_ACTIVATIONS',2);
+define('BLOCK_MEMBER_IMEI_ACTIVATION_DAYS',1);
+define('MAX_MEMBER_IMEI_ACTIVATIONS',4);
+
 
 
 

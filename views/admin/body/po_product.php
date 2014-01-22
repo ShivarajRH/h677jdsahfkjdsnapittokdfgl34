@@ -3,17 +3,17 @@
 <div class="container">
 	<h2>Purchase Order - Productwise</h2>
 
-	
+	<!-- <div> 
+	</div> -->
 
 	<table width="100%">
 		<tr>
 			<td>
-				<input type="text" name="s" id="po_search" class="prd_blk inp" placeholder="Search &amp; Add" > 
-				<div class="prd_srch_result closeonclick" id="po_prod_list"></div>
+				 Search:<input type="text" name="s" class="prd_blk inp" placeholder="Search &amp; Add" > 
 			</td>
 			
 			<td>
-				<a href="javascript:void(0)" id="load_unavail" class="button button-rounded button-flat-primary button" style="float:right;" onclick="show()">Load</a>
+				<a href="javascript:void(0)" id="load_unavail" class="button button-rounded button-action button-small" style="float:right;" onclick="show()">Load unavailable products</a>
 				<form name="tcol" onsubmit="return false" style="float:right;margin:7px;">
 					<b>Show Offer</b> : <input type="checkbox" name="col1" onclick="toggleVis(this.name)"> 
 				</form>
@@ -77,10 +77,6 @@
 		<table id="show_submit" width="100%" >
 			<tr>
 				<td>
-			<!--  <td valign="top"><b>Expected Date of Delivary</b>:<input type="text" name="po_deliverydate" id="po_deliverydate"  style="width:207px;height:21px;">
-			<b>Remarks:</b>
-			<input type="text" name="po_remarks"  style="width:500px;height:21px;">&nbsp;&nbsp;
-			<input type="checkbox" value="1" checked="checked" name="sendpo_mail"><b>Notify Vendors By Mail</b> &nbsp;&nbsp;-->
 					
 					<button type="submit" class="button button-rounded button-action button-small" style="float: right;">Create PO</button>
 					
@@ -109,7 +105,7 @@
 	<br><br>
 	
 	<div class="datagrid_cont">
-	<h3 id="ttl_res">Total Products:</h3>
+	<h3 id="ttl_res"></h3>
 		<table class="datagrid datagridsort" width="100%">
 			<thead>
 				<tr><th><input type="checkbox" class="chk_all"></th><th>Source</th><th>Product ID</th><th>Product</th><th>Mrp</th><th style="display: none;">Margin</th><th>Stock</th><th>PO Qty</th><th>Orders[90 Days]</th></tr>
@@ -119,6 +115,9 @@
 		<br><br>
 	</div>
 </div>
+
+
+
 
 <form id="src_form" action="<?=site_url("admin/mark_src_products")?>" method="post">
 	<input type="hidden" name="pids" class="pids">
@@ -173,16 +172,16 @@
 					
 					<a target="_blank" class="pprod_name" href="<?php echo site_url('admin/product/%product_id%') ?>">%product_name%</a> &nbsp;<b>(%product_brand%)</b>
 					<br/>
-					<a href="javascript:void(0)" class="pprod_name_subwrap" onclick="view_orderdet(%product_id%)">order details&nbsp;,&nbsp;</a><a href="javascript:void(0)" class="pprod_name_subwrap" onclick="view_purchasepattern(%product_id%)">purchase pattern</a>
+					<a href="javascript:void(0)" class="pprod_name_subwrap" onclick="view_orderdet(%product_id%)">view order details&nbsp;,&nbsp;</a><a href="javascript:void(0)" class="pprod_name_subwrap" onclick="view_purchasepattern(%product_id%)">view purchase pattern</a>
 			
 					<!--  <br/>
 					Date:%last_orderdon% &nbsp;Transid:<a target="_blank" href="<?php echo site_url('admin/trans/%transid%')?>">%transid%</a></p>-->
 				</td>
 				
 				<td></td>
-				<td><input type="text" class="inp calc_pp mrp" size=7 name="mrp[]" value="%mrpvalue%"></td>
+				<td><input type="text" class="inp calc_pp mrp readonly" size=7 name="mrp[]" value="%mrpvalue%" readonly="readonly"></td>
 				<td><input type="text" title="Change/Update DP Price on change" class="inp calc_pp has_dp_price dp_price" size=5 name="dp_price[]" value="%dp_price%"></td>
-				<td><input type="text" class="inp calc_pp margin readonly" size="7" name="margin[]" readonly="readonly" value="%margin%" ></td>
+				<td><input type="text" class="inp calc_pp margin readonly" size="7" name="margin[]" readonly="readonly" value="%margin%" readonly="readonly" ></td>
 				
 				<td class="qty_price_blk" style="width:150px;font-size: 10px;" >
 					<div style="margin-bottom: 2px">
@@ -332,6 +331,7 @@
 </div>
 
 <script>
+$('#show_submit').hide();
 $('select[name="cat_prod_disp"]').live( "change",function(){
 	var sel_cat_id = $(this).val();
 	if(sel_cat_id == 0)
@@ -450,7 +450,7 @@ function load_openpolist(pid)
 function show() {
     document.getElementById("modal").style.display="block";
     //setTimeout("hide()", 38000);  // 3 seconds
-    setTimeout("hide()", 1000);  // 3 seconds
+    setTimeout("hide()", 30000);  // 3 seconds
 }
 
 function hide() {
@@ -464,22 +464,33 @@ $('#poprodfrm').submit(function(){
 		var qty_pending = 0;
 		var ven_pending = 0;
 		var marg_pending = 0;
+		var invalid_extramargin = 0;
+		var invalid_purchasevalue = 0;
 		var frmEle = $(this);
 		$('.datagrid tbody tr',frmEle).addClass('row_p');
 			$('.datagrid tbody tr:visible',frmEle).each(function(){
 				qty = $('input[name="qty[]"]',this).val()*1;
 				ven = $('select[name="vendor[]"]',this).val()*1;
 				marg = $('input[name="margin[]"]',this).val()*1;
-				
-				if(isNaN(marg) )
+				unit_price = $('input[name="price[]"]',this).val()*1;
+				extra_margin = $('input[name="sch_discount[]"]',this).val();
+
+				if(isNaN(marg) || marg =='' )
 					marg_pending += 1;
 					
 				
-				if(qty==0)
+				if(isNaN(qty) || qty==0)
 					qty_pending += 1;
 	
 				if(ven==0)
 					ven_pending += 1;
+
+				if(isNaN(extra_margin))
+					invalid_extramargin += 1;
+				
+				if(unit_price<=0)
+					invalid_purchasevalue +=1;
+				
 				$(this).removeClass('row_p');
 			});
 
@@ -496,7 +507,18 @@ $('#poprodfrm').submit(function(){
 				return false;
 			}
 	
-		
+			if(invalid_purchasevalue)
+			{
+				alert("Invalid 'Extra Margins' entered,purchase price can't be 'negative'");
+				return false;
+			}
+			
+			if(invalid_extramargin)
+			{
+				alert("Please enter valid Extra Margin");
+				return false;
+			}
+			
 			if(confirm('Are You sure want to place PO?'))
 			{
 				return true;
@@ -510,6 +532,9 @@ $('#poprodfrm').submit(function(){
 
 function loadbrandproducts()
 {
+	if($(".sl_sel_prod:checked").length==0)
+	{alert("Select atleast one product"); return false;}
+	
 	$(".sl_sel_prod:checked").each(function(){
 	$r=$(this).parents("tr").get(0);
 	addproduct($(".pid",$r).val(),$(".name",$r).html(),$(".mrp",$r).html(),$(".i_po_qty",$r).val());
@@ -518,12 +543,12 @@ function loadbrandproducts()
 	$("#sl_products").dialog('close');
 }
 
-
-
 var p_brand_list = [];
 var added_po=[];
 function remove_prod_selection(ele)
 {
+	if(confirm("Are you sure want to remove product from po list?"))
+	{
 		var trEle = $(ele).parents('tr:first');
 		var rmv_prdid = $('input[name="product[]"]',trEle).val();
 			trEle.remove();
@@ -539,11 +564,12 @@ function remove_prod_selection(ele)
 			$('#pprods tbody tr').each(function(i,ele){
 				$('td:first',this).text(i*1+1);
 			});
-			
+	}	
 }
 
 function addproduct(id,name,mrp,require)
 {
+	$('#show_submit').show();
 	if(!id)
 		return;
 	
@@ -559,7 +585,7 @@ function addproduct(id,name,mrp,require)
 		o=$.parseJSON(data);
 		i=added_po.length;
 
-	 
+	 $("input[name='s']").val(" ");
 		
 	if(data.length && data!=undefined && o.product_id != undefined)
 	{
@@ -637,6 +663,7 @@ function addproduct(id,name,mrp,require)
 		}
 		if(pprice.length)
 		{
+			
 			template=template.replace(/%pprice%/g,pprice);
 		}
 		if(o.purchase_price)
@@ -760,6 +787,7 @@ $(function(){
 
 	
 	$("#load_unavail").click(function(){
+		$('#show_submit').show();
 		$(this).hide();
 		$.post("<?=site_url("admin/jx_load_unavail_products")?>",{hash:<?=time()?>,oldest_order:'asc'},function(data){
 			os=$.parseJSON(data);
@@ -916,52 +944,27 @@ $(function(){
 	 });
 	 });
 	
-	$("#po_search").keyup(function(){
-		q=$(this).val();
-		if(jHR!=0)
-			jHR.abort();
-		clearTimeout(search_timer);
-		search_timer=setTimeout(function(){
-		jHR=$.post("<?=site_url("admin/jx_searchproducts")?>",{q:q},function(data){
-			$("#po_prod_list").html(data).show();
-		});});
-	}).focus(function(){
-		if($("#po_prod_list a").length==0)
-			return;
-		$("#po_prod_list").show();
-	}).click(function(e){
-		e.stopPropagation();
-	});
 
+$('input[name="s"]').autocomplete({
+
+	source:site_url+'/admin/jx_searchproducts_json',
+	 minLength: 2,
+	 select:function(event, ui ){
+		addproduct(ui.item.id ,ui.item.label,ui.item.mrp);
+		 }
+});
+	
 	$("#sl_show").click(function(){
 		$('select[name="cat_prod_disp"]').html("");
 		$("#sl_products").dialog('open');
+		$("#ttl_res").html('');
 	});
-/*	$('input[name="sch_type[]"] tr').live('change',function(){
-		 	sch_type=$(this).val();
-		
-		if(mrgin.length)
-			o.margin=mrgin;
-		else
-			o.margin=o.margin;
 
-		
-		if(!o.dp_price.length)
-		{
-			if(sch_type == 1)
-				pprice=mrp-(mrp*parseFloat(o.margin)/100);
-			else
-				pprice=mrp-parseFloat(o.margin);
-		}
 	
-	 });*/
-
-
 
 	
 	 $('select[name="fil_vendor"]').live("change",function(){
 			var vendorid=$(this).val();
-			
 			var vtext=$('select[name="fil_vendor"] option:selected').html();
 			//alert(vtext);
 			$('select[name="vendor[]"]:visible').find('option').each(function(){
@@ -970,7 +973,7 @@ $(function(){
 					$r=$(this).parents("tr:visible");
 					$(this,$r).attr('selected','selected');
 				    $.post("<?=site_url("admin/jx_getbrandmargin")?>",{v:$(this,$r).val(),b:$(".brand",$r).val(),c:$(".cat",$r).val()},function(data){
-						if(!data)
+						if(data)
 				    	 $(".margin",$r).val(data).change();
 					});
 				}
@@ -1319,16 +1322,16 @@ $("#sl_products").dialog({
      
 				$("#sl_products .datagrid tbody").html("<tr><td colspan='8' align='left'>Loading .....</td></tr>");
 				bid=$('select[name="fil_brand"]').val();
-				//vid=$("#vendoridhidden").val();
 				$("#loading_bar").show();
 				$.post(site_url+'/admin/jx_getproductsforbrand',{bid:bid},function(json){
 					$("#loading_bar").hide();
 					data=$.parseJSON(json);
 					brand_prods=data;
+					$('#ttl_res').html("");
 					$("#sl_products .datagrid tbody").html("");
 					if(data.length )
 					{
-					$('#ttl_res').append(data.length);
+						$('#ttl_res').html('Total Products:'+data.length);
 					$.each(data,function(i,p){
 						if(!$('select[name="cat_prod_disp"] option#cat_'+p.product_cat_id).length){
 							if(p.product_cat_id != undefined){
@@ -1392,8 +1395,9 @@ $("#sl_products").dialog({
 								},
 
 								'Mark as Sourcable' :function()
-								{
-								
+								{		
+									if($(".sl_sel_prod:checked").length==0)
+									{alert("Select atleast one product"); return false;}
 										var dlg = $(this);
 										var pids_arr=[];
 										$(".sl_sel_prod:checked").each(function(){
@@ -1415,6 +1419,8 @@ $("#sl_products").dialog({
 
 								'Mark as not Sourcable':function()
 								{ 
+									if($(".sl_sel_prod:checked").length==0)
+									{alert("Select atleast one product"); return false;}
 									var dlg = $(this);
 									var pids=[];
 									$(".sl_sel_prod:checked").each(function(){

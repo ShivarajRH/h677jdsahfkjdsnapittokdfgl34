@@ -242,7 +242,6 @@ ul.tabs li.active
 	<a href="<?=site_url("admin/viewcat/{$deal['catid']}")?>"><?=$deal['category']?></a>  &raquo; 
 	<a href="<?=site_url("admin/viewbrand/{$deal['brandid']}")?>"><?=$deal['brand']?></a>
 </div>
-
 <h3 class="page_title">
 	<br>
 	<?=$deal['name']?> <a style="font-size: 9px;" href="<?=site_url("admin/pnh_editdeal/{$deal['id']}")?>">Edit</a> 
@@ -787,7 +786,6 @@ ul.tabs li.active
 	</div>	       			
 </div>	       			
 </div>
-
 <style>
 	#description {padding:10px;background: #fcfcfc;max-height: 200px;overflow: hidden}
 	#description table{background: #FFF;font-size: 11px;width: 100%;}
@@ -981,6 +979,7 @@ function deal_sale_stat()
 			}
 		});
 }
+
 function deal_stat_pieview(state_id)
 {
 	var state_id=state_id;

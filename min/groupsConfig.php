@@ -36,7 +36,7 @@
 
 	$min_assets['js'][] = '../js/jquery.bpopup.js';//BY S
 	$min_assets['js'][] = '../js/jquery-sticky.js';//BY S
-	
+		$min_assets['js'][] = '../js/jquery.slimscroll.min.js';//BY Sur
 	
 	//JQplot Plugins for analytics view
 	$min_assets['plot_js'][] = '../js/jq_plot/jquery.jqplot.min.js';//BY Sur
@@ -68,11 +68,11 @@
 
 return array(
 
-	'js'=>array("../js/jquery.js","../js/jquery.ui.js","../js/cookie.js","../js/func.js","../js/jquery.easing.js","../js/fanb.js","../js/common.js","../js/jquery.pngFix.js","../js/countdown.js","../js/cloud-zoom.1.0.2.min.js","../js/chosen.jquery.min.js","../js/header_scripts.js","../js/jquery.printElement.js"),
+	'js'=>array("../js/jquery.js","../js/jquery.ui.js","../js/cookie.js","../js/func.js","../js/jquery.easing.js","../js/fanb.js","../js/common.js","../js/jquery.pngFix.js","../js/countdown.js","../js/cloud-zoom.1.0.2.min.js"),
 	
 	'livefeed'=>array("../js/livefeed.js"),
 	
-	'css'=>array("../css/common.css","../css/jquery.ui.css","../css/fancyb/fancy.css","../css/cloud-zoom.css","../css/chosen.css"),
+	'css'=>array("../css/common.css","../css/jquery.ui.css","../css/fancyb/fancy.css","../css/cloud-zoom.css"),
 	'erp_js' =>$min_assets['js'],
 	'jqplot_js' =>$min_assets['plot_js'],
 	'erp_css' =>$min_assets['css'],

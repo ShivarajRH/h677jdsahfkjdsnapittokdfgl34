@@ -1,3 +1,8 @@
+<style>
+    table.datagridsort thead tr .headerSortDown, table.datagridsort thead tr .headerSortUp {
+        color: blueviolet;
+    }
+</style>
 <?php
 $msg_generate_pick_list = '';
 $msg_process_by_fran = '';
@@ -32,10 +37,11 @@ if($total_trans_rows<=0) { ?>
     <?php 
 }
 else {
-    $ttl_trans_listed .= 'Showing <strong> '.$total_trans_rows.' </strong> batched process from <strong>'.date("d/m/Y",$s).'</strong> to <strong>'.date("M/d/Y",$e).'</strong> ';
+    $ttl_trans_listed .= 'Showing <strong> '.$total_trans_rows.' </strong> batched process from <strong>'.date("d/m/Y",$s).'</strong> to <strong>'.date("d/m/Y",$e).'</strong> ';
     $batch_status=array(0=>'Pending',2=>'Partial',3=>'Cancelled');
     ?>
-    <table class="datagrid" width="100%">
+    <table id="" class="datagrid datagridsort" width="100%">
+        <thead>
         <tr>
             <th width="15">#</th>
             <th width="150">Date</th>
@@ -45,26 +51,29 @@ else {
             <th width="60">No. Transactions</th>
             <th width="35">Packing Status</th>
             <th>Assigned to</th>
-            <th>Action</th>
+            <th width="400">Action</th>
         </tr>
+        </thead>
+        <tbody>
         <?php
         foreach ($batches_det as $i=>$batch_item) { ?>
         <tr>
             <td><?=++$i;?></td>
             <td><div class="str_time"><?=format_datetime($batch_item['created_on']);?></div></td>
-            <td><b><?=$batch_item['batch_id'];?></b></td>
+            <td><b><a href="<?=site_url("admin/batch/".$batch_item['batch_id']);?>" target="_blank"><?=$batch_item['batch_id'];?></a></b></td>
             <td><?=$batch_item['batch_grp_name'];?></td>
             <td><?=$batch_item['territory_name'];?></td>
             <td><?=$batch_item['num_orders'];?></td>
             <td><?=$batch_status[$batch_item['status']];?></td>
             <td align="center"><b><?=ucfirst($batch_item['assigned_to']); ?></b></td>
             <td>
-                <a class="packthis button button-rounded button-tiny button-action" href="javascript:void(0)" batch_id="<?=$batch_item['batch_id'];?>">Pack This Batch</a>
-                <a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="picklist_product_wise(this,<?=$batch_item['batch_id'];?>)">Product Pickslip</a>
-                <a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0)" onclick="picklist_fran_wise(this,<?=$batch_item['batch_id'];?>)">By Franchise Pick Slip</a>
+                <a class="packthis button button-rounded button-tiny button-action" href="javascript:void(0);" batch_id="<?=$batch_item['batch_id'];?>">Pack This Batch</a>
+                <a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0);" onclick="picklist_product_wise(this,<?=$batch_item['batch_id'];?>)">Product Pickslip</a>
+                <a class="btn_picklist button button-rounded button-tiny button-primary" href="javascript:void(0);" onclick="picklist_fran_wise(this,<?=$batch_item['batch_id'];?>)">By Franchise Pickslip</a>
             </td>
         </tr>
         <?php } ?>
+        </tbody>
     </table>
 
     <div style="display:none;" id="dlg_batch_order_list">
@@ -72,7 +81,7 @@ else {
             <h3>Batch:#<span></span></h3>
         </div>
         <div id="batch_order_list">
-        <table class='datagrid' width='100%'>
+        <table class='datagrid datagridsort' width='100%'>
             <thead>
             <tr>
                     <th>#</th>
@@ -99,7 +108,7 @@ else {
     $(".process_by_fran_link").html('<?=$msg_process_by_fran;?>');
     $(".block_alloted_status").hide();
     $(".chk_latest_batch").hide();
-    
+        
     $("#dlg_batch_order_list").dialog({
         modal:true
         ,autoOpen:false
@@ -127,9 +136,9 @@ else {
                                         <td>"+(fran_det.num_orders)+"</td>\n\
                                         <td><a style='color:#ffffff;' class='packthis button button-rounded button-tiny button-action' href='"+site_url+"/admin/pack_invoice_by_fran/"+fran_det.batch_id+"/"+fran_det.franchise_id+"' target='_blank'>Pack This Batch</a></td>\n\
                                 </tr>";
-                            
                         });
                         $("table tbody",dlt_elt).html(html);
+                        $(".datagridsort").trigger("update");
                     }
                     else {
                         $("table tbody",dlt_elt).html("<tr><td colspan='6' align='center'>"+resp.message+"</a>");
@@ -142,6 +151,21 @@ else {
     $(".packthis").click(function() {
         var batch_id = $(this).attr('batch_id');
         $("#dlg_batch_order_list").data("batch_id",batch_id).dialog("open");
+    });
+    
+    $(".datagridsort").tablesorter({
+        sortList: [[1,0]] //[0,0], 
+        //,widgets: ['zebra']
+        //,headers: { 8:{sorter: false}}
+        //,theme:'blackice'
+        //,showProcessing:true
+        // starting sort direction "asc" or "desc"
+        //,sortInitialOrder: "asc"
+        // sort empty cell to bottom, top, none, zero
+        //,emptyTo: "bottom"
+        // apply disabled classname to the pager arrows when the rows at
+        // either extreme is visible - default is true
+       // ,updateArrows: true
     });
     
 </script>

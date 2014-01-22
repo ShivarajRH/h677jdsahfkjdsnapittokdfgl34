@@ -6,10 +6,10 @@
 <div style="float: left;clear: both">
 <form  id="upd_lrno_list"action="<?php echo site_url('admin/update_bulk_lrdetails')?>" method="post">
 <table class="datagrid" width="100%">
-<thead><th>SL no</th><th>Manifesto ID (Comma separated)</th><th>LR No</th><th>No of Box's</th><th>Amount (Rs)</th></thead>
+<thead><th>SL no</th><th>Manifesto ID (Comma separated)</th><th>LR No</th><th>No of Box's</th><th>Weight (Kg)</th><th>Amount (Rs)</th></thead>
 <tbody>
 <?php for($i=1;$i<=20;$i++){?>
-<tr class="chk_entry"><td><?php echo $i;?></td><td><input type="text" name="manifest_id[]" size="40px"  value="<?php echo set_value('manifest_id')?>"></td><td><input type="text" name="lr_no[]"  value="<?php echo set_value('lr_no')?>"></td><td><input type="text" size="5" name="no_ofboxes[]" value="<?php echo set_value('no_ofboxes')?>"></td><td><input type="text" size="10" name="amt[]" value="<?php echo set_value('amt')?>"></td></tr>
+<tr class="chk_entry"><td><?php echo $i;?></td><td><input type="text" name="manifest_id[]" size="40px"  value="<?php echo set_value('manifest_id')?>"></td><td><input type="text" name="lr_no[]"  value="<?php echo set_value('lr_no')?>"></td><td><input type="text" size="5" name="no_ofboxes[]" value="<?php echo set_value('no_ofboxes')?>"></td><td><input type="text" size="10" name="weight[]" value="<?php echo set_value('weight')?>"></td><td><input type="text" size="10" name="amt[]" value="<?php echo set_value('amt')?>"></td></tr>
 <?php }?>
 </tbody>
 </table>
@@ -48,7 +48,13 @@ tfoot{display:none}
 					if(isNaN(nbx))
 						$('input[name="no_ofboxes[]"]',ele).addClass('invalid_entry');
 					if(!nbx)
-						$('input[name="no_ofboxes[]"]',ele).addClass('invalid_entry');	
+						$('input[name="no_ofboxes[]"]',ele).addClass('invalid_entry');
+							
+				var weight = $('input[name="weight[]"]',ele).val()*1;
+					if(isNaN(weight))
+						$('input[name="weight[]"]',ele).addClass('invalid_entry');
+					if(!weight)
+						$('input[name="weight[]"]',ele).addClass('invalid_entry');				
 					
 				var amt = $('input[name="amt[]"]',ele).val()*1;
 					if(isNaN(amt))

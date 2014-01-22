@@ -65,8 +65,8 @@ class Reservation extends Voucher {
             $cond = ' and f.territory_id = '.$territory_id.' ';
             
         $rslt = $this->db->query("select distinct 
-                            o.itemid,count(distinct tr.transid) as ttl_orders
-                            ,bc.id as menuid,bc.batch_grp_name as menuname,f.territory_id
+                            o.itemid,count(distinct tr.transid) as ttl_trans,group_concat(distinct tr.transid) as grp_trans
+                            ,bc.id as menuid,bc.batch_grp_name as menuname,group_concat(distinct d.menuid) as actualmenus,f.territory_id
                             ,sd.id,sd.batch_id,sd.p_invoice_no
                             ,from_unixtime(tr.init) as init,bc.batch_size,bc.group_assigned_uid as bc_group_uids
                                 from king_transactions tr
@@ -78,9 +78,11 @@ class Reservation extends Voucher {
                                 join pnh_menu mn on mn.id=d.menuid
                                 join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
                                 join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
-                                where sd.batch_id=? $cond
+                                where sd.batch_id = ? $cond and tr.batch_enabled=1
                                     group by  bc.id
                                 order by tr.init asc",GLOBAL_BATCH_ID); //,array($assigned_menuids)
+                                
+                                        
 //        echo '<pre>'.$this->db->last_query(); die();
         if($rslt->num_rows() > 0) {
             $bc_userids = array();
@@ -88,11 +90,11 @@ class Reservation extends Voucher {
             $total_orders=0;
             foreach($rslt->result_array() as $i=>$r) {
                 $arr_menus[$i]["menuid"] =$r['menuid'];
-                $arr_menus[$i]["menuname"] =$r['menuname']." (".$r['ttl_orders'].")";
-                $arr_menus[$i]["ordcount"]=$r['ttl_orders'];
+                $arr_menus[$i]["menuname"] =$r['menuname']." (".$r['ttl_trans'].")";
+                $arr_menus[$i]["ordcount"]=$r['ttl_trans'];
                 $arr_menus[$i]["batch_size"]=$r['batch_size'];
                 $arr_menus[$i]["bc_group_uids"]=$r['bc_group_uids'];
-                $total_orders+=$r['ttl_orders'];
+                $total_orders+=$r['ttl_trans'];
                 
                 foreach(explode(',',$r['bc_group_uids']) as $a_uid)
                     $bc_userids[$a_uid] = $this->db->query("select username from king_admin where id = ? ",$a_uid)->row()->username;
@@ -316,14 +318,16 @@ class Reservation extends Voucher {
         
         $data['batch_conf']=  $this->reservations->getBatchGroupConfig();
         
-        $data['pnh_terr'] = $this->db->query("select e.* from proforma_invoices a 
-                                                        join shipment_batch_process_invoice_link b on a.p_invoice_no = b.p_invoice_no 
-                                                        join king_transactions c on c.transid = a.transid  
-                                                        join pnh_m_franchise_info d on d.franchise_id = c.franchise_id and d.is_suspended = 0
-                                                        join pnh_m_territory_info e on e.id = d.territory_id 
-                                                        where a.invoice_status = 1 and batch_id = ?
-                                                        group by d.territory_id 
-                                                        order by territory_name",GLOBAL_BATCH_ID)->result_array();
+        $data['pnh_terr'] = $this->db->query("select t.* from proforma_invoices pi 
+                                                        join shipment_batch_process_invoice_link sd on pi.p_invoice_no = sd.p_invoice_no 
+                                                        join king_transactions tr on tr.transid = pi.transid  
+                                                        join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
+                                                        join pnh_m_territory_info t on t.id = f.territory_id 
+                                                        join king_orders o on o.transid=tr.transid
+                                                        left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
+                                                        where pi.invoice_status = 1 and sd.batch_id = '5000' and tr.batch_enabled=1 and i.id is null
+                                                        group by f.territory_id 
+                                                        order by t.territory_name",GLOBAL_BATCH_ID)->result_array();
         
         $data['pnh_towns']=$this->db->query("select id,town_name from pnh_towns order by town_name")->result_array();
         $data['userslist']=$this->db->query("select id,username from king_admin where account_blocked=0")->result_array();

@@ -2,12 +2,14 @@
 
 <div class="container">
     <div class="container_head">
-        <div>
+        <form id="head_filter_form" name="head_filter_form">
+            <div>
                 <h2>Manage Transaction Reservations</h2>
                 <div class="above_header_block_btns">
                     <div class="process_by_fran_link"></div>
                 </div>
             </div>
+        </form>
     </div>
     <div class="left_block fl_left">
             
@@ -48,52 +50,54 @@
             </div>
         <!--<p class="page_trans_description"></p>-->
             <div class="level1_filters">
+                
                 <fieldset>
                     <span title="Toggle Filter Block" class="close_filters"><span class="close_btn">Show</span>
                         <h3 class="filter_heading">Filters:</h3>
                     </span>
                         <div class="filters_block">
-                                
-                                <div class="group_filter">
-                                    <select id="sel_menu" name="sel_menu" colspan="2">
-                                        <option value="00">Select Menu</option>
-                                         <?php /*foreach($pnh_menu as $menu): ?>
-                                                <option value="<?php echo $menu['id'];?>"><?php echo $menu['name'];?></option>
-                                        <?php endforeach;*/ ?>
-                                    </select> &nbsp;
-                                    <select id="sel_brands" name="sel_brands">
-                                        <option value="00">Select Brands</option>
-                                         <?php /* foreach($pnh_brands as $brand): ?>
-                                                <option value="<?php echo $brand['id'];?>"><?php echo $brand['name'];?></option>
-                                        <?php endforeach; */?>
-                                    </select>
-
-
-                                    <select id="sel_territory" name="sel_territory" >
-                                        <option value="00">All Territory</option>
-                                        <?php /* foreach($pnh_terr as $terr):?>
-                                                <option value="<?php echo $terr['id'];?>"><?php echo $terr['territory_name'];?></option>
-                                        <?php endforeach; */ ?>
-                                    </select>
-                                    <select id="sel_town" name="sel_town">
-                                        <option value="00">All Towns</option>
-                                        <?php /*foreach($pnh_towns as $town): ?>
-                                                <option value="<?php echo $town['id'];?>"><?php echo $town['town_name'];?></option>
-                                        <?php endforeach; */ ?>
-                                    </select>
-                                    <select id="sel_franchise" name="sel_franchise" style="width: 204px;">
-                                        <option value="00">All Franchise</option>
-                                    </select>
-                                    <span>Batch Group Status:
-                                        <select id="sel_batch_group_type" name="sel_batch_group_type" style="width: 204px;">
-                                            <option value="00">Any</option>
-                                            <option value="1">Grouped</option>
-                                            <option value="2">Un-Grouped</option>
+                                <div class="fl_right"><a class="reset_all button button-rounded button-tiny button-caution" onclick="javascript:btn_fn_reset_filters();">Reset</a></div>
+                                <form action="" name="form_filters" id="form_filters">
+                                    <div class="group_filter">
+                                        <select id="sel_menu" name="sel_menu" colspan="2">
+                                            <option value="00">Select Menu</option>
+                                             <?php /*foreach($pnh_menu as $menu): ?>
+                                                    <option value="<?php echo $menu['id'];?>"><?php echo $menu['name'];?></option>
+                                            <?php endforeach;*/ ?>
+                                        </select> &nbsp;
+                                        <select id="sel_brands" name="sel_brands">
+                                            <option value="00">Select Brands</option>
+                                             <?php /* foreach($pnh_brands as $brand): ?>
+                                                    <option value="<?php echo $brand['id'];?>"><?php echo $brand['name'];?></option>
+                                            <?php endforeach; */?>
                                         </select>
-                                    </span>
-                                </div>
-                                <div class="clear"></div>
-                                <div>
+
+
+                                        <select id="sel_territory" name="sel_territory" >
+                                            <option value="00">All Territory</option>
+                                            <?php /* foreach($pnh_terr as $terr):?>
+                                                    <option value="<?php echo $terr['id'];?>"><?php echo $terr['territory_name'];?></option>
+                                            <?php endforeach; */ ?>
+                                        </select>
+                                        <select id="sel_town" name="sel_town">
+                                            <option value="00">All Towns</option>
+                                            <?php /*foreach($pnh_towns as $town): ?>
+                                                    <option value="<?php echo $town['id'];?>"><?php echo $town['town_name'];?></option>
+                                            <?php endforeach; */ ?>
+                                        </select>
+                                        <select id="sel_franchise" name="sel_franchise" style="width: 204px;">
+                                            <option value="00">All Franchise</option>
+                                        </select>
+                                        <span>Batch Group Type:
+                                            <select id="sel_batch_group_type" name="sel_batch_group_type" style="width: 104px;">
+                                                <option value="00">Any</option>
+                                                <option value="1">Grouped</option>
+                                                <option value="2">Un-Grouped</option>
+                                            </select>
+                                        </span>
+                                    </div>
+
+                                    <div class="clear"></div>
                                     <span class="limit_display_block">
                                         Show
                                             <select name="limit_filter" id="limit_filter">
@@ -103,38 +107,40 @@
                                             </select>
                                         items per page.
                                     </span>
-                                    <div class="date_filter">
-                                        <form id="trans_date_form" method="post">
-                                                <b>Show transactions : </b>
-                                                <label for="date_from">From :</label><input type="text" id="date_from"
-                                                        name="date_from" value="<?php //echo date('Y-m-01',time()-60*60*24*7*4*4)?>" />
-                                                <label for="date_to">To :</label><input type="text" id="date_to"
-                                                        name="date_to" value="<?php //echo date('Y-m-d',time())?>" /> 
-                                                <input type="submit" value="Submit" class="button button-tiny button-royal">
-                                        </form>
-                                    </div>
+                                </form>
+                                <div class="date_filter">
+                                    <form id="trans_date_form" method="post">
+                                            <b>Show transactions : </b>
+                                            <label for="date_from">From :</label><input type="text" id="date_from"
+                                                    name="date_from" value="<?php //echo date('Y-m-01',time()-60*60*24*7*4*4)?>" />
+                                            <label for="date_to">To :</label><input type="text" id="date_to"
+                                                    name="date_to" value="<?php //echo date('Y-m-d',time())?>" /> 
+                                            <input type="submit" value="Submit" class="button button-tiny button-royal">
+                                    </form>
                                 </div>
-
                         </div>
                         <input type="hidden" name="pg_num" class="page_num" value="0" size="3" />
                 </fieldset>
+                
             </div>
             <div class="clear"></div>
-            <div class="level2_filters">
-                    <div class="trans_pagination pagination_top"></div>
+            <form id="form_filters_2" name="form_filters_2">
+                <div class="level2_filters">
+                        <div class="trans_pagination pagination_top"></div>
 
-                    <div class="chk_latest_batch">
-                        <label for="latest_batches">Latest Batches</label>
-                        <input type="checkbox" id="latest_batches" name="latest_batches" value="<?=($latest_batches)? 1 : 0; ?>" <?=( $latest_batches ) ? 'checked' : "" ; ?> /></div>
-                        
-                    <div class="oldest_newest_sel_block"><select name="sel_old_new" id="sel_old_new"><option value="1" selected>NEWEST</option><option value="0" <?=($oldest_newest=='0') ? "selected":""; ?> >OLDEST</option></select></div>
-                    <div class="block_alloted_status"><select id="sel_alloted_status" name="sel_alloted_status"><option value="0" <?=( $alloted_status == 0 ? 'selected' : "" ); ?> >Not Alloted</option><option value="1" <?= ( $alloted_status===1 ? 'selected':'') ?> >Alloted</option></select></div>
-                    
-                    <div class="sel_terr_block"></div>
-                    <div class="sel_terr_block"></div>
-                    <span class="ttl_trans_listed dash_bar"></span>
+                        <div class="chk_latest_batch">
+                            <label for="latest_batches">Latest Batches</label>
+                            <input type="checkbox" id="latest_batches" name="latest_batches" value="<?=($latest_batches)? 1 : 0; ?>" <?=( $latest_batches ) ? 'checked' : "" ; ?> /></div>
 
-            </div>
+                        <div class="oldest_newest_sel_block"><select name="sel_old_new" id="sel_old_new"><option value="1" selected>NEWEST</option><option value="0" <?=($oldest_newest=='0') ? "selected":""; ?> >OLDEST</option></select></div>
+                        <div class="block_alloted_status"><select id="sel_alloted_status" name="sel_alloted_status"><option value="0" <?=( $alloted_status == 0 ? 'selected' : "" ); ?> >Not Alloted</option><option value="1" <?= ( $alloted_status===1 ? 'selected':'') ?> >Alloted</option></select></div>
+
+                        <div class="sel_terr_block"></div>
+                        <div class="sel_terr_block"></div>
+                        <span class="ttl_trans_listed dash_bar"></span>
+
+                </div>
+            </form>
             <div id="trans_list_replace_block"></div>
     </div>
     

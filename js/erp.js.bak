@@ -405,7 +405,7 @@ function get_unixtimetodatetime(utime)
 	var y=date.getFullYear();
     var m=date.getMonth()+1;
     var d=date.getDate();
-    var h=date.getHours();
+    var h=(date.getHours() > 9)?date.getHours()-12:date.getHours();
     var mi=date.getMinutes();
     var s=date.getSeconds();
     var datetime=d+'/'+m+'/'+y+' '+h+':'+mi+':'+s;

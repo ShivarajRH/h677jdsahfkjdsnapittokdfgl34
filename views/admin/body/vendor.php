@@ -87,7 +87,15 @@ Total PO value
 </div>
 
 <div id="v_brands">
-<h3>Linked Brands and Category Details</h3> <a class="editmargin button button-action button-rounded button-small" style="float:right;margin-top:-36px;margin-right:20px;"  href="<?php echo site_url("admin/editvendor/{$v['vendor_id']}#v_linkbrands")?>">Edit Brand Margin</a>
+<div class="po_filter_wrap2">
+<div style="width:35%;float:right;margin-top:15px;">
+	<span><b style="margin:3px 5px;float: left">Filter by : </b></span>
+	<select name='fil_brand' class='fil_brand' style="width:200px;" data-placeholder='Brand'>
+		
+	</select>
+</div>
+</div>
+<h3>Linked Brands and Category Details</h3> <a class="editmargin button button-rounded button-action button-small" style="float:right;margin-top:-36px;margin-right:20px;"  href="<?php echo site_url("admin/editvendor/{$v['vendor_id']}#v_linkbrands")?>">Edit Brand Margin</a>
 <table class="datagrid" width="100%">
 <thead>
 <tr><th>Sl no</th><th>Linked Brands</th><th>Linked Categorys </th><th>Total PO value</th></tr>
@@ -95,7 +103,7 @@ Total PO value
 <tbody>
 <?php $i=1; foreach($brands as $b){ $bid=$b['id']; $vid=$b['vendor_id']?>
 			
-<tr class="vbc_link" vendorid="<?php echo $b['vendor_id'] ;?>" brandid="<?php echo  $b['id']?>">
+<tr class="vbc_link  brandid_<?php echo $b['id'];?>" vendorid="<?php echo $b['vendor_id'] ;?>" brandid="<?php echo  $b['id']?>">
 <td><?php echo $i;?></td>
 <td><a  href="<?=site_url("admin/viewbrand/{$b['id']}")?>"><?=$b['name']?></a></td>
 <td>
@@ -111,13 +119,13 @@ Total PO value
 <?php $i++; }?>
 </tbody>
 </table>
-
 </div>
 
 
-
 <div id="v_pos">
-
+<div class="dash_bar_right">Cancelled POs : <?=$this->db->query("select count(*) as t from t_po_info where po_status=3 and vendor_id='".$v['vendor_id']."'")->row()->t; ?></div>
+<div class="dash_bar_right">Complete POs : <?=$this->db->query("select count(*) as ttl from t_po_info where po_status=2 and vendor_id='".$v['vendor_id']."'")->row()->ttl; ?></div>
+<div class="dash_bar_right">Open POs : <?=$this->db->query("select count(*) as t from t_po_info where po_status=0 and vendor_id='".$v['vendor_id']."'")->row()->t; ?></div>
 <table class="datagrid" style="margin-top:10px;" width="100%">
 <thead>
 <tr>
@@ -134,7 +142,7 @@ Total PO value
 <?php foreach($pos as $p){?>
 <tr>
 <td>PO<?=$p['po_id']?></td>
-<td><?=date("g:ia d/m/y",strtotime($p['created_on']))?></td>
+<td><?=date("d/M/Y  g:ia ",strtotime($p['created_on']))?></td>
 <td>Rs <?=number_format($p['total_value'])?></td>
 <td><?php switch($p['po_status']){
 	case 1:
@@ -169,6 +177,41 @@ Total PO value
 </div>
 <script>
 var ven_id = '<?php echo $this->uri->segment(3);?>';
+$('.fil_brand').chosen();
+$('.fil_cat').chosen();
+
+$('#v_brands').click(function(){
+	var ven_id = '<?php echo $this->uri->segment(3);?>';
+	if(ven_id)
+	{
+		$('.po_filter_wrap2').show();
+		var ven_id = '<?php echo $this->uri->segment(3);?>';
+		
+		
+		$.post(site_url+'/admin/jx_load_brand_byvendor',{ven_id:ven_id},function(resp){
+			var brand_html='';
+			if(resp.status=='error')
+			{
+				alert(resp.message);
+			}
+			else
+			{
+				brand_html+='<option value=""></option>';
+				brand_html+='<option value="0">All</option>';
+				$.each(resp.br_list,function(i,c){
+				brand_html+='<option value="'+c.brandid+'">'+c.brand_name+'</option>';
+				});
+			}
+			$('.fil_brand').html(brand_html).trigger("liszt:updated");
+		},'json');
+	}
+	else
+	{
+		$('.po_filter_wrap2').hide();
+	}
+	
+});
+
 
 
 
@@ -189,13 +232,24 @@ $('.vbc_link a.tgl_linkedcats').click(function(e){
 			}
 			else
 			{
-				qcktiphtml += '<div style="max-height:200px;overflow:auto;clear:both">';
-				qcktiphtml += '<table width="100%" border=1 class="datagrid" >';
+				qcktiphtml += '<div style="max-height:200px;overflow:auto;clear:both" id="#catbrand">';
+				qcktiphtml += '<table width="100%" border=1 class="datagrid">';
 				qcktiphtml += '<thead><tr><th>Category</th><th>Brand Margin</th><th>Applicable from</th><th>Applicable To</th></tr></thead><tbody>';
 				$.each(resp.l_catlist,function(a,b){
+					var date = new Date();
+					var d = date.getDate();
+					var m = date.getMonth();
+					m=m==0?'01':m;
+					var y = date.getFullYear();
+					var today_dt = y+"-"+m+"-"+d;
+					var is_exp = js_date_diff(today_dt,b.applicable_till);
+					if(is_exp<0)
+					{qcktiphtml+='<tr class=warn>';}
+					else
+					{qcktiphtml+='<tr>';}
 					if(b.category_name==null)
 						b.category_name='All';
-					qcktiphtml+='<tr>';
+					
 					qcktiphtml+='	<td>'+b.category_name+'</td>';
 					qcktiphtml+='	<td>'+b.brand_margin+'</td>';
 					qcktiphtml+='	<td>'+b.applicable_from+ '</td>';
@@ -219,54 +273,39 @@ $('.vbc_link a.tgl_linkedcats').click(function(e){
 
 
 
-
-
-
-
-/*function view_cat(bid)
-{
-	$('#category_det').data('bid',bid).dialog('open');
-	
-}
-	
-$("#category_det").dialog({
-modal:true,
-width:'500',
-height:'400',
-autoOpen:false,
-open:function(){
-	var	dlg = $(this);
-	$('.cat_name').html("");
-	$("#cat_link_tbl tbody").html("");
-	$.post(site_url+'/admin/to_get_linkedcatbybrandvendor',{brandid:dlg.data('bid'),vendorid:ven_id},function(resp){
-		if(resp.status=='success')
-		{
-			$(".cat_name").html('Configured Categories for '+resp.brand_name +'&nbsp;Brand');
-				
-				$.each(resp.l_catlist,function(i,c){
-				var tblrow=''
-					+"<tr>"
-					+"<td>"+c.category_name+"</td>"
-					+"<td>"+c.brand_margin+"</td>"
-					+"<td>"+c.applicable_from+"</td>"
-					+"<td>"+c.applicable_till+"</td>"
-					+"</tr>"
-					
-					$("#cat_link_tbl tbody").append(tblrow);
-
-				
-			});
-		}
-	},'json');
-}
-});*/
+$('.fil_brand').change(function(){
+	if($(this).val()==0)
+	{
+		$('#v_brands .datagrid tbody tr').show();
+	}
+	else if($(this).val()>0)
+	{
+		$('#v_brands .datagrid tbody tr').hide();
+		$('#v_brands .datagrid tbody tr.brandid_'+$(this).val()).show();
+	}
+});
 
 $('.tab_view').tabs();
 $('.leftcont').hide();
+
+
+function js_date_diff  (date2, date1) {
+    var days = 0;
+    if (date2 != null && date1 != null) {
+        date1 = new Date(date1).getTime();
+        date2 = new Date(date2).getTime();
+        var timediff = date1 - date2;
+		if (!isNaN(timediff)) {
+            //day 86400000 = second = 1000,minute = second * 60,hour = minute * 60,day = hour * 24, to get day
+            days = Math.floor(timediff / 86400000);
+        }
+    }
+
+    return days;
+};
 </script>
 
 <style>
-
 #v_contact_cont table{
 margin:10px;
 border:1px solid #ccc;
@@ -300,6 +339,8 @@ padding:5px;
     margin: 2px 0;
     padding: 2px;
 }
+
+.warn td{background: #FDD2D2 !important;}
 </style>
 
 <?php

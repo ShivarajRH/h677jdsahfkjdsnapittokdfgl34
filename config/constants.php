@@ -37,9 +37,7 @@ define('FOPEN_WRITE_CREATE_STRICT', 			'xb');
 define('FOPEN_READ_WRITE_CREATE_STRICT',		'x+b');
 
 define('APP_DOMAIN_LINK',"snapittoday.com");
-define('IMAGES_URL',"http://static.snapittoday.com/");
-define('ERP_IMAGES_URL',"http://static.snapittoday.com/erp_images/");
-define('ERP_PHYSICAL_IMAGES',"images/erp_images/");
+
 
 define('FB_APPID','127409457364009');
 define('FB_SECRET','d85747b3cf547800c8653de33d0770ad');
@@ -60,8 +58,14 @@ define('GMAP_KEY','ABQIAAAAeNP67zzDfiHO9x8bftOY2hR2xb83VVuvy_z2dBdLSs4PrqlsDRTq2
 define("CS_TELEPHONE","+91-92-4340-4342");
 define("CS_EMAIL","hello@snapittoday.com");
 
+define('REQUEST_URI',$_SERVER['REQUEST_URI']);
 
-define("CRON_IMAGES_LOC","/home/snapitto/cron_images_updater/imgs/subfolder/images/");
+define('IMAGES_URL',"http://static.snapittoday.com/");
+
+define('ERP_IMAGES_URL',"http://".$_SERVER['HTTP_HOST']."/images/erp_images/");
+define('ERP_PHYSICAL_IMAGES',"images/erp_images/");
+
+
 
 define('HTTP_IS_AJAX', isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
 

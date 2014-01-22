@@ -11,10 +11,12 @@
 Registered 
 </div>
 
+<?php/*
 <div class="dash_bar">
 <span><?=$suspended_frans_ttl?></span>
 Suspended
 </div>
+*/?>
 
 <div class="dash_bar">
 <span><?=count($frans)-$suspended_frans_ttl?></span>

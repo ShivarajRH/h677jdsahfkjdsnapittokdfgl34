@@ -1,15 +1,26 @@
 <?php 
 	$user=$this->erpm->auth(PURCHASE_ORDER_ROLE);
-	$no_days = date_diff_days(date('Y-m-d'),$po['date_of_delivery']);
-	$is_po_exp = 0;
-	if($no_days > 0)
+	if($po['date_of_delivery']!=null)
 	{
-		$poid=$po['po_id'];
-		$remarks='By System';
-		if($this->db->query("select * from t_po_info where po_status!=3 and po_id=?",$poid)->num_rows()!=0)
-			$this->db->query("update t_po_info set po_status=3,status_remarks=?,modified_on=now(),modified_by=? where po_id=? limit 1",array($remarks,$user['userid'],$poid));
-		$is_po_exp = 1;
+		
+		$no_days = date_diff_days(date('Y-m-d'),$po['date_of_delivery']);
+		$is_po_exp = 0;
+		
+		if($no_days > 0 && $no_days != 0)
+		{
+			
+			$poid=$po['po_id'];
+			$remarks='By System';
+			if($this->db->query("select * from t_po_info where po_status not in(2,3) and po_id=?",$poid)->num_rows()!=0)
+				$this->db->query("update t_po_info set po_status=3,status_remarks=?,modified_on=now(),modified_by=? where po_id=? limit 1",array($remarks,$user['userid'],$poid));
+			$is_po_exp = 1;
+		}
 	}
+	
+	//check if po has grn
+	$has_grn=0;
+	if($this->db->query("select * from t_grn_product_link where po_id=?",$po['po_id'])->num_rows()!=0)
+	$has_grn=1;
 	?>
 <?php $po_status_arr=array();
 $po_status_arr[0]="Open";
@@ -21,7 +32,9 @@ $po_status_arr[3]="Cancelled";?>
 		<?php if($po['po_status']!="2" && $po['po_status']!="3"){?>
 			<a onclick='closepo( )' href="javascript:void(0)" class="button button-tiny button-caution button-rounded" >Close PO</a>
 		<?php } ?>
-		<a class="button button-tiny" onclick="print_po(<?=$po['po_id']?>)" >Print po</a>
+		<?php if($po['po_status']!="3"){?>
+		<a class="button button-tiny" onclick="print_po(<?=$po['po_id']?>)" style="cursor: pointer;">Print po</a>
+		<?php }?>
 	</span>
 	<h2>Purchase Order : <?=$po['po_id']?></h2>
 
@@ -42,7 +55,7 @@ $po_status_arr[3]="Cancelled";?>
 <?php }?>
 <tr><td><b>Created By</b></td><td>|</td><td><?=$po['created_byname'] ?></td></tr>
 <?php if(!$po['date_of_delivery'] || !$po['remarks']){?>
-<tr><td><input onclick='update_po_det(<?php echo $po['po_id'] ?>)' class="update_link button-rounded button button-flat-caution button-small" value="Update Remarks"></td></tr>
+<tr><td><input onclick='update_po_det(<?php echo $po['po_id'] ?>)' class="update_link button-rounded button button-flat-caution button-small" value="Update Remarks" style="cursor: pointer;"></td></tr>
 <?php }?>
 </div>
 </tbody>
@@ -57,8 +70,11 @@ $po_status_arr[3]="Cancelled";?>
 <td>
 <?if($po['po_status']==0){?>
 <span style="color: orange"><b><?php echo $po_status_arr[$po['po_status']]?></b></span>
-<?php }if($po['po_status']==3){?>
+
+<?php }elseif($po['po_status']==3){?>
 <span style="color: red"><b><?php echo $po_status_arr[$po['po_status']] ?></b></span>
+<?php }else{?>
+<span><b><?php echo $po_status_arr[$po['po_status']] ?></b></span>
 <?php }?>
 </td></tr>
 <?php if($po['modified_on']!=null){?>
@@ -80,6 +96,7 @@ $po_status_arr[3]="Cancelled";?>
 <ul>
 <li><a href="#po_list"><b>Product List</b></a></li>
 <li><a href="#po_removedlist"><b>Removed Product List</b></a></li>
+<?php if($has_grn == '1') {?><li><a href="#grn_info"><b>Grn Details</b></a></li><?php }?>
 </ul>
 <div id="po_list">
 <table class="datagrid" width="100%">
@@ -94,7 +111,8 @@ $po_status_arr[3]="Cancelled";?>
 <th>Scheme Discount</th>
 <th style="text-align:right;">Unit Price</th>
 <th style="text-align:right;">Sub Total</th>
-<th style="text-align:right;">Action</th>
+<th></th>
+<!-- <th style="text-align:right;">Action</th> -->
 </thead>
 <tbody>
 <?php $sno=1; foreach($items as $i){
@@ -111,7 +129,9 @@ $po_status_arr[3]="Cancelled";?>
 <td><?=$i['scheme_discount_value']?$i['scheme_discount_value']:0?>%</td>
 <td style="text-align:right;"><?=format_price($i['purchase_price'])?></td>
 <td style="text-align:right;"><?=format_price($i['purchase_price']*$i['order_qty'])?></td>
+<?php if($i['received_qty']==0){?>
 <td style="text-align:right;"><a href="javascript:void(0)" onclick="remove_prod_frmpo(<?php echo $i['product_id']?>)" prodid=<?php echo $i['product_id'];?> ><img  src="<?php echo base_url().'images/icon_delete13.gif'?>"></a></td>
+<?php }?>
 </tr>
 <?php }?>
 </tbody>
@@ -120,6 +140,7 @@ $po_status_arr[3]="Cancelled";?>
 <div style="float:right;margin-right: 65px;margin-top:-11px;">
 <b>Total Purchase Value:Rs&nbsp;&nbsp;<?=format_price($ttl_po_val)?></b>
 </div>
+
 </div>
 
 <div id="po_removedlist">
@@ -161,7 +182,19 @@ $po_status_arr[3]="Cancelled";?>
 </table>
 
 </div>
-
+<?php if($has_grn == '1') {?>
+<div id="grn_info">
+<table class="datagrid" width="100%">
+<thead><th>Slno</th><th>Grn ID</th><th>Product</th><th>Invoiced Qty</th><th>Received Qty</th><th>MRP</th><th>Tax</th><th>Purchase Price</th><th>Invoice</th><th>Amount</th><th>Accounted Status</th><th>Stock Intake By</th><th>Created on</th></thead>
+<tbody>
+<?php if($grns){ $i=1;foreach($grns->result_array() as $grn){?>
+<tr><td><?=$i?></td><td><a target="_blank" href="<?php echo site_url("admin/viewgrn/{$grn['grn_id']}")?>"><?=$grn['grn_id']?></a></td><td><a href="<?=site_url("admin/product/{$grn['product_id']}")?>"><?=$grn['product_name']?></a></td><td><?=$grn['invoice_qty']?></td><td><?=$grn['received_qty']?></td><td><?=$grn['mrp']?></td><td><?=$grn['tax_percent']?></td><td><?=$grn['purchase_price']?></td><td><?=$grn['purchase_inv_no']?></td><td><?=$grn['purchase_inv_value']?></td><td><?=$grn['payment_status']==0?'UnAccounted':'Accounted';?></td><td><?=$this->db->query("select a.name from king_admin a join t_stock_update_log l on l.grn_id=? where a.id=l.created_by",$grn['grn_id'])->row()->name?></td><td><?=format_datetime($grn['created_on'])?></td></tr>
+<?php }$i++;?>
+<?php }?>
+</tbody>
+</table>
+</div>
+<?php }?>
 </div>
 
 <div id="status_rmrks_div" title="Reason for Closing Purchase order">
@@ -170,11 +203,11 @@ $po_status_arr[3]="Cancelled";?>
 </form>
 </div>
 
-<div id="update_po_delivery_det" title="update Expected delivery details" style="display:none;">
+<div id="update_po_delivery_det" title="Update Expected Delivery Details" style="display:none;">
 <form method="post" action="<?php echo site_url('admin/updatedeliverydate/'.$po['po_id'])?>" id="delivery_det_frm"  data-validate="parsley" >
-<table>
-<tr><td>Expected Delivery Date</td><td><input type="text" name="po_deliverydate" id="po_deliverydate" value="" data-required="true"></td></tr>
-<tr><td>Remarks</td><td><textarea name="po_remarks" value="" data-required="true"></textarea></td></tr>
+<table cellpadding="5">
+<tr><td valign="top">Expected Delivery Date</td><td><input type="text" name="po_deliverydate" id="po_deliverydate" value="" data-required="true" readonly="readonly"></td></tr>
+<tr><td valign="top">Remarks</td><td><textarea name="po_remarks" value="" data-required="true" style="width:263px;height:80px;"></textarea></td></tr>
 </table>
 </form>
 </div>
@@ -190,8 +223,8 @@ $('#update_po_delivery_det').dialog({
 	modal:true,
 	autoOpen:false,
 	autoResize:true,
-	width:'400',
-	height:'auto',
+	width:'484',
+	height:'238',
 	open:function(){
 		
 	},
