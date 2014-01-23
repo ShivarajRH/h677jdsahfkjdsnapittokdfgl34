@@ -711,7 +711,7 @@ class Pnh extends Controller{
 						// Insert into sms_invoice_log table	
 						$this->db->query("insert into sms_invoice_log(type,fid,invoice_no,emp_id1,emp_id2,status,logged_on,logged_by)values(1,?,?,?,0,1,now(),?)",array($f_id,$invno,$emp_id,$emp_id));
 						
-						$this->db->query("insert into pnh_invoice_transit_log(sent_log_id,invoice_no,ref_id,status,logged_on,logged_by)values(?,?,?,3,now(),0)",array($inv_transit_det['sent_log_id'],$invno,$emp_id));
+						$this->db->query("insert into pnh_invoice_transit_log(sent_log_id,invoice_no,ref_id,status,logged_on,logged_by,received_on)values(?,?,?,3,now(),0,now())",array($inv_transit_det['sent_log_id'],$invno,$emp_id));
 						
 						$log_prm2=array();
 						$log_prm2['emp_id']=$emp_id;

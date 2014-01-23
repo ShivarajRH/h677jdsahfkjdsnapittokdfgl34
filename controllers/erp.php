@@ -2510,6 +2510,14 @@ order by product_name";
 	function mark_c_refund($rid="",$from_pending=false)
 	{
 		$user=$this->auth(true);
+		
+		$transid = $this->db->query("select transid from t_refund_info where refund_id=?",$rid)->row()->transid;
+		
+		// check if valid to process refund 
+		$process_refund = $this->erpm->_valid_transforrefund($transid);
+		if(!$process_refund)
+			show_error('Refund cannot be processed for Partner/Storeking Transactions');
+		
 		$this->db->query("update t_refund_info set status=1,modified_on=?,modified_by=? where refund_id=?",array(time(),$user['userid'],$rid));
 		$r=$this->db->query("select r.invoice_no,r.amount,t.is_pnh,r.transid,t.franchise_id,r.refund_for from t_refund_info r join king_transactions t on t.transid=r.transid where r.refund_id=?",$rid)->row_array();
 		if($r['is_pnh']!=0)
@@ -2536,7 +2544,7 @@ order by product_name";
 			  
 		}
 		if(!$from_pending)
-			redirect("admin/trans/".$this->db->query("select transid from t_refund_info where refund_id=?",$rid)->row()->transid);
+			redirect("admin/trans/".$transid);
 		redirect("admin/pending_refunds_list");
 	}
 	
@@ -2547,16 +2555,25 @@ order by product_name";
 		$oid=$this->input->post("nc_oid");
 		$qty=$this->input->post("nc_qty");
 		$n_oid=random_string("numeric",10);
+		$is_pnh=$this->db->query("select * from king_transactions where transid=?",$transid)->row()->is_pnh;
 		$order=$this->db->query("select * from king_orders where id=?",$oid)->row_array();
+		
 		$prod=$this->db->query("select name from king_dealitems where id=?",$order['itemid'])->row_array();
 		$n_qty=$order['quantity']-$qty;
 		$inp=array($n_oid,$transid,$order['userid'],$order['itemid'],$order['vendorid'],$order['brandid'],$n_qty,3,$order['i_orgprice'],$order['i_price'],$order['i_nlc'],$order['i_phc'],$order['i_tax'],$order['i_discount'],$order['i_coup_discount'],$order['i_discount_applied_on'],$order['time'],time());
+		
 		$this->db->query("insert into king_orders(id,transid,userid,itemid,vendorid,brandid,quantity,status,i_orgprice,i_price,i_nlc,i_phc,i_tax,i_discount,i_coup_discount,i_discount_applied_on,time,actiontime) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",$inp);
 		$this->db->query("update king_orders set quantity=? where id=? limit 1",array($qty,$oid));
 		$this->erpm->do_trans_changelog($transid,"Order '{$prod['name']}' quantity changed from {$order['quantity']} to {$qty}");
-		$this->db->query("insert into t_refund_info(transid,amount,status,created_on,created_by) values(?,?,?,?,?)",array($transid,$refund,0,time(),$user['userid']));
-		$rid=$this->db->insert_id();
-		$this->db->query("insert into t_refund_order_item_link(refund_id,order_id,qty) values(?,?,?)",array($rid,$n_oid,$n_qty));
+		
+		// check if transactions is ready to process refund 
+		if($this->erpm->_valid_transforrefund($transid))
+		{
+			$this->db->query("insert into t_refund_info(transid,amount,status,created_on,created_by) values(?,?,?,?,?)",array($transid,$refund,0,time(),$user['userid']));
+			$rid=$this->db->insert_id();
+			$this->db->query("insert into t_refund_order_item_link(refund_id,order_id,qty) values(?,?,?)",array($rid,$n_oid,$n_qty));
+		}
+		
 		redirect("admin/trans/{$transid}");
 	}
 	
@@ -8530,8 +8547,7 @@ group by product_id,location",$bid)->result_array();
 			$from=strtotime($s);
 			$to=strtotime("23:59:59 $e");
 		}
-	//	$sql="select s.*,f.franchise_name,a.name as created_by from pnh_sch_discount_track s join pnh_m_franchise_info f on f.franchise_id=s.franchise_id left outer join king_admin a on a.id=s.created_by where 1 ";
-		$sql="SELECT s.*,f.franchise_name,a.name AS created_by ,d.name AS deal FROM pnh_sch_discount_track s JOIN pnh_m_franchise_info f ON f.franchise_id=s.franchise_id  LEFT JOIN king_dealitems d ON d.id=s.dealid LEFT OUTER JOIN king_admin a ON a.id=s.created_by WHERE 1 ";
+		$sql="select s.*,f.franchise_name,a.name as created_by from pnh_sch_discount_track s join pnh_m_franchise_info f on f.franchise_id=s.franchise_id left outer join king_admin a on a.id=s.created_by where 1 ";
 		$title="Scheme discounts added";
 		if($fid)
 			$sql.=" and s.franchise_id=?";
@@ -8544,7 +8560,6 @@ group by product_id,location",$bid)->result_array();
 		$data['pagetitle']=$title;
 		$data['discs']=$this->db->query($sql,$fid)->result_array();
 		$data['page']="pnh_sch_discounts";
-		
 		$this->load->view("admin",$data);
 	}
 	
@@ -8726,9 +8741,8 @@ group by product_id,location",$bid)->result_array();
 		$user=$this->auth(SPECIAL_MARGIN_UPDATE);
 		if($_POST)
 		{
-			foreach(array("discount","start","end","reason","menu","brand","cat","fids","bulk_schtype","target_value","credit_prc","credit_value","mscheme_type","mscheme_val","msch_applyfrm","expire_prevsch","disc_ondeal","dealids") as $i)
+			foreach(array("discount","start","end","reason","menu","brand","cat","fids","bulk_schtype","target_value","credit_prc","credit_value","mscheme_type","mscheme_val","msch_applyfrm","expire_prevsch") as $i)
 				$$i=$this->input->post($i);
-			
 			if(empty($fids))
 				show_error("No Franchises selected");
 			$start=strtotime($start);
@@ -8741,56 +8755,34 @@ group by product_id,location",$bid)->result_array();
 			{
 				if($bulk_schtype==1)//if scheme discount
 				{
-					
-					
-					if($brand==0 &&  !$disc_ondeal)
+					if($brand==0)
 					{
-						$fran_sch=$this->db->query('select * from pnh_sch_discount_brands where franchise_id=? and menuid like ?  and catid like ? and is_sch_enabled=1 and dealid=0',array($fid,'%'.$menu.'%','%'.$cat.'%'))->result_array();
+						$fran_sch=$this->db->query('select * from pnh_sch_discount_brands where franchise_id=? and menuid like ?  and catid like ? and is_sch_enabled=1 ',array($fid,'%'.$menu.'%','%'.$cat.'%'))->result_array();
 						foreach($fran_sch as $fransch)
 						{
-							$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0 where franchise_id=? and menuid=? and catid=? and dealid=0",array($fid,$menu,$cat));
+							$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0 where franchise_id=? and menuid=? and catid=?",array($fid,$menu,$cat));
 							$this->db->query("update pnh_franchise_menu_link set sch_discount=?,sch_discount_start=?,sch_discount_end=?,is_sch_enabled=0 where fid=? and menuid=?",array($discount,$start,$end,$fid,$menu));
 						}
 					}
-					else if(!$disc_ondeal)
+					else
 					 
-					 {
-						$fran_sch=$this->db->query('select * from pnh_sch_discount_brands where franchise_id=? and menuid like ? and brandid like ? and catid like ? and is_sch_enabled=1 and dealid=0',array($fid,'%'.$menu.'%','%'.$brand.'%','%'.$cat.'%'))->result_array();
-						
-							foreach($fran_sch as $fransch)
+					 {	
+						$fran_sch=$this->db->query('select * from pnh_sch_discount_brands where franchise_id=? and menuid like ? and brandid like ? and catid like ? and is_sch_enabled=1 ',array($fid,'%'.$menu.'%','%'.$brand.'%','%'.$cat.'%'))->result_array();
+						foreach($fran_sch as $fransch)
+						{
+							if($fransch['valid_from']<time() && $fransch['valid_to']>time() && $fransch['is_sch_enabled']==1)
 							{
-								if($fransch['valid_from']<time() && $fransch['valid_to']>time() && $fransch['is_sch_enabled']==1)
-								{
-									$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0 where franchise_id=? and menuid=? and brandid=? and catid=? and dealid=0",array($fid,$menu,$brand,$cat));
-									$this->db->query("update pnh_franchise_menu_link set sch_discount=?,sch_discount_start=?,sch_discount_end=?,is_sch_enabled=0 where fid=? and menuid=?",array($discount,$start,$end,$fid,$menu));
-								}
-									
+								$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0 where franchise_id=? and menuid=? and brandid=? and catid=? ",array($fid,$menu,$brand,$cat));
+								$this->db->query("update pnh_franchise_menu_link set sch_discount=?,sch_discount_start=?,sch_discount_end=?,is_sch_enabled=0 where fid=? and menuid=?",array($discount,$start,$end,$fid,$menu));
 							}
-						
+								
+						}
 					 }
-					 
-					 if($disc_ondeal)
-					 {
-					 	foreach($dealids as $dealid)
-					 	{
-					 		$fran_sch=$this->db->query('select * from pnh_sch_discount_brands where franchise_id=? and menuid like ? and brandid like ? and catid like ? and is_sch_enabled=1 and dealid=?',array($fid,'%'.$menu.'%','%'.$brand.'%','%'.$cat.'%',$dealid))->row_array();
-					 		if($fran_sch['valid_from']<time() && $fran_sch['valid_to']>time() && $fran_sch['is_sch_enabled']==1)
-								{
-									$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0 where franchise_id=? and menuid=? and brandid=? and catid=? and dealid=?",array($fid,$menu,$brand,$cat,$dealid));
-									//$this->db->query("update pnh_sch_discount_track set is_sch_enabled=0 where franchise_id=? and sch_menu=? and brandid=? and catid=? and dealid=?",array($fid,$menu,$brand,$cat,$dealid));
-								}
-					 		$inp=array("franchise_id"=>$fid,"sch_menu"=>$menu,"catid"=>$cat,"brandid"=>$brand,"sch_discount"=>$discount,"sch_discount_start"=>$start,"sch_discount_end"=>$end,'reason'=>$reason,"created_by"=>$user['userid'],"created_on"=>time(),"sch_type"=>1,"dealid"=>$dealid);
-					 		$this->db->insert("pnh_sch_discount_track",$inp);
-					 		$inp=array("franchise_id"=>$fid,"menuid"=>$menu,"discount"=>$discount,"valid_from"=>$start,"valid_to"=>$end,"brandid"=>$brand,"created_on"=>time(),"created_by"=>$user['userid'],"catid"=>$cat,"is_sch_enabled"=>1,"sch_type"=>1,"dealid"=>$dealid);
-					 		$this->db->insert("pnh_sch_discount_brands",$inp);
-					 	}
-					 }else 
-					 {
-						$inp=array("franchise_id"=>$fid,"sch_menu"=>$menu,"catid"=>$cat,"brandid"=>$brand,"sch_discount"=>$discount,"sch_discount_start"=>$start,"sch_discount_end"=>$end,'reason'=>$reason,"created_by"=>$user['userid'],"created_on"=>time(),"sch_type"=>1);
-						$this->db->insert("pnh_sch_discount_track",$inp);
-						$inp=array("franchise_id"=>$fid,"menuid"=>$menu,"discount"=>$discount,"valid_from"=>$start,"valid_to"=>$end,"brandid"=>$brand,"created_on"=>time(),"created_by"=>$user['userid'],"catid"=>$cat,"is_sch_enabled"=>1,"sch_type"=>1);
-						$this->db->insert("pnh_sch_discount_brands",$inp);
-					 }
+					$inp=array("franchise_id"=>$fid,"sch_menu"=>$menu,"catid"=>$cat,"brandid"=>$brand,"sch_discount"=>$discount,"sch_discount_start"=>$start,"sch_discount_end"=>$end,'reason'=>$reason,"created_by"=>$user['userid'],"created_on"=>time(),"sch_type"=>1);
+					$this->db->insert("pnh_sch_discount_track",$inp);
+					$inp=array("franchise_id"=>$fid,"menuid"=>$menu,"discount"=>$discount,"valid_from"=>$start,"valid_to"=>$end,"brandid"=>$brand,"created_on"=>time(),"created_by"=>$user['userid'],"catid"=>$cat,"is_sch_enabled"=>1,"sch_type"=>1);
+					$this->db->insert("pnh_sch_discount_brands",$inp);
+					
 				
 				}
 				
@@ -11849,11 +11841,18 @@ order by action_date";
 				$oid_list = @$this->db->query("select id,quantity from king_orders where status = 0 and transid = ? ",$transid)->result_array();
 				if($oid_list)
 				{
-					$this->db->query("insert into t_refund_info(transid,amount,status,created_on,created_by) values(?,?,?,?,?)",array($transid,$refund,1,time(),$user['userid']));
-					$rid=$this->db->insert_id();
+					$process_refund = $this->erpm->_valid_transforrefund($transid); 
+					if($process_refund)
+					{
+						$this->db->query("insert into t_refund_info(transid,amount,status,created_on,created_by) values(?,?,?,?,?)",array($transid,$refund,1,time(),$user['userid']));
+						$rid=$this->db->insert_id();
+					}
+					
 					foreach($oid_list as $o)
 					{
-						$this->db->query("insert into t_refund_order_item_link(refund_id,order_id,qty) values(?,?,?)",array($rid,$o['id'],$o['quantity']));
+						if($process_refund)
+							$this->db->query("insert into t_refund_order_item_link(refund_id,order_id,qty) values(?,?,?)",array($rid,$o['id'],$o['quantity']));
+						
 						$this->db->query("update king_orders set status=3,actiontime=".time()." where id=? limit 1",$o['id']);
 						$output[] = '"'.$transid.'","'.$o['id'].'","Cancelled"';
 					}
@@ -17830,7 +17829,7 @@ order by action_date";
 			}
 			else 
 			{
-				$param1['sent_on']=cur_datetime();
+				//$param1['sent_on']=cur_datetime();
 				$param1['modified_on']=cur_datetime();
 				$param1['modified_by']=$user_det['userid'];
 				
@@ -19021,98 +19020,56 @@ order by action_date";
 		 * load all franchise by menuid and territory
 		 * @param unknown_type $menu_id
 		 */
-		function get_franchisebymenu_id($menu_id=0,$territory_id=0,$townid=0,$sch_type=0)
+		function get_franchisebymenu_id($menu_id=0,$territory_id=0,$townid=0)
 		{
 			$cond='';
-			$output=array();
-		
+			
 			if(!$territory_id)
 			{
 				$territory_id=$this->input->post('territoryid');
 				if($territory_id)
 					if(is_array($territory_id))
-					$territory_id=implode(',',array_filter($territory_id));
+						$territory_id=implode(',',array_filter($territory_id));
 			}
-		
+			
 			if(!$townid)
 			{
 				$townid=$this->input->post('townid');
 				if($townid)
 					if(is_array($townid))
-					$townid=implode(',',array_filter($townid));
+						$townid=implode(',',array_filter($townid));
 			}
-		
+			
 			if(!$menu_id)
 			{
 				$menu_id=$this->input->post('menuid');
 				if($menu_id)
 					if(is_array($menu_id))
-					$menu_id=implode(',',array_filter($menu_id));
+						$menu_id=implode(',',array_filter($menu_id));
 			}
-		
+			
 			if($menu_id)
 				$cond.=" and a.menuid in ($menu_id)";
 		
 			if($territory_id )
 				$cond.=" and b.territory_id in ($territory_id)";
-		
+			
 			if($townid)
 				$cond.=" and b.town_id in ($townid) ";
-		
-		
+			
+
 			$user=$this->auth_pnh_employee();
-		
-			$franchise_list = $this->db->query("SELECT a.fid,b.franchise_name,is_suspended,b.territory_id,t.territory_name,b.town_id,tw.town_name
-					FROM `pnh_franchise_menu_link`a
-					JOIN pnh_m_franchise_info b ON b.franchise_id=a.fid
-					JOIN pnh_m_territory_info t ON t.id=b.territory_id
-					JOIN pnh_towns tw ON tw.id=b.town_id
-					WHERE b.is_suspended != 1 AND a.status=1 $cond
-					GROUP BY a.fid
-					ORDER BY b.franchise_name ASC ");
-		
-					$fran_schstatus=array();
-					$fran_schstatus['has_nosch']=array();
-		
-			//check if scheme is not alloted
-			if($franchise_list)
-			{
-				foreach($franchise_list->result_array() as $fran_schdisc)
-				{
-					if($sch_type==1)
-					{
-						if($this->db->query("select DISTINCT franchise_id from  pnh_sch_discount_brands where franchise_id=? and ? between valid_from and valid_to and is_sch_enabled=1",array($fran_schdisc['fid'],time()))->num_rows()!=0)
-						{
-							array_push($fran_schstatus['has_nosch'], $fran_schdisc['fid']);
-						}
-					}
-					if($sch_type==3)
-					{
-						if($this->db->query("select DISTINCT franchise_id from  imei_m_scheme where franchise_id=? and ? between sch_apply_from and scheme_to and is_active=1",array($fran_schdisc['fid'],time()))->num_rows()!=0)
-						{
-							array_push($fran_schstatus['has_nosch'], $fran_schdisc['fid']);
-						}
-					}
-					if($sch_type==2)
-					{
-						if($this->db->query("select DISTINCT franchise_id from  pnh_super_scheme where franchise_id=? and ? between valid_from and valid_to and is_active=1",array($fran_schdisc['fid'],time()))->num_rows()!=0)
-						{
-							array_push($fran_schstatus['has_nosch'], $fran_schdisc['fid']);
-						}
-					}
-				}
-			}
-		
-		
+			$franchise_list = $this->db->query("SELECT a.fid,b.franchise_name,is_suspended
+													FROM `pnh_franchise_menu_link`a
+													JOIN pnh_m_franchise_info b ON b.franchise_id=a.fid
+													WHERE b.is_suspended != 1 AND a.status=1 $cond
+													group by a.fid									
+													order by b.franchise_name asc ");
+			$output=array();
 			if($franchise_list ->num_rows())
 			{
-					$output['menu_fran_list'] = $franchise_list->result_array();
-					$output['status']='success';
-					$output['has_nosch']=$fran_schstatus['has_nosch'];
-					/*$output['has_nombrsch']=$fran_schstatus['has_nombrsch'];
-					$output['has_nosuprsch']=$fran_schstatus['has_nosupersch'];
-					$output['new_fran']=$fran_schstatus['new_fran'];*/
-		
+				$output['menu_fran_list'] = $franchise_list->result_array();
+				$output['status']='success';
 			}
 			else
 			{
@@ -19120,52 +19077,6 @@ order by action_date";
 				$output['message']='No franchise Found';
 			}
 			echo json_encode($output);
-		}
-		
-		
-		function jx_check_has_scheme($menuid=0,$catid=0,$brandid=0,$sch_type=0)
-		{
-			$output=array();
-			$fran_schstatus=array();
-			$fran_schstatus['has_schdisc']=array();
-			$fran_schstatus['has_mbrsch']=array();
-			$fran_schstatus['has_supersch']=array();
-		
-			if($sch_type==1)
-			{
-				$has_sch_disc=$this->db->query("select distinct franchise_id  from  pnh_sch_discount_brands where menuid=? and catid=? and brandid=? and ? between valid_from and valid_to and is_sch_enabled=1",array($menuid,$catid,$brandid,time()));
-				if($has_sch_disc)
-				{
-		
-					$output['status']='success';
-					$output['has_sch_disc']=$has_sch_disc->result_array();
-				}
-		
-			}
-		
-			if($sch_type==3)
-			{
-				$has_mbr_sch = $this->db->query("select distinct franchise_id from  imei_m_scheme where menuid=? and categoryid=? and brandid=? and ? between sch_apply_from and scheme_to and is_active=1",array($menuid,$catid,$brandid,time()));
-		
-				if($has_mbr_sch)
-				{
-					$output['status']='success';
-					$output['has_sch_disc']=$has_mbr_sch->result_array();
-				}
-			}
-			if($sch_type==2)
-			{
-				$has_spr_sch=$this->db->query("select distinct franchise_id from  pnh_super_scheme where menu_id=? and cat_id=? and brand_id=? and ? between valid_from and valid_to and is_active=1",array($menuid,$catid,$brandid,time()));
-				if($has_spr_sch)
-				{
-		
-					$output['status']='success';
-					$output['has_sch_disc']=$has_spr_sch->result_array();
-				}
-			}
-		
-			echo json_encode($output);
-		
 		}
 		
 		function get_franchisemenuby_twnid($town_id=0)
@@ -21861,6 +21772,10 @@ die; */
 				$param['sent_log_id']=$send_log_id;
 				$param['invoice_no']=$incoice;
 				$param['status']=3;
+				
+				if(!$received_on[$i] && $received_on[$i]=='')
+					show_error("Delivered date must be require");
+				
 				$param['received_by']=$received_by[$i];
 				$param['received_on']=$received_on[$i];
 				$param['contact_no']=$contact_no[$i];
@@ -21896,11 +21811,20 @@ die; */
 		
 		foreach(explode(',',$invoices) as $invoice)
 		{
+			$inv_trans_det = array('received_on_f'=>'','received_by'=>'','contact_no'=>'','received_on'=>'');
 			$already=0;
-			$check_status=$this->db->query("select count(*) as ttl from pnh_invoice_transit_log where invoice_no=? and (status=3 || status=4)",array($invoice))->row()->ttl;
-			if($check_status)
+			$inv_transit_res=$this->db->query("select * from pnh_invoice_transit_log where invoice_no=? and status=3",array($invoice));
+			if($inv_transit_res->num_rows())
+			{
+				$inv_trans_det = $inv_transit_res->row_array();
+				if(is_null($inv_trans_det['received_on']))
+					$inv_trans_det['received_on_f'] = '';
+				else
+					$inv_trans_det['received_on_f'] = date('Y-m-d',$inv_trans_det['received_on']);
 				$already=1;
-			array_push($invoice_det,array('inv'=>$invoice,'st'=>$already));
+			}
+				
+			array_push($invoice_det,array('inv'=>$invoice,'st'=>$already,'det'=>$inv_trans_det));
 		}
 		
 		$output['invoice_det']=$invoice_det;
@@ -24738,40 +24662,5 @@ die; */
 			echo "No Franchises Found";
 		} 
 		
-	}
-	
-	/**
-	 * function to get all deals for category brand menu
-	 * @param unknown_type $menu
-	 * @param unknown_type $brand
-	 * @param unknown_type $cat
-	 */
-	function jx_to_getdeals_bybrandcatmenu($menu=0,$brand=0,$cat=0)
-	{
-		$is_sorceble_deal=array();
-		$is_sorceble_deal['sourceable']=array();
-		$is_sorceble_deal['nonsourceable']=array();
-	
-		$output=array();
-		$deal_list=$this->db->query("SELECT DISTINCT i.id,i.dealid,i.name,f.is_sourceable FROM king_dealitems i
-				JOIN king_deals d ON d.dealid=i.dealid
-				JOIN king_brands b ON b.id=d.brandid
-				JOIN king_categories c ON c.id=d.catid
-				JOIN pnh_menu m ON m.id=d.menuid
-				JOIN m_product_deal_link p ON p.itemid=i.id
-				JOIN m_product_info f ON f.product_id=p.product_id
-				WHERE d.menuid=? AND brandid=? AND catid=?",array($menu,$brand,$cat));
-	
-		if($deal_list)
-		{
-			$output['status']='success';
-			$output['deal_list']=$deal_list->result_array();
-		}
-		else
-		{
-			$output['status']='error';
-			$output['message']='No Deals Found';
-		}
-		echo json_encode($output);
 	}
 }
