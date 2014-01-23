@@ -284,6 +284,7 @@ h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;}
     height: auto;
 }
 .reset_all {cursor:pointer; text-decoration: none; margin: 5px 0 0 0; }
+
 .ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {
     /*border: none ; 
     1px solid #d9bea3;!important*/

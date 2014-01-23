@@ -167,5 +167,6 @@ else {
         // either extreme is visible - default is true
        // ,updateArrows: true
     });
+    
 </script>
     

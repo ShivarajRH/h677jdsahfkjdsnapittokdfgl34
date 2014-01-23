@@ -1063,3 +1063,5 @@ Jan_17: alter table `m_product_info` add index `product_id` (`product_id`);
 Jan_18: alter table `shipment_batch_process_invoice_link` add column `batched_on` bigint (20)  NULL  after `delivered_by`, add column `batched_by` int (11)  NULL  after `batched_on`;
 
 Jan_21_2014 drop table `acknowledgement_print_log`;
+
+

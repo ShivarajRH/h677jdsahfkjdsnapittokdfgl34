@@ -5669,9 +5669,9 @@ order by p.product_name asc
 		{
 			foreach($po as $p)
 			{
-				$inp=array($grn,$poid,$p['product'],$p['oqty'],$p['rqty'],$p['mrp'],$p['dp_price'],$p['price'],$p['tax'],$p['location'],$p['rackbin'],$p['margin'],$p['foc'],$p['offer']);
-				$this->db->query("insert into t_grn_product_link(grn_id,po_id,product_id,invoice_qty,received_qty,mrp,dp_price,purchase_price,tax_percent,location_id,rack_bin_id,margin,is_foc,has_offer,created_on)
-						values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,now())",$inp);
+				$inp=array($grn,$poid,$p['product'],$p['oqty'],$p['rqty'],$p['mrp'],$p['dp_price'],$p['price'],$p['tax'],$p['location'],$p['rackbin'],$p['margin'],$p['scheme_discount_value'],$p['foc'],$p['offer']);
+				$this->db->query("insert into t_grn_product_link(grn_id,po_id,product_id,invoice_qty,received_qty,mrp,dp_price,purchase_price,tax_percent,location_id,rack_bin_id,margin,scheme_discount_value,is_foc,has_offer,created_on)
+						values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now())",$inp);
 
 				$this->db->query("update t_po_product_link set received_qty=received_qty+? where po_id=? and product_id=?",array($p['rqty'],$poid,$p['product']));
 				if($p['rqty']!=0)
@@ -5886,11 +5886,12 @@ order by p.product_name asc
 				move_uploaded_file($f['tmp_name'], ERP_PHYSICAL_IMAGES."invoices/{$inv_id}.jpg");
 			}
 		}
-		foreach(array("inv_amounts","inv_ids","adjusted","grn","mrp","items","discount","type","vvalue","mode","inst_no","inst_date","bank","narration") as $i)
+		foreach(array("inv_amounts","inv_ids","adjusted","grn","mrp","items","discount","type","vvalue","mode","inst_no","inst_date","bank","narration","grn_validated_inv_val") as $i)
 			$$i=$this->input->post($i);
 		foreach($inv_ids as $i=>$id)
-			$this->db->query("update t_grn_invoice_link set purchase_inv_value=? where id=? limit 1",array($inv_amounts[$i],$id));
-		foreach($items as $i=>$item)
+			//$this->db->query("update t_grn_invoice_link set purchase_inv_value=? where id=? limit 1",array($inv_amounts[$i],$id));
+			$this->db->query("update t_grn_invoice_link set grn_validated_inv_value=? where id=? limit 1",array($grn_validated_inv_val[$i],$id));
+			foreach($items as $i=>$item)
 		{
 			$disc=$discount[$i];
 			if($type[$i]==1)
@@ -7059,8 +7060,11 @@ order by p.product_name asc
 	{
 		$user=$this->erpm->getadminuser();
 		$msg=$this->input->post("msg");
+		$cheq_realize_date=$this->input->post("cheq_realizedon");
+		/* print_r($_POST);
+		exit; */
 		$r=$this->db->query("select * from pnh_t_receipt_info where receipt_id=?",$rid)->row_array();
-		$this->db->query("update pnh_t_receipt_info set reason=?,status=1,activated_by=?,activated_on=? where receipt_id=? and (is_submitted=1 or payment_mode=0) limit 1",array($msg,$user['userid'],time(),$rid));
+		$this->db->query("update pnh_t_receipt_info set reason=?,status=1,activated_by=?,activated_on=?,cheq_realized_on=?  where receipt_id=? and (is_submitted=1 or payment_mode=0) limit 1",array($msg,$user['userid'],time(),$cheq_realize_date,$rid));
 		
 		if($r['receipt_type']==1)
 			$this->erpm->pnh_fran_account_stat($r['franchise_id'],0, $r['receipt_amount'],"Topup for Receipt:{$r['receipt_id']} ".date("d/m/y",$r['created_on']),"topup",$r['receipt_id']);
@@ -7395,8 +7399,17 @@ order by p.product_name asc
   			$cond_params = array();
   			if($st_date)
   				$cond = " and r.activated_on between ? and ?  ";
-  			$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by FROM pnh_t_receipt_info r JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id LEFT OUTER JOIN king_admin a ON a.id=r.created_by LEFT OUTER JOIN king_admin d ON d.id=r.activated_by WHERE r.status=1 AND r.is_active=1 AND f.is_suspended=0 and (is_submitted=1 or r.activated_on!=0) and r.is_active=1 $cond ORDER BY activated_on desc";
-  			
+  		//	$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by FROM pnh_t_receipt_info r JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id LEFT OUTER JOIN king_admin a ON a.id=r.created_by LEFT OUTER JOIN king_admin d ON d.id=r.activated_by WHERE r.status=1 AND r.is_active=1 AND f.is_suspended=0 and (is_submitted=1 or r.activated_on!=0) and r.is_active=1 $cond ORDER BY activated_on desc";
+  			$sql="SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by,b.bank_name AS submit_bankname,c.submitted_on,s.name AS submitted_by,c.remarks AS submittedremarks
+					FROM pnh_t_receipt_info r
+					JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
+					JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
+					LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
+					LEFT OUTER JOIN king_admin d ON d.id=r.activated_by 
+					LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id
+					LEFT JOIN king_admin s ON s.id=c.submitted_by
+					WHERE r.status=1 AND r.is_active=1 AND f.is_suspended=0 AND (r.is_submitted=1 OR r.activated_on!=0) AND r.is_active=1 $cond
+					ORDER BY activated_on DESC";
   		}
   		
   		
@@ -7416,12 +7429,14 @@ order by p.product_name asc
 			if($st_date)
 				$cond = " and unix_timestamp(c.cancelled_on) between ? and ?  ";
 			
-			$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on
+			$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on,c.cheq_cancelled_on,c.cancel_status,b.bank_name AS submit_bankname,c.submitted_on,s.name as submitted_by,c.remarks AS submittedremarks
 						FROM pnh_t_receipt_info r 
 						JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
 						left JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
 						LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
 						LEFT OUTER JOIN king_admin d ON d.id=r.activated_by 
+						LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id
+						LEFT JOIN king_admin s ON s.id=c.submitted_by
 						WHERE r.status in (2,3) AND r.is_active=1  $cond
 						GROUP BY r.receipt_id
 						ORDER BY activated_on DESC
@@ -8436,7 +8451,8 @@ order by p.product_name asc
 				{
 					$item['split_order'] = 1;
 					$item['qty'] = 1;
-					$transids[1][] = $item;
+					//$transids[1][] = $item;
+					$transids[0][] = $item;
 				}
 			}else
 			{
@@ -8448,9 +8464,9 @@ order by p.product_name asc
 		if(count($transids[0]))
 			$split_transid_list[] = $transids[0];
 		
-		if(count($transids[1]))
+		/*if(count($transids[1]))
 			foreach($transids[1] as $tr_items)
-				$split_transid_list[] = array($tr_items);	
+				$split_transid_list[] = array($tr_items);*/
 		
             $batch_enabled=1;
 		$trans_grp_ref_no = ($this->db->query("select if(max(trans_grp_ref_no),max(trans_grp_ref_no)+1,400001) as n from king_transactions where trans_grp_ref_no >= 0")->row()->n);

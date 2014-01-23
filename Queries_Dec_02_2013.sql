@@ -1556,7 +1556,7 @@ select distinct from_unixtime(tr.init,'%D %M %Y') as str_date,from_unixtime(tr.i
 # Jan_17_2014
 
 -- =============================================================================
-update t_imei_no set status=0 and order_id=0 where imei_no = '355681050857430';
+update t_imei_no set status=0 and order_id=0 where imei_no = '354619056098758';
 -- =============================================================================
 
 select * from t_imei_no
@@ -1776,4 +1776,60 @@ Company Assets
 
 select printcount from picklist_log_reservation where batch_id='5730'
 
-select status,product_id from t_imei_no where imei_no = '355681053892715'; 51084_4090_1_1_163256_4271887558_5649623681'
+select status,product_id from t_imei_no where imei_no = '355681053892715'; #51084_4090_1_1_163256_4271887558_5649623681';
+
+# Jan_22_2014
+
+-- =============================================================================
+update t_imei_no set status=0 and order_id=0 where imei_no = '356721053822855';
+-- =============================================================================
+
+select * from t_stock_info where product_id='8702'
+
+select * from t_reserved_batch_stock where  product_id='132989'
+
+select * from t_imei_no where product_id='132989'
+
+insert into t_imei_no(id,product_id,imei_no,status,grn_id,stock_id,order_id,created_on,modified_on)
+values(24560,5746,'354619056098762',0,'2235',0,0,'now()',0)
+
+-- // Territory 
+select t.*,sd.batch_id,i.id from proforma_invoices pi 
+                                                        join shipment_batch_process_invoice_link sd on pi.p_invoice_no = sd.p_invoice_no 
+                                                        join king_transactions tr on tr.transid = pi.transid  
+                                                        join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
+                                                        join pnh_m_territory_info t on t.id = f.territory_id 
+                                                        join king_orders o on o.transid=tr.transid
+                                                        left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
+                                                        where pi.invoice_status = 1 and sd.batch_id = '5000' and tr.batch_enabled=1 #and i.id is null
+                                                        group by f.territory_id 
+                                                        order by t.territory_name
+
+select * from shipment_batch_process_invoice_link sd where batch_id='5000';
+
+select distinct 
+                            o.itemid,count(distinct tr.transid) as ttl_trans,group_concat(distinct tr.transid) as grp_trans
+                            ,bc.id as menuid,bc.batch_grp_name as menuname,group_concat(distinct d.menuid) as actualmenus,f.territory_id
+                            ,sd.id,sd.batch_id,sd.p_invoice_no
+                            ,from_unixtime(tr.init) as init,bc.batch_size,bc.group_assigned_uid as bc_group_uids
+                                from king_transactions tr
+                                join king_orders as o on o.transid=tr.transid
+                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
+                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no and sd.invoice_no=0
+                                join king_dealitems dl on dl.id = o.itemid
+                                join king_deals d on d.dealid = dl.dealid 
+                                join pnh_menu mn on mn.id=d.menuid
+                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
+                                join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
+                                where sd.batch_id = '5000' and tr.batch_enabled=1
+                                    group by  bc.id
+                                order by tr.init asc
+
+select * from 
+
+select status,product_id from t_imei_no where imei_no = '1223334566777_7089_1_10_163421_4628351511_7719121613'
+
+select * from t_imei_no  where product_id='8583';
+
+select * from shipment_batch_process_invoice_link
+

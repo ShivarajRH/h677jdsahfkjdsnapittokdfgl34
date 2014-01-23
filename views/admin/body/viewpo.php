@@ -65,7 +65,7 @@ $po_status_arr[3]="Cancelled";?>
 <div width="50%" style="float:right;margin-left:117px;">
 <table cellspacing="5" width="100%">
 <tbody>
-<tr><td><b>Po value</b></td><td>|</td><td>Rs <?=format_price($ttl_po_val)?></td></tr>
+<tr><td><b>Po value</b></td><td>|</td><td>Rs <?=format_price($ttl_po_val['total_value'])?></td></tr>
 <tr><td><b>Status</b></td><td>|</td>
 <td>
 <?if($po['po_status']==0){?>
@@ -92,19 +92,19 @@ $po_status_arr[3]="Cancelled";?>
 </div>
 </fieldset>
 
-<div class="tab_view">
+<div class="tab_view ">
 <ul>
 <li><a href="#po_list"><b>Product List</b></a></li>
 <li><a href="#po_removedlist"><b>Removed Product List</b></a></li>
 <?php if($has_grn == '1') {?><li><a href="#grn_info"><b>Grn Details</b></a></li><?php }?>
 </ul>
 <div id="po_list">
-<table class="datagrid" width="100%">
+<table class="datagrid nofooter" width="100%">
 <thead>
 <th>Slno</th>
 <th>Product Name</th>
 <th>Order Qty</th>
-<th>Received Qty</th>
+<th style="text-align:center">Received Qty</th>
 <th>MRP</th>
 <th>DP Price</th>
 <th>Margin</th>
@@ -122,7 +122,7 @@ $po_status_arr[3]="Cancelled";?>
 <td><?=$sno++?></td>
 <td><a href="<?=site_url("admin/product/{$i['product_id']}")?>"><?=$i['product_name']?></a></td>
 <td><?=$i['order_qty']?></td>
-<td><?=$i['received_qty']?></td>
+<td align="center"><?=$i['received_qty']?></td>
 <td><?=$i['mrp']?></td>
 <td><?=$i['dp_price']?></td>
 <td><?=$i['margin']?>%</td>
@@ -135,11 +135,18 @@ $po_status_arr[3]="Cancelled";?>
 </tr>
 <?php }?>
 </tbody>
+<tfoot class="nofooter">
+<tr>
+	<td align="right" colspan="3" style="text-align: right !important;padding-right: 62px !important"><b>Total O.Qty : <?=$ttl_po_val['total_qty']?></b></td>
+<td style="text-align: right !important;padding-right: 59px !important"><b>Total : <?=$ttl_po_val['received_qty']?></b></td>
+<td colspan="7" style="text-align: right !important;padding-right: 55px !important"><b>Total Purchase Value : Rs&nbsp;&nbsp;<?=format_price($ttl_po_val['total_value'])?></b></td>
+	</tr>
+</tfoot>
 </table>
 <br>
-<div style="float:right;margin-right: 65px;margin-top:-11px;">
+<!--  <div style="float:right;margin-right: 65px;margin-top:-11px;">
 <b>Total Purchase Value:Rs&nbsp;&nbsp;<?=format_price($ttl_po_val)?></b>
-</div>
+</div>-->
 
 </div>
 

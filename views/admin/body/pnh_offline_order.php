@@ -952,15 +952,15 @@ $('#reg_mem_dlg').dialog({
 						var mem_regname = $.trim($('input[name="memreg_name"]').val());
 						var mem_mobno = $.trim($('input[name="memreg_mobno"]').val());
 							if(mem_regname.length == 0)
-								error_list.push("Please Enter name");
+								error_list.push("Please Enter name.");
 							
-							if(mem_regname.length == 0)
-								error_list.push("Please Enter name");
+							if(mem_mobno.length == 0)
+								error_list.push("Please Enter Mobile Number.");
 							else
 							{
 								mem_mobno = mem_mobno*1	
 								if(isNaN(mem_mobno))
-									error_list.push("Invalid Mobileno entered");	
+									error_list.push("Enter valid Mobile number.");	
 							}	
 							
 							if(error_list.length)
@@ -1165,10 +1165,10 @@ $(function(){
 				{
 					goodtogo=1;
 					$("#final_amount").text( format_number(obj.total) );
-					$("#final_ded").text(obj.d_total);
-					$("#final_com").text(obj.com);
-					$("#final_bal").text(obj.bal);
-					$("#final_abal").text(obj.abal);
+					$("#final_ded").text(format_number(obj.d_total));
+					$("#final_com").text( format_number(obj.com) );
+					$("#final_bal").text( format_number(obj.bal) );
+					$("#final_abal").text( format_number(obj.abal) );
 					$("#price_changes").html(obj.pc);
 					$("#last_confirm").show();
 					

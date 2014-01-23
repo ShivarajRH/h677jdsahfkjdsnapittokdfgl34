@@ -1055,9 +1055,16 @@ create table `acknowledgement_print_log` (  `sno` bigint NOT NULL AUTO_INCREMENT
 , `created_on` varchar (50) , `created_by` int (30) , `status` int (10) DEFAULT '0', `count` int (100) DEFAULT '0', PRIMARY KEY ( `sno`));
 
 ALTER TABLE `snapitto_dbexisting`.`pnh_sch_discount_track` ADD COLUMN `dealid` BIGINT(0) NULL AFTER `catid`; 
-ALTER TABLE `snapitto_dbexisting`.`pnh_sch_discount_brands` ADD COLUMN `dealid` BIGINT(11) DEFAULT 0 NULL AFTER `discount`;
+ALTER TABLE `snapitto_dbexisting`.`pnh_sch_discount_brands` ADD COLUMN `dealid` BIGINT(11) DEFAULT 0 NULL AFTER `discount`;  
 
 
 Jan_16: alter table `king_orders` add index `status` (`status`);
 Jan_17: alter table `m_product_info` add index `product_id` (`product_id`);
 Jan_18: alter table `shipment_batch_process_invoice_link` add column `batched_on` bigint (20)  NULL  after `delivered_by`, add column `batched_by` int (11)  NULL  after `batched_on`;
+
+ALTER TABLE `m_vendor_info` ADD COLUMN `payment_type` INT(1) DEFAULT 0 NULL AFTER `require_payment_advance`;
+
+ALTER TABLE `pnh_t_receipt_info` ADD COLUMN `cheq_realized_on` VARCHAR(255) NULL AFTER `activated_on`;
+
+Jan_21_2014: drop table `acknowledgement_print_log`;
+

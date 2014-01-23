@@ -283,7 +283,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 					<?php }?>
 					</table>
 					</div>
-					
+			
 					<div id="live_suspn">
 					<table class="datagrid">
 					<thead><th>Reason</th><th>Unsuspended On</th><th>Suspended By</th></thead>
@@ -3239,12 +3239,13 @@ $("#pnh_membersch").dialog({
 					$('#ttl_order_amt').html("Total Ordered : "+resp.ttl_summary);
 					$('#paymrent_order_amt').html("Total Paid : "+resp.ttl_payment);
 					$('#shipped_order_amt').html("Total Shipped : "+resp.ttl_shipped);
-					 var types = ['Order Placed', 'Payment','shipped'];
+					 var types = ['Order Placed','shipped', 'Cheque Date','Cash in Bank'];
 					$('#payment_stat .payment_stat_view').empty();
 					var summary=resp.summary;
 					var payment=resp.payment;
 					var shipped=resp.shipped;
-					plot2 = $.jqplot('payment_stat .payment_stat_view', [summary,payment,shipped], {
+					var realized=resp.realized;
+					plot2 = $.jqplot('payment_stat .payment_stat_view', [summary,shipped,payment,realized], {
 				       	seriesDefaults: {
 				        showMarker:true,
 				        pointLabels: { show:true }

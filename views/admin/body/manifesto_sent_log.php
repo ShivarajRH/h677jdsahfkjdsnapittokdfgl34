@@ -1528,14 +1528,14 @@ $("#mark_delivered_courier_transport").dialog({
 				html_contant+="<tr>";
 				html_contant+="	<td>"+(a+1)+"</td>";
 				html_contant+="	<td>"+b.inv+"</td>";
-				html_contant+="	<td><input type='text' name='received_by[]' value=''></td>";
-				html_contant+="	<td><input type='text' name='received_on[]' value='' class='received_on'></td>";
-				html_contant+="	<td><input type='text' name='contact_no[]' value='' maxlength='10' ></td>";
+				html_contant+="	<td><input type='text' name='received_by[]' value='"+b.det.received_by+"'></td>";
+				html_contant+="	<td><input type='text' name='received_on[]' value='"+b.det.received_on_f+"' class='received_on'></td>";
+				html_contant+="	<td><input type='text' name='contact_no[]' value='"+b.det.contact_no+"' maxlength='10' ></td>";
 				ds='';
 
 				if(b.st)
 				{
-					ds="disabled='disabled' checked='checked'";
+					ds="disabled='disabled' checked='checked' class='readonly_inp' ";
 				}else{
 					show_submit=1;
 				}
@@ -1548,6 +1548,9 @@ $("#mark_delivered_courier_transport").dialog({
 			$("#mark_delivered_courier_transport_form").html(html_contant);
 			$('#mark_delivered_courier_transport_form .received_on').datepicker();
 
+			$('#mark_delivered_courier_transport_form .readonly_inp').each(function(){
+				$('input[type="text"]',$(this).parents('tr:first')).attr('readonly',true);
+			}) 
 			if(show_submit)
 			{
 				var buttons={

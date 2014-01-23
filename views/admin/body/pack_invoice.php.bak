@@ -1093,7 +1093,7 @@ foreach($invoice as $i)
 		});
 		$("#scan_barcode").keyup(function(e){
                         e.preventDefault();
-                        if((e.which || e.keyCode)==13) {
+                        if((e.keyCode)==13) { //e.which || 
                             validate_barcode(0);
                         }
                         return false;

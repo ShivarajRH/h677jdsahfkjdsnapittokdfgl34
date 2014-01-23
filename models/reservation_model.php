@@ -1177,7 +1177,7 @@ class reservation_model extends Model
      * @return type
      */
     function get_paking_info($product_id) {
-        $s = $this->db->query("select stock_id,product_id,location_id,rack_bin_id,concat(location_id,'-',rack_bin_id) as rbid,product_barcode,sum(available_qty) as s,mrp from t_stock_info where product_id={$product_id} group by rbid,mrp,product_barcode,stock_id having sum(available_qty)>=0 order by mrp,s,available_qty desc")->result_array();
+        $s = $this->db->query("select stock_id,product_id,location_id,rack_bin_id,concat(location_id,'-',rack_bin_id) as rbid,product_barcode,sum(available_qty) as s,mrp from t_stock_info where product_id={$product_id} group by rbid,mrp,product_barcode,stock_id having sum(available_qty)>=0 order by rbid asc")->result_array();
         return $s;
     }
     

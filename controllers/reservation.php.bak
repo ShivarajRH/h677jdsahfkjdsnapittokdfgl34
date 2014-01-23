@@ -228,7 +228,7 @@ class Reservation extends Voucher {
                 }
                 else {
                     
-                    $transid_msg=' --"--';
+                    $transid_msg=' --"--';//'-second</a>';
                 }
                 //if(isset($batch_id)) $batch_id_msg = '<a href="'.site_url("admin/batch/".$batch_id).'" target="_blank">B'.$batch_id.'</a>';
                 

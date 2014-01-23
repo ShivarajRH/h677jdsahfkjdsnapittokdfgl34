@@ -5939,7 +5939,9 @@ order by p.product_name asc
 			$po['price']=$_POST['price'][$i]-$po['discount'];
 			$po['foc']=$this->input->post("foc$i");
 			$po['offer']=$this->input->post("offer$i");
-
+			$po['vendor_id']=$_POST['vendor_id'][$i];
+			$po['remarks']=$_POST['po_remarks'][$i];
+			$po['date_of_delivery']=$_POST['edod'][$i];
 
 			if(!isset($_POST['note'][$i]))
 				$po['note']=isset($_POST['note'][$i]);
@@ -5947,19 +5949,28 @@ order by p.product_name asc
 				$po['note']='';
 
 			$pos[$v][]=$po;
+			
 		}
 		
 		foreach($pos as $v=>$po)
 		{
+			
 			$total=0;
 			$this->db->query("insert into t_po_info(vendor_id,po_status,created_on,created_by) values(?,0,now(),?)",array($v,$user['userid']));
 			$poid=$this->db->insert_id();
+			
 			foreach($po as $p)
 			{
+				
+				
 				$oprice = $p['dp_price']?$p['dp_price']:$p['mrp'];
 				$marg=$p['margin'];
 				$disc=$p['discount'];
-
+				
+				$remarks=$p['remarks'];
+				$edod=$p['date_of_delivery'];
+				
+				
 				$disc_val = ($p['type']==1)?($oprice*$disc/100):$disc;
 
 				$p['price']=($oprice-($oprice*$marg/100))-$disc_val;
@@ -5976,7 +5987,7 @@ order by p.product_name asc
 				$this->_update_dp_byproductid($p['product'],$p['dp_price']);
 
 			}
-			$this->db->query("update t_po_info set total_value=? where po_id=? limit 1",array($total,$poid));
+			$this->db->query("update t_po_info set total_value=?,remarks=?,date_of_delivery=? where po_id=? limit 1",array($total,$remarks,$edod,$poid));
 		}
 		
 		$this->session->set_flashdata("erp_pop_info","POs created");
@@ -6094,11 +6105,6 @@ order by p.product_name asc
 		{
 			$r['dp_price'] = '';
 		}
-		
-		if($r['dp_price'] !=0)
-		//	$purchase_price=$r['dp_price']-($r['dp_price']*)
-		
-		
 		$r['orders']=$this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_deal_link l join king_orders o on o.itemid=l.itemid where l.product_id=? and o.time>".(time()-(24*60*60*90)),$id)->row()->s;
 		$r['last_pen_order'] = @$this->db->query("SELECT a.transid,DATE_FORMAT(FROM_UNIXTIME(time),'%d/%m/%Y') AS orderd_on
 				FROM king_transactions a
@@ -7060,8 +7066,11 @@ order by p.product_name asc
 	{
 		$user=$this->erpm->getadminuser();
 		$msg=$this->input->post("msg");
+		$cheq_realize_date=$this->input->post("cheq_realizedon");
+		/* print_r($_POST);
+		exit; */
 		$r=$this->db->query("select * from pnh_t_receipt_info where receipt_id=?",$rid)->row_array();
-		$this->db->query("update pnh_t_receipt_info set reason=?,status=1,activated_by=?,activated_on=? where receipt_id=? and (is_submitted=1 or payment_mode=0) limit 1",array($msg,$user['userid'],time(),$rid));
+		$this->db->query("update pnh_t_receipt_info set reason=?,status=1,activated_by=?,activated_on=?,cheq_realized_on=?  where receipt_id=? and (is_submitted=1 or payment_mode=0) limit 1",array($msg,$user['userid'],time(),$cheq_realize_date,$rid));
 		
 		if($r['receipt_type']==1)
 			$this->erpm->pnh_fran_account_stat($r['franchise_id'],0, $r['receipt_amount'],"Topup for Receipt:{$r['receipt_id']} ".date("d/m/y",$r['created_on']),"topup",$r['receipt_id']);
@@ -7396,8 +7405,17 @@ order by p.product_name asc
   			$cond_params = array();
   			if($st_date)
   				$cond = " and r.activated_on between ? and ?  ";
-  			$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by FROM pnh_t_receipt_info r JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id LEFT OUTER JOIN king_admin a ON a.id=r.created_by LEFT OUTER JOIN king_admin d ON d.id=r.activated_by WHERE r.status=1 AND r.is_active=1 AND f.is_suspended=0 and (is_submitted=1 or r.activated_on!=0) and r.is_active=1 $cond ORDER BY activated_on desc";
-  			
+  		//	$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by FROM pnh_t_receipt_info r JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id LEFT OUTER JOIN king_admin a ON a.id=r.created_by LEFT OUTER JOIN king_admin d ON d.id=r.activated_by WHERE r.status=1 AND r.is_active=1 AND f.is_suspended=0 and (is_submitted=1 or r.activated_on!=0) and r.is_active=1 $cond ORDER BY activated_on desc";
+  			$sql="SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by,b.bank_name AS submit_bankname,c.submitted_on,s.name AS submitted_by,c.remarks AS submittedremarks
+					FROM pnh_t_receipt_info r
+					JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
+					JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
+					LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
+					LEFT OUTER JOIN king_admin d ON d.id=r.activated_by 
+					LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id
+					LEFT JOIN king_admin s ON s.id=c.submitted_by
+					WHERE r.status=1 AND r.is_active=1 AND f.is_suspended=0 AND (r.is_submitted=1 OR r.activated_on!=0) AND r.is_active=1 $cond
+					ORDER BY activated_on DESC";
   		}
   		
   		
@@ -7417,12 +7435,14 @@ order by p.product_name asc
 			if($st_date)
 				$cond = " and unix_timestamp(c.cancelled_on) between ? and ?  ";
 			
-			$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on
+			$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on,c.cheq_cancelled_on,c.cancel_status,b.bank_name AS submit_bankname,c.submitted_on,s.name as submitted_by,c.remarks AS submittedremarks
 						FROM pnh_t_receipt_info r 
 						JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
 						left JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
 						LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
 						LEFT OUTER JOIN king_admin d ON d.id=r.activated_by 
+						LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id
+						LEFT JOIN king_admin s ON s.id=c.submitted_by
 						WHERE r.status in (2,3) AND r.is_active=1  $cond
 						GROUP BY r.receipt_id
 						ORDER BY activated_on DESC

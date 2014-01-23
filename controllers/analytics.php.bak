@@ -951,21 +951,55 @@
 					left join pnh_menu d on d.id=c.menuid
 					where ki.franchise_id ='".$fid."' and date_format(from_unixtime(ki.init),'%Y-%m-%d') between '".$st."' and '".$en."'
 					$order_cond";
-		$payment = "SELECT receipt_amount,date_format(from_unixtime(activated_on),'%d-%m-%Y') as d,f.franchise_name,a.name AS admin
+		 			
+		$payment = "SELECT receipt_amount,date_format(from_unixtime(instrument_date),'%d-%m-%Y') as d,f.franchise_name,a.name AS admin
 					FROM pnh_t_receipt_info r
 					JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id
 					LEFT OUTER JOIN king_admin a ON a.id=r.created_by
 					WHERE r.status=1 AND r.is_active=1 AND (is_submitted=1 or r.activated_on!=0) and r.is_active=1 and r.franchise_id='".$fid."'
 					and date_format(from_unixtime(activated_on),'%Y-%m-%d') between '".$st."' and '".$en."'
 					$payment_cond";
+		
+		$realized =	"SELECT receipt_amount,date_format(from_unixtime(activated_on),'%d-%m-%Y') as d,f.franchise_name,a.name AS admin
+					FROM pnh_t_receipt_info r
+					JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id
+					LEFT OUTER JOIN king_admin a ON a.id=r.created_by
+					WHERE r.status=1 AND r.is_active=1 AND (is_submitted=1 or r.activated_on!=0) and r.is_active=1 and r.franchise_id='".$fid."'
+					and date_format(from_unixtime(activated_on),'%Y-%m-%d') between '".$st."' and '".$en."'
+					$payment_cond";		
+		 
+		$shipped = "select ifnull(sum((b.mrp-(b.discount+b.credit_note_amt))*b.invoice_qty),0) as amt,date_format(a.shipped_on,'%d-%m-%Y') as mn
+					from shipment_batch_process_invoice_link a
+					join king_invoice b on a.invoice_no = b.invoice_no and b.invoice_status = 1
+					join king_orders c on c.id = b.order_id
+					join king_transactions d on d.transid = c.transid
+					where date_format(a.shipped_on,'%Y-%m-%d') between '".$st."' and '".$en."' and a.shipped = 1
+					and is_pnh = 1 and franchise_id  ='".$fid."' group by mn asc";
+						
 		 $sale_anl = $this->db->query($sales);
 		 $pay_anl = $this->db->query($payment);
+		 $ship_anl = $this->db->query($shipped);
+		 $realized_anl = $this->db->query($realized);
+		
 		 $order_summary = array();
 		 $payment_summary = array();
+		 $realized_summary = array();
+		 $shipped_summary = array();
+		
 		 $order_date=array();
 		 $payment_date=array();
+		 $shipped_date=array();
+		 $realized_date=array();
+		
 		 $sale_ticks=array();
 		 $payment_ticks=array();
+		 $shipped_ticks=array();
+		 $realized_ticks=array();
+		 
+		 $ttl_ord_sales_amt=0;
+		 $ttl_payment_amt=0;
+		 $ttl_shipped_amt=0;
+		
 		 $t_array=array();
 		 $t=array();
 		 $ticks=array();
@@ -977,6 +1011,7 @@
 				$order_summary[($row['mn'])]=$row['total_value']*1;
 				$order_date[($row['mn'])]=$row['mn'];
 				$sale_ticks[]=strtotime($row['mn']);
+				$ttl_ord_sales_amt+=$row['total_value']*1;
 			}
 		 }
 		 if($pay_anl->num_rows())
@@ -986,15 +1021,38 @@
 				$payment_summary[($row['d'])]=$row['receipt_amount']*1;
 				$payment_date[($row['d'])]=$row['d'];
 				$payment_ticks[]=strtotime($row['d']);
+				$ttl_payment_amt+=$row['receipt_amount']*1;
 			}
 		 }
+		 if($realized_anl->num_rows())
+		 {
+			foreach($realized_anl->result_array() as $row)
+			{
+				$realized_summary[($row['d'])]=$row['receipt_amount']*1;
+				$realized_date[($row['d'])]=$row['d'];
+				$realized_ticks[]=strtotime($row['d']);
+			}
+		 }
+		 if($ship_anl->num_rows())
+		 {
+			foreach($ship_anl->result_array() as $row)
+			{
+				$shipped_summary[($row['mn'])]=$row['amt']*1;
+				$shipped_date[($row['mn'])]=$row['mn'];
+				$shipped_ticks[]=strtotime($row['mn']);
+				$ttl_shipped_amt+=$row['amt']*1;
+			}
+		 }
+		 
 		 //print_r($order_date);print_r($payment_date);exit;
-		 $t_array=array_merge($sale_ticks,$payment_ticks);
+		 $t_array=array_merge($sale_ticks,$payment_ticks,$shipped_ticks,$realized_ticks);
 		 sort($t_array);
 
 		 $ticks=array_values(array_unique($t_array));
 		 $order_summary_fnl = array();
 		 $payment_summary_fnl = array();
+		 $realized_summary_fnl = array();
+		 $shipped_summary_fnl = array();
 		 
 		 foreach($ticks as $i=>$t)
 		 {
@@ -1005,6 +1063,12 @@
 			if(isset($payment_summary[$t1]))
 				$payment_summary_fnl[] = array($i+1,$payment_summary[$t1],$payment_date[$t1],$payment_summary[$t1]);
 			
+			if(isset($realized_summary[$t1]))
+				$realized_summary_fnl[] = array($i+1,$realized_summary[$t1],$realized_date[$t1],$realized_summary[$t1]);
+			
+			if(isset($shipped_summary[$t1]))
+				$shipped_summary_fnl[] = array($i+1,$shipped_summary[$t1],$shipped_date[$t1],$shipped_summary[$t1]);
+			
 			$x_ticks[]=date('d-M-Y',$t);
 		 }
 		$output = array();
@@ -1012,6 +1076,11 @@
 		$output['ticks'] = $x_ticks;
 		$output['summary'] = $order_summary_fnl;
 		$output['payment'] = $payment_summary_fnl;
+		$output['shipped'] = $shipped_summary_fnl;
+		$output['realized'] = $realized_summary_fnl;
+		$output['ttl_summary']='Rs '.format_price($ttl_ord_sales_amt,0);
+		$output['ttl_payment']='Rs '.format_price($ttl_payment_amt,0);
+		$output['ttl_shipped']='Rs '.format_price($ttl_shipped_amt,0);
 		echo json_encode($output);
 	}
 
