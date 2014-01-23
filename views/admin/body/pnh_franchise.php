@@ -1,16 +1,29 @@
 <style>
-.container_div{visibility:hidden}
-.leftcont{display: none}.fran_suspendlink{
-border-radius:5px;
-background:#f77;
-display:inline-block;
-padding:3px 7px;
-color:#fff;
-cursor: pointer;
+.container_div
+{
+	visibility:hidden
 }
-.fran_suspendlink:hover{
-background:#f00;
-text-decoration:none;
+.leftcont
+{
+	display: none
+}
+.fran_suspendlink
+{
+	border-radius:5px;
+	background:#f77;
+	display:inline-block;
+	padding:3px 7px;
+	color:#fff;
+	cursor: pointer;
+}
+.fran_suspendlink:hover
+{
+	background:#f00;
+	text-decoration:none;
+}
+li.required
+{
+	color: #cd0000;list-style: none
 }
 li.required{color: #cd0000;list-style: none}
 .jqplot-highlighter-tooltip, .jqplot-canvasOverlay-tooltip
@@ -274,7 +287,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 					<?php }?>
 					</table>
 					</div>
-					
+			
 					<div id="live_suspn">
 					<table class="datagrid">
 					<thead><th>Reason</th><th>Unsuspended On</th><th>Suspended By</th></thead>
@@ -315,14 +328,18 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 			</div>
 	<!-- franchise status log END -->
 	
-	<!-- Analytics graph section start ---->
+		<!-- Analytics graph section start ---->
 		<div id="analytics">
 			<table width="100%">
 				<tr>
-					<td width="50%">
-						<h4><div class="head_wrap"></div></h4>
+					<td width="70%">
+						<div style="float:left;width:100%">
+							<span id="ttl_order_amt"></span>
+							<span id="shipped_order_amt"></span>
+							<span id="paymrent_order_amt"></span>
+						</div>
 					</td>
-					<td width="50%">
+					<td width="30%">
 						<div class="fr_menu_by_mn">
 							<form id="grid_list_frm_to" method="post">
                                     <div style="margin:2.5px 0px;font-size:12px;text-align: right">
@@ -896,7 +913,6 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 													<th>Menu</th>
 													<th>Brand</th>
 													<th>Category</th>
-													<th>Deals</th>
 													<th>Discount</th>
 													<th>Valid from</th>
 													<TH>Valid upto</TH>
@@ -906,9 +922,8 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 												</tr>
 											</thead>
 											<tbody>
-												<?php foreach($this->db->query("select s.*,a.name as admin,b.name as brand,c.name as category,s.menuid,i.name AS menu,d.name AS deal from pnh_sch_discount_brands s left outer join king_brands b on b.id=s.brandid left outer join king_categories c on c.id=s.catid join king_admin a on a.id=s.created_by JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id JOIN pnh_menu i ON i.id=s.menuid LEFT JOIN king_dealitems d ON d.id=s.dealid where s.franchise_id=? and ? between s.valid_from and s.valid_to and sch_type=1 GROUP BY s.id order by id desc ",array($fran['franchise_id'],time()))->result_array() as $s){
-													
-													if(!$s['is_sch_enabled'])
+												<?php foreach($this->db->query("select s.*,a.name as admin,b.name as brand,c.name as category,s.menuid,i.name AS menu from pnh_sch_discount_brands s left outer join king_brands b on b.id=s.brandid left outer join king_categories c on c.id=s.catid join king_admin a on a.id=s.created_by JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id JOIN pnh_menu i ON i.id=s.menuid where s.franchise_id=? and ? between s.valid_from and s.valid_to and sch_type=1 GROUP BY s.id order by id desc ",array($fran['franchise_id'],time()))->result_array() as $s){
+														if(!$s['is_sch_enabled'])
 															continue;
 												?>
 												<?php// foreach($this->db->query("select h.*,a.name as admin,m.name AS menu  from pnh_sch_discount_track h left outer join king_admin a on a.id=h.created_by LEFT JOIN pnh_menu m ON m.id=h.sch_menu where franchise_id=? and ? between valid_from and valid_to and sch_type=1 order by h.id desc",array($fran['franchise_id'],time()))->result_array()  as $s){?>
@@ -917,7 +932,6 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 													<td><?=empty($s['brand'])?"All brands":$s['brand']?></td>
 													<td><?=empty($s['category'])?"All categories":$s['category']?>
 													</td>
-													<td><?=empty($s['deal'])?"All deals":$s['deal']?></td>
 													<td><?=$s['discount']?>%</td>
 													<td><?=date("d/m/Y",$s['valid_from'])?></td>
 													<td><?=date("d/m/Y",$s['valid_to'])?></td>
@@ -3222,18 +3236,23 @@ $("#pnh_membersch").dialog({
 			$('#payment_stat .payment_stat_view').html('<div class="anmtd_loading_img"><span></span></div>'); 
 			$.getJSON(site_url+'/admin/jx_order_payment_det/'+start_date+'/'+end_date+'/'+franid,'',function(resp)
 	    	{
-	    		if(resp.summary == 0 && resp.payment == 0)
+	    		if(resp.summary == 0 && resp.payment == 0 && shipped==0)
 				{
 					$('#payment_stat .payment_stat_view').html("<div class='fr_alert_wrap' style='padding:113px 0px'>No Sales statisticks found between "+start_date+" and "+end_date+"</div>" );	
 				}
 				else
 				{
 					// reformat data ;
-					 var types = ['Order Placed', 'Payment'];
+					$('#ttl_order_amt').html("Total Ordered : "+resp.ttl_summary);
+					$('#paymrent_order_amt').html("Total Paid : "+resp.ttl_payment);
+					$('#shipped_order_amt').html("Total Shipped : "+resp.ttl_shipped);
+					 var types = ['Order Placed','shipped', 'Cheque Date','Cash in Bank'];
 					$('#payment_stat .payment_stat_view').empty();
 					var summary=resp.summary;
 					var payment=resp.payment;
-					plot2 = $.jqplot('payment_stat .payment_stat_view', [summary,payment], {
+					var shipped=resp.shipped;
+					var realized=resp.realized;
+					plot2 = $.jqplot('payment_stat .payment_stat_view', [summary,shipped,payment,realized], {
 				       	seriesDefaults: {
 				        showMarker:true,
 				        pointLabels: { show:true }

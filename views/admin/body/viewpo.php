@@ -160,9 +160,9 @@ foreach($items as $i){
 		<td colspan="5" align="right">Total</td>
 		<td align="right"><?php echo $total_item_qty; ?></td>
 		<td align="right"><?php echo $total_item_rcvd_qty; ?></td>
-		<td colspan="4">&nbsp;</td>
-		<td align="right"><?php echo format_price($total_pprice,4); ?></td>
-		<td colspan="3">&nbsp;</td>
+		<td class="hideinprint" colspan="4">&nbsp;</td>
+		<td class="hideinprint" align="right"><?php echo format_price($total_pprice,4); ?></td>
+		<td colspan="3" class="hideinprint hideinprint1">&nbsp;</td>
 	</tr>
 </tbody>
 </table>

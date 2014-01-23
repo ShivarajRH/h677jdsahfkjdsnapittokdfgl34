@@ -415,6 +415,8 @@
 		</div>
 	</form>
 </div>
+
+<style>.error_inp{border:2px solid #cd0000 !important;}</style>
 <!-- add alternative number end -->
 <script>
 prepare_daterange('from_date','to_date');
@@ -1525,14 +1527,14 @@ $("#mark_delivered_courier_transport").dialog({
 				html_contant+="<tr>";
 				html_contant+="	<td>"+(a+1)+"</td>";
 				html_contant+="	<td>"+b.inv+"</td>";
-				html_contant+="	<td><input type='text' name='received_by[]' value=''></td>";
-				html_contant+="	<td><input type='text' name='received_on[]' value='' class='received_on'></td>";
-				html_contant+="	<td><input type='text' name='contact_no[]' value='' maxlength='10' ></td>";
+				html_contant+="	<td><input type='text' name='received_by[]' value='"+b.det.received_by+"'></td>";
+				html_contant+="	<td><input type='text' name='received_on[]' value='"+b.det.received_on_f+"' class='received_on'></td>";
+				html_contant+="	<td><input type='text' name='contact_no[]' value='"+b.det.contact_no+"' maxlength='10' ></td>";
 				ds='';
 
 				if(b.st)
 				{
-					ds="disabled='disabled' checked='checked'";
+					ds="disabled='disabled' checked='checked' class='readonly_inp' ";
 				}else{
 					show_submit=1;
 				}
@@ -1544,6 +1546,10 @@ $("#mark_delivered_courier_transport").dialog({
 			html_contant+="</tbody></table>";
 			$("#mark_delivered_courier_transport_form").html(html_contant);
 			$('#mark_delivered_courier_transport_form .received_on').datepicker();
+
+			$('#mark_delivered_courier_transport_form .readonly_inp').each(function(){
+				$('input[type="text"]',$(this).parents('tr:first')).attr('readonly',true);
+			}) 
 
 			if(show_submit)
 			{
@@ -1583,29 +1589,46 @@ $("#mark_delivered_courier_transport").dialog({
 $("#mark_delivered_courier_transport_form").submit(function(){
 	var mobile=$("input[name='contact_no[]']",this).val();
 	var delivered_status=0;
+	var ship_date=$("input[name='received_on[]']",this);
+	var error=0;
+
+	$('.error_inp',this).removeClass('error_inp');
 	
-	$("input[name='delivered[]']",this).each(function(){
-		if($(this).attr("checked") && !$(this).is(":disabled"))
+	$("input[name='delivered[]']:checked",this).each(function(a,b){
+		if(!$(this).attr('disabled'))
 		{
-			delivered_status=1;
+			var trEle = $(this).parents('tr:first');
+			
+			var rcvd_by = $("input[name='received_by[]']",trEle).val();
+			var rcvd_on = $("input[name='received_on[]']",trEle).val();
+			var contact_no = $("input[name='contact_no[]']",trEle).val();
+				if(contact_no.length!=0)
+				{
+					if(contact_no.length<10 || isNaN(contact_no*1))
+					{
+						$("input[name='contact_no[]']",trEle).addClass('error_inp');
+					}
+				}
+
+				if(rcvd_on == "")
+					$("input[name='received_on[]']",trEle).addClass('error_inp');
+				delivered_status = 1;
+			
 		}
 	});
 
 	if(delivered_status==0)
 	{
-		alert('Select atleast one innoice');
+		alert('Select atleast one invoice');
+		return false;
+	}
+
+	if($('.error_inp',this).length)
+	{
+		alert("Please enter valid data to submit");
 		return false;
 	}
 	
-	if(mobile.length!=0)
-	{
-		if(mobile.length<10 || isNaN(mobile))
-		{
-			alert('Invalid contact number');
-			return false;
-		}	
-	}
-	return true;
 });
 
 $("#add_alternative_nukber").click(function(){
