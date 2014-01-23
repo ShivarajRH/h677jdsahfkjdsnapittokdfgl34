@@ -97,7 +97,8 @@ table{
 							in.phc,in.nlc,
 							in.service_tax,
 							item.pnh_id,f.offer_text,f.immediate_payment,
-							in.invoice_qty as quantity 
+							in.invoice_qty as quantity,
+							ordert.member_id  as alloted_mem_id 
 						from king_orders as ordert
 						join king_dealitems as item on item.id=ordert.itemid 
 						join king_deals as deal on deal.dealid=item.dealid 
@@ -292,6 +293,9 @@ table{
 			</table>
 			<table cellspacing=0 cellpadding=5 border=1 width="100%" style="margin-top:10px;">
 				<tr>
+					<?php if($orders[0]['alloted_mem_id']){?>
+					<td width="10"><b>MemberID</b></td>
+					<?php }?>
 					<td width="<?=$is_pnh?"70":"45"?>%"><b>Product Item Name</b></td>
 					<?php if($is_pnh){?>
 							<td align="right" width="80" ><b>MRP</b></td>
@@ -325,6 +329,8 @@ table{
 		$total_item_amount = 0;
 		
 		$s_tax_on = 0; 
+		
+		$col_span_fix = $orders[0]['alloted_mem_id']?1:0; 
 		
 		
 		$p_tax_list = array();
@@ -371,6 +377,9 @@ table{
 				
 ?>			
 			<tr>
+				<?php if($order['alloted_mem_id']){?>
+					<td width="10"><b><?php echo $order['alloted_mem_id'];?></b></td>
+				<?php }?>
 				<td>
 					<?php if($inv_type !='original'){ ?>
 						<span class="hideinprint">
@@ -526,7 +535,7 @@ table{
 
 
 			<tr style="font-weight: bold;">
-				<td colspan="<?=($is_pnh&&$inv_type =='auditing')?"5":($is_pnh?"5":"4")?>" align="right">
+				<td colspan="<?=($is_pnh&&$inv_type =='auditing')?"5"+$col_span_fix:($is_pnh?"5":"4")+$col_span_fix?>" align="right">
 					&nbsp; 
 				</td>
 				<?php if(!$is_pnh){?>
@@ -1465,7 +1474,7 @@ table{
 				<table width="100%" style="font-size: 120%" border=0 cellpadding="5" cellspacing="0">
 					<tbody>
 						<tr>
-							<td>NO : <?=$invoice_credit_note_det['id']?></td>
+							<td>Dispatch No : <?=$dispatch_id?></td>
 							<td align="right">Dated : <?=date("d/m/Y",$inv_createdon)?></td>
 						</tr>
 						<tr>
