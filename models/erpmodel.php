@@ -161,6 +161,9 @@ class Erpmodel extends Model
 
 	function _notifybymail($to,$subj,$message,$fromname="Support",$from='support@snapittoday.com',$cc=array())
 	{
+		
+		return ;
+		
 		/*
 		$config['protocol'] = 'sendmail';
 		$config['mailpath'] = '/usr/sbin/sendmail';
@@ -168,7 +171,8 @@ class Erpmodel extends Model
 		$config['charset'] = 'utf8';
 		$config['wordwrap'] = TRUE;
 		*/
-		
+		if($_SERVER['HTTP_HOST']!="snapittoday.com")
+			return;
 		$this->email->clear();
 		
 		$config = array(
@@ -1954,7 +1958,7 @@ courier disable ends
 			$need_pids[$r['id']][]=$r['product_id'];
 			
 			$ord_item_ids[$r['itemid']] = $r['id'];
-			$is_order_splitted[$r['id']]=$r['is_ordqty_splitd'];
+			$is_order_splitted[$r['id']]=0;//$r['is_ordqty_splitd'];
 		}
 		$p_oids=array();
 		foreach($need_pids as $oid=>$p)
@@ -2481,7 +2485,6 @@ courier disable ends
 		}
 		$user=$this->erpm->getadminuser();
 		$bid=$this->db->query("select batch_id from shipment_batch_process_invoice_link where p_invoice_no=?",$p_invoice)->row()->batch_id;
-		
 		// Status is marked only invoiced in this stage for pnh invoices    
 		if($inv_trans_det['is_pnh'])
 		{
@@ -2506,6 +2509,8 @@ courier disable ends
 			
 			$this->session->set_flashdata("erp_pop_info","Invoice status Updated");
 			
+			redirect("admin/invoice/$invoice_no");
+			
 		}else
 		{
 			
@@ -2515,16 +2520,18 @@ courier disable ends
 				$this->db->query("update shipment_batch_process set status=1 where batch_id=? limit 1",$bid);
 			
 			$this->session->set_flashdata("erp_pop_info","Packed status updated");
+			
+			redirect("admin/invoice/$invoice_no");
 		}
 		
+		/*
 		if($split_inv_grpno)
 			redirect("admin/invoice/$split_inv_grpno");
 		else
 			redirect("admin/invoice/$invoice_no");
+			*/
 			
 	}
-	
-	
 	
 	function do_addtransmsg($transid)
 	{
@@ -7438,7 +7445,7 @@ order by p.product_name asc
 			$this->db->insert("pnh_sms_log_sent",$inp);
 			$sms_log_id = $this->db->insert_id();
 		}
-		if($_SERVER['HTTP_HOST']=="localhost")
+		if($_SERVER['HTTP_HOST']!="snapittoday.com")
 			return;
 		$exotel_sid="snapittoday";
 		$exotel_token="491140e9fbe5c507177228cf26cf2f09356e042c";
