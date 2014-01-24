@@ -124,7 +124,7 @@ else {
                                 $batch_id_msg = '<div class="ungrouped_item">Un-Grouped</div>';
                             }
                             else {
-                                $batch_id_msg = '<a href="'.site_url("admin/batch/".$trans_arr['batch_id']).'" target="_blank">B'.$trans_arr['batch_id'].'</a>';
+                                $batch_id_msg = '<div class="info_links"><a href="'.site_url("admin/batch/".$trans_arr['batch_id']).'" target="_blank">B'.$trans_arr['batch_id'].'</a></div>';
                             }
                         }
                         ?>

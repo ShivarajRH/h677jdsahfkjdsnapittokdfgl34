@@ -989,7 +989,7 @@ class Erp extends Stream
 	//	$data['grns']=$this->db->query("select g.*,v.vendor_name,0 as value from t_grn_product_link gp join t_grn_info g on g.grn_id=gp.grn_id join m_vendor_info v on v.vendor_id=g.vendor_id where gp.po_id=? group by g.grn_id",$poid)->result_array();
 		$data['grns']=$this->db->query("SELECT p.product_name,po.po_id,i.purchase_inv_no,i.purchase_inv_date,i.purchase_inv_value,l.payment_status,g.* FROM t_grn_product_link g  JOIN t_po_info po ON po.po_id=g.po_id  JOIN m_product_info p ON p.product_id=g.product_id  JOIN t_grn_invoice_link i ON i.grn_id=g.grn_id JOIN t_grn_info l ON l.grn_id=g.grn_id WHERE g.po_id=? AND g.received_qty!=0",$poid);
 		$data['vouchers']=$this->db->query("select v.*,t.adjusted_amount from t_voucher_document_link t join t_voucher_info v on v.voucher_id=t.voucher_id where t.ref_doc_id=? and t.ref_doc_type=2",$poid)->result_array();
-		$data['ttl_po_val']=$this->db->query("SELECT SUM(purchase_price*order_qty) AS total_value FROM t_po_product_link WHERE po_id=? AND is_active=1",$poid)->row()->total_value;
+		$data['ttl_po_val']=$this->db->query("SELECT SUM(purchase_price*order_qty) AS total_value,SUM(order_qty) AS total_qty,SUM(received_qty) AS received_qty FROM t_po_product_link WHERE po_id=? AND is_active=1",$poid)->row_array();
 		$data['removed_poprod_list']=$this->db->query("select i.*,p.product_name,a.name AS modifiedby  from t_po_product_link i join m_product_info p on p.product_id=i.product_id JOIN king_admin a ON a.id=i.modified_by where i.po_id=? and i.is_active=0 ",$poid)->result_array();
 		$this->load->view("admin",$data);
 	}
@@ -8291,6 +8291,7 @@ group by g.product_id ");
 		$data['is_membrsch_applicable']=$this->db->query("SELECT m.name AS menu FROM pnh_franchise_menu_link a JOIN pnh_menu m ON m.id= a.menuid WHERE a.status=1 AND menuid=112 AND fid=?",$fid)->row_array();		
 		//$data['is_mbrsch_active']=$this->db->query("select 1 from strking_member_scheme where is_active=1 and franchise_id=? order by created_on desc limit 1",$fid)->row();
 		$data['fran_status']=$this->db->query("SELECT is_suspended FROM pnh_m_franchise_info WHERE franchise_id=?",$fid)->row()->is_suspended;
+                $data['fran_invoices']=$this->db->query("select i.invoice_no,i.transid,i.mrp,tr.franchise_id,from_unixtime(i.createdon) from king_invoice i join king_transactions tr on tr.transid=i.transid where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id=? order by i.createdon asc",$fid)->result_array();
 		$data['franchise_id']=$fid;
 		$data['page']="pnh_franchise";
 		$this->load->view("admin",$data);
@@ -8978,7 +8979,7 @@ group by g.product_id ");
 	
 	function pnh_topup($fid)
 	{
-		$user=$this->auth(FINANCE_ROLE);
+		$user=$this->auth(FINANCE_ROLE); print_r($_POST);die();
 		if($_POST)
 			$this->erpm->do_pnh_topup($fid);
 		$data['fid']=$fid;
@@ -26675,5 +26676,25 @@ die; */
 				move_uploaded_file($f['tmp_name'], ERP_PHYSICAL_IMAGES."invoices/{$inv_id}.jpg");
 			}
 		}
+	}
+	
+	function get_vendor_details()
+	{
+		$vids=$this->input->post('vids');
+		$vids=array_unique($vids);
+		$vids=implode(',',$vids);
+		$output=array();
+		$vendor_details=$this->db->query("select vendor_name,vendor_id from m_vendor_info where vendor_id in ($vids)");
+		if($vendor_details)
+		{
+			$output['status']='success';
+			$output['vdet']=$vendor_details->result_array();
+		}
+		else
+		 {
+		 	$output['status']='error';
+		 	$output['message']='No data found';
+		 }
+		echo json_encode($output);
 	}
 }

@@ -5939,7 +5939,9 @@ order by p.product_name asc
 			$po['price']=$_POST['price'][$i]-$po['discount'];
 			$po['foc']=$this->input->post("foc$i");
 			$po['offer']=$this->input->post("offer$i");
-
+			$po['vendor_id']=$_POST['vendor_id'][$i];
+			$po['remarks']=$_POST['po_remarks'][$i];
+			$po['date_of_delivery']=$_POST['edod'][$i];
 
 			if(!isset($_POST['note'][$i]))
 				$po['note']=isset($_POST['note'][$i]);
@@ -5947,19 +5949,28 @@ order by p.product_name asc
 				$po['note']='';
 
 			$pos[$v][]=$po;
+			
 		}
 		
 		foreach($pos as $v=>$po)
 		{
+			
 			$total=0;
 			$this->db->query("insert into t_po_info(vendor_id,po_status,created_on,created_by) values(?,0,now(),?)",array($v,$user['userid']));
 			$poid=$this->db->insert_id();
+			
 			foreach($po as $p)
 			{
+				
+				
 				$oprice = $p['dp_price']?$p['dp_price']:$p['mrp'];
 				$marg=$p['margin'];
 				$disc=$p['discount'];
-
+				
+				$remarks=$p['remarks'];
+				$edod=$p['date_of_delivery'];
+				
+				
 				$disc_val = ($p['type']==1)?($oprice*$disc/100):$disc;
 
 				$p['price']=($oprice-($oprice*$marg/100))-$disc_val;
@@ -5976,7 +5987,7 @@ order by p.product_name asc
 				$this->_update_dp_byproductid($p['product'],$p['dp_price']);
 
 			}
-			$this->db->query("update t_po_info set total_value=? where po_id=? limit 1",array($total,$poid));
+			$this->db->query("update t_po_info set total_value=?,remarks=?,date_of_delivery=? where po_id=? limit 1",array($total,$remarks,$edod,$poid));
 		}
 		
 		$this->session->set_flashdata("erp_pop_info","POs created");
@@ -6094,11 +6105,6 @@ order by p.product_name asc
 		{
 			$r['dp_price'] = '';
 		}
-		
-		if($r['dp_price'] !=0)
-		//	$purchase_price=$r['dp_price']-($r['dp_price']*)
-		
-		
 		$r['orders']=$this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_deal_link l join king_orders o on o.itemid=l.itemid where l.product_id=? and o.time>".(time()-(24*60*60*90)),$id)->row()->s;
 		$r['last_pen_order'] = @$this->db->query("SELECT a.transid,DATE_FORMAT(FROM_UNIXTIME(time),'%d/%m/%Y') AS orderd_on
 				FROM king_transactions a

@@ -612,7 +612,7 @@ $(function(){
 	<form id="reg_mem_frm" action="<?php echo site_url('admin/jx_reg_newmem')?>" method="post">
 		<input type="hidden" name="franchise_id" value="" id="memreg_fid">
 		<table>
-			<tr><td>Member Name</td><td>:</td><td><input type="text" name="memreg_name" id="memreg_name" ></td></tr>
+			<tr><td>Member Name</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_name" id="memreg_name" ></td></tr>
 			<tr><td>Mobile Number</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_mobno" id="memreg_mobno" data-required="true" maxlength="10"></td></tr>
 		</table>
 	</form>
@@ -951,39 +951,37 @@ $('#reg_mem_dlg').dialog({
 						// register member 
 						var mem_regname = $.trim($('input[name="memreg_name"]').val());
 						var mem_mobno = $.trim($('input[name="memreg_mobno"]').val());
-							if(mem_regname.length == 0)
-								error_list.push("Please Enter name.");
-							
-							if(mem_mobno.length == 0)
-								error_list.push("Please Enter Mobile Number.");
-							else
-							{
-								mem_mobno = mem_mobno*1	
-								if(isNaN(mem_mobno))
-									error_list.push("Enter valid Mobile number.");	
-							}	
-							
-							if(error_list.length)
-							{
-								alert(error_list.join("\r\n"));
-							}else
-							{
-								$.post(site_url+'/admin/jx_reg_newmem',$('#reg_mem_frm').serialize(),function(resp){
-									if(resp.status == 'success')
-									{
-										$('input[name="mid"]').val(resp.mid);
-										$('#mid_entrytype').val(0);
-										$('.mid').trigger('change');
-										$('#reg_mem_dlg').dialog('close');
-									}else
-									{
-										$('input[name="mid"]').val('');
-										alert(resp.error);
-									}
-								},'json');
-							}
-							
+                        if(mem_regname.length == 0)
+                                error_list.push("Please Enter Member name.");
 						
+                        if(mem_mobno.length == 0)
+                                error_list.push("Please Enter Mobile Number.");
+                        else
+                        {
+                                mem_mobno = mem_mobno*1	
+                                if(isNaN(mem_mobno))
+                                        error_list.push("Please Enter valid Mobile number.");	
+                        }	
+
+                        if(error_list.length)
+                        {
+                                alert(error_list.join("\r\n"));
+                        }else
+                        {
+                                $.post(site_url+'/admin/jx_reg_newmem',$('#reg_mem_frm').serialize(),function(resp){
+                                        if(resp.status == 'success')
+                                        {
+                                                $('input[name="mid"]').val(resp.mid);
+                                                $('#mid_entrytype').val(0);
+                                                $('.mid').trigger('change');
+                                                $('#reg_mem_dlg').dialog('close');
+                                        }else
+                                        {
+                                                $('input[name="mid"]').val('');
+                                                alert(resp.error);
+                                        }
+                                },'json');
+                        }
 					},
 					'Cancel':function(){
 						$(this).dialog('close');
@@ -1137,7 +1135,7 @@ $(function(){
 
 			if(mid==0 && menu_id != 112)
 			{
-				if(confirm("Instant Registration is required because Other than Electronic items are there in the Cart"))
+				if(confirm("Instant Registration is required because Other than Mobile & Tablet items are there in the Cart"))
 					 mem_reg();
 				 return false;
 			}

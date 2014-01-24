@@ -152,18 +152,25 @@
 
 <input type="hidden" name="fid" id="i_fid">
 
-<table class="datagrid" width="100%" id="prods_order">
+<table class="datagrid nofooter" width="100%" id="prods_order" border="0">
 <thead><tr><th>Sno</th><th>Product Image-PID</th><th>Product Name</th><th>MRP</th><th>Offer price / <br> DP price</th>
 			<th>MemberShip Fee</th>
 			<th>Qty</th>
 			<th>Sub Total</th><th>Quote</th><th>Actions</th></tr></thead>
 <tbody>
 </tbody>
+<tfoot>
+    <tr>
+        <td colspan="7" style="text-align:right;">Sub Total Amount :</td>
+        <td><span style="font-weight: bold;" class="ttl_subtotal">0</span></td>
+        <td colspan="2"></td>
+    </tr>
+</tfoot>
 </table>
 
 <div style="padding:5px 0px 0px 0px;">
-<div style="float:right;"><input type="submit" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;background: #68a54b;color: #FFF;cursor: pointer" id="pnh_ordeR_submit" value="Place order"  class="myButton_placeorder1"></div>
-<div><input type="button" value="Request From Franchisee" id="reqq_but" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;cursor: pointer;background: #68a54b;color: #FFF" onclick='request_quote()' class="myButton_reqfran1" style="font-size:12px;">
+    <div style="float:right;"><input type="submit" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;background: #68a54b;color: #FFF;cursor: pointer" id="pnh_ordeR_submit" value="Place order"  class="myButton_placeorder1"></div>
+    <div><input type="button" value="Request From Franchisee" id="reqq_but" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;cursor: pointer;background: #68a54b;color: #FFF" onclick='request_quote()' class="myButton_reqfran1" style="font-size:12px;">
 </div>
 
 <div class="clear"></div>
@@ -186,7 +193,6 @@
 <tr><td><input type="button" value="Confirm" onclick='final_confirm()'></td><td><input type="button" value="Cancel" onclick='final_cancel()'></td></tr>
 </tbody>
 </table>
-
 <div class="clear"></div>
 
 </div>
@@ -201,7 +207,7 @@
 <tr pid="%pid%"  pimage="%pimage% %pid%" pname="%pname%" mrp="%mrp%" price="%price%" lcost="%lcost%" margin="%margin%" >
 <td>%sno%</td>
 <td style="text-align: center;padding:10px 0px 0px;width: 100px;background: #FFF;"><img alt="" height="100" src="<?=IMAGES_URL?>items/%pimage%.jpg"><b style="display: block;background: #f7f7f7;padding:2px;;text-align: center">%pid%</b></td>
-<td><input class="pids" type="hidden" name="pid[]" value="%pid%"><span>%pname%</span>
+<td><input class="pids" type="hidden" name="pid[]" value="%pid%"><span class="title"><a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">%pname%</a></span>
 <input type="hidden" name="menu[]" value="%menuid%" class="menuids">
 <div style="margin-top: 5px;font-size: 12px;">
 	<div class="p_extra"><b>Category :</b> %cat%</div>
@@ -240,7 +246,7 @@ text-align: center;width: 60px;"><b>OldMRP:</b> <span style="color: #cd0000;font
 <td><span class="stotal">%lcost%</span></td>
 <td><input type="text" name="quote[]" size=4></td>
 <td><a href="javascript:void(0)" onclick='remove_psel(this)'>remove</a><br>
-<a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">view</a>
+<!--<a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">view</a>-->
 </td>
 </tr>
 </tbody> 
@@ -251,8 +257,8 @@ text-align: center;width: 60px;"><b>OldMRP:</b> <span style="color: #cd0000;font
 	{
 		var sel_pid = $(ele).parents("tr:first").attr('pid');
 			$($(ele).parents("tr").get(0)).remove();
-		remove_pid(sel_pid);
-		
+                remove_pid(sel_pid);
+                
 		$('#prods_order tbody tr').each(function(i,itm){
 			$('td:first',this).text(i+1);
 		});
@@ -606,7 +612,7 @@ $(function(){
 	<form id="reg_mem_frm" action="<?php echo site_url('admin/jx_reg_newmem')?>" method="post">
 		<input type="hidden" name="franchise_id" value="" id="memreg_fid">
 		<table>
-			<tr><td>Member Name</td><td>:</td><td><input type="text" name="memreg_name" id="memreg_name" ></td></tr>
+			<tr><td>Member Name</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_name" id="memreg_name" ></td></tr>
 			<tr><td>Mobile Number</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_mobno" id="memreg_mobno" data-required="true" maxlength="10"></td></tr>
 		</table>
 	</form>
@@ -645,7 +651,7 @@ $('#req_quote_dlg').dialog({
 												req_plist += '	<td>'+$(this).attr('pname')+'</td>';
 												req_plist += '	<td>'+$(this).attr('mrp')+'</td>';
 												req_plist += '	<td>'+$(this).attr('price')+'</td>';
-												req_plist += '	<td><span style="background-color:#89c403;">'+$(this).attr('lcost')+'</span></td>';
+												req_plist += '	<td><span style="background-color:#89c403;">'+format_number($(this).attr('lcost'))+'</span></td>';
 												req_plist += '	<td><input type="text" size="4" name="qty[]" value="'+$('input[name="qty[]"]',this).val()+'"></td>';
 												req_plist += '	<td><input type="text" size="4" name="quote[]" value="'+$('input[name="quote[]"]',this).val()+'"></td>';
 												req_plist += '	<td><a href="javascript:void(0)" class="remove_btn"><b>[X]</b></a> </td>';
@@ -790,7 +796,7 @@ function select_fran(fid)
 	$.post("<?=site_url("admin/pnh_jx_getfranbalance")?>",{id:fid},function(data){
 		o=$.parseJSON(data);
 		credit=parseInt(o.credit);
-		balance=parseFloat(o.balance);
+		balance= format_number(o.balance);
 		if(balance < 5000)
 			$("#fran_balance").addClass('warning');
 		else
@@ -896,6 +902,8 @@ function remove_pid(pid)
 	for(i=0;i<t_pids.length;i++)
 		if(pid!=t_pids[i])
 			pids.push(t_pids[i]);
+                    
+        change_total_subtotal(); 
 }
 
 function load_franchisebyid()
@@ -943,43 +951,41 @@ $('#reg_mem_dlg').dialog({
 						// register member 
 						var mem_regname = $.trim($('input[name="memreg_name"]').val());
 						var mem_mobno = $.trim($('input[name="memreg_mobno"]').val());
-							if(mem_regname.length == 0)
-								error_list.push("Please Enter name");
-							
-							if(mem_regname.length == 0)
-								error_list.push("Please Enter name");
-							else
-							{
-								mem_mobno = mem_mobno*1	
-								if(isNaN(mem_mobno))
-									error_list.push("Invalid Mobileno entered");	
-							}	
-							
-							if(error_list.length)
-							{
-								alert(error_list.join("\r\n"));
-							}else
-							{
-								$.post(site_url+'/admin/jx_reg_newmem',$('#reg_mem_frm').serialize(),function(resp){
-									if(resp.status == 'success')
-									{
-										$('input[name="mid"]').val(resp.mid);
-										$('#mid_entrytype').val(0);
-										$('.mid').trigger('change');
-										$('#reg_mem_dlg').dialog('close');
-									}else
-									{
-										$('input[name="mid"]').val('');
-										alert(resp.error);
-									}
-								},'json');
-							}
-							
-						
+                        if(mem_regname.length == 0)
+                                error_list.push("Please Enter Member name.");
+
+                        if(mem_mobno.length == 0)
+                                error_list.push("Please Enter Mobile Number.");
+                        else
+                        {
+                                mem_mobno = mem_mobno*1	
+                                if(isNaN(mem_mobno))
+                                        error_list.push("Please Enter valid Mobile number.");	
+                        }	
+
+                        if(error_list.length)
+                        {
+                                alert(error_list.join("\r\n"));
+                        }else
+                        {
+                                $.post(site_url+'/admin/jx_reg_newmem',$('#reg_mem_frm').serialize(),function(resp){
+                                        if(resp.status == 'success')
+                                        {
+                                                $('input[name="mid"]').val(resp.mid);
+                                                $('#mid_entrytype').val(0);
+                                                $('.mid').trigger('change');
+                                                $('#reg_mem_dlg').dialog('close');
+                                        }else
+                                        {
+                                                $('input[name="mid"]').val('');
+                                                alert(resp.error);
+                                        }
+                                },'json');
+                        }
 					},
 					'Cancel':function(){
 						$(this).dialog('close');
-					},
+					}
 				}
 });
 
@@ -1100,7 +1106,7 @@ $(function(){
 		menuids=[];
 		
 		$("#prods_order .stotal").each(function(){
-			total+=parseFloat($(this).html());
+			total+= format_number( $(this).html() );
 		});
 		
 		$("#prods_order .pids").each(function(){
@@ -1129,7 +1135,7 @@ $(function(){
 
 			if(mid==0 && menu_id != 112)
 			{
-				if(confirm("Instant Registration is required because Other than Electronic items are there in the Cart"))
+				if(confirm("Instant Registration is required because Other than Mobile & Tablet items are there in the Cart"))
 					 mem_reg();
 				 return false;
 			}
@@ -1156,11 +1162,11 @@ $(function(){
 				if(obj.e==0)
 				{
 					goodtogo=1;
-					$("#final_amount").text(obj.total);
-					$("#final_ded").text(obj.d_total);
-					$("#final_com").text(obj.com);
-					$("#final_bal").text(obj.bal);
-					$("#final_abal").text(obj.abal);
+					$("#final_amount").text( format_number(obj.total) );
+					$("#final_ded").text(format_number(obj.d_total));
+					$("#final_com").text( format_number(obj.com) );
+					$("#final_bal").text( format_number(obj.bal) );
+					$("#final_abal").text( format_number(obj.abal) );
 					$("#price_changes").html(obj.pc);
 					$("#last_confirm").show();
 					
@@ -1179,7 +1185,8 @@ $(function(){
 		}
 		return false;
 	});
-
+        
+        
 	$("#prods_order .qty").live("change",function(){
 		p=$(this).parents("tr").get(0);
 		
@@ -1212,9 +1219,11 @@ $(function(){
 		
 		//$(".stotal",p).html(parseInt($(".price",p).html())*parseInt($(".qty",p).val()));
 		//$(".landing_cost",p).html(parseInt($(".lcost",p).html())*parseInt($(".qty",p).val()));
-		$(".stotal",p).html(parseFloat($(".lcost",p).text())*parseInt($(".qty",p).val()));
+                var sub_total = parseFloat( $(".lcost",p).text())*parseInt($(".qty",p).val() ) ;
+		$(".stotal",p).html( format_number( sub_total ) );
+                change_total_subtotal();
 	});
-
+        
 	$("#p_srch").keyup(function(){
 		fid=$("#fid_inp").val();
 		q=$(this).val();
@@ -1333,6 +1342,9 @@ $(function(){
 			pids.push(p.pid);
 			
 			show_prev_orderd();
+                        
+                        change_total_subtotal();
+                        
 			show_prevorderd_unshipped();
 			
 		});
@@ -1357,6 +1369,20 @@ $(".mid").change(function(){
 			$("#mem_fran").html(data).show();
 		});
 	});
+
+
+function change_total_subtotal() {
+    var ttl_subtotal=0;
+    if($("#prods_order .stotal").html() == '') {
+        ttl_subtotal=0;
+    }
+    else {
+        $("#prods_order .stotal").each(function(){
+                ttl_subtotal += format_number($(this).html());
+        });
+    }
+    $(".ttl_subtotal").html(ttl_subtotal);
+}
 
 function trig_loadpnh(pid)
 {
@@ -1589,6 +1615,13 @@ $("#show_scheme_details").dialog({
 		}
 });
 
+function format_number(num,decimal) {
+    var deci = (decimal === undefined || decimal === null ) ? 2 : decimal;
+    num = parseFloat(num);
+    
+    var final_num = ( num.toString().indexOf(".") !== -1) ? num.toFixed(deci) : num;
+    return parseFloat(final_num);
+}
 
 
 </script>
@@ -1638,7 +1671,7 @@ overflow:auto;
 	background:#fafafa;
 	position: fixed;
 	right: 18px;
-	top: 64px;
+	top: 76px;
 }
 
 .ui-widget-header{background: none;}
@@ -1789,7 +1822,6 @@ background-color:#89c403;display:block;padding:12px 15px;
 .offn_courier_detail span {
     margin:0 10px;
 }
+.title a { text-decoration: none; color: #161EE7; }
 </style>
-
-
 <?php

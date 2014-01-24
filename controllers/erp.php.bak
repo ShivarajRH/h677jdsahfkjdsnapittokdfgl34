@@ -19925,9 +19925,10 @@ order by action_date";
 			$amount=$this->input->post('debit_amt');
 			$sms=$this->input->post('sms');
 			$tm_sms=$this->input->post('tm_sms');
+			$cheq_cancelled_on=$this->input->post('cheq_canceled_on');
 			$d=0;
 			$output=array();
-			$this->db->query("update pnh_m_deposited_receipts set status=2,is_cancelled=1,cancel_reason=?,cancelled_on=now(),cancel_status=?,dbt_amt=? where receipt_id=?",array($desc,$cancel_status,$amount,$receipt_id));
+			$this->db->query("update pnh_m_deposited_receipts set status=2,is_cancelled=1,cancel_reason=?,cancelled_on=now(),cancel_status=?,dbt_amt=?,cheq_cancelled_on=? where receipt_id=?",array($desc,$cancel_status,$amount,$cheq_cancelled_on,$receipt_id));
 			$this->db->query("update pnh_t_receipt_info set status=2,activated_by=?,reason=?,activated_on=? where receipt_id=?",array($user['userid'],$desc,time(),$receipt_id));
 				
 			//if($sms || $tm_sms)
@@ -22362,11 +22363,17 @@ die; */
 		
 		foreach(explode(',',$invoices) as $invoice)
 		{
+			$inv_trans_det = array('received_on_f'=>'','received_by'=>'','contact_no'=>'','received_on'=>'');
 			$already=0;
-			$check_status=$this->db->query("select count(*) as ttl from pnh_invoice_transit_log where invoice_no=? and (status=3 || status=4)",array($invoice))->row()->ttl;
-			if($check_status)
+			$inv_transit_res=$this->db->query("select * from pnh_invoice_transit_log where invoice_no=? and status=3",array($invoice));
+			if($inv_transit_res->num_rows())
+			{
+				$inv_trans_det = $inv_transit_res->row_array();
+				$inv_trans_det['received_on_f'] = format_date($inv_trans_det['received_on']);
 				$already=1;
-			array_push($invoice_det,array('inv'=>$invoice,'st'=>$already));
+			}
+				
+			array_push($invoice_det,array('inv'=>$invoice,'st'=>$already,'det'=>$inv_trans_det));
 		}
 		
 		$output['invoice_det']=$invoice_det;

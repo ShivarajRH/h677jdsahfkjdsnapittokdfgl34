@@ -1232,8 +1232,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 								</tr>
 								<tr>
 									<td>Amount (Rs)</td><td>:</td>
-									<td><input type="text" class="inp amount" name="amount"
-										size=5>
+									<td><input type="text" class="inp amount" name="amount" size=5>
 									</td>
 								</tr>
 								<tr>
@@ -1264,6 +1263,38 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 								<tr class="inst inst_date">
 									<td class="label">Instrument Date</td><td> :</td>
 									<td><input type="text" name="date" id="sec_date" size=15></td>
+								</tr>
+                                                                <tr>
+									<td>Select Invoices :</td><td> :</td>
+									<td>
+                                                                            <table>
+                                                                            <thead>
+                                                                                <tr>
+                                                                                    <th>Invoice No</th>
+                                                                                    <th>Un-reconcile Amount</th>
+                                                                                    <th>Additional Amount</th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                                <tr class="" id="reconcile_row">
+                                                                                    <td>
+                                                                                        <select size=4 name="sel_invoice[]" id="selected_invoices" style="width:160px;">
+                                                                                            <?php foreach($fran_invoices as $invoice) { ?>
+                                                                                                <option value="<?=$invoice['invoice_no'];?>"><?=$invoice['invoice_no']." (".$invoice['mrp'].")";?></option>
+                                                                                            <?php } ?>
+                                                                                        </select>
+                                                                                    </td>
+                                                                                    <td><input type="text" class="inp" name="amt_unreconcile[]" size=5></td>
+                                                                                    <td><input type="text" class="inp" name="amt_additional[]" size=5></td>
+                                                                                    <td><div class="button button-tiny_wrap cursor" onclick="clone_rows();">+</div></td>
+                                                                                </tr>
+                                                                                <div class="reconcilation_invoices">
+                                                                                    
+                                                                                </div>
+                                                                                
+                                                                            </tbody>
+                                                                            </table>
+                                                                        </td>
 								</tr>
 								<tr class="inst_msg">
 									<td>Message</td><td> :</td>
@@ -2850,7 +2881,13 @@ $("#pnh_membersch").dialog({
 		.module_cont .module_cont_block .module_cont_block_grid_total{margin:3px 0px;}
 		.module_cont .module_cont_grid_block_pagi{padding:3px;text-align: right;}
 		.module_cont .module_cont_grid_block_pagi a{padding:5px 10px;color:#454545;background: #f1f1f1;display: inline-block}
-		
+		.button-tiny_wrap {
+                    font-size: 11px;
+                    height: 16.4px;
+                    line-height: 16.4px;
+                    margin-left: 7px;
+                    padding: 0 9.92px;
+                }
 	</style>
 	
 	<script>
@@ -3680,7 +3717,28 @@ $("#pnh_membersch").dialog({
 			},'json');
 		}
 		load_recent_calllog('',<?php echo $f['franchise_id'];?>);
-			
-				</script>
+                var ic=0;
+                $("#selected_invoices").chosen();
+                
+                function clone_rows() {
+                    alert("345");
+                    ic++;
+                    var html='';
+                    $("#selected_invoices_"+ic).chosen();
+                    html += "<tr class='' id='reconcile_row_1'>\n\
+                                    <td>\n\
+                                        <select size='4' name='sel_invoice[]' id='selected_invoices_"+ic+"' style='width:160px;'>";
+                                            <?php foreach($fran_invoices as $invoice) { ?>
+                                                html += "<option value='<?=$invoice['invoice_no'];?>'><?=$invoice['invoice_no'].' ('.$invoice['mrp'].')';?></option>";
+                                            <?php } ?>
+                                        html += "</select>"
+                                    html += "</td>\n\
+                                    <td><input type='text' class='inp' name='amt_unreconcile[]' size=5></td>\n\
+                                    <td><input type='text' class='inp' name='amt_additional[]' size=5></td>\n\
+                                    <td><span class='button button-tiny_wrap cursor' onclick='clone_row();'>+</span></td>\n\
+                                </tr>");
+                        $("reconcile_row").append(html);
+                }
+</script>
  
 <?php

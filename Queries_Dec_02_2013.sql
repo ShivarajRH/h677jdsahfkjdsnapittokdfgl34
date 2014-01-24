@@ -1757,7 +1757,7 @@ select * from shipment_batch_process_invoice_link where batch_id='5714'
 #=================================================================================================
 #============== BATCH RESET ======================================================================
 set @global_batch_id=5000;
-set @batch_id=5729; #5544-48
+set @batch_id=5760; #5544-48
 update shipment_batch_process_invoice_link set batch_id=@global_batch_id where batch_id=@batch_id;
 delete from shipment_batch_process where batch_id = @batch_id;
 #=================================================================================================
@@ -1781,17 +1781,23 @@ select status,product_id from t_imei_no where imei_no = '355681053892715'; #5108
 # Jan_22_2014
 
 -- =============================================================================
-update t_imei_no set status=0 and order_id=0 where imei_no = '356721053822855';
+update t_imei_no set status=0 and order_id=0 where imei_no = '911222652406180';
 -- =============================================================================
+select * from m_product_info where product_id='133097';
+# Stock intake the product with product id
+set @product_id = '133097'; # frequent
+set @id='24569';
+set @imei_no = '364619056098761';
+insert into t_imei_no(id,product_id,imei_no,status,grn_id,stock_id,order_id,created_on,modified_on) values(@id,@product_id,@imei_no,0,'2235',0,0,now(),0);
 
+-- =============================================================================
 select * from t_stock_info where product_id='8702'
 
 select * from t_reserved_batch_stock where  product_id='132989'
 
-select * from t_imei_no where product_id='132989'
+select * from t_imei_no where imei_no='354619056098765' product_id='132989'
 
-insert into t_imei_no(id,product_id,imei_no,status,grn_id,stock_id,order_id,created_on,modified_on)
-values(24560,5746,'354619056098762',0,'2235',0,0,'now()',0)
+
 
 -- // Territory 
 select t.*,sd.batch_id,i.id from proforma_invoices pi 
@@ -1832,4 +1838,58 @@ select status,product_id from t_imei_no where imei_no = '1223334566777_7089_1_10
 select * from t_imei_no  where product_id='8583';
 
 select * from shipment_batch_process_invoice_link
+
+-- =====================================================================
+# INSERT NEW IMEI FOR PRODUCT
+insert into t_imei_no(id,product_id,imei_no,status,grn_id,stock_id,order_id,created_on,modified_on)
+values(24565,29226,'354619056098767',0,'2235',0,0,now(),0);
+-- =====================================================================
+
+select * from m_product_info where product_id='29226';
+
+ALTER TABLE `m_vendor_info` ADD COLUMN `payment_type` INT(1) DEFAULT 0 NULL AFTER `require_payment_advance`;
+
+ALTER TABLE `pnh_t_receipt_info` ADD COLUMN `cheq_realized_on` VARCHAR(255) NULL AFTER `activated_on`;
+
+-- 1
+select r.*,m.name AS modifiedby,a.name as admin,act.name as act_by,d.remarks AS submittedremarks,sub.name AS submittedby,d.submitted_on,can.cancelled_on,can.cancel_reason 
+from pnh_t_receipt_info r 
+LEFT OUTER JOIN `pnh_m_deposited_receipts`can ON can.receipt_id=r.receipt_id 
+left outer join king_admin a on a.id=r.created_by left outer join king_admin act on act.id=r.activated_by 
+LEFT OUTER JOIN `pnh_m_deposited_receipts`d ON d.receipt_id=r.receipt_id 
+LEFT OUTER JOIN king_admin sub ON sub.id=d.submitted_by 
+LEFT OUTER JOIN king_admin m ON m.id=r.modified_by where franchise_id='371' group by r.receipt_id;
+
+-- 2
+select dm.created_on,di.id,di.device_sl_no,d.device_name 
+from pnh_m_device_info di 
+join pnh_m_device_type d on d.id=di.device_type_id 
+join pnh_t_device_movement_info dm on dm.device_id=di.id where di.issued_to='371'
+
+-- 3
+SELECT m.id,m.name AS menu FROM `pnh_franchise_menu_link`a 
+JOIN pnh_m_franchise_info b ON b.franchise_id=a.fid 
+JOIN pnh_menu m ON m.id=a.menuid 
+WHERE a.status=1 AND b.franchise_id='371';
+
+-- 4
+select f.*,f.franchise_id,f.sch_discount,f.sch_discount_start,f.sch_discount_end,f.credit_limit,f.security_deposit,c.class_name,c.margin,c.combo_margin,f.pnh_franchise_id,f.franchise_name,f.locality,f.city,f.current_balance,f.login_mobile1,f.login_mobile2,f.email_id,u.name as assigned_to,t.territory_name,f.is_prepaid 
+from pnh_m_franchise_info f 
+left outer join king_admin u on u.id=f.assigned_to 
+join pnh_m_territory_info t on t.id=f.territory_id 
+join pnh_m_class_info c on c.id=f.class_id 
+where f.franchise_id='371' order by f.franchise_name asc;
+
+-- 5 new
+select i.invoice_no,i.transid,i.mrp,tr.franchise_id,from_unixtime(i.createdon) from king_invoice i
+join king_transactions tr on tr.transid=i.transid
+where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id='224'
+order by i.createdon asc
+
+#invoice_status
+
+-- ====================================================================================
+create table `pnh_t_receipt_reconcilation` (  `id` bigint (20) NOT NULL AUTO_INCREMENT , `debit_note_id` bigint (20) DEFAULT '0', `invoice_no` bigint (20) , `dispatch_id` int (100) , `inv_amount` float (50) DEFAULT '0', `unreconciled` float (50) DEFAULT '0', `created_on` int (50) , `created_by` int (20) , `modified_on` int (50) , `modified_by` int (20) , PRIMARY KEY ( `id`))  
+create table `pnh_t_receipt_reconcilation_log` (  `logid` bigint (20) NOT NULL AUTO_INCREMENT , `credit_note_id` int (50) , `receipt_id` int (50) , `reconcile_id` int (50) , `reconcile_amount` float (50) DEFAULT '0', `is_reversed` int (11) DEFAULT '0', `created_on` int (100) , `created_by` int (20) , PRIMARY KEY ( `logid`))  
+-- ====================================================================================
 

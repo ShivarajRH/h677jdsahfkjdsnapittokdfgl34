@@ -124,15 +124,19 @@ class Reservation extends Voucher {
         if(isset($_POST['pids'])) {
             $this->erpm->do_pack(); die();
         }
-        
         $p_invoice_ids = $this->db->query("select group_concat(distinct sd.p_invoice_no) as p_invoice_ids
                                             from shipment_batch_process_invoice_link sd
                                             join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no
                                             join king_orders o on o.id=pi.order_id
                                             join king_transactions tr on tr.transid=o.transid
                                             where sd.batch_id=? and tr.franchise_id=?",array($batch_id,$franchise_id))->row()->p_invoice_ids;
-        $data['invoice'] = $invoices = $this->erpm->getinvoiceforpacking($p_invoice_ids);
-        
+//        echo '<pre>';print_r($p_invoice_ids);die();
+        if(!$p_invoice_ids) {
+            show_error("No invoices found");
+        }
+        else  {
+            $data['invoice'] = $invoices = $this->erpm->getinvoiceforpacking($p_invoice_ids);
+        }
         $data['page']="pack_invoice";
         $this->load->view("admin",$data);
     }
@@ -228,7 +232,7 @@ class Reservation extends Voucher {
                 }
                 else {
                     
-                    $transid_msg=' --"--';//'-second</a>';
+                    $transid_msg=' --"--';
                 }
                 //if(isset($batch_id)) $batch_id_msg = '<a href="'.site_url("admin/batch/".$batch_id).'" target="_blank">B'.$batch_id.'</a>';
                 
@@ -613,7 +617,7 @@ class Reservation extends Voucher {
      * Function to get batch orders list
      * @param type $batch_id int
      */
-    function jx_get_batch_order_list($batch_id) {
+    function jx_get_batched_trans_orders_list($batch_id) {
         $this->erpm->auth();
         
         $output=array();

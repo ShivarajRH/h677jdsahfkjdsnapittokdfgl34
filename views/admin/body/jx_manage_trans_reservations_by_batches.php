@@ -60,7 +60,7 @@ else {
         <tr>
             <td><?=++$i;?></td>
             <td><div class="str_time"><?=format_datetime($batch_item['created_on']);?></div></td>
-            <td><b><a href="<?=site_url("admin/batch/".$batch_item['batch_id']);?>" target="_blank"><?=$batch_item['batch_id'];?></a></b></td>
+            <td><div class="info_links"><b><a href="<?=site_url("admin/batch/".$batch_item['batch_id']);?>" target="_blank"><?=$batch_item['batch_id'];?></a></b></div></td>
             <td><?=$batch_item['batch_grp_name'];?></td>
             <td><?=$batch_item['territory_name'];?></td>
             <td><?=$batch_item['num_orders'];?></td>
@@ -124,7 +124,7 @@ else {
                 $("table tbody",dlt_elt).html("");
                 dlt_elt.dialog("option","title","Batch franchise order list of #"+batch_id);
                 
-                $.post(site_url+'/admin/jx_get_batch_order_list/'+batch_id,{},function(resp) {
+                $.post(site_url+'/admin/jx_get_batched_trans_orders_list/'+batch_id,{},function(resp) {
                     if(resp.status=='success') {
                         var html='';
                         $.each(resp.franchise_list,function(i,fran_det) {

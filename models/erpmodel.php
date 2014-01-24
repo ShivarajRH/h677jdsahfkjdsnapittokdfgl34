@@ -7089,8 +7089,14 @@ order by p.product_name asc
 	function do_pnh_topup($fid)
 	{
 		$user=$this->erpm->getadminuser();
-		foreach(array("r_type","amount","bank","type","no","date","msg","transit_type") as $i)
+		foreach(array("r_type","amount","bank","type","no","date","msg","transit_type","selected_invoices") as $i)
 			$$i=$this->input->post($i);
+                
+//                foreach($selected_invoices as $invoice) {
+//                        echo $invoice;
+                        //$this->get_invoice_value;
+//                }
+                die();
 		$inp=array("receipt_type"=>$r_type,"franchise_id"=>$fid,"bank_name"=>$bank,"receipt_amount"=>$amount,"payment_mode"=>$type,"instrument_no"=>$no,"instrument_date"=>strtotime($date),"created_by"=>$user['userid'],"created_on"=>time(),"remarks"=>$msg,"in_transit"=>$transit_type);
 		
 		// if cash receipt is added.
@@ -8112,18 +8118,16 @@ order by p.product_name asc
 	{
 		$itemid=$this->db->query("select id from king_dealitems where pnh_id=?",$pid)->row()->id;
 		
-		//$menuid=$this->db->query("select d.menuid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.is_pnh=1 and i.pnh_id=?",$pid)->row()->menuid;
 		
 		$menuid=$this->db->query("select d.menuid,m.default_margin as margin from king_dealitems i join king_deals d on d.dealid=i.dealid JOIN pnh_menu m ON m.id=d.menuid where i.is_pnh=1 and i.pnh_id=?",$pid)->row_array();
 		
-		//print_r($menuid);
+	
 		$brandid=$this->db->query("select d.brandid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.is_pnh=1 and i.pnh_id=?",$pid)->row()->brandid;
 		
 		$catid=$this->db->query("select d.catid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.is_pnh=1 and i.pnh_id=?",$pid)->row()->catid;
 		
 		$fran=$this->db->query("select * from pnh_m_franchise_info where franchise_id=?",$fid)->row_array();
 		
-		//$fran1=$this->db->query("select * from pnh_franchise_menu_link where fid=? and menuid=?",array($fid,$menuid['menuid']))->row_array();
 		
 		$fran1=$this->db->query("select * from pnh_sch_discount_brands where franchise_id=? and menuid=? and brandid=? and is_sch_enabled = 1 ",array($fid,$menuid['menuid'],$brandid))->row_array();
 		 
