@@ -161,9 +161,6 @@ class Erpmodel extends Model
 
 	function _notifybymail($to,$subj,$message,$fromname="Support",$from='support@snapittoday.com',$cc=array())
 	{
-		
-		return ;
-		
 		/*
 		$config['protocol'] = 'sendmail';
 		$config['mailpath'] = '/usr/sbin/sendmail';
@@ -5930,9 +5927,9 @@ order by p.product_name asc
 
 		$sql="SELECT a.*,b.id as brand_id,b.name AS brand_name,d.menuid,ifnull(m.name,m1.name) AS menu,v.vendor_id,r.vendor_name,date_format(from_unixtime(o.time),'%d/%m/%Y') as last_orderdon,o.transid,t.partner_id,p.name AS partner_name,t.is_pnh,po.po_id as is_po_raised
 				FROM m_product_info a
-				left join m_product_deal_link l on l.product_id=a.product_id
-				left JOIN king_dealitems di ON di.id= l.itemid
-				left JOIN king_deals d ON d.dealid=di.dealid
+				join m_product_deal_link l on l.product_id=a.product_id and l.is_active = 1 
+				JOIN king_dealitems di ON di.id= l.itemid  
+				JOIN king_deals d ON d.dealid=di.dealid 
 				left JOIN king_brands b ON a.brand_id = b.id
 				left JOIN pnh_menu m ON m.id=d.menuid and di.is_pnh = 1
 				left JOIN king_menu m1 ON m1.id=d.menuid and di.is_pnh = 0
@@ -5944,14 +5941,14 @@ order by p.product_name asc
 				LEFT JOIN t_po_product_link po ON po.product_id=a.product_id
 				WHERE a.product_id=?
 				group by a.product_id
-				";
+			";
 		$r=$this->db->query($sql,$id)->row_array();
 
 
 		// Check if valid for DP margin
 		if($r['is_serial_required'])
 		{
-			$r['dp_price'] = @$this->db->query("select price from king_deals a join king_dealitems b on a.dealid = b.dealid join m_product_deal_link c on c.itemid = b.id where product_id = ? and c.is_active = 1 order by c.id desc limit 1 ",$r['product_id'])->row()->price;
+			$r['dp_price'] = @$this->db->query("select price from king_deals a join king_dealitems b on a.dealid = b.dealid and b.is_combo = 0 join m_product_deal_link c on c.itemid = b.id where product_id = ? and c.is_active = 1 order by c.id desc limit 1 ",$r['product_id'])->row()->price;
 		}else
 		{
 			$r['dp_price'] = '';
@@ -7705,18 +7702,18 @@ order by p.product_name asc
 	function get_pnh_margin($fid,$pid)
 	{
 		$itemid=$this->db->query("select id from king_dealitems where pnh_id=?",$pid)->row()->id;
-		
+	
 		//$menuid=$this->db->query("select d.menuid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.is_pnh=1 and i.pnh_id=?",$pid)->row()->menuid;
-		
+	
 		$menuid=$this->db->query("select d.menuid,m.default_margin as margin from king_dealitems i join king_deals d on d.dealid=i.dealid JOIN pnh_menu m ON m.id=d.menuid where i.is_pnh=1 and i.pnh_id=?",$pid)->row_array();
-		
+	
 		//print_r($menuid);
 		$brandid=$this->db->query("select d.brandid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.is_pnh=1 and i.pnh_id=?",$pid)->row()->brandid;
-		
+	
 		$catid=$this->db->query("select d.catid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.is_pnh=1 and i.pnh_id=?",$pid)->row()->catid;
-		
+	
 		$fran=$this->db->query("select * from pnh_m_franchise_info where franchise_id=?",$fid)->row_array();
-		
+	
 		//$fran1=$this->db->query("select * from pnh_franchise_menu_link where fid=? and menuid=?",array($fid,$menuid['menuid']))->row_array();
 		
 		$fran1=$this->db->query("select * from pnh_sch_discount_brands where franchise_id=? and menuid=? and brandid=? and is_sch_enabled = 1 ",array($fid,$menuid['menuid'],$brandid))->row_array();
@@ -7757,16 +7754,14 @@ order by p.product_name asc
 		$margin['bal_discount']=0;
 		
 		$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=?  and ? between valid_from and valid_to and catid=? and brandid=? and menuid=? and is_sch_enabled = 1 and dealid=? order by id desc limit 1",array($fid,time(),$catid,$brandid,$menuid['menuid'],$itemid))->row()->discount;
-			if(empty($bmargin))
-		$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=? and ? between valid_from and valid_to and brandid=? and catid=? and menuid=? and is_sch_enabled = 1 and dealid=0 order by id desc limit 1",array($fid,time(),$brandid,$catid,$menuid['menuid']))->row()->discount;
-		
+		if(empty($bmargin))
+			$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=? and ? between valid_from and valid_to and brandid=? and catid=? and menuid=? and is_sch_enabled = 1 and dealid=0 order by id desc limit 1",array($fid,time(),$brandid,$catid,$menuid['menuid']))->row()->discount;
 		if(empty($bmargin))
 			$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=?  and ? between valid_from and valid_to and brandid=? and catid=0 and menuid=? and is_sch_enabled = 1 and dealid=0 order by id desc limit 1",array($fid,time(),$brandid,$menuid['menuid']))->row()->discount;
 		if(empty($bmargin))
 			$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=?  and ? between valid_from and valid_to and catid=? and brandid=0 and menuid=? and is_sch_enabled = 1 and dealid=0 order by id desc limit 1",array($fid,time(),$catid,$menuid['menuid']))->row()->discount;
 		if(empty($bmargin))
 			$bmargin=$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=?  and ? between valid_from and valid_to and catid=0 and brandid=0 and menuid=? and is_sch_enabled = 1 and dealid=0 order by id desc limit 1",array($fid,time(),$menuid['menuid']))->row()->discount;
-
 		
 		
 		if(!$has_special_margin)
@@ -7867,7 +7862,7 @@ order by p.product_name asc
 		foreach(array("fid","pid","qty","mid","redeem","redeem_points","mid_entrytype") as $i)
 			$$i=$this->input->post($i);
 		
-		
+        $updated_by=$admin["userid"];
 
 		if($redeem)
 			$redeem_points = 150;
@@ -11462,6 +11457,27 @@ order by action_date";
     }
 
 	
+/**
+     * function to log admin/logged in user activity  
+     * 
+     * @author Shariff
+     */
+    function log_admin_activity()
+    {
+    	$user = $this->erpm->auth();
+    	
+    	if($_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest')
+    		return ;
+    	
+    	$inp = array();
+    	$inp['user_id'] = $user['userid'];
+    	$inp['ipaddress'] = $_SERVER['REMOTE_ADDR'];
+    	$inp['visited_url'] = current_url();
+    	$inp['reference_method'] = $_SERVER['REQUEST_METHOD'];
+    	$inp['logged_on'] = cur_datetime();
+    	$this->db->insert('king_admin_activitylog',$inp);
+    	
+    }
 }
 
 
