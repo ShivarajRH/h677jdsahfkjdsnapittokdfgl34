@@ -1,16 +1,29 @@
 <style>
-.container_div{visibility:hidden}
-.leftcont{display: none}.fran_suspendlink{
-border-radius:5px;
-background:#f77;
-display:inline-block;
-padding:3px 7px;
-color:#fff;
-cursor: pointer;
+.container_div
+{
+	visibility:hidden
 }
-.fran_suspendlink:hover{
-background:#f00;
-text-decoration:none;
+.leftcont
+{
+	display: none
+}
+.fran_suspendlink
+{
+	border-radius:5px;
+	background:#f77;
+	display:inline-block;
+	padding:3px 7px;
+	color:#fff;
+	cursor: pointer;
+}
+.fran_suspendlink:hover
+{
+	background:#f00;
+	text-decoration:none;
+}
+li.required
+{
+	color: #cd0000;list-style: none
 }
 li.required{color: #cd0000;list-style: none}
 .jqplot-highlighter-tooltip, .jqplot-canvasOverlay-tooltip
@@ -274,7 +287,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 					<?php }?>
 					</table>
 					</div>
-					
+			
 					<div id="live_suspn">
 					<table class="datagrid">
 					<thead><th>Reason</th><th>Unsuspended On</th><th>Suspended By</th></thead>
@@ -315,14 +328,18 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 			</div>
 	<!-- franchise status log END -->
 	
-	<!-- Analytics graph section start ---->
+		<!-- Analytics graph section start ---->
 		<div id="analytics">
 			<table width="100%">
 				<tr>
-					<td width="50%">
-						<h4><div class="head_wrap"></div></h4>
+					<td width="70%">
+						<div style="float:left;width:100%">
+							<span id="ttl_order_amt"></span>
+							<span id="shipped_order_amt"></span>
+							<span id="paymrent_order_amt"></span>
+						</div>
 					</td>
-					<td width="50%">
+					<td width="30%">
 						<div class="fr_menu_by_mn">
 							<form id="grid_list_frm_to" method="post">
                                     <div style="margin:2.5px 0px;font-size:12px;text-align: right">
@@ -3222,18 +3239,23 @@ $("#pnh_membersch").dialog({
 			$('#payment_stat .payment_stat_view').html('<div class="anmtd_loading_img"><span></span></div>'); 
 			$.getJSON(site_url+'/admin/jx_order_payment_det/'+start_date+'/'+end_date+'/'+franid,'',function(resp)
 	    	{
-	    		if(resp.summary == 0 && resp.payment == 0)
+	    		if(resp.summary == 0 && resp.payment == 0 && shipped==0)
 				{
 					$('#payment_stat .payment_stat_view').html("<div class='fr_alert_wrap' style='padding:113px 0px'>No Sales statisticks found between "+start_date+" and "+end_date+"</div>" );	
 				}
 				else
 				{
 					// reformat data ;
-					 var types = ['Order Placed', 'Payment'];
+					$('#ttl_order_amt').html("Total Ordered : "+resp.ttl_summary);
+					$('#paymrent_order_amt').html("Total Paid : "+resp.ttl_payment);
+					$('#shipped_order_amt').html("Total Shipped : "+resp.ttl_shipped);
+					 var types = ['Order Placed','shipped', 'Cheque Date','Cash in Bank'];
 					$('#payment_stat .payment_stat_view').empty();
 					var summary=resp.summary;
 					var payment=resp.payment;
-					plot2 = $.jqplot('payment_stat .payment_stat_view', [summary,payment], {
+					var shipped=resp.shipped;
+					var realized=resp.realized;
+					plot2 = $.jqplot('payment_stat .payment_stat_view', [summary,shipped,payment,realized], {
 				       	seriesDefaults: {
 				        showMarker:true,
 				        pointLabels: { show:true }

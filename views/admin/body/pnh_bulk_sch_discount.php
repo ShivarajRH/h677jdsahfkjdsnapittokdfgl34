@@ -283,6 +283,8 @@ $('#pnh_bulkschdisc_frm').submit(function(){
 	}
 });
 
+
+
 $('#choose_menu').change(function(){
 	var sel_terrid=$('#chose_terry').val();
 	var sel_sch_type=$("#bulk_schtype").val();
