@@ -24663,4 +24663,95 @@ die; */
 		} 
 		
 	}
+
+	function fld_margin_log()
+	{
+		$data['page']='franchise_local_distributor_mrgn_log';
+		$data['fld_mrgn_log_res']=$this->db->query(" SELECT l.franchise_id,f.franchise_name,l.margin,l.created_on,a.name AS updatedby,l.dealid,i.pnh_id,i.name,i.id as deal_id,l.orderid,o.transid
+													 FROM `pnh_l_franchise_distrubuter_margin` l
+													 JOIN pnh_m_franchise_info f ON l.franchise_id=f.franchise_id
+													 JOIN king_admin a ON a.id=l.created_by
+													 JOIN king_dealitems i ON i.dealid=l.dealid
+													 JOIN king_orders o on o.id=l.orderid
+													 JOIN king_deals d ON d.dealid=i.dealid");
+		$this->load->view("admin",$data);
+	}
+	/**
+	 * function to get all deals for category brand menu
+	 * @param unknown_type $menu
+	 * @param unknown_type $brand
+	 * @param unknown_type $cat
+	 */
+	function jx_to_getdeals_bybrandcatmenu($menu=0,$brand=0,$cat=0)
+	{
+		$is_sorceble_deal=array();
+		$is_sorceble_deal['sourceable']=array();
+		$is_sorceble_deal['nonsourceable']=array();
+	
+		$output=array();
+		$deal_list=$this->db->query("SELECT DISTINCT i.id,i.dealid,i.name,f.is_sourceable FROM king_dealitems i
+								 		JOIN king_deals d ON d.dealid=i.dealid
+										JOIN king_brands b ON b.id=d.brandid
+										JOIN king_categories c ON c.id=d.catid
+										JOIN pnh_menu m ON m.id=d.menuid
+										JOIN m_product_deal_link p ON p.itemid=i.id
+										JOIN m_product_info f ON f.product_id=p.product_id
+										WHERE d.menuid=? AND brandid=? AND catid=?",array($menu,$brand,$cat));
+		
+		if($deal_list)
+		{
+			$output['status']='success';
+			$output['deal_list']=$deal_list->result_array();
+		}
+		else 
+		{
+			$output['status']='error';
+			$output['message']='No Deals Found';
+		}
+		echo json_encode($output);
+	}
+	
+	function jx_check_has_scheme($menuid=0,$catid=0,$brandid=0,$sch_type=0)
+	{
+			$output=array();
+			$fran_schstatus=array();
+			$fran_schstatus['has_schdisc']=array();
+			$fran_schstatus['has_mbrsch']=array();
+			$fran_schstatus['has_supersch']=array();
+			
+			if($sch_type==1)
+			{
+				$has_sch_disc=$this->db->query("select distinct franchise_id  from  pnh_sch_discount_brands where menuid=? and catid=? and brandid=? and ? between valid_from and valid_to and is_sch_enabled=1",array($menuid,$catid,$brandid,time()));
+				if($has_sch_disc)
+				{
+					
+					$output['status']='success';
+					$output['has_sch_disc']=$has_sch_disc->result_array();
+				}
+				
+			}	
+			
+			if($sch_type==3)
+			{
+				$has_mbr_sch = $this->db->query("select distinct franchise_id from  imei_m_scheme where menuid=? and categoryid=? and brandid=? and ? between sch_apply_from and scheme_to and is_active=1",array($menuid,$catid,$brandid,time()));
+				
+				if($has_mbr_sch)
+				{
+					$output['status']='success';
+					$output['has_sch_disc']=$has_mbr_sch->result_array();
+				}
+			}
+			if($sch_type==2)
+			{
+				$has_spr_sch=$this->db->query("select distinct franchise_id from  pnh_super_scheme where menu_id=? and cat_id=? and brand_id=? and ? between valid_from and valid_to and is_active=1",array($menuid,$catid,$brandid,time()));
+				if($has_spr_sch)
+				{
+					
+					$output['status']='success';
+					$output['has_sch_disc']=$has_spr_sch->result_array();
+				}
+			}
+
+		echo json_encode($output);
+	}
 }

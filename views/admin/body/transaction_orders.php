@@ -8,16 +8,18 @@ $shipped_oids=array();
 $shipped_orders=array();
 $transid=$order['transid'];
 
+$order_status_arr=array();
+$order_status_arr[0]='Pending';
+$order_status_arr[1]='Processed';
+$order_status_arr[3]='Cancelled';
 
 
-$sql_trans_ttls = 'select status,ifnull(amt1,amt2) as amt from (
-select b.status,sum((mrp-(discount+credit_note_amt))*a.invoice_qty) as amt1,
-	sum(i_orgprice-(i_coup_discount+i_discount)*b.quantity) as amt2
-	from king_orders b 
-	left join king_invoice a on a.order_id = b.id 
-	where b.transid = ?
-group by b.status )
-as g';
+$sql_trans_ttls = 'SELECT STATUS,IFNULL(amt1,amt2) AS amt,totals
+						FROM ( SELECT b.status,SUM((mrp-(discount+credit_note_amt))*a.invoice_qty) AS amt1,SUM(i_orgprice-(i_coup_discount+i_discount)*b.quantity) AS amt2,
+						COUNT(b.id) AS totals
+						FROM king_orders b 
+						LEFT JOIN king_invoice a ON a.order_id = b.id 
+						WHERE b.transid = ? GROUP BY b.status ) AS g';
 
 $trans_order_status_amt = $this->db->query($sql_trans_ttls,$transid);
 
@@ -132,6 +134,7 @@ if(count($allotted_memids) <= 1)
 {
 	echo implode(', ',$allotted_memids);
 }
+$is_pnh = $tran['is_pnh'];
 ?>
 
 <?php if($tran['is_pnh']){?>
@@ -934,5 +937,14 @@ margin-bottom:0px;
 }
 
 .btn{background: #FDFDFD;color: #454545;font-size: 10px;font-weight: bold;padding:0px 4px;display: inline-block;margin-top: 3px;text-decoration: underline;}
+.span_count_wrap {
+    background: none repeat scroll 0 0 #EAEAEA;
+    float: left;
+    font-size: 11px;
+    margin: 10px;
+    padding: 5px;
+    text-align: center;
+    width: 15%;
+}
 </style>
 <?php
