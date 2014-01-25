@@ -7085,20 +7085,83 @@ order by p.product_name asc
 		$this->erpm->flash_msg("Receipt $rid activated");
 		redirect("admin/pnh_pending_receipts");
 	}
-	
-	function do_pnh_topup($fid)
+	function get_dispatch_id_invno($invoice_no) {
+            return $this->db->query("select ref_dispatch_id from king_invoice where invoice_no=? group by invoice_no",$invoice_no)->row()->ref_dispatch_id;
+        }
+        function reconcile_invoice_amount($recpt_id,$amount,$invoice_no,$unreconcile_amt,$additional_amt,$userid) {
+                //insert to receipt_reconcilation table
+                $dispatch_id = $this->get_dispatch_id_invno($invoice_no);
+                $input_data = array(
+                        'debit_note_id'=> 0
+                        ,'invoice_no'=>$invoice_no
+                        ,'dispatch_id'=>$dispatch_id
+                        ,'inv_amount'=>$amount
+                        ,'unreconciled'=>$amount
+                        ,'created_on'=>time()
+                        ,'created_by'=>$userid
+                        ,'modified_on'=>time()
+                        ,'modified_by'=>$userid
+                    );
+                    
+                
+                $this->db->insert("pnh_t_receipt_reconcilation",$input_data);
+                $reconsile_id = $this->db->insert_id();
+                
+                //`reconcile_amount`,`is_reversed`,`created_on`,`created_by`) values ( NULL,NULL,'119','1','15000','0',NULL,NULL)
+               //insert to reconcile log 
+                $input_data2 = array(
+                        'credit_note_id'=> 0
+                        ,'receipt_id'=>$recpt_id
+                        ,'reconcile_id'=>$reconsile_id
+                        ,'reconcile_amount'=>$amount
+                        ,'is_reversed'=>0
+                        ,'created_on'=>time()
+                        ,'created_by'=>$userid
+                    );
+                    
+                
+                $this->db->insert("pnh_t_receipt_reconcilation_log",$input_data2);
+                $log_id = $this->db->insert_id();
+                echo "reconcileid".$reconsile_id." logid=".$log_id;
+        }
+        
+	function do_pnh_topup($fid,$user)
 	{
 		$user=$this->erpm->getadminuser();
-		foreach(array("r_type","amount","bank","type","no","date","msg","transit_type","selected_invoices") as $i)
+		foreach(array("r_type","amount","bank","type","no","date","msg","transit_type","sel_invoice","amt_unreconcile","amt_additional") as $i)
 			$$i=$this->input->post($i);
                 
 //                foreach($selected_invoices as $invoice) {
 //                        echo $invoice;
                         //$this->get_invoice_value;
 //                }
-                die();
-		$inp=array("receipt_type"=>$r_type,"franchise_id"=>$fid,"bank_name"=>$bank,"receipt_amount"=>$amount,"payment_mode"=>$type,"instrument_no"=>$no,"instrument_date"=>strtotime($date),"created_by"=>$user['userid'],"created_on"=>time(),"remarks"=>$msg,"in_transit"=>$transit_type);
-		
+
+                $recpt_id = 119;
+                
+                if($sel_invoice) {
+
+                    echo '<pre>';
+                    print_r($sel_invoice);
+                    print_r($amt_unreconcile);
+                    print_r($amt_additional);
+                    
+                    
+                    foreach($sel_invoice as $i=>$invoice) {
+                        $unreconcile_amt = $amt_unreconcile[$i];
+                        $additional_amt = $amt_additional[$i];
+                        
+                        if($invoice!='' && $unreconcile_amt!='' && $additional_amt!='') {
+                                $sub_val = $amount-$amt_additional;
+                                //$status = $this->reconcile_invoice_amount($recpt_id,$amount,$invoice,$unreconcile_amt,$additional_amt,$user['userid']);
+                        }
+                        
+                    }
+                }
+                
+                die("TESTING..");
+                
+		$inp=array("receipt_type"=>$r_type,"franchise_id"=>$fid,"bank_name"=>$bank,"receipt_amount"=>$amount,"payment_mode"=>$type,"instrument_no"=>$no,"instrument_date"=>strtotime($date),"created_by"=>$user['userid'],"created_on"=>time(),"remarks"=>$msg,"in_transit"=>$transit_type,"unreconciled_value"=>$amount);
+                
 		// if cash receipt is added.
 		if($type == 0)
 			$inp['instrument_date'] = strtotime(date('Y-m-d'));
@@ -7107,6 +7170,9 @@ order by p.product_name asc
 		$recpt_id = $this->db->insert_id();
 //		$this->erpm->pnh_fran_account_stat($fid,0, $amount,"Topup $no $date");
 		
+                //update unreconceiled value
+                
+                
 		/*
 		$arr = array($fid,((!$r_type)?2:3),$recpt_id,$r_type,$amount,$msg,1,date('Y-m-d H:i:s'),$user['userid']);
 				$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,receipt_id,receipt_type,credit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?,?)",$arr);

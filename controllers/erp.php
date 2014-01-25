@@ -8291,7 +8291,11 @@ group by g.product_id ");
 		$data['is_membrsch_applicable']=$this->db->query("SELECT m.name AS menu FROM pnh_franchise_menu_link a JOIN pnh_menu m ON m.id= a.menuid WHERE a.status=1 AND menuid=112 AND fid=?",$fid)->row_array();		
 		//$data['is_mbrsch_active']=$this->db->query("select 1 from strking_member_scheme where is_active=1 and franchise_id=? order by created_on desc limit 1",$fid)->row();
 		$data['fran_status']=$this->db->query("SELECT is_suspended FROM pnh_m_franchise_info WHERE franchise_id=?",$fid)->row()->is_suspended;
-                $data['fran_invoices']=$this->db->query("select i.invoice_no,i.transid,i.mrp,tr.franchise_id,from_unixtime(i.createdon) from king_invoice i join king_transactions tr on tr.transid=i.transid where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id=? order by i.createdon asc",$fid)->result_array();
+                $data['fran_invoices']=$this->db->query("select i.invoice_no,i.transid,tr.franchise_id,from_unixtime(i.createdon),sum(i.mrp) as inv_amount,count(i.invoice_no) as num_invs,group_concat(i.mrp) as grp_mrp
+                                                            from king_invoice i
+                                                            join king_transactions tr on tr.transid=i.transid
+                                                            where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id=?
+                                                            group by i.invoice_no,i.transid order by i.createdon asc",$fid)->result_array();
 		$data['franchise_id']=$fid;
 		$data['page']="pnh_franchise";
 		$this->load->view("admin",$data);
@@ -8979,9 +8983,9 @@ group by g.product_id ");
 	
 	function pnh_topup($fid)
 	{
-		$user=$this->auth(FINANCE_ROLE); print_r($_POST);die();
+		$user=$this->auth(FINANCE_ROLE); //print_r($_POST); print_r($user); die();
 		if($_POST)
-			$this->erpm->do_pnh_topup($fid);
+			$this->erpm->do_pnh_topup($fid,$user);
 		$data['fid']=$fid;
 		$data['page']="pnh_topup";
 		$this->load->view("admin",$data);

@@ -1781,13 +1781,13 @@ select status,product_id from t_imei_no where imei_no = '355681053892715'; #5108
 # Jan_22_2014
 
 -- =============================================================================
-update t_imei_no set status=0 and order_id=0 where imei_no = '911222652406180';
+update t_imei_no set status=0 and order_id=0 where imei_no = '356519052961611';
 -- =============================================================================
-select * from m_product_info where product_id='133097';
+select * from m_product_info where product_id='132961';
 # Stock intake the product with product id
-set @product_id = '133097'; # frequent
-set @id='24569';
-set @imei_no = '364619056098761';
+set @product_id = '132961'; # frequent
+set @id='24573';
+set @imei_no = '364619056098766';
 insert into t_imei_no(id,product_id,imei_no,status,grn_id,stock_id,order_id,created_on,modified_on) values(@id,@product_id,@imei_no,0,'2235',0,0,now(),0);
 
 -- =============================================================================
@@ -1880,16 +1880,58 @@ join pnh_m_territory_info t on t.id=f.territory_id
 join pnh_m_class_info c on c.id=f.class_id 
 where f.franchise_id='371' order by f.franchise_name asc;
 
--- 5 new
-select i.invoice_no,i.transid,i.mrp,tr.franchise_id,from_unixtime(i.createdon) from king_invoice i
+-- 5 new invalid
+select i.invoice_no,i.transid,i.mrp,tr.franchise_id,from_unixtime(i.createdon)
+	from king_invoice i
 join king_transactions tr on tr.transid=i.transid
 where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id='224'
-order by i.createdon asc
+ order by i.createdon asc
 
 #invoice_status
 
+
+#Jan_24_2014
+
+select * from king_invoice
+select count(invoice_no),group_concat(mrp) from king_invoice group by invoice_no,transid
+
+-- =============================================================================
+update t_imei_no set status=0 and order_id=0 where imei_no = '356519052961611';
+-- =============================================================================
+select * from m_product_info where product_id='132961';
+# Stock intake the product with product id
+set @product_id = '132961'; # frequent
+set @id='24573';
+set @imei_no = '364619056098766';
+insert into t_imei_no(id,product_id,imei_no,status,grn_id,stock_id,order_id,created_on,modified_on) values(@id,@product_id,@imei_no,0,'2235',0,0,now(),0);
+
+-- =============================================================================
+
+
+-- new 1 valid
+select i.invoice_no,i.transid,tr.franchise_id,from_unixtime(i.createdon),sum(i.mrp) as inv_total,count(i.invoice_no) as num_invs,group_concat(i.mrp) as grp_mrp,group_concat(distinct ref_dispatch_id) as grp_dispatch_id
+	from king_invoice i
+join king_transactions tr on tr.transid=i.transid
+where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id='224'
+ group by i.invoice_no,i.transid order by i.createdon asc
+
+#============
+select * from pnh_t_receipt_info where franchise_id = '43';
+
+
 -- ====================================================================================
+#Jan_24_2014
 create table `pnh_t_receipt_reconcilation` (  `id` bigint (20) NOT NULL AUTO_INCREMENT , `debit_note_id` bigint (20) DEFAULT '0', `invoice_no` bigint (20) , `dispatch_id` int (100) , `inv_amount` float (50) DEFAULT '0', `unreconciled` float (50) DEFAULT '0', `created_on` int (50) , `created_by` int (20) , `modified_on` int (50) , `modified_by` int (20) , PRIMARY KEY ( `id`))  
 create table `pnh_t_receipt_reconcilation_log` (  `logid` bigint (20) NOT NULL AUTO_INCREMENT , `credit_note_id` int (50) , `receipt_id` int (50) , `reconcile_id` int (50) , `reconcile_amount` float (50) DEFAULT '0', `is_reversed` int (11) DEFAULT '0', `created_on` int (100) , `created_by` int (20) , PRIMARY KEY ( `logid`))  
+alter table `pnh_t_receipt_info` add column `unreconciled_value` double   NULL  after `modified_on`, add column `unreconciled_status` varchar (11)  NULL  after `unreconciled_value`;
+update pnh_t_receipt_info set unreconciled_value = receipt_amount;
+
 -- ====================================================================================
+
+select * from king_invoice
+-- new 
+select ref_dispatch_id from king_invoice where invoice_no='20141019614' group by invoice_no
+
+-- new
+insert into pnh_t_receipt_reconcilation
 
