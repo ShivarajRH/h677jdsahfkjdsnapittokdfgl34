@@ -7626,13 +7626,30 @@ group by product_id,location",$bid)->result_array();
 	
 	function pnh_pub_unpub_deals()
 	{
-		$user=$this->auth(DEAL_MANAGER_ROLE);
-		foreach(array("action","itemids") as $i)
-			$$i=$this->input->post($i);
-		$ids=explode(",",$itemids);
-		foreach(explode(",",$itemids) as $id)
-			$this->db->query("update king_deals set publish=$action where dealid=? limit 1",$this->db->query("select dealid from king_dealitems where id=?",$id)->row()->dealid);
-		$this->erpm->flash_msg(count($ids)." deals ".($action=="0"?"Unp":"P")."ublished");
+		if($this->input->post('ids'))
+		{
+			$ids=$this->input->post('ids');
+			$act=$this->input->post('act');
+			$user=$this->auth(DEAL_MANAGER_ROLE);
+			foreach(array($ids,$act) as $i)
+				$$i=$this->input->post($i);
+			$id_s=explode(",",$ids);
+			//print_r($id_s);exit;
+			foreach($id_s as $id)
+				$this->db->query("update king_deals set publish=$act where dealid=? limit 1",$this->db->query("select dealid from king_dealitems where id=?",$id)->row()->dealid);
+			$this->erpm->flash_msg(count($ids)." deals ".($action=="0"?"Unp":"P")."ublished");
+		}else
+		{
+			$user=$this->auth(DEAL_MANAGER_ROLE);
+			foreach(array("action","itemids") as $i)
+				$$i=$this->input->post($i);
+			$ids=explode(",",$itemids);
+			foreach(explode(",",$itemids) as $id)
+				$this->db->query("update king_deals set publish=$action where dealid=? limit 1",$this->db->query("select dealid from king_dealitems where id=?",$id)->row()->dealid);
+			$this->erpm->flash_msg(count($ids)." deals ".($action=="0"?"Unp":"P")."ublished");
+			redirect($_SERVER['HTTP_REFERER']);
+		}
+		
 		redirect($_SERVER['HTTP_REFERER']);
 	}
 	
@@ -9025,11 +9042,63 @@ group by product_id,location",$bid)->result_array();
 	function pnh_deals()
 	{
 		$user=$this->auth(DEAL_MANAGER_ROLE|CALLCENTER_ROLE);
-		$data['deals']=$this->erpm->pnh_getdeals();
+		//$data['deals']=$this->erpm->pnh_getdeals();
 		$data['page']="pnh_deals";
 		$this->load->view("admin",$data);
 	}
+	
+	function pnh_deals_list()
+	{
+		$output=array();
+		$deals=$this->erpm->pnh_getdeals();
+		if($deals)
+		{
+			$output['status'] = 'success';
+			$output['deals_lst'] = $deals;
+		}else
+		{
+			$output['status'] = 'error';
+			$output['error'] = 'Deals not found';
+		}	
 
+		echo json_encode($output);
+	}
+	
+	function jx_deallist_bycat()
+	{
+		$user=$this->erpm->auth();
+		
+		$brandid=$this->input->post('brandid');
+		$catid=$this->input->post('catid');
+		$dealid=$this->input->post('dealid');
+		$type=$this->input->post('type');
+		
+		
+		if($type == 0)
+			$deals=$this->erpm->pnh_getdeals($brandid,$catid);
+		else
+			$deals=$this->erpm->pnh_getdealsbycat($catid,$brandid,$type);
+		
+		$output['has_user_edit'] = 0;
+		if($this->erpm->auth(DEAL_MANAGER,true))
+			$output['has_user_edit'] = 1;
+		
+		if($deals)
+		{
+			$output['status'] = 'success';
+			$output['deals_lst'] = $deals;
+			$output['type'] = $type;
+			$output['ttl_deals'] = count($deals);
+		}else
+		{
+			$output['status'] = 'error';
+			$output['error'] = 'Deals not found';
+		}	
+		echo json_encode($output);
+	}
+	
+	
+	
 	function pnh_dealsbycat($catid,$brandid,$type=0)
 	{
 		$user=$this->auth(DEAL_MANAGER_ROLE|CALLCENTER_ROLE);
@@ -9043,6 +9112,43 @@ group by product_id,location",$bid)->result_array();
 																			WHERE d.catid=? AND d.brandid=? ",array($catid,$brandid))->row()->brandcategory;
 		$this->load->view("admin",$data);
 	}
+	
+	function cat_list_bycharacter()
+	{
+		$ch=$this->input->post('ch');
+		$cat_list=$this->erpm->cat_alpha_list($ch);
+		
+		if($cat_list->num_rows())
+		{
+			$output['status'] = 'success';
+			$output['cat_list'] = $cat_list->result_array();
+		}else
+		{
+			$output['status'] = 'error';
+			$output['error'] = 'Categories not found';
+		}	
+
+		echo json_encode($output);
+	}
+	
+	function brand_list_bycharacter()
+	{
+		$ch=$this->input->post('ch');
+		$brand_list=$this->erpm->brand_alpha_list($ch);
+		
+		if($brand_list->num_rows())
+		{
+			$output['status'] = 'success';
+			$output['brand_list'] = $brand_list->result_array();
+		}else
+		{
+			$output['status'] = 'error';
+			$output['error'] = 'Brands not found';
+		}	
+
+		echo json_encode($output);
+	}
+	
 	
 	function prod_mrp_update($bid=false,$cid=false)
 	{
@@ -9196,15 +9302,16 @@ group by product_id,location",$bid)->result_array();
 			$this->load->view("admin",$data);
 		}
 
-		function pnh_pub_deal($itemid,$pub,$redirect=1)
-		{
-			$user=$this->auth(DEAL_MANAGER_ROLE);
+	function pnh_pub_deal($itemid,$pub,$redirect=1)
+	{
+			$user=$this->erpm->auth(DEAL_MANAGER_ROLE);
 			$this->db->query("update king_deals set publish=? where dealid=?",array(!$pub,$this->db->query("select dealid from king_dealitems where id=?",$itemid)->row()->dealid));
 			
 			if($redirect)
 			{
 				$this->session->set_flashdata("erp_pop_info","Deal status changed");
-				redirect($_SERVER['HTTP_REFERER']);
+				if(isset($_SERVER['HTTP_REFERER']))
+					redirect($_SERVER['HTTP_REFERER']);
 			}else{
 				$output=array();
 				if($this->db->affected_rows())
@@ -9355,12 +9462,11 @@ group by product_id,location",$bid)->result_array();
 						$fmsg.="</div>";
 					die($fmsg) ;
 				}
-			 if($vdet['voucher_status']=3)
+
+			 if($vdet['voucher_status']==3 && $entered_int==1)
 				{
-				//get the book menus
+					//get the book menus
 					$vmenus=$this->db->query("select id,name from  pnh_menu where id in (select menu_ids from pnh_t_book_details a join pnh_m_book_template b on b.book_template_id=a.book_template_id where a.book_id=?)",$vdet['book_id'])->row_array();
-					
-					
 					$prev_voucher_bal=$this->db->query("SELECT SUM(customer_value) AS loyal_pnts FROM pnh_t_voucher_details WHERE STATUS in(5) AND member_id=?",$mem['pnh_member_id'])->row()->loyal_pnts;
 					if(!$prev_voucher_bal)
 						$prev_voucher_bal=0;
@@ -11033,14 +11139,16 @@ group by product_id,location",$bid)->result_array();
 	 */
 	function pnh_jx_dealstock_det($itemid='',$is_pnh=0)
 	{
+		if($this->input->post('refid'))
+		{
+			$itemid=$this->input->post('refid');
+			$is_pnh=$this->input->post('is_pnh');
+		}
 		$this->auth(true);
-		
 		if(!$itemid)
 			exit;
 			
 		$is_pnh = $is_pnh?1:0;	
-		
-		
 		$item_stk = $this->erpm->do_stock_check(array($itemid),1,true);
 		$output = array();
 		$arr = array_values($item_stk);
@@ -18345,8 +18453,8 @@ order by action_date";
 											FROM king_deals a
 											JOIN king_brands b ON b.id=a.brandid
 											JOIN king_categories c ON c.id=a.catid
-											WHERE b.id=?
-											GROUP BY c.id",$brandid);
+											WHERE b.id=? 
+											GROUP BY c.id order by category_name",$brandid);
 			if($cat_list->num_rows())
 			{
 				$output['cat_list']=$cat_list->result_array();
@@ -18374,7 +18482,7 @@ order by action_date";
 											JOIN king_brands b ON b.id=a.brandid
 											JOIN king_categories c ON c.id=a.catid
 											WHERE c.id=?
-											GROUP BY b.id",$catid);
+											GROUP BY b.id order by brand_name",$catid);
 			if($brand_list->num_rows())
 			{
 				$output['brand_list']=$brand_list->result_array();
@@ -18599,7 +18707,7 @@ order by action_date";
 			
 			$inv_transit_log_res = $this->db->query("select a.id,a.ref_id,a.sent_log_id,a.invoice_no,a.logged_on,a.status,if(ref_id,b.name,d.name) as hndleby_name,
 			 											if(ref_id,b.contact_no,d.contact_no) as hndleby_contactno,c.id as manifesto_id,c.hndleby_empid,c.bus_id,c.bus_destination,
-														c.office_pickup_empid,c.pickup_empid,b.job_title2,c.hndlby_type,c.hndleby_courier_id,a.logged_by,c.alternative_contactno
+														c.office_pickup_empid,c.pickup_empid,b.job_title2,c.hndlby_type,c.hndleby_courier_id,a.logged_by,c.alternative_contactno,a.received_on
 															from pnh_invoice_transit_log a
 															left join m_employee_info b on a.ref_id = b.employee_id
 															join pnh_m_manifesto_sent_log c on c.id = a.sent_log_id
@@ -18783,6 +18891,9 @@ order by action_date";
 					}else if($inv_transit_log['status'] == 3)
 					{
 						$inv_last_status = 'Delivered';
+						
+						if($inv_transit_log['received_on'] && $inv_transit_log['received_on']!=null)
+							$inv_last_status.="<br>[".format_date($inv_transit_log['received_on'])."]";
 						
 						$driver_det=$this->db->query("select b.name,b.contact_no,b.job_title2 from pnh_invoice_transit_log  a join m_employee_info b on b.employee_id=a.ref_id where status=3 and invoice_no=?",$invno)->row_array();
 						
@@ -19048,7 +19159,7 @@ order by action_date";
 		{
 			$cond='';
 			$output=array();
-
+			
 			if(!$territory_id)
 			{
 				$territory_id=$this->input->post('territoryid');
@@ -19056,7 +19167,7 @@ order by action_date";
 					if(is_array($territory_id))
 						$territory_id=implode(',',array_filter($territory_id));
 			}
-
+			
 			if(!$townid)
 			{
 				$townid=$this->input->post('townid');
@@ -23999,7 +24110,7 @@ die; */
 			$lr_no = $this->input->post('lr_no');
 			$amount_list = $this->input->post('amt');
 			$no_ofboxes=$this->input->post('no_ofboxes');
-			$weight=$this->input->post('weight');
+			$weights=$this->input->post('weight');
 			
 			$send_sms=array();
 			$send_sms[]=$territory_manager=$this->input->post('tm');
@@ -24014,8 +24125,8 @@ die; */
 				$l = $lr_no[$ri];
 				$boxno = $this->db->query('select (max(ref_box_no))+1 as no from pnh_m_manifesto_sent_log ')->row()->no;
 				$ttl_boxes = $no_ofboxes[$ri];
-				$amt = $amount_list[$ri]; 
-				$weight = $weight[$ri];
+				$amt = $amount_list[$ri];
+				$weight = $weights[$ri];
 				$this->db->query("update pnh_m_manifesto_sent_log set status=3,modified_on=?,modified_by=?,lrno=?,amount=?,weight=?,lrn_updated_on=?,no_ofboxes=?,ref_box_no=? where id in ($m) and lrn_updated_on is null ",array(cur_datetime(),$user['userid'],$l,$amt,$weight,cur_datetime(),$ttl_boxes,$boxno));
 				
 				if($this->db->affected_rows())
@@ -24294,7 +24405,7 @@ die; */
 	function manifestolr_log($st_date=0,$en_date=0,$manifestoid=0,$pg=0)
 	{
 		$this->erpm->auth();
-
+		
 		if(isset($_POST['st_dt']))
 		{
 			$st_date=$this->input->post('st_dt');

@@ -570,4 +570,28 @@ float:left;max-height: 400px;overflow:auto;
     text-align: right;
     width: 100%;margin:7px;
 }
+#ttl_order_amt
+{
+	background: none repeat scroll 0 0 #F1F1F1;
+    float: left;
+    font-weight: bold;
+    margin: 3px 6px 6px 21px;
+    padding: 6px;
+}
+#paymrent_order_amt
+{
+	background: none repeat scroll 0 0 #F1F1F1;
+    float: left;
+    font-weight: bold;
+    margin: 3px 6px 6px 21px;
+    padding: 6px;
+}
+#shipped_order_amt
+{
+	background: none repeat scroll 0 0 #F1F1F1;
+    float: left;
+    font-weight: bold;
+    margin: 3px 6px 6px 21px;
+    padding: 6px;
+}
 /*************  Franchisee Analytics End ************/
