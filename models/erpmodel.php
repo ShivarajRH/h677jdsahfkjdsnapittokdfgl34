@@ -5252,7 +5252,7 @@ order by p.product_name asc
 		$user=$this->session->userdata("admin_user");
 		
 		if(!$user)
-			redirect("admin");
+			$ret?false:redirect("admin");
 		if($super===false)
 			return $user;
 		if($super===true)
@@ -6908,9 +6908,34 @@ order by p.product_name asc
 		redirect("admin/pnh_deals");
 	}
 	
-	function pnh_getdeals()
+	function pnh_getdeals($brandid=false,$catid=false)
 	{
-		//return $this->db->query("select d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid where i.is_pnh=1 order by i.created_on desc,i.name asc limit 30")->result_array();
+		if($brandid == 0 && $catid == 0)
+			$cond=" where i.is_pnh=1 group by i.id order by i.name asc limit 100 ";
+		else if($catid != 0 && $brandid == 0 )
+			$cond=" where i.is_pnh=1 and d.catid='".$catid."' group by i.id order by i.name asc ";
+		else if($catid == 0 && $brandid != 0 )
+			$cond=" where i.is_pnh=1 and d.brandid='".$brandid."' group by i.id order by i.name asc ";
+		else if($catid != 0 && $brandid != 0 )
+			$cond=" where i.is_pnh=1 and d.catid='".$catid."' and d.brandid='".$brandid."' group by i.id order by i.name asc ";
+		
+		$sql = "select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,i.is_combo,d.publish,d.brandid,d.catid,i.orgprice,
+					i.price,i.name,i.pic,i.pnh_id,i.id as itemid,
+					b.name as brand,c.name as category 
+				from king_deals d 
+				join king_dealitems i on i.dealid=d.dealid 
+				join king_brands b on b.id=d.brandid 
+				join king_categories c on c.id=d.catid 
+				left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp()
+				$cond
+				";
+		// $this->db->query("select d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid where i.is_pnh=1 order by i.created_on desc,i.name asc limit 30")->result_array();
+		
+		return $this->db->query($sql)->result_array();
+	}
+
+	function pnh_deals_bydealid($id=false)
+	{
 		$sql = "select ifnull(group_concat(smd.special_margin),0) as sm,d.publish,d.brandid,d.catid,i.orgprice,
 						i.price,i.name,i.pic,i.pnh_id,i.id as itemid,
 						b.name as brand,c.name as category 
@@ -6919,26 +6944,29 @@ order by p.product_name asc
 					join king_brands b on b.id=d.brandid 
 					join king_categories c on c.id=d.catid 
 					left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp()  
-					where i.is_pnh=1 
-					group by i.id 
-					order by i.sno desc
-					limit 30 
-				";
+					where i.is_pnh=1 and d.dealid='".$id."'";
 		return $this->db->query($sql)->result_array();
 	}
 	
 	function pnh_getdealsbycat($catid,$brandid,$type=0)
 	{
+		if($catid !=0 && $brandid ==0)
+			$cond ="and d.catid='".$catid."'";
+		else if($catid ==0 && $brandid !=0)
+			$cond ="and d.brandid='".$brandid."'";	
+		else if($catid !=0 && $brandid !=0)	
+			$cond ="and d.catid='".$catid."' and d.brandid='".$brandid."'";
+		else if($catid ==0 && $brandid ==0)	
+			$cond ="and 1";
+			
+		  
 		if($type==0)
-			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() where i.is_pnh=1 and d.catid=? and d.brandid=? group by i.id order by i.name asc",array($catid,$brandid))->result_array();
+			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() where i.is_pnh=1 $cond group by i.id order by i.name asc limit 50")->result_array();
 		else if($type==1)
-			$ret=$this->db->query("select * from (select ifnull(group_concat(smd.special_margin),0) as sm,i.id,o.transid,o.time as order_time,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join king_orders o on o.itemid=i.id left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() where i.is_pnh=1 and d.catid=? and d.brandid= ?group by i.id order by o.time desc) as dd group by dd.id order by dd.order_time desc",array($catid,$brandid))->result_array();
+			$ret=$this->db->query("select * from (select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,i.id,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() where i.is_pnh=1 $cond group by i.id ) as dd group by dd.id  limit 30")->result_array();
 		else if($type==2)
-			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,o.quantity as qty,ifnull(sum(o.quantity),0) as sold,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join king_orders o on o.itemid=i.id left outer join king_transactions t on t.transid=o.transid and t.is_pnh=1 left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() where i.is_pnh=1 and d.catid=? and d.brandid=? group by i.id order by count(o.id) desc",array($catid,$brandid))->result_array();
-		else if($type==3)
-			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,o.quantity as qty,ifnull(sum(o.quantity),0) as sold,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join king_orders o on o.itemid=i.id left outer join king_transactions t on t.transid=o.transid and t.is_pnh=1 left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() where i.is_pnh=1 and d.catid=? and (o.time>".mktime(0,0,0,0,-90)." or o.time is null) and d.brandid=? group by i.id order by count(o.id) desc,i.name asc",array($catid,$brandid))->result_array();
+			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,o.quantity as qty,ifnull(sum(o.quantity),0) as sold,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join king_orders o on o.itemid=i.id left outer join king_transactions t on t.transid=o.transid and t.is_pnh=1 left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() where i.is_pnh=1 $cond group by i.id order by count(o.id) desc limit 30")->result_array();
 		return $ret;	
-
 	}
 	
 	function pnh_getreceiptbytype($type,$st_date=false,$en_date=false,$tid=false,$pg=0)
@@ -11202,9 +11230,10 @@ order by action_date";
 		$fr_receipt_list_head = '"Slno","FranchiseName","Receipt Id","Payment Mode","Receipt Amount","Instrument Number","Payment Date","Transit type","Bank Details","Receipt AddedOn"';
 		if($export_rtype == '3')
 			$fr_receipt_list_head .= ',"RealizedOn"';
+		$fr_receipt_list_head .= ',"Remarks"';
 		
 		$fr_receipt_list[] = $fr_receipt_list_head;
-
+		
 		if($res->num_rows()!=0)
 		{
 			foreach($res->result_array() as $row_f)
@@ -11223,7 +11252,9 @@ order by action_date";
 				if($export_rtype == '3')
 					$fr_receipt_det[] .= ucwords(date("d/m/Y",$row_f['activated_on']));
 				
+				$fr_receipt_det[] = ($row_f['remarks']);
 				$fr_receipt_list[]='"'.implode('","',$fr_receipt_det).'"';
+				
 			}
 
 
@@ -11456,8 +11487,46 @@ order by action_date";
         return $output;
     }
 
+	function vendor_alpha_list($ch)
+	{
+		if($ch != '09')
+		{
+			return $this->db->query("Select a.vendor_id,a.vendor_name from m_vendor_info a join t_po_info b on b.vendor_id=a.vendor_id where vendor_name like '".$ch."%'  and b.po_status not in (2,3) group by vendor_id" );	
+		}else
+		{
+			return $this->db->query("Select a.vendor_id,a.vendor_name from m_vendor_info a join t_po_info b on b.vendor_id=a.vendor_id where vendor_name REGEXP '^[0-9]' and b.po_status not in (2,3) group by vendor_id" );
+		}
+	}
 	
-/**
+	function cat_alpha_list($ch)
+	{
+		if($ch == '09')
+		{
+			return $this->db->query("Select id,name from king_categories where name REGEXP '^[0-9]' group by id order by name" );	
+		}else if($ch == '20')
+		{
+			return $this->db->query("select c.id,c.name from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid join king_orders o on o.itemid=i.id join king_transactions t on t.transid=o.transid and t.is_pnh=1 where i.is_pnh=1 group by c.name order by count(o.id) desc limit 20");
+		}else
+		{
+			return $this->db->query("Select id,name from king_categories where name like '".$ch."%' group by id order by name" );
+		}
+		
+	}
+	
+	function brand_alpha_list($ch)
+	{
+		if($ch == '09')
+		{
+			return $this->db->query("Select id,name from king_brands where name REGEXP '^[0-9]' group by id order by name" );	
+		}else if($ch == '20')
+		{
+			return $this->db->query("select b.id,b.name from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid join king_orders o on o.itemid=i.id join king_transactions t on t.transid=o.transid and t.is_pnh=1 where i.is_pnh=1 group by b.id order by count(o.id) desc limit 20");
+		}else
+		{
+			return $this->db->query("Select id,name from king_brands where name like '".$ch."%' group by id order by name" );
+		}
+	}
+	/**
      * function to log admin/logged in user activity  
      * 
      * @author Shariff
