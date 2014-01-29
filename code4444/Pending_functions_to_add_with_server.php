@@ -1034,3 +1034,27 @@ $.each(arr, function (index, value) {
 </select>
 
 //web lab,sycopaint,mysms,text,fluid UI, talk to messenger, want
+
+//This prototype function allows you to remove even array from array
+                Array.prototype.remove = function(x) { 
+                    for(i in this){
+                        if(this[i].toString() == x.toString()){
+                            this.splice(i,1)
+                        }
+                    }
+                }
+                var arr = [1,2,[1,1], 'abc'];
+                arr.remove([1,1]);
+                console.log(arr) //[1, 2, 'abc']
+
+                var arr = [1,2,[1,1], 'abc'];
+                arr.remove(1);
+                console.log(arr) //[2, [1,1], 'abc']
+
+                var arr = [1,2,[1,1], 'abc'];
+                arr.remove('abc');
+                console.log(arr) //[1, 2, [1,1]]
+                
+                
+                
+                

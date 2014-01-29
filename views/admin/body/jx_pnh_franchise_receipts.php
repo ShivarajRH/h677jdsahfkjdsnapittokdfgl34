@@ -223,6 +223,11 @@
 				<tr><td><b>Realized On</b></td><td><b>:</b></td><td><?=format_date_ts($r['activated_on'])?></td></tr>
 				<tr><td><b>Realized By</b></td><td><b>:</b></td><td><?=$r['activated_by']?></td></tr>
 				<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['reason']?></td></tr>
+				<tr><td><b>Un-Reconciled Value</b></td><td><b>:</b></td><td>
+                                        <?=$r['unreconciled_value']?>
+                                         ( <?php //echo $r['unreconciled_value'] ."=". $r['receipt_amount'];
+                                                echo  ( ( $r['unreconciled_value'] == 0 && $r['receipt_amount'] ==0 ) ? 'done' : "partial" ? 'pending' : ( $r['unreconciled_value'] == $r['receipt_amount'] ) ); ?> )
+                                    </td></tr>
 				</table>
 				</div>
 				</td>

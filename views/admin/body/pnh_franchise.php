@@ -1238,7 +1238,9 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 								<tr>
 									<td>Amount (Rs)</td><td>:</td>
 									<td><input type="text" class="inp amount" name="amount" id="receipt_amount" size=5 value="">
-                                                                            <span class="unreconciled_total">Un-Reconciled: <abbr title="Amount">0</abbr></span>
+                                                                            <span class="reconciled_total">Adjusted Amount: <abbr title="Amount">0</abbr>
+                                                                            <input type="hidden" name="total_val_reconcile" id="total_val_reconcile" value="">
+                                                                            </span>
 									</td>
 								</tr>
 								<tr>
@@ -1292,7 +1294,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
                                                                                         </select>
                                                                                     </td>
                                                                                     <td><input type="text" class="inp amt_unreconcile" name="amt_unreconcile[]" id="amt_unreconcile" size=5 value=""></td>
-                                                                                    <td><input type="text" class="inp amt_additional" name="amt_additional[]" id="amt_additional" size=5></td>
+                                                                                    <td><input type="text" class="inp amt_adjusted" name="amt_adjusted[]" id="amt_adjusted" size=5></td>
                                                                                     <td><span class="button button-tiny_wrap cursor button-primary clone_rows">+</span></td>
                                                                                 </tr>-->
                                                                             </tbody>
@@ -3696,6 +3698,8 @@ $("#pnh_membersch").dialog({
                         if(sts !== true) {
                             error_msgs.push(sts);
                         }
+                        var reconciled_total= parseFloat( $("abbr",".reconciled_total").html() );
+                        $("#total_val_reconcile").val(reconciled_total);
                         
 		if(error_msgs.length)
 		{
@@ -3721,10 +3725,10 @@ $("#pnh_membersch").dialog({
             var err_status=true;
             $(".amt_unreconcile").each(function(i,row){
                 if($(row).val() != '') { // selected invoice
-                    var addi_val = $(".amt_additional:eq("+i+")");
+                    var addi_val = $(".amt_adjusted:eq("+i+")");
                     if(addi_val.val() == '') { //additional value is empty
                         //$(".error_status").html("Please enter additional amount!");
-                        return err_status = "Please specify additional amount for selected invoices";
+                        return err_status = "Please specify adjusted amount for selected invoices";
                         addi_val.focus();
                     }
                 }
@@ -3737,16 +3741,24 @@ $("#pnh_membersch").dialog({
 
         $(".clone_rows").live("click",function() {
             
+            var rtype = $("#r_type").find(":selected").val();
+            if(rtype == 0) { alert("Security Deposit of type can not reconcile the Amount."); return false; }
+            
             var receipt_amount = $("#receipt_amount").val();
             if( $(".error_status").html() != '' && receipt_amount != '') {
                 return false;
             }
             
+            var reconciled_total= parseFloat( $("abbr",".reconciled_total").html() );
+            if(receipt_amount != '' && reconciled_total == receipt_amount) {
+                alert("All Amount Adjusted.");
+                return false;
+            }
             //alert(icount);
             var html='';
             
             if(icount == 0)
-                html +="<tr><th>&nbsp;</th><th>Invoice No</th><th>Un-reconcile Amount</th><th>Additional Amount</th></tr>";
+                html +="<tr><th>&nbsp;</th><th>Invoice No</th><th>Un-reconcile Amount</th><th>Adjusted Amount</th></tr>";
             
             icount = icount+1;
             html += "<tr class='' id='reconcile_row_"+icount+"'>\n\
@@ -3758,19 +3770,54 @@ $("#pnh_membersch").dialog({
                                         html += "<option value='<?=$invoice['invoice_no'];?>' inv_amount='<?=$invoice['inv_amount'];?>'><?=$invoice['invoice_no'];?> ( <?=$invoice['inv_amount'];?> )</option>";
                                     <?php } ?>
                                 html += "</select>\n\
-                            </td>\n\
+                            </td>\n\\n\
                             <td><input type='text' class='inp amt_unreconcile' name='amt_unreconcile[]' id='amt_unreconcile_"+icount+"' size=5></td>\n\
-                            <td><input type='text' class='inp amt_additional' name='amt_additional[]' id='amt_additional_"+icount+"' size=5></td>\n\
+                            <td><input type='text' class='inp amt_adjusted' name='amt_adjusted[]' id='amt_adjusted_"+icount+"' size=5 value=''></td>\n\
                         </tr>";
                         //
-
+                        
                 $("#reconcile_row").append(html);
                 $("#selected_invoices_"+icount).chosen();
         });
         
         function remove_row(rowid) {
             var tbody=$("#reconcile_row");
+            update_values(rowid);
             $("#reconcile_row_"+rowid,tbody).remove();
+            
+        }
+        //This prototype function allows you to remove even array from array
+        Array.prototype.remove = function(x) { 
+            for(i in this){
+                if(this[i].toString() == x.toString()){
+                    this.splice(i,1)
+                }
+            }
+        }
+        
+        /* var arr = [1,2,[1,1], 'abc'];
+         arr.remove([1,1]);
+         console.log(arr) //[1, 2, 'abc']
+
+         var arr = [1,2,[1,1], 'abc'];
+         arr.remove(1);
+         console.log(arr) //[2, [1,1], 'abc']
+
+         var arr = [1,2,[1,1], 'abc'];
+         arr.remove('abc');
+         console.log(arr) //[1, 2, [1,1]]*/
+
+        function update_values(rowid) {
+                
+            //remove invoice
+            //subtract ajusted amount
+            var sel_inv = $("#selected_invoices_"+rowid).find(':selected').val();
+            arr_invs.remove(sel_inv);
+            
+            var amt_adjusted = $("#amt_adjusted_"+rowid).val();
+            var reconciled_total= parseFloat( $("abbr",".reconciled_total").html() );
+            var sub_amount = reconciled_total - amt_adjusted;
+            $("abbr",".reconciled_total").html(sub_amount);
         }
         
         var arr_invs = [];
@@ -3782,73 +3829,139 @@ $("#pnh_membersch").dialog({
                 $(".error_status").html("Please specify receipt amount"); $("#receipt_amount:first:visible").focus(); return false;
             }
             
-            var unreconciled_total= parseFloat( $("abbr",".unreconciled_total").html() );
-            
-            
-            //print(unreconciled_total+" < "+receipt_amount);
-            
-            
+            var reconciled_total= parseFloat( $("abbr",".reconciled_total").html() );
             var sel_inv = $(elt).find(':selected').val();
             var sel_inv_amount = parseFloat( $(elt).find(':selected').attr("inv_amount") );
              
-                 
-            if(unreconciled_total < receipt_amount) {
-                
+            //print(reconciled_total+" < "+receipt_amount);
+            if(reconciled_total < receipt_amount) {
 
-                        var i_sub_total = sel_inv_amount+unreconciled_total;
+                        var i_sub_total = sel_inv_amount + reconciled_total;
                         if(i_sub_total < receipt_amount) {
-                         
-                            if(!myInArray(sel_inv,arr_invs)) {
+                            
+                            //
+                            var err = 0;
+                            $(".sel_invoices").each(function(i,row) {
+                                var sel_inv2 = $(this).val();
+                                print("==========\n#"+count+". "+sel_inv+"=="+sel_inv2);
+                                
+                                if(sel_inv == sel_inv2) {
+                                    err= err+1;
+                                }
+                            });
+                            print("\ncount="+err);
+                            if(err <= 1) { 
                                 arr_invs.push(sel_inv);
+                                //print("already exits...");
                             }
                             else {
+                                $("#selected_invoices_"+count).prop('selectedIndex', 0);
                                 $(".error_status").html("Invoice already selected.");
                                 return false;
                             }
-
-                            if(count) {
-                                $("#amt_unreconcile_"+count).val(sel_inv_amount);
+                            
+                            /*var found = arr_invs.map(function (key) {
+                                if (key.invoice == sel_inv) {
+                                  return key.invoice
+                                } else {
+                                  return null
+                                }
+                            });
+                            if(found == '') {
+                                print("Inserted");
+                                arr_invs.push({
+                                    count:count
+                                    ,invoice:sel_inv
+                                });
                             }
                             else {
-                                $("#amt_unreconcile").val(sel_inv_amount);
+                                $(".error_status").html("Invoice already selected.");return false;
                             }
-                            show_unconcile_total();
+                            print(found);
+                            print(arr_invs);
+                            print("\n====\n");*/
+                                
+                            /*if(!myInArray(sel_inv,arr_invs[count])) {
+                                
+                                arr_invs.push({
+                                            count:count
+                                            ,invoice:sel_inv
+                                        });
+                            }
+                            else {
+                                /*var s=chk_select_invs(sel_inv);
+                                if(s) {
+                                    return false;
+                                }
+                                else {
+                                    print("Invoice not found.=>"+s);
+                                }*/
+                                //arr_invs.remove(sel_inv);
+                                //$(".error_status").html("Invoice already selected.");
+                            //}
+                           // print(arr_invs);*/
+                            
+                            if(count) {
+                                $("#amt_unreconcile_"+count).val(sel_inv_amount);
+                                $("#amt_adjusted_"+count).val(sel_inv_amount);
+                            }
+                            /*else {$("#amt_unreconcile").val(sel_inv_amount);$("#amt_adjusted").val(sel_inv_amount);}*/
+                            $(".amt_adjusted").trigger("change");
                         }
                         else {
-                            alert("Invoice amount cannot be more than the receipt amount!");
+                            var add_inv_btn = false;
+                            var i_sub_total = receipt_amount - reconciled_total;
+                            
+                            $("#amt_unreconcile_"+count).val(sel_inv_amount);
+                            $("#amt_adjusted_"+count).val(i_sub_total);
+                            $(".amt_adjusted").trigger("change");
+                            //alert("Invoice amount cannot be more than the receipt amount!");
                         }
-                        
             }
             else {
                 alert("Invoice amount cannot be more than the receipt!");
-                
             }
-            
         }
+        
         $("#receipt_amount").keyup(function() {
            $(".error_status").html(""); 
         });
         
+        $(".amt_adjusted").live("change",function() {
+            show_unconcile_total();
+        });
+        
         function show_unconcile_total() {
             var invs_total = 0;
-            $(".amt_unreconcile").each(function(i,row) {
+            $(".amt_adjusted").each(function(i,row) {
                 var amount = $(this).val();
-                
-                if(amount=='') {
-                   // print( amount );
-                }
-                else {
+                if(amount!='') {
                     //print( parseFloat(amount ) );
                     invs_total += parseFloat(amount);
                 }
             });
             
-            $("abbr",".unreconciled_total").html(invs_total);
+            $("abbr",".reconciled_total").html(invs_total);
         }
         function myInArray(needle, haystack) {
             return $.inArray(needle, haystack) !== -1;
         }
         
+        /*function chk_select_invs(key_sel_inv) {
+            var status = false;
+            $(".sel_invoices").each(function(i,row) {
+                var sel_inv = $(this).val();
+                print(sel_inv+"=="+key_sel_inv);
+                if(sel_inv == sel_inv) {
+                    //continue;
+                    
+                }else if(sel_inv == sel_inv) {
+                    return status = true;
+                }
+                //else arr_invs.remove(sel_inv);
+            });
+            return status;
+        }*/
 </script>
 
  <style>
@@ -3862,15 +3975,16 @@ $("#pnh_membersch").dialog({
         .sel_invoices { 
             width:160px; 
         }
-        .amt_unreconcile,.amt_additional {
+        .amt_unreconcile,.amt_adjusted {
             text-align: right;
         }
-        .unreconciled_total abbr {
+        .reconciled_total abbr {
             font-weight: bold;
         }
-        .unreconciled_total {
+        .reconciled_total {
             padding:0 0 0 20px;
         }
+        .error_status { font-size: 12px; color:#B44F4F; }
 </style>
 
 <?php

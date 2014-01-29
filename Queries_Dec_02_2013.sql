@@ -1920,7 +1920,7 @@ select * from pnh_t_receipt_info where franchise_id = '43';
 
 
 -- ====================================================================================
-#Jan_24_2014
+# Jan_24_2014
 create table `pnh_t_receipt_reconcilation` (  `id` bigint (20) NOT NULL AUTO_INCREMENT , `debit_note_id` bigint (20) DEFAULT '0', `invoice_no` bigint (20) , `dispatch_id` int (100) , `inv_amount` float (50) DEFAULT '0', `unreconciled` float (50) DEFAULT '0', `created_on` int (50) , `created_by` int (20) , `modified_on` int (50) , `modified_by` int (20) , PRIMARY KEY ( `id`))  
 create table `pnh_t_receipt_reconcilation_log` (  `logid` bigint (20) NOT NULL AUTO_INCREMENT , `credit_note_id` int (50) , `receipt_id` int (50) , `reconcile_id` int (50) , `reconcile_amount` float (50) DEFAULT '0', `is_reversed` int (11) DEFAULT '0', `created_on` int (100) , `created_by` int (20) , PRIMARY KEY ( `logid`))  
 alter table `pnh_t_receipt_info` add column `unreconciled_value` double   NULL  after `modified_on`, add column `unreconciled_status` varchar (11)  NULL  after `unreconciled_value`;
@@ -1934,4 +1934,30 @@ select ref_dispatch_id from king_invoice where invoice_no='20141019614' group by
 
 -- new
 insert into pnh_t_receipt_reconcilation
+
+# Jan_25_2014
+
+CREATE TABLE `king_admin_activitylog` (                  
+                          `id` int(11) NOT NULL AUTO_INCREMENT,                  
+                          `user_id` int(11) DEFAULT '0',                         
+                          `visited_url` varchar(4000) DEFAULT NULL,              
+                          `reference_method` varchar(50) DEFAULT NULL,           
+                          `ipaddress` varchar(255) DEFAULT NULL,                 
+                          `logged_on` datetime DEFAULT NULL,                     
+                          PRIMARY KEY (`id`)                                     
+                        );
+
+select * from pnh_t_receipt_info where franchise_id = '43';
+
+update pnh_t_receipt_info set unreconciled_value='' and unreconciled_status='' where 1=1;
+
+truncate table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation`;
+truncate table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation_log`;
+
+-- new 1
+select sum(unreconciled_value),count(receipt_id) as num_receipts from pnh_t_receipt_info where franchise_id = '43' and unreconciled_value != 0 and status in (1);
+
+-- new 2
+select receipt_id,receipt_amount,unreconciled_value from pnh_t_receipt_info where franchise_id = '43' and status = 1;
+
 
