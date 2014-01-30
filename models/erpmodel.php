@@ -7085,147 +7085,130 @@ order by p.product_name asc
 		$this->erpm->flash_msg("Receipt $rid activated");
 		redirect("admin/pnh_pending_receipts");
 	}
+        
 	function get_dispatch_id_invno($invoice_no) {
             return $this->db->query("select ref_dispatch_id from king_invoice where invoice_no=? group by invoice_no",$invoice_no)->row()->ref_dispatch_id;
         }
-        function reconcile_invoice_amount($recpt_id,$amount,$invoice_no,$unreconcile_amt,$adjusted_amt,$userid) {
-                //insert to receipt_reconcilation table
-                $dispatch_id = $this->get_dispatch_id_invno($invoice_no);
+        
+        /**
+         * Function to reconcile the receipts
+         * @param type $invoice_arr array
+         * @return type array
+         */
+        function reconcile_receipt($invoice_arr) {
+            
+            $userid = $invoice_arr['userid'];
+            $receipt_id = $invoice_arr['receipt_id'];
+            $amount = $invoice_arr['amount'];
+            $total_reconcile_val = $invoice_arr['total_reconcile_val'];
+            $fid = $invoice_arr['fid'];
+            $unreconciled_value = $invoice_arr['unreconciled_value'];
+            
+            foreach($invoice_arr['invoices'] as $i=>$arr) {
+                
+                // 1. pnh_t_receipt_reconcilation
                 $input_data = array(
                         'debit_note_id'=> 0
-                        ,'invoice_no'=>$invoice_no
-                        ,'dispatch_id'=>$dispatch_id
-                        ,'inv_amount'=>$amount
-                        ,'unreconciled'=>$amount
+                        ,'invoice_no'=>$arr['invoice_no']
+                        ,'dispatch_id'=>$arr['dispatch_id']
+                        ,'inv_amount'=>$arr['invoice_amt']
+                        ,'unreconciled'=>$arr['unreconciled_amt']
                         ,'created_on'=>time()
                         ,'created_by'=>$userid
-                        ,'modified_on'=>time()
-                        ,'modified_by'=>$userid
+                        ,'modified_on'=>''
+                        ,'modified_by'=>''
                     );
-                    
-                
                 $this->db->insert("pnh_t_receipt_reconcilation",$input_data);
-                $reconsile_id = $this->db->insert_id();
+                $reconcile_id = $this->db->insert_id();
                 
-                //`reconcile_amount`,`is_reversed`,`created_on`,`created_by`) values ( NULL,NULL,'119','1','15000','0',NULL,NULL)
-               //insert to reconcile log 
+                //2. pnh_t_receipt_reconcilation_log
                 $input_data2 = array(
-                        'credit_note_id'=> 0
-                        ,'receipt_id'=>$recpt_id
-                        ,'reconcile_id'=>$reconsile_id
-                        ,'reconcile_amount'=>$amount
-                        ,'is_reversed'=>0
-                        ,'created_on'=>time()
-                        ,'created_by'=>$userid
-                    );
-                    
-                
+                    'credit_note_id'=> 0
+                    ,'receipt_id'=>$receipt_id
+                    ,'reconcile_id'=>$reconcile_id
+                    ,'reconcile_amount'=>$arr['adjusted_amt']
+                    ,'is_reversed'=>0
+                    ,'created_on'=>time()
+                    ,'created_by'=>$userid
+                );
                 $this->db->insert("pnh_t_receipt_reconcilation_log",$input_data2);
-                $log_id = $this->db->insert_id();
-                echo "reconcileid".$reconsile_id." logid=".$log_id;
+
+                $output[$i]['reconcile_id'] = $reconcile_id;
+                $output[$i]['log_id'] = $this->db->insert_id();
+            }
+            
+            //3.  pnh_t_receipt_info
+            if($total_reconcile_val == 0)
+                $unreconciled_status = "done";
+            elseif($total_reconcile_val < $amount)
+                $unreconciled_status = "par";
+            else
+                $unreconciled_status = "pen";
+
+            $input_data3 = array("unreconciled_value"=>$total_reconcile_val,"unreconciled_status"=>$unreconciled_status);
+            $where_data = array("receipt_id" => $receipt_id,"franchise_id" => $fid );
+            $this->db->update("pnh_t_receipt_info",$input_data3,$where_data);
+            return $output;
         }
         
-	function do_pnh_topup($fid,$user)
-	{
+        /**
+         * 
+         * @param type $fid
+         * @param type $user 
+         */
+	function do_pnh_topup($fid,$user)  {
 		$user=$this->erpm->getadminuser();
 		foreach(array("r_type","amount","bank","type","no","date","msg","transit_type","sel_invoice","amt_unreconcile","amt_adjusted","total_val_reconcile") as $i)
 			$$i=$this->input->post($i);
-                                
-		
+//                    echo '<pre>'; print_r($_POST); die();
                 $inp=array("receipt_type"=>$r_type,"franchise_id"=>$fid,"bank_name"=>$bank,"receipt_amount"=>$amount,"payment_mode"=>$type,"instrument_no"=>$no,"instrument_date"=>strtotime($date),"created_by"=>$user['userid'],"created_on"=>time(),"remarks"=>$msg,"in_transit"=>$transit_type,"unreconciled_value"=>$amount);
                 // if cash receipt is added.
 		if($type == 0)
 			$inp['instrument_date'] = strtotime(date('Y-m-d')); // security deposit
-                
 		$this->db->insert("pnh_t_receipt_info",$inp);
 		$recpt_id = $this->db->insert_id();
                 
-//		$this->erpm->pnh_fran_account_stat($fid,0, $amount,"Topup $no $date");
-
                 //update unreconceiled value
                 if($r_type == 1){
                     // If not security deposit we can concile the amount
                    
-                   // $recpt_id = 228;
+                    //$recpt_id = 298;
 
+                    $unreconciled_value = $amount - $total_val_reconcile;
                     if($sel_invoice) {
-
-                       // echo '<pre>';
-                        /*print_r($sel_invoice);print_r($amt_unreconcile);print_r($amt_adjusted);*/
-                        //print_r($_POST);
-
                         $invoice_arr = array();
                         foreach($sel_invoice as $i=>$invoice_no) {
                             $unreconcile_amt = $amt_unreconcile[$i];
                             $adjusted_amt = $amt_adjusted[$i];
                             if($invoice_no!='' && $unreconcile_amt!='' && $adjusted_amt!='') {
-                                
                                     $dispatch_id = $this->get_dispatch_id_invno($invoice_no);
                                     
                                     $sub_val = $unreconcile_amt - $adjusted_amt;
-                                    $invoice_arr[$i]["invoice_no"] = $sel_invoice[$i];
-                                    $invoice_arr[$i]["dispatch_id"] = $dispatch_id;
-                                    $invoice_arr[$i]["invoice_amt"] = $unreconcile_amt;
-                                    $invoice_arr[$i]["adjusted_amt"] = $adjusted_amt;
-                                    $invoice_arr[$i]["unreconciled_amt"] = $sub_val;
-                                    
-                                    $userid = $user['userid'];
-                                    $input_data = array(
-                                            'debit_note_id'=> 0
-                                            ,'invoice_no'=>$invoice_no
-                                            ,'dispatch_id'=>$dispatch_id
-                                            ,'inv_amount'=>$unreconcile_amt
-                                            ,'unreconciled'=>$sub_val
-                                            ,'created_on'=>time()
-                                            ,'created_by'=>$userid
-                                            ,'modified_on'=>time()
-                                            ,'modified_by'=>$userid
-                                        );
-                                    $this->db->insert("pnh_t_receipt_reconcilation",$input_data);
-                                    $reconcile_id = $this->db->insert_id();
-                                    
-                                        $input_data2 = array(
-                                            'credit_note_id'=> 0
-                                            ,'receipt_id'=>$recpt_id
-                                            ,'reconcile_id'=>$reconcile_id
-                                            ,'reconcile_amount'=>$adjusted_amt
-                                            ,'is_reversed'=>0
-                                            ,'created_on'=>time()
-                                            ,'created_by'=>$userid
-                                        );
-                                       $this->db->insert("pnh_t_receipt_reconcilation_log",$input_data2);
-                                    //$invoice_arr[$i]["afterreconcile_amt"] = (double) $sub_val;
-                                    //$status = $this->reconcile_invoice_amount($recpt_id,$amount,$invoice,$unreconcile_amt,$adjusted_amt,$user['userid']);
+                                    $invoice_arr['invoices'][$i]["invoice_no"] = $sel_invoice[$i];
+                                    $invoice_arr['invoices'][$i]["dispatch_id"] = $dispatch_id;
+                                    $invoice_arr['invoices'][$i]["invoice_amt"] = $unreconcile_amt;
+                                    $invoice_arr['invoices'][$i]["adjusted_amt"] = $adjusted_amt;
+                                    $invoice_arr['invoices'][$i]["unreconciled_amt"] = $sub_val;
+                                    //$invoice_arr[$i]["sub_val"] = $sub_val;
                             }
-
                         }
+                        $invoice_arr['userid'] = $user['userid'];
+                        $invoice_arr['receipt_id'] = $recpt_id;
                         $invoice_arr['amount']=$amount;
-                        $unreconciled_value = $amount-$total_val_reconcile;
-                        $invoice_arr['total_reconcile_val'] = $unreconciled_value;
-                        if($unreconciled_value == 0) {
-                            $unreconciled_status = "d";
-                        }
-                        else {
-                            $unreconciled_status = "p";
-                        }
-                        $input_data3 = array(
-                                            "unreconciled_value"=>$unreconciled_value
-                                            ,"unreconciled_status"=>$unreconciled_status
-                                        );
-                        $where_data = array(
-                                    "receipt_id" => $recpt_id
-                                    ,"franchise_id" => $fid
-                                );
-                        $this->db->update("pnh_t_receipt_info",$input_data3,$where_data);
+                        $invoice_arr['total_reconcile_val'] = $total_val_reconcile;
+                        $invoice_arr['unreconciled_value'] = $unreconciled_value;
+                        $invoice_arr['fid'] = $fid;
                         
-                        //print_r($invoice_arr);
+                        //echo '<pre>'; print_r($invoice_arr);die();
+                        
+                        $rdata = $this->reconcile_receipt($invoice_arr);
+                       //echo '<pre>'; print_r($rdata);die();
                     }
-                
                 }
 		//die("Workingon...");
-                
-		/*
-		$arr = array($fid,((!$r_type)?2:3),$recpt_id,$r_type,$amount,$msg,1,date('Y-m-d H:i:s'),$user['userid']);
+
+//		$this->erpm->pnh_fran_account_stat($fid,0, $amount,"Topup $no $date");
+		/*$arr = array($fid,((!$r_type)?2:3),$recpt_id,$r_type,$amount,$msg,1,date('Y-m-d H:i:s'),$user['userid']);
 				$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,receipt_id,receipt_type,credit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?,?)",$arr);
 		*/
 		$franchise_det=$this->erpm->pnh_getfranchise($fid);

@@ -4317,6 +4317,8 @@ group by g.product_id ");
 		foreach(array("type","amount","desc","sms","receipt_id") as $i)
 			$$i=$this->input->post($i);
 		
+                echo '<pre>'; print_r($_POST); die();
+                
 		$acc_stat_id = $this->erpm->pnh_fran_account_stat($fid,$type,$amount,$desc,"correction",$fid);
 		$trans_type = 5;
 		if($receipt_id)

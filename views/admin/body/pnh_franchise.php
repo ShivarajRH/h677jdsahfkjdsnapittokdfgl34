@@ -199,6 +199,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 	<?php }?>
 	<li><a href="#status_log">Status Log</a></li>
 	<li><a href="#analytics" class="analytics">Analytics</a></li>
+	<li><a href="#reconsile" class="reconsile">Reconsile</a></li>
 	</ul>
 	
 	<div id="credit_notes">
@@ -389,7 +390,213 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 				</tr>
 			</table>
 		</div>
-	<!-- Analytics graph section end ---->
+                <!-- Analytics graph section end ---->
+                
+		<!-- Reconsile graph section start ---->
+		<div id="reconsile">
+			
+                        <?php if(1) { ?>
+                                <div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 500px;font-size: 12px;">
+                                <h4 style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Reconsile Receipts</h4>
+                                        <!--<form method="post" id="top_form" action="<?=site_url("admin/pnh_topup/{$fran['franchise_id']}")?>">
+                                                <table cellpadding=3 width="100%">
+                                                        <tr>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td><span class="error_status"></span></td>
+                                                        </tr>
+                                                        <tr>
+                                                                <td>Type</td><td>:</td>
+                                                                <td>
+                                                                        <select name="r_type" id="r_type">
+                                                                                <option value="1">Topup</option>
+                                                                                <option value="0">Security Deposit</option>
+                                                                        </select>
+                                                                        <select name="sel_receipts">
+                                                                            <option value="00">Select receipt</option>
+                                                                        </select>
+                                                                </td>
+                                                        </tr>
+                                                        <tr>
+                                                                <td>Amount (Rs)</td><td>:</td>
+                                                                <td><input type="text" class="inp amount" name="amount" id="receipt_amount" size=5 value="">
+                                                                    <span class="reconciled_total">Adjusted Amount: <abbr title="Amount">0</abbr>
+                                                                    <input type="hidden" name="total_val_reconcile" id="total_val_reconcile" value="">
+                                                                    </span>
+                                                                </td>
+                                                        </tr>
+                                                        <tr>
+                                                                <td>Instrument Type</td><td> :</td>
+                                                                <td><select name="type" class="inst_type">
+                                                                                <option value="0">Cash</option>
+                                                                                <option value="1">Cheque</option>
+                                                                                <option value="2">DD</option>
+                                                                                <option value="3">Transfer</option>
+                                                                </select></td>
+                                                        </tr>
+                                                        <tr>
+                                                                <td>Instrument Status</td><td> :</td>
+                                                                <td><select name="transit_type">
+                                                                                <option value="0">In Hand</option>
+                                                                                <option value="1">Via Courier</option>
+                                                                                <option value="2">With Executive</option>
+                                                                </select></td>
+                                                        </tr>
+                                                        <tr class="inst inst_name">
+                                                                <td class="label">Bank name </td><td>:</td>
+                                                                <td><input type="text" name="bank" size=30></td>
+                                                        </tr>
+                                                        <tr class="inst inst_no">
+                                                                <td class="label">Instrument No</td><td> :</td>
+                                                                <td><input type="text" name="no" size=10></td>
+                                                        </tr>
+                                                        <tr class="inst inst_date">
+                                                                <td class="label">Instrument Date</td><td> :</td>
+                                                                <td><input type="text" name="date" id="sec_date" size=15></td>
+                                                        </tr>
+                                                        <tr>
+                                                                <td>Select Invoices</td><td> :</td>
+                                                                <td><span class="button button-tiny_wrap cursor button-primary clone_rows">+</span>
+                                                                    <table border="0" cellspacing="0" cellpadding="2">
+                                                                    <tbody id="reconcile_row">
+                                                                    </tbody></table>
+                                                                </td>
+                                                        </tr>
+                                                        <tr class="inst_msg">
+                                                                <td>Message</td><td> :</td>
+                                                                <td><textarea class="msg" name="msg" style="width:350px;height:80px;" ></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                                <td align="right" colspan="3"><input type="submit" class="button button-rounded button-small button-flat-action" value="Submit"></td>
+                                                        </tr>
+                                                </table>
+                                        </form>-->
+                                </div>
+                                <!--
+                                <div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 580px;font-size: 12px;">
+                                        <h4
+                                                style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Account
+                                                Statement Correction</h4>
+                                        <form method="post" id="acc_change_form"
+                                                action="<?=site_url("admin/pnh_acc_stat_c/{$fran['franchise_id']}")?>">
+                                                <input type="hidden" name="is_manual_corr" value="1">
+                                                <table cellpadding=3>
+                                                        <tr>
+                                                                <td width="100">Type</td><td>:</td>
+                                                                <td><select name="type"><option value="0">In (credit)</option>
+                                                                                <option value="1">Out (debit)</option>
+                                                                </select></td>
+                                                        </tr>
+                                                        <tr>
+                                                                <td>Amount (Rs)</td><td>:</td>
+                                                                <td><input type="text" name="amount" class="inp" size=5>
+                                                                </td>
+                                                        </tr>
+                                                        <tr>
+                                                                <td>Description</td><td>:</td>
+                                                                <td><textarea name="desc" class="inp" style="width:400px;height:100px;" ></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                        <td>Send SMS to Franchise</td><td>:</td>
+                                                                <td><label><input type="checkbox" name="sms" value="1"></label></td>
+                                                        </tr>
+                                                        <tr>
+                                                                <td colspan="3" align="right"><input type="submit" class="button button-rounded button-small button-flat-action" value="Make correction" ></td>
+                                                        </tr>
+                                                </table>
+                                        </form>
+                                </div>-->
+                        <?php } ?>
+                                <div class="clear"></div></br></br>
+
+                                <div class="tab_view">
+
+
+                                        <h4 style="margin-bottom: 0px">
+                                                Receipts <a href="<?=site_url("admin/pnh_receiptsbyfranchise/1/".$f['franchise_id'])?>"
+                                                        style="font-size: 75%">activate/cancel</a>
+                                        </h4>
+
+
+                                        <ul>
+                                                <li><a href="#pending" onclick="load_receipts(this,'pending',0,<?=$f['franchise_id']?>,100)" class="pending_receipt">Pending</a></li>
+                                                <li><a href="#processed" onclick="load_receipts(this,'processed',0,<?=$f['franchise_id']?>,100)">Processed</a></li>
+                                                <li><a href="#realized" onclick="load_receipts(this,'realized',0,<?=$f['franchise_id']?>,100)">Realized</a></li>
+                                                <li><a href="#cancelled" onclick="load_receipts(this,'cancelled',0,<?=$f['franchise_id']?>,100)">Cancelled/Bounced</a></li>
+                                                <li><a href="#acct_stat" onclick="load_receipts(this,'acct_stat',0,<?=$f['franchise_id']?>,100)">Account Correction</a></li>
+                                                <?php if($this->erpm->auth(FINANCE_ROLE,true)){ ?>
+                                                <li><a href="#security_cheques" >Security Cheque Details</a></li>
+                                                <?php } ?>
+                                        </ul>
+                                        <div id="pending">
+                                                <div class="tab_content"></div>
+                                        </div>
+                                        <?php if($this->erpm->auth(FINANCE_ROLE,true)){ ?>
+                                        <div id="security_cheques" style="min-height: 100px">
+                                                <div class="clearboth" align="left" style="padding:10px;">
+                                                        <a href="javascript:void(0)" onclick="load_add_security_cheque_dlg()" style="font-size: 12px;"><b>Add security cheque</b></a>
+                                                </div>	
+                                                <div class="grid_view clearboth">
+                                                        <table class="datagrid">
+                                                                <thead><th>Slno</th><th>Cheque no</th><th>Bank name</th><th>Cheque Date</th><th>Amount(Rs)</th><th>Collected on</th></thead>
+                                                                <tbody>
+                                                        <?php
+                                                                $v_fran_security_chq_res = @$this->db->query("select * from pnh_m_fran_security_cheques where franchise_id = ? ",$f['franchise_id']);
+                                                                if($v_fran_security_chq_res->num_rows())
+                                                                {
+                                                        ?>
+
+                                                                <?php
+                                                                        $ttl = 1;
+                                                                        foreach($v_fran_security_chq_res->result_array() as $v_fran_security_chq_row)
+                                                                        {
+                                                                ?>
+                                                                                <tr>
+                                                                                        <td><?php echo $ttl++;?></td>
+                                                                                        <td><?php echo $v_fran_security_chq_row['cheque_no'] ?></td>
+                                                                                        <td><?php echo $v_fran_security_chq_row['bank_name'] ?></td>
+                                                                                        <td><?php echo $v_fran_security_chq_row['cheque_date'] ?></td>
+                                                                                        <td><?php echo $v_fran_security_chq_row['amount'] ?></td>
+                                                                                        <td><?php echo $v_fran_security_chq_row['collected_on'] ?></td>
+                                                                                </tr>
+                                                                <?php				
+                                                                        }
+                                                                ?>
+
+                                                        <?php				
+                                                                }
+                                                        ?>
+                                                                </tbody>
+                                                        </table>
+                                                </div>
+                                        </div>
+                                        <?php				
+                                                }
+                                        ?>
+
+                                        <div id="processed">
+                                                <div class="tab_content"></div>
+                                        </div>
+
+                                        <div id="realized">
+                                                <div class="tab_content"></div>
+                                        </div>
+
+                                        <div id="cancelled">
+                                                <div class="tab_content"></div>
+                                        </div>
+
+                                        <div id="acct_stat">
+                                                <div class="tab_content"></div>
+                                        </div>
+                                </div>
+                                <div class="clear"></div>
+				
+			 
+				
+			
+		</div>
+	<!-- reconsile graph section end ---->
 	
 	
 	<!-- List Franchise Returns Start -->
@@ -1317,8 +1524,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 						<h4
 							style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Account
 							Statement Correction</h4>
-						<form method="post" id="acc_change_form"
-							action="<?=site_url("admin/pnh_acc_stat_c/{$fran['franchise_id']}")?>">
+						<form method="post" id="acc_change_form" action="<?=site_url("admin/pnh_acc_stat_c/{$fran['franchise_id']}")?>">
 							<input type="hidden" name="is_manual_corr" value="1">
 							<table cellpadding=3>
 								<tr>
@@ -2259,9 +2465,20 @@ $(function(){
 		},400);
 	});
 	
+        $('.reconsile').click(function(){
+		setTimeout(function(){
+			fran_menu_stat();
+			payment_order_stat();
+			brands_byfranch();	
+		},400);
+	});
+	
 	
 	if(location.hash == '#analytics')
 		$('.analytics').click();
+	
+        if(location.hash == '#reconsile')
+		$('.reconsile').click();
 	
 	
 	$(".credit_form").submit(function(){
@@ -3698,11 +3915,13 @@ $("#pnh_membersch").dialog({
                         if(sts !== true) {
                             error_msgs.push(sts);
                         }
-                        var reconciled_total= parseFloat( $("abbr",".reconciled_total").html() );
+                        var reconciled_total = parseFloat( $("abbr",".reconciled_total").html() );
+                        
                         $("#total_val_reconcile").val(reconciled_total);
                         
 		if(error_msgs.length)
 		{
+                    alert(reconciled_total);
 			alert("Errors:\n"+error_msgs.join("\n"));
 			return false;
 		}
@@ -3807,8 +4026,9 @@ $("#pnh_membersch").dialog({
          arr.remove('abc');
          console.log(arr) //[1, 2, [1,1]]*/
 
+        var arr_invs = [];
         function update_values(rowid) {
-                
+
             //remove invoice
             //subtract ajusted amount
             var sel_inv = $("#selected_invoices_"+rowid).find(':selected').val();
@@ -3819,8 +4039,7 @@ $("#pnh_membersch").dialog({
             var sub_amount = reconciled_total - amt_adjusted;
             $("abbr",".reconciled_total").html(sub_amount);
         }
-        
-        var arr_invs = [];
+
         function fn_inv_selected(elt,count) {
             var receipt_amount = $("#receipt_amount").val();
             $(".error_status").html("");

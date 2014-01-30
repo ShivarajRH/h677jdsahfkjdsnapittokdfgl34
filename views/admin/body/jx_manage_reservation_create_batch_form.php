@@ -118,7 +118,7 @@ $("#sel_batch_menu").live("change",function(e) {
 $("#dlg_sel_territory").live("change",function() {
     var terrid=$(this).find(":selected").val();
 //        if(terrid=='00') {          $(".sel_status").html("Please select territory."); return false;        }
-    /*$.post(site_url+"admin/jx_suggest_townbyterrid/"+terrid,function(resp) {
+    /*$.post(site_url+"/admin/jx_suggest_townbyterrid/"+terrid,function(resp) {
         if(resp.status=='success') {
              //print(resp.towns);
             var obj = jQuery.parseJSON(resp.towns);
@@ -130,7 +130,7 @@ $("#dlg_sel_territory").live("change",function() {
                         //$(".sel_status").html(resp.message);
         }
     },'json').done(done).fail(fail);*/
-            $.post(site_url+"admin/jx_terr_batch_group_status/"+terrid,function(resp) {
+            $.post(site_url+"/admin/jx_terr_batch_group_status/"+terrid,function(resp) {
                 if(resp.status=='success') {
                     var menulist_opts = '<option value="00" default_batch_size="20" >All</option>';
                         $.each(resp.arr_menus,function(ii,row){
