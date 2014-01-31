@@ -282,7 +282,7 @@
 
             var postData = {p_invoice_ids_str:p_invoice_ids_str,date_from:date_from,date_to:date_to};
 
-            $.post(site_url+"admin/jx_get_acknowledgement_list",postData,function(resp) {
+            $.post(site_url+"/admin/jx_get_acknowledgement_list",postData,function(resp) {
                     //show dialog
                     $("#dlg_block").html(resp).dialog("open").dialog('option', 'title', 'Print Acknowledgement list');
             },'html');
@@ -352,7 +352,7 @@
     function get_acknowledgement_list(p_invoice_ids_str,date_from,date_to) {
         var postData = {p_invoice_ids_str:p_invoice_ids_str,date_from:date_from,date_to:date_to};
 
-        $.post(site_url+"admin/jx_get_acknowledgement_list",postData,function(resp) {
+        $.post(site_url+"/admin/jx_get_acknowledgement_list",postData,function(resp) {
                 $("#dlg_block").html(resp).dialog("open").dialog('option', 'title', 'Print Acknowledgement list');
         },'html');
         return false;
@@ -366,7 +366,7 @@
 
         var postData = {p_invoice_ids_str:p_invoice_ids_str};
         var html='';
-        $.post(site_url+"admin/jx_show_acknowledgement_log",postData,function(resp) {
+        $.post(site_url+"/admin/jx_show_acknowledgement_log",postData,function(resp) {
             
             if(resp.status == 'success') {
                 html += "<h2>Acknowledgement Print Log</h2>\n\

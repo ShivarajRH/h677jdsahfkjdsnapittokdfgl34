@@ -1898,11 +1898,11 @@ select count(invoice_no),group_concat(mrp) from king_invoice group by invoice_no
 -- =============================================================================
 update t_imei_no set status=0 and order_id=0 where imei_no = '356519052961611';
 -- =============================================================================
-select * from m_product_info where product_id='132961';
+select * from m_product_info where product_id='5777';
 # Stock intake the product with product id
-set @product_id = '132961'; # frequent
-set @id='24573';
-set @imei_no = '364619056098766';
+set @product_id = '5777'; # frequent
+set @id='24575';
+set @imei_no = '364619056098768';
 insert into t_imei_no(id,product_id,imei_no,status,grn_id,stock_id,order_id,created_on,modified_on) values(@id,@product_id,@imei_no,0,'2235',0,0,now(),0);
 
 -- =============================================================================
@@ -1960,4 +1960,65 @@ select sum(unreconciled_value),count(receipt_id) as num_receipts from pnh_t_rece
 -- new 2
 select receipt_id,receipt_amount,unreconciled_value from pnh_t_receipt_info where franchise_id = '43' and status = 1;
 
+# Jan_29_2014
+select * from  pnh_t_receipt_info where franchise_id = '43' and unreconciled_status !='p'
 
+-- // RESET RECONCILE TABLE
+truncate table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation`;
+truncate table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation_log`;
+update pnh_t_receipt_info set unreconciled_value = receipt_amount;
+
+jx_manage_reservation_create_batch_form.php
+
+select * from pnh_t_receipt_info where franchise_id = '43' and status = 1 and unreconciled_value!=0;
+
+#Jan_30_2014
+
+-- // RESET RECONCILE TABLE
+truncate table `pnh_t_receipt_reconcilation`;
+truncate table `pnh_t_receipt_reconcilation_log`;
+update pnh_t_receipt_info set unreconciled_value = receipt_amount where 1=1;
+
+-- new 
+select rlog.*
+		,r.franchise_id,r.receipt_amount,r.receipt_type 
+select * 
+from pnh_t_receipt_reconcilation_log rlog
+join pnh_t_receipt_info r on r.receipt_id = rlog.receipt_id
+join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+where r.franchise_id = '43' and r.status = 1;
+
+-- new final
+select * 
+from pnh_t_receipt_info r 
+join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
+join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+where r.franchise_id = '43';
+
+select * from pnh_t_receipt_info where receipt_amount != 0 and franchise_id = '43';
+
+# and unreconciled_value!=0;
+-- new
+
+alter table `pnh_t_receipt_info` change `unreconciled_status` `unreconciled_status` varchar (50) DEFAULT 'pending' NULL COMMENT 'pending,partial,done';
+
+alter table `pnh_t_receipt_info` drop column `unreconciled_status`
+alter table `pnh_t_receipt_info` add `unreconciled_status` varchar (50) DEFAULT 'pending' NULL COMMENT 'pending,partial,done';
+
+
+UPDATE `pnh_t_receipt_info` SET `unreconciled_value` = '254', `unreconciled_status` = 'partial' WHERE `receipt_id` = 5382 AND `franchise_id` = '43';
+
+-- new 1 reconcile info
+select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.id as reconcile_id,rcon.invoice_no,rcon.inv_amount,rcon.unreconciled,r.unreconciled_value,r.receipt_amount
+from pnh_t_receipt_info r 
+join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
+join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+where r.franchise_id = '43' and r.receipt_id = '119';
+
+select *,from_unixtime(created_on) as created_date from pnh_t_receipt_info where receipt_amount != 0 and franchise_id = '43' and receipt_id='119'
+
+-- new receipt info
+select r.unreconciled_value,r.receipt_amount,from_unixtime(r.created_on)  from pnh_t_receipt_info r
+ where r.receipt_amount != 0 and r.franchise_id = '43' and r.receipt_id='119';
+
+select * from king_admin

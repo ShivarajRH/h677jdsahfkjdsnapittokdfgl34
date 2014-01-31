@@ -1218,7 +1218,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 			<div id="statement">
 				<?php if(1){?>
 					<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 500px;font-size: 12px;">
-					<h4 style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Make a Topup/Security Deposit</h4>
+					<h4 style="background: #6B7899; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Make a Topup/Security Deposit</h4>
 						<form method="post" id="top_form" action="<?=site_url("admin/pnh_topup/{$fran['franchise_id']}")?>">
 							<table cellpadding=3 width="100%">
                                                                 <tr>
@@ -1274,7 +1274,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 								</tr>
                                                                 <tr>
 									<td>Select Invoices</td><td> :</td>
-									<td><span class="button button-tiny_wrap cursor button-primary clone_rows">+</span>
+									<td><a href="javascript:void(0);" class="button button-tiny_wrap cursor button-primary clone_rows">+</a>
                                                                             <table border="0" cellspacing="0" cellpadding="2">
 <!--                                                                            <thead>
                                                                                 <tr>
@@ -1314,8 +1314,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 
 
 					<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 580px;font-size: 12px;">
-						<h4
-							style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Account
+						<h4 style="background: #6B7899; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Account
 							Statement Correction</h4>
 						<form method="post" id="acc_change_form"
 							action="<?=site_url("admin/pnh_acc_stat_c/{$fran['franchise_id']}")?>">
@@ -1323,9 +1322,12 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 							<table cellpadding=3>
 								<tr>
 									<td width="100">Type</td><td>:</td>
-									<td><select name="type"><option value="0">In (credit)</option>
-											<option value="1">Out (debit)</option>
-									</select></td>
+									<td>
+                                                                            <select name="type">
+                                                                                <option value="0">In (credit)</option>
+                                                                                <option value="1">Out (debit)</option>
+                                                                            </select>
+                                                                        </td>
 								</tr>
 								<tr>
 									<td>Amount (Rs)</td><td>:</td>
@@ -1365,8 +1367,9 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 							<li><a href="#cancelled" onclick="load_receipts(this,'cancelled',0,<?=$f['franchise_id']?>,100)">Cancelled/Bounced</a></li>
 							<li><a href="#acct_stat" onclick="load_receipts(this,'acct_stat',0,<?=$f['franchise_id']?>,100)">Account Correction</a></li>
 							<?php if($this->erpm->auth(FINANCE_ROLE,true)){ ?>
-							<li><a href="#security_cheques" >Security Cheque Details</a></li>
+                                                            <li><a href="#security_cheques" >Security Cheque Details</a></li>
 							<?php } ?>
+                                                        <li><a href="#reconcile" onclick="load_receipts(this,'reconcile',0,<?=$f['franchise_id']?>,100)">Reconciled</a></li>
 						</ul>
 						<div id="pending">
 							<div class="tab_content"></div>
@@ -1427,6 +1430,10 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 						</div>
 						
 						<div id="acct_stat">
+							<div class="tab_content"></div>
+						</div>
+						
+						<div id="reconcile">
 							<div class="tab_content"></div>
 						</div>
 					</div>
@@ -2030,7 +2037,9 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 			</form>
 		</div>
 	</div>
-				
+	
+        <div id="dlg_unreconcile_list" style="display:none;"></div>
+        
 	<style>
 .subdatagrid {
 	width: 100%
@@ -2674,7 +2683,7 @@ $('#remarks_changestatus').dialog({
 		'Cancel':function()
 		{
 			$(this).dialog('close');
-		},
+		}
 	}
 	
 });
@@ -3737,8 +3746,8 @@ $("#pnh_membersch").dialog({
         }
         
         var icount=0;
-        // x $("#selected_invoices").chosen();
-
+        var franchise_id = '<?=$franchise_id;?>';
+        
         $(".clone_rows").live("click",function() {
             
             var rtype = $("#r_type").find(":selected").val();
@@ -3764,22 +3773,35 @@ $("#pnh_membersch").dialog({
             html += "<tr class='' id='reconcile_row_"+icount+"'>\n\
                             <td><span class='button button-tiny_wrap cursor button-caution' onclick='remove_row("+icount+");'>-</span></td>\n\
                             <td>\n\
-                                <select size='4' name='sel_invoice[]' id='selected_invoices_"+icount+"' class='sel_invoices' onchange='fn_inv_selected(this,"+icount+");'>\n\
-                                        <option value='00'>Choose</option>";
-                                    <?php foreach($fran_invoices as $invoice) { ?>
-                                        html += "<option value='<?=$invoice['invoice_no'];?>' inv_amount='<?=$invoice['inv_amount'];?>'><?=$invoice['invoice_no'];?> ( <?=$invoice['inv_amount'];?> )</option>";
-                                    <?php } ?>
-                                html += "</select>\n\
+                                <select size='2' name='sel_invoice[]' id='selected_invoices_"+icount+"' class='sel_invoices' onchange='fn_inv_selected(this,"+icount+");'>\n\
+                                </select>\n\
                             </td>\n\\n\
                             <td><input type='text' class='inp amt_unreconcile' name='amt_unreconcile[]' id='amt_unreconcile_"+icount+"' size=5></td>\n\
                             <td><input type='text' class='inp amt_adjusted' name='amt_adjusted[]' id='amt_adjusted_"+icount+"' size=5 value=''></td>\n\
                         </tr>";
-                        //
-                        
+
                 $("#reconcile_row").append(html);
-                $("#selected_invoices_"+icount).chosen();
+                var invs_id = $("#selected_invoices_"+icount);
+                load_unconciled_invoices(invs_id);
         });
         
+        function load_unconciled_invoices(invs_id) {
+            //on click
+            var invs = "<option value='00'>Choose</option>\n";
+            $.post(site_url+"/admin/jx_get_unreconciled_invoice_list/"+franchise_id,{},function(resp) {
+                    if(resp.fran_invoices.length) {
+                        $.each(resp.fran_invoices,function(i,invoice) {
+                            invs += "<option value='"+invoice.invoice_no+"' inv_amount='"+invoice.inv_amount+"'>"+invoice.invoice_no+" ( "+invoice.inv_amount+" )</option>\n";
+                        });
+                        invs_id.html(invs);
+                        invs_id.chosen();
+                    }
+                    else 
+                        alert(resp);
+            },'json');
+        }
+        
+        var arr_invs = [];
         function remove_row(rowid) {
             var tbody=$("#reconcile_row");
             update_values(rowid);
@@ -3808,20 +3830,24 @@ $("#pnh_membersch").dialog({
          console.log(arr) //[1, 2, [1,1]]*/
 
         function update_values(rowid) {
-                
             //remove invoice
             //subtract ajusted amount
             var sel_inv = $("#selected_invoices_"+rowid).find(':selected').val();
-            arr_invs.remove(sel_inv);
+            if(arr_invs.length)
+                arr_invs.remove(sel_inv);
+//            else $("#reconcile_row").html("");
             
             var amt_adjusted = $("#amt_adjusted_"+rowid).val();
             var reconciled_total= parseFloat( $("abbr",".reconciled_total").html() );
             var sub_amount = reconciled_total - amt_adjusted;
             $("abbr",".reconciled_total").html(sub_amount);
+            
+            if(rowid == 0)
+                $("#reconcile_row").parent().html("");
         }
         
-        var arr_invs = [];
         function fn_inv_selected(elt,count) {
+            
             var receipt_amount = $("#receipt_amount").val();
             $(".error_status").html("");
             
@@ -3833,20 +3859,27 @@ $("#pnh_membersch").dialog({
             var sel_inv = $(elt).find(':selected').val();
             var sel_inv_amount = parseFloat( $(elt).find(':selected').attr("inv_amount") );
              
+             
             //print(reconciled_total+" < "+receipt_amount);
             if(reconciled_total < receipt_amount) {
 
                         var i_sub_total = sel_inv_amount + reconciled_total;
                         if(i_sub_total < receipt_amount) {
                             
-                            //
+                            if( $("#reconcile_row_"+count).hasClass("inv_"+sel_inv) ) {
+                                alert("Already exits");
+                                return false;
+                            }
+                            else {
+                                $("#reconcile_row_"+count).addClass("inv_"+sel_inv);
+                            }
+                            
                             var err = 0;
                             $(".sel_invoices").each(function(i,row) {
                                 var sel_inv2 = $(this).val();
-                                print("==========\n#"+count+". "+sel_inv+"=="+sel_inv2);
                                 
                                 if(sel_inv == sel_inv2) {
-                                    err= err+1;
+                                    err = err+1;
                                 }
                             });
                             print("\ncount="+err);
@@ -3882,7 +3915,6 @@ $("#pnh_membersch").dialog({
                             print("\n====\n");*/
                                 
                             /*if(!myInArray(sel_inv,arr_invs[count])) {
-                                
                                 arr_invs.push({
                                             count:count
                                             ,invoice:sel_inv
@@ -3943,28 +3975,94 @@ $("#pnh_membersch").dialog({
             
             $("abbr",".reconciled_total").html(invs_total);
         }
+        
         function myInArray(needle, haystack) {
             return $.inArray(needle, haystack) !== -1;
         }
         
-        /*function chk_select_invs(key_sel_inv) {
-            var status = false;
-            $(".sel_invoices").each(function(i,row) {
-                var sel_inv = $(this).val();
-                print(sel_inv+"=="+key_sel_inv);
-                if(sel_inv == sel_inv) {
-                    //continue;
+    $("#dlg_unreconcile_list").dialog({
+        modal:true,
+	autoOpen:false,
+	width:500,
+	height:500,
+	autoResize:true
+    });
+    
+    function clk_show_reconciled(elt,receipt_id,franchise_id) {
+        var recon_list='';
+        $.post(site_url+"/admin/jx_get_fran_reconcile_list/"+receipt_id+"/"+franchise_id,{},function(resp) {
+            if(resp.status == 'success') {
+                recon_list += "<table><tr><th>Receipt #</th><td>"+resp.receipt_det.receipt_id+"</td></tr>\n\
+                                    <th>Receipt Amount</th><td>"+resp.receipt_det.receipt_amount+" Rs.</td></tr>\n\
+                                    <th>Un reconciled Amount</th><td>"+resp.receipt_det.unreconciled_value+" Rs.</td></tr>\n\
+                                    <tr><th>Created On</th><td>"+resp.receipt_det.created_date+"</td></tr></table>";
+                recon_list += "<table width='100%' class='datagrid'><tr><th>#</th><th>Invoice No</th><th>Invoice Amount</th><th>Reconciled Value</th><th>Unreconciled Amount</th><th>Created By</th><th>Created On</th></tr>";
+                $.each(resp.reconcile_list,function(i,recon) {
+                    recon_list += "<tr><td>"+(++i)+"</td><td>"+recon.invoice_no+"</td><td>"+recon.inv_amount+"</td><td>"+recon.reconcile_amount+"</td><td>"+recon.unreconciled+"</td><td>"+recon.username+"</td><td>"+recon.created_date+"</td>";
+                });
+                recon_list += "</table>";
+                
+            }
+            else if(resp.status == 'fail') {
+                recon_list += resp.response;
+            }
+            else {
+                alert(resp);return false;
+            }
+            $("#dlg_unreconcile_list").html(recon_list).dialog('open');
+        },'json');
+        
+    }
+    var dlg_icount = 1;
+    function clk_reconcile_action(elt,receipt_id,franchise_id,receipt_amount,unreconciled_value) {
+        var recon_list = '';
+        recon_list += "<table><thead>\n\
+                                    <tr>\n\
+                                        <th>Receipt #</th><td>"+receipt_id+"</td></tr>\n\
+                                        <th>Receipt Amount</th><td>"+receipt_amount+" Rs.</td></tr>\n\
+                                        <th>Unreconcile Amount</th><td>"+unreconciled_value+" Rs.</td>\n\
+                                    </tr>\n\
+                                    <tr class='' id='reconcile_row_1'>\n\
+                                        <td>\n\
+                                            <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='sel_invoices' onchange='fn_inv_selected(this,1);'>\n\
+                                            </select>\n\
+                                        </td>\n\
+                                        <td><input type='text' class='inp amt_unreconcile' name='amt_unreconcile[]' id='amt_unreconcile_1' size=5></td>\n\
+                                        <td><input type='text' class='inp amt_adjusted' name='amt_adjusted[]' id='amt_adjusted_1' size=5 value=''></td>\n\
+                                    </tr>\n\
+                                    </thead>\n\
+                                    <tbody class='dlg_invs_list'><tr><td colspan='3'><a href='javascript:void(0)' class='button button-tiny button-primary' class='add_row(this)'> + </a></td></tr></tbody>\n\
+                        </table>";
+                    var invs_id = $("#dlg_selected_invoices_1");
+                    load_unconciled_invoices(invs_id);
                     
-                }else if(sel_inv == sel_inv) {
-                    return status = true;
-                }
-                //else arr_invs.remove(sel_inv);
-            });
-            return status;
-        }*/
+                  
+        $("#dlg_unreconcile_list").html(recon_list).dialog('open');
+        
+        function add_row(elt) {
+            
+                dlg_icount = dlg_icount+1;
+                recon_list += "<tr class='' id='reconcile_row_"+dlg_icount+"'>\n\
+                                <td><span class='button button-tiny_wrap cursor button-caution' onclick='remove_row("+dlg_icount+");'>-</span></td>\n\
+                                <td>\n\
+                                    <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_"+dlg_icount+"' class='sel_invoices' onchange='fn_inv_selected(this,"+dlg_icount+");'>\n\
+                                    </select>\n\
+                                </td>\n\\n\
+                                <td><input type='text' class='inp amt_unreconcile' name='amt_unreconcile[]' id='amt_unreconcile_"+dlg_icount+"' size=5></td>\n\
+                                <td><input type='text' class='inp amt_adjusted' name='amt_adjusted[]' id='amt_adjusted_"+dlg_icount+"' size=5 value=''></td>\n\
+                            </tr>";
+                                    
+                    $("#dlg_invs_list tbody").append(recon_list);
+                    
+                    var invs_id = $("#dlg_selected_invoices_"+dlg_icount);
+                    load_unconciled_invoices(invs_id);
+                                      
+        }
+    }
 </script>
 
  <style>
+        /*.datagrid th { background: #443266;color: #C3C3E5; }*/
         .button-tiny_wrap {
             font-size: 11px;
             height: 16.4px;

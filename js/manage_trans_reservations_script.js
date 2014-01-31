@@ -38,7 +38,7 @@ function show_orders_list(franid,from,to,batch_type) {
             $(".orders_info_block_"+franid).show();//.toggle("slow");
             $(".orders_info_block_"+franid+" table tbody").html("<div class='loading'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Loading...</div>");
             
-            $.post(site_url+"admin/jx_get_franchise_orders/"+franid+"/"+from+"/"+to+"/"+batch_type, {}, function(rdata){
+            $.post(site_url+"/admin/jx_get_franchise_orders/"+franid+"/"+from+"/"+to+"/"+batch_type, {}, function(rdata){
                 $(".orders_info_block_"+franid+" table tbody").html(rdata);
             }).fail(fail);
         }
@@ -78,7 +78,7 @@ $("#dlg_create_group_batch_block").dialog({
 //                            ,assigned_menuids:assigned_menuids
                     var postData = {sel_batch_menu:sel_batch_menu,batch_size:batch_size,assigned_uid:assigned_uid,territory_id:territory_id,townid:townid,franchise_id:franchise_id};
                     //print(postData);
-                    $.post(site_url+"admin/create_batch_by_group_config",postData,function(resp) {
+                    $.post(site_url+"/admin/create_batch_by_group_config",postData,function(resp) {
                             print(resp);
                             if(resp.status == 'success') {
                                 loadTransactionList(0);
@@ -127,7 +127,7 @@ function batch_show_group(territory_id,townid,franchise_id) {
     postData = {territory_id : territory_id,townid:townid,franchise_id:franchise_id};
     
     $("#dlg_create_group_batch_block").html('');
-    $.post(site_url+"admin/manage_reservation_create_batch_form",postData,function(hmtldata) {
+    $.post(site_url+"/admin/manage_reservation_create_batch_form",postData,function(hmtldata) {
          $("#dlg_create_group_batch_block").html(hmtldata).dialog("open");
     }).fail(fail);
     return false;
@@ -166,7 +166,7 @@ function chkall_fran_orders(franid) {
 function picklist_product_wise(elt,batch_id,franchise_id) {    //$("#picklist_by_fran_form_"+franchise_id).submit();
     //var p_invoice_ids_str = $("#picklist_by_fran_all_"+franchise_id).val();var postData = {pick_list_trans:p_invoice_ids_str};
     if(franchise_id== undefined) { franchise_id =''; }
-    $.post(site_url+"admin/picklist_product_wise/"+batch_id+"/"+franchise_id,{},function(resp) {
+    $.post(site_url+"/admin/picklist_product_wise/"+batch_id+"/"+franchise_id,{},function(resp) {
             $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Productwise pick slip for #'+batch_id);
     });
 }
@@ -174,7 +174,7 @@ function picklist_product_wise(elt,batch_id,franchise_id) {    //$("#picklist_by
 function picklist_fran_wise(elt,batch_id,franchise_id) {    //$("#picklist_by_fran_form_"+franchise_id).submit();
     //var p_invoice_ids_str = $("#picklist_by_fran_all_"+franchise_id).val();var postData = {pick_list_trans:p_invoice_ids_str};
     if(franchise_id== undefined) { franchise_id =''; }
-    $.post(site_url+"admin/picklist_fran_wise/"+batch_id+"/"+franchise_id,{},function(resp) {
+    $.post(site_url+"/admin/picklist_fran_wise/"+batch_id+"/"+franchise_id,{},function(resp) {
             $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Franchisewise pick slip for #'+batch_id);
     });
 }
@@ -206,7 +206,7 @@ $("#btn_generate_pick_list").live("click",function(){
 //               $("#show_picklist_block input[name='pick_list_trans']").val(p_invoice_ids_str);$("#show_picklist_block").dialog("open").dialog('option', 'title', 'Pick List for '+p_invoice_ids.length+" proforma invoice/s");
 
                 var postData = {pick_list_trans:p_invoice_ids_str};
-                $.post(site_url+"admin/picklist_product_wise",postData,function(resp) {
+                $.post(site_url+"/admin/picklist_product_wise",postData,function(resp) {
                         $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Pick List for '+p_invoice_ids.length+" proforma invoice/s");
                 });
                 return false;
@@ -228,7 +228,7 @@ $("#btn_generate_pick_list").live("click",function(){
                 var p_invoice_ids_str = p_invoice_ids.join(",");
                 
                 var postData = {pick_list_trans:p_invoice_ids_str};
-                $.post(site_url+"admin/picklist_product_wise",postData,function(resp) {
+                $.post(site_url+"/admin/picklist_product_wise",postData,function(resp) {
                         $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Pick List for '+p_invoice_ids.length+" proforma invoice/s");
                 });
                 //$("#show_picklist_block input[name='pick_list_trans']").val(p_invoice_ids_str);$("#show_picklist_block").dialog("open").dialog('option', 'title', 'Pick List for '+p_invoice_ids.length+" proforma invoice/s");
@@ -256,7 +256,7 @@ function reallot_stock_for_all_transaction(userid,pg) {
     var rdata='';
     $('#trans_list_replace_block').html("<div class='loading'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Loading...</div>");
     
-    $.post(site_url+"admin/jx_reserve_avail_stock_all_transaction/"+updated_by,"",function(resp) {
+    $.post(site_url+"/admin/jx_reserve_avail_stock_all_transaction/"+updated_by,"",function(resp) {
             if(resp.status == 'fail') {
                         rdata = resp.response+"";
             }
@@ -403,7 +403,7 @@ function cancel_proforma_invoice(p_invoice_no,userid,pg) {
         return false;
     }
     var rdata='';
-    $.post(site_url+"admin/cancel_reserved_proforma_invoice/"+p_invoice_no+"/"+userid,{},function(resp) {
+    $.post(site_url+"/admin/cancel_reserved_proforma_invoice/"+p_invoice_no+"/"+userid,{},function(resp) {
             if(resp.status == 'success') {
                 /*rdata = "<div>\n\
                             <h4>Proforma invoice has been cancelled</h4>\n\
@@ -485,7 +485,7 @@ $("#sel_batch_group_type").live("change",function() {
 $("#sel_menu").live("change",function() {
         var menuid=$(this).find(":selected").val();
 
-        $.post(site_url+"admin/jx_get_brandsbymenuid/"+menuid,{},function(resp) {
+        $.post(site_url+"/admin/jx_get_brandsbymenuid/"+menuid,{},function(resp) {
                 if(resp.status=='success') {
                      var obj = jQuery.parseJSON(resp.brands);
                     $("#sel_brands").html(objToOptions_brands(obj));
@@ -528,7 +528,7 @@ $("#sel_franchise").live("change",function() {
 $("#sel_town").live("change",function() { 
     var townid=$(this).find(":selected").val();
     var terrid=$("#sel_territory").find(":selected").val();
-    $.post(site_url+"admin/jx_suggest_fran/"+terrid+"/"+townid,function(resp) {
+    $.post(site_url+"/admin/jx_suggest_fran/"+terrid+"/"+townid,function(resp) {
             if(resp.status=='success') {
                  var obj = jQuery.parseJSON(resp.franchise);
                 $("#sel_franchise").html(objToOptions_franchise(obj));
@@ -549,7 +549,7 @@ $("#sel_territory").live("change",function() {
 //        if(terrid=='00') {          $(".sel_status").html("Please select territory."); return false;        }
    // $("table").data("sdata", {terrid:terrid});
 
-    $.post(site_url+"admin/jx_suggest_townbyterrid/"+terrid,function(resp) {
+    $.post(site_url+"/admin/jx_suggest_townbyterrid/"+terrid,function(resp) {
         if(resp.status=='success') {
              //print(resp.towns);
              var obj = jQuery.parseJSON(resp.towns);
@@ -697,7 +697,7 @@ $(document).ready(function() {
          }
     });
 });
-/*function batch_enable_disable(transid,flag,pg) {    var d_msg=(flag==1)?"enable":"disable";    if(confirm("Are you sure you want to "+d_msg+" for batch?")) { $.post(site_url+"admin/jx_batch_enable_disable/"+transid+"/"+flag,{},function(rdata) { loadTransactionList(pg);  }).done(done).fail(fail); } }
+/*function batch_enable_disable(transid,flag,pg) {    var d_msg=(flag==1)?"enable":"disable";    if(confirm("Are you sure you want to "+d_msg+" for batch?")) { $.post(site_url+"/admin/jx_batch_enable_disable/"+transid+"/"+flag,{},function(rdata) { loadTransactionList(pg);  }).done(done).fail(fail); } }
 function f1(){var data = '21/12/2013';var pat= /[0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4}/;if (data.match(re));}*/
 $("#latest_batches").live("change",function() {
     loadTransactionList(0);

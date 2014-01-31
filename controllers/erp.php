@@ -8291,11 +8291,7 @@ group by g.product_id ");
 		$data['is_membrsch_applicable']=$this->db->query("SELECT m.name AS menu FROM pnh_franchise_menu_link a JOIN pnh_menu m ON m.id= a.menuid WHERE a.status=1 AND menuid=112 AND fid=?",$fid)->row_array();		
 		//$data['is_mbrsch_active']=$this->db->query("select 1 from strking_member_scheme where is_active=1 and franchise_id=? order by created_on desc limit 1",$fid)->row();
 		$data['fran_status']=$this->db->query("SELECT is_suspended FROM pnh_m_franchise_info WHERE franchise_id=?",$fid)->row()->is_suspended;
-                $data['fran_invoices']=$this->db->query("select i.invoice_no,i.transid,tr.franchise_id,from_unixtime(i.createdon),sum(i.mrp) as inv_amount,count(i.invoice_no) as num_invs,group_concat(i.mrp) as grp_mrp
-                                                            from king_invoice i
-                                                            join king_transactions tr on tr.transid=i.transid
-                                                            where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id=?
-                                                            group by i.invoice_no,i.transid order by i.createdon asc",$fid)->result_array();
+                
 		$data['franchise_id']=$fid;
 		$data['page']="pnh_franchise";
 		$this->load->view("admin",$data);
@@ -23977,6 +23973,16 @@ die; */
 	
 			$data['credit_log']=$this->db->query($sql,$fid)->result_array();
 		}
+                else if($type=="reconcile")
+		{
+			$sql="select * from pnh_t_receipt_info where receipt_amount != 0 and franchise_id = ?";
+	
+			$total_records=$this->db->query($sql,$fid)->num_rows;
+	
+			$sql.=" limit $pg , $limit ";
+	
+			$data['receipt_log']=$this->db->query($sql,$fid)->result_array();
+		}
 	
 		$data['total_records']=$total_records;
 		$data['pagination']=$this->_prepare_pagination("admin/jx_pnh_franchise_reports/$fid/$type/$limit",$total_records,$limit,6);
@@ -26701,4 +26707,45 @@ die; */
 		 }
 		echo json_encode($output);
 	}
+        
+        /**
+         * Function to get list of reconciled invoices or cr,dr data
+         * @param type $receipt_id int 
+         * @param type $franchise_id int
+         * @return string array
+         */
+        function jx_get_fran_reconcile_list($receipt_id,$franchise_id)
+        {
+            $this->erpm->auth();
+            $sql = "select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.id as reconcile_id,rcon.invoice_no,rcon.inv_amount,rcon.unreconciled,from_unixtime(rcon.created_on) as created_date,a.username
+                    from pnh_t_receipt_info r 
+                    join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
+                    join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+                    join king_admin a on a.id=rcon.created_by
+                    where r.franchise_id = ? and r.receipt_id = ?";
+
+            $reconcile_set = $this->db->query($sql,array($franchise_id,$receipt_id));
+            if( $reconcile_set->num_rows() ) 
+            {
+                $rdata['status'] = 'success';
+                $rdata['reconcile_list'] = $reconcile_set->result_array();
+                $rdata['receipt_det'] = $this->db->query("select r.receipt_id,r.unreconciled_value,r.receipt_amount,from_unixtime(r.created_on) as created_date from pnh_t_receipt_info r where r.receipt_amount != 0 and r.franchise_id = ? and r.receipt_id=?",array($franchise_id,$receipt_id))->row_array();
+            }
+            else
+            {
+                $rdata['status'] = 'fail';
+                $rdata['response'] = 'No records found';
+                $rdata['lst_qry'] = $this->db->last_query();
+            }
+            echo json_encode($rdata);
+        }
+        
+        function jx_get_unreconciled_invoice_list($fid) {
+            $rdata['fran_invoices']=$this->db->query("select i.invoice_no,sum(i.mrp) as inv_amount,group_concat(distinct i.invoice_no) as grp_invs
+                                                            from king_invoice i
+                                                            join king_transactions tr on tr.transid=i.transid
+                                                            where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id=?
+                                                            group by i.invoice_no,i.transid order by i.createdon asc",$fid)->result_array();
+            echo json_encode($rdata);//,i.transid,tr.franchise_id,from_unixtime(i.createdon),,count(i.invoice_no) as num_invs,group_concat(i.mrp) as grp_mrp,
+        }
 }

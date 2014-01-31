@@ -1082,7 +1082,17 @@ CREATE TABLE `king_admin_activitylog` (
 #Jan_24_2014
 create table `pnh_t_receipt_reconcilation` (  `id` bigint (20) NOT NULL AUTO_INCREMENT , `debit_note_id` bigint (20) DEFAULT '0', `invoice_no` bigint (20) , `dispatch_id` int (100) , `inv_amount` float (50) DEFAULT '0', `unreconciled` float (50) DEFAULT '0', `created_on` int (50) , `created_by` int (20) , `modified_on` int (50) , `modified_by` int (20) , PRIMARY KEY ( `id`))  
 create table `pnh_t_receipt_reconcilation_log` (  `logid` bigint (20) NOT NULL AUTO_INCREMENT , `credit_note_id` int (50) , `receipt_id` int (50) , `reconcile_id` int (50) , `reconcile_amount` float (50) DEFAULT '0', `is_reversed` int (11) DEFAULT '0', `created_on` int (100) , `created_by` int (20) , PRIMARY KEY ( `logid`))  
-alter table `pnh_t_receipt_info` add column `unreconciled_value` double   NULL  after `modified_on`, add column `unreconciled_status` varchar (11)  NULL  after `unreconciled_value`;
+alter table `pnh_t_receipt_info` add column `unreconciled_value` double   NULL  after `modified_on`, add column `unreconciled_status` varchar (50)  NULL  after `unreconciled_value` COMMENT 'pending,partial,done';
 update pnh_t_receipt_info set unreconciled_value = receipt_amount;
 #^^^^^^
+
+# Jan_30_2014
+
+insert  into `m_batch_config`(`id`,`batch_grp_name`,`assigned_menuid`,`batch_size`,`group_assigned_uid`) values (
+1,'Electronics','112,113,115,116,117,118,122,126',20,'1,35,52')
+,(2,'Beauty','100,101,102,103,104,105,106,107,108,109,110,111,120',30,'6,31,35,52')
+,(3,'Footwear & Clothing','114,119,121,123',10,'3,2,35,52')
+,(4,'Company Assets & Vouchers','124,125',10,'1,3,35,52');
+
+
 
