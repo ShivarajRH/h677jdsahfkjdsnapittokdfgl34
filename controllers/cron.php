@@ -1178,10 +1178,20 @@ class Cron extends Controller{
 												WHERE b.town_id=? AND o.transid IS NOT NULL AND is_pnh = 1 and o.status != 3 
 												AND date(from_unixtime(a.init)) = curdate()
 												",$exec_det['asgnd_town_id'])->row()->total_order_value;
-				if($ttl_sales)
+				$ttl_month_sales=@$this->db->query("SELECT SUM((o.i_orgprice-o.i_discount-o.i_coup_discount)*o.quantity) AS total_order_value
+						FROM pnh_m_franchise_info b
+						JOIN king_transactions a ON a.franchise_id = b.franchise_id AND is_pnh = 1
+						JOIN king_orders o ON o.transid = a.transid
+						WHERE b.town_id=? AND o.transid IS NOT NULL AND is_pnh = 1 and o.status != 3
+						AND date(from_unixtime(a.init)) >= date(?)  
+						",array($exec_det['asgnd_town_id'],date('Y-m-01')))->row()->total_order_value;
+				
+				if(1)
 				{
 					$ttl_sales = 'Rs '.round($ttl_sales*1);
+					$ttl_month_sales = 'Rs '.round($ttl_month_sales*1);
 					$grp_msg = 	"Today Total Sales: $town_name-$ttl_sales";
+					$grp_msg .= " Total Sales this month : $ttl_month_sales";
 					
 					$emp_mobnos = explode(',',$emp_phno);
 					foreach($emp_mobnos as $emp_phno)
@@ -1225,11 +1235,21 @@ class Cron extends Controller{
 												WHERE b.territory_id=? AND o.transid IS NOT NULL and o.status != 3  
 												AND date(from_unixtime(a.init)) = curdate()
 											",$tm_det['territory_id'])->row()->total_order_value;
-											
-				if($ttl_sales*1)
+				
+				$ttl_month_sales=@$this->db->query("SELECT SUM((o.i_orgprice-o.i_discount-o.i_coup_discount)*o.quantity) AS total_order_value
+						FROM pnh_m_franchise_info b
+						JOIN king_transactions a ON a.franchise_id = b.franchise_id AND is_pnh = 1
+						JOIN king_orders o ON o.transid = a.transid
+						WHERE b.territory_id=? AND o.transid IS NOT NULL and o.status != 3
+						AND date(from_unixtime(a.init)) >= date(?)
+						",array($tm_det['territory_id'],date('Y-m-01')))->row()->total_order_value;
+				
+				if(1)
 				{
 					$ttl_sales = 'Rs '.round($ttl_sales*1);
+					$ttl_month_sales = 'Rs '.round($ttl_month_sales*1);
 					$grp_msg = 	"Today Total Sales: $territory_name-$ttl_sales";
+					$grp_msg .= " Total Sales this month : $ttl_month_sales";
 					
 					$emp_mobnos = explode(',',$emp_phno);
 					foreach($emp_mobnos as $emp_phno)
