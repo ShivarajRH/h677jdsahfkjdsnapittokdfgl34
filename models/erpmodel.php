@@ -7887,7 +7887,7 @@ order by p.product_name asc
 		$fran_status_arr[2]="Payment Suspension";
 		$fran_status_arr[3]="Temporary Suspension";
 		$admin = $this->auth(false);
-		foreach(array("fid","pid","qty","mid","redeem","redeem_points","mid_entrytype") as $i)
+		foreach(array("fid","pid","qty","mid","redeem","redeem_points","mid_entrytype","local_distributor_mrgn","creditdays") as $i)
 			$$i=$this->input->post($i);
 		
         $updated_by=$admin["userid"];
@@ -8040,6 +8040,7 @@ order by p.product_name asc
 			$userid = 0;
 		}
 		$transid=strtoupper("PNH".random_string("alpha",3).$this->p_genid(5));
+
 		if($redeem)
 		{
 			$total-=$redeem_value;
@@ -8058,7 +8059,7 @@ order by p.product_name asc
 		else	
 			$batch_enabled = 0;
 		
-			$this->db->query("insert into king_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,trans_created_by,batch_enabled) values(?,?,?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran['franchise_id'],$admin['userid'],$batch_enabled));
+			$this->db->query("insert into king_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,trans_created_by,batch_enabled,credit_days) values(?,?,?,?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran['franchise_id'],$admin['userid'],$batch_enabled,$creditdays));
 		
 		foreach($items as $item)
 		{
@@ -8278,8 +8279,9 @@ order by p.product_name asc
 			$billno=$nbill['bill_no']+1;
 		$inp=array("bill_no"=>$billno,"franchise_id"=>$franid,"transid"=>$transid,"user_id"=>$userid,"status"=>1);
 		$this->db->insert("pnh_cash_bill",$inp);
-		
-		redirect("admin/trans/$transid");
+	
+		$this->session->set_flashdata("erp_pop_info"," PNH Order Placed");
+		redirect("admin/trans/$transid",'refresh');
 	}
 	
 	
@@ -9429,7 +9431,6 @@ order by action_date";
 					order by returned_on desc
 				limit $pg,10 ";
 		$res = $this->db->query($sql,$param);
-		
 		if($res->num_rows())
 			return $res->result_array();
 		return false;	
@@ -11219,12 +11220,7 @@ order by action_date";
 		}
 
 		$res = $this->db->query($sql);
-		
-		/*
-		$fr_receipt_list = array();
-		$fr_receipt_heading="Receipt Details";
-		$fr_receipt_list[] = '"Slno","FranchiseName","Receipt Id","Payment Mode","Receipt Amount","Instrument Number","Payment Date","Transit type","Bank Details","Receipt AddedOn"';
-		*/
+
 		$fr_receipt_list = array();
 		$fr_receipt_heading="Receipt Details";
 		$fr_receipt_list_head = '"Slno","FranchiseName","Receipt Id","Payment Mode","Receipt Amount","Instrument Number","Payment Date","Transit type","Bank Details","Receipt AddedOn"';

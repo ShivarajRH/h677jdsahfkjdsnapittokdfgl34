@@ -1,6 +1,14 @@
 <?php 
 		
-		 
+		//Order status with totals--START
+			$order_status_arr=array();
+			$order_status_arr[0]='Pending';
+			$order_status_arr[1]='Unshipped';
+			$order_status_arr[2]='Shipped';
+			$order_status_arr[3]='Returned';
+			
+			
+		//Order status with totals--END
 		
 		$order_cond = '';
 		$type = $this->input->post('type');
@@ -138,11 +146,7 @@
 	<td width="150">
 		<a href="<?=site_url("admin/trans/{$o['transid']}")?>" class="link"><?=$o['transid']?></a> <br />
 		Batch Enabled : <?php echo $o['batch_enabled']?'yes':'no' ?>
-		<?php /* 
 		<br />
-		Member ID: <a href="<?=site_url("admin/pnh_viewmember/{$o['userid']}")?>"><?=$o['pnh_member_id']?></a>
-		 */
-		 ?>
 	</td>
 	<td><?=round($o['amount'],2)?></td>
 	<td><?=round($o['com'],2)?></td>
@@ -254,6 +258,19 @@
 				?>
 			</tbody>
 		</table>
+		</br>
+		<?php 
+			$sql_trans_ttls = 'SELECT STATUS,IFNULL(amt1,amt2) AS amt,totals
+									FROM ( SELECT b.status,SUM((mrp-(discount+credit_note_amt))*a.invoice_qty) AS amt1,SUM(i_orgprice-(i_coup_discount+i_discount)*b.quantity) AS amt2,
+									COUNT(b.id) AS totals
+									FROM king_orders b
+									LEFT JOIN king_invoice a ON a.order_id = b.id
+									WHERE b.transid = ? GROUP BY b.status ) AS g';
+				
+			$trans_order_status_amt = $this->db->query($sql_trans_ttls,$o['transid']);
+			foreach($trans_order_status_amt->result_array() as $to_row){ ?>
+			<div><span class="span_count_wrap"><b><?php echo $order_status_arr[$to_row['STATUS']] ?> (<?php echo $to_row['totals']?>) </b> : <span style="width:61px;display: inline-block;text-align: justify;"><?php echo format_price($to_row['amt']);?> rs</span></span></div>
+	<?php }?>
 	</td>
 	<td>
 		<?php 	
@@ -304,4 +321,14 @@
 	 </script>
 	 <style>
 	 	.subdatagrid th{padding:3px !important;text-align: left;}
+	 	.span_count_wrap {
+    background: none repeat scroll 0 0 #EAEAEA;
+    float: left;
+    font-size: 11px;
+    margin: -1px;
+    padding: 5px;
+    text-align: center;
+    width: 23%;
+    margin: -12px -1px -1px;
+}
 	 </style>

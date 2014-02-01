@@ -1,3 +1,4 @@
+<style>.contenttable .leftcont{display:none;}.security_details td{padding:5px 10px !important;} .security_details .datagrid td{padding:2px !important;}</style>
 <div class="container" style="padding:5px;">
 <div style="position:absolute;top:0px;right:60px;"><a href="javascript:void(0)" style="background:#ffaa00;border:1px solid #aaa;border-top:0px;text-decoration:none;display:block;padding:0px 5px 1px 5px;border-radius:0px 0px 5px 5px;color:#555;" onclick='$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"})'>show menu</a></div>
 <div style="clear: both;overflow: hidden;">
@@ -48,6 +49,14 @@
 </fieldset>
 <br><br><br>
 <fieldset>
+<legend><b>Active IMEI Scheme</b></legend>
+<table class="datagrid  noprint" id="active_imei_scheme">
+<thead><th>Menu</th><th>Brand</th><th>Category</th><th>Scheme Type</th><th>Credit value</th><th>Valid From</th><th>Applied From</th><th>Valid To</th></thead>
+<tbody></tbody>
+</table>
+</fieldset>
+<br><br><br>
+<fieldset>
 <legend><b>Alloted Menu</b></legend>
 <table class="datagrid  noprint" id="menu">
 <tbody></tbody>
@@ -67,6 +76,7 @@
 <form method="post" id="order_form" autocomplete="off">
 <input type="checkbox" id="redeem_r" name="redeem" value="1" style="display:none;">
 <input type="hidden" id="redeem_p" name="redeem_points" value="0" style="display:none;">
+<input type="hidden"  name="creditdays" value="" style="display:none;">
 <div id="prod_suggest_list">
 <fieldset>
 <legend><b>Product Data</b></legend>
@@ -144,18 +154,25 @@
 
 <input type="hidden" name="fid" id="i_fid">
 
-<table class="datagrid" width="100%" id="prods_order">
+<table class="datagrid nofooter" width="100%" id="prods_order" border="0">
 <thead><tr><th>Sno</th><th>Product Image-PID</th><th>Product Name</th><th>MRP</th><th>Offer price / <br> DP price</th>
 			<th>MemberShip Fee</th>
 			<th>Qty</th>
 			<th>Sub Total</th><th>Quote</th><th>Actions</th></tr></thead>
 <tbody>
 </tbody>
+<tfoot>
+    <tr>
+        <td colspan="7" style="text-align:right;">Sub Total Amount :</td>
+        <td><span style="font-weight: bold;" class="ttl_subtotal">0</span></td>
+        <td colspan="2"></td>
+    </tr>
+</tfoot>
 </table>
 
 <div style="padding:5px 0px 0px 0px;">
-<div style="float:right;"><input type="submit" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;background: #68a54b;color: #FFF;cursor: pointer" id="pnh_ordeR_submit" value="Place order"  class="myButton_placeorder1"></div>
-<div><input type="button" value="Request From Franchisee" id="reqq_but" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;cursor: pointer;background: #68a54b;color: #FFF" onclick='request_quote()' class="myButton_reqfran1" style="font-size:12px;">
+    <div style="float:right;"><input type="submit" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;background: #68a54b;color: #FFF;cursor: pointer" id="pnh_ordeR_submit" value="Place order"  class="myButton_placeorder1"></div>
+    <div><input type="button" value="Request From Franchisee" id="reqq_but" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;cursor: pointer;background: #68a54b;color: #FFF" onclick='request_quote()' class="myButton_reqfran1" style="font-size:12px;">
 </div>
 
 <div class="clear"></div>
@@ -175,6 +192,7 @@
 <tr><td>Amount to be deducted</td><td>Rs <span id="final_ded"></span></td></tr>
 <tr><td>Current Balance : </td><td>Rs <span id="final_bal"></span></td></tr>
 <tr><td>Balance After deduction : </td><td>Rs <span id="final_abal"></span></td></tr>
+<tr><td>Credit Days : </td><td><input type="text" size="7" value="0" name="credit_days" class="credit_days"></td></tr>
 <tr><td><input type="button" value="Confirm" onclick='final_confirm()'></td><td><input type="button" value="Cancel" onclick='final_cancel()'></td></tr>
 </tbody>
 </table>
@@ -193,7 +211,7 @@
 <tr pid="%pid%"  pimage="%pimage% %pid%" pname="%pname%" mrp="%mrp%" price="%price%" lcost="%lcost%" margin="%margin%" >
 <td>%sno%</td>
 <td style="text-align: center;padding:10px 0px 0px;width: 100px;background: #FFF;"><img alt="" height="100" src="<?=IMAGES_URL?>items/%pimage%.jpg"><b style="display: block;background: #f7f7f7;padding:2px;;text-align: center">%pid%</b></td>
-<td><input class="pids" type="hidden" name="pid[]" value="%pid%"><span>%pname%</span>
+<td><input class="pids" type="hidden" name="pid[]" value="%pid%"><span class="title"><a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">%pname%</a></span>
 <input type="hidden" name="menu[]" value="%menuid%" class="menuids">
 <div style="margin-top: 5px;font-size: 12px;">
 	<div class="p_extra"><b>Category :</b> %cat%</div>
@@ -232,26 +250,12 @@ text-align: center;width: 60px;"><b>OldMRP:</b> <span style="color: #cd0000;font
 <td><span class="stotal">%lcost%</span></td>
 <td><input type="text" name="quote[]" size=4></td>
 <td><a href="javascript:void(0)" onclick='remove_psel(this)'>remove</a><br>
-<a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">view</a>
+<!--<a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">view</a>-->
 </td>
 </tr>
 </tbody> 
 </table>
-
-<script>
-	function remove_psel(ele)
-	{
-		var sel_pid = $(ele).parents("tr:first").attr('pid');
-			$($(ele).parents("tr").get(0)).remove();
-		remove_pid(sel_pid);
-		
-		$('#prods_order tbody tr').each(function(i,itm){
-			$('td:first',this).text(i+1);
-		});
-		
-	}
-	
-</script>
+ 
 <style>
 
 #display_fr_totals{
@@ -503,9 +507,7 @@ function get_pnh_franchises(){
 		}
 		$('select[name="sel_fid"]').html(f_sel_html);
 		$('select[name="sel_fid"]').trigger("liszt:updated");
-		
-	});
-	
+	});	
 }
 $(function(){
 	$('#fid_inp').change(function(){
@@ -517,91 +519,102 @@ $(function(){
 		$('#fid_inp').val($(this).val());
 
 		load_franchisebyid();
-		
-		
 	});
 });
 </script>
-
-<div id="req_quote_dlg" title="Franchise Request/Quotes ">
-	<form id='fr_req_quote_frm' method="post" action="<?=site_url('admin/pnh_place_quote') ?>">
-		<input type="hidden" name="fid" value="0" >
-		<div>
-			<h4 style="margin:5px 0px !important;" id="req_frname"></h4>
-			<div id="req_prodlist" style="margin: 5px 0px;">
-				<table width="100%" cellpadding="3" cellspacing="0" class="datagrid">
-					<thead>
-						<tr>
-							<th><b>Slno</b></th>
-							<th><b>PID</b></th>
-							<th><b>Deal</b></th>
-							<th><b>MRP</b></th>
-							<th><b>Offer</b></th>
-							<th><b>Landing</b></th>
-							<th><b>Qty</b></th>
-							<th><b>Quote</b></th>
-							<th>&nbsp;</th>
-						</tr>
-					</thead>
-					<tbody>
-						
-					</tbody>
-				</table>
+<div style="display:none">
+	<div id="req_quote_dlg" title="Franchise Request/Quotes ">
+		<form id='fr_req_quote_frm' method="post" action="<?=site_url('admin/pnh_place_quote') ?>">
+			<input type="hidden" name="fid" value="0" >
+			<div>
+				<h4 style="margin:5px 0px !important;" id="req_frname"></h4>
+				<div id="req_prodlist" style="margin: 5px 0px;">
+					<table width="100%" cellpadding="3" cellspacing="0" class="datagrid">
+						<thead>
+							<tr>
+								<th><b>Slno</b></th>
+								<th><b>PID</b></th>
+								<th><b>Deal</b></th>
+								<th><b>MRP</b></th>
+								<th><b>Offer</b></th>
+								<th><b>Landing</b></th>
+								<th><b>Qty</b></th>
+								<th><b>Quote</b></th>
+								<th>&nbsp;</th>
+							</tr>
+						</thead>
+						<tbody>
+							
+						</tbody>
+					</table>
+				</div>
+				<span style="float:right;" class="dash_bar_right"><b>Add New Product:</b><input type="checkbox" name="add_newprod" id="add_newprod"></span>
+				<br><br><br>
+				<div id="fran_reqlist" style="margin: 5px 0px;">
+					<table width="100%" cellpadding="3" cellspacing="0" class="datagrid">
+						<thead>
+							<tr>
+								<th><b>Product Name</b></th>
+								<th><b>Price Range</b></th>
+								<th><b>Qty</b></th>
+								<th><b>Quote</b></th>
+								<th>&nbsp;</th>
+							</tr>
+						</thead>
+						<tbody>
+							
+						</tbody>
+					</table>
+				</div>
+				
+				<div style="margin:5px 0px;">
+					<b>Respond To Request In:</b><br />
+					<select name="req_respond_time" >
+						<option value="5">5 Min</option>
+						<option value="10">10 Min</option>
+						<option value="15">15 Min</option>
+						<option value="30">30 Min</option>
+						<option value="45">45 Min</option>
+						<option value="60">1 Hour</option>
+					</select>
+				</div>
+				<div style="margin:5px 0px;">
+					<b>Have you asked for options, so we can fulfill franchise needs ?</b>
+							: <input type="checkbox" value="1" name="cnfrm_req_opts" /> 
+				</div>
+				
+				<div style="margin:5px 0px;">
+					<b>Remarks/notes on request</b><br />
+					 <textarea name="req_remark" style="width: 98%;height: 80px;"></textarea>
+				</div>
 			</div>
-			<span style="float:right;" class="dash_bar_right"><b>Add New Product:</b><input type="checkbox" name="add_newprod" id="add_newprod"></span>
-			<br><br><br>
-			<div id="fran_reqlist" style="margin: 5px 0px;">
-				<table width="100%" cellpadding="3" cellspacing="0" class="datagrid">
-					<thead>
-						<tr>
-							<th><b>Product Name</b></th>
-							<th><b>Price Range</b></th>
-							<th><b>Qty</b></th>
-							<th><b>Quote</b></th>
-							<th>&nbsp;</th>
-						</tr>
-					</thead>
-					<tbody>
-						
-					</tbody>
-				</table>
-			</div>
-			
-			<div style="margin:5px 0px;">
-				<b>Respond To Request In:</b><br />
-				<select name="req_respond_time" >
-					<option value="5">5 Min</option>
-					<option value="10">10 Min</option>
-					<option value="15">15 Min</option>
-					<option value="30">30 Min</option>
-					<option value="45">45 Min</option>
-					<option value="60">1 Hour</option>
-				</select>
-			</div>
-			<div style="margin:5px 0px;">
-				<b>Have you asked for options, so we can fulfill franchise needs ?</b>
-						: <input type="checkbox" value="1" name="cnfrm_req_opts" /> 
-			</div>
-			
-			<div style="margin:5px 0px;">
-				<b>Remarks/notes on request</b><br />
-				 <textarea name="req_remark" style="width: 98%;height: 80px;"></textarea>
-			</div>
-		</div>
-		<input type="hidden" name="product_name" id="product_name">
-		<input type="hidden" name="mrp" id="mrp">
-	</form>
+			<input type="hidden" name="product_name" id="product_name">
+			<input type="hidden" name="mrp" id="mrp">
+		</form>
+		
+	</div>
 	
-</div>
+	<div id="reg_mem_dlg" title="Instant Member Registration">
+		<form id="reg_mem_frm" action="<?php echo site_url('admin/jx_reg_newmem')?>" method="post">
+			<input type="hidden" name="franchise_id" value="" id="memreg_fid">
+			<table>
+				<tr><td>Member Name</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_name" id="memreg_name" ></td></tr>
+				<tr><td>Mobile Number</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_mobno" id="memreg_mobno" data-required="true" maxlength="10"></td></tr>
+			</table>
+		</form>
+	</div>
+	
+	<div id="newbie_confirm_dlg" title="New franchisee note" >
+		<h4>New franchisee note</h4>
+		<div class="hexa">
+			<div><b>Please take a note, this is a new franchisee and we should treat them very well</b></div>
+			<div><input type="checkbox" class="nb_cond" value="1" ><b>Dont say no to products</b></div>
+			<div><input type="checkbox" class="nb_cond" value="1" ><b>Contact TM or executive in office for any information</b></div>
+			<div><input type="checkbox" class="nb_cond" value="1" ><b>Dont commit shipment date (post dated)</b></div>
+			<div><input type="checkbox" class="nb_cond" value="1" ><b>Be gentle with policy and treat them as a child</b></div>
+		</div>
+	</div>
 
-<div id="reg_mem_dlg" title="Instant Member Registration">
-	<form id="reg_mem_frm" action="<?php echo site_url('admin/jx_reg_newmem')?>" method="post">
-		<input type="hidden" name="franchise_id" value="" id="memreg_fid">
-		<table>
-			<tr><td>Member Name</td><td>:</td><td><input type="text" name="memreg_name" id="memreg_name" ></td></tr>
-			<tr><td>Mobile Number</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_mobno" id="memreg_mobno" data-required="true" maxlength="10"></td></tr>
-		</table>
-	</form>
 </div>
 
 <script>
@@ -637,7 +650,7 @@ $('#req_quote_dlg').dialog({
 												req_plist += '	<td>'+$(this).attr('pname')+'</td>';
 												req_plist += '	<td>'+$(this).attr('mrp')+'</td>';
 												req_plist += '	<td>'+$(this).attr('price')+'</td>';
-												req_plist += '	<td><span style="background-color:#89c403;">'+$(this).attr('lcost')+'</span></td>';
+												req_plist += '	<td><span style="background-color:#89c403;">'+format_number($(this).attr('lcost'))+'</span></td>';
 												req_plist += '	<td><input type="text" size="4" name="qty[]" value="'+$('input[name="qty[]"]',this).val()+'"></td>';
 												req_plist += '	<td><input type="text" size="4" name="quote[]" value="'+$('input[name="quote[]"]',this).val()+'"></td>';
 												req_plist += '	<td><a href="javascript:void(0)" class="remove_btn"><b>[X]</b></a> </td>';
@@ -782,7 +795,7 @@ function select_fran(fid)
 	$.post("<?=site_url("admin/pnh_jx_getfranbalance")?>",{id:fid},function(data){
 		o=$.parseJSON(data);
 		credit=parseInt(o.credit);
-		balance=parseFloat(o.balance);
+		balance= format_number(o.balance);
 		if(balance < 5000)
 			$("#fran_balance").addClass('warning');
 		else
@@ -888,10 +901,13 @@ function remove_pid(pid)
 	for(i=0;i<t_pids.length;i++)
 		if(pid!=t_pids[i])
 			pids.push(t_pids[i]);
+                    
+        change_total_subtotal(); 
 }
 
 function load_franchisebyid()
 {
+	$("#franchise_det").html("<div align='center'><img src='"+base_url+'/images/loading_bar.gif'+"' /></div>").show();
 	fid=$("#fid_inp").val();
 	if(fid.length==0)
 	{
@@ -935,43 +951,41 @@ $('#reg_mem_dlg').dialog({
 						// register member 
 						var mem_regname = $.trim($('input[name="memreg_name"]').val());
 						var mem_mobno = $.trim($('input[name="memreg_mobno"]').val());
-							if(mem_regname.length == 0)
-								error_list.push("Please Enter name");
-							
-							if(mem_regname.length == 0)
-								error_list.push("Please Enter name");
-							else
-							{
-								mem_mobno = mem_mobno*1	
-								if(isNaN(mem_mobno))
-									error_list.push("Invalid Mobileno entered");	
-							}	
-							
-							if(error_list.length)
-							{
-								alert(error_list.join("\r\n"));
-							}else
-							{
-								$.post(site_url+'/admin/jx_reg_newmem',$('#reg_mem_frm').serialize(),function(resp){
-									if(resp.status == 'success')
-									{
-										$('input[name="mid"]').val(resp.mid);
-										$('#mid_entrytype').val(0);
-										$('.mid').trigger('change');
-										$('#reg_mem_dlg').dialog('close');
-									}else
-									{
-										$('input[name="mid"]').val('');
-										alert(resp.error);
-									}
-								},'json');
-							}
-							
-						
+                        	if(mem_regname.length == 0)
+                                error_list.push("Please Enter Member name.");
+
+							if(mem_mobno.length == 0)
+                                error_list.push("Please Enter Mobile Number.");
+	                        else
+	                        {
+	                                mem_mobno = mem_mobno*1	
+	                                if(isNaN(mem_mobno))
+	                                        error_list.push("Please Enter valid Mobile number.");	
+	                        }	
+
+                        if(error_list.length)
+                        {
+                                alert(error_list.join("\r\n"));
+                        }else
+                        {
+                                $.post(site_url+'/admin/jx_reg_newmem',$('#reg_mem_frm').serialize(),function(resp){
+                                        if(resp.status == 'success')
+                                        {
+                                                $('input[name="mid"]').val(resp.mid);
+                                                $('#mid_entrytype').val(0);
+                                                $('.mid').trigger('change');
+                                                $('#reg_mem_dlg').dialog('close');
+                                        }else
+                                        {
+                                                $('input[name="mid"]').val('');
+                                                alert(resp.error);
+                                        }
+                                },'json');
+                        }
 					},
 					'Cancel':function(){
 						$(this).dialog('close');
-					},
+					}
 				}
 });
 
@@ -995,11 +1009,24 @@ function final_confirm()
 		alert("Max redeemable points is 150");
 		return false
 	}
+	if($(".credit_days").val() =='' || $(".credit_days").val() == 0)
+	{
+		$(".credit_days").addClass('error_inp');
+		alert("Please Enter Credit Days");
+		return false;
+	}
+	if($(".credit_days").val() > 5 )
+	{
+		alert("Credit Days can't be greater than 5 days");
+		return false;
+	}
 	if($(".price_c_com").length==1 && !$(".price_c_com").attr("checked"))
 	{
 		alert("Is price change communicated to franchise?");
 		return false;
 	}
+	$(".credit_days").removeClass('error_inp');
+	$("input[name='creditdays']").val($('.credit_days').val());	
 	$("#redeem_p").val($(".redeem_points").val());
 	$("#order_form").submit();
 	$("#pnh_order_submit").attr("disabled",true);
@@ -1094,6 +1121,7 @@ $(function(){
 		$("#prods_order .stotal").each(function(){
 			total+=parseFloat($(this).html());
 		});
+		total = format_number(total);
 		
 		$("#prods_order .pids").each(function(){
 			ppids.push($(this).val());
@@ -1121,7 +1149,7 @@ $(function(){
 
 			if(mid==0 && menu_id != 112)
 			{
-				if(confirm("Instant Registration is required because Beauty Products are there in the Cart"))
+				if(confirm("Instant Registration is required because Other than Electronic items are there in the Cart"))
 					 mem_reg();
 				 return false;
 			}
@@ -1143,16 +1171,16 @@ $(function(){
 			$("#order_form").hide();
 			attr=$(".attr").serialize();
 			
-			$.post("<?=site_url("admin/pnh_jx_checkstock_order")?>",{attr:attr,pids:ppids.join(","),qty:qty.join(","),fid:$('#i_fid').val(),mid:$("input[name='mid']",$(this)).val()},function(data){
+			$.post("<?=site_url("admin/pnh_jx_checkstock_order")?>",{attr:attr,pids:ppids.join(","),qty:qty.join(","),fid:$('#i_fid').val(),mid:$("input[name='mid']",$(this)).val(),credit_days:$('.credit_days').val()},function(data){
 				obj=$.parseJSON(data);
 				if(obj.e==0)
 				{
 					goodtogo=1;
-					$("#final_amount").text(obj.total);
-					$("#final_ded").text(obj.d_total);
-					$("#final_com").text(obj.com);
-					$("#final_bal").text(obj.bal);
-					$("#final_abal").text(obj.abal);
+					$("#final_amount").text( format_number(obj.total) );
+					$("#final_ded").text(format_number(obj.d_total));
+					$("#final_com").text( format_number(obj.com) );
+					$("#final_bal").text( format_number(obj.bal) );
+					$("#final_abal").text( format_number(obj.abal) );
 					$("#price_changes").html(obj.pc);
 					$("#last_confirm").show();
 					
@@ -1171,7 +1199,8 @@ $(function(){
 		}
 		return false;
 	});
-
+        
+        
 	$("#prods_order .qty").live("change",function(){
 		p=$(this).parents("tr").get(0);
 		
@@ -1204,10 +1233,11 @@ $(function(){
 		
 		//$(".stotal",p).html(parseInt($(".price",p).html())*parseInt($(".qty",p).val()));
 		//$(".landing_cost",p).html(parseInt($(".lcost",p).html())*parseInt($(".qty",p).val()));
-		
-		$(".stotal",p).html(parseFloat($(".lcost",p).text())*parseInt($(".qty",p).val()));
+                var sub_total = parseFloat( $(".lcost",p).text())*parseInt($(".qty",p).val() ) ;
+		$(".stotal",p).html( format_number( sub_total ) );
+                change_total_subtotal();
 	});
-
+        
 	$("#p_srch").keyup(function(){
 		fid=$("#fid_inp").val();
 		q=$(this).val();
@@ -1326,6 +1356,9 @@ $(function(){
 			pids.push(p.pid);
 			
 			show_prev_orderd();
+                        
+                        change_total_subtotal();
+                        
 			show_prevorderd_unshipped();
 			
 		});
@@ -1350,6 +1383,20 @@ $(".mid").change(function(){
 			$("#mem_fran").html(data).show();
 		});
 	});
+
+
+function change_total_subtotal() {
+    var ttl_subtotal=0;
+    if($("#prods_order .stotal").html() == '') {
+        ttl_subtotal=0;
+    }
+    else {
+        $("#prods_order .stotal").each(function(){
+                ttl_subtotal += format_number($(this).html());
+        });
+    }
+    $(".ttl_subtotal").html(ttl_subtotal);
+}
 
 function trig_loadpnh(pid)
 {
@@ -1477,6 +1524,7 @@ $("#show_scheme_details").dialog({
 		dlg = $(this);
 		$('#active_scheme_discount tbody').html("");
 		$('#active_super_scheme tbody').html("");
+		$('#active_imei_scheme tbody').html("");
 		$('#menu tbody').html("");
 		fid=$("#i_fid").val();
 		$.post("<?=site_url("admin/pnh_jx_load_scheme_details")?>",{fid:fid},function(result){
@@ -1532,6 +1580,33 @@ $("#show_scheme_details").dialog({
 					});
 				}
 
+				if(result.active_imeischeme != undefined)
+				{
+					$.each(result.active_imeischeme,function(k,v){
+						if(v.brand_name == undefined)
+						{v.brand_name='All brands'; }
+						if(v.cat_name == undefined)
+						{v.cat_name='All categories';}
+						if(v.scheme_type == 1)
+						{v.scheme_type='Percentage'; }
+						if(v.scheme_type == 0)
+						{v.scheme_type='Fixed Value'; }
+						 var imeisch_row =
+							 "<tr>"
+							  +"<td>"+v.menu_name+"</td>"
+							  +"<td>"+v.brand_name+"</td>"
+							  +"<td>"+v.cat_name+"</td>"
+							  +"<td>"+v.scheme_type+"</td>"
+							  +"<td>"+v.credit_value+"</td>"
+							  +"<td>"+v.validfrom+"</td>"
+							  +"<td>"+v.apply_from+"</td>"
+							  +"<td>"+v.validto+"</td>"
+							  +"<td></td>"
+							  +"</tr>";
+							  $("#active_imei_scheme tbody").append(imeisch_row);
+							
+					});
+				}
 				if(result.menu != undefined)
 				{
 					$.each(result.menu,function(k,v){
@@ -1553,20 +1628,28 @@ $("#show_scheme_details").dialog({
 		}
 });
 
+function format_number(num,decimal) {
+    var deci = (decimal === undefined || decimal === null ) ? 2 : decimal;
+    num = parseFloat(num);
+    
+    var final_num = ( num.toString().indexOf(".") !== -1) ? num.toFixed(deci) : num;
+    return parseFloat(final_num);
+}
 
-
+function remove_psel(ele)
+{
+	var sel_pid = $(ele).parents("tr:first").attr('pid');
+		$($(ele).parents("tr").get(0)).remove();
+            remove_pid(sel_pid);
+            
+	$('#prods_order tbody tr').each(function(i,itm){
+		$('td:first',this).text(i+1);
+	});
+	
+}
 </script>
 
-<div id="newbie_confirm_dlg" title="New franchisee note" >
-	<h4>New franchisee note</h4>
-	<div class="hexa">
-		<div><b>Please take a note, this is a new franchisee and we should treat them very well</b></div>
-		<div><input type="checkbox" class="nb_cond" value="1" ><b>Dont say no to products</b></div>
-		<div><input type="checkbox" class="nb_cond" value="1" ><b>Contact TM or executive in office for any information</b></div>
-		<div><input type="checkbox" class="nb_cond" value="1" ><b>Dont commit shipment date (post dated)</b></div>
-		<div><input type="checkbox" class="nb_cond" value="1" ><b>Be gentle with policy and treat them as a child</b></div>
-	</div>
-</div>
+
 
 <style>
 
@@ -1602,7 +1685,7 @@ overflow:auto;
 	background:#fafafa;
 	position: fixed;
 	right: 18px;
-	top: 64px;
+	top: 76px;
 }
 
 .ui-widget-header{background: none;}
@@ -1623,9 +1706,7 @@ left:20px;background:#C97033;border-radius:5px 5px 0px 0px;
 .footerlinks{
 display:none;
 }
-.contenttable .leftcont{
-display:none;
-}
+
 #srch_results{
 	margin-left: 85px;
 	position: absolute;
@@ -1753,6 +1834,8 @@ background-color:#89c403;display:block;padding:12px 15px;
 .offn_courier_detail span {
     margin:0 10px;
 }
+.title a { text-decoration: none; color: #161EE7; }
+.error_inp{border:1px solid #cd0000 !important;}
 </style>
 
 
