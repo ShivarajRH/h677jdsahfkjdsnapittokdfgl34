@@ -259,9 +259,9 @@ class Pnh extends Controller{
 				$discount=$deal['price']/100*$margin['margin'];
 		}
 		
-		$name=ucfirst($deal['print_name']);
-		if(!trim($name))
-			$name=ucfirst($deal['name']);
+		//$name=ucfirst($deal['print_name']);
+		//if(!trim($name))
+		$name=ucfirst($deal['name']);
 		  
 		$cost=round($deal['price']-$discount,2);
 		//echo "{$name}\n Mrp : Rs {$deal['mrp']}, Landing Cost : Rs {$cost}";

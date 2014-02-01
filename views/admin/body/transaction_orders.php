@@ -116,7 +116,8 @@ Prepaid Voucher used : <?=$c?>
 <h2 style="margin: 3px 0px;margin-bottom: 10px;">Order Transaction : <?=$tran['transid']?></h2>
 <div class="clear"></div>
 <table class="datagrid" width="100%">
-<thead><tr><th>Transaction ID</th><th>User</th><th>Mode</th><th>Amount</th><th>Paid</th><th>Refund</th><th colspan="2">Payment Status</th><th>Init Time</th><th>Completed on</th></tr></thead>
+<thead><tr><th>Transaction ID</th><th>User</th><th>Mode</th>
+	<?php if($tran['is_pnh']){?> <th>Payment Credit Days</th> <?php } ?><th>Amount</th><th>Paid</th><th>Refund</th><th colspan="2">Payment Status</th><th>Init Time</th><th>Completed on</th></tr></thead>
 <tbody>
 <tr>
 <td><?=$tran['transid']?></td>
@@ -159,6 +160,17 @@ default:
 	echo "Unknown";break;
 }?>
 </td>
+<?php if($tran['is_pnh']){?>
+<td>
+	<b><?php echo $tran['credit_days']?>&nbsp;Days</b>
+	<br>
+	<div style="padding:5px;background:#ffffaa;text-align: center;" >
+		Payment Clearence 
+		<div>On or Before <br /> <b>(<?php echo format_date_ts($tran['init']+($tran['credit_days']*24*60*60))?>)</b></div>
+	</div>
+</td>
+<?php }?>
+
 <td>Rs <?=$tran['amount']?></td>
 <td>Rs <?=$tran['paid']?><?php if($tran['mode']==0){?><br><a style="font-size:70%" href="<?=site_url("admin/callcenter/trans/{$tran['transid']}")?>">check PG details</a><?php }?></td>
 <td width="10" style="white-space:nowrap;"><?php 
@@ -461,6 +473,9 @@ $allow_qty_chng = 0;
 		
 		if($o['status'] == 0)
 			$allow_qty_chng = 1;
+		
+		$alloted_imei_det_res = $this->db->query("select * from t_imei_update_log where alloted_order_id = ? order by id desc limit 1;",$o['id']);
+		
 		?>
 	<tr>
 	<td>
@@ -545,7 +560,36 @@ $allow_qty_chng = 0;
 			$b=$ba['batch_id'];
 	}?>
 	<div>batch: <a href="<?=site_url("admin/batch/{$b}")?>"><?=$b?></a></div>
-	<?php } if(!isset($processed[$o['id']]) && !isset($p_processed[$o['id']])) echo "na";?>
+	<?php } if(!isset($processed[$o['id']]) && !isset($p_processed[$o['id']])) echo "na";
+
+	$alloted_imei_det = array();
+	if($alloted_imei_det_res->num_rows())
+	{
+		$alloted_imei_det = $alloted_imei_det_res->row_array();
+		
+	}else
+	{
+		$alloted_imei_det = $this->db->query("select * from t_imei_no where order_id = ? ", $o['id'])->row_array();
+	}
+	
+	if(count($alloted_imei_det))
+	{
+		echo '<div style="font-size:11px;background:#fcfcfc;padding:5px;">
+		<b>IMEI : '.$alloted_imei_det['imei_no'].'</b> <br>';
+		echo '		<b>Activation Credit : Rs '.$o['imei_reimbursement_value_perunit'].'</b>
+		';
+		// is imei activated
+		$imei_actv_det_res = $this->db->query("select * from t_imei_no where imei_no = ? ", $alloted_imei_det['imei_no']);
+		if($imei_actv_det_res->num_rows())
+		{
+			$imei_actv_det = $imei_actv_det_res->row_array();
+			echo ' <div class="legend" >'.($imei_actv_det['is_imei_activated']?'<span style="background:green;color:white;padding:3px 5px;">Activated</span>':'<span style="background:#cd0000;color:white;padding:3px 5px;">Not Activated</span>').'</div>';
+		}
+		echo '</div>';
+	}
+	
+	?>
+	
 	</td>
 	<td>
 	<?=$o['actiontime']?format_datetime_ts($o['actiontime']):"na"?>
