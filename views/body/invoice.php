@@ -9,7 +9,7 @@ $ttl_inv_list = array();
 // check if the invoice is split invoice 	
 $mem_det = array();	
 $invoice_credit_note_res = $this->db->query("select group_concat(id) as id,sum(amount) as amount from t_invoice_credit_notes a where invoice_no in (select invoice_no from king_invoice where split_inv_grpno = ? or invoice_no = ? ) ",array($invoice_no,$invoice_no));
-
+$credit_days=$this->db->query("select credit_days from king_transactions where transid=?",$transid)->row()->credit_days;
 //echo $this->db->last_query();
 
 ?>
@@ -163,6 +163,14 @@ table{
 				$voucher_codes=$this->db->query("select group_concat(voucher_slno) as voucher_codes,transid from pnh_voucher_activity_log where transid=? group by transid",$orders[0]['transid'])->row_array();
 			}
 		}
+		
+		//check as imei scheme
+		$imei_credit=$order['imei_reimbursement_value_perunit'];
+	
+
+
+
+		
 
 ?>
 <div class="invoice" style="padding:10px;page-break-after:always"> 
@@ -238,8 +246,11 @@ table{
 					</td>
 					<td align="right" valign="top">
 						<table border=1 cellspacing	=0 cellpadding=5>
-							<tr><td>Invoice<br>No:</td><td width=100><b><?=isset($invoice_no)?$invoice_no:$order['invoice_no']?>
-							</b></td>
+							<tr><td>Invoice<br>No:</td>
+							<td width=200><b><?=isset($invoice_no)?$invoice_no:$order['invoice_no']?></b><br>
+							<span style="font-size: 11px;"><b>Maximum Credit : <?=$credit_days ?> Days</b></span>
+							</td>
+							
 							<td>Invoice<br>Date:</td><td width="100"><b><?=date("d/m/Y",$inv_createdon)?></b></td>
 							<td>Transaction<br>
 							<div align="center">ID/Date :</div></td><td width="100"><b><?=$order['transid']?></b> 
@@ -396,6 +407,9 @@ table{
 							<?php if(!empty($inos)){?>
 							<br><b>Imeino: <?=implode(", ",$inos)?></b>
 							<?php }?>
+							<br>
+							<span> Activation : <b> <?php echo $imei_credit ?></b></span>
+						
 						</span>
 						
 						<span class="showinprint">
@@ -939,7 +953,7 @@ table{
 					<span class="showinprint"><?php echo $itm_ord['det']['print_name'].'-'.$itm_ord['det']['pnh_id'];?></span>
 					<span class="hideinprint"><?php echo $itm_ord['det']['name'].'-'.$itm_ord['det']['pnh_id'];?></span>
 				</td>
-			<td><?php echo implode(', ',$itm_ord['invs']);?></td>
+			<td><?php echo implode(', ',array_unique($itm_ord['invs']));?></td>
 			<td><?php echo $itm_ord['qty'];?></td>
 			<td><?php echo $itm_ord['amt'];?></td>
 		</tr>
@@ -1014,6 +1028,7 @@ table{
 					</td>
 					<td align="right" valign="top">
 						<table border=1 cellspacing	=0 cellpadding=5>
+							<td>Invoice<br>No:</td><td width=100><b><?=$invoice_no?></b></td>
 							<td><br>Date:</td><td width="100"><b><?=date("d/m/Y",$inv_createdon)?></b></td>
 							<td>Transaction<br><div align="center">ID/Date :</div></td>
 							<td width="100">
@@ -1061,13 +1076,14 @@ table{
 		<tr>
 			<th>No</th>
 			<th>Item</th>
-			<th>Invoice</th>
+			<th>Serialnos</th>
 			<th>Qty</th>
 			<th>Total</th>
 		</tr>
 		<?php 
 			$k1=0;
 			foreach($orderslist_byproduct as $itmid=>$itm_ord){ 
+				
 			?>
 		<tr>
 			<td><?php echo ++$k1; ?></td>
@@ -1076,14 +1092,13 @@ table{
 				
 			</td>
 			<td><?php 
+					$itm_ord['invs'] = array_filter(array_unique($itm_ord['invs']));
 					//echo implode(', ',$itm_ord['invs']);
 					foreach($itm_ord['invs'] as $i_inv)
 					{
-						$i_imei_no = @$this->db->query("select concat('-',imei_no) as inv_imei_no from t_imei_no a join king_invoice b on a.order_id = b.order_id where invoice_no = ? ",$i_inv)->row()->inv_imei_no;
-						if($i_imei_no)
-							$i_imei_no .= '<br>';
+						$i_imei_no = @$this->db->query("select group_concat(imei_no) as inv_imei_no from t_imei_no a join king_invoice b on a.order_id = b.order_id join king_orders c on c.id = b.order_id where b.invoice_no = ? and c.itemid = ? ",array($i_inv,$itmid))->row()->inv_imei_no;
 						
-						echo $i_inv.$i_imei_no;
+						echo $i_imei_no?str_replace(',', '<br>', $i_imei_no):'';
 					}
 				?>
 			</td>
