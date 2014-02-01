@@ -23880,8 +23880,8 @@ die; */
 						LEFT OUTER JOIN king_admin a ON a.id=r.created_by
 						LEFT OUTER JOIN king_admin m ON m.id=r.modified_by
 						WHERE r.status=0 AND r.is_active=1 and is_submitted=0 and r.status=0 and r.franchise_id=?
-						ORDER BY instrument_date asc";
-	
+						ORDER BY instrument_date,r.created_on asc";
+
 			$total_records=$this->db->query($sql,$fid)->num_rows;
 	
 			$sql.=" limit $pg , $limit ";
@@ -23973,9 +23973,9 @@ die; */
 	
 			$data['credit_log']=$this->db->query($sql,$fid)->result_array();
 		}
-                else if($type=="reconcile")
+                else if($type=="unreconcile")
 		{
-			$sql="select * from pnh_t_receipt_info where receipt_amount != 0 and franchise_id = ?";
+			$sql="select * from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? order by created_on desc";
 	
 			$total_records=$this->db->query($sql,$fid)->num_rows;
 	
@@ -26716,8 +26716,10 @@ die; */
          */
         function jx_get_fran_reconcile_list($receipt_id,$franchise_id)
         {
-            $this->erpm->auth();
-            $sql = "select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.id as reconcile_id,rcon.invoice_no,rcon.inv_amount,rcon.unreconciled,from_unixtime(rcon.created_on) as created_date,a.username
+            $this->erpm->auth();//from_unixtime,'%e/%m/%y'date_fromat
+            $sql = "select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.id as reconcile_id,rcon.invoice_no
+                        ,rcon.inv_amount,rcon.unreconciled
+                        ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date,a.username
                     from pnh_t_receipt_info r 
                     join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
                     join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
@@ -26729,7 +26731,7 @@ die; */
             {
                 $rdata['status'] = 'success';
                 $rdata['reconcile_list'] = $reconcile_set->result_array();
-                $rdata['receipt_det'] = $this->db->query("select r.receipt_id,r.unreconciled_value,r.receipt_amount,from_unixtime(r.created_on) as created_date from pnh_t_receipt_info r where r.receipt_amount != 0 and r.franchise_id = ? and r.receipt_id=?",array($franchise_id,$receipt_id))->row_array();
+                $rdata['receipt_det'] = $this->db->query("select r.receipt_id,r.unreconciled_value,r.receipt_amount,DATE_FORMAT(from_unixtime(r.created_on),'%e/%m/%Y') as created_date from pnh_t_receipt_info r where r.receipt_amount != 0 and r.franchise_id = ? and r.receipt_id=?",array($franchise_id,$receipt_id))->row_array();
             }
             else
             {
@@ -26744,7 +26746,8 @@ die; */
             $rdata['fran_invoices']=$this->db->query("select i.invoice_no,sum(i.mrp) as inv_amount,group_concat(distinct i.invoice_no) as grp_invs
                                                             from king_invoice i
                                                             join king_transactions tr on tr.transid=i.transid
-                                                            where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id=?
+                                                            left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no
+                                                            where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id=? and rcon.invoice_no is null
                                                             group by i.invoice_no,i.transid order by i.createdon asc",$fid)->result_array();
             echo json_encode($rdata);//,i.transid,tr.franchise_id,from_unixtime(i.createdon),,count(i.invoice_no) as num_invs,group_concat(i.mrp) as grp_mrp,
         }

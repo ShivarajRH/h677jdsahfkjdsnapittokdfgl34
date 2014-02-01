@@ -7167,13 +7167,13 @@ order by p.product_name asc
 		if($type == 0)
 			$inp['instrument_date'] = strtotime(date('Y-m-d')); // security deposit
 		
-//                $this->db->insert("pnh_t_receipt_info",$inp); $recpt_id = $this->db->insert_id();
+                $this->db->insert("pnh_t_receipt_info",$inp); $recpt_id = $this->db->insert_id();
                 
                 //update unreconceiled value
                 if($r_type == 1){
                     // If not security deposit we can concile the amount
                    
-                    $recpt_id = 119;
+                    //$recpt_id = 119;
 
                     $unreconciled_value = $amount - $total_val_reconcile;
                     if($sel_invoice) {

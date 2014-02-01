@@ -36,21 +36,11 @@
                                                             <li><a class="load_type <?=$selected;?>" id="assigned_batches" href="javascript:void(0)" title="Transactions are batched for shipping">Assigned Batches</a><div class="batch_pop"></div></li>
                                                     </ol>
                                         </div>
-                                        <!--<div id="disabled_tabs">
-                                            <div class="tab_list">
-                                                <ol>
-                                                    <li><a class="load_type" id="disabled_alloted" href="javascript:void(0)" title="Transactions are disabled and stock alloted">Alloted</a></li>
-                                                    <li><a class="load_type" id="disabled_not_alloted" href="javascript:void(0)" title="Transactions are disabled and stock not alloted">Not Alloted</a></li>
-                                                </ol>
-                                            </div>
-                                        </div>-->
                                 </td>
                         </tr>
                 </table>
             </div>
-        <!--<p class="page_trans_description"></p>-->
             <div class="level1_filters">
-                
                 <fieldset>
                     <span title="Toggle Filter Block" class="close_filters"><span class="close_btn">Show</span>
                         <h3 class="filter_heading">Filters:</h3>
@@ -61,29 +51,17 @@
                                     <div class="group_filter">
                                         <select id="sel_menu" name="sel_menu" colspan="2">
                                             <option value="00">Select Menu</option>
-                                             <?php /*foreach($pnh_menu as $menu): ?>
-                                                    <option value="<?php echo $menu['id'];?>"><?php echo $menu['name'];?></option>
-                                            <?php endforeach;*/ ?>
                                         </select> &nbsp;
                                         <select id="sel_brands" name="sel_brands">
                                             <option value="00">Select Brands</option>
-                                             <?php /* foreach($pnh_brands as $brand): ?>
-                                                    <option value="<?php echo $brand['id'];?>"><?php echo $brand['name'];?></option>
-                                            <?php endforeach; */?>
                                         </select>
 
 
                                         <select id="sel_territory" name="sel_territory" >
                                             <option value="00">All Territory</option>
-                                            <?php /* foreach($pnh_terr as $terr):?>
-                                                    <option value="<?php echo $terr['id'];?>"><?php echo $terr['territory_name'];?></option>
-                                            <?php endforeach; */ ?>
                                         </select>
                                         <select id="sel_town" name="sel_town">
                                             <option value="00">All Towns</option>
-                                            <?php /*foreach($pnh_towns as $town): ?>
-                                                    <option value="<?php echo $town['id'];?>"><?php echo $town['town_name'];?></option>
-                                            <?php endforeach; */ ?>
                                         </select>
                                         <select id="sel_franchise" name="sel_franchise" style="width: 204px;">
                                             <option value="00">All Franchise</option>

@@ -2022,3 +2022,17 @@ select r.unreconciled_value,r.receipt_amount,from_unixtime(r.created_on)  from p
  where r.receipt_amount != 0 and r.franchise_id = '43' and r.receipt_id='119';
 
 select * from king_admin
+
+# Jan_31_2014
+-- new get only unreconciled receipts
+select * from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = '43' order by created_on desc;
+
+
+select i.invoice_no,sum(i.mrp) as inv_amount,group_concat(distinct i.invoice_no) as grp_invs
+                                                            from king_invoice i
+                                                            join king_transactions tr on tr.transid=i.transid
+ 				left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no
+                                                            where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id='43' and rcon.invoice_no is null
+                                                            group by i.invoice_no,i.transid order by i.createdon asc
+
+# => 200555 200696 200879 202019 => 4 70 - 4 = 66
