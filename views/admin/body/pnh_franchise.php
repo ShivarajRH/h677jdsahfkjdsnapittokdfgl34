@@ -1,60 +1,46 @@
-<style>
-.container_div
-{
-	visibility:hidden
-}
-.leftcont
-{
-	display: none
-}
-.fran_suspendlink
-{
-	border-radius:5px;
-	background:#f77;
-	display:inline-block;
-	padding:3px 7px;
-	color:#fff;
-	cursor: pointer;
-}
-.fran_suspendlink:hover
-{
-	background:#f00;
-	text-decoration:none;
-}
-li.required
-{
-	color: #cd0000;list-style: none
-}
-li.required{color: #cd0000;list-style: none}
-.jqplot-highlighter-tooltip, .jqplot-canvasOverlay-tooltip
-{
-	font-size: 13px !important;
-    margin-left:10px;margin-top:-5px;
-    background:none repeat scroll 0 0 #FFFFFF !important; 
-}
-.sbutton span {
-    color: #FFFFFF;
-}
-.close_btn{padding:1px 6px;color:#FFF !important;font-weight: bold;background: #cd0000;border:1px solid #B44F4F}
-</style>
+<link rel='stylesheet' type='text/css' href="<?php echo base_url().'css/sk_franchise.css'?>">
+<link rel='stylesheet' type='text/css' href="<?php echo base_url().'css/fullcalendar.css'?>">
+<script type='text/javascript' src="<?php echo base_url().'js/fullcalendar.min.js'?>"></script>
+<script type='text/javascript' src="<?php echo base_url().'js/jquery-ui-timepicker-addon.js'?>"></script>
+<script>
+$(function(){
+    $( ".tsk_stdate" ).datepicker({
+      changeMonth: true,
+     dateFormat: "dd/mm/yy",
+    	minDate: new Date(),
+      numberOfMonths:1,
+      onClose: function( selectedDate ) {
+        $( ".tsk_endate" ).datepicker( "option", "minDate", selectedDate );
+    
+      }
+    });
+    $( ".tsk_endate" ).datepicker({
+     	 changeMonth: true,
+   	 	dateFormat: "dd/mm/yy",
+    	minDate: new Date(),
+      	numberOfMonths: 1,
+      	onClose: function( selectedDate ) {
+        $( ".tsk_stdate" ).datepicker( "option", "maxDate", selectedDate );
+      
+      }
+    });
+});
+</script>
+
 <?php 
-$f=$fran; 
-$menus=array();
-$menu_list=$this->db->query("select id,name from pnh_menu")->result_array();
-foreach($menu_list as $menu_li)
-{
-	$menus[$menu_li['id']]=$menu_li['name'];
-}
+	$f=$fran; 
+	$menus=array();
+	$menu_list=$this->db->query("select id,name from pnh_menu")->result_array();
 
+	foreach($menu_list as $menu_li)
+	{
+		$menus[$menu_li['id']]=$menu_li['name'];
+	}
 ?>
-<style>
-	.dash_bar_right{font-size: 11px;min-width: 100px !important;text-align: center;padding:3px 5px;}
-	.dash_bar_right span{display: block;font-size: 15px;}
-	h4{margin:5px 0px;}
-</style>
 
-<div class="container page_wrap" style="padding-top:7px;margin-top: 10px;">
+<div class="container page_wrap" style="">
 <?php
+	$fid=$this->uri->segment(3);
 	$acc_statement = $this->erpm->get_franchise_account_stat_byid($f['franchise_id']);	
 	$net_payable_amt = $acc_statement['net_payable_amt'];
 	$credit_note_amt = $acc_statement['credit_note_amt'];
@@ -65,11 +51,9 @@ foreach($menu_list as $menu_li)
 	$ordered_tilldate = $acc_statement['ordered_tilldate'];
 	$not_shipped_amount = $acc_statement['not_shipped_amount'];
 	$acc_adjustments_val = $acc_statement['acc_adjustments_val'];
-	
 	$pending_payment = $acc_statement['pending_payment'];
 	
 	$fr_reg_diff = ceil((time()-$f['created_on'])/(24*60*60));
-	 
 	if($fr_reg_diff <= 30)
 	{
 		$fr_reg_level_color = '#cd0000';
@@ -93,253 +77,249 @@ foreach($menu_list as $menu_li)
 		$fr_status_color='green';
 	}
 ?>
-<div class="page_topbar_left fl_left">
-	<h2 style="margin-top: 5px !important;font-size: 25px;color: red;font-weight: normal;color:purple;font-family: Helvetica !important"><?php echo $f['franchise_name']?><a style="margin-left: 10px; font-size: 12px;"href="<?php echo site_url('admin/pnh_edit_fran'.'/'.$f['franchise_id'])?>">(edit)</a></h2>	
-</div>
-<div class="fl_left" style="padding:15px;margin-left: 20px;	">
-		Registered On: <b><?php echo format_date(date('Y-m-d H:i:s',$f['created_on']))?></b> 
-		Level :
-		<b style="font-size: 11px;background-color:<?php echo $fr_reg_level_color;?>;color:#fff;padding:2px 3px;border-radius:3px;">
-			 <?php echo $fr_reg_level;?>
-		</b>&nbsp;&nbsp;
-		<?php 
-		$fran_status_arr=array();
-		$fran_status_arr[0]="Live";
-		$fran_status_arr[1]="Permanent Suspension";
-		$fran_status_arr[2]="Payment Suspension";
-		$fran_status_arr[3]="Temporary Suspension";
-		?>
-		Status:<b style="font-size: 11px;background-color:<?php echo $fr_status_color?>;color:#fff;padding:2px 3px;border-radius:3px;">
-			<?php echo $fran_status_arr[$fran_status];?>
-				</b>
-</div>
-<?php if($is_prepaid){?>
-<span style="background-color: #BF0A99;color:white;height:25px;width:123px;display:block;text-align:center;float:left;white-space:nowrap;margin-left:60px;"><?php echo "<b>Prepaid Franchise</b>"?></span>
-<?php }?>
-<div class="page_topbar_right fl_right">
-			
-<a style="white-space:nowrap" href="<?=site_url("admin/pnh_sms_log/{$f['franchise_id']}")?>" class="myButton_pnhfranpg">SMS Log</a> 
 
-<a style="white-space:nowrap" href="<?=site_url("admin/pnh_quotes/{$f['franchise_id']}")?>" class="myButton_pnhfranpg" >Franchise Requests</a>
-
-<?php if($have_prepaid_menu) {?>
-<a style="padding:5px 10px;"  class="fran_suspendlink" onclick="mark_prepaid_franchise(<? echo $f['franchise_id'].','.$is_prepaid?>)"><?php echo $f['is_prepaid']?'Unmark prepaid':'Mark prepaid' ?></a>
-<?php }?>
-
-<?php if($f['is_suspended']==0){?> 
-<a style="padding:5px 10px;"  class="fran_suspendlink" onclick="reson_forsuspenfran(<?=$f['franchise_id']?>)">Suspend Account</a>
-<?php }else{?>
-
-<a style="padding:5px 10px;"  class="fran_suspendlink" onclick="reson_forunsuspension(<?=$f['franchise_id']?>)">Unsuspend Account</a>
-<?php }?>
-</div>
-
-<div style="margin-bottom: 0px;clear: both;overflow: hidden">
+<div class="page_topbar_left">
 	
-<div class="dash_bar_right" style="background: tomato">
-Pending Payment : <span>Rs <?=format_price($shipped_tilldate-($paid_tilldate+$acc_adjustments_val+$credit_note_amt),2)?></span>
+	<div style="float:left;width:100%">
+		<h2 class="franch_header_wrap"><?php echo $f['franchise_name']?><a style="margin-left: 10px; font-size: 12px;"href="<?php echo site_url('admin/pnh_edit_fran'.'/'.$f['franchise_id'])?>">(edit)</a></h2>
+		
+		<div style="float:right;">
+			<?php if($have_prepaid_menu) {?>
+				<span style="float: none" class="fran_suspendlink paid_unmark_wrapper" onclick="mark_prepaid_franchise(<? echo $f['franchise_id'].','.$is_prepaid?>)">
+						<?php echo $f['is_prepaid']?'Unmark prepaid':'Mark prepaid' ?>
+				</span>
+			<?php }?>
+			<?php if($is_prepaid){?>
+				<span class="paid_wrapper" ><?php echo "<b>Prepaid Franchise</b>"?></span>
+			<?php }?>
+		</div>
+	</div>
+	
+	
+	<div style="margin-top: 10px;float:left">
+		<b class="level_wrapper" style="background-color:<?php echo $fr_reg_level_color;?>;">
+				 <?php echo $fr_reg_level;?>
+		</b>&nbsp;&nbsp;
+		
+		<?php 
+			$fran_status_arr=array();
+			$fran_status_arr[0]="Live";
+			$fran_status_arr[1]="Permanent Suspension";
+			$fran_status_arr[2]="Payment Suspension";
+			$fran_status_arr[3]="Temporary Suspension";
+		?>
+		
+		Status:
+			<b class="level_wrapper" style="background-color:<?php echo $fr_status_color?>;">
+				<?php echo $fran_status_arr[$fran_status];?>
+			</b>
+	</div>	
+	
+	<div class="dash_bar_right" style="background: tomato">
+		Pending Payment : <span>Rs <?=format_price($shipped_tilldate-($paid_tilldate+$acc_adjustments_val+$credit_note_amt),2)?></span>
+	</div>
+	
+	<div class="dash_bar_right">
+		UnCleared Payments : <span>Rs <?=format_price($uncleared_payment,2)?></span>
+	</div>
+
+	<div class="dash_bar_right">
+		Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
+	</div>
+	
+	<div class="dash_bar_right">
+		<a class="fran_suspendlink" target="_blank" style="float: none" href="<?=site_url("admin/pnh_sms_log/{$f['franchise_id']}")?>">SMS Log</a> 
+	</div>
+	
+	<?php if($f['is_suspended']==0){?> 
+			<div class="dash_bar_right">
+				<a class="fran_suspendlink" onclick="reson_forsuspenfran(<?=$f['franchise_id']?>)">Suspend Account</a>
+			</div>
+	<?php }else{?>
+			<div class="dash_bar_right">
+				<a  class="fran_suspendlink" onclick="reson_forunsuspension(<?=$f['franchise_id']?>)">Unsuspend Account</a>
+			</div>
+	<?php }?>
+	
+	<div class="dash_bar_right">
+		<a class="fran_suspendlink" target="_blank" style="float: none" href="<?=site_url("admin/pnh_quotes/{$f['franchise_id']}")?>">
+			Franchise Requests
+		</a> 
+	</div>
 </div>
 
 
-<div class="dash_bar_right">
-UnCleared Payments : <span>Rs <?=format_price($uncleared_payment,2)?></span>
-</div>
 
-<div class="dash_bar_right">
-	Adjustments : <span>Rs <?=format_price($acc_adjustments_val,2)?></span>
-</div>
-
-<div class="dash_bar_right">
-Paid till Date : <span>Rs <?=format_price($paid_tilldate,2)?></span>
-</div>
-
-<div class="dash_bar_right">
-Credit Notes Raised : <span>Rs <?=format_price($credit_note_amt,2)?></span>
-</div>
-<div class="dash_bar_right">
-Bounced/Cancelled : <span>Rs <?=format_price($cancelled_tilldate,2)?></span>
-</div>
-
-<div class="dash_bar_right">
-Unshipped : <span>Rs <?=format_price($not_shipped_amount,2)?></span>
-</div>
-<div class="dash_bar_right">
-Shipped : <span>Rs <?=format_price($shipped_tilldate,2)?></span>
-</div>
-
-<div class="dash_bar_right">
-Ordered : <span>Rs <?=format_price($ordered_tilldate,2)?></span>
-</div>
-
-<div class="dash_bar_right">
-Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
-</div>
-</div>
-<div style="clear: both">&nbsp;</div>
-
-<div id="loading_container_div" align="center" style="padding:10px;"><img src="<?php echo base_url().'/images/loading_bar.gif';?>" ></div>
+<div class="page_topbar_right"></div>
 
 <div class="container_div" style="margin-top: 0px;">
-
-
-<div class="tab_view">
-	<ul class="fran_tabs">
-	<li><a href="#name">Basic Details</a></li>
-	<?php if($this->erpm->auth(PNH_EXECUTIVE_ROLE|CALLCENTER_ROLE,true)){?>
-	<li><a href="#actions" onclick="load_receipts(this,'actions',0,<?=$f['franchise_id']?>,100)">Credits and MIDs</a></li>
-	<?php }?>
-	<li><a href="#statement" class="account_statement">Account Statement &amp; Topup</a></li>
-	<li><a href="#orders" >Orders</a></li>
-	<li><a href="#return_products" onclick="load_all_return_prods(0)" >Returns</a></li>
-	<li><a href="#credit_notes" onclick="load_credit_notes(0)" >Invoice Credit Notes</a></li>
-	<?php if($is_prepaid){?>
-	<li>
-		<a href="#voucher_activity" onclick="load_voucher_activity(0)" id="voucher_tab">Voucher</a>
+	<div class="tab_view">
+		<ul class="fran_tabs">
+			<li><a href="#name">Basic Details</a></li>
+				<?php if($this->erpm->auth(PNH_EXECUTIVE_ROLE|CALLCENTER_ROLE,true)){?>
+					<li><a href="#actions" onclick="load_receipts(this,'actions',0,<?=$f['franchise_id']?>,100)">Credits and MIDs</a></li>
+				<?php }?>
+			<li><a href="#statement" class="account_statement">Account Statement &amp; Topup</a></li>
+			<li><a href="#orders" >Orders</a></li>
+			<li><a href="#return_products" onclick="load_all_return_prods(0)" >Returns</a></li>
+			<li><a href="#credit_notes" onclick="load_credit_notes(0)" >Invoice Credit Notes</a></li>
+				<?php if($is_prepaid){?>
+					<li>
+						<a href="#voucher_activity" onclick="load_voucher_activity(0)" id="voucher_tab">Voucher</a>
+					</li>
+				<?php }?>
+				<?php if($is_membrsch_applicable){?>
+					<li><a href="#shipped_imeimobslno" onclick="load_allshipped_imei(0)">IMEINO Activations</a></li>
+				<?php }?>
+			<li><a href="#status_log">Status Log</a></li>
+			<li><a href="#analytics" class="analytics">Analytics</a></li>
+			<li><a href="#ship_log" class="ship_log">Shipped &amp; Delivered Log</a></li>
+			<!--<li><a href="<?=site_url("admin/pnh_addfranchise/$fid")?>">SMS Log</a></li>-->
+		</ul>
 	
-	</li>
-	<?php }?>
-	<?php if($is_membrsch_applicable){?>
-	<li><a href="#shipped_imeimobslno" onclick="load_allshipped_imei(0)">IMEINO Activations</a></li>
-	<?php }?>
-	<li><a href="#status_log">Status Log</a></li>
-	<li><a href="#analytics" class="analytics">Analytics</a></li>
-	</ul>
-	
-	<div id="credit_notes">
-		<div class="module_cont">
-			<h3 class="module_cont_title">Credit Notes Raised</h3>
-			<div class="module_cont_block">
-				
-				<div class="module_cont_block_grid_total fl_left">
-					<span class="stat total">Total : <b>10</b></span> 
-					
-				</div>
-				<div class="module_cont_block_filters fl_right">
-					&nbsp;
-				</div>
-				
-				<div class="module_cont_block_grid" style="clear:both">
-					<table class="datagrid" width="100%">
-						<thead>
-							<th width="20">#</th>
-							<th width="30">CreditNote ID</th>
-							<th width="30">Invoice no</th>
-							<th width="30">Order no</th>
-							<th width="30">Amount (Rs)</th>
-							<th width="100">Created On</th>
-						</thead>
-						<tbody></tbody>
-					</table>	
-				</div>
-				<div class="module_cont_grid_block_pagi">
-					
-				</div>
-			</div>
-		</div>	
-	</div>
-	<!-- franchise status log START -->
-			<div id="status_log">
-				<div class="tab_view">
-					<ul class="fran_tabs">
-						  <li><a href="#permant_suspn">Permanent Suspension</a></li>
-						<li><a href="#payment_suspn">Payment Suspension</a></li>
-						<li><a href="#temp_suspn">Temporary Suspension</a></li>
-						<li><a href="#live_suspn">Unsuspended Log</a></li>
-					</ul>
-					<?php $log_res=$this->db->query("SELECT l.*,a.name FROM franchise_suspension_log l JOIN king_admin a ON a.id=suspended_by WHERE franchise_id=? AND suspension_type IN(0,1,2,3)",$f['franchise_id'])?>
-					
-					<?php if($log_res->num_rows()){?>
-					
-					<div id="permant_suspn">
-					
-					<table class="datagrid">
-					<thead><th>Suspended Type</th><th>Reason</th><th>Suspended On</th><th>Suspended By</th></thead>
-					<?php
-					foreach($log_res->result_array() as $l){
-					if( $l['suspension_type']==1){?>
-					<tr>
-					<td><?php echo $fran_status_arr[$l['suspension_type']]?></td>
-					<td><?php echo $l['reason']?></td>
-					<td><?php echo format_datetime_ts($l['suspended_on'])?></td>
-					<td><?php echo $l['name']?></td>
-					</tr>
-					<?php }?>
-					
-					<?php } ?>
-					
-					
-					</table>
+		<!-- Invoice Credit Notes START -->
+		<div id="credit_notes">
+			<div class="module_cont">
+				<h3 class="module_cont_title">Credit Notes Raised</h3>
+				<div class="module_cont_block">
+					<div class="module_cont_block_grid_total fl_left">
+						<span class="stat total">Total : <b>10</b></span> 
 					</div>
 					
+					<div class="module_cont_block_filters fl_right">&nbsp;</div>
+					
+					<div class="module_cont_block_grid" style="clear:both">
+						<table class="datagrid" width="100%">
+							<thead>
+								<th width="20">#</th>
+								<th width="30">CreditNote ID</th>
+								<th width="30">Invoice no</th>
+								<th width="30">Order no</th>
+								<th width="30">Amount (Rs)</th>
+								<th width="100">Created On</th>
+							</thead>
+							<tbody></tbody>
+						</table>	
+					</div>
+					
+					<div class="module_cont_grid_block_pagi">
+					</div>
+				</div>
+			</div>	
+		</div>
+		<!-- Invoice Credit Notes START -->
+		
+		<!-- franchise status log START -->
+		<div id="status_log">
+			<div class="tab_view">
+				<ul class="fran_tabs">
+					  <li><a href="#permant_suspn">Permanent Suspension</a></li>
+					<li><a href="#payment_suspn">Payment Suspension</a></li>
+					<li><a href="#temp_suspn">Temporary Suspension</a></li>
+					<li><a href="#live_suspn">Unsuspended Log</a></li>
+				</ul>
+				
+				<?php $log_res=$this->db->query("SELECT l.*,a.name FROM franchise_suspension_log l JOIN king_admin a ON a.id=suspended_by WHERE franchise_id=? AND suspension_type IN(0,1,2,3)",$f['franchise_id'])?>
+				<?php if($log_res->num_rows()){?>
+					<div id="permant_suspn">
+						<table class="datagrid">
+							<thead>
+								<th>Suspended Type</th>
+								<th>Reason</th>
+								<th>Suspended On</th>
+								<th>Suspended By</th>
+							</thead>
+							
+							<?php
+								foreach($log_res->result_array() as $l){
+									if( $l['suspension_type']==1){?>
+									<tr>
+									<td><?php echo $fran_status_arr[$l['suspension_type']]?></td>
+									<td><?php echo $l['reason']?></td>
+									<td><?php echo format_datetime_ts($l['suspended_on'])?></td>
+									<td><?php echo $l['name']?></td>
+									</tr>
+									<?php }?>
+								<?php } ?>
+						</table>
+					 </div>
+			
 					<div id="payment_suspn">
-					<table class="datagrid">
-					<thead><th>Suspended Type</th><th>Reason</th><th>Suspended On</th><th>Suspended By</th></thead>
-					<?php 
-					foreach($log_res->result_array() as $l){
-					if( $l['suspension_type']==2){?>
-					<tr>
-					<td><?php echo $fran_status_arr[$l['suspension_type']]?></td>
-					<td><?php echo $l['reason']?></td>
-					<td><?php echo format_datetime_ts($l['suspended_on'])?></td>
-					<td><?php echo $l['name']?></td>
-					<?php } ?>
-					</tr>
-					<?php }?>
-					</table>
+						<table class="datagrid">
+							<thead>
+								<th>Suspended Type</th><th>Reason</th><th>Suspended On</th><th>Suspended By</th>
+							</thead>
+							<?php 
+							foreach($log_res->result_array() as $l){
+								if( $l['suspension_type']==2){?>
+									<tr>
+										<td><?php echo $fran_status_arr[$l['suspension_type']]?></td>
+										<td><?php echo $l['reason']?></td>
+										<td><?php echo format_datetime_ts($l['suspended_on'])?></td>
+										<td><?php echo $l['name']?></td>
+									</tr>
+								<?php } ?>
+							 <?php }?>
+						</table>
 					</div>
 			
 					<div id="live_suspn">
-					<table class="datagrid">
-					<thead><th>Reason</th><th>Unsuspended On</th><th>Suspended By</th></thead>
-					<?php 
-					foreach($log_res->result_array() as $l){
-					if( $l['suspension_type']==0){?>
-					<tr>
-					<td><?php echo $l['reason']?></td>
-					<td><?php echo format_datetime_ts($l['suspended_on'])?></td>
-					<td><?php echo $l['name']?></td>
-					<?php } ?>
-					</tr>
-					<?php }?>
-					</table>
+						<table class="datagrid">
+							<thead>
+								<th>Reason</th><th>Unsuspended On</th><th>Suspended By</th>
+							</thead>
+						
+							<?php 
+							foreach($log_res->result_array() as $l){
+								if( $l['suspension_type']==0){?>
+									<tr>
+										<td><?php echo $l['reason']?></td>
+										<td><?php echo format_datetime_ts($l['suspended_on'])?></td>
+										<td><?php echo $l['name']?></td>
+									</tr>
+								<?php } ?>
+							<?php }?>
+						</table>
 					</div>
-					
+			
 					<div id="temp_suspn">
-					<table class="datagrid">
-					<thead><th>Suspended Type</th><th>Reason</th><th>Suspended On</th><th>Suspended By</th></thead>
-					<?php 
-					foreach($log_res->result_array() as $l){
-					if( $l['suspension_type']==3){?>
-					<tr>
-					<td><?php echo $fran_status_arr[$l['suspension_type']]?></td>
-					<td><?php echo $l['reason']?></td>
-					<td><?php echo format_datetime_ts($l['suspended_on'])?></td>
-					<td><?php echo $l['name']?></td>
-					<?php }?>
-					</tr>
-					<?php }?>
-					</table>
+						<table class="datagrid">
+							<thead>
+								<th>Suspended Type</th><th>Reason</th><th>Suspended On</th><th>Suspended By</th>
+							</thead>
+						
+							<?php 
+							foreach($log_res->result_array() as $l){
+								if( $l['suspension_type']==3){?>
+									<tr>
+										<td><?php echo $fran_status_arr[$l['suspension_type']]?></td>
+										<td><?php echo $l['reason']?></td>
+										<td><?php echo format_datetime_ts($l['suspended_on'])?></td>
+										<td><?php echo $l['name']?></td>
+									</tr>
+								<?php }?>
+							<?php }?>
+						</table>
 					</div>
-					<?php }else{
-						echo '<div align="center">No data found</div>';
-					}?>
-				</div>
-				
+				<?php }else{
+					echo '<div align="center">No data found</div>';
+				}?>
 			</div>
-	<!-- franchise status log END -->
-	
+		</div>
+		<!-- franchise status log END -->
+		
 		<!-- Analytics graph section start ---->
 		<div id="analytics">
 			<table width="100%">
 				<tr>
-					<td width="70%">
+					<td width="50%">
 						<div style="float:left;width:100%">
 							<span id="ttl_order_amt"></span>
 							<span id="shipped_order_amt"></span>
 							<span id="paymrent_order_amt"></span>
 						</div>
 					</td>
-					<td width="30%">
+					<td width="50%">
 						<div class="fr_menu_by_mn">
 							<form id="grid_list_frm_to" method="post">
                                     <div style="margin:2.5px 0px;font-size:12px;text-align: right">
@@ -355,12 +335,13 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 				</tr>
 			</table>
 			 
-				<div id="payment_stat">
-					<div class="payment_stat_view">
-					</div>
+			<div id="payment_stat">
+				<div class="payment_stat_view">
 				</div>
-				<div id="fr_det_popup">
-				</div>
+			</div>
+			
+			<div id="fr_det_popup">
+			</div>
 					 
 			<table width="100%">
 				<tr>
@@ -393,134 +374,146 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 				</tr>
 			</table>
 		</div>
-	<!-- Analytics graph section end ---->
+		<!-- Analytics graph section end ---->
 	
-	
-	<!-- List Franchise Returns Start -->
-	<div id="return_products">
-		
-		<div class="module_cont">
-			<h3 class="module_cont_title">Return List</h3>
-			<div class="module_cont_block">
-				
-				<div class="module_cont_block_grid_total fl_left">
-					<span class="stat total">Total : <b>10</b></span> 
-					
-				</div>
-				<div class="module_cont_block_filters fl_right">
-					<span class="filter_bydate">
-						Filter by Date : 
-						<input type="text" name="return_on_date" style="font-size: 12px;padding:3px 7px;width: 80px;" value="" placeholder="" >
-						to 
-						<input type="text" name="return_on_date_end" style="font-size: 12px;padding:3px 7px;width: 80px;" value="" placeholder="" >
-					</span>
-					<span class="filter_bykwd" style="margin-left:10px;">
-						Search : <input type="text" name="return_kwd_srch" style="font-size: 12px;padding:3px 7px;width: 200px;" value="" placeholder="" >
-						<input type="button" onclick="load_return_prods(0)" value="Search" />
-					</span>
-				</div>
-				
-				
-				<div class="module_cont_block_grid" style="clear:both">
-					<table class="datagrid" width="100%">
-						<thead>
-							<th width="20">Sno</th>
-							<th width="30">Return ID</th>
-							<th width="150">Returned On</th>
-							<th width="80">Returned By</th>
-							<th width="30">Invoice no</th>
-							<th width="30">Order no</th>
-							<th width="200">Product name</th>
-							<th width="30">Qty</th>
-							<th width="100">Returned For</th>
-							<th width="100">Current Status</th>
-							<th width="100">Last Updated On</th>
-							<th width="100">Last Updated By</th>
-							<th width="100">Remarks</th>
-						</thead>
-						<tbody></tbody>
-					</table>	
-				</div>
-				<div class="module_cont_grid_block_pagi">
-					
-				</div>	
-			</div>
+		<!-- Ship Log block Start-->
+		<div id="ship_log">
+			<!--<span class="ttl_amount_wrap">Total Shipped this month: <span class="ttl_amount_shipped"></span></span>
+			<span class="ttl_amount_wrap">Total Delivered this month: <span class="ttl_amount_delivered"></span></span>-->
+			<div class='shipment_log' style="margin:10px;clear:both"></div>
 		</div>
-		
-	</div>	
-	<!-- List Franchise Returns End -->
-	<?php  if($is_prepaid){?>
-	<!-- prepaid voucher activity Start -->
-	<div id="voucher_activity">
-				<b>Voucher Activity</b>
-				<div class="dash_bar_right" style="padding: 12px 6px;">
-					<b>Voucher Book Value:<?php echo 'Rs'.format_price($this->db->query("SELECT SUM(`value`) AS ttl_value FROM `pnh_t_voucher_details` WHERE franchise_id=? AND `status`<=1 AND is_alloted=1 ",$f['franchise_id'])->row()->ttl_value)?></b>
+		<!-- Ship Log block end-->
+	
+		<!-- List Franchise Returns Start -->
+		<div id="return_products">
+			<div class="module_cont">
+				<h3 class="module_cont_title">Return List</h3>
+				<div class="module_cont_block">
+					<div class="module_cont_block_grid_total fl_left">
+						<span class="stat total">Total : <b>10</b></span> 
+					</div>
+					
+					<div class="module_cont_block_filters fl_right">
+						<span class="filter_bydate">
+							Filter by Date : 
+							<input type="text" name="return_on_date" style="font-size: 12px;padding:3px 7px;width: 80px;" value="" placeholder="" >
+							to 
+							<input type="text" name="return_on_date_end" style="font-size: 12px;padding:3px 7px;width: 80px;" value="" placeholder="" >
+						</span>
+						<span class="filter_bykwd" style="margin-left:10px;">
+							Search : <input type="text" name="return_kwd_srch" style="font-size: 12px;padding:3px 7px;width: 200px;" value="" placeholder="" >
+							<input type="button" onclick="load_return_prods(0)" value="Search" />
+						</span>
+					</div>
+					
+					<div class="module_cont_block_grid" style="clear:both">
+						<table class="datagrid" width="100%">
+							<thead>
+								<th width="20">Sno</th>
+								<th width="30">Return ID</th>
+								<th width="150">Returned On</th>
+								<th width="80">Returned By</th>
+								<th width="30">Invoice no</th>
+								<th width="30">Order no</th>
+								<th width="200">Product name</th>
+								<th width="30">Qty</th>
+								<th width="100">Returned For</th>
+								<th width="100">Current Status</th>
+								<th width="100">Last Updated On</th>
+								<th width="100">Last Updated By</th>
+								<th width="100">Remarks</th>
+							</thead>
+							<tbody></tbody>
+						</table>	
+					</div>
+					<div class="module_cont_grid_block_pagi">
+					</div>	
 				</div>
-
-				<div class="dash_bar_right" style="padding: 12px 6px;">
-					<b>Activated Voucher Value:<?php echo 'Rs'.format_price($this->db->query("SELECT SUM(`value`) AS ttl_value FROM `pnh_t_voucher_details` WHERE franchise_id=? AND `status`>=3 AND is_alloted=1 and is_activated=1",$f['franchise_id'])->row()->ttl_value)?></b>
-				</div>
-
-				<div class="dash_bar_right" style="padding: 12px 6px;">
-					<b>Not Activated Voucher Value:<?php echo 'Rs'.format_price($this->db->query("SELECT SUM(`value`) AS ttl_value FROM `pnh_t_voucher_details` WHERE franchise_id=? AND `status`<=1 AND is_alloted=1 and is_activated=0",$f['franchise_id'])->row()->ttl_value)?></b>
-				</div>
-				<br> <br>
-
-				<div class="tab_view">
-					<ul class="fran_tabs">
-					<li><a href="#book_orders" onclick="load_voucher_activity(this,'book_orders',0,0)" id="book_orders_tab">
-								Book orders</a></li>
-					<li><a href="#inactivated_vouchers" onclick="load_voucher_activity(this,'inactivated_vouchers',0,0)">Inactive
-								Vouchers</a></li>
-								
-						<li><a href="#activated_vouchers"
+			</div>
+		</div>	
+		<!-- List Franchise Returns End -->
+	
+		<?php  if($is_prepaid){?>
+		<!-- prepaid voucher activity Start -->
+		<div id="voucher_activity">
+			<b>Voucher Activity</b>
+			<div class="dash_bar_right" style="padding: 12px 6px;">
+				<b>Voucher Book Value:<?php echo 'Rs'.format_price($this->db->query("SELECT SUM(`value`) AS ttl_value FROM `pnh_t_voucher_details` WHERE franchise_id=? AND `status`<=1 AND is_alloted=1 ",$f['franchise_id'])->row()->ttl_value)?></b>
+			</div>
+	
+			<div class="dash_bar_right" style="padding: 12px 6px;">
+				<b>Activated Voucher Value:<?php echo 'Rs'.format_price($this->db->query("SELECT SUM(`value`) AS ttl_value FROM `pnh_t_voucher_details` WHERE franchise_id=? AND `status`>=3 AND is_alloted=1 and is_activated=1",$f['franchise_id'])->row()->ttl_value)?></b>
+			</div>
+	
+			<div class="dash_bar_right" style="padding: 12px 6px;">
+				<b>Not Activated Voucher Value:<?php echo 'Rs'.format_price($this->db->query("SELECT SUM(`value`) AS ttl_value FROM `pnh_t_voucher_details` WHERE franchise_id=? AND `status`<=1 AND is_alloted=1 and is_activated=0",$f['franchise_id'])->row()->ttl_value)?></b>
+			</div>
+			<br> <br>
+	
+			<div class="tab_view">
+				<ul class="fran_tabs">
+					<li>
+						<a href="#book_orders" onclick="load_voucher_activity(this,'book_orders',0,0)" id="book_orders_tab">Book orders</a>
+					</li>
+					<li>
+						<a href="#inactivated_vouchers" onclick="load_voucher_activity(this,'inactivated_vouchers',0,0)">Inactive
+							Vouchers</a>
+					</li>
+							
+					<li>
+						<a href="#activated_vouchers"
 							onclick="load_voucher_activity(this,'activated_vouchers',0,0)">Activated
-						</a></li>
-						<li><a href="#fully_redeemed_vouchers"
-							onclick="load_voucher_activity(this,'fully_redeemed_vouchers',0,0)">Fully
-								Redeemed</a></li>
-						<li><a href="#partially_redeemed_vouchers"
+						</a>
+					</li>
+					
+					<li>
+						<a href="#fully_redeemed_vouchers"
+								onclick="load_voucher_activity(this,'fully_redeemed_vouchers',0,0)">Fully
+						Redeemed</a>
+					</li>
+					
+					<li>
+						<a href="#partially_redeemed_vouchers"
 							onclick="load_voucher_activity(this,'partially_redeemed_vouchers',0,0)">Partially
-								Redeemed</a></li>
-						
-					</ul>
-					
-					<div id="book_orders">
-						<h3>Book orders</h3>
-						<div class="tab_content"></div>
-					</div>
-					
-					<div id="inactivated_vouchers">
-						<h3>Inactive Vouchers</h3>
-						<div class="tab_content"></div>
-					</div>
-					
-					<div id="activated_vouchers">
-						<h3>Activated Voucher</h3>
-						<div class="tab_content"></div>
-					</div>
-
-					<div id="fully_redeemed_vouchers">
-						<h3>Fully Redeemed Voucher</h3>
-						<div class="tab_content"></div>
-					</div>
-
-					<div id="partially_redeemed_vouchers">
-						<h3>Partially Redeemed Voucher</h3>
-						<div class="tab_content"></div>
-					</div>
+							Redeemed</a>
+					</li>
+				</ul>
+				
+				<div id="book_orders">
+					<h3>Book orders</h3>
+					<div class="tab_content"></div>
 				</div>
-				<!-- End of tab -->
-			</div><!-- Activity div blk end -->
-<?php }?>
+				
+				<div id="inactivated_vouchers">
+					<h3>Inactive Vouchers</h3>
+					<div class="tab_content"></div>
+				</div>
+				
+				<div id="activated_vouchers">
+					<h3>Activated Voucher</h3>
+					<div class="tab_content"></div>
+				</div>
+
+				<div id="fully_redeemed_vouchers">
+					<h3>Fully Redeemed Voucher</h3>
+					<div class="tab_content"></div>
+				</div>
+
+				<div id="partially_redeemed_vouchers">
+					<h3>Partially Redeemed Voucher</h3>
+					<div class="tab_content"></div>
+				</div>
+			</div>
+			<!-- End of tab -->
+		</div>
+		<!-- Activity div blk end -->
 	<!-- prepaid voucher activity End -->
+	<?php }?>
 	
 	<!-- IMEI slno log Start-->
 	<?php if($is_membrsch_applicable){?>
-	
-			<div id="shipped_imeimobslno">
+		<div id="shipped_imeimobslno">
 			<?php 	
-			
 				$ttl_imei_status_res = $this->db->query("select franchise_id,is_imei_activated,count(distinct i.id) as ttl_orders
 					from t_imei_no i
 					join king_orders b on i.order_id = b.id
@@ -543,10 +536,6 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 				
 				$ttl_purchased = $ttl_activated_msch+$ttl_inactiv_msch;
 					
-				//$ttl_purchased=$this->db->query("SELECT COUNT(DISTINCT i.id) AS ttl FROM king_orders o JOIN king_transactions t ON t.transid=o.transid JOIN t_imei_no i ON i.order_id=o.id WHERE o.imei_scheme_id > 0 and t.franchise_id=?",$f['franchise_id'])->row()->ttl;
-				//$ttl_activated_msch=$this->db->QUERY("SELECT COUNT(DISTINCT i.id) AS active_msch FROM king_orders o JOIN king_transactions t ON t.transid=o.transid JOIN t_imei_no i ON i.order_id=o.id WHERE is_imei_activated=1 AND o.imei_scheme_id > 0 AND t.franchise_id=? ",$f['franchise_id'])->ROW()->active_msch;
-				//$ttl_inactiv_msch=$this->db->QUERY("SELECT COUNT(DISTINCT i.id) AS inactive_msch FROM king_orders o JOIN king_transactions t ON t.transid=o.transid JOIN t_imei_no i ON i.order_id=o.id WHERE is_imei_activated=0 AND o.imei_scheme_id > 0 AND t.franchise_id=?",$f['franchise_id'])->ROW()->inactive_msch;
-				
 				$ttl_imei_activated_credit=$this->db->QUERY("select sum(imei_reimbursement_value_perunit) as imei_credit  
 																from king_orders a 
 																join t_imei_no b on a.id = b.order_id 
@@ -559,735 +548,728 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 						where is_imei_activated = 0 and franchise_id = ? ",$f['franchise_id'])->ROW()->imei_credit;
 				
 			?>
-		<div class="module_cont">
-			<!--  <h3 class="module_cont_title">IMEI List</h3>-->
-			<div class="module_cont_block">
-				<div class="module_cont_block_grid_total fl_left" style="padding:5px;">
-						<span class="stat total">Total Purchased : <b><?php echo  $ttl_purchased*1 ;?></b></span> 
-						<span class="stat total">&nbsp;&nbsp;Active : <b><?php echo $ttl_activated_msch*1?></b></span> 
-						<span class="stat total">&nbsp;&nbsp;Inactive : <b><?php echo $ttl_inactiv_msch*1?></b></span> 
+			<div class="module_cont">
+				<!--  <h3 class="module_cont_title">IMEI List</h3>-->
+				<div class="module_cont_block">
+					<div class="module_cont_block_grid_total fl_left" style="padding:5px;">
+							<span class="stat total">Total Purchased : <b><?php echo  $ttl_purchased*1 ;?></b></span> 
+							<span class="stat total">&nbsp;&nbsp;Active : <b><?php echo $ttl_activated_msch*1?></b></span> 
+							<span class="stat total">&nbsp;&nbsp;Inactive : <b><?php echo $ttl_inactiv_msch*1?></b></span> 
+					</div>
+					
+					<div class="module_cont_block_grid_total fl_right" style="padding:5px;">
+						<span class="stat total " >Total Credit : <b style="background: #F3EE81;padding:3px 6px;border-radius:3px;"><?php echo 'Rs '.format_price($ttl_imei_activated_credit+$ttl_imei_pending_credit)?></b> &nbsp;&nbsp;</span>
+						<span class="stat total " >Activated : <b style="background: #95DB95;padding:3px 6px;border-radius:3px;"><?php echo 'Rs '.format_price($ttl_imei_activated_credit)?></b>&nbsp;&nbsp;</span>
+						<span class="stat total " >Pending : <b style="background: #F39381;padding:3px 6px;border-radius:3px;"><?php echo 'Rs '.format_price($ttl_imei_pending_credit)?></b>&nbsp;&nbsp;</span>
+					</div>
+					
+					<div class="module_cont_block_filters clearboth" style="background: #f5f5f5;margin:0px;height: 27px;padding:3px;">
+						
+						<span class="filter_bykwd fl_right" >
+							Search : <input type="text" name="imei_srch_kwd" style="font-size: 12px;padding:3px 7px;width: 200px;" value="" placeholder="" >
+							<input type="button" onclick = "load_shipped_imei(0)" value="Search" />
+						</span>
+						
+						<span style="margin-right:10px;padding:5px;font-size:12px;" >
+							<b>Filter IMEI By</b>&nbsp; : 
+							
+							<select name="date_type">
+								<option value="0" selected>Activated Date</option>
+								<option value="1">Ordered Date</option>
+							</select>
+							
+							<input type="text" name="active_ondate" style="font-size: 12px;padding:3px 7px;width: 80px;" value="" placeholder="" >
+							to 
+							<input type="text" name="active_ondate_end" style="font-size: 12px;padding:3px 7px;width: 80px;" value="" placeholder="" >
+							&nbsp;&nbsp;
+							
+							Activated Status :
+								<select name="imei_status" id="imei_status">
+									<option value="0">All</option>
+									<option value="1">In Active</option>
+									<option value="2">Active</option>
+								</select>
+						</span>
+					</div>
+					
+					<div class="module_cont_block_grid" style="clear:both">
+						<table class="datagrid" width="100%">
+							<thead>
+								<th>Sno</th>
+								<th>Product Name</th>
+								<th>Invoice Slno</th>
+								<th>IMEI Slno</th>
+								<th>Selling Price</th>
+								<th>Orderd On</th>
+								<th>Is Activated</th>
+								<th>Applied Credit</th>
+								<th>Credit Value(Rs)</th>
+								<th>Activated on</th>
+							</thead>
+							<tbody></tbody>
+						</table>	
+					</div>
+					<div class="module_cont_grid_block_pagi">
+					</div>	
 				</div>
-				<div class="module_cont_block_grid_total fl_right" style="padding:5px;">
-					<span class="stat total " >Total Credit : <b style="background: #F3EE81;padding:3px 6px;border-radius:3px;"><?php echo 'Rs '.format_price($ttl_imei_activated_credit+$ttl_imei_pending_credit)?></b> &nbsp;&nbsp;</span>
-					<span class="stat total " >Activated : <b style="background: #95DB95;padding:3px 6px;border-radius:3px;"><?php echo 'Rs '.format_price($ttl_imei_activated_credit)?></b>&nbsp;&nbsp;</span>
-					<span class="stat total " >Pending : <b style="background: #F39381;padding:3px 6px;border-radius:3px;"><?php echo 'Rs '.format_price($ttl_imei_pending_credit)?></b>&nbsp;&nbsp;</span>
-				</div>
-				
-				<div class="module_cont_block_filters clearboth" style="background: #f5f5f5;margin:0px;height: 27px;padding:3px;">
-					
-					<span class="filter_bykwd fl_right" >
-						Search : <input type="text" name="imei_srch_kwd" style="font-size: 12px;padding:3px 7px;width: 200px;" value="" placeholder="" >
-						<input type="button" onclick = "load_shipped_imei(0)" value="Search" />
-					</span>
-					
-					<span style="margin-right:10px;padding:5px;font-size:12px;" >
-						<b>Filter IMEI By</b>&nbsp; : 
-						<select name="date_type">
-							<option value="0" selected>Activated Date</option>
-							<option value="1">Ordered Date</option>
-						</select>
-						<input type="text" name="active_ondate" style="font-size: 12px;padding:3px 7px;width: 80px;" value="" placeholder="" >
-						to 
-						<input type="text" name="active_ondate_end" style="font-size: 12px;padding:3px 7px;width: 80px;" value="" placeholder="" >
-						&nbsp;&nbsp;
-						Activated Status :
-						<select name="imei_status" id="imei_status">
-						<option value="0">All</option>
-						<option value="1">In Active</option>
-						<option value="2">Active</option>
-						</select>
-					</span>
-					
-					
-				</div>
-				<div class="module_cont_block_grid" style="clear:both">
-					<table class="datagrid" width="100%">
-						<thead>
-							<th>Sno</th>
-							<th>Product Name</th>
-							<th>Invoice Slno</th>
-							<th>IMEI Slno</th>
-							<th>Selling Price</th>
-							<th>Orderd On</th>
-							<th>Is Activated</th>
-							<th>Applied Credit</th>
-							<th>Credit Value(Rs)</th>
-							<th>Activated on</th>
-						</thead>
-						<tbody></tbody>
-					</table>	
-				</div>
-				<div class="module_cont_grid_block_pagi">
-					
-				</div>	
 			</div>
 		</div>
-	</div>
-			<?php }?>
+	<?php }?>
 	<!-- IMEI slno log END-->
+	
+	<!-- sTART of name block -->	
 		<div id="name">
-	 
-			<table width="100%" cellpadding="0" cellspacing="0">
+	 		<table width="100%" cellpadding="0" cellspacing="0">
 				<tr>
-				
 					<td valign="top" width="35%" >
 						<div class="emp_bio">
-							
 							<div class="vm">
-							<table cellspacing="5"  id="details">
-							<tr><td class="label">FID </td><td><b><?=$f['pnh_franchise_id']?></b></td></tr>
-						<?php if($f['is_lc_store']){?><tr><td>Type </td><td><b><?=$f['is_lc_store']?"LC Store":"Franchise"?> </b></td></tr><?php }?>
-							<?php if($f['login_mobile1']){?>
-							<tr><td class="label">Mobile </td>
-							<td><?=$f['login_mobile1']?><img src="<?=IMAGES_URL?>phone.png" class="phone_small" onclick='makeacall("0<?=$f['login_mobile1']?>")'>,<?php }?>
-										<?php if($f['login_mobile2']){?>
-								<?=$f['login_mobile2']?><img src="<?=IMAGES_URL?>phone.png" class="phone_small" onclick='makeacall("0<?=$f['login_mobile2']?>")'>
-										<?php }?></td>
-							</tr>
-							<?php foreach($this->db->query("select * from pnh_m_franchise_contacts_info where franchise_id=?",$f['franchise_id'])->result_array() as $c){?>
-							<?php if($c['contact_name']){?><tr><td class="label">Contact Person </td><td><b><?=$c['contact_name']?> </b></td></tr><?php }?>
-							<?php if($c['contact_designation']){?><tr><td class="label">Designation </td><td><b><?=$c['contact_designation']?> </b></td></tr><?php }?>
-							<?php if($c['contact_telephone']){?><tr><td class="label">Telephone </td><td><b><?=$c['contact_telephone']?>,<?=$c['contact_fax']?></b></td></tr><?php }?>
-							<?php }?>
-							<?php if($f['address']){?><tr><td class="label">Address</td><td><b><?=$f['address']?></b></td></tr><?php }?>
-							<?php if($f['store_area']){?><tr><td class="label">Area</td><td><b><?=$f['store_area']?>sqft</b></td></tr><?php }?>
+								<table cellspacing="5"  id="details">
+									<tr>
+										<td class="label">FID </td><td><b><?=$f['pnh_franchise_id']?></b></td>
+									</tr>
 							
-							<?php
-								$f['town_name'] = $this->db->query("select town_name from pnh_towns a join pnh_m_franchise_info b on a.id = b.town_id where franchise_id = ? ",$f['franchise_id'])->row()->town_name; 
-							?>
-							<tr><td class="label">Town  | Territory</td><td><b><?=$f['town_name']?> | </b><b><?=$f['territory_name']?></b></td></tr>
-							<tr><td class="label">Town Courier Priorities</td><td style="background: #f9f9f9">
-                                                        <?php
-                                                        
-                                                        $courier = $this->erpm->get_fran_courier_details($f['franchise_id']);
-                                                        if($courier === false) {
-                                                            echo 'Not set.'; ?>
-                                                            <a href="<?=site_url().'admin/towns_courier_priority/'.$f['territory_id'];?>" target="_blank" style="float:right;">Update</a>
-                                                        <?php }
-                                                        else {
-							?>
-                                                        <ol style="padding:5px 20px">
-                                                            <li><span>
-                                                                <b><?=$courier["c1"]['courier_name']?> / </b>
-                                                                <b><?=$courier["c1"]['delivery_hours_1']?> Hrs</b> / 
-                                                                Deliver <b><?php echo $this->erpm->get_delivery_type_msg($courier["c1"]['delivery_type_priority1']); ?></b>
-                                                            </span></li>
-                                                            <?php if($courier["c2"]['courier_name']){?>
-                                                            <li><span>
-                                                                <b><?=$courier["c2"]['courier_name']?> / </b>
-                                                                <b><?=$courier["c2"]['delivery_hours_2']?> Hrs</b> / 
-                                                                Deliver <b><?php echo $this->erpm->get_delivery_type_msg($courier["c2"]['delivery_type_priority2']); ?></b>
-                                                            </span></li>
-                                                            <?php } ?>
-                                                            <?php if($courier["c3"]['courier_name']){?>
-                                                            <li><span>
-                                                                <b><?=$courier["c3"]['courier_name']?> / </b>
-                                                                <b><?=$courier["c3"]['delivery_hours_3']?> Hrs</b> / 
-                                                                Deliver <b><?php echo $this->erpm->get_delivery_type_msg($courier["c3"]['delivery_type_priority3']); ?></b>
-                                                            </span></li>
-                                                            <?php } ?>
-                                                        </ol>
-							<?php } ?>
-                                                        </td></tr>
-							<?php if($f['lat']){?><tr><td class="label">Latitude</td><td><b><?=$f['lat']?></b></td></tr><?php }?>
-							<?php if($f['long']){?><tr><td class="label">Longitude</td><td><b><?=$f['long']?></b></td></tr><?php }?>
-							</table>
+									<?php if($f['is_lc_store']){?><tr><td>Type </td><td><b><?=$f['is_lc_store']?"LC Store":"Franchise"?> </b></td></tr><?php }?>
+										<?php if($f['login_mobile1']){?>
+											<tr><td class="label">Mobile </td>
+												<td><?=$f['login_mobile1']?><img src="<?=IMAGES_URL?>phone.png" class="phone_small" onclick='makeacall("0<?=$f['login_mobile1']?>")'>,<?php }?>
+													<?php if($f['login_mobile2']){?>
+														<?=$f['login_mobile2']?>
+														<img src="<?=IMAGES_URL?>phone.png" class="phone_small" onclick='makeacall("0<?=$f['login_mobile2']?>")'>
+													<?php }?>
+												</td>
+											</tr>
+								
+											<?php foreach($this->db->query("select * from pnh_m_franchise_contacts_info where franchise_id=?",$f['franchise_id'])->result_array() as $c){?>
+											<?php if($c['contact_name']){?><tr><td class="label">Contact Person </td><td><b><?=$c['contact_name']?> </b></td></tr><?php }?>
+											<?php if($c['contact_designation']){?><tr><td class="label">Designation </td><td><b><?=$c['contact_designation']?> </b></td></tr><?php }?>
+											<?php if($c['contact_telephone']){?><tr><td class="label">Telephone </td><td><b><?=$c['contact_telephone']?>,<?=$c['contact_fax']?></b></td></tr><?php }?>
+											<?php }?>
+											<?php if($f['address']){?><tr><td class="label">Address</td><td><b><?=$f['address']?></b></td></tr><?php }?>
+											<?php if($f['store_area']){?><tr><td class="label">Area</td><td><b><?=$f['store_area']?>sqft</b></td></tr><?php }?>
+											<?php
+												$f['town_name'] = $this->db->query("select town_name from pnh_towns a join pnh_m_franchise_info b on a.id = b.town_id where franchise_id = ? ",$f['franchise_id'])->row()->town_name; 
+											?>
+											<tr><td class="label">Town  | Territory</td><td><b><?=$f['town_name']?> | </b><b><?=$f['territory_name']?></b></td></tr>
+											<tr><td class="label">Town Courier Priorities</td><td style="background: #f9f9f9">
+				                            <?php
+	                                            $courier = $this->erpm->get_fran_courier_details($f['franchise_id']);
+                                                if($courier === false) {
+                                                    echo 'Not set.'; ?>
+                                                    <a href="<?=site_url().'admin/towns_courier_priority/'.$f['territory_id'];?>" target="_blank" style="float:right;">Update</a>
+                                                <?php }
+                                                else {
+											?>
+                                            
+                                            <ol style="padding:5px 20px">
+                                                <li><span>
+                                                    <b><?=$courier["c1"]['courier_name']?> / </b>
+                                                    <b><?=$courier["c1"]['delivery_hours_1']?> Hrs</b> / 
+                                                    Deliver <b><?php echo $this->erpm->get_delivery_type_msg($courier["c1"]['delivery_type_priority1']); ?></b>
+                                                </span></li>
+                                                <?php if($courier["c2"]['courier_name']){?>
+                                                <li><span>
+                                                    <b><?=$courier["c2"]['courier_name']?> / </b>
+                                                    <b><?=$courier["c2"]['delivery_hours_2']?> Hrs</b> / 
+                                                    Deliver <b><?php echo $this->erpm->get_delivery_type_msg($courier["c2"]['delivery_type_priority2']); ?></b>
+                                                </span></li>
+                                                <?php } ?>
+                                                <?php if($courier["c3"]['courier_name']){?>
+                                                <li><span>
+                                                    <b><?=$courier["c3"]['courier_name']?> / </b>
+                                                    <b><?=$courier["c3"]['delivery_hours_3']?> Hrs</b> / 
+                                                    Deliver <b><?php echo $this->erpm->get_delivery_type_msg($courier["c3"]['delivery_type_priority3']); ?></b>
+                                                </span></li>
+                                                <?php } ?>
+                                            </ol>
+										<?php } ?>
+	                                    </td></tr>
+									<?php if($f['lat']){?><tr><td class="label">Latitude</td><td><b><?=$f['lat']?></b></td></tr><?php }?>
+									<?php if($f['long']){?><tr><td class="label">Longitude</td><td><b><?=$f['long']?></b></td></tr><?php }?>
+									<tr><td class="label">Registered</td><td><b><?php echo format_date(date('Y-M-d H:i:s',$f['created_on']))?></b></td></tr>
+								</table>
+							</div>
+						</div>
+						
+						<div id="activity_menu_tabs" style="font-size: 12px;" >
+							<ul>
+								<li><a href="#activity">Activity</a></li>
+								<li><a href="#alloted_menu">Alloted Menu</a></li>		
+							</ul>	
+							<div id="activity">
+								<table width="100%">
+									<tr>
+										<td width="100%">
+											<a style="white-space:nowrap" href="<?=site_url("admin/pnh_assign_exec/{$f['franchise_id']}")?>" class="button button-tiny ">Assign Executives</a> &nbsp;&nbsp; 
+											<a style="white-space:nowrap" href="<?=site_url("admin/pnh_upload_images/{$f['franchise_id']}")?>" class="button button-tiny ">Upload Images</a> &nbsp;&nbsp; 
+										 	<a  onclick="members_details(<?php echo $f['franchise_id']; ?>)" href="javascript:void(0)" class="button button-tiny ">Members</a>&nbsp;&nbsp; 
+											<a onclick="load_bankdetails()" href="javascript:void(0)" class="button button-tiny ">Bank Details</a>&nbsp;&nbsp;
+										</td>
+									</tr>
+								</table>
 							</div>
 							
-							<div>
-									<fieldset>
-										<legend><b>Allotted Member IDs</b></legend>
-										<table class="datagrid" width="100%">
-											<thead>
-												<tr>
-													<th>Start</th>
-													<th>End</th>
-													<th>Allotted on</th>
-													<th>Allotted by</th>
-												</tr>
-											</thead>
-											<tbody>
-												<?php foreach($this->db->query("select m.*,a.name as admin from pnh_m_allotted_mid m join king_admin a on a.id=m.created_by where franchise_id=?",$f['franchise_id'])->result_array() as $m){?>
-												<tr>
-													<td><?=$m['mid_start']?></td>
-													<td><?=$m['mid_end']?></td>
-													<td><?=date("d/m/y",$m['created_on'])?></td>
-													<td><?=$m['admin']?></td>
-													<?php }?>
-											
-											</tbody>
-										</table>
-									</fieldset>
-							</div>	
-							
-						</div>
+							<div id="alloted_menu">
+								<a class="edit_wrapper" style="font-size: 11px;color: blue;" href="<?php echo site_url("admin/pnh_edit_fran/{$f['franchise_id']}#v_shop")?>" style="float: right;margin-left: 12px;">Add/Edit</a>
+								<?php
+									if($fran_menu)
+									{ 
+								?>
+										<ol start="1">
+											<?php foreach($fran_menu as $fmenu){?>
+												<li><?php echo $fmenu['menu'] ?></li>
+											<?php }?>
+										</ol>
+								<?php 
+									}else
+									{
+										echo '<b>No menus linked</b>';
+									}
+								?>
+							</div>
+						</div>	
 					</td>
 					
-					<td  valign="top">
-						
+					<td valign="top">
 						<div id="fran_misc_logs" style="font-size: 12px;" >
 							<ul>
 								<li><a href="#recent_call_log">Recent Call Log</a></li>
 								<li><a href="#account_statement_summ">Recent Account statement</a></li>		
 							</ul>	
-							
-				 
-					<div id="recent_call_log">
-						<table class="datagrid smallheader noprint" width="100%">
-							<thead>
-								<tr>
-									<tH width="140">Call Made on</tH>
-									<th width="150">By</th>
-									<th>Message</th>									
-								</tr>	
-							</thead>
-							<tbody></tbody>
-						</table>
-						<div id="call_log_pagi" class="pagination" align="right"></div>
-					</div>
-						
-	 									
-				
-				<div id="account_statement_summ">
-						
-					<?php	
-						if($this->erpm->auth(true,true)){
-							$action_type_list = array(); 
-							$action_type_list[1] = 'Invoice';
-							$action_type_list[2] = 'Deposit';
-							$action_type_list[3] = 'Topup';
-							$action_type_list[4] = 'Membership';
-							$action_type_list[5] = 'Correction';
-							$action_type_list[7] = 'Credit Note';
-					?>
-						
-							<table class="datagrid noprint" width="100%">
-								<thead>
-									<tr>
-										<th>Type</th>
-										<th>Date</th>
-										<th>Credit</th>
-										<th>Debit</th>
-										<th>Remarks</th>
-									</tr>
-								</thead>
-								<tbody>
-									<?php foreach($this->db->query("select * from pnh_franchise_account_summary where franchise_id = ? order by statement_id desc limit 7 ",$f['franchise_id'])->result_array() as $t){?>
-									<tr>
-										<td><?=$action_type_list[$t['action_type']]?></td>
-										<td><?=format_datetime($t['created_on'])?></td>
-										<td><?=$t['credit_amt']?></td>
-										<td><?=$t['debit_amt']?></td>
-										<td width="200"><?=$t['remarks']?></td>
-									</tr>
-									<?php }?>
-								</tbody>
-							</table>
-							<?php } ?>
-							
-						
-							<div style="background: #eee; padding: 5px;">
-								<form id="d_ac_form"
-									action="<?=site_url("admin/pnh_download_stat/{$f['franchise_id']}")?>"
-									method="post">
-									<h4 style="margin: 0px;">Download account statement</h4>
-									From <input type="text" name="from" id="d_ac_from" value="<?php echo (date('Y-m-d',$f['created_on']))?>" size=10> To
-									<input size=10 type="text" name="to" id="d_ac_to" value="<?php echo (date('Y-m-d'))?>"> 
-									<select name="type" style="display: none">
-										<option value="new">New</option>
-									</select>
-									<b>Output</b> : 
-									<select name="op_type">
-										<option value="pdf">PDF</option>
-										<option value="xls">XLS</option>
-									</select>
-									<input type="submit" value="Go">
-								</form>
+							<div id="recent_call_log">
+								<table class="datagrid smallheader noprint" width="100%">
+									<thead>
+										<tr>
+											<tH width="140">Call Made on</tH>
+											<th width="150">By</th>
+											<th>Message</th>									
+										</tr>	
+									</thead>
+									<tbody></tbody>
+								</table>
+								<div id="call_log_pagi" class="pagination" align="right"></div>
 							</div>
-						</div>
-					</div>	
-				</td>
-			</tr>
+							
+							<div id="account_statement_summ">
+								<?php	
+									if($this->erpm->auth(true,true)){
+										$action_type_list = array(); 
+										$action_type_list[1] = 'Invoice';
+										$action_type_list[2] = 'Deposit';
+										$action_type_list[3] = 'Topup';
+										$action_type_list[4] = 'Membership';
+										$action_type_list[5] = 'Correction';
+										$action_type_list[7] = 'Credit Note';
+								?>
+									
+									<table class="datagrid noprint" width="100%">
+										<thead>
+											<tr>
+												<th>Type</th>
+												<th>Date</th>
+												<th>Credit</th>
+												<th>Debit</th>
+												<th>Remarks</th>
+											</tr>
+										</thead>
+										<tbody>
+											<?php foreach($this->db->query("select * from pnh_franchise_account_summary where franchise_id = ? order by statement_id desc limit 7 ",$f['franchise_id'])->result_array() as $t){?>
+											<tr>
+												<td><?=$action_type_list[$t['action_type']]?></td>
+												<td><?=format_datetime($t['created_on'])?></td>
+												<td><?=$t['credit_amt']?></td>
+												<td><?=$t['debit_amt']?></td>
+												<td width="200"><?=$t['remarks']?></td>
+											</tr>
+											<?php }?>
+										</tbody>
+									</table>
+								<?php } ?>
+										
+									
+								<div style="background: #eee; padding: 5px;">
+									<form id="d_ac_form"
+										action="<?=site_url("admin/pnh_download_stat/{$f['franchise_id']}")?>"
+										method="post">
+										<h4 style="margin: 0px;">Download account statement</h4>
+										From <input type="text" name="from" id="d_ac_from" value="<?php echo (date('Y-m-d',$f['created_on']))?>" size=10> To
+										<input size=10 type="text" name="to" id="d_ac_to" value="<?php echo (date('Y-m-d'))?>"> 
+										<select name="type" style="display: none">
+											<option value="new">New</option>
+										</select>
+										<b>Output</b> : 
+										<select name="op_type">
+											<option value="pdf">PDF</option>
+											<option value="xls">XLS</option>
+										</select>
+										<input type="submit" value="Go">
+									</form>
+								</div>
+							</div>
+						</div>	
+					</td>
+				</tr>
 			</table>
 			 
-			<br>
-			<fieldset >
-			<legend><b>Activity</b></legend>
-			<table width="100%">
-			<tr>
-				<td width="100%">
-					<a style="white-space:nowrap" href="<?=site_url("admin/pnh_manage_devices/{$f['franchise_id']}")?>" class="myButton_pnhfranpg">Manage devices</a> &nbsp;&nbsp;
-					<a style="white-space:nowrap" href="<?=site_url("admin/pnh_assign_exec/{$f['franchise_id']}")?>" class="myButton_pnhfranpg">Assign Executives</a> &nbsp;&nbsp; 
-					<a style="white-space:nowrap" href="<?=site_url("admin/pnh_upload_images/{$f['franchise_id']}")?>" class="myButton_pnhfranpg">Upload Images</a> &nbsp;&nbsp; 
-				 	<a  onclick="members_details(<?php echo $f['franchise_id']; ?>)" href="javascript:void(0)" class="myButton_pnhfranpg">Members</a>&nbsp;&nbsp; 
-					<a onclick="load_bankdetails()" href="javascript:void(0)" class="myButton_pnhfranpg">Bank Details</a>&nbsp;&nbsp;
-					
-				</td>
-			</tr>
-			</table>
-			</fieldset>
-			
-			<br>
-			<fieldset>
-			<legend><b>Alloted Menu</b>
-				
-				<a style="font-size: 11px;color: blue;" href="<?php echo site_url("admin/pnh_edit_fran/{$f['franchise_id']}#v_shop")?>" style="float: right;margin-left: 12px;">Add/Edit</a>
-				
-			</legend>
-			
-			<?php
-				if($fran_menu)
-				{ 
-			?>
-					<ol start="1">
-						<?php foreach($fran_menu as $fmenu){?>
-							<li><?php echo $fmenu['menu'] ?></li>
-						<?php }?>
-					</ol>
-			<?php 
-				}else
-				{
-					echo '<b>No menus linked</b>';
-				}
-				 ?>
-			</fieldset>
-			<br>
-			
 			<br>
 			<table width="100%">
 				<tr>
 					<td>
-					<div id="members" Title="Members Details">
-						<div>
-							<div class="dash_bar">
-								Total Members : <span><?=$this->db->query("select count(1) as l from pnh_member_info where franchise_id=?",$f['franchise_id'])->row()->l?>
-								</span>
-							</div>
-							<div class="dash_bar">
-								Last month registered : <span><?=$this->db->query("select count(1) as l from pnh_member_info where franchise_id=? and created_on between ".mktime(0,0,0,-1,1)." and ".mktime(23,59,59,-1,31),$f['franchise_id'])->row()->l?>
-								</span>
-							</div>
-							<div class="dash_bar">
-								This month registered : <span><?=$this->db->query("select count(1) as l from pnh_member_info where franchise_id=? and created_on >".mktime(0,0,0,date("m"),1),$f['franchise_id'])->row()->l?>
-								</span>
+						<div id="members" Title="Members Details">
+							<div>
+								<div class="dash_bar">
+									Total Members : <span><?=$this->db->query("select count(1) as l from pnh_member_info where franchise_id=?",$f['franchise_id'])->row()->l?>
+									</span>
+								</div>
+								<div class="dash_bar">
+									Last month registered : <span><?=$this->db->query("select count(1) as l from pnh_member_info where franchise_id=? and created_on between ".mktime(0,0,0,-1,1)." and ".mktime(23,59,59,-1,31),$f['franchise_id'])->row()->l?>
+									</span>
+								</div>
+								<div class="dash_bar">
+									This month registered : <span><?=$this->db->query("select count(1) as l from pnh_member_info where franchise_id=? and created_on >".mktime(0,0,0,date("m"),1),$f['franchise_id'])->row()->l?>
+									</span>
+								</div>
 							</div>
 						</div>
-
-					</div>
 					</td>
 				</tr>
+				
 				<tr>
-				<td>
-				<br>
-				<fieldset >
-				<legend><b>Scheme Discount</b></legend>
-					<div>
-						<a onclick="give_sch_discnt_frm()" href="javascript:void(0)" class="myButton_pnhfranpg">Give Scheme Discount</a>&nbsp;&nbsp;&nbsp;
-						<a onclick = "give_supersch()" href="javascript:void(0)" class="myButton_pnhfranpg">Give Super Scheme</a>&nbsp;&nbsp;&nbsp;
-						<?php if($is_membrsch_applicable ){?>
-										<a onclick="give_membrsch()" href="javascript:void(0)"
-											class="myButton_pnhfranpg">Give IMEI/Serialno Scheme</a>&nbsp;&nbsp;&nbsp;
-										<?php }?>
-						<a onclick="load_scheme_disc_history()" href="javascript:void(0)" class="myButton_pnhfranpg" style="float:right">Scheme Discount History</a>&nbsp;&nbsp;&nbsp;
-						<h4 style="margin-bottom: 0px;">Active scheme discounts for brands &amp; categories</h4>
-						
-						
-							<div class="tab_view tab_view_inner">
-								<ol>
-									<li><a href="#sch_disc">Scheme Discount</a></li>
-									<li><a href="#super_sch">Super Scheme</a></li>
-									<?php if($is_membrsch_applicable){?>								
-									<li><a href="#membr_sch">IMEI/Serialno Scheme</a></li>
-										<?php }?>
-								</ol>
-								<div id="sch_disc">
-									<div class="tab_view">
-										<ol>
-											<li><a href="#sch_disc_active">Active</a></li>
-											<li><a href="#super_sch_active">Expired</a></li>
-										</ol>
-										<div id="sch_disc_active" class="tab_view_inner">
-											<table class="datagrid" width="100%">
-											<thead>
-												<tr>
-													<th>Menu</th>
-													<th>Brand</th>
-													<th>Category</th>
-													<th>Deals</th>
-													<th>Discount</th>
-													<th>Valid from</th>
-													<TH>Valid upto</TH>
-													<th>Added on</th>
-													<th>Added by</th>
-													<th></th>
-												</tr>
-											</thead>
-											<tbody>
-												<?php foreach($this->db->query("select s.*,a.name as admin,b.name as brand,c.name as category,s.menuid,i.name AS menu,d.name AS deal from pnh_sch_discount_brands s left outer join king_brands b on b.id=s.brandid left outer join king_categories c on c.id=s.catid join king_admin a on a.id=s.created_by JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id JOIN pnh_menu i ON i.id=s.menuid LEFT JOIN king_dealitems d ON d.id=s.dealid where s.franchise_id=? and ? between s.valid_from and s.valid_to and sch_type=1 GROUP BY s.id order by id desc ",array($fran['franchise_id'],time()))->result_array() as $s){
-													
-													if(!$s['is_sch_enabled'])
-															continue;
-												?>
-												<?php// foreach($this->db->query("select h.*,a.name as admin,m.name AS menu  from pnh_sch_discount_track h left outer join king_admin a on a.id=h.created_by LEFT JOIN pnh_menu m ON m.id=h.sch_menu where franchise_id=? and ? between valid_from and valid_to and sch_type=1 order by h.id desc",array($fran['franchise_id'],time()))->result_array()  as $s){?>
-												<tr>
-													<td><?=$s['menu']?></td>
-													<td><?=empty($s['brand'])?"All brands":$s['brand']?></td>
-													<td><?=empty($s['category'])?"All categories":$s['category']?>
-													</td>
-													<td><?=empty($s['deal'])?"All deals":$s['deal']?></td>
-													<td><?=$s['discount']?>%</td>
-													<td><?=date("d/m/Y",$s['valid_from'])?></td>
-													<td><?=date("d/m/Y",$s['valid_to'])?></td>
-													<td><?=date("d/m/Y",$s['created_on'])?></td>
-													<td><?=$s['admin']?></td>
-													<td><?php if($s['is_sch_enabled']==1){?><a href="<?=site_url("admin/pnh_expire_scheme_discount/{$s['id']}")?>" class="danger_link">expire</a><?php }else{?><?php echo "<b>Expired</b>" ;}?></td>
-												</tr>
-												<?php }?>
-											</tbody>
-											</table>
-										</div>
-										<div id="super_sch_active" class="tab_view_inner">
-											<table class="datagrid" width="100%">
-											<thead>
-												<tr>
-													<th>Menu</th>
-													<th>Brand</th>
-													<th>Category</th>
-													<th>Discount</th>
-													<th>Valid from</th>
-													<TH>Valid upto</TH>
-													<th>Added on</th>
-													<th>Added by</th>
-													<th></th>
-												</tr>
-											</thead>
-											<tbody>
-												<?php foreach($this->db->query("select s.*,a.name as admin,b.name as brand,c.name as category,s.menuid,i.name AS menu from pnh_sch_discount_brands s left outer join king_brands b on b.id=s.brandid left outer join king_categories c on c.id=s.catid join king_admin a on a.id=s.created_by JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id JOIN pnh_menu i ON i.id=s.menuid where s.franchise_id=? and ? between s.valid_from and s.valid_to  GROUP BY s.id order by id desc ",array($fran['franchise_id'],time()))->result_array() as $s){
-														if($s['is_sch_enabled'])
-															continue;
-												?>
-												<?php// foreach($this->db->query("select h.*,a.name as admin,m.name AS menu  from pnh_sch_discount_track h left outer join king_admin a on a.id=h.created_by LEFT JOIN pnh_menu m ON m.id=h.sch_menu where franchise_id=? and ? between valid_from and valid_to and sch_type=1 order by h.id desc",array($fran['franchise_id'],time()))->result_array()  as $s){?>
-												<tr>
-													<td><?=$s['menu']?></td>
-													<td><?=empty($s['brand'])?"All brands":$s['brand']?></td>
-													<td><?=empty($s['category'])?"All categories":$s['category']?>
-													</td>
-													<td><?=$s['discount']?>%</td>
-													<td><?=date("d/m/Y",$s['valid_from'])?></td>
-													<td><?=date("d/m/Y",$s['valid_to'])?></td>
-													<td><?=date("d/m/Y",$s['created_on'])?></td>
-													<td><?=$s['admin']?></td>
-													<td><?php if($s['is_sch_enabled']==1){?><a href="<?=site_url("admin/pnh_expire_scheme_discount/{$s['id']}")?>" class="danger_link">expire</a><?php }else{?><?php echo "<b>Expired</b>" ;}?></td>
-												</tr>
-												<?php }?>
-											</tbody>
-											</table>
-										</div>
-									</div>
-								</div>
-								<div id="super_sch">
-									<div class="tab_view">
-										<ol>
-											<li><a href="#super_sch_active">Active</a></li>
-											<li><a href="#super_sch_expired">Expired</a></li>
-										</ol>
-										<div id="super_sch_active" class="tab_view_inner">
-											<?php $t=$this->db->query("SELECT s.*,a.name AS admin,b.name AS brand,c.name AS category,s.menu_id,i.name AS menuname FROM pnh_super_scheme s  LEFT OUTER JOIN king_brands b ON b.id=s.brand_id LEFT OUTER JOIN king_categories c ON c.id=s.cat_id JOIN king_admin a ON a.id=s.created_by  JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id  JOIN pnh_menu i ON i.id=s.menu_id WHERE s.franchise_id=? AND ? between s.valid_from and s.valid_to AND is_active=1 GROUP BY s.id ORDER BY id DESC ",array($fran['franchise_id'],time()));
-											
-											if($t->num_rows()){
-											$super_sch=	$t->result_array();
-											?>
-											<table class="datagrid">
-												<thead><tr><th>Menu</th><th>Brand</th><th>Category</th><th>Target Sales</th><th>Credit</th><th>Valid From</th><th>Valid To</th><th>Added On</th><th>Added By</th><th></th></tr></thead>
+					<td>
+					<br>
+					<fieldset >
+					<legend><b>Scheme Discount</b></legend>
+						<div>
+							<a onclick="give_sch_discnt_frm()" href="javascript:void(0)" class="myButton_pnhfranpg">Give Scheme Discount</a>&nbsp;&nbsp;&nbsp;
+							<a onclick = "give_supersch()" href="javascript:void(0)" class="myButton_pnhfranpg">Give Super Scheme</a>&nbsp;&nbsp;&nbsp;
+							<?php if($is_membrsch_applicable ){?>
+											<a onclick="give_membrsch()" href="javascript:void(0)"
+												class="myButton_pnhfranpg">Give IMEI/Serialno Scheme</a>&nbsp;&nbsp;&nbsp;
+											<?php }?>
+							<a onclick="load_scheme_disc_history()" href="javascript:void(0)" class="myButton_pnhfranpg" style="float:right">Scheme Discount History</a>&nbsp;&nbsp;&nbsp;
+							<h4 style="margin-bottom: 0px;">Active scheme discounts for brands &amp; categories</h4>
+							
+							
+								<div class="tab_view tab_view_inner">
+									<ol>
+										<li><a href="#sch_disc">Scheme Discount</a></li>
+										<li><a href="#super_sch">Super Scheme</a></li>
+										<?php if($is_membrsch_applicable){?>								
+										<li><a href="#membr_sch">IMEI/Serialno Scheme</a></li>
+											<?php }?>
+									</ol>
+									<div id="sch_disc">
+										<div class="tab_view">
+											<ol>
+												<li><a href="#sch_disc_active">Active</a></li>
+												<li><a href="#super_sch_active">Expired</a></li>
+											</ol>
+											<div id="sch_disc_active" class="tab_view_inner">
+												<table class="datagrid" width="100%">
+												<thead>
+													<tr>
+														<th>Menu</th>
+														<th>Brand</th>
+														<th>Category</th>
+														<th>Deals</th>
+														<th>Discount</th>
+														<th>Valid from</th>
+														<TH>Valid upto</TH>
+														<th>Added on</th>
+														<th>Added by</th>
+														<th></th>
+													</tr>
+												</thead>
 												<tbody>
-													<?php foreach($super_sch as $super_sh){
-															if(!$super_sh['is_active'])
+													<?php foreach($this->db->query("select s.*,a.name as admin,b.name as brand,c.name as category,s.menuid,i.name AS menu,d.name AS deal from pnh_sch_discount_brands s left outer join king_brands b on b.id=s.brandid left outer join king_categories c on c.id=s.catid join king_admin a on a.id=s.created_by JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id JOIN pnh_menu i ON i.id=s.menuid LEFT JOIN king_dealitems d ON d.id=s.dealid where s.franchise_id=? and ? between s.valid_from and s.valid_to and sch_type=1 GROUP BY s.id order by id desc ",array($fran['franchise_id'],time()))->result_array() as $s){
+														
+														if(!$s['is_sch_enabled'])
 																continue;
 													?>
+													<?php// foreach($this->db->query("select h.*,a.name as admin,m.name AS menu  from pnh_sch_discount_track h left outer join king_admin a on a.id=h.created_by LEFT JOIN pnh_menu m ON m.id=h.sch_menu where franchise_id=? and ? between valid_from and valid_to and sch_type=1 order by h.id desc",array($fran['franchise_id'],time()))->result_array()  as $s){?>
 													<tr>
-													<td><?php echo $super_sh['menuname']?></td>
-													<td><?=empty($super_sh['brand'])?"All brands":$super_sh['brand']?></td>
-													<td><?=empty($super_sh['category'])?"All categories":$super_sh['category']?></td>
-													<td><?php echo $super_sh['target_value'];?></td>
-													<td><?php echo $super_sh['credit_prc'];?>%</td>
-													<td><?=date("d/m/Y",$super_sh['valid_from'])?></td>
-													<td><?=date("d/m/Y",$super_sh['valid_to'])?></td>
-													<td><?=date("d/m/Y",$super_sh['created_on'])?></td>
-													<td><?=$super_sh['admin']?></td>
-													<td><?php if($super_sh['is_active']==1){?><a href="<?=site_url("admin/pnh_expire_superscheme/{$super_sh['id']}")?>" class="danger_link">expire</a><?php }else{?><?php echo "<b>Expired</b>"; }?></td>
+														<td><?=$s['menu']?></td>
+														<td><?=empty($s['brand'])?"All brands":$s['brand']?></td>
+														<td><?=empty($s['category'])?"All categories":$s['category']?>
+														</td>
+														<td><?=empty($s['deal'])?"All deals":$s['deal']?></td>
+														<td><?=$s['discount']?>%</td>
+														<td><?=date("d/m/Y",$s['valid_from'])?></td>
+														<td><?=date("d/m/Y",$s['valid_to'])?></td>
+														<td><?=date("d/m/Y",$s['created_on'])?></td>
+														<td><?=$s['admin']?></td>
+														<td><?php if($s['is_sch_enabled']==1){?><a href="<?=site_url("admin/pnh_expire_scheme_discount/{$s['id']}")?>" class="danger_link">expire</a><?php }else{?><?php echo "<b>Expired</b>" ;}?></td>
 													</tr>
-												<?php }?>
+													<?php }?>
 												</tbody>
-											</table>
-											<?php }?>
-										</div>
-										<div id="super_sch_expired" class="tab_view_inner">
-											<?php $t=$this->db->query("SELECT s.*,a.name AS admin,b.name AS brand,c.name AS category,s.menu_id,i.name AS menuname FROM pnh_super_scheme s  LEFT OUTER JOIN king_brands b ON b.id=s.brand_id LEFT OUTER JOIN king_categories c ON c.id=s.cat_id JOIN king_admin a ON a.id=s.modified_by  JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id  JOIN pnh_menu i ON i.id=s.menu_id WHERE s.franchise_id=?  AND is_active=0 GROUP BY s.id ORDER BY id DESC limit 10",$fran['franchise_id']);
-											if($t->num_rows()){
-											$super_sch=	$t->result_array();
-											?>
-											<table class="datagrid">
-												<thead><tr><th>Menu</th><th>Brand</th><th>Category</th><th>Target Sales</th><th>Credit</th><th>Valid From</th><th>Valid To</th><th>Modified On</th><th>Modified By</th><th>Status</th></tr></thead>
+												</table>
+											</div>
+											<div id="super_sch_active" class="tab_view_inner">
+												<table class="datagrid" width="100%">
+												<thead>
+													<tr>
+														<th>Menu</th>
+														<th>Brand</th>
+														<th>Category</th>
+														<th>Discount</th>
+														<th>Valid from</th>
+														<TH>Valid upto</TH>
+														<th>Added on</th>
+														<th>Added by</th>
+														<th></th>
+													</tr>
+												</thead>
 												<tbody>
-													<?php foreach($super_sch as $super_sh){
-														if($super_sh['is_active'])
-															continue;
+													<?php foreach($this->db->query("select s.*,a.name as admin,b.name as brand,c.name as category,s.menuid,i.name AS menu from pnh_sch_discount_brands s left outer join king_brands b on b.id=s.brandid left outer join king_categories c on c.id=s.catid join king_admin a on a.id=s.created_by JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id JOIN pnh_menu i ON i.id=s.menuid where s.franchise_id=? and ? between s.valid_from and s.valid_to  GROUP BY s.id order by id desc ",array($fran['franchise_id'],time()))->result_array() as $s){
+															if($s['is_sch_enabled'])
+																continue;
 													?>
+													<?php// foreach($this->db->query("select h.*,a.name as admin,m.name AS menu  from pnh_sch_discount_track h left outer join king_admin a on a.id=h.created_by LEFT JOIN pnh_menu m ON m.id=h.sch_menu where franchise_id=? and ? between valid_from and valid_to and sch_type=1 order by h.id desc",array($fran['franchise_id'],time()))->result_array()  as $s){?>
 													<tr>
-													<td><?php echo $super_sh['menuname']?></td>
-													<td><?=empty($super_sh['brand'])?"All brands":$super_sh['brand']?></td>
-													<td><?=empty($super_sh['category'])?"All categories":$super_sh['category']?></td>
-													<td><?php echo $super_sh['target_value'];?></td>
-													<td><?php echo $super_sh['credit_prc'];?>%</td>
-													<td><?=date("d/m/Y",$super_sh['valid_from'])?></td>
-													<td><?=date("d/m/Y",$super_sh['valid_to'])?></td>
-													<td><?=date("d/m/Y",$super_sh['created_on'])?></td>
-													<td><?=$super_sh['admin']?></td>
-													<td><?php if($super_sh['is_active']==1){?><a href="<?=site_url("admin/pnh_expire_superscheme/{$super_sh['id']}")?>" class="danger_link">expire</a><?php }else{?><?php echo "<b>Expired</b>"; }?></td>
+														<td><?=$s['menu']?></td>
+														<td><?=empty($s['brand'])?"All brands":$s['brand']?></td>
+														<td><?=empty($s['category'])?"All categories":$s['category']?>
+														</td>
+														<td><?=$s['discount']?>%</td>
+														<td><?=date("d/m/Y",$s['valid_from'])?></td>
+														<td><?=date("d/m/Y",$s['valid_to'])?></td>
+														<td><?=date("d/m/Y",$s['created_on'])?></td>
+														<td><?=$s['admin']?></td>
+														<td><?php if($s['is_sch_enabled']==1){?><a href="<?=site_url("admin/pnh_expire_scheme_discount/{$s['id']}")?>" class="danger_link">expire</a><?php }else{?><?php echo "<b>Expired</b>" ;}?></td>
 													</tr>
-												<?php }?>
+													<?php }?>
 												</tbody>
-											</table>
-											<?php }?>
-								
+												</table>
+											</div>
 										</div>
-									</div>	
-								</div>
-								<?php if($is_membrsch_applicable){?>
-								<div id="membr_sch">
-												<div class="tab_view">
-													<ol>
-														<li><a href="#membr_sch_active">Active</a></li>
-														<li><a href="#membr_sch_expired">Expired</a></li>
-													</ol>
-													<div id="membr_sch_active" class="tab_view_inner">
-														<?php $m=$this->db->query("SELECT a.*,m.name AS menu,c.name AS cat_name,b.name AS brand_name,ad.name AS admin,a.id as sch_id,a.is_active as sch_active FROM imei_m_scheme a JOIN pnh_menu m ON m.id=a.menuid LEFT JOIN king_categories c ON c.id=a.categoryid LEFT JOIN king_brands b ON b.id=a.brandid JOIN king_admin ad ON ad.id=a.created_by WHERE a.is_active=1 and franchise_id=?",$fran['franchise_id']);?>
-														<?php if($m->num_rows()){ 
-																$membr_sch=	$m->result_array();
+									</div>
+									<div id="super_sch">
+										<div class="tab_view">
+											<ol>
+												<li><a href="#super_sch_active">Active</a></li>
+												<li><a href="#super_sch_expired">Expired</a></li>
+											</ol>
+											<div id="super_sch_active" class="tab_view_inner">
+												<?php $t=$this->db->query("SELECT s.*,a.name AS admin,b.name AS brand,c.name AS category,s.menu_id,i.name AS menuname FROM pnh_super_scheme s  LEFT OUTER JOIN king_brands b ON b.id=s.brand_id LEFT OUTER JOIN king_categories c ON c.id=s.cat_id JOIN king_admin a ON a.id=s.created_by  JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id  JOIN pnh_menu i ON i.id=s.menu_id WHERE s.franchise_id=? AND ? between s.valid_from and s.valid_to AND is_active=1 GROUP BY s.id ORDER BY id DESC ",array($fran['franchise_id'],time()));
+												
+												if($t->num_rows()){
+												$super_sch=	$t->result_array();
+												?>
+												<table class="datagrid">
+													<thead><tr><th>Menu</th><th>Brand</th><th>Category</th><th>Target Sales</th><th>Credit</th><th>Valid From</th><th>Valid To</th><th>Added On</th><th>Added By</th><th></th></tr></thead>
+													<tbody>
+														<?php foreach($super_sch as $super_sh){
+																if(!$super_sh['is_active'])
+																	continue;
 														?>
-														<table class="datagrid">
-															<thead>
-																<tr>
-																	<th>Menu</th>
-																	<th>Brand</th>
-																	<th>Category</th>
-																	<th>Scheme Type</th>
-																	<th>Credit Value</th>
-																	<th>Valid from</th>
-																	<TH>Valid upto</TH>
-																	<th>Applicable from</th>
-																	<th>Added on</th>
-																	<th>Added by</th>
-																	<th></th>
-																</tr>
-															</thead>
-															<tbody>
-																<tr>
-																	<?php 
-																		$mbr_schtypes=array("Fixed Fee","Percentage");
-																		foreach($membr_sch as $membr_sh){
-																	?>
-																	<td><?php echo $membr_sh['menu']?></td>
-																	<td><?php echo $membr_sh['brand_name']?$membr_sh['brand_name']:"All brands"?></td>
-																	<td><?php echo($membr_sh['cat_name'])?$membr_sh['cat_name']:"All categories"?>
-																	</td>
-																	<td><?php  echo $mbr_schtypes[$membr_sh['scheme_type']]?>
-																	</td>
-																	<td><?php echo $membr_sh['credit_value']?></td>
-																	<td><?php echo date("d/m/Y",$membr_sh['scheme_from'])?></td>
-																	<td><?php echo date("d/m/Y",$membr_sh['scheme_to'])?>
-																	</td>
-
-																	<td><?php echo date("d/m/Y",$membr_sh['sch_apply_from'])?>
-																	</td>
-																	<td><?php echo date("d/m/Y",$membr_sh['created_on'])?>
-																	</td>
-																	<td><?php echo $membr_sh['admin']?></td>
-																	<td><?php if($membr_sh['is_active']==1){?><a
-																		href="<?=site_url("admin/pnh_expire_membrscheme/{$membr_sh['sch_id']}")?>"
-																		class="danger_link">expire</a> <?php }else{?> <?php echo "<b>Expired</b>"; }?>
-																	</td>
-
-																</tr>
-																<?php }?>
-															</tbody>
-														</table>
-														<?php }?>
-													</div>
-
-													<div id="membr_sch_expired" class="tab_view_inner">
-														<?php $m=$this->db->query("SELECT a.*,m.name AS menu,c.name AS cat_name,b.name AS brand_name,ad.name AS admin,a.is_active as sch_active FROM imei_m_scheme a JOIN pnh_menu m ON m.id=a.menuid LEFT JOIN king_categories c ON c.id=a.categoryid LEFT JOIN king_brands b ON b.id=a.brandid JOIN king_admin ad ON ad.id=a.modified_by WHERE a.is_active=0 and franchise_id=?",$fran['franchise_id']);?>
-														<?php if($m->num_rows()){
-																$membr_sch=	$m->result_array();
+														<tr>
+														<td><?php echo $super_sh['menuname']?></td>
+														<td><?=empty($super_sh['brand'])?"All brands":$super_sh['brand']?></td>
+														<td><?=empty($super_sh['category'])?"All categories":$super_sh['category']?></td>
+														<td><?php echo $super_sh['target_value'];?></td>
+														<td><?php echo $super_sh['credit_prc'];?>%</td>
+														<td><?=date("d/m/Y",$super_sh['valid_from'])?></td>
+														<td><?=date("d/m/Y",$super_sh['valid_to'])?></td>
+														<td><?=date("d/m/Y",$super_sh['created_on'])?></td>
+														<td><?=$super_sh['admin']?></td>
+														<td><?php if($super_sh['is_active']==1){?><a href="<?=site_url("admin/pnh_expire_superscheme/{$super_sh['id']}")?>" class="danger_link">expire</a><?php }else{?><?php echo "<b>Expired</b>"; }?></td>
+														</tr>
+													<?php }?>
+													</tbody>
+												</table>
+												<?php }?>
+											</div>
+											<div id="super_sch_expired" class="tab_view_inner">
+												<?php $t=$this->db->query("SELECT s.*,a.name AS admin,b.name AS brand,c.name AS category,s.menu_id,i.name AS menuname FROM pnh_super_scheme s  LEFT OUTER JOIN king_brands b ON b.id=s.brand_id LEFT OUTER JOIN king_categories c ON c.id=s.cat_id JOIN king_admin a ON a.id=s.modified_by  JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id  JOIN pnh_menu i ON i.id=s.menu_id WHERE s.franchise_id=?  AND is_active=0 GROUP BY s.id ORDER BY id DESC limit 10",$fran['franchise_id']);
+												if($t->num_rows()){
+												$super_sch=	$t->result_array();
+												?>
+												<table class="datagrid">
+													<thead><tr><th>Menu</th><th>Brand</th><th>Category</th><th>Target Sales</th><th>Credit</th><th>Valid From</th><th>Valid To</th><th>Modified On</th><th>Modified By</th><th>Status</th></tr></thead>
+													<tbody>
+														<?php foreach($super_sch as $super_sh){
+															if($super_sh['is_active'])
+																continue;
 														?>
-														<table class="datagrid">
-															<thead>
-																<tr>
-																	<th>Menu</th>
-																	<th>Brand</th>
-																	<th>Category</th>
-																	<th>Scheme Type</th>
-																	<th>Credit Value</th>
-																	<th>Valid from</th>
-																	<TH>Valid upto</TH>
-																	<th>Applicable from</th>
-																	<th>Modified on</th>
-																	<th>Modified by</th>
-																	<th></th>
-																</tr>
-															</thead>
-															<tbody>
-																<tr>
-																	<?php foreach($membr_sch as $membr_sh){
-																		if($membr_sh['sch_active'])
-																			continue;
-													?>
-																	<td><?php echo $membr_sh['menu']?></td>
-																	<td><?php echo $membr_sh['brand_name']?$membr_sh['brand_name']:"All brands"?></td>
-																	<td><?php echo($membr_sh['cat_name'])?$membr_sh['cat_name']:"All categories"?>
-																	
-																	<td><?php $mbr_schtypes=array("Fixed Fee","Percentage"); echo $mbr_schtypes[$membr_sh['scheme_type']]?>
-																	</td>
-																	<td><?php echo $membr_sh['credit_value']?></td>
-																	<td><?php echo date("d/m/Y",$membr_sh['scheme_from'])?>
-																	</td>
-																	<td><?php echo date("d/m/Y",$membr_sh['scheme_to'])?></td>
-																	<td><?php echo date("d/m/Y",$membr_sh['sch_apply_from'])?>
-																	</td>
-																	<td><?php echo date("d/m/Y",$membr_sh['modified_on'])?>
-																	</td>
-																	<td><?php echo $membr_sh['admin']?></td>
-																	<td><?php if($membr_sh['sch_active']==1){?><a
-																		href="<?=site_url("admin/pnh_expire_membrscheme/{$membr_sh['id']}")?>"
-																		class="danger_link">expire</a> <?php }else{?> <?php echo "<b>Expired</b>"; }?>
-																	</td>
-
-																</tr>
-																<?php }?>
-															</tbody>
-														</table>
-														<?php }?>
+														<tr>
+														<td><?php echo $super_sh['menuname']?></td>
+														<td><?=empty($super_sh['brand'])?"All brands":$super_sh['brand']?></td>
+														<td><?=empty($super_sh['category'])?"All categories":$super_sh['category']?></td>
+														<td><?php echo $super_sh['target_value'];?></td>
+														<td><?php echo $super_sh['credit_prc'];?>%</td>
+														<td><?=date("d/m/Y",$super_sh['valid_from'])?></td>
+														<td><?=date("d/m/Y",$super_sh['valid_to'])?></td>
+														<td><?=date("d/m/Y",$super_sh['created_on'])?></td>
+														<td><?=$super_sh['admin']?></td>
+														<td><?php if($super_sh['is_active']==1){?><a href="<?=site_url("admin/pnh_expire_superscheme/{$super_sh['id']}")?>" class="danger_link">expire</a><?php }else{?><?php echo "<b>Expired</b>"; }?></td>
+														</tr>
+													<?php }?>
+													</tbody>
+												</table>
+												<?php }?>
+									
+											</div>
+										</div>	
+									</div>
+									<?php if($is_membrsch_applicable){?>
+									<div id="membr_sch">
+													<div class="tab_view">
+														<ol>
+															<li><a href="#membr_sch_active">Active</a></li>
+															<li><a href="#membr_sch_expired">Expired</a></li>
+														</ol>
+														<div id="membr_sch_active" class="tab_view_inner">
+															<?php $m=$this->db->query("SELECT a.*,m.name AS menu,c.name AS cat_name,b.name AS brand_name,ad.name AS admin,a.id as sch_id,a.is_active as sch_active FROM imei_m_scheme a JOIN pnh_menu m ON m.id=a.menuid LEFT JOIN king_categories c ON c.id=a.categoryid LEFT JOIN king_brands b ON b.id=a.brandid JOIN king_admin ad ON ad.id=a.created_by WHERE a.is_active=1 and franchise_id=?",$fran['franchise_id']);?>
+															<?php if($m->num_rows()){ 
+																	$membr_sch=	$m->result_array();
+															?>
+															<table class="datagrid">
+																<thead>
+																	<tr>
+																		<th>Menu</th>
+																		<th>Brand</th>
+																		<th>Category</th>
+																		<th>Scheme Type</th>
+																		<th>Credit Value</th>
+																		<th>Valid from</th>
+																		<TH>Valid upto</TH>
+																		<th>Applicable from</th>
+																		<th>Added on</th>
+																		<th>Added by</th>
+																		<th></th>
+																	</tr>
+																</thead>
+																<tbody>
+																	<tr>
+																		<?php 
+																			$mbr_schtypes=array("Fixed Fee","Percentage");
+																			foreach($membr_sch as $membr_sh){
+																		?>
+																		<td><?php echo $membr_sh['menu']?></td>
+																		<td><?php echo $membr_sh['brand_name']?$membr_sh['brand_name']:"All brands"?></td>
+																		<td><?php echo($membr_sh['cat_name'])?$membr_sh['cat_name']:"All categories"?>
+																		</td>
+																		<td><?php  echo $mbr_schtypes[$membr_sh['scheme_type']]?>
+																		</td>
+																		<td><?php echo $membr_sh['credit_value']?></td>
+																		<td><?php echo date("d/m/Y",$membr_sh['scheme_from'])?></td>
+																		<td><?php echo date("d/m/Y",$membr_sh['scheme_to'])?>
+																		</td>
+	
+																		<td><?php echo date("d/m/Y",$membr_sh['sch_apply_from'])?>
+																		</td>
+																		<td><?php echo date("d/m/Y",$membr_sh['created_on'])?>
+																		</td>
+																		<td><?php echo $membr_sh['admin']?></td>
+																		<td><?php if($membr_sh['is_active']==1){?><a
+																			href="<?=site_url("admin/pnh_expire_membrscheme/{$membr_sh['sch_id']}")?>"
+																			class="danger_link">expire</a> <?php }else{?> <?php echo "<b>Expired</b>"; }?>
+																		</td>
+	
+																	</tr>
+																	<?php }?>
+																</tbody>
+															</table>
+															<?php }?>
+														</div>
+	
+														<div id="membr_sch_expired" class="tab_view_inner">
+															<?php $m=$this->db->query("SELECT a.*,m.name AS menu,c.name AS cat_name,b.name AS brand_name,ad.name AS admin,a.is_active as sch_active FROM imei_m_scheme a JOIN pnh_menu m ON m.id=a.menuid LEFT JOIN king_categories c ON c.id=a.categoryid LEFT JOIN king_brands b ON b.id=a.brandid JOIN king_admin ad ON ad.id=a.modified_by WHERE a.is_active=0 and franchise_id=?",$fran['franchise_id']);?>
+															<?php if($m->num_rows()){
+																	$membr_sch=	$m->result_array();
+															?>
+															<table class="datagrid">
+																<thead>
+																	<tr>
+																		<th>Menu</th>
+																		<th>Brand</th>
+																		<th>Category</th>
+																		<th>Scheme Type</th>
+																		<th>Credit Value</th>
+																		<th>Valid from</th>
+																		<TH>Valid upto</TH>
+																		<th>Applicable from</th>
+																		<th>Modified on</th>
+																		<th>Modified by</th>
+																		<th></th>
+																	</tr>
+																</thead>
+																<tbody>
+																	<tr>
+																		<?php foreach($membr_sch as $membr_sh){
+																			if($membr_sh['sch_active'])
+																				continue;
+														?>
+																		<td><?php echo $membr_sh['menu']?></td>
+																		<td><?php echo $membr_sh['brand_name']?$membr_sh['brand_name']:"All brands"?></td>
+																		<td><?php echo($membr_sh['cat_name'])?$membr_sh['cat_name']:"All categories"?>
+																		
+																		<td><?php $mbr_schtypes=array("Fixed Fee","Percentage"); echo $mbr_schtypes[$membr_sh['scheme_type']]?>
+																		</td>
+																		<td><?php echo $membr_sh['credit_value']?></td>
+																		<td><?php echo date("d/m/Y",$membr_sh['scheme_from'])?>
+																		</td>
+																		<td><?php echo date("d/m/Y",$membr_sh['scheme_to'])?></td>
+																		<td><?php echo date("d/m/Y",$membr_sh['sch_apply_from'])?>
+																		</td>
+																		<td><?php echo date("d/m/Y",$membr_sh['modified_on'])?>
+																		</td>
+																		<td><?php echo $membr_sh['admin']?></td>
+																		<td><?php if($membr_sh['sch_active']==1){?><a
+																			href="<?=site_url("admin/pnh_expire_membrscheme/{$membr_sh['id']}")?>"
+																			class="danger_link">expire</a> <?php }else{?> <?php echo "<b>Expired</b>"; }?>
+																		</td>
+	
+																	</tr>
+																	<?php }?>
+																</tbody>
+															</table>
+															<?php }?>
+														</div>
 													</div>
 												</div>
-											</div>
-											<?php }?>
-						</div>
-					</div>
-					
-				</fieldset>
-				</td>
+												<?php }?>
+									</div>
+							</div>
+						
+						</fieldset>
+					</td>
 				</tr>
-				</table>
-				</fieldset>
-				<br>
-				<fieldset>
-				<legend><b>Device Information</b></legend>
+			</table>
+		</fieldset>
+		<br>
+			
+		<fieldset>
+			<legend><b>Device Information</b></legend>
 				<table width="100%">
-				 
-				<tr>
-				<td width="20%">
-						<?php 
-							$app_v = '';
-							$app_v_res = $this->db->query("select version_no from pnh_app_versions where id=? ",$f['app_version']);
-							if($app_v_res->num_rows())
-								$app_v=$app_v_res->row()->version_no;
+					<tr>
+						<td width="20%">
+							<?php 
+								$app_v = '';
+								$app_v_res = $this->db->query("select version_no from pnh_app_versions where id=? ",$f['app_version']);
+								if($app_v_res->num_rows())
+									$app_v=$app_v_res->row()->version_no;
 							?>
-							<p>
-								<h4 style="margin: 0px; font-size: 15px;">
-									<b>App Version : </b><span><?=$app_v?></span>
-								</h4>
-							</p>
-							
-							
-							<form action="<?=site_url("admin/pnh_change_app_version")?>">
-								<input type="hidden" name="fid" value="<?=$f['franchise_id']?>">
-							<p>	Change to New Version : <select id="fran_ver_change">
-									<option value="0">select</option>
-									<?php foreach($this->db->query("select version_no,id from pnh_app_versions where id>?",$f['app_version'])->result_array() as $v){?>
-									<option value="<?=$v['id']?>">
-										<?=$v['version_no']?>
-									</option>
-									<?php }?>
-								</select></p>
-							</form>
+						<p>
+							<h4 style="margin: 0px; font-size: 15px;">
+								<b>App Version : </b><span><?=$app_v?></span>
+							</h4>
+						</p>
+						
+						<form action="<?=site_url("admin/pnh_change_app_version")?>">
+							<input type="hidden" name="fid" value="<?=$f['franchise_id']?>">
+								<p>	Change to New Version : <select id="fran_ver_change">
+																<option value="0">select</option>
+																<?php foreach($this->db->query("select version_no,id from pnh_app_versions where id>?",$f['app_version'])->result_array() as $v){?>
+																<option value="<?=$v['id']?>">
+																	<?=$v['version_no']?>
+																</option>
+																<?php }?>
+															</select>
+								</p>
+						</form>
 					</td>	
 
 				</tr>
-				
 			</table>
-			 
-		</div>
-				<!-- End of name block -->
-			<?php if(1){?>	
-			<div id="statement">
-				<?php if(1){?>
-					<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 500px;font-size: 12px;">
+		</fieldset>
+	</div>
+	<!-- End of name block -->
+	
+	<?php if(1){?>	
+		<div id="statement">
+			<div class="dash_bar_right">
+				Adjustments : <span>Rs <?=format_price($acc_adjustments_val,2)?></span>
+			</div>
+			
+			<div class="dash_bar_right">
+				Paid till Date : <span>Rs <?=format_price($paid_tilldate,2)?></span>
+			</div>
+		
+			<div class="dash_bar_right">
+				Credit Notes Raised : <span>Rs <?=format_price($credit_note_amt,2)?></span>
+			</div>
+			
+			<div class="dash_bar_right">
+				Bounced/Cancelled : <span>Rs <?=format_price($cancelled_tilldate,2)?></span>
+			</div>
+			
+			<div class="dash_bar_right">
+				Unshipped : <span>Rs <?=format_price($not_shipped_amount,2)?></span>
+			</div>
+			
+			<div class="dash_bar_right">
+				Shipped : <span>Rs <?=format_price($shipped_tilldate,2)?></span>
+			</div>
+			
+			<div class="dash_bar_right">
+				Ordered : <span>Rs <?=format_price($ordered_tilldate,2)?></span>
+			</div>
+
+			<?php if(1){?>
+				<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 500px;font-size: 12px;">
 					<h4 style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Make a Topup/Security Deposit</h4>
-						<form method="post" id="top_form" action="<?=site_url("admin/pnh_topup/{$fran['franchise_id']}")?>">
-							<table cellpadding=3 width="100%">
-								<tr>
-									<td>Type</td><td>:</td>
-									<td>
-										<select name="r_type" id="r_type">
-											<option value="1">Topup</option>
-											<option value="0">Security Deposit</option>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td>Amount (Rs)</td><td>:</td>
-									<td><input type="text" class="inp amount" name="amount"
-										size=5>
-									</td>
-								</tr>
-								<tr>
-									<td>Instrument Type</td><td> :</td>
-									<td><select name="type" class="inst_type">
-											<option value="0">Cash</option>
-											<option value="1">Cheque</option>
-											<option value="2">DD</option>
-											<option value="3">Transfer</option>
-									</select></td>
-								</tr>
-								<tr>
-									<td>Instrument Status</td><td> :</td>
-									<td><select name="transit_type">
-											<option value="0">In Hand</option>
-											<option value="1">Via Courier</option>
-											<option value="2">With Executive</option>
-									</select></td>
-								</tr>
-								<tr class="inst inst_name">
-									<td class="label">Bank name </td><td>:</td>
-									<td><input type="text" name="bank" size=30></td>
-								</tr>
-								<tr class="inst inst_no">
-									<td class="label">Instrument No</td><td> :</td>
-									<td><input type="text" name="no" size=10></td>
-								</tr>
-								<tr class="inst inst_date">
-									<td class="label">Instrument Date</td><td> :</td>
-									<td><input type="text" name="date" id="sec_date" size=15></td>
-								</tr>
-								<tr class="inst_msg">
-									<td>Message</td><td> :</td>
-									<td><textarea class="msg" name="msg" style="width:350px;height:80px;" ></textarea></td>
-								</tr>
-								<tr>
-									<td align="right" colspan="3"><input type="submit" class="button button-rounded button-small button-flat-action" value="Submit"></td>
-								</tr>
-							</table>
-						</form>
-					</div>
+					<form method="post" id="top_form" action="<?=site_url("admin/pnh_topup/{$fran['franchise_id']}")?>">
+						<table cellpadding=3 width="100%">
+							<tr>
+								<td>Type</td><td>:</td>
+								<td>
+									<select name="r_type" id="r_type">
+										<option value="1">Topup</option>
+										<option value="0">Security Deposit</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>Amount (Rs)</td><td>:</td>
+								<td><input type="text" class="inp amount" name="amount"
+									size=5>
+								</td>
+							</tr>
+							<tr>
+								<td>Instrument Type</td><td> :</td>
+								<td><select name="type" class="inst_type">
+										<option value="0">Cash</option>
+										<option value="1">Cheque</option>
+										<option value="2">DD</option>
+										<option value="3">Transfer</option>
+								</select></td>
+							</tr>
+							<tr>
+								<td>Instrument Status</td><td> :</td>
+								<td><select name="transit_type">
+										<option value="0">In Hand</option>
+										<option value="1">Via Courier</option>
+										<option value="2">With Executive</option>
+								</select></td>
+							</tr>
+							<tr class="inst inst_name">
+								<td class="label">Bank name </td><td>:</td>
+								<td><input type="text" name="bank" size=30></td>
+							</tr>
+							<tr class="inst inst_no">
+								<td class="label">Instrument No</td><td> :</td>
+								<td><input type="text" name="no" size=10></td>
+							</tr>
+							<tr class="inst inst_date">
+								<td class="label">Instrument Date</td><td> :</td>
+								<td><input type="text" name="date" id="sec_date" size=15></td>
+							</tr>
+							<tr class="inst_msg">
+								<td>Message</td><td> :</td>
+								<td><textarea class="msg" name="msg" style="width:350px;height:80px;" ></textarea></td>
+							</tr>
+							<tr>
+								<td align="right" colspan="3"><input type="submit" class="button button-rounded button-small button-flat-action" value="Submit"></td>
+							</tr>
+						</table>
+					</form>
+				</div>
 
-
-					<div
-						style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 580px;font-size: 12px;">
-						<h4
-							style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Account
+				<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 580px;font-size: 12px;">
+						<h4	style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Account
 							Statement Correction</h4>
-						<form method="post" id="acc_change_form"
-							action="<?=site_url("admin/pnh_acc_stat_c/{$fran['franchise_id']}")?>">
+						<form method="post" id="acc_change_form" action="<?=site_url("admin/pnh_acc_stat_c/{$fran['franchise_id']}")?>">
 							<input type="hidden" name="is_manual_corr" value="1">
 							<table cellpadding=3>
 								<tr>
@@ -1316,50 +1298,49 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 						</form>
 					</div>
 				<?php }?>
-					<div class="clear"></div></br></br>
+				<div class="clear"></div></br></br>
 
-					<div class="tab_view">
-					
-					
-						<h4 style="margin-bottom: 0px">
-							Receipts <a href="<?=site_url("admin/pnh_receiptsbyfranchise/1/".$f['franchise_id'])?>"
-								style="font-size: 75%">activate/cancel</a>
-						</h4>
+				<div class="tab_view">
+					<h4 style="margin-bottom: 0px">
+						Receipts <a href="<?=site_url("admin/pnh_receiptsbyfranchise/1/".$f['franchise_id'])?>" style="font-size: 75%">activate/cancel</a>
+					</h4>
 						
-						
-						<ul>
-							<li><a href="#pending" onclick="load_receipts(this,'pending',0,<?=$f['franchise_id']?>,100)" class="pending_receipt">Pending</a></li>
-							<li><a href="#processed" onclick="load_receipts(this,'processed',0,<?=$f['franchise_id']?>,100)">Processed</a></li>
-							<li><a href="#realized" onclick="load_receipts(this,'realized',0,<?=$f['franchise_id']?>,100)">Realized</a></li>
-							<li><a href="#cancelled" onclick="load_receipts(this,'cancelled',0,<?=$f['franchise_id']?>,100)">Cancelled/Bounced</a></li>
-							<li><a href="#acct_stat" onclick="load_receipts(this,'acct_stat',0,<?=$f['franchise_id']?>,100)">Account Correction</a></li>
-							<?php if($this->erpm->auth(FINANCE_ROLE,true)){ ?>
-							<li><a href="#security_cheques" >Security Cheque Details</a></li>
-							<?php } ?>
-						</ul>
-						<div id="pending">
-							<div class="tab_content"></div>
-						</div>
+					<ul>
+						<li><a href="#pending" onclick="load_receipts(this,'pending',0,<?=$f['franchise_id']?>,100)" class="pending_receipt">Pending</a></li>
+						<li><a href="#processed" onclick="load_receipts(this,'processed',0,<?=$f['franchise_id']?>,100)">Processed</a></li>
+						<li><a href="#realized" onclick="load_receipts(this,'realized',0,<?=$f['franchise_id']?>,100)">Realized</a></li>
+						<li><a href="#cancelled" onclick="load_receipts(this,'cancelled',0,<?=$f['franchise_id']?>,100)">Cancelled/Bounced</a></li>
+						<li><a href="#acct_stat" onclick="load_receipts(this,'acct_stat',0,<?=$f['franchise_id']?>,100)">Account Correction</a></li>
 						<?php if($this->erpm->auth(FINANCE_ROLE,true)){ ?>
+						<li><a href="#security_cheques" >Security Cheque Details</a></li>
+						<?php } ?>
+					</ul>
+					
+					<div id="pending">
+						<div class="tab_content"></div>
+					</div>
+						
+					<?php if($this->erpm->auth(FINANCE_ROLE,true)){ ?>
 						<div id="security_cheques" style="min-height: 100px">
 							<div class="clearboth" align="left" style="padding:10px;">
 								<a href="javascript:void(0)" onclick="load_add_security_cheque_dlg()" style="font-size: 12px;"><b>Add security cheque</b></a>
 							</div>	
+							
 							<div class="grid_view clearboth">
 								<table class="datagrid">
 									<thead><th>Slno</th><th>Cheque no</th><th>Bank name</th><th>Cheque Date</th><th>Amount(Rs)</th><th>Collected on</th></thead>
 									<tbody>
-								<?php
-									$v_fran_security_chq_res = @$this->db->query("select * from pnh_m_fran_security_cheques where franchise_id = ? ",$f['franchise_id']);
-									if($v_fran_security_chq_res->num_rows())
-									{
-								?>
+										<?php
+											$v_fran_security_chq_res = @$this->db->query("select * from pnh_m_fran_security_cheques where franchise_id = ? ",$f['franchise_id']);
+											if($v_fran_security_chq_res->num_rows())
+											{
+										?>
 								
-									<?php
-										$ttl = 1;
-										foreach($v_fran_security_chq_res->result_array() as $v_fran_security_chq_row)
-										{
-									?>
+										<?php
+											$ttl = 1;
+											foreach($v_fran_security_chq_res->result_array() as $v_fran_security_chq_row)
+											{
+										?>
 											<tr>
 												<td><?php echo $ttl++;?></td>
 												<td><?php echo $v_fran_security_chq_row['cheque_no'] ?></td>
@@ -1368,130 +1349,129 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 												<td><?php echo $v_fran_security_chq_row['amount'] ?></td>
 												<td><?php echo $v_fran_security_chq_row['collected_on'] ?></td>
 											</tr>
+										<?php				
+											}
+										?>
 									<?php				
 										}
 									?>
-								
-								<?php				
-									}
-								?>
-									</tbody>
-								</table>
-							</div>
-						</div>
-						<?php				
-							}
-						?>
-						
-						<div id="processed">
-							<div class="tab_content"></div>
-						</div>
-						
-						<div id="realized">
-							<div class="tab_content"></div>
-						</div>
-						
-						<div id="cancelled">
-							<div class="tab_content"></div>
-						</div>
-						
-						<div id="acct_stat">
-							<div class="tab_content"></div>
+								</tbody>
+							</table>
 						</div>
 					</div>
-					<div class="clear"></div>
+				<?php				
+					}
+				?>
+						
+				<div id="processed">
+					<div class="tab_content"></div>
 				</div>
-				<?php } ?>
 				
+				<div id="realized">
+					<div class="tab_content"></div>
+				</div>
 				
+				<div id="cancelled">
+					<div class="tab_content"></div>
+				</div>
 				
+				<div id="acct_stat">
+					<div class="tab_content"></div>
+				</div>
+			</div>
+			<div class="clear"></div>
+		</div>
+	<?php } ?>
 				
-				
-				<?php if($this->erpm->auth(PNH_EXECUTIVE_ROLE|CALLCENTER_ROLE,true)){?>
-				<div id="actions">
-				<table width="100%">
-				<tr>
-				<td>
-					<div>
-					<fieldset>
-						<legend><b>Allotted Member IDs</b></legend>
-						<table class="datagrid" width="100%">
-							<thead>
-								<tr>
-									<th>Start</th>
-									<th>End</th>
-									<th>Allotted on</th>
-									<th>Allotted by</th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php foreach($this->db->query("select m.*,a.name as admin from pnh_m_allotted_mid m join king_admin a on a.id=m.created_by where franchise_id=?",$f['franchise_id'])->result_array() as $m){?>
-								<tr>
-									<td><?=$m['mid_start']?></td>
-									<td><?=$m['mid_end']?></td>
-									<td><?=date("d/m/y",$m['created_on'])?></td>
-									<td><?=$m['admin']?></td>
-									<?php }?>
-							
-							</tbody>
-						</table>
-						<?php if($this->erpm->auth(PNH_EXECUTIVE_ROLE,true)){?>
-						<h4 style="margin-bottom: 0px;">Allot Member IDs</h4>
-						<form
-							action="<?=site_url("admin/pnh_allot_mid/{$f['franchise_id']}")?>"
-							id="allot_mid_form" method="post">
-							From <input type="text" name="start" class="inp" size=7
-								maxlength="8"> to <input maxlength="8" type="text" name="end"
-								class="inp" size=7> <input type="submit" value="Allot">
-						</form>
-						<?php } ?>
-						</fieldset>
-					</div>
-					</td>
-				</tr>
-				<tr></tr>
+	<?php if($this->erpm->auth(PNH_EXECUTIVE_ROLE|CALLCENTER_ROLE,true)){?>
+		<div id="actions">
+			<table width="100%">
 				<tr>
 					<td>
 						<div>
-						<fieldset>
-							<legend><b>Give Credit</b></legend>
-							<form method="post" class="credit_form"
-								action="<?=site_url("admin/pnh_give_credit")?>">
-								<input type="hidden" name="reason" class="c_reason"> <input
-									type="hidden" name="fid" value="<?=$f['franchise_id']?>">
-								Enhance credit limit : Rs
-								<?=$f['credit_limit']?>
-								+ <input type="text" class="inp" size=4 name="limit"> <input
-									type="submit" value="Add Credit">
-							</form>
+							<fieldset>
+								<legend><b>Allotted Member IDs</b></legend>
+								<table class="datagrid" width="100%">
+									<thead>
+										<tr>
+											<th>Start</th>
+											<th>End</th>
+											<th>Allotted on</th>
+											<th>Allotted by</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php foreach($this->db->query("select m.*,a.name as admin from pnh_m_allotted_mid m join king_admin a on a.id=m.created_by where franchise_id=?",$f['franchise_id'])->result_array() as $m){?>
+										<tr>
+											<td><?=$m['mid_start']?></td>
+											<td><?=$m['mid_end']?></td>
+											<td><?=date("d/m/y",$m['created_on'])?></td>
+											<td><?=$m['admin']?></td>
+											<?php }?>
+									
+									</tbody>
+								</table>
+								
+								<?php if($this->erpm->auth(PNH_EXECUTIVE_ROLE,true)){?>
+									<h4 style="margin-bottom: 0px;">Allot Member IDs</h4>
+									<form
+										action="<?=site_url("admin/pnh_allot_mid/{$f['franchise_id']}")?>"
+										id="allot_mid_form" method="post">
 							
-							<div class="tab_content">
-							</div>
-							
-							<form method="post" class="credit_form"
-								action="<?=site_url("admin/pnh_give_credit")?>">
-								<input type="hidden" name="reason" class="c_reason"> <input
-									type="hidden" name="reduce" value="1"> <input type="hidden"
-									name="fid" value="<?=$f['franchise_id']?>"> Reduce credit limit
-								: Rs
-								<?=$f['credit_limit']?>
-								- <input type="text" class="inp" size=4 name="limit"> <input
-									type="submit" value="Reduce Credit">
-							</form>
+										From 
+										<input type="text" name="start" class="inp" size=7
+											maxlength="8"> to <input maxlength="8" type="text" name="end"
+												class="inp" size=7> <input type="submit" value="Allot">
+									</form>
+								<?php } ?>
 							</fieldset>
 						</div>
+					</td>
+				</tr>
+				
+				<tr></tr>
+				
+				<tr>
+					<td>
+						<div>
+							<fieldset>
+								<legend><b>Give Credit</b></legend>
+								<form method="post" class="credit_form"
+									action="<?=site_url("admin/pnh_give_credit")?>">
+									<input type="hidden" name="reason" class="c_reason"> <input
+										type="hidden" name="fid" value="<?=$f['franchise_id']?>">
+									Enhance credit limit : Rs
+									<?=$f['credit_limit']?>
+									+ <input type="text" class="inp" size=4 name="limit"> <input
+										type="submit" value="Add Credit">
+								</form>
+							
+								<div class="tab_content">
+								</div>
+							
+								<form method="post" class="credit_form"
+									action="<?=site_url("admin/pnh_give_credit")?>">
+									<input type="hidden" name="reason" class="c_reason"> <input
+										type="hidden" name="reduce" value="1"> <input type="hidden"
+										name="fid" value="<?=$f['franchise_id']?>"> Reduce credit limit
+									: Rs
+									<?=$f['credit_limit']?>
+									- <input type="text" class="inp" size=4 name="limit"> <input
+										type="submit" value="Reduce Credit">
+								</form>
+							</fieldset>
+						</div>
+						
 						<p>
-						<div id="sch_hist" title=" Give Scheme Discount" style="overflow: hidden">
+							<div id="sch_hist" title=" Give Scheme Discount" style="overflow: hidden">
 								<form id="sch_form" method="post" action="<?=site_url("admin/pnh_give_sch_discount/{$f['franchise_id']}")?>" data-validate="parsley">
-									
-										<table cellspacing="10">
-										
-											<tr>
-												<Td>Scheme Discount</td><td>:</td>
-												<td>
-													<input type="text" name="discount" value="1" size="5" data-required="true">%
-												</td>
-											</tr>
+									<table cellspacing="10">
+										<tr>
+											<Td>Scheme Discount</td><td>:</td>
+											<td>
+												<input type="text" name="discount" value="1" size="5" data-required="true">%
+											</td>
+										</tr>
 										<tr>
 											<td>Menu </td><td>:</td>
 											<td><select name="menu" class="schmenu" data-placeholder="Select Menu" style="width:250px;" data-required="true">
@@ -1503,184 +1483,189 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 
 										</tr>
 										
-											<tr>
-												<td>Category </td><td>:</td>
-												<td><select name="cat" class="select_cat"  data-placeholder="Select Category" style="width:250px;" data-required="true"></select>
-												</select>
-												</td>
-											</tr>
+										<tr>
+											<td>Category </td><td>:</td>
+											<td><select name="cat" class="select_cat"  data-placeholder="Select Category" style="width:250px;" data-required="true"></select>
+											</select>
+											</td>
+										</tr>
 											
-											<tr>
-												<td>Brand </td><td>:</td>
-												<td><select name="brand"  class="select_brand"  data-placeholder="Select Brand" style="width:250px;" data-required="true"></select>
-												</td>
-											</tr>
-											<tr>
-												<td>From</td><td>:</td>
-												<td><input type="text" class="inp" size="10" name="start" id="d_start" data-required="true">
-												 to <input type="text" class="inp" size="10" name="end" id="d_end" data-required="true"></td>
-													
-											</tr>
-											<tr>
-												<td valign="top">Reason</td><td valign="top">:</td>
-												<td><textarea class="inp" name="reason" style="width: 300px;height: 100px;" data-required="true" ></textarea>
-														
-												</td>
-											</tr>
-											<tr><td>Expire Previous Schemes</td><td>:</td><td><input type="checkbox" name="expire_schdisc" value="1" checked></td></tr>
-											</div>
-										</table>
+										<tr>
+											<td>Brand </td><td>:</td>
+											<td><select name="brand"  class="select_brand"  data-placeholder="Select Brand" style="width:250px;" data-required="true"></select>
+											</td>
+										</tr>
+										
+										<tr>
+											<td>From</td><td>:</td>
+											<td><input type="text" class="inp" size="10" name="start" id="d_start" data-required="true">
+											 to <input type="text" class="inp" size="10" name="end" id="d_end" data-required="true"></td>
+										</tr>
+										
+										<tr>
+											<td valign="top">Reason</td><td valign="top">:</td>
+											<td><textarea class="inp" name="reason" style="width: 300px;height: 100px;" data-required="true" ></textarea>
+											</td>
+										</tr>
+										
+										<tr>
+											<td>Expire Previous Schemes</td><td>:</td><td><input type="checkbox" name="expire_schdisc" value="1" checked></td>
+										</tr>
+									</table>
 								</form>
-						</div>
+							</div>
 						</p>
 						
 						<p>
-						<div id="pnh_superschme" title=" Give Super Scheme" style="overflow: hidden">
+							<div id="pnh_superschme" title=" Give Super Scheme" style="overflow: hidden">
 								<form id="super_schform" method="post" action="<?=site_url("admin/pnh_give_super_sch/{$f['franchise_id']}")?>" data-validate="parsley">
-									
-										<table cellspacing="10">
-											<tr>
-												<Td>Cash Back</td><td>:</td>
-												<td><select name="credit" data-required="true">
-														<?php for($i=1;$i<=4;$i++){?>
+									<table cellspacing="10">
+										<tr>
+											<Td>Cash Back</td><td>:</td>
+											<td>
+												<select name="credit" data-required="true">
+													<?php for($i=1;$i<=4;$i++){?>
 														<option value="<?=$i?>"><?=$i?>%</option>
-														<?php }?>
-													</select>
-												</td>
-											</tr>
-											<tr><td>Total Sales Value</td><td>:</td><td><input type="text" name="ttl_sales_value" data-required="true"></td></tr>
+													<?php }?>
+												</select>
+											</td>
+										</tr>
+											
+										<tr>
+											<td>Total Sales Value</td><td>:</td><td><input type="text" name="ttl_sales_value" data-required="true"></td></tr>
 										<tr>
 											<td>Menu </td><td>:</td>
-											<td><select name="super_schmenu" class="schmenu" data-placeholder="Select Menu" style="width:250px;" data-required="true">
-											<option value="0"></option>
-											<?php foreach($this->db->query("SELECT distinct a.menuid as id,b.name FROM `pnh_franchise_menu_link`a JOIN pnh_menu b ON b.id=a.menuid WHERE a.status=1 and fid=? group by id order by b.name asc",$f['franchise_id'])->result_array() as $menu){?>
-											<option value="<?php echo $menu['id']?>"><?php echo $menu['name']?></option>
-											<?php }?>
-											</select></td>
-
+											<td>
+												<select name="super_schmenu" class="schmenu" data-placeholder="Select Menu" style="width:250px;" data-required="true">
+													<option value="0"></option>
+													<?php foreach($this->db->query("SELECT distinct a.menuid as id,b.name FROM `pnh_franchise_menu_link`a JOIN pnh_menu b ON b.id=a.menuid WHERE a.status=1 and fid=? group by id order by b.name asc",$f['franchise_id'])->result_array() as $menu){?>
+													<option value="<?php echo $menu['id']?>"><?php echo $menu['name']?></option>
+													<?php }?>
+												</select>
+											</td>
 										</tr>
 										
-											<tr>
-												<td>Category </td><td>:</td>
-												<td><select name="cat" class="select_cat"  data-placeholder="Select Category" style="width:250px;" data-required="true" ></select>
-												</select>
+										<tr>
+											<td>Category </td><td>:</td>
+												<td>
+													<select name="cat" class="select_cat"  data-placeholder="Select Category" style="width:250px;" data-required="true" ></select>
+													</select>
 												</td>
-											</tr>
+										</tr>
 											
-											<tr>
-												<td>Brand </td><td>:</td>
-												<td><select name="brand"  class="select_brand"  data-placeholder="Select Brand" style="width:250px;" data-required="true" ></select>
-												</td>
-											</tr>
+										<tr>
+											<td>Brand </td><td>:</td>
+											<td><select name="brand"  class="select_brand"  data-placeholder="Select Brand" style="width:250px;" data-required="true" ></select>
+											</td>
+										</tr>
 											<!--  <tr>
 												<td>From</td><td>:</td>
 												<td><input type="text" class="inp" size="10" name="super_schstart" id="supersch_start" data-required="true">
 												 to <input type="text" class="inp" size="10" name="super_schend" id="supersch_end" data-required="true"></td>
 													
 											</tr>-->
-											<tr>
-												<td valign="top">Reason</td><td valign="top">:</td>
-												<td><textarea class="inp" name="reason" style="width: 300px;height: 100px;" data-required="true" ></textarea>
-														
-												</td>
-											</tr>
+										<tr>
+											<td valign="top">Reason</td><td valign="top">:</td>
+											<td><textarea class="inp" name="reason" style="width: 300px;height: 100px;" data-required="true" ></textarea>
+											</td>
+										</tr>
 											
-											<tr><td>Validity</td><td>:</td><td><b>Valid For the Calender Month</b></td></tr>
-											<tr><td>Expire Previous Schemes</td><td>:</td><td><input type="checkbox" name="expire_supersch" value="1" checked></td></tr>
-											
-											</div>
-										</table>
+										<tr><td>Validity</td><td>:</td><td><b>Valid For the Calender Month</b></td></tr>
+										<tr><td>Expire Previous Schemes</td><td>:</td><td><input type="checkbox" name="expire_supersch" value="1" checked></td></tr>
+									</table>
 								</form>
+							</div>
 						</div>
-						</p>
-
-<div id="pnh_membersch" title="Give Member Scheme">
-									<form id="membr_schform" method="post"
+					</p>
+					
+					<div id="pnh_membersch" title="Give Member Scheme">
+						<form id="membr_schform" method="post"
 										action="<?=site_url("admin/pnh_give_member_sch/{$f['franchise_id']}")?>"
 										data-validate="parsley">
 
-										<table cellspacing="10">
-
-											<tr>
-												<td>Scheme Type</td>
-												<td>:</td>
-												<td><select name="ime_schtype">
-														<option value="0">Fixed Fee</option>
-														<option value="1">percentage</option>
-												</select></td>
-											</tr>
-											<tr>
-												<Td>Cash Back</td>
-												<td>:</td>
-												<td><input type="text" name="mbrsch_credit" size="25">
-												</td>
-											</tr>
+							<table cellspacing="10">
+								<tr>
+									<td>Scheme Type</td>
+									<td>:</td>
+									<td><select name="ime_schtype">
+											<option value="0">Fixed Fee</option>
+											<option value="1">percentage</option>
+									</select></td>
+								 </tr>
+								 <tr>
+									<Td>Cash Back</td>
+									<td>:</td>
+									<td><input type="text" name="mbrsch_credit" size="25">
+									</td>
+								</tr>
 
 											<!--  <tr>
 												<td>Menu </td><td>:</td>
 												<td><b><?php //echo $is_membrsch_applicable['menu'] ;?></b></td>
 											</tr>-->
-											<tr>
-												<td>Menu</td>
-												<td>:</td>
-												<td><select name="mbr_schmenu" class="schmenu"
-													data-placeholder="Select Menu" style="width: 250px;"
-													data-required="true">
-														<option value="0"></option>
-														<?php foreach($this->db->query("SELECT distinct a.menuid as id,b.name FROM `pnh_franchise_menu_link`a JOIN pnh_menu b ON b.id=a.menuid WHERE a.status=1 and fid=? group by id order by b.name asc",$f['franchise_id'])->result_array() as $menu){?>
-														<option value="<?php echo $menu['id']?>">
-															<?php echo $menu['name']?>
-														</option>
-														<?php }?>
-												</select></td>
+								<tr>
+									<td>Menu</td>
+									<td>:</td>
+									<td><select name="mbr_schmenu" class="schmenu"
+											data-placeholder="Select Menu" style="width: 250px;"
+											data-required="true">
+												<option value="0"></option>
+												<?php foreach($this->db->query("SELECT distinct a.menuid as id,b.name FROM `pnh_franchise_menu_link`a JOIN pnh_menu b ON b.id=a.menuid WHERE a.status=1 and fid=? group by id order by b.name asc",$f['franchise_id'])->result_array() as $menu){?>
+												<option value="<?php echo $menu['id']?>">
+													<?php echo $menu['name']?>
+												</option>
+												<?php }?>
+										</select>
+									</td>
+								</tr>
 
-											</tr>
+								<tr>
+									<td>Category</td>
+									<td>:</td>
+									<td><select name="mbr_schcat" class="select_cat"
+										data-placeholder="Select Category" style="width: 250px;"
+										data-required="true"></select> </select>
+									</td>
+								</tr>
 
-											<tr>
-												<td>Category</td>
-												<td>:</td>
-												<td><select name="mbr_schcat" class="select_cat"
-													data-placeholder="Select Category" style="width: 250px;"
-													data-required="true"></select> </select>
-												</td>
-											</tr>
+								<tr>
+									<td>Brand</td>
+									<td>:</td>
+									<td><select name="mbr_schbrand" class="select_brand"
+										data-placeholder="Select Brand" style="width: 250px;"
+										data-required="true"></select>
+									</td>
+								</tr>
 
-											<tr>
-												<td>Brand</td>
-												<td>:</td>
-												<td><select name="mbr_schbrand" class="select_brand"
-													data-placeholder="Select Brand" style="width: 250px;"
-													data-required="true"></select>
-												</td>
-											</tr>
+								<tr>
+									<td>From</td>
+									<td>:</td>
+									<td><input type="text" class="inp" size="10"
+										name="msch_start" id="msch_start" data-required="true"> to
+										<input type="text" class="inp" size="10" name="msch_end"
+										id="msch_end" data-required="true"></td>
 
-											<tr>
-												<td>From</td>
-												<td>:</td>
-												<td><input type="text" class="inp" size="10"
-													name="msch_start" id="msch_start" data-required="true"> to
-													<input type="text" class="inp" size="10" name="msch_end"
-													id="msch_end" data-required="true"></td>
-
-											</tr>
-											<tr>
-												<td>Apply From</td>
-												<td>:</td>
-												<td><input type="text" class="inp" size="10"
-													name="mbrsch_applyfrm" id="msch_applyfrm"
-													data-required="true">
-											
-											</tr>
-											<tr><td width="50%">Expire Previous Scheme </td><td>:</td><td><input type="checkbox" name="expire_msch" value="1" checked></td></tr>
-											
-											</div>
-										</table>
-									</form>
-
-								</div>
+								</tr>
+								<tr>
+									<td>Apply From</td>
+									<td>:</td>
+									<td><input type="text" class="inp" size="10"
+										name="mbrsch_applyfrm" id="msch_applyfrm"
+										data-required="true">
+									</td>
+								</tr>
+								<tr>
+									<td width="50%">Expire Previous Scheme </td><td>:</td><td><input type="checkbox" name="expire_msch" value="1" checked></td>
+								</tr>
+							</table>
+						</div>
+					</form>
+				</div>	
+			</tr>			
+	</div>
 
 					</td>
-				</tr>
+				
 
 				<div class="clear"></div>
 			</table>
@@ -1759,23 +1744,23 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 						</div>
 
 						<div class="dash_bar">
-							Total Order value : <span>Rs <?=number_format($this->db->query("select sum(amount) as l from king_transactions where franchise_id=?",$f['franchise_id'])->row()->l,0)?>
+							Total Order value : <span>Rs <?=format_price($this->db->query("select sum(amount) as l from king_transactions where franchise_id=?",$f['franchise_id'])->row()->l,0)?>
 							</span>
 						</div>
 						<div class="dash_bar">
-							Value last month : <span>Rs <?=number_format($this->db->query("select sum(amount) as l from king_transactions where franchise_id=? and init between ".mktime(0,0,0,-1,1)." and ".mktime(23,59,59,-1,31),$f['franchise_id'])->row()->l,2)?>
+							Value last month : <span>Rs <?=format_price($this->db->query("select sum(amount) as l from king_transactions where franchise_id=? and init between ".mktime(0,0,0,-1,1)." and ".mktime(23,59,59,-1,31),$f['franchise_id'])->row()->l,2)?>
 							</span>
 						</div>
 						<div class="dash_bar">
-							Value this month : <span>Rs <?=number_format($this->db->query("select sum(amount) as l from king_transactions where franchise_id=? and init >".mktime(0,0,0,date("m"),1),$f['franchise_id'])->row()->l,2)?>
+							Value this month : <span>Rs <?=format_price($this->db->query("select sum(amount) as l from king_transactions where franchise_id=? and init >".mktime(0,0,0,date("m"),1),$f['franchise_id'])->row()->l,2)?>
 							</span>
 						</div>
 						<div class="dash_bar">
-							Total commission : <span>Rs <?=number_format($this->db->query("select sum(o.i_coup_discount) as l from king_transactions t join king_orders o on o.transid=t.transid where t.franchise_id=?",$f['franchise_id'])->row()->l,2)?>
+							Total commission : <span>Rs <?=format_price($this->db->query("select sum(o.i_coup_discount) as l from king_transactions t join king_orders o on o.transid=t.transid where t.franchise_id=?",$f['franchise_id'])->row()->l,2)?>
 							</span>
 						</div>
 						<div class="dash_bar">
-							Total commission this month : <span>Rs <?=number_format($this->db->query("select sum(o.i_coup_discount) as l from king_transactions t join king_orders o on o.transid=t.transid where t.franchise_id=? and o.time>".mktime(0,0,0,date("m"),1),$f['franchise_id'])->row()->l,2)?>
+							Total commission this month : <span>Rs <?=format_price($this->db->query("select sum(o.i_coup_discount) as l from king_transactions t join king_orders o on o.transid=t.transid where t.franchise_id=? and o.time>".mktime(0,0,0,date("m"),1),$f['franchise_id'])->row()->l,2)?>
 							</span>
 						</div>
 					</div>
@@ -1955,16 +1940,16 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 	<!-- Franchise suspend form END -->
 	
 	<div id="unsuspend_fran" title="Unsuspend Franchise">
-	<form id="unsuspend_reasonfrm" method="post" data-validate="parsley">
-	<input type="hidden" name="unsuspend_fid" id="unsuspend_fid">
-			<table cellspacing="5" width="100%">
-			<tr>
-					<td valign="top" valign="top"><b>Reason</b></td>
-					<td valign="top"><b>:</b></td>
-					<td valign="top"><textarea name="unsus_reason" data-required="true" style="width: 320px; height: 110px;"></textarea></td>
-			</tr>
-			</table>
-	</form>
+		<form id="unsuspend_reasonfrm" method="post" data-validate="parsley">
+		<input type="hidden" name="unsuspend_fid" id="unsuspend_fid">
+				<table cellspacing="5" width="100%">
+				<tr>
+						<td valign="top" valign="top"><b>Reason</b></td>
+						<td valign="top"><b>:</b></td>
+						<td valign="top"><textarea name="unsus_reason" data-required="true" style="width: 320px; height: 110px;"></textarea></td>
+				</tr>
+				</table>
+		</form>
 	</div>
 	
 	<!-- mark prepaid franchise modal-->
@@ -1984,71 +1969,259 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 		</form>
 	</div>
 	<!-- mark prepaid franchise modal end-->
-	
-	
-	<div style="display:none">
-		<div id="dlg_add_security_cheque_det" title="Add Security Cheque Details">
-			<form action="<?php echo site_url('admin/jx_add_security_chqdet');?>" method="post">
-				<input type="hidden" name="f_schq_fid" value="<?php echo $f['franchise_id'];?>">
-				<table width="100%" cellpadding="5" cellspacing="0">
-					<tr><td><b>Bank name</b></td> <td><input type="text" name="f_schq_bankname" value=""></td></tr>
-					<tr><td><b>Cheque no</b></td> <td><input type="text" name="f_schq_no" value=""></td></tr>
-					<tr><td><b>Cheque Date</b></td> <td><input type="text" name="f_schq_date" value=""></td></tr>
-					<tr><td><b>Amount (Rs)</b></td> <td><input type="text" name="f_schq_amt" value=""></td></tr>
-					<tr><td><b>Collected On</b></td> <td><input type="text" name="f_schq_colon" value=""></td></tr>
-				</table>
-			</form>
-		</div>
+	<div id="ship_log_dlg" >
+		<div id="ship_log_dlg_wrap"></div>
 	</div>
-				
-	<style>
-.subdatagrid {
-	width: 100%
-}
+	<div id="delivery_log_dlg" >
+		<div id="delivery_log_dlg_wrap"></div>
+	</div>
+	
+	<div id="inv_transitlogdet_dlg" title="Shipment Transit Log">
+		<h3 style="margin:3px 0px;"></h3>
+		<div id="inv_transitlogdet_tbl">
+			
+		</div>
+	</div>		
 
-.subdatagrid th {
-	padding: 5px;
-	font-size: 11px;
-	background: #F4EB9A;
-	color: maroon
-}
-
-.subdatagrid td {
-	padding: 3px;
-	font-size: 12px;
-}
-
-.subdatagrid td a {
-	color: #121213;
-}
-
-.cancelled_ord td {
-	text-decoration: line-through;
-	color: #cd0000 !important;
-}
-
-.cancelled_ord td a {
-	text-decoration: line-through;
-	color: #cd0000 !important;
-}
-
-.tabs ul.tabsul li a {
-	display: block;
-	padding: 5px 10px;
-}
-.vm #details td{
-padding:7px;
-background:#dfdfff;
-}
-.label{
-font-weight:bold;
-width:100px;
-background:#eee !important;
-}
-
-</style>
 </div>
 <script>
+
+ var twnlnk_franchise_html='';
+
+function load_ship_del_calender()
+{
+		  var date = new Date();
+		  var d = date.getDate();
+		  var m = date.getMonth();
+		  var y = date.getFullYear();
+
+		  $('.shipment_log').fullCalendar({
+			  	editable: false,
+			  	droppable: false,
+		   		draggable: false,
+		   		
+			   	header: {
+		 		left: 'prev,next today',
+		 		center: 'title',
+		 		right: 'month,basicWeek,agendaDay'
+		 		},
+		 		
+		   	
+		   	selectable: true,
+			selectHelper: true,
+			
+			events: function(start, end, callback){
+					 var franchise_id='<?php echo $fran['franchise_id'] ?>';
+					 // $('.ttl_amount_shipped').text(0);
+					  //$('.ttl_amount_delivered').text(0);
+				 	$('.shipment_log').fullCalendar('removeEvents')
+				 		$.post(site_url+'/admin/jx_franchise_shipment_logonload',{'start': start.getTime(),'end': end.getTime(), 'fid':franchise_id},function(result){
+				 				//$('.ttl_amount_shipped').html("Rs. "+result.ttl_amt_shipped);
+				 				//$('.ttl_amount_delivered').html("Rs. "+result.ttl_amt_delivered);
+                    		    callback(result.ship_del_list);
+                    	},'json');
+                    	
+              },
+		    eventRender: function(event, element) {
+				var amount = event.amount;
+					if(event.type == 'shipment')
+					{element.find('.fc-event-title').html('Shipped Value <br /><b>Rs. '+amount+'</b>').parent().addClass('shipped_event');}
+					else if(event.type == 'delivery')
+					{element.find('.fc-event-title').html('Delivered Value <br /><b>Rs. '+amount+'</b>').parent().addClass('delivered_event');}
+						
+		    },
+		     eventClick: function(calEvent, jsEvent, view) {
+					var date=calEvent.start;
+					var event_type=calEvent.type;
+				 	var sel_date = (date.getDate())>9?(date.getDate()):'0'+(date.getDate());
+				 	var sel_mnth = (date.getMonth()+1)>9?(date.getMonth()+1):'0'+(date.getMonth()+1);
+			  	 	var sel_year = date.getFullYear();
+			     	var ship_date = sel_year+'-'+(sel_mnth)+'-'+sel_date;
+			     	var delivery_date = sel_year+'-'+(sel_mnth)+'-'+sel_date;
+				 	var franchise_id='<?php echo $fran['franchise_id'] ?>';
+				 
+						if(event_type == "shipment")
+						{
+							var title = 'Shipment Log on '+sel_date+'/'+(sel_mnth)+'/'+sel_year;
+								$( "#ship_log_dlg" ).data({'sel_date':sel_date,'sel_mnth':sel_mnth, 'sel_year':sel_year, 'fid':franchise_id, 'ship_date':ship_date }).dialog('open','option','title',title);
+								$( "#ship_log_dlg" ).dialog('option','title',title);
+						}else if(event_type == "delivery")
+						{
+							var title = 'Delivery Log on '+sel_date+'/'+(sel_mnth)+'/'+sel_year;
+								$( "#delivery_log_dlg" ).data({'sel_date':sel_date,'sel_mnth':sel_mnth, 'sel_year':sel_year, 'fid':franchise_id, 'delivery_date':delivery_date }).dialog('open','option','title',title);
+								$( "#delivery_log_dlg" ).dialog('option','title',title);
+						 }
+		  }
+	});
+	
+}
+
+$(function(){
+
+	if(location.hash != '#ship_log')
+	{
+		$('.ship_log').click(function(e){
+			if(!$('.shipment_log').hasClass( 'fc' ))
+				load_ship_del_calender();
+		});
+	}else
+	{
+		load_ship_del_calender();
+	}
+});
+
+   
+$("#ship_log_dlg" ).dialog({
+		modal:true,
+		autoOpen:false,
+		width:'1000',
+		height:'450',
+		autoResize:true,
+		open:function(){
+		dlg = $(this);
+		var ship_date=$(this).data('ship_date');
+		var sel_date=$(this).data('sel_date');
+		var sel_mnth=$(this).data('sel_mnth');
+		var sel_year=$(this).data('sel_year');
+		// ajax request fetch task details
+	   $.post(site_url+'/admin/jx_franchise_shipment_log_bydate',{sel_date:$(this).data('sel_date'), sel_mnth:$(this).data('sel_mnth'), sel_year:$(this).data('sel_year'), fid:$(this).data('fid'), ship_date:$(this).data('ship_date')},function(result){
+	   if(result.status == 'failure')
+		{
+			 $('#ship_log_dlg_wrap').html('No Shipments on '+ship_date);
+			 return false;
+	    }
+	    else
+		{
+	    	var shipment_det='';
+	    	var k=1;
+	    	 
+	    	 shipment_det +='<table class="datagrid" width="100%"  ><tr><th width="5%">Sl.No</th><th>TransID</th><th>Invoice</th>';
+	    	 shipment_det +='<th>Item</th><th>Quantity</th><th>Amount</th></tr>';
+	    	 $.each(result.ship_det,function(i,s1){
+	    	 	s = s1[0];
+	    	 	
+	    	 		shipment_det +='<tr>';
+	    	 		shipment_det +='	<td rowspan="'+s1.invoices.length+'">'+k+'</td>';
+	    	 		shipment_det +='	<td rowspan="'+s1.invoices.length+'">'+s1.transid+'</td>';
+	    	 		j=0;
+	    	 		$.each(s1.invoices,function(a,b){
+	    	 			if(j!=0)
+	    	 				shipment_det +='<tr>';			
+	    	 			shipment_det +='<td>'+b.invoice_no+'</td>';
+		    	 		shipment_det +='	<td>'+b.name+'</td>';
+		    	 		shipment_det +='	<td>'+b.qty+'</td>';
+		    	 		shipment_det +='	<td>'+b.amount+'</td>';
+		    	 		if(j!=0)
+	    	 				shipment_det +='</tr>';
+	    	 				j++;	
+	    	 		});
+	    	 		shipment_det +='</tr>';
+	    	 	 //shipment_det +='<tr><td>'+(k++)+'</td><td><a href="'+site_url+'/admin/pnh_deal/'+s.itemid+'" target="_blank">'+s.name+'</a></td><td>'+s.quantity+'</td>';
+	    	 	 
+	    	 	 //shipment_det +='<td>'+s.amount+'</td><td><a href="'+site_url+'/admin/invoice/'+s.invoice_no+'" target="_blank">'+s.invoice_no+'</a></td><td><a href="'+site_url+'/admin/trans/'+s.transid+'" style="font-weight:bold" target="_blank">'+s.transid+'</a><br /><span style="font-size:10px;font-weight:bold">Ordered On : '+s.time+'</span></td>';
+	    	 	 
+	    	 	 //shipment_det +='<td><a class="link_btn" onclick="get_invoicetransit_log(this,'+s.invoice_no+')" href="javascript:void(0)">View Transit Log</a></td></tr>';
+		    	 	 k++;
+	    	 });			
+	    	 shipment_det +='<tfoot><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td></tr></tfoot>';
+	    	 $('#ship_log_dlg_wrap').html(shipment_det);	
+		}
+	  },'json');
+	}
+});
+$("#delivery_log_dlg" ).dialog({
+		modal:true,
+		autoOpen:false,
+		width:'1000',
+		height:'450',
+		autoResize:true,
+		open:function(){
+		dlg = $(this);
+
+		var delivery_date=$(this).data('delivery_date');
+		var sel_date=$(this).data('sel_date');
+		var sel_mnth=$(this).data('sel_mnth');
+		var sel_year=$(this).data('sel_year');
+		// ajax request fetch task details
+	   $.post(site_url+'/admin/jx_franchise_delivery_log_bydate',{sel_date:$(this).data('sel_date'), sel_mnth:$(this).data('sel_mnth'), sel_year:$(this).data('sel_year'), fid:$(this).data('fid'), delivery_date:$(this).data('delivery_date')},function(result){
+	   if(result.status == 'failure')
+		{
+			 $('#delivery_log_dlg_wrap').html('No deliveries on '+delivery_date);
+			 return false;
+	    }
+	    else
+		{
+	    	var delivery_det='';
+	    	var k=1;
+	    	 
+	    	 delivery_det +='<table class="datagrid" width="100%"  ><tr><th width="5%">Sl.No</th><th>TransID</th><th>Invoice</th>';
+	    	 delivery_det +='<th>Item</th><th>Quantity</th><th>Amount</th></tr>';
+	    	 $.each(result.delivery_det,function(i,s1){
+	    	 	s = s1[0];
+	    	 	
+	    	 		delivery_det +='<tr>';
+	    	 		delivery_det +='	<td rowspan="'+s1.invoices.length+'">'+k+'</td>';
+	    	 		delivery_det +='	<td rowspan="'+s1.invoices.length+'">'+s1.transid+'</td>';
+	    	 		j=0;
+	    	 		$.each(s1.invoices,function(a,b){
+	    	 			if(j!=0)
+	    	 				delivery_det +='<tr>';			
+	    	 			delivery_det +='<td>'+b.invoice_no+'</td>';
+		    	 		delivery_det +='	<td>'+b.name+'</td>';
+		    	 		delivery_det +='	<td>'+b.qty+'</td>';
+		    	 		delivery_det +='	<td>'+b.amount+'</td>';
+		    	 		if(j!=0)
+	    	 				delivery_det +='</tr>';
+	    	 				j++;	
+	    	 		});
+	    	 		delivery_det +='</tr>';
+	    	 		k++;
+	    	 	});
+	    	  delivery_det +='<tfoot><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td></tr></tfoot>';
+	    	 $('#delivery_log_dlg_wrap').html(delivery_det);	
+		
+		}
+	  },'json');
+	}
+});
+
+function get_invoicetransit_log(ele,invno)
+{
+	$('#inv_transitlogdet_dlg').data({'invno':invno,}).dialog('open');
+}
+
+var refcont = null;
+$('#inv_transitlogdet_dlg').dialog({width:'900',height:'auto',autoOpen:false,modal:true,
+											open:function(){
+
+												
+												//,'width':refcont.width()
+												//$('div[aria-describedby="inv_transitlogdet_dlg"]').css({'top':(refcont.offset().top+15+refcont.height())+'px','left':refcont.offset().left});
+												
+												$('#inv_transitlogdet_tbl').html('loading...');
+												$.post(site_url+'/admin/jx_invoicetransit_det','invno='+$(this).data('invno'),function(resp){
+													if(resp.status == 'error')
+													{
+														alert(resp.error);
+													}else
+													{
+														var inv_transitlog_html = '<table class="datagrid" width="100%"><thead><th width="30%">Msg</th><th width="10%">Status</th><th width="10%">Handle By</th><th width="10%">Logged On</th><th width="15%">SMS</th></thead><tbody>';
+														$.each(resp.transit_log,function(i,log){
+															inv_transitlog_html += '<tr><td>'+log[5]+'</td><td>'+log[1]+'</td><td>'+log[2]+'('+log[4]+')</td><td>'+log[3]+'</td><td>'+log[6]+'</td></tr>';
+														});
+														inv_transitlog_html += '</tbody></table>';
+														$('#inv_transitlogdet_tbl').html(inv_transitlog_html);
+
+														$('#inv_transitlogdet_dlg h3').html('Invoice no :<span style="color:blue;font-size:12px">'+resp.invoice_no+'</span>  Franchise name: <span style="color:orange;font-size:12px">'+resp.Franchise_name +'</span> Town : <span style="color:gray;font-size:12px">'+resp.town_name+'</span>'+' ManifestoNo :'+resp.manifesto_id);
+
+
+														
+														
+													}
+												},'json');
+											}
+									});	
+	
 $('.tab_view').tabs();
 $('#loading_container_div').remove();
 $('.container_div').css('visibility','visible');
@@ -2718,6 +2891,7 @@ function give_supersch()
 }
 
 $('#fran_misc_logs').tabs();
+$('#activity_menu_tabs').tabs();
 
 $("#pnh_superschme").dialog({
 	modal:true,
@@ -2802,67 +2976,6 @@ $("#pnh_membersch").dialog({
 	});
 </script>
 
-<style>
-.datagrid1 {border-collapse: collapse;border:none !important}
-.datagrid1 th{border:none !important;font-size: 12px;padding:0px 0px;}
-.datagrid1 td{border-right:none;border-left:none;border-bottom:1px dotted #ccc;font-size: 12px;}
-.datagrid1 td a{text-transform: capitalize}
-	#franchise_order_list_wrapper .tab_list{
-		clear:both;
-		display: block;
-	}
-	#franchise_order_list_wrapper .tab_list ol{
-		padding-left:0px;
-	}
-	#franchise_order_list_wrapper .tab_list li{
-		display: inline-block;
-	}
-	#franchise_order_list_wrapper .tab_list li a{
-		display: block;
-		background: #efefef;
-		padding:5px 10px;
-		font-size: 12px;
-		color: #454545;
-		cursor:pointer;
-	}
-	#franchise_order_list_wrapper .tab_list li a.selected{
-		background: #555;
-		color: #fff;
-	}
-
-
-.transit_link{
-	border-radius:5px;
-	background:#96C5E0;
-	display:inline-block;
-	padding:3px 7px;
-	color:#fff;
-}
-.transit_link:hover{
-	border-radius:0px;
-	background:#3084C1;
-	text-decoration:none;
-}
-
-.datagrid th{padding:12px 7px}
-.datagrid1 {border-collapse: collapse;border:none !important}
-.datagrid1 th{border:none !important;font-size: 13px;padding:0px 0px;}
-.datagrid1 td{border-right:none;border-left:none;border-bottom:none;font-size: 12px;padding:2px;color: #444;text-transform: capitalize}
-.datagrid1 td a{text-transform: capitalize}
-.datagrid1 td b{font-weight: bold;font-size: 11px;}
-
-</style>	 
-
-<style>
-		.module_cont{padding;2px;}
-		.module_cont .module_cont_title{margin:5px 0px;}
-		.module_cont .module_cont_block{clear:both;}
-		.module_cont .module_cont_block .module_cont_block_grid_total{margin:3px 0px;}
-		.module_cont .module_cont_grid_block_pagi{padding:3px;text-align: right;}
-		.module_cont .module_cont_grid_block_pagi a{padding:5px 10px;color:#454545;background: #f1f1f1;display: inline-block}
-		
-	</style>
-	
 	<script>
 		$('input[name="return_on_date"],input[name="return_on_date_end"]').datepicker({});
 		
@@ -3691,6 +3804,9 @@ $("#pnh_membersch").dialog({
 		}
 		load_recent_calllog('',<?php echo $f['franchise_id'];?>);
 			
-				</script>
+	
+</script>
+
  
 <?php
+	
