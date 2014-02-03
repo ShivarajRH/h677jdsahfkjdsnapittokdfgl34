@@ -1,0 +1,272 @@
+.container_div
+{
+	visibility:hidden
+}
+.leftcont
+{
+	display: none
+}
+.fran_suspendlink
+{
+	border-radius:5px;
+	color:#333;
+	cursor: pointer;
+}
+.fran_suspendlink:hover
+{
+	
+	text-decoration:none;
+}
+.page_wrap
+{
+	padding-top:7px;margin-top: 10px;
+}
+li.required
+{
+	color: #cd0000;list-style: none
+}
+.jqplot-highlighter-tooltip, .jqplot-canvasOverlay-tooltip
+{
+	font-size: 13px !important;
+    margin-left:10px;margin-top:-5px;
+    background:none repeat scroll 0 0 #FFFFFF !important; 
+}
+.sbutton span {
+    color: #FFFFFF;
+}
+.button-tiny
+{
+	 padding: 0 2.92px;
+}
+.link_btn
+{
+	font-size: 10px;
+	color:#ff9600 !important;
+}
+.close_btn
+{
+	padding:1px 6px;color:#FFF !important;font-weight: bold;background: #cd0000;border:1px solid #B44F4F
+}
+.fc-event-title b
+{
+	font-size: 20px;
+	margin:10px;
+}
+.fc-event-title 
+{
+	font-size: 13px;
+	margin:10px;
+}
+.fc-event-skin.shipped_event
+{
+  background-color:#0000FF;
+}
+.fc-event-skin.delivered_event
+{
+	background-color:#008000;
+}
+.dash_bar_right
+{
+	font-size: 11px;
+	min-width: 100px !important;
+	text-align: center;
+	padding:3px 5px;
+}
+.dash_bar_right span
+{
+	display: inline;font-size: 15px;
+}
+h4
+{
+	margin:5px 0px;
+}
+.subdatagrid 
+{
+	width: 100%
+}
+
+.subdatagrid th {
+	padding: 5px;
+	font-size: 11px;
+	background: #F4EB9A;
+	color: maroon
+}
+
+.subdatagrid td {
+	padding: 3px;
+	font-size: 12px;
+}
+
+.subdatagrid td a {
+	color: #121213;
+}
+
+.cancelled_ord td {
+	text-decoration: line-through;
+	color: #cd0000 !important;
+}
+
+.cancelled_ord td a {
+	text-decoration: line-through;
+	color: #cd0000 !important;
+}
+
+.tabs ul.tabsul li a {
+	display: block;
+	padding: 5px 10px;
+}
+.vm #details td{
+	padding:7px;
+	background:#dfdfff;
+}
+.label{
+	font-weight:bold;
+	width:100px;
+	background:#eee !important;
+}
+.ttl_amount_wrap
+{
+	 background: none repeat scroll 0 0 #F1F1F1;
+    float: right;
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    margin-right: 10px;
+    margin-top: 5px;
+    padding: 6px;
+}
+.datagrid1 
+{
+	border-collapse: collapse;border:none !important
+}
+.datagrid1 th
+{
+	border:none !important;font-size: 12px;padding:0px 0px;
+}
+.datagrid1 td
+{
+	border-right:none;border-left:none;border-bottom:1px dotted #ccc;font-size: 12px;
+}
+.datagrid1 td a
+{
+	text-transform: capitalize
+}
+#franchise_order_list_wrapper .tab_list{
+	clear:both;
+	display: block;
+}
+#franchise_order_list_wrapper .tab_list ol{
+	padding-left:0px;
+}
+#franchise_order_list_wrapper .tab_list li{
+	display: inline-block;
+}
+#franchise_order_list_wrapper .tab_list li a{
+	display: block;
+	background: #efefef;
+	padding:5px 10px;
+	font-size: 12px;
+	color: #454545;
+	cursor:pointer;
+}
+#franchise_order_list_wrapper .tab_list li a.selected{
+	background: #555;
+	color: #fff;
+}
+.transit_link{
+	border-radius:5px;
+	background:#96C5E0;
+	display:inline-block;
+	padding:3px 7px;
+	color:#fff;
+}
+.transit_link:hover{
+	border-radius:0px;
+	background:#3084C1;
+	text-decoration:none;
+}
+
+.datagrid th{padding:12px 7px}
+.datagrid1 {border-collapse: collapse;border:none !important}
+.datagrid1 th{border:none !important;font-size: 13px;padding:0px 0px;}
+.datagrid1 td{border-right:none;border-left:none;border-bottom:none;font-size: 12px;padding:2px;color: #444;text-transform: capitalize}
+.datagrid1 td a{text-transform: capitalize}
+.datagrid1 td b{font-weight: bold;font-size: 11px;}
+.module_cont{padding;2px;}
+.module_cont .module_cont_title{margin:5px 0px;}
+.module_cont .module_cont_block{clear:both;}
+.module_cont .module_cont_block .module_cont_block_grid_total{margin:3px 0px;}
+.module_cont .module_cont_grid_block_pagi{padding:3px;text-align: right;}
+.module_cont .module_cont_grid_block_pagi a{padding:5px 10px;color:#454545;background: #f1f1f1;display: inline-block}
+
+.level_wrapper
+{
+	font-size: 11px;
+	color:#fff;
+	padding:2px 3px;
+	border-radius:3px;
+}
+.status_wrapper
+{
+	
+}
+.paid_wrapper
+{
+	background-color: #BF0A99;
+    color: #FFFFFF;
+    display: inline-block;
+    padding: 3px;
+    text-align: center;
+}
+.page_topbar_left .franch_header_wrap
+{
+	width:75%;
+	float: left;
+}
+.paid_unmark_wrapper
+{
+	 color: #0000FF;
+    font-size: 10px;
+    padding: 7px 4px;
+    text-decoration: underline;
+}
+#activity_menu_tabs
+{
+	margin: 5px 0px 0px 5px;
+	width:97%;
+}
+#details
+{
+	width:99%;
+}
+.edit_wrapper
+{
+	 color: #0000FF;
+    float: right;
+    font-size: 11px;
+}
+.page_topbar_left
+{
+	
+}
+.page_topbar_left .franch_header_wrap
+{
+	margin: 5px 0px !important;
+	font-size: 25px;
+	color: red;
+	font-weight: normal;
+	color:purple;
+	font-family: Helvetica !important;
+}
+.page_topbar_right
+{
+	margin-bottom: 0px;clear: both;overflow: hidden
+}
+.ship_log_calender_wrap
+{
+	margin-top:20px;	
+}
+.ship_log_calender_wrap #ship_log_details_wrap
+{
+	
+}

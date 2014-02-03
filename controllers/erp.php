@@ -24760,4 +24760,200 @@ die; */
 
 		echo json_encode($output);
 	}
+/*
+	 * Ajax function to load shipments details for a franchise on selected date
+	 * 
+	 * 
+	 */
+	function jx_franchise_shipment_log_bydate()
+	{
+		$cal_date=$this->input->post('sel_date');
+		$cal_mnth=$this->input->post('sel_mnth');
+		$cal_year=$this->input->post('sel_year');
+		$ship_date=$this->input->post('ship_date');
+		$fid=$this->input->post('fid');
+		
+		
+		//print_r($transids);exit;
+		$sql='select c.transid,c.batch_enabled,sum(o.i_coup_discount) as com,
+						i.invoice_no,
+						date_format(date(a.shipped_on), "%d/%m/%Y") as s_date,o.transid,d.name,sum(i.invoice_qty) as quantity,
+						o.status,o.itemid,
+						date_format(from_unixtime(o.time),"%d/%m/%Y") as time,o.actiontime,
+						i_orgprice,
+						date(a.shipped_on),
+						sum((i.mrp-i.discount)*i.invoice_qty) as amt
+					from shipment_batch_process_invoice_link a
+					join king_invoice i on i.invoice_no=a.invoice_no
+					join king_orders o on o.id = i.order_id
+					join king_transactions c on c.transid = o.transid
+					join king_dealitems d on d.id = o.itemid
+					where c.franchise_id = ? and o.status in (1,2) and a.shipped = 1 and  c.is_pnh = 1 and date(a.shipped_on) = date(?)  
+					group by i.invoice_no,o.itemid';
+		$ship_details_res=$this->db->query($sql,array($fid,$ship_date));
+		$output['ttl_amt']=0;
+		$output['ttl_qty']=0;
+		
+		if($ship_details_res->num_rows())
+		{
+			$ship_details=array();
+			$ship_details_trans=array();
+			$output['status']='success';
+			foreach($ship_details_res->result_array() as $t)
+			{
+				$t['amount']=format_price($t['amt']);
+				$output['ttl_amt']+=$t['amt'];
+				$output['ttl_qty']+=$t['quantity'];
+				$ship_details[]=$t;
+				
+				if(!isset($ship_details_trans[$t['transid']]))
+				{
+					$ship_details_trans[$t['transid']]=array('transid'=>$t['transid'],'amount'=>0,'invoices'=>array());
+				}
+				$ship_details_trans[$t['transid']]['amount'] += $t['amt'];
+				array_push($ship_details_trans[$t['transid']]['invoices'],array('invoice_no'=>$t['invoice_no'],'name'=>$t['name'],'qty'=>$t['quantity'],'amount'=>$t['amt']));
+			}
+			$output['ttl_amt']=format_price($output['ttl_amt']);
+			$output['ship_det']=$ship_details_trans;
+		}else
+		{
+			$output['status']='failure';
+			$output['message']='No Log Found';
+		}				
+					
+		echo json_encode($output);	
+	}
+	
+	/*
+	 * Ajax function to load Delivery details for a franchise on selected date
+	 * 
+	 * 
+	 */
+	function jx_franchise_delivery_log_bydate()
+	{
+		$cal_date=$this->input->post('sel_date');
+		$cal_mnth=$this->input->post('sel_mnth');
+		$cal_year=$this->input->post('sel_year');
+		$delivery_date=$this->input->post('delivery_date');
+		$fid=$this->input->post('fid');
+		$sql='select c.transid,c.batch_enabled,sum(o.i_coup_discount) as com,
+						i.invoice_no,
+						date_format(date(a.delivered_on), "%d/%m/%Y") as s_date,o.transid,d.name,sum(i.invoice_qty) as quantity,
+						o.status,o.itemid,
+						date_format(from_unixtime(o.time),"%d/%m/%Y") as time,o.actiontime,
+						i_orgprice,
+						date(a.shipped_on),
+						sum((i.mrp-i.discount)*i.invoice_qty) as amt
+					from shipment_batch_process_invoice_link a
+					join king_invoice i on i.invoice_no=a.invoice_no
+					join king_orders o on o.id = i.order_id
+					join king_transactions c on c.transid = o.transid
+					join king_dealitems d on d.id = o.itemid
+					where c.franchise_id = ? and o.status in (1,2) and a.shipped = 1 and  c.is_pnh = 1 and date(a.delivered_on) = date(?)  
+					group by i.invoice_no,o.itemid';
+		$delivery_details_res=$this->db->query($sql,array($fid,$delivery_date));
+		$output['ttl_amt']=0;
+		$output['ttl_qty']=0;
+		
+		if($delivery_details_res->num_rows())
+		{
+			$delivery_details=array();
+			$delivery_details_trans=array();
+			$output['status']='success';
+			foreach($delivery_details_res->result_array() as $t)
+			{
+				
+				$t['amount']=format_price($t['amt']);
+				$output['ttl_amt']+=$t['amt'];
+				$output['ttl_qty']+=$t['quantity'];
+				$delivery_details[]=$t;
+				
+				if(!isset($delivery_details_trans[$t['transid']]))
+				{
+					$delivery_details_trans[$t['transid']]=array('transid'=>$t['transid'],'amount'=>0,'invoices'=>array());
+				}
+				$delivery_details_trans[$t['transid']]['amount'] += $t['amt'];
+				array_push($delivery_details_trans[$t['transid']]['invoices'],array('invoice_no'=>$t['invoice_no'],'name'=>$t['name'],'qty'=>$t['quantity'],'amount'=>$t['amt']));
+			}
+			$output['ttl_amt']=format_price($output['ttl_amt']);
+			$output['delivery_det']=$delivery_details_trans;
+		}else
+		{
+			$output['status']='failure';
+			$output['message']='No Log Found';
+		}				
+		echo json_encode($output);	
+	}
+
+	/*
+	 * Ajax function to load total amount shipped on dates 
+	 * @param unknown_type start date,end date
+	 * @param unknown_type franchise id
+	 * 
+	 */
+	function jx_franchise_shipment_logonload()
+	{
+		$this->erpm->auth();
+		
+		$fid=$this->input->post('fid');
+		$st_d = $this->input->post('start')/1000;
+		$en_d = $this->input->post('end')/1000;
+		
+		//to covert timestamp to date
+		$st_dt=gmdate("Y-m-d", $st_d);
+		$en_dt=gmdate("Y-m-d", $en_d);
+		 
+		$sql='(select c.transid as title,sum((i.mrp-i.discount)*i.invoice_qty) as amount,date(a.shipped_on) as start,date(a.shipped_on) as end,"shipment" as type
+						from shipment_batch_process_invoice_link a
+						join king_invoice i on i.invoice_no=a.invoice_no
+						join king_orders o on o.id = i.order_id
+						join king_transactions c on c.transid = o.transid
+						join king_dealitems d on d.id = o.itemid 
+						where c.franchise_id = ? and o.status in (1,2) and a.shipped = 1 and  c.is_pnh = 1 
+						and date(a.shipped_on) between ? and ? 
+						group by date(a.shipped_on)
+				)
+				union
+				(select c.transid as title,sum((i.mrp-i.discount)*i.invoice_qty) as amount,date(a.delivered_on) as start,date(a.delivered_on) as end,"delivery" as type
+						from shipment_batch_process_invoice_link a
+						join king_invoice i on i.invoice_no=a.invoice_no
+						join king_orders o on o.id = i.order_id
+						join king_transactions c on c.transid = o.transid
+						join king_dealitems d on d.id = o.itemid 
+						where c.franchise_id = ? and o.status in (1,2) and a.shipped = 1 and  c.is_pnh = 1
+						and date(a.delivered_on) between ? and ? and a.delivered_on is not null 
+						group by date(a.delivered_on)
+				)';
+		
+		$ship_del_list_res=$this->db->query($sql,array($fid,$st_dt,$en_dt,$fid,$st_dt,$en_dt));
+		
+		$output['ttl_amt_shipped']=0;
+		$output['ttl_amt_delivered']=0;
+		if($ship_del_list_res->num_rows())
+		{
+			$output['status']='success';
+			$ship_del_list=array();
+			foreach($ship_del_list_res->result_array() as $t)
+			{
+				if($t['type']=='shipment')
+				{
+					$output['ttl_amt_shipped']+=$t['amount'];
+				}
+				if($t['type']=='delivery')
+				{
+					$output['ttl_amt_delivered']+=$t['amount'];
+				}
+				$t['amount']=format_price($t['amount']);
+				$ship_del_list[]=$t;
+			}
+			$output['ttl_amt_shipped']=format_price($output['ttl_amt_shipped']);
+			$output['ttl_amt_delivered']=format_price($output['ttl_amt_delivered']);
+			$output['ship_del_list']=$ship_del_list;
+		}else
+		{
+			$output['status']='failure';
+			$output['message']='No Log Found';
+		}	
+		echo json_encode($output);	
+	}
 }
