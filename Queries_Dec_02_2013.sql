@@ -2028,7 +2028,7 @@ select * from king_admin
 select * from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = '43' order by created_on desc;
 
 
-select i.invoice_no,sum(i.mrp) as inv_amount,group_concat(distinct i.invoice_no) as grp_invs
+select i.invoice_no,round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2) as inv_amount,group_concat(distinct i.invoice_no) as grp_invs
                                                             from king_invoice i
                                                             join king_transactions tr on tr.transid=i.transid
  				left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no
@@ -2036,3 +2036,35 @@ select i.invoice_no,sum(i.mrp) as inv_amount,group_concat(distinct i.invoice_no)
                                                             group by i.invoice_no,i.transid order by i.createdon asc
 
 # => 200555 200696 200879 202019 => 4 70 - 4 = 66
+
+# Feb_01_2014
+-- new 
+select * from (
+select i.invoice_no,( sum( i.mrp - discount - credit_note_amt )  * invoice_qty) as invoice_val,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),rcon.unreconciled) as inv_amount,group_concat(distinct i.invoice_no) as grp_invs
+		from king_invoice i
+		join king_transactions tr on tr.transid=i.transid
+		left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
+		where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id='43' #and rcon.invoice_no is null 
+		#and rcon.unreconciled = 0 
+		#and rcon.invoice_no = '200804' #804'
+		group by i.invoice_no,i.transid order by i.createdon asc
+) as g where g.inv_amount > 0;
+#=>70 61 63 
+
+select * from pnh_t_receipt_reconcilation;
+
+
+-- // RESET RECONCILE TABLE
+truncate table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation`;
+truncate table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation_log`;
+update `snapittoday_db_jan_2014`.pnh_t_receipt_info set unreconciled_value = receipt_amount where receipt_amount !=0;
+update `snapittoday_db_jan_2014`.pnh_t_receipt_info set unreconciled_status = 'pending' where receipt_amount !=0;
+
+t_invoice_credit_notes
+pnh_t_credit_info
+
+final price => mrp - discont- creditnoteamount
+
+select * from pnh_t_receipt_info where receipt_id=5386
+
+select * from pnh_m_deposited_receipts where receipt_id=5386

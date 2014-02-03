@@ -7091,68 +7091,6 @@ order by p.product_name asc
         }
         
         /**
-         * Function to reconcile the receipts
-         * @param type $invoice_arr array
-         * @return type array
-         */
-        function reconcile_receipt($invoice_arr) {
-            
-            $userid = $invoice_arr['userid'];
-            $receipt_id = $invoice_arr['receipt_id'];
-            $amount = $invoice_arr['amount'];
-            $total_reconcile_val = $invoice_arr['total_reconcile_val'];
-            $fid = $invoice_arr['fid'];
-            $unreconciled_value = $invoice_arr['unreconciled_value'];
-            
-            foreach($invoice_arr['invoices'] as $i=>$arr) {
-                
-                // 1. pnh_t_receipt_reconcilation
-                $input_data = array(
-                        'debit_note_id'=> 0
-                        ,'invoice_no'=>$arr['invoice_no']
-                        ,'dispatch_id'=>$arr['dispatch_id']
-                        ,'inv_amount'=>$arr['invoice_amt']
-                        ,'unreconciled'=>$arr['unreconciled_amt']
-                        ,'created_on'=>time()
-                        ,'created_by'=>$userid
-                        ,'modified_on'=>''
-                        ,'modified_by'=>''
-                    );
-                $this->db->insert("pnh_t_receipt_reconcilation",$input_data);
-                $reconcile_id = $this->db->insert_id();
-                
-                //2. pnh_t_receipt_reconcilation_log
-                $input_data2 = array(
-                    'credit_note_id'=> 0
-                    ,'receipt_id'=>$receipt_id
-                    ,'reconcile_id'=>$reconcile_id
-                    ,'reconcile_amount'=>$arr['adjusted_amt']
-                    ,'is_reversed'=>0
-                    ,'created_on'=>time()
-                    ,'created_by'=>$userid
-                );
-                $this->db->insert("pnh_t_receipt_reconcilation_log",$input_data2);
-
-                $output[$i]['reconcile_id'] = $reconcile_id;
-                $output[$i]['log_id'] = $this->db->insert_id();
-            }
-            
-            //3.  pnh_t_receipt_info
-            if($unreconciled_value == 0)
-                $unreconciled_status = "done";
-            elseif($unreconciled_value < $amount)
-                $unreconciled_status = "partial";
-            else
-                $unreconciled_status = "pending";
-            
-            $input_data3 = array("unreconciled_value"=>$unreconciled_value,"unreconciled_status"=>$unreconciled_status);
-            $where_data = array("receipt_id" => $receipt_id,"franchise_id" => $fid );
-            $this->db->update("pnh_t_receipt_info",$input_data3,$where_data);
-            echo $this->db->last_query();
-            return $output;
-        }
-        
-        /**
          * 
          * @param type $fid
          * @param type $user 
@@ -12469,38 +12407,38 @@ order by action_date";
         return $this->db->query("select username from king_admin where id=?",$userid)->row()->username;
     }
 
-	function vendor_alpha_list($ch)
-	{
-		if($ch != '09')
-		{
-			return $this->db->query("Select a.vendor_id,a.vendor_name from m_vendor_info a join t_po_info b on b.vendor_id=a.vendor_id where vendor_name like '".$ch."%'  and b.po_status not in (2,3) group by vendor_id" );	
-		}else
-		{
-			return $this->db->query("Select a.vendor_id,a.vendor_name from m_vendor_info a join t_po_info b on b.vendor_id=a.vendor_id where vendor_name REGEXP '^[0-9]' and b.po_status not in (2,3) group by vendor_id" );
-		}
-	}
-	
-	function cat_alpha_list($ch)
-	{
-		if($ch != '09')
-		{
-			return $this->db->query("Select id,name from king_categories where name like '".$ch."%' group by name" );	
-		}else
-		{
-			return $this->db->query("Select id,name from king_categories where name REGEXP '^[0-9]' group by name" );
-		}
-	}
-	function brand_alpha_list($ch)
-	{
-		if($ch != '09')
-		{
-			return $this->db->query("Select id,name from king_brands where name like '".$ch."%' group by name" );	
-		}else
-		{
-			return $this->db->query("Select id,name from king_brands where name REGEXP '^[0-9]' group by name" );
-		}
-	}
-	
+    function vendor_alpha_list($ch)
+    {
+            if($ch != '09')
+            {
+                    return $this->db->query("Select a.vendor_id,a.vendor_name from m_vendor_info a join t_po_info b on b.vendor_id=a.vendor_id where vendor_name like '".$ch."%'  and b.po_status not in (2,3) group by vendor_id" );	
+            }else
+            {
+                    return $this->db->query("Select a.vendor_id,a.vendor_name from m_vendor_info a join t_po_info b on b.vendor_id=a.vendor_id where vendor_name REGEXP '^[0-9]' and b.po_status not in (2,3) group by vendor_id" );
+            }
+    }
+
+    function cat_alpha_list($ch)
+    {
+            if($ch != '09')
+            {
+                    return $this->db->query("Select id,name from king_categories where name like '".$ch."%' group by name" );	
+            }else
+            {
+                    return $this->db->query("Select id,name from king_categories where name REGEXP '^[0-9]' group by name" );
+            }
+    }
+    
+    function brand_alpha_list($ch)
+    {
+            if($ch != '09')
+            {
+                    return $this->db->query("Select id,name from king_brands where name like '".$ch."%' group by name" );	
+            }else
+            {
+                    return $this->db->query("Select id,name from king_brands where name REGEXP '^[0-9]' group by name" );
+            }
+    }
 	
     /**
      * 
@@ -12518,7 +12456,6 @@ order by action_date";
      * @return array
      */
     function get_stock_from_orderid($orderid) {
-   
             $order_itemid=$this->db->query("select o.itemid from  king_orders o where o.id=? ",array($orderid))->row()->itemid;
             $raw_prod_ref=$this->db->query("select qty,product_id from m_product_deal_link where itemid = ?",$order_itemid)->result_array();
             
@@ -12534,10 +12471,7 @@ order by action_date";
                         );
             }
             return $arr_rslt;
-
-  
             /*$raw_prods=$this->db->query("select * from products_group_orders where transid in ('".implode("','",$v_transids)."')")->result_array();
-
             foreach($raw_prods as $r)
             {
                     $itemid=$this->db->query("select itemid from king_orders where id=? and transid = ? ",array($r['order_id'],$r['transid']))->row()->itemid;
@@ -12550,9 +12484,69 @@ order by action_date";
                     $productids[]=$r['product_id'];
 
             }
-
             */
     }
+
+    /**
+    * Function to reconcile the receipts
+    * @param type $invoice_arr array
+    * @return type array
+    */
+    function reconcile_receipt($invoice_arr) {
+        $output = array();
+        $userid = $invoice_arr['userid'];
+        $receipt_id = $invoice_arr['receipt_id'];
+        $amount = $invoice_arr['amount'];
+        $total_reconcile_val = $invoice_arr['total_reconcile_val'];
+        $fid = $invoice_arr['fid'];
+        $unreconciled_value = $invoice_arr['unreconciled_value'];
+        foreach($invoice_arr['invoices'] as $i=>$arr) {
+
+            // 1. pnh_t_receipt_reconcilation
+            $input_data = array(
+                    'debit_note_id'=> 0
+                    ,'invoice_no'=>$arr['invoice_no']
+                    ,'dispatch_id'=>$arr['dispatch_id']
+                    ,'inv_amount'=>$arr['invoice_amt']
+                    ,'unreconciled'=>$arr['unreconciled_amt']
+                    ,'created_on'=>time()
+                    ,'created_by'=>$userid
+                    ,'modified_on'=>''
+                    ,'modified_by'=>''
+                );
+            $this->db->insert("pnh_t_receipt_reconcilation",$input_data);
+            $reconcile_id = $output[$i]['reconcile_id'] = $this->db->insert_id();
+
+            //2. pnh_t_receipt_reconcilation_log
+            $input_data2 = array(
+                'credit_note_id'=> 0
+                ,'receipt_id'=>$receipt_id
+                ,'reconcile_id'=>$reconcile_id
+                ,'reconcile_amount'=>$arr['adjusted_amt']
+                ,'is_reversed'=>0
+                ,'created_on'=>time()
+                ,'created_by'=>$userid
+            );
+            $this->db->insert("pnh_t_receipt_reconcilation_log",$input_data2);
+            $output[$i]['log_id'] = $this->db->insert_id();
+        }
+
+        //3.  pnh_t_receipt_info
+        if($unreconciled_value == 0)
+            $unreconciled_status = "done";
+        elseif($unreconciled_value < $amount)
+            $unreconciled_status = "partial";
+        else
+            $unreconciled_status = "pending";
+
+        $input_data3 = array("unreconciled_value"=>$unreconciled_value,"unreconciled_status"=>$unreconciled_status);
+        $where_data = array("receipt_id" => $receipt_id,"franchise_id" => $fid );
+        $this->db->update("pnh_t_receipt_info",$input_data3,$where_data);
+        $output['lst_qry'] = $this->db->last_query();
+        
+        return $output;
+   }
+   
 }
 
 

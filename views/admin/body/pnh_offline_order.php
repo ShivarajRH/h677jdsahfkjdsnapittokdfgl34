@@ -1615,15 +1615,6 @@ $("#show_scheme_details").dialog({
 		}
 });
 
-function format_number(num,decimal) {
-    var deci = (decimal === undefined || decimal === null ) ? 2 : decimal;
-    num = parseFloat(num);
-    
-    var final_num = ( num.toString().indexOf(".") !== -1) ? num.toFixed(deci) : num;
-    return parseFloat(final_num);
-}
-
-
 </script>
 
 <div id="newbie_confirm_dlg" title="New franchisee note" >

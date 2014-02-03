@@ -69,7 +69,7 @@
                                                 <?php } ?>
                                                  &nbsp;
                                                  <?php if($r['unreconciled_value'] != $r['receipt_amount']) { ?>
-                                                    <a href="javascript:void(0)" onclick="clk_show_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-action">View Reconciled</a>
+                                                    <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-primary">View Reconciled</a>
                                                  <?php } ?>
                                             </td>
                                         </tr>
@@ -193,7 +193,7 @@
                                                         <?php } ?>
                                                          &nbsp;
                                                          <?php if($r['unreconciled_value'] != $r['receipt_amount']) { ?>
-                                                            <a href="javascript:void(0)" onclick="clk_show_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-action">View Reconciled</a>
+                                                            <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-primary">View Reconciled</a>
                                                          <?php } ?>
                                                     </td>
                                                 </tr>
@@ -277,7 +277,7 @@
                                             <?php } ?>
                                              &nbsp;
                                              <?php if($r['unreconciled_value'] != $r['receipt_amount']) { ?>
-                                                <a href="javascript:void(0)" onclick="clk_show_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-action">View Reconciled</a>
+                                                <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-primary">View Reconciled</a>
                                              <?php } ?>
                                         </td>
                                     </tr>
@@ -545,7 +545,7 @@ else if($type=="unreconcile")
                                             <?php } ?>
                                              &nbsp;
                                              <?php if($r['unreconciled_value'] != $r['receipt_amount']) { ?>
-                                                <a href="javascript:void(0)" onclick="clk_show_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-action">View Reconciled</a>
+                                                <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-primary">View Reconciled</a>
                                              <?php } ?>
                                         </td>
                                     </tr>

@@ -2004,50 +2004,59 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 			</form>
 		</div>
 	</div>
-        <div id="dlg_unreconcile_list" style="display:none;">
-                <h3>Select invoices for reconciliation </h3>
+        <div id="dlg_unreconcile_view_list" style="display:none;">
+        </div>
+        <div id="dlg_unreconcile_form" style="display:none;">
+            <h3>Select invoices for reconciliation </h3>
+            <form id="dl_submit_reconcile_form">
                 <table class="datagrid1" width="100%">
-                    <tr><td width="150">Receipt #</td><th class="dg_l_receipt_id"></th></tr>
-                    <tr><td width="150">Receipt Amount</td><th class="dg_l_receipt_amount"></th></tr>
-                    <tr><td width="150">Unreconcile Amount</td><th class="dg_l_unreconciled_value"></th></tr>
+                    <tr><td width="150">Receipt #</td><th>
+                            <!--<label class="dg_l_receipt_id"></label>-->
+                            <input type="text" readonly='true' id="dg_i_receipt_id" name="dg_i_receipt_id" value="" size="6" class="inp"/></th></tr>
+                    <tr><td width="150">Receipt Amount</td><th>
+                            <!--<label  class="dg_l_receipt_amount"></label>-->
+                            <input type="text" readonly='true' id="dg_i_receipt_amount" name="dg_i_receipt_amount" value="" size="6" class="inp money"/>Rs.</th></tr>
+                    <tr><td width="150">Unreconcile Amount</td><th>
+                            <!--<label class="dg_l_unreconciled_value"></label>-->
+                            <input type="text" readonly='true' id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value="" size="6" class="inp money"/>Rs.</th></tr>
                 </table>
                 <div>&nbsp;</div>
                 <div class="dg_error_status"></div>
-                <form onsubmit="dl_submit_reconcile_form">
-                    <input type="hidden" id="dg_i_receipt_id" name="dg_i_receipt_id" value=""/>
-                    <input type="hidden" id="dg_i_receipt_amount" name="dg_i_receipt_amount" value=""/>
-                    <input type="hidden" id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value=""/>
                     <table class="datagrid nofooter" width="100%">
-                        <thead> <tr><th>&nbsp;</th><th>Invoice No</th><th>Un-reconcile Amount</th><th>Adjusted Amount</th></tr> </thead>
+                        <thead> <tr><th>Invoice No</th><th width="100">Invoice Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
                         <tbody class='dlg_invs_list'>
                                 <tr id='dg_reconcile_row_1'>
                                     <td>
-                                        <a href='javascript:void(0)' class='button button-tiny button-primary' onclick='dg_add_invoice_row(this);'>+</a>
-                                    </td>
-                                    <td>
                                         <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='sel_invoices' onchange='dg_fn_inv_selected(this,1);'></select>
                                     </td>
-                                    <td><input type='text' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=5></td>
-                                    <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=5 value=''></td>
+                                    <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=6></td>
+                                    <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value=''></td>
+                                    <td>
+                                        <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick='dg_add_invoice_row(this);'> + </a>
+                                    </td>
                                 </tr>
                         </tbody>
                         <tfoot class="nofooter">
                             <tr>
+                                <td colspan="2">
+                                    <span style="float:right;">Total reconciled (Rs.):</span><br>
+                                    <span style="float:right;">Un-reconciled after Reconcile (Rs.):</span>
+                                </td>
+                                <td align="left">
+                                    <input type="text" readonly='true' name="ttl_reconciled" class="dg_l_total_adjusted_val money" value="0" size="6" /><br>
+                                    <input type="text" readonly='true' name="ttl_unreconciled_after" class="dg_ttl_unreconciled_after money" value="0" size="6" />
+                                </td>
                                 <td></td>
-                                <td></td>
-                                <td><span style="float:right;">Total</span></td>
-                                <td align="left"><input type="text" disabled class="dg_l_total_adjusted_val money" value="0" size="4" /></td>
                             </tr>
                         </tfoot>
                     </table>
-                    <input type="submit" class='button button-tiny button-primary fl_right' value="Submit"/>
                 </form>
         </div>
         
 </div>
 <script>
 // <![CDATA[
-    var franchise_id = '<?=$franchise_id;?>';
+    var franchise_id = "<?=$franchise_id;?>";
     var frn_version_url = "<?=site_url("admin/pnh_fran_ver_change/{$fran['franchise_id']}")?>";
     var f_created_on = "<?php echo date('m/d/Y',$f['created_on'])?>";
     var franchise_name = "<?php echo $f['franchise_name']?>";

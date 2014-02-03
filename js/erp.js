@@ -415,3 +415,45 @@ function get_unixtimetodatetime(utime)
     var datetime=d+'/'+m+'/'+y+' '+h+':'+mi+':'+s;
     return datetime;
 }
+
+/** This prototype function allows you to reset all form input types
+ * $("#formname").clearForm();
+ */
+$.fn.clearForm = function() {
+  return this.each(function() {
+    var type = this.type, tag = this.tagName.toLowerCase();
+    if (tag == 'form')
+      return $(':input',this).clearForm();
+    if (type == 'text' || type == 'password' || tag == 'textarea')
+      this.value = '';
+    else if (type == 'checkbox' || type == 'radio')
+      this.checked = false;
+    else if (tag == 'select')
+      this.selectedIndex = 0;//this.selectedIndex = -1;
+  });
+};
+
+/** This prototype function allows you to remove even array from array 
+   var arr = [1,2,[1,1], 'abc']; 
+   arr.remove([1,1]);console.log(arr) //[1, 2, 'abc']
+   arr.remove(1); console.log(arr) //[2, [1,1], 'abc']
+   arr.remove('abc'); console.log(arr) //[1, 2, [1,1]]*/
+Array.prototype.remove = function(x) { 
+    for(i in this){
+        if(this[i].toString() == x.toString()){
+            this.splice(i,1)
+        }
+    }
+}
+
+/**
+ * This function allows you to remove decimal point to 2 digits, also preserver integer numbers
+ * 5.386823 => 5.39
+ */
+function format_number(num,decimal) { //decimal is optional
+    var deci = (decimal === undefined || decimal === null ) ? 2 : decimal;
+    num = parseFloat(num);
+    
+    var final_num = ( num.toString().indexOf(".") !== -1) ? num.toFixed(deci) : num;
+    return parseFloat(final_num);
+}
