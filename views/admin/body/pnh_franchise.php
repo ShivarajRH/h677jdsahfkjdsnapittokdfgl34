@@ -2011,21 +2011,18 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
             <form id="dl_submit_reconcile_form">
                 <table class="datagrid1" width="100%">
                     <tr><td width="150">Receipt #</td><th>
-                            <!--<label class="dg_l_receipt_id"></label>-->
                             <input type="text" readonly='true' id="dg_i_receipt_id" name="dg_i_receipt_id" value="" size="6" class="inp"/></th></tr>
                     <tr><td width="150">Receipt Amount</td><th>
-                            <!--<label  class="dg_l_receipt_amount"></label>-->
-                            <input type="text" readonly='true' id="dg_i_receipt_amount" name="dg_i_receipt_amount" value="" size="6" class="inp money"/>Rs.</th></tr>
+                            Rs. <input type="text" readonly='true' id="dg_i_receipt_amount" name="dg_i_receipt_amount" value="" size="6" class="inp money"/></th></tr>
                     <tr><td width="150">Unreconcile Amount</td><th>
-                            <!--<label class="dg_l_unreconciled_value"></label>-->
-                            <input type="text" readonly='true' id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value="" size="6" class="inp money"/>Rs.</th></tr>
+                            Rs. <input type="text" readonly='true' id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value="" size="6" class="inp money"/></th></tr>
                 </table>
                 <div>&nbsp;</div>
                 <div class="dg_error_status"></div>
                     <table class="datagrid nofooter" width="100%">
                         <thead> <tr><th>Invoice No</th><th width="100">Invoice Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
                         <tbody class='dlg_invs_list'>
-                                <tr id='dg_reconcile_row_1'>
+                                <tr id='dg_reconcile_row_1' class="dg_invoice_row">
                                     <td>
                                         <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='sel_invoices' onchange='dg_fn_inv_selected(this,1);'></select>
                                     </td>

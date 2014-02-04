@@ -2068,3 +2068,4 @@ final price => mrp - discont- creditnoteamount
 select * from pnh_t_receipt_info where receipt_id=5386
 
 select * from pnh_m_deposited_receipts where receipt_id=5386
+

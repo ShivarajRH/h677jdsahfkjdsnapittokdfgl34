@@ -4296,6 +4296,9 @@ group by g.product_id ");
 		$user=$this->auth(FINANCE_ROLE);
 		$r=$this->db->query("select * from pnh_t_receipt_info where receipt_id=?",$rid)->row_array();
 		$this->db->query("update pnh_t_receipt_info set status=3 where receipt_id=? limit 1",$rid);
+                
+                $this->erpm->reverse_the_reconcilation($rid);
+                
 		$_POST=array("type"=>1,"amount"=>$r['receipt_amount'],"desc"=>"Reversal of receipt $rid","internal"=>true,"sms"=>false,"receipt_id"=>$rid);
 		$this->pnh_acc_stat_c($r['franchise_id']);
 		redirect($_SERVER['HTTP_REFERER']);
@@ -23975,7 +23978,7 @@ die; */
 		}
                 else if($type=="unreconcile")
 		{
-			$sql="select * from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? order by created_on desc";
+			$sql="select * from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) order by created_on desc";
 	 //and unreconciled_value > 0
 			$total_records=$this->db->query($sql,$fid)->num_rows;
 	
@@ -26716,7 +26719,7 @@ die; */
          */
         function jx_get_fran_reconcile_list($receipt_id,$franchise_id)
         {
-            $user = $this->erpm->auth();
+            $user = $this->erpm->auth(FINANCE_ROLE);
             $sql = "select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.id as reconcile_id,rcon.invoice_no
                         ,rcon.inv_amount,rcon.unreconciled
                         ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date,a.username
@@ -26747,7 +26750,7 @@ die; */
          * @param type $fid int 
          */
         function jx_get_unreconciled_invoice_list($fid) {
-            $user = $this->erpm->auth();
+            $user = $this->erpm->auth(FINANCE_ROLE);
             $rdata['fran_invoices']=$this->db->query("select * from (select i.invoice_no,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),rcon.unreconciled) as inv_amount,group_concat(distinct i.invoice_no) as grp_invs
                                                             from king_invoice i
                                                             join king_transactions tr on tr.transid=i.transid
@@ -26758,7 +26761,7 @@ die; */
         }
         
         function jx_dl_submit_reconcile_form($fid) {
-            $user = $this->erpm->auth();
+            $user = $this->erpm->auth(FINANCE_ROLE);
             
             //$rdata['post'] = $_POST;
             //echo json_encode($rdata); die();

@@ -12547,6 +12547,23 @@ order by action_date";
         return $output;
    }
    
+    function reverse_the_reconcilation($rid) {
+        /*
+         On cancell receipt:
+=> Get receipt id, reconcile id, reconciled_amount
+=> with reconcile id  take invoice amount  and put into unreconcile field   & update modified date
+=> update in reconcilation log table is _reversed = 1 and reconciled_amount = 0 (reconciled invoice_amount)
+=> & update in receiptinfo table unreconciled_value =same as receipt amount & unreconciled status=pending/partial
+=> On 2nd time reconcilation with same receipt id which is reversed,
+=> Insert new row with same receipt id, reconcile id and reconciled amount
+( always consider rows with is_reversed=0 from reconcilation_log table )
+         ====>
+         Step2: its not invoice amount, but it should be take reconciled amount w.r.t to the receipt being cancelled & put it back into unreconcile field.
+Step3: Again here reconciled_amount need not be zero, it should be reconciled_amount=reconciled_amount-previously reconciled amount w.r.t to receipt being 
+Step5 & Step6: Why will we reconcile the same receipt again, as its already cancelled?
+         
+         */
+    }
 }
 
 
