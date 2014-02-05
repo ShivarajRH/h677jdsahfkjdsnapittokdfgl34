@@ -24808,10 +24808,11 @@ die; */
 				
 				if(!isset($ship_details_trans[$t['transid']]))
 				{
-					$ship_details_trans[$t['transid']]=array('transid'=>$t['transid'],'amount'=>0,'invoices'=>array());
+					$ship_details_trans[$t['transid']]=array('transid'=>$t['transid'],ord_on=>$t['time'],'amount'=>0,'invoices'=>array());
 				}
 				$ship_details_trans[$t['transid']]['amount'] += $t['amt'];
-				array_push($ship_details_trans[$t['transid']]['invoices'],array('invoice_no'=>$t['invoice_no'],'name'=>$t['name'],'qty'=>$t['quantity'],'amount'=>$t['amt']));
+				$ship_details_trans[$t['transid']]['ord_on'] = $t['time'];
+				array_push($ship_details_trans[$t['transid']]['invoices'],array('invoice_no'=>$t['invoice_no'],'itemid'=>$t['itemid'],'name'=>$t['name'],'qty'=>$t['quantity'],'amount'=>$t['amt'],'ord_on'=>$t['time']));
 			}
 			$output['ttl_amt']=format_price($output['ttl_amt']);
 			$output['ship_det']=$ship_details_trans;
@@ -24836,9 +24837,10 @@ die; */
 		$cal_year=$this->input->post('sel_year');
 		$delivery_date=$this->input->post('delivery_date');
 		$fid=$this->input->post('fid');
+		
 		$sql='select c.transid,c.batch_enabled,sum(o.i_coup_discount) as com,
 						i.invoice_no,
-						date_format(date(a.delivered_on), "%d/%m/%Y") as s_date,o.transid,d.name,sum(i.invoice_qty) as quantity,
+						date_format(date(e.logged_on), "%d/%m/%Y") as s_date,o.transid,d.name,sum(i.invoice_qty) as quantity,
 						o.status,o.itemid,
 						date_format(from_unixtime(o.time),"%d/%m/%Y") as time,o.actiontime,
 						i_orgprice,
@@ -24849,7 +24851,8 @@ die; */
 					join king_orders o on o.id = i.order_id
 					join king_transactions c on c.transid = o.transid
 					join king_dealitems d on d.id = o.itemid
-					where c.franchise_id = ? and o.status in (1,2) and a.shipped = 1 and  c.is_pnh = 1 and date(a.delivered_on) = date(?)  
+					join pnh_invoice_transit_log e on e.invoice_no = i.invoice_no and e.status = 3
+					where c.franchise_id = ? and o.status in (1,2) and a.shipped = 1 and  c.is_pnh = 1 and date(e.logged_on) = date(?)     
 					group by i.invoice_no,o.itemid';
 		$delivery_details_res=$this->db->query($sql,array($fid,$delivery_date));
 		$output['ttl_amt']=0;
@@ -24870,10 +24873,11 @@ die; */
 				
 				if(!isset($delivery_details_trans[$t['transid']]))
 				{
-					$delivery_details_trans[$t['transid']]=array('transid'=>$t['transid'],'amount'=>0,'invoices'=>array());
+					$delivery_details_trans[$t['transid']]=array('transid'=>$t['transid'],ord_on=>$t['time'],'amount'=>0,'invoices'=>array());
 				}
 				$delivery_details_trans[$t['transid']]['amount'] += $t['amt'];
-				array_push($delivery_details_trans[$t['transid']]['invoices'],array('invoice_no'=>$t['invoice_no'],'name'=>$t['name'],'qty'=>$t['quantity'],'amount'=>$t['amt']));
+				$delivery_details_trans[$t['transid']]['ord_on'] = $t['time'];
+				array_push($delivery_details_trans[$t['transid']]['invoices'],array('invoice_no'=>$t['invoice_no'],'itemid'=>$t['itemid'],'name'=>$t['name'],'qty'=>$t['quantity'],'amount'=>$t['amt'],'ord_on'=>$t['time']));
 			}
 			$output['ttl_amt']=format_price($output['ttl_amt']);
 			$output['delivery_det']=$delivery_details_trans;
@@ -24914,15 +24918,17 @@ die; */
 						group by date(a.shipped_on)
 				)
 				union
-				(select c.transid as title,sum((i.mrp-i.discount)*i.invoice_qty) as amount,date(a.delivered_on) as start,date(a.delivered_on) as end,"delivery" as type
-						from shipment_batch_process_invoice_link a
-						join king_invoice i on i.invoice_no=a.invoice_no
-						join king_orders o on o.id = i.order_id
-						join king_transactions c on c.transid = o.transid
-						join king_dealitems d on d.id = o.itemid 
-						where c.franchise_id = ? and o.status in (1,2) and a.shipped = 1 and  c.is_pnh = 1
-						and date(a.delivered_on) between ? and ? and a.delivered_on is not null 
-						group by date(a.delivered_on)
+				(
+						select c.transid as title,sum((i.mrp-i.discount)*i.invoice_qty) as amount,date(e.logged_on) as start,date(e.logged_on) as end,"delivery" as type
+							from shipment_batch_process_invoice_link a
+							join king_invoice i on i.invoice_no=a.invoice_no
+							join king_orders o on o.id = i.order_id
+							join king_transactions c on c.transid = o.transid
+							join king_dealitems d on d.id = o.itemid 
+							join pnh_invoice_transit_log e on e.invoice_no = i.invoice_no and e.status = 3 
+							where c.franchise_id = ? and o.status in (1,2) and a.shipped = 1 and  c.is_pnh = 1
+							and date(e.logged_on) between ? and ? 
+						group by date(e.logged_on) 
 				)';
 		
 		$ship_del_list_res=$this->db->query($sql,array($fid,$st_dt,$en_dt,$fid,$st_dt,$en_dt));
