@@ -2046,7 +2046,7 @@ select i.invoice_no,( sum( i.mrp - discount - credit_note_amt )  * invoice_qty) 
 		left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
 		where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id='43' #and rcon.invoice_no is null 
 		#and rcon.unreconciled = 0 
-		#and rcon.invoice_no = '200804' #804'
+		and rcon.invoice_no = '20141019616' #804'
 		group by i.invoice_no,i.transid order by i.createdon asc
 ) as g where g.inv_amount > 0;
 #=>70 61 63 
@@ -2068,4 +2068,87 @@ final price => mrp - discont- creditnoteamount
 select * from pnh_t_receipt_info where receipt_id=5386
 
 select * from pnh_m_deposited_receipts where receipt_id=5386
+
+# Feb_04_2014
+
+-- All new 
+
+# 1. list a reconcile ids of that receipt
+select * from pnh_t_receipt_reconcilation_log where receipt_id='5384';
+update pnh_t_receipt_reconcilation_log set is_reversed = 1 where receipt_id = '5385';
+
+# 2. 
+select * from pnh_t_receipt_reconcilation where id = '1';
+update pnh_t_receipt_reconcilation set unreconciled = unreconciled + '.$reconcile_amount.' and modified_on = now() and modified_by = '.$userid.' where id = '2';
+
+
+# 3. update receipt table with unreconciled_amount and unreconcile status
+update `snapittoday_db_jan_2014`.pnh_t_receipt_info set `unreconciled_value` = `receipt_amount`,`unreconciled_status` = 'pending' where `receipt_id` = '5385';
+-- select * from pnh_t_receipt_info where receipt_id='5385';
+
+
+# => 5384 -> 9=>2168.53
+
+select * from pnh_t_receipt_reconcilation_log where receipt_id='5383';
+select * from pnh_t_receipt_reconcilation where id in ('12','13','14');
+select * from pnh_t_receipt_info where receipt_id='5383';
+
+select * from pnh_t_receipt_reconcilation_log where receipt_id='5382' and is_reversed = 0;
+select * from pnh_t_receipt_reconcilation where id in ('15','16','17');
+select * from pnh_t_receipt_info where receipt_id='5382';
+
+--  new to unreconcile the invoice not receipt 
+#1. get reconcile_id ( id )
+select rlog.receipt_id,rcon.id as reconcile_id,rcon.invoice_no,rcon.inv_amount,rlog.reconcile_amount from pnh_t_receipt_reconcilation rcon 
+join pnh_t_receipt_reconcilation_log rlog on rlog.reconcile_id = rcon.id
+where rlog.is_reversed = 0 and rcon.invoice_no = '20141019616';
+#=> 11 
+
+#2. update reconcile table set unreconciled = unreconciled + $reconcile_amount and modified_by and modified_on  and is_invoice_cancelled = 1 where invoice_no = '' and id = reconcile_id;
+
+#3.  update receipt_info set unreconciled_value = unreconciled_value + $reconcile_amount and unreconciled_status = if(unreconciled_value = receipt_amount,'pending', if(unreconciled_value = 0, 'done', 'partial') ) where receipt_id = '';
+
+#4. update `pnh_t_receipt_reconcilation_log` set `is_invoice_cancelled` = 1 where `reconcile_id` = '11'
+-- 22. 
+
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+-- Unreconcilation on Cancel invoice
+
+#1. reconcile table get reconcile_id ( id )
+select * from pnh_t_receipt_reconcilation where invoice_no = '20141019616';
+select * from pnh_t_receipt_reconcilation_log where reconcile_id in ('18');
+select * from pnh_t_receipt_info where receipt_id = '4939';
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+
+# ==================================================================================
+alter table `pnh_t_receipt_reconcilation` add column     `is_invoice_cancelled` int (20) DEFAULT '0' NULL  after `modified_by`,change `modified_on` `modified_on` varchar (50)  NULL;
+alter table `pnh_t_receipt_reconcilation_log` add column `is_invoice_cancelled` int (20) DEFAULT '0' NULL  after `reconcile_id`;
+# ==================================================================================
+
+select * from king_invoice where invoice_no = '20141019616';
+
+-- # new
+select * from (
+select i.invoice_no,( sum( i.mrp - discount - credit_note_amt )  * invoice_qty) as invoice_val,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),rcon.unreconciled) as inv_amount,group_concat(distinct i.invoice_no) as grp_invs
+		from king_invoice i
+		join king_transactions tr on tr.transid=i.transid
+		left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
+		where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id='17' #and rcon.invoice_no is null 
+		#and rcon.unreconciled = 0 
+		#and i.invoice_no = '20141019616' #804'
+		group by i.invoice_no,i.transid order by i.invoice_no asc
+) as g where g.inv_amount > 0;
+
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+-- Unreconcilation on Cancel invoice
+
+#1. reconcile table get reconcile_id ( id )
+select * from pnh_t_receipt_reconcilation where invoice_no = '20141019617';
+select * from pnh_t_receipt_reconcilation_log where reconcile_id in ('19');
+select * from pnh_t_receipt_info where receipt_id = '4938';
+#####http://localhost/snapitto/admin/invoice/20141019617
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+select * from shipment_batch_process_invoice_link where invoice_no = '20141019616'
+
+# Feb_05_2014
 

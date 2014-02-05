@@ -12545,25 +12545,83 @@ order by action_date";
         $output['lst_qry'] = $this->db->last_query();
         
         return $output;
-   }
+    }
    
-    function reverse_the_reconcilation($rid) {
+    /**
+     * Function to reconciled receipts table when reverse/cancel the receipt at any level (pending, processed, realized)
+     * @param type $receipt_id int
+     * @param type $user array
+     * @return string string
+     */
+    function pnh_reverse_reconcile_receipt($receipt_id,$user) {
         /*
          On cancell receipt:
-=> Get receipt id, reconcile id, reconciled_amount
-=> with reconcile id  take invoice amount  and put into unreconcile field   & update modified date
-=> update in reconcilation log table is _reversed = 1 and reconciled_amount = 0 (reconciled invoice_amount)
-=> & update in receiptinfo table unreconciled_value =same as receipt amount & unreconciled status=pending/partial
-=> On 2nd time reconcilation with same receipt id which is reversed,
-=> Insert new row with same receipt id, reconcile id and reconciled amount
-( always consider rows with is_reversed=0 from reconcilation_log table )
-         ====>
-         Step2: its not invoice amount, but it should be take reconciled amount w.r.t to the receipt being cancelled & put it back into unreconcile field.
-Step3: Again here reconciled_amount need not be zero, it should be reconciled_amount=reconciled_amount-previously reconciled amount w.r.t to receipt being 
-Step5 & Step6: Why will we reconcile the same receipt again, as its already cancelled?
-         
+            => Get receipt id, reconcile id, reconciled_amount
+            => with reconcile id  take invoice amount  and put into unreconcile field   & update modified date
+            => update in reconcilation log table is _reversed = 1 and reconciled_amount = 0 (reconciled invoice_amount)
+            => & update in receiptinfo table unreconciled_value =same as receipt amount & unreconciled status=pending/partial
          */
+        $recon_log_set = $this->db->query("select * from `pnh_t_receipt_reconcilation_log` where `is_reversed` = 0 and `receipt_id`= ? ",$receipt_id);
+        if($recon_log_set->num_rows() == 0) {
+            $recon_output = "No reconciled log data found for this receipt.";
+        }
+        else {
+            $recon_log_rslt = $recon_log_set->result_array();
+            foreach($recon_log_rslt as $reconlog) {
+                $reconcile_id = $reconlog['reconcile_id'];
+                $reconcile_amount = $reconlog['reconcile_amount'];
+                //1. update unreconcile amount & modified by & date or reverse reconcile
+                $this->db->query("update `pnh_t_receipt_reconcilation set `unreconciled` = `unreconciled` + '".$reconcile_amount."',`modified_on`  = now(),`modified_by` = ? where id = ? ",array($user['userid'],$reconcile_id) );
+            }
+            #2. update receipt table with unreconciled_amount and unreconcile status
+            $this->db->query("update `pnh_t_receipt_info` set `unreconciled_value` = `receipt_amount`,`unreconciled_status` = 'pending' where receipt_id = ? ",$receipt_id);
+            
+            #3. update is reversed=1 where given receipt id for reconcile log table
+            $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_reversed` = 1 where receipt_id = ? ",$receipt_id);
+            
+            $recon_output = 'Successfully reverced the reconcilation.';
+        }
+        return $recon_output;
     }
+    
+    /**
+     * Function to update reconcile table on cancel of invoice
+     * @param type $invoice_no int
+     * @param type $user array
+     * @return string string
+     */
+    function pnh_reverse_reconcile_invoice($invoice_no,$user) {
+        
+        $recon_log_set = $this->db->query("select rlog.receipt_id,rcon.id as reconcile_id,rcon.invoice_no,rcon.inv_amount,rlog.reconcile_amount from pnh_t_receipt_reconcilation rcon 
+                                            join pnh_t_receipt_reconcilation_log rlog on rlog.reconcile_id = rcon.id
+                                            where rlog.is_reversed = 0 and rcon.invoice_no = ? ",$invoice_no);
+        
+        if($recon_log_set->num_rows() == 0) {
+            $recon_output = "No matching reconciled invoices found.";
+        }
+        else {
+            $recon_log_rslt = $recon_log_set->result_array();
+            foreach($recon_log_rslt as $reconlog) {
+                $receipt_id = $reconlog['receipt_id'];
+                $reconcile_id = $reconlog['reconcile_id'];
+                $reconcile_amount = $reconlog['reconcile_amount'];
+                
+                //1. update unreconcile amount & modified by,date and is_invoice_cancelled = 1
+                $this->db->query("update `pnh_t_receipt_reconcilation set `unreconciled` = `unreconciled` + '".$reconcile_amount."',`modified_on`  = now(),`modified_by` = ?,is_invoice_cancelled = 1 where invoice_no = ? and id = ? ",array($userid,$invoice_no,$reconcile_id) );
+                
+                // update reconcile log table : is_invoice_cancelled = 1
+                $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_invoice_cancelled` = 1 where `reconcile_id` = ? ",$reconcile_id);
+                
+                // update receipt info table : add the unreconciled value with reconcile amount and its reconcile status
+                $this->db->query("update `pnh_t_receipt_info` set `unreconciled_value` = `unreconciled_value` + '".$reconcile_amount."', unreconciled_status = if(unreconciled_value = receipt_amount,'pending', if(unreconciled_value = 0, 'done', 'partial') ) where receipt_id = ? ",$receipt_id);
+                
+            }
+            
+            $recon_output = 'Successfully Un-reconciled the invoice.';
+        }
+        return $recon_output;
+    }
+    
 }
 
 

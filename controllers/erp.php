@@ -2359,8 +2359,7 @@ class Erp extends Stream
 			$oids[]=$i['order_id'];
 		$orders=$this->db->query("select quantity as qty,itemid,id from king_orders where id in ('".implode("','",$oids)."')")->result_array();
 		
-		
-		
+                
 		$batch_id = $this->db->query("select batch_id from shipment_batch_process_invoice_link where invoice_no=?",$invno)->row()->batch_id;
 		$pinvno = $this->db->query("select a.p_invoice_no  
 													from proforma_invoices a
@@ -2552,6 +2551,10 @@ class Erp extends Stream
 		if($this->db->query("select count(1) as l from shipment_batch_process_invoice_link where batch_id=?",$bid)->row()->l<=$c)
 //		if($this->db->query("select count(1) as l from shipment_batch_process_invoice_link bi join proforma_invoices i on i.p_invoice_no=bi.p_invoice_no where bi.batch_id=? and bi.packed=0 and i.invoice_status=1",$bid)->row()->l==0)
 			$this->db->query("update shipment_batch_process set status=2 where batch_id=? limit 1",$bid);
+                
+                // and also update the reconcilation tables with this invoice id
+                $recon_status = $this->erpm->pnh_reverse_reconcile_invoice($invno,$user);
+                
 		redirect("admin/trans/$transid");
 	}
 
@@ -4293,11 +4296,13 @@ group by g.product_id ");
 	
 	function pnh_reverse_receipt($rid)
 	{
-		$user=$this->auth(FINANCE_ROLE);
+            	$user=$this->auth(FINANCE_ROLE);
+                
+                // and also update the reconcilation tables with this receipt id
+                $recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user);
+
 		$r=$this->db->query("select * from pnh_t_receipt_info where receipt_id=?",$rid)->row_array();
 		$this->db->query("update pnh_t_receipt_info set status=3 where receipt_id=? limit 1",$rid);
-                
-                $this->erpm->reverse_the_reconcilation($rid);
                 
 		$_POST=array("type"=>1,"amount"=>$r['receipt_amount'],"desc"=>"Reversal of receipt $rid","internal"=>true,"sms"=>false,"receipt_id"=>$rid);
 		$this->pnh_acc_stat_c($r['franchise_id']);
@@ -8010,11 +8015,13 @@ group by g.product_id ");
 	
 	function pnh_cancel_receipt($rid=false)
 	{
-		$this->auth(FINANCE_ROLE);
+		$user = $this->auth(FINANCE_ROLE);
 		if(!$rid)
 			show_error("Input Missing");
-		else
-		$this->erpm->do_pnh_cancel_receipt($rid);
+		else {
+                    $recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user);
+                    $this->erpm->do_pnh_cancel_receipt($rid);
+                }
 	}
 	
 	function pnh_disenable_sch($fid,$en)
@@ -19934,7 +19941,7 @@ order by action_date";
 			$output=array();
 			$this->db->query("update pnh_m_deposited_receipts set status=2,is_cancelled=1,cancel_reason=?,cancelled_on=now(),cancel_status=?,dbt_amt=?,cheq_cancelled_on=? where receipt_id=?",array($desc,$cancel_status,$amount,$cheq_cancelled_on,$receipt_id));
 			$this->db->query("update pnh_t_receipt_info set status=2,activated_by=?,reason=?,activated_on=? where receipt_id=?",array($user['userid'],$desc,time(),$receipt_id));
-				
+                        
 			//if($sms || $tm_sms)
 			//{
 				$franchise_info=@$this->db->query("select f.*,r.receipt_id,r.instrument_no,r.receipt_amount from pnh_t_receipt_info r join pnh_m_franchise_info f on f.franchise_id=r.franchise_id where receipt_id=?",$receipt_id)->row_array();
@@ -19982,6 +19989,9 @@ order by action_date";
 					$this->erpm->flash_msg("Account statement corrected");
 				}
 			//}
+                        // and also update the reconcilation tables with this receipt id
+                        $recon_status = $this->erpm->pnh_reverse_reconcile_receipt($receipt_id,$user);
+                        
 			$d+=$this->db->affected_rows();
 			if($d)
 			{
@@ -23979,7 +23989,7 @@ die; */
                 else if($type=="unreconcile")
 		{
 			$sql="select * from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) order by created_on desc";
-	 //and unreconciled_value > 0
+
 			$total_records=$this->db->query($sql,$fid)->num_rows;
 	
 			$sql.=" limit $pg , $limit ";
@@ -26724,7 +26734,7 @@ die; */
                         ,rcon.inv_amount,rcon.unreconciled
                         ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date,a.username
                     from pnh_t_receipt_info r 
-                    join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
+                    join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id and is_reversed = 0
                     join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
                     join king_admin a on a.id=rcon.created_by
                     where r.franchise_id = ? and r.receipt_id = ?";
@@ -26755,8 +26765,8 @@ die; */
                                                             from king_invoice i
                                                             join king_transactions tr on tr.transid=i.transid
                                                             left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
-                                                            where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id='43' #and rcon.invoice_no is null 
-                                                            group by i.invoice_no,i.transid order by i.createdon asc) as g where g.inv_amount > 0;",$fid)->result_array();
+                                                            where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id= ? #and i.invoice_no is null 
+                                                            group by i.invoice_no,i.transid order by i.invoice_no asc) as g where g.inv_amount > 0 ",$fid)->result_array();
             echo json_encode($rdata);//,i.transid,tr.franchise_id,from_unixtime(i.createdon),,count(i.invoice_no) as num_invs,group_concat(i.mrp) as grp_mrp,
         }
         

@@ -2024,7 +2024,7 @@ Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
                         <tbody class='dlg_invs_list'>
                                 <tr id='dg_reconcile_row_1' class="dg_invoice_row">
                                     <td>
-                                        <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='sel_invoices' onchange='dg_fn_inv_selected(this,1);'></select>
+                                        <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange='dg_fn_inv_selected(this,1);'></select>
                                     </td>
                                     <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=6></td>
                                     <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value=''></td>
