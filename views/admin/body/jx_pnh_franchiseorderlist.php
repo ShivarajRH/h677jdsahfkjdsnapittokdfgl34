@@ -99,12 +99,12 @@
 		
 		if(!$res->num_rows())
 		{
-			echo "<div align='center'><h3 style='margin:2px;'>No Orders found for selected dates</h3></div>".'<table class="datagrid" width="100%"></table>';	
+			echo "<div align='center'><h3 style='margin-top:15px;'>No Orders found for selected dates</h3></div>".'<table class="datagrid" width="100%"></table>';	
 		}else
 		{
-			echo '<div align="left"><h3 style="margin:2px;" id="ttl_orders_listed">Showing <b></b> Orders from '.format_date(date('Y-m-d',$st_ts)).' to '.format_date(date('Y-m-d',$en_ts)).' </h3></div>';
+			echo '<div align="left"><h3 id="ttl_orders_listed">Showing <b></b> Orders from '.format_date(date('Y-m-d',$st_ts)).' to '.format_date(date('Y-m-d',$en_ts)).' </h3></div>';
 				
-?>		<table class="datagrid" width="100%">
+?>		<table class="datagrid" width="100%" style="clear:both">
 	<thead><tr><th>Time</th><th>Order</th><th>Amount</th><th>Commission</th><th>Deal/Product details</th><th>Status</th><th>Last action</th></tr></thead>
 	<tbody>
 	
@@ -143,10 +143,22 @@
 		?>
 		
 	</td>
-	<td width="150">
+	<td width="168">
 		<a href="<?=site_url("admin/trans/{$o['transid']}")?>" class="link"><?=$o['transid']?></a> <br />
 		Batch Enabled : <?php echo $o['batch_enabled']?'yes':'no' ?>
 		<br />
+		<?php 
+			$sql_trans_ttls = 'SELECT STATUS,IFNULL(amt1,amt2) AS amt,totals
+									FROM ( SELECT b.status,SUM((mrp-(discount+credit_note_amt))*a.invoice_qty) AS amt1,SUM(i_orgprice-(i_coup_discount+i_discount)*b.quantity) AS amt2,
+									COUNT(b.id) AS totals
+									FROM king_orders b
+									LEFT JOIN king_invoice a ON a.order_id = b.id
+									WHERE b.transid = ? GROUP BY b.status ) AS g';
+				
+			$trans_order_status_amt = $this->db->query($sql_trans_ttls,$o['transid']);
+			foreach($trans_order_status_amt->result_array() as $to_row){ ?>
+			<div><span class="span_count_wrap"><?php echo $order_status_arr[$to_row['STATUS']] ?> (<b><?php echo $to_row['totals']?></b>) : <b>Rs. <span style=""><?php echo format_price($to_row['amt']);?></span></b></span></div>
+		<?php }?>
 	</td>
 	<td><?=round($o['amount'],2)?></td>
 	<td><?=round($o['com'],2)?></td>
@@ -240,14 +252,17 @@
 								 
 								
 								//foreach($ship_dets as $s_invno =>$s_shipdate)
-								foreach($this->db->query("select a.invoice_no,round(sum(nlc*quantity)) as amt from king_invoice a join king_orders b on a.order_id = b.id where a.transid = ? and a.order_id = ? ",array($o['transid'],$o_item['id']))->result_array() as $invdet)
+								foreach($this->db->query("select a.invoice_no,date(from_unixtime(a.createdon)) as inv_date,round(sum(nlc*quantity)) as amt from king_invoice a join king_orders b on a.order_id = b.id where a.transid = ? and a.order_id = ? and invoice_status = 1 ",array($o['transid'],$o_item['id']))->result_array() as $invdet)
 								{
+									if(!$invdet['invoice_no'])
+										continue;
 									//$status_mrp= $this->db->query("select round(sum(nlc*quantity)) as amt from king_invoice a join king_orders b on a.order_id = b.id where a.invoice_no = '".$s_invno."' ")->row()->amt;
 									$status_mrp = $invdet['amt']; 
 									$s_invno = $invdet['invoice_no'];
-									$s_shipdate = '';
-									$s_shipdate = @$this->db->query("select date(shipped_on) as shipped_on from shipment_batch_process_invoice_link where invoice_no = ? ",$invdet['invoice_no'])->row()->shipped_on;
-									echo ' <div style="margin:3px 0px"><a target="_blank" href="'.site_url('admin/invoice/'.$s_invno).'">'.$s_invno.'-'.$s_shipdate.'</a></div>';
+									$i_inv_date = format_date($invdet['inv_date']);
+									$s_shipdate = @$this->db->query("select date_format(shipped_on,'%d/%m/%Y') as shipped_on from shipment_batch_process_invoice_link where invoice_no = ? and shipped = 1 ",$invdet['invoice_no'])->row()->shipped_on;
+									echo ' <div><a target="_blank" style="font-weight:bold;font-size:11px;color:#DA0B6E" href="'.site_url('admin/invoice/'.$s_invno).'">'.$s_invno.'</a><br />'.($s_shipdate?'(ShippedOn) '.$s_shipdate.' ':'(InvoicedOn) '.$i_inv_date.'').' </div>';
+									
 								}
 							?>
 						</td>
@@ -259,18 +274,7 @@
 			</tbody>
 		</table>
 		</br>
-		<?php 
-			$sql_trans_ttls = 'SELECT STATUS,IFNULL(amt1,amt2) AS amt,totals
-									FROM ( SELECT b.status,SUM((mrp-(discount+credit_note_amt))*a.invoice_qty) AS amt1,SUM(i_orgprice-(i_coup_discount+i_discount)*b.quantity) AS amt2,
-									COUNT(b.id) AS totals
-									FROM king_orders b
-									LEFT JOIN king_invoice a ON a.order_id = b.id
-									WHERE b.transid = ? GROUP BY b.status ) AS g';
-				
-			$trans_order_status_amt = $this->db->query($sql_trans_ttls,$o['transid']);
-			foreach($trans_order_status_amt->result_array() as $to_row){ ?>
-			<div><span class="span_count_wrap"><b><?php echo $order_status_arr[$to_row['STATUS']] ?> (<?php echo $to_row['totals']?>) </b> : <span style="width:61px;display: inline-block;text-align: justify;"><?php echo format_price($to_row['amt']);?> rs</span></span></div>
-	<?php }?>
+		
 	</td>
 	<td>
 		<?php 	
@@ -322,13 +326,12 @@
 	 <style>
 	 	.subdatagrid th{padding:3px !important;text-align: left;}
 	 	.span_count_wrap {
-    background: none repeat scroll 0 0 #EAEAEA;
-    float: left;
-    font-size: 11px;
-    margin: -1px;
-    padding: 5px;
-    text-align: center;
-    width: 23%;
-    margin: -12px -1px -1px;
+    background: none repeat scroll 0 0 #87318c;
+	float: left;
+	font-size: 11px;
+	color: #fff;
+	margin: 7px 0;
+	padding: 5px 7px;
+	text-align: center;
 }
 	 </style>

@@ -79,27 +79,7 @@ $(function(){
 ?>
 
 <div class="page_topbar_left">
-	
-	<div style="float:left;width:100%">
-		<h2 class="franch_header_wrap"><?php echo $f['franchise_name']?><a style="margin-left: 10px; font-size: 12px;"href="<?php echo site_url('admin/pnh_edit_fran'.'/'.$f['franchise_id'])?>">(edit)</a></h2>
-		
-		<div style="float:right;">
-			<?php if($have_prepaid_menu) {?>
-				<span style="float: none" class="fran_suspendlink paid_unmark_wrapper" onclick="mark_prepaid_franchise(<? echo $f['franchise_id'].','.$is_prepaid?>)">
-						<?php echo $f['is_prepaid']?'Unmark prepaid':'Mark prepaid' ?>
-				</span>
-			<?php }?>
-			<?php if($is_prepaid){?>
-				<span class="paid_wrapper" ><?php echo "<b>Prepaid Franchise</b>"?></span>
-			<?php }?>
-		</div>
-	</div>
-	
-	
-	<div style="margin-top: 10px;float:left">
-		<b class="level_wrapper" style="background-color:<?php echo $fr_reg_level_color;?>;">
-				 <?php echo $fr_reg_level;?>
-		</b>&nbsp;&nbsp;
+	<div style="width:50%;float:left; margin-bottom: 9px;">
 		
 		<?php 
 			$fran_status_arr=array();
@@ -110,9 +90,50 @@ $(function(){
 		?>
 		
 		Status:
-			<b class="level_wrapper" style="background-color:<?php echo $fr_status_color?>;">
-				<?php echo $fran_status_arr[$fran_status];?>
-			</b>
+		<b class="level_wrapper" style="background-color:<?php echo $fr_status_color?>;">
+			<?php echo $fran_status_arr[$fran_status];?>
+		</b>|
+			
+		<b class="level_wrapper" style="margin-left:2px;background-color:<?php echo $fr_reg_level_color;?>;">
+				 <?php echo $fr_reg_level;?>
+		</b>
+		
+		<?php if($is_prepaid){?>
+			|<span class="paid_wrapper" ><?php echo "<b>Prepaid</b>"?></span>
+		<?php }?>
+		<?php if($have_prepaid_menu) {?>
+			<span class="fran_suspendlink paid_unmark_wrapper" onclick="mark_prepaid_franchise(<? echo $f['franchise_id'].','.$is_prepaid?>)">
+					<?php echo $f['is_prepaid']?'[Unmark]':'[Mark Prepaid]' ?>
+			</span>
+		<?php }?>
+		<h2 class="franch_header_wrap"><?php echo $f['franchise_name']?><a style="margin-left: 10px; font-size: 12px;"href="<?php echo site_url('admin/pnh_edit_fran'.'/'.$f['franchise_id'])?>">(edit)</a></h2>
+	</div>
+	
+	<div style="float:right;width:40%;margin-bottom: 6px;">
+		<ul class="actions_wrap" style="">
+			<li>
+				<a class="fran_suspendlink" target="_blank" style="float: none" href="<?=site_url("admin/pnh_quotes/{$f['franchise_id']}")?>">
+					Franchise Requests
+				</a> 
+			</li>
+			
+			<?php if($f['is_suspended']==0){?> 
+				<li>
+					<a class="fran_suspendlink" href="javascript:void(0)" onclick="reson_forsuspenfran(<?=$f['franchise_id']?>)">Suspend Account</a>
+				</li>
+			<?php }else{?>
+				<li>
+					<a  class="fran_suspendlink" href="javascript:void(0)" onclick="reson_forunsuspension(<?=$f['franchise_id']?>)" >Unsuspend Account</a>
+				</li>
+			<?php }?>
+			
+			<li><a class="fran_suspendlink" target="_blank" style="float: none" href="<?=site_url("admin/pnh_sms_log/{$f['franchise_id']}")?>">SMS Log</a></li>
+		</ul>
+	</div>
+	
+	
+	<div style="margin-top: 10px;float:left">
+		
 	</div>	
 	
 	<div class="dash_bar_right" style="background: tomato">
@@ -127,25 +148,6 @@ $(function(){
 		Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 	</div>
 	
-	<div class="dash_bar_right">
-		<a class="fran_suspendlink" target="_blank" style="float: none" href="<?=site_url("admin/pnh_sms_log/{$f['franchise_id']}")?>">SMS Log</a> 
-	</div>
-	
-	<?php if($f['is_suspended']==0){?> 
-			<div class="dash_bar_right">
-				<a class="fran_suspendlink" onclick="reson_forsuspenfran(<?=$f['franchise_id']?>)">Suspend Account</a>
-			</div>
-	<?php }else{?>
-			<div class="dash_bar_right">
-				<a  class="fran_suspendlink" onclick="reson_forunsuspension(<?=$f['franchise_id']?>)">Unsuspend Account</a>
-			</div>
-	<?php }?>
-	
-	<div class="dash_bar_right">
-		<a class="fran_suspendlink" target="_blank" style="float: none" href="<?=site_url("admin/pnh_quotes/{$f['franchise_id']}")?>">
-			Franchise Requests
-		</a> 
-	</div>
 </div>
 
 
@@ -700,6 +702,7 @@ $(function(){
 								<table width="100%">
 									<tr>
 										<td width="100%">
+											<a style="white-space:nowrap" href="<?=site_url("admin/pnh_manage_devices/{$f['franchise_id']}")?>" class="button button-tiny ">Manage devices</a> &nbsp;&nbsp;
 											<a style="white-space:nowrap" href="<?=site_url("admin/pnh_assign_exec/{$f['franchise_id']}")?>" class="button button-tiny ">Assign Executives</a> &nbsp;&nbsp; 
 											<a style="white-space:nowrap" href="<?=site_url("admin/pnh_upload_images/{$f['franchise_id']}")?>" class="button button-tiny ">Upload Images</a> &nbsp;&nbsp; 
 										 	<a  onclick="members_details(<?php echo $f['franchise_id']; ?>)" href="javascript:void(0)" class="button button-tiny ">Members</a>&nbsp;&nbsp; 
@@ -1178,32 +1181,34 @@ $(function(){
 	
 	<?php if(1){?>	
 		<div id="statement">
-			<div class="dash_bar_right">
-				Adjustments : <span>Rs <?=format_price($acc_adjustments_val,2)?></span>
-			</div>
+			<div class="fl_left">
+				<div class="dash_bar_right">
+					Adjustments : <span>Rs <?=format_price($acc_adjustments_val,2)?></span>
+				</div>
+				
+				<div class="dash_bar_right">
+					Paid till Date : <span>Rs <?=format_price($paid_tilldate,2)?></span>
+				</div>
 			
-			<div class="dash_bar_right">
-				Paid till Date : <span>Rs <?=format_price($paid_tilldate,2)?></span>
-			</div>
-		
-			<div class="dash_bar_right">
-				Credit Notes Raised : <span>Rs <?=format_price($credit_note_amt,2)?></span>
-			</div>
-			
-			<div class="dash_bar_right">
-				Bounced/Cancelled : <span>Rs <?=format_price($cancelled_tilldate,2)?></span>
-			</div>
-			
-			<div class="dash_bar_right">
-				Unshipped : <span>Rs <?=format_price($not_shipped_amount,2)?></span>
-			</div>
-			
-			<div class="dash_bar_right">
-				Shipped : <span>Rs <?=format_price($shipped_tilldate,2)?></span>
-			</div>
-			
-			<div class="dash_bar_right">
-				Ordered : <span>Rs <?=format_price($ordered_tilldate,2)?></span>
+				<div class="dash_bar_right">
+					Credit Notes Raised : <span>Rs <?=format_price($credit_note_amt,2)?></span>
+				</div>
+				
+				<div class="dash_bar_right">
+					Bounced/Cancelled : <span>Rs <?=format_price($cancelled_tilldate,2)?></span>
+				</div>
+				
+				<div class="dash_bar_right">
+					Unshipped : <span>Rs <?=format_price($not_shipped_amount,2)?></span>
+				</div>
+				
+				<div class="dash_bar_right">
+					Shipped : <span>Rs <?=format_price($shipped_tilldate,2)?></span>
+				</div>
+				
+				<div class="dash_bar_right">
+					Ordered : <span>Rs <?=format_price($ordered_tilldate,2)?></span>
+				</div>
 			</div>
 
 			<?php if(1){?>
@@ -1730,21 +1735,19 @@ $(function(){
 				<div id="orders">
 
 					<div>
-						<div class="dash_bar">
-							Total Orders : <span><?=$this->db->query("select count(1) as l from king_transactions where franchise_id=?",$f['franchise_id'])->row()->l?>
-							</span>
+						<div class="dash_bar_right">
+							Total Order value : <span>Rs <?=format_price($this->db->query("select sum(amount) as l from king_transactions where franchise_id=?",$f['franchise_id'])->row()->l,0)?></span>
 						</div>
-						<div class="dash_bar">
+						<div class="dash_bar_right">
+							Total Orders : <span><?=$this->db->query("select count(1) as l from king_transactions where franchise_id=?",$f['franchise_id'])->row()->l?></span>
+						</div>
+						
+						<!--<div class="dash_bar">
 							Orders last month : <span><?=$this->db->query("select count(1) as l from king_transactions where franchise_id=? and init between ".mktime(0,0,0,date("m")-1,01,date('Y'))." and ".(mktime(0,0,0,date("m"),01,date('Y'))-1),$f['franchise_id'])->row()->l?>
 							</span>
 						</div>
 						<div class="dash_bar">
 							Orders this month : <span><?=$this->db->query("select count(1) as l from king_transactions where franchise_id=? and init >".mktime(0,0,0,date("m"),1),$f['franchise_id'])->row()->l?>
-							</span>
-						</div>
-
-						<div class="dash_bar">
-							Total Order value : <span>Rs <?=format_price($this->db->query("select sum(amount) as l from king_transactions where franchise_id=?",$f['franchise_id'])->row()->l,0)?>
 							</span>
 						</div>
 						<div class="dash_bar">
@@ -1763,46 +1766,37 @@ $(function(){
 							Total commission this month : <span>Rs <?=format_price($this->db->query("select sum(o.i_coup_discount) as l from king_transactions t join king_orders o on o.transid=t.transid where t.franchise_id=? and o.time>".mktime(0,0,0,date("m"),1),$f['franchise_id'])->row()->l,2)?>
 							</span>
 						</div>
+						-->
+						<div class="tab_list" style="float:left">
+							<ol>
+								<li><a class="all" href="javascript:void(0)" onclick="load_franchise_orders('all')" >All</a></li>
+								<li><a class="shipped" href="javascript:void(0)" onclick="load_franchise_orders('shipped')">Shipped</a></li>
+								<li><a class="unshipped" href="javascript:void(0)" onclick="load_franchise_orders('unshipped')">UnShipped</a></li>
+								<li><a class="cancelled" href="javascript:void(0)" onclick="load_franchise_orders('cancelled')">Cancelled</a></li>
+								<li><a class="part_ship" href="javascript:void(0)" onclick="load_franchise_orders('part_ship')">Partially Shipped</a></li>
+								<li><a class="batch_closed" href="javascript:void(0)" onclick="load_franchise_orders('batch_closed')">Disabled from Batch</a></li>
+							</ol>
+						</div>
 					</div>
 					<div id="franchise_order_list_wrapper" style="clear: both; z-index: 9 !important;">
 						
 						<div id="franchise_ord_list" style="clear: both;overflow: hidden">
-							<table width="100%" >
-								<tr>
-									<td>
-										<div class="tab_list" style="clear: both;overflow: hidden">
-											<ol>
-												<li><a class="all" href="javascript:void(0)" onclick="load_franchise_orders('all')" >All</a></li>
-												<li><a class="shipped" href="javascript:void(0)" onclick="load_franchise_orders('shipped')">Shipped</a></li>
-												<li><a class="unshipped" href="javascript:void(0)" onclick="load_franchise_orders('unshipped')">UnShipped</a></li>
-												<li><a class="cancelled" href="javascript:void(0)" onclick="load_franchise_orders('cancelled')">Cancelled</a></li>
-												<li><a class="part_ship" href="javascript:void(0)" onclick="load_franchise_orders('part_ship')">Partially Shipped</a></li>
-												<li><a class="batch_closed" href="javascript:void(0)" onclick="load_franchise_orders('batch_closed')">Disabled from Batch</a></li>
-											</ol>
-										</div>
-									</td>
-									<td align="right">
-										<div >
-											<form id="franchise_ord_list_frm" method="post"
-												action="<?php echo site_url('admin/jx_pnh_getfranchiseordersbydate')?>">
-												<input type="hidden" value="all" name="type">
-												<input type="hidden" name="fid"
-													value="<?php echo $f['franchise_id']?>"> <b>Show Orders </b> :
-												From :<input type="text" style="width: 90px;" id="ord_fil_from"
-													name="ord_fil_from" value="<?php echo date('Y-m-01',time())?>" />
-												To :<input type="text" style="width: 90px;" id="ord_fil_to"
-													name="ord_fil_to" value="<?php echo date('Y-m-d',time())?>" /> <input
-													type="button" onclick="load_franchise_orders(1)" value="Submit">
-											</form>
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2" align="left">
-										 <div class="franchise_ord_list_content" style="clear:both;"></div>
-									</td>
-								</tr>
-							</table>
+							<div >
+								<form id="franchise_ord_list_frm" method="post"
+									action="<?php echo site_url('admin/jx_pnh_getfranchiseordersbydate')?>">
+									<input type="hidden" value="all" name="type">
+									<input type="hidden" name="fid"
+										value="<?php echo $f['franchise_id']?>"> <b>Show Orders : </b>
+									From : <input type="text" style="width: 90px;" id="ord_fil_from"
+										name="ord_fil_from" value="<?php echo date('Y-m-01',time())?>" />
+									To : <input type="text" style="width: 90px;" id="ord_fil_to"
+										name="ord_fil_to" value="<?php echo date('Y-m-d',time())?>" /> <input
+										type="button" onclick="load_franchise_orders(1)" value="Submit">
+								</form>
+							</div>
+							<div class="franchise_ord_list_content" style="margin-top: -10px;"></div>
+						
+							
 							<div id="remarks_changestatus" title="Change Amount Transit Status">
 								<form id="transit_rmks" method="post" action="<?php echo site_url("admin/pnh_change_receipt_trans_type/{$pr['receipt_id']}")?>" date-validate="parsley">
 									<table>
@@ -1939,7 +1933,7 @@ $(function(){
 	</div>
 	<!-- Franchise suspend form END -->
 	
-	<div id="unsuspend_fran" title="Unsuspend Franchise">
+	<div id="unsuspend_fran" title="Reason for unsuspending Franchise">
 		<form id="unsuspend_reasonfrm" method="post" data-validate="parsley">
 		<input type="hidden" name="unsuspend_fid" id="unsuspend_fid">
 				<table cellspacing="5" width="100%">
@@ -2096,34 +2090,29 @@ $("#ship_log_dlg" ).dialog({
 	    	var k=1;
 	    	 
 	    	 shipment_det +='<table class="datagrid" width="100%"  ><tr><th width="5%">Sl.No</th><th>TransID</th><th>Invoice</th>';
-	    	 shipment_det +='<th>Item</th><th>Quantity</th><th>Amount</th></tr>';
+	    	 shipment_det +='<th>Item</th><th>Quantity</th><th>Amount</th><th></th></tr>';
 	    	 $.each(result.ship_det,function(i,s1){
 	    	 	s = s1[0];
 	    	 	
 	    	 		shipment_det +='<tr>';
-	    	 		shipment_det +='	<td rowspan="'+s1.invoices.length+'">'+k+'</td>';
-	    	 		shipment_det +='	<td rowspan="'+s1.invoices.length+'">'+s1.transid+'</td>';
+	    	 		shipment_det +='	<td rowspan="'+s1.invoices.length+'">'+(k++)+'</td>';
+	    	 		shipment_det +='	<td rowspan="'+s1.invoices.length+'"><a href="'+site_url+'/admin/trans/'+s1.transid+'" target="_blank">'+s1.transid+'</a><br /><span style="font-size:10px;font-weight:bold">Ordered On : '+s1.ord_on+'</span> </td>';
 	    	 		j=0;
 	    	 		$.each(s1.invoices,function(a,b){
 	    	 			if(j!=0)
 	    	 				shipment_det +='<tr>';			
-	    	 			shipment_det +='<td>'+b.invoice_no+'</td>';
-		    	 		shipment_det +='	<td>'+b.name+'</td>';
+	    	 			shipment_det +='<td><a href="'+site_url+'/admin/invoice/'+b.invoice_no+'" target="_blank">'+b.invoice_no+'</a></td>';
+		    	 		shipment_det +='	<td><a href="'+site_url+'/admin/pnh_deal/'+b.itemid+'" target="_blank">'+b.name+'</a></td>';
 		    	 		shipment_det +='	<td>'+b.qty+'</td>';
 		    	 		shipment_det +='	<td>'+b.amount+'</td>';
+		    	 		shipment_det +='	<td><a class="link_btn" onclick="get_invoicetransit_log(this,'+b.invoice_no+')" href="javascript:void(0)">View Transit Log</a></td>';
 		    	 		if(j!=0)
 	    	 				shipment_det +='</tr>';
 	    	 				j++;	
 	    	 		});
 	    	 		shipment_det +='</tr>';
-	    	 	 //shipment_det +='<tr><td>'+(k++)+'</td><td><a href="'+site_url+'/admin/pnh_deal/'+s.itemid+'" target="_blank">'+s.name+'</a></td><td>'+s.quantity+'</td>';
-	    	 	 
-	    	 	 //shipment_det +='<td>'+s.amount+'</td><td><a href="'+site_url+'/admin/invoice/'+s.invoice_no+'" target="_blank">'+s.invoice_no+'</a></td><td><a href="'+site_url+'/admin/trans/'+s.transid+'" style="font-weight:bold" target="_blank">'+s.transid+'</a><br /><span style="font-size:10px;font-weight:bold">Ordered On : '+s.time+'</span></td>';
-	    	 	 
-	    	 	 //shipment_det +='<td><a class="link_btn" onclick="get_invoicetransit_log(this,'+s.invoice_no+')" href="javascript:void(0)">View Transit Log</a></td></tr>';
-		    	 	 k++;
 	    	 });			
-	    	 shipment_det +='<tfoot><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td></tr></tfoot>';
+	    	 shipment_det +='<tfoot class="nofooter"><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td></td><td></td><td></td></tr></tfoot>';
 	    	 $('#ship_log_dlg_wrap').html(shipment_det);	
 		}
 	  },'json');
@@ -2155,29 +2144,29 @@ $("#delivery_log_dlg" ).dialog({
 	    	var k=1;
 	    	 
 	    	 delivery_det +='<table class="datagrid" width="100%"  ><tr><th width="5%">Sl.No</th><th>TransID</th><th>Invoice</th>';
-	    	 delivery_det +='<th>Item</th><th>Quantity</th><th>Amount</th></tr>';
+	    	 delivery_det +='<th>Item</th><th>Quantity</th><th>Amount</th><th></th></tr>';
 	    	 $.each(result.delivery_det,function(i,s1){
 	    	 	s = s1[0];
 	    	 	
 	    	 		delivery_det +='<tr>';
-	    	 		delivery_det +='	<td rowspan="'+s1.invoices.length+'">'+k+'</td>';
-	    	 		delivery_det +='	<td rowspan="'+s1.invoices.length+'">'+s1.transid+'</td>';
+	    	 		delivery_det +='	<td rowspan="'+s1.invoices.length+'">'+(k++)+'</td>';
+	    	 		delivery_det +='	<td rowspan="'+s1.invoices.length+'"><a href="'+site_url+'/admin/trans/'+s1.transid+'" target="_blank">'+s1.transid+'</a><br /><span style="font-size:10px;font-weight:bold">Ordered On : '+s1.ord_on+'</span></td>';
 	    	 		j=0;
 	    	 		$.each(s1.invoices,function(a,b){
 	    	 			if(j!=0)
 	    	 				delivery_det +='<tr>';			
-	    	 			delivery_det +='<td>'+b.invoice_no+'</td>';
-		    	 		delivery_det +='	<td>'+b.name+'</td>';
+	    	 			delivery_det +='<td><a href="'+site_url+'/admin/invoice/'+b.invoice_no+'" target="_blank">'+b.invoice_no+'</a></td>';
+		    	 		delivery_det +='	<td><a href="'+site_url+'/admin/pnh_deal/'+b.itemid+'" target="_blank">'+b.name+'</a></td>';
 		    	 		delivery_det +='	<td>'+b.qty+'</td>';
 		    	 		delivery_det +='	<td>'+b.amount+'</td>';
+		    	 		delivery_det +='	<td><a class="link_btn" onclick="get_invoicetransit_log(this,'+b.invoice_no+')" href="javascript:void(0)">View Transit Log</a></td>';
 		    	 		if(j!=0)
 	    	 				delivery_det +='</tr>';
 	    	 				j++;	
 	    	 		});
 	    	 		delivery_det +='</tr>';
-	    	 		k++;
 	    	 	});
-	    	  delivery_det +='<tfoot><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td></tr></tfoot>';
+	    	  delivery_det +='<tfoot class="nofooter"><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td></td><td></td><td></td></tr></tfoot>';
 	    	 $('#delivery_log_dlg_wrap').html(delivery_det);	
 		
 		}
@@ -2297,7 +2286,7 @@ function load_allcatgory()
 				
 		$('#franchise_ord_list_frm input[name="type"]').val(fil_ordersby);
 		
-		$('.franchise_ord_list_content').html("Loading...");
+		$('.franchise_ord_list_content').html("<div style='margin-top:15px'>Loading...</div>");
 		$.post($('#franchise_ord_list_frm').attr('action'),$('#franchise_ord_list_frm').serialize()+'&stat='+stat,function(resp){
 			$('.franchise_ord_list_content').html(resp);
 		});
@@ -3300,7 +3289,7 @@ $("#pnh_membersch").dialog({
 					}
 		            else
 		            {
-		            	alert('All Fields are required!!!');
+		            	
 		            }
 			},
 			'Cancel':function(){
@@ -3317,8 +3306,8 @@ $("#pnh_membersch").dialog({
 		$("#unsuspend_fran").dialog({
 			modal:true,
 			autoOpen:false,
-			width:'400',
-			height:'200',
+			width:'500',
+			height:'300',
 			open:function(){
 				var dlg=$(this);
 				$('#unsuspend_reasonfrm input[name="unsuspend_fid"]',this).val(dlg.data('unsuspend_fid'));
@@ -3333,7 +3322,7 @@ $("#pnh_membersch").dialog({
 				}
 				else
 				{
-					alert("Remarks required!!!");
+					
 				}
 			},
 			'Cancel':function(){

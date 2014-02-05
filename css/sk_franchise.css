@@ -19,7 +19,7 @@
 }
 .page_wrap
 {
-	padding-top:7px;margin-top: 10px;
+	
 }
 li.required
 {
@@ -151,17 +151,15 @@ h4
 {
 	text-transform: capitalize
 }
-#franchise_order_list_wrapper .tab_list{
-	clear:both;
-	display: block;
+
+.tab_list ol{
+	 margin: 5px 2px;
+    padding: 0;
 }
-#franchise_order_list_wrapper .tab_list ol{
-	padding-left:0px;
-}
-#franchise_order_list_wrapper .tab_list li{
+.tab_list li{
 	display: inline-block;
 }
-#franchise_order_list_wrapper .tab_list li a{
+.tab_list li a{
 	display: block;
 	background: #efefef;
 	padding:5px 10px;
@@ -169,7 +167,7 @@ h4
 	color: #454545;
 	cursor:pointer;
 }
-#franchise_order_list_wrapper .tab_list li a.selected{
+.tab_list li a.selected{
 	background: #555;
 	color: #fff;
 }
@@ -201,10 +199,11 @@ h4
 
 .level_wrapper
 {
-	font-size: 11px;
+	font-size: 9px;
 	color:#fff;
 	padding:2px 3px;
 	border-radius:3px;
+	margin-right: 7px;
 }
 .status_wrapper
 {
@@ -212,16 +211,11 @@ h4
 }
 .paid_wrapper
 {
-	background-color: #BF0A99;
+	 background-color: #008000;
     color: #FFFFFF;
-    display: inline-block;
-    padding: 3px;
-    text-align: center;
-}
-.page_topbar_left .franch_header_wrap
-{
-	width:75%;
-	float: left;
+    font-size: 9px;
+    padding: 2px;
+    margin-left: 6px;
 }
 .paid_unmark_wrapper
 {
@@ -251,12 +245,11 @@ h4
 }
 .page_topbar_left .franch_header_wrap
 {
-	margin: 5px 0px !important;
-	font-size: 25px;
-	color: red;
-	font-weight: normal;
-	color:purple;
-	font-family: Helvetica !important;
+	color: #800080;
+    font-family: Helvetica !important;
+    font-size: 21px;
+    font-weight: normal;
+    margin: 10px 0 6px !important;
 }
 .page_topbar_right
 {
@@ -269,4 +262,41 @@ h4
 .ship_log_calender_wrap #ship_log_details_wrap
 {
 	
+}
+.actions_wrap
+{
+	float:right;
+	margin: -7px 0 0;
+}
+.actions_wrap li
+{
+	float: left;
+    list-style-type: square;
+    margin: 0 19px;
+}
+.actions_wrap li a
+{
+	color: #000000;
+    font-size: 11px;
+    font-weight: bold;
+    text-decoration: underline;
+}
+#franchise_ord_list_frm
+{
+	float: right;
+    font-size: 11px;
+    margin-right: 3px;
+    margin-top: 6px;
+    text-align: right;
+    width: 32%;
+    z-index: 1;
+}
+#franchise_ord_list_frm b{
+	 font-size: 12px;
+}
+#ttl_orders_listed
+{
+	float: left;
+    margin: 10px 0;
+    width: 57%;
 }

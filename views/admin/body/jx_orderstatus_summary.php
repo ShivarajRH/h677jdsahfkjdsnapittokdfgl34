@@ -2,6 +2,7 @@
 	.show_totalamount{max-width: 100% !important}
 </style>
 <?php
+	
 //          join pnh_m_territory_info f on f.id = d.territory_id
 //          join pnh_m_franchise_info d on d.franchise_id = c.franchise_id
 //          join pnh_towns e on e.id = d.town_id 
@@ -135,17 +136,16 @@
 
                 $total_results=$total_results_all=$total_results_shipped=$total_results_unshipped=$total_results_cancelled='';
 
-                $total_results=$this->db->query($sql)->num_rows();
-				
-				 
+                $rslt = $this->db->query($sql);
+                $total_results=$rslt->num_rows();
+                //$rslt=$this->db->query($sql)->result_array();
                 
-                $rslt=$this->db->query($sql)->result_array();
-                foreach ($rslt as $amt) {
+                foreach ($rslt->result_array() as $amt) {
                     //$total_amount+=$amt['amount'];
                     $total_amount += $this->db->query("select sum((i_orgprice)*quantity) as t from king_orders where transid = ?  ",$amt['transid'])->row()->t;
 					$total_inv_amount += $this->db->query("select sum((i_orgprice-(i_discount+i_coup_discount))*quantity) as t from king_orders where transid = ?  ",$amt['transid'])->row()->t;
-					
                 }
+                
 		$sql .=" limit $pg,$limit ";
                 
 //                echo '<pre>'.$sql."<br>".$total_results_shipped."<br>".$total_results_unshipped."<br>".$total_results_cancelled."<br>".$total_amount."<br>"; die("TESTING");
@@ -298,7 +298,7 @@
                                                         }
                                                         $is_shipped = ($is_shipped && $o_item['invoice_status']) ?'Yes':'No';
                                                           $amount=round($o_item['i_orgprice']-($o_item['i_coup_discount']+$o_item['i_discount']),2);
-//                                                          $total_amount+=$amount;
+//                                                        $total_amount+=$amount;
                                                         
                                                         
 
