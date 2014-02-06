@@ -74,14 +74,12 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 		<div style="float:right">
 			<span id="load_brands"></span>
 			<input type="button" value="Show & load" id="sl_show" class="button button-rounded button-flat-primary button-small">
-			<span type="button" class="button button-rounded button-action button-small"  id="load_unavail">Load Unavailable Products</span>
+			<span type="button" class="button button-rounded button-action button-small"  id="load_unavail" style="cursor: pointer;">Load Unavailable Products</span>
 		</div>
-			<input type="text" class="prd_blk inp " id="po_search" placeholder="Search &amp; Add">
-		<div id="po_prod_list" class="prd_srch_result closeonclick"></div> 
 		
-		
+			<input type="text" name="s" class="prd_blk inp" placeholder="Search &amp; Add" value="" >
 	</div>
-
+<div class="clear"></div>
 	<h4>Purchase Products</h4>
 	<table class="datagrid nofooter" id="pprods" width="100%" cellpadding="8">
 		<thead>
@@ -114,7 +112,7 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 <div style="float:left;">
 <table class="datagrid nofooter">
 <b>Enter Expected Delivery Details</b>
-<tr><td align="center">Date</td><td align="center">:</td><td align="center"><input type="text"  name="e_dod"  class="datetimepick" value="" readonly="readonly"></td><td align="center">Remarks</td><td align="center">:</td><td style="text-align:right;align:center;"><textarea style="width:350px" name="remarks"  value=""></textarea></td></tr>
+<tr><td align="center">Date<span class="red_star">*</span></td><td align="center">:</td><td align="center"><input type="text"  name="e_dod"  class="datetimepick" value="" readonly="readonly"></td><td align="center">Remarks<span class="red_star">*</span></td><td align="center">:</td><td style="text-align:right;align:center;"><textarea style="width:350px" name="remarks"  value=""></textarea></td></tr>
 </table>
 </div>
 <div style="float:right;margin-top:40px;margin-right:44px;">
@@ -146,13 +144,28 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 <div>
 <b>PNH Product ID:%product_id%</b>
 </div>
+<div><span style="background-color: #FAFAFA;padding:3px;width:20px;font-weight: bold;color: blue;">Current Stock : %curr_stck%</span></div>
 </td>
 <td><input type="text" class="mrp calc_pp inp readonly" size="8" name="mrp[]" value=mrpvalue readonly="readonly"></td>
 <td>
 	<div style="visibility: %dp_price_inp% "><input type="text" title="Change/Update DP Price on change" class="calc_pp has_dp_price dp_price" size="8" name="dp_price[]" value="%dp_price%"></div>
 </td>
 
-<td><input type="text" class="margin inp calc_pp readonly" size="8" name="margin[]" value="%margin%"  readonly="readonly"></td>
+<td class="mrgn_blk" style="width:150px;font-size: 10px;" >
+<div style="margin-bottom: 2px">
+<span>Ven.Margin :
+<input type="text" class="margin inp calc_pp readonly" size="8" name="margin[]" value="%margin%"  readonly="readonly"></span>
+</div>
+
+<div>
+	<span>Sch.Margin : <input type="text" class="inp calc_pp sdiscount" size=4 name="sch_discount[]" value="0" style="width:50px;border:1px solid #000000;"><input type="radio" value="1" checked class="calc_pp stype_%product_id%" name="sch_type[] %product_id%">% <input type="radio" value="2" class="calc_pp stype_%product_id%" name="sch_type[] %product_id%">Rs</span>
+		
+</div>
+<div class="marg_prc_preview" style="display:none!important;">
+	<span>Tot.Margin : <input type="text" name="marg_prc %product_id%" value="" readonly="readonly" class="inp marg_prc_%product_id% readonly">%</span>
+	
+</div>
+</td>
 
 <td class="qty_price_blk" style="width:150px;font-size: 10px;" >
 <div style="margin-bottom: 2px">
@@ -162,23 +175,10 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 
 <div>
 	<span>Required qty : </span>
-	<span><input type="text" class="inp calc_pp qty" id="prod_qty_%product_id%"  size=4 name="qty[]" value="%require_qty%" style="border:1px solid #FF0000;width:72px;"></span>
+	<span><input type="text" class="inp calc_pp qty" id="prod_qty_%product_id%"  size=4 name="qty[]" value="%require_qty%" style="border:1px solid #000000;width:72px;"></span>
 </div>
 
-<div>
-	<span>Extra Margin :</span>
-	<span><input type="text" class="inp calc_pp sdiscount" size=7 name="sch_discount[]" value="0" style="width:72px;border:1px solid #FF0000;"></span>	
-</div>
 
-<div>
-	<span>Discount type :</span>
-	<span>
-		<select class="calc_pp stype" name="sch_type[]" style="width:82px;margin-bottom: ">
-				<option value="1">percent</option>
-				<option value="2">value</option>
-			</select>
-		</span>	
-	</div>
 </td>
 
 
@@ -186,20 +186,17 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 <div>
 	<div>
 		<input type="text" class="inp pprice readonly" readonly="readonly"  name="price[]" value="%pprice%" >
-		<span class="marg_prc_preview" style="display:none!important;">
-				<input type="text" name="marg_prc" value="" readonly="readonly" class="inp marg_prc readonly">
-				%
-			</span>
+		
 		</div>
 		
 	</div>
 </td>
-	<td>
-		<div>
-			<input type="text" class="inp tpprice readonly"
-				readonly="readonly" name="qtyprice[]" value="">
-		</div>
-	</td>
+<td>
+	<div>
+		<input type="text" class="inp tpprice readonly"
+			readonly="readonly" name="qtyprice[]" value="">
+	</div>
+</td>
 
 <td name="tcol1" id="tcol1" class="bold" style="height:104px;display:none">
 	<div>
@@ -358,7 +355,6 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 </div>
 
 <script>
-
 $('select[name="cat_prod_disp"]').live( "change",function(){
 	var sel_cat_id = $(this).val();
 	if(sel_cat_id == 0)
@@ -369,8 +365,6 @@ $('select[name="cat_prod_disp"]').live( "change",function(){
 		$('#sl_products tbody tr.cat_'+sel_cat_id).show();
 	}
 });
-
-var pre_selected_vendor_id="<?php echo $vid?>";
 
 function get_unixtimetodate(utime)
 {
@@ -618,7 +612,8 @@ function remove_prod_selection(ele)
 
 function addproduct(id,name,mrp,margin,orders,qty,require)
 {
-	$("#po_search").val("");
+
+	 
 	
 	selected_vendorid=$("#vendorsel").val();
 
@@ -629,7 +624,9 @@ function addproduct(id,name,mrp,margin,orders,qty,require)
 		alert("Product already added to the current Order");
 		return;
 	}
+	
 	$.post("<?=site_url("admin/jx_productdetails")?>",{id:id,vid:selected_vendorid},function(data){
+		$('input[name="s"]').val("");
 		o=$.parseJSON(data);
 		i=added_po.length;
 		$("#po_prod_list").hide();
@@ -643,7 +640,10 @@ function addproduct(id,name,mrp,margin,orders,qty,require)
 		template=template.replace(/%margin%/g,o.margin);
 		template=template.replace(/%foc%/g,"foc"+i);
 		template=template.replace(/%dp_price%/g,o.dp_price);
-		
+
+		cur_stk=o.cur_stk!=null?o.cur_stk:0;
+		template=template.replace(/%curr_stck%/g,cur_stk);
+
 		if(o.is_serial_required*1)
 			template=template.replace(/%dp_price_inp%/g,'visible');
 		else
@@ -721,7 +721,8 @@ function calc_total_pov()
 		qty=parseInt($(".qty",$p).val());
 		mrp=parseFloat($(".mrp",$p).val());
 		dp_price=parseFloat($(".dp_price",$p).val());
-		stype=parseFloat($(".stype",$p).val());
+		pid=$(".product",$p).val();
+		stype=parseFloat($('.stype_'+pid+':checked',$p).val());
 		sdiscount=parseFloat($(".sdiscount",$p).val());
 		if(isNaN(sdiscount))
 		{
@@ -806,7 +807,8 @@ $(function(){
 		qty=parseInt($(".qty",$p).val());
 		mrp=parseFloat($(".mrp",$p).val());
 		dp_price=parseFloat($(".dp_price",$p).val());
-		stype=parseFloat($(".stype",$p).val());
+		pid=$(".product",$p).val();
+		stype=parseFloat($('.stype_'+pid+':checked',$p).val());
 		sdiscount=parseFloat($(".sdiscount",$p).val());
 		if(isNaN(sdiscount))
 		{
@@ -822,8 +824,11 @@ $(function(){
 		//	price=dp_price-(dp_price*margin/100);
 			if(stype==1)
 			{
-				$('.marg_prc_preview',$p).hide();
+				
 				price=dp_price-(dp_price*parseFloat(margin+sdiscount)/100);
+				margin_prc=parseFloat(margin+sdiscount);
+				$('.marg_prc_preview',$p).show();
+				$('.marg_prc_'+pid).val(margin_prc);
 			}
 			else
 			{
@@ -831,7 +836,7 @@ $(function(){
 				price=dp_price-(dp_price*parseFloat(margin)/100)-parseFloat(sdiscount);
 				margin_prc=(1-(price/dp_price))*100;
 				$('.marg_prc_preview',$p).show();
-				$('.marg_prc').val(margin_prc);
+				$('.marg_prc_'+pid).val(margin_prc);
 			}
 
 			if(dp_price > mrp)
@@ -839,51 +844,41 @@ $(function(){
 				
 		}else
 		{
-			//price=mrp-(mrp*margin/100);
 			if(stype==1)
 			{
-				$('.marg_prc_preview',$p).hide();
+				
 				price=mrp-(mrp*parseFloat(margin+sdiscount)/100);
+				margin_prc=parseFloat(margin+sdiscount);
+				$('.marg_prc_preview',$p).show();
+				$('.marg_prc_'+pid).val(margin_prc);
 			}
 			else
 			{
 				price=mrp-(mrp*parseFloat(margin)/100)-parseFloat(sdiscount);
 				margin_prc=(1-(price/mrp))*100;
 				$('.marg_prc_preview',$p).show();
-				$('.marg_prc').val(margin_prc);
+				$('.marg_prc_'+pid).val(margin_prc);
 			}
 		}
 	
 		qtyprice=qty*price;
 		$(".pprice",$p).val(price);
 		$(".tpprice",$p).val(price*qty);
-		//$(".qtypprice",$p).val()
+		
 		calc_total_pov();
 	});
 
-	$("#po_search").keyup(function(e){
-		e.preventDefault();
-		q=$(this).val();
-		if(q.length<3)
-			return true;
-		if(jHR!=0)
-			jHR.abort();
-		window.clearTimeout(search_timer);
-		search_timer=window.setTimeout(function(){
-		jHR=$.post("<?=site_url("admin/getvendorproducts")?>",{q:q,v:$("#vendoridhidden").val()},function(data){
-			$("#po_prod_list").html(data).show();
-			
-		});
-		},200);
-	}).focus(function(){
-		if($("#po_prod_list a").length==0)
-			return;
-		$("#po_prod_list").show();
-	}).click(function(e){
-		e.stopPropagation();
-	});
-
 	
+	
+	
+	$('input[name="s"]').autocomplete({
+		source:site_url+'/admin/getvendorproducts_json/'+$("#vendorsel").val(),
+		 minLength: 2,
+		 select:function(event, ui ){
+			addproduct(ui.item.id ,ui.item.label,ui.item.mrp);
+			 }
+	
+	});
 		
 
 	$("#purchaseordefrm").submit(function(){
@@ -902,22 +897,31 @@ $(function(){
 			var invalid_extramargin = 0;
 			var invalid_purchasevalue = 0;
 				$('#pprods tbody tr:visible',this).each(function(){
-					qty = $('input[name="qty[]"]',this).val()*1;
-					marg = $('input[name="margin[]"]',this).val()*1;
-					unit_price = $('input[name="price[]"]',this).val()*1;
-					extra_margin = $('input[name="sch_discount[]"]',this).val();
+					qty = parseInt($('input[name="qty[]"]',this).val())*1;
+					marg = parseFloat($('input[name="margin[]"]',this).val())*1;
+					unit_price = parseFloat($('input[name="price[]"]',this).val())*1;
+					extra_margin = parseFloat($('input[name="sch_discount[]"]',this).val());
 					
-					if(isNaN(marg) || marg == 0)
+					if(isNaN(marg) || marg == '')
+					{
 						marg_pending += 1;
-					
+						$('input[name="margin[]"]',this).addClass('error_inp');
+					}
 					if( isNaN(qty) || qty==0)
+					{
 						qty_pending += 1;
-
+						$('input[name="qty[]"]',this).addClass('error_inp');
+					}
 					if(unit_price<=0)
+					{
 						invalid_purchasevalue += 1;
-
+						$('input[name="price[]"]',this).addClass('error_inp');
+					}
 					if(isNaN(extra_margin))
+					{
 						invalid_extramargin += 1;
+						$('input[name="sch_discount[]"]',this).addClass('error_inp');
+					}
 				});
 				
 				if(marg_pending)
@@ -937,11 +941,13 @@ $(function(){
 				}
 				if(!$('input[name="e_dod"]').val())
 				{
+					$('input[name="e_dod"]').addClass('error_inp');
 					alert('"Date of Delivery" is mandatory');
 					return false;
 				}
 				if($('textarea[name="remarks"]').val().length == 0)	
 				{
+					$('textarea[name="remarks"]').addClass('error_inp');
 					alert('Please input Remarks');
 					return false;
 				}
@@ -970,13 +976,14 @@ $(function(){
 		if($("#vendorsel").val()!=0)
 		{
 			showvendor($("#vendorsel").val());
+			pre_selected_vendor_id=$("#vendorsel").val();
 			$('.block').show();
 			$(".v_disp_container").show();
 			$(".showaftvendor").show();
 			$('.v_disp_container').slideUp();
 			$("#vendorsel,#choosevendor").attr("disabled",true);
 			$("#vendoridhidden").val($("#vendorsel").val());
-			$.post("<?=site_url("admin/jx_getbrandsforvendor_json")?>",{vid:$("#vendorsel").val()},function(json){
+				$.post("<?=site_url("admin/jx_getbrandsforvendor_json")?>",{vid:$("#vendorsel").val()},function(json){
 				data=$.parseJSON(json);
 				str='<select id="sl_sel_brand">';
 				$.each(data,function(i,v){
@@ -986,10 +993,19 @@ $(function(){
 				$("#load_brands").html(str);
 				
 			});
+				$('input[name="s"]').autocomplete({
+					source:site_url+'/admin/getvendorproducts_json/'+pre_selected_vendor_id,
+					 minLength: 2,
+					 select:function(event, ui ){
+						addproduct(ui.item.id ,ui.item.label,ui.item.mrp);
+						 }
+				
+				});
 		}else
 		{
 			//alert("Choose vendor");
 		}
+		
 	}).attr("disabled",false).trigger('click');
 
 	$("#sl_show").click(function(){
@@ -1000,6 +1016,10 @@ $(function(){
 
 	
 });
+
+
+var pre_selected_vendor_id="<?php echo $vid?>";
+
 var brand_prods=[];
 var search_timer=0,jHR=0;
 function showvendor_old(vid)
@@ -1489,8 +1509,6 @@ function remove_prodfrmpo(ele)
 	},'json');
 				
 	}
-
-		
 }
 
 

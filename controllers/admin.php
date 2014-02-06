@@ -26,9 +26,55 @@ class Admin extends Erp {
 		$this->load->model("reservation_model","reservations");
 		$this->load->library("email");
 		$this->erpm->loadroles();
-		if($_SERVER['HTTP_HOST']!="shivaraj" && $_SERVER['HTTP_HOST']!="localhost" && $_SERVER['HTTP_HOST']!="sand43.snapittoday.com" && $_SERVER['HTTP_HOST']!="erp69.sand43.snapittoday.com")
+
+		if($this->erpm->auth(false,true))
+			$this->erpm->log_admin_activity();
+		
+		/*
+		if($_SERVER['HTTP_HOST']!="localhost" && $_SERVER['HTTP_HOST']!="sand43.snapittoday.com" && $_SERVER['HTTP_HOST']!="erp69.sand43.snapittoday.com" && $_SERVER['HTTP_HOST']!="dashboard.snapittoday.com")
 		if((!isset($_COOKIE['admauth']) || $_COOKIE['admauth']!=$this->session->userdata("admkey")) && $this->uri->segment(2)!="key")
 			show_404();
+		*/
+
+		if($_SERVER['HTTP_HOST']!="localhost" && $_SERVER['HTTP_HOST']!="sand43.snapittoday.com" && $_SERVER['HTTP_HOST']!="erp69.sand43.snapittoday.com")
+		{
+			/*
+			if($this->uri->segment(2)=="key"){
+
+			}else{
+				 
+				if(!isset($_COOKIE['admauth']))
+				{
+					show_404();
+				}
+				else
+				{
+					if($_COOKIE['admauth']!=$this->session->userdata("admkey"))
+					{
+						if($this->uri->segment(2)!="key"){
+							$this->session->set_userdata("admkey",$_COOKIE['admauth']);
+							//show_error("Cookie auth expired,please login again from secure link");
+						}
+
+					}	
+				}
+				 
+			}
+			*/
+
+			if($this->uri->segment(2)=="key"){
+
+			}else{
+				if(strlen($this->session->userdata("admkey")) < 5 )
+				{
+					//show_404();
+				}
+			}
+
+		}
+			 
+ 
+		
 	}
 
 	function key($hash)
@@ -2397,7 +2443,6 @@ class Admin extends Erp {
 	{
 		$this->erpm->auth();
 		
-		/*
 		$inv_bygrpno = $this->db->query("select distinct split_inv_grpno 
 	from shipment_batch_process_invoice_link a 
 	join proforma_invoices b on a.p_invoice_no = b.p_invoice_no 
@@ -2408,7 +2453,7 @@ where (b.dispatch_id = ? or c.ref_dispatch_id = ? )
 
 	if($inv_bygrpno)
 		$invoice_no = $inv_bygrpno;
-		 */ 
+		 
 		
 //		$batch=$this->db->query("select * from shipment_batch_process_invoice_link where invoice_no=?",$invoice_no)->row_array();
 //		if(!empty($batch) && $batch['packed']==0 && $this->db->query("select invoice_status as s from king_invoice where invoice_no=?",$invoice_no)->row()->s==1)
@@ -5530,8 +5575,6 @@ Brands Under this category please add!!!</span></div>';
 			$this->load->dbutil();
 			echo $this->dbutil->csv_from_result($res); 
 		}
-
-		
 		
 		 
 	}

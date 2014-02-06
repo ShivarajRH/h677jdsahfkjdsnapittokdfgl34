@@ -1,3 +1,4 @@
+<style>.contenttable .leftcont{display:none;}.security_details td{padding:5px 10px !important;} .security_details .datagrid td{padding:2px !important;}</style>
 <div class="container" style="padding:5px;">
 <div style="position:absolute;top:0px;right:60px;"><a href="javascript:void(0)" style="background:#ffaa00;border:1px solid #aaa;border-top:0px;text-decoration:none;display:block;padding:0px 5px 1px 5px;border-radius:0px 0px 5px 5px;color:#555;" onclick='$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"})'>show menu</a></div>
 <div style="clear: both;overflow: hidden;">
@@ -75,6 +76,7 @@
 <form method="post" id="order_form" autocomplete="off">
 <input type="checkbox" id="redeem_r" name="redeem" value="1" style="display:none;">
 <input type="hidden" id="redeem_p" name="redeem_points" value="0" style="display:none;">
+<input type="hidden"  name="creditdays" value="" style="display:none;">
 <div id="prod_suggest_list">
 <fieldset>
 <legend><b>Product Data</b></legend>
@@ -190,6 +192,7 @@
 <tr><td>Amount to be deducted</td><td>Rs <span id="final_ded"></span></td></tr>
 <tr><td>Current Balance : </td><td>Rs <span id="final_bal"></span></td></tr>
 <tr><td>Balance After deduction : </td><td>Rs <span id="final_abal"></span></td></tr>
+<tr><td>Credit Days : </td><td><input type="text" size="7" value="0" name="credit_days" class="credit_days"></td></tr>
 <tr><td><input type="button" value="Confirm" onclick='final_confirm()'></td><td><input type="button" value="Cancel" onclick='final_cancel()'></td></tr>
 </tbody>
 </table>
@@ -208,6 +211,7 @@
 <td>%sno%</td>
 <td style="text-align: center;padding:10px 0px 0px;width: 100px;background: #FFF;"><img alt="" height="100" src="<?=IMAGES_URL?>items/%pimage%.jpg"><b style="display: block;background: #f7f7f7;padding:2px;;text-align: center">%pid%</b></td>
 <td><input class="pids" type="hidden" name="pid[]" value="%pid%"><span class="title"><a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">%pname%</a></span>
+
 <input type="hidden" name="menu[]" value="%menuid%" class="menuids">
 <div style="margin-top: 5px;font-size: 12px;">
 	<div class="p_extra"><b>Category :</b> %cat%</div>
@@ -251,21 +255,7 @@ text-align: center;width: 60px;"><b>OldMRP:</b> <span style="color: #cd0000;font
 </tr>
 </tbody> 
 </table>
-
-<script>
-	function remove_psel(ele)
-	{
-		var sel_pid = $(ele).parents("tr:first").attr('pid');
-			$($(ele).parents("tr").get(0)).remove();
-                remove_pid(sel_pid);
-                
-		$('#prods_order tbody tr').each(function(i,itm){
-			$('td:first',this).text(i+1);
-		});
-		
-	}
-	
-</script>
+ 
 <style>
 
 #display_fr_totals{
@@ -517,9 +507,7 @@ function get_pnh_franchises(){
 		}
 		$('select[name="sel_fid"]').html(f_sel_html);
 		$('select[name="sel_fid"]').trigger("liszt:updated");
-		
 	});
-	
 }
 $(function(){
 	$('#fid_inp').change(function(){
@@ -531,12 +519,10 @@ $(function(){
 		$('#fid_inp').val($(this).val());
 
 		load_franchisebyid();
-		
-		
 	});
 });
 </script>
-
+<div style="display:none">
 <div id="req_quote_dlg" title="Franchise Request/Quotes ">
 	<form id='fr_req_quote_frm' method="post" action="<?=site_url('admin/pnh_place_quote') ?>">
 		<input type="hidden" name="fid" value="0" >
@@ -600,22 +586,34 @@ $(function(){
 			<div style="margin:5px 0px;">
 				<b>Remarks/notes on request</b><br />
 				 <textarea name="req_remark" style="width: 98%;height: 80px;"></textarea>
+				</div>
 			</div>
-		</div>
-		<input type="hidden" name="product_name" id="product_name">
-		<input type="hidden" name="mrp" id="mrp">
-	</form>
+			<input type="hidden" name="product_name" id="product_name">
+			<input type="hidden" name="mrp" id="mrp">
+		</form>
+	</div>
 	
-</div>
+	<div id="reg_mem_dlg" title="Instant Member Registration">
+		<form id="reg_mem_frm" action="<?php echo site_url('admin/jx_reg_newmem')?>" method="post">
+			<input type="hidden" name="franchise_id" value="" id="memreg_fid">
+			<table>
+				<tr><td>Member Name</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_name" id="memreg_name" ></td></tr>
+				<tr><td>Mobile Number</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_mobno" id="memreg_mobno" data-required="true" maxlength="10"></td></tr>
+			</table>
+		</form>
+	</div>
+	
+	<div id="newbie_confirm_dlg" title="New franchisee note" >
+		<h4>New franchisee note</h4>
+		<div class="hexa">
+			<div><b>Please take a note, this is a new franchisee and we should treat them very well</b></div>
+			<div><input type="checkbox" class="nb_cond" value="1" ><b>Dont say no to products</b></div>
+			<div><input type="checkbox" class="nb_cond" value="1" ><b>Contact TM or executive in office for any information</b></div>
+			<div><input type="checkbox" class="nb_cond" value="1" ><b>Dont commit shipment date (post dated)</b></div>
+			<div><input type="checkbox" class="nb_cond" value="1" ><b>Be gentle with policy and treat them as a child</b></div>
+		</div>
+	</div>
 
-<div id="reg_mem_dlg" title="Instant Member Registration">
-	<form id="reg_mem_frm" action="<?php echo site_url('admin/jx_reg_newmem')?>" method="post">
-		<input type="hidden" name="franchise_id" value="" id="memreg_fid">
-		<table>
-			<tr><td>Member Name</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_name" id="memreg_name" ></td></tr>
-			<tr><td>Mobile Number</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_mobno" id="memreg_mobno" data-required="true" maxlength="10"></td></tr>
-		</table>
-	</form>
 </div>
 
 <script>
@@ -908,6 +906,7 @@ function remove_pid(pid)
 
 function load_franchisebyid()
 {
+	$("#franchise_det").html("<div align='center'><img src='"+base_url+'/images/loading_bar.gif'+"' /></div>").show();
 	fid=$("#fid_inp").val();
 	if(fid.length==0)
 	{
@@ -954,14 +953,14 @@ $('#reg_mem_dlg').dialog({
                         if(mem_regname.length == 0)
                                 error_list.push("Please Enter Member name.");
 
-                        if(mem_mobno.length == 0)
+						if(mem_mobno.length == 0)
                                 error_list.push("Please Enter Mobile Number.");
-                        else
-                        {
-                                mem_mobno = mem_mobno*1	
-                                if(isNaN(mem_mobno))
-                                        error_list.push("Please Enter valid Mobile number.");	
-                        }	
+						else
+						{
+						        mem_mobno = mem_mobno*1	
+						        if(isNaN(mem_mobno))
+						                error_list.push("Please Enter valid Mobile number.");	
+						}	
 
                         if(error_list.length)
                         {
@@ -1009,11 +1008,24 @@ function final_confirm()
 		alert("Max redeemable points is 150");
 		return false
 	}
+	if($(".credit_days").val() =='' || $(".credit_days").val() == 0)
+	{
+		$(".credit_days").addClass('error_inp');
+		alert("Please Enter Credit Days");
+		return false;
+	}
+	if($(".credit_days").val() > 5 )
+	{
+		alert("Credit Days can't be greater than 5 days");
+		return false;
+	}
 	if($(".price_c_com").length==1 && !$(".price_c_com").attr("checked"))
 	{
 		alert("Is price change communicated to franchise?");
 		return false;
 	}
+	$(".credit_days").removeClass('error_inp');
+	$("input[name='creditdays']").val($('.credit_days').val());	
 	$("#redeem_p").val($(".redeem_points").val());
 	$("#order_form").submit();
 	$("#pnh_order_submit").attr("disabled",true);
@@ -1108,6 +1120,7 @@ $(function(){
 		$("#prods_order .stotal").each(function(){
 			total+= format_number( $(this).html() );
 		});
+		total = format_number(total);
 		
 		$("#prods_order .pids").each(function(){
 			ppids.push($(this).val());
@@ -1135,7 +1148,7 @@ $(function(){
 
 			if(mid==0 && menu_id != 112)
 			{
-				if(confirm("Instant Registration is required because Other than Mobile & Tablet items are there in the Cart"))
+				if(confirm("Instant Registration is required because Other than Electronic items are there in the Cart"))
 					 mem_reg();
 				 return false;
 			}
@@ -1157,7 +1170,7 @@ $(function(){
 			$("#order_form").hide();
 			attr=$(".attr").serialize();
 			
-			$.post("<?=site_url("admin/pnh_jx_checkstock_order")?>",{attr:attr,pids:ppids.join(","),qty:qty.join(","),fid:$('#i_fid').val(),mid:$("input[name='mid']",$(this)).val()},function(data){
+			$.post("<?=site_url("admin/pnh_jx_checkstock_order")?>",{attr:attr,pids:ppids.join(","),qty:qty.join(","),fid:$('#i_fid').val(),mid:$("input[name='mid']",$(this)).val(),credit_days:$('.credit_days').val()},function(data){
 				obj=$.parseJSON(data);
 				if(obj.e==0)
 				{
@@ -1623,19 +1636,20 @@ function format_number(num,decimal) {
     return parseFloat(final_num);
 }
 
-
+function remove_psel(ele)
+{
+	var sel_pid = $(ele).parents("tr:first").attr('pid');
+		$($(ele).parents("tr").get(0)).remove();
+            remove_pid(sel_pid);
+            
+	$('#prods_order tbody tr').each(function(i,itm){
+		$('td:first',this).text(i+1);
+	});
+	
+}
 </script>
 
-<div id="newbie_confirm_dlg" title="New franchisee note" >
-	<h4>New franchisee note</h4>
-	<div class="hexa">
-		<div><b>Please take a note, this is a new franchisee and we should treat them very well</b></div>
-		<div><input type="checkbox" class="nb_cond" value="1" ><b>Dont say no to products</b></div>
-		<div><input type="checkbox" class="nb_cond" value="1" ><b>Contact TM or executive in office for any information</b></div>
-		<div><input type="checkbox" class="nb_cond" value="1" ><b>Dont commit shipment date (post dated)</b></div>
-		<div><input type="checkbox" class="nb_cond" value="1" ><b>Be gentle with policy and treat them as a child</b></div>
-	</div>
-</div>
+
 
 <style>
 
@@ -1692,9 +1706,7 @@ left:20px;background:#C97033;border-radius:5px 5px 0px 0px;
 .footerlinks{
 display:none;
 }
-.contenttable .leftcont{
-display:none;
-}
+
 #srch_results{
 	margin-left: 85px;
 	position: absolute;

@@ -1,10 +1,10 @@
 <div class="container" id="account_grn_present">
 <h2>Account GRN<?=$this->uri->segment(3)?></h2>
 
-<form method="post" id="cv_form" enctype="multipart/form-data">
+<form method="post" id="cv_form" enctype="multipart/form-data" >
 <input type="hidden" name="grn" value="<?=$this->uri->segment(3)?>">
 <div style="padding:20px 0px;">
-<table class="datagrid" width="100%">
+<table class="datagrid nofooter" width="100%">
 <thead>
 <tr>
 <th>Product</th>
@@ -26,8 +26,8 @@
 <tr>
 <td><?=$i['product_name']?><input type="hidden" name="items[]" value="<?=$i['id']?>"></td>
 <td><a href="<?=site_url("admin/viewpo/{$i['po_id']}")?>">PO<?=$i['po_id']?></a></td>
-<td><?=$i['invoice_qty']?></td>
-<td class="qty"><?=$i['received_qty']?></td>
+<td style="text-align:justify;"><?=$i['invoice_qty']?></td>
+<td class="qty" style="text-align:justify;"><?=$i['received_qty']?></td>
 <td><input type="hidden" name="mrp[]" value="<?=$i['mrp']?>"><span class="mrp"><?=$i['mrp']?></span></td>
 <td><input type="hidden" name="dp_price[]" value="<?=$i['dp_price']?>"><span class="dp_price"><?=$i['dp_price']?></span></td>
 <td><nobr><input type="text" class="inp margin readonly" size=7 name="margin[]" value="<?=$i['margin']?>" readonly="readonly">%</nobr></td>
@@ -39,7 +39,7 @@
 </select>
 </td>
 <td><?=$i['purchase_price']?></td>
-<td><span class="pprice"></span></td>
+<td><input type="hidden"  name="grn_validated_inv_val[]" value=""><span class="pprice"></span></td>
 <td>
 <select class="invoice" name="invoice[]">
 <?php foreach($invoices as $inv){?>
@@ -50,6 +50,12 @@
 </tr>
 <?php }?>
 </tbody>
+<tfoot>
+<tr>
+	<td align="right" colspan="3" style="text-align: left !important;padding-left: 263px !important"><b>Total Inv.Qty : <?=$ttl_in_stk_qty['invoice_qty']?></b></td>
+	<td  colspan="0" style="text-align: left !important;padding-left: 0px !important"><b>Total Rec.Qty: <?=$ttl_in_stk_qty['received_qty']?></b></td>
+	<td colspan="8" style="text-align: right !important;padding-right: 139px !important"><b>Total GRN Inv.Val&nbsp;&nbsp;<span class="tot_val">0</span></b></td></tr>
+</tfoot>
 </table>
 </div>
 
@@ -72,9 +78,7 @@
 <td><?=$inv['purchase_inv_no']?><input type="hidden" name="inv_ids[]" value="<?=$inv['id']?>"></td>
 <td><?=format_date($inv['purchase_inv_date'])?></td>
 <td>Rs <b><input type="text" class="inp readonly" name="inv_amounts[]" readonly="readonly" value="<?=$inv['purchase_inv_value']?>" size=10></b></td>
-<!--  <td>Rs <b><input type="text" class="inp" name="grn_validated_inv_amounts[]" value="<?=$inv['grn_validated_inv_value']?>" size=10></b></td>-->
-<td><input type="hidden" name="grn_validated_inv_val" value="">Rs <b><span id="inv_<?=$inv['id']?>">0</span></b></td>
-
+<td>Rs <b><span class="inv_<?=$inv['id']?>">0</span></b></td>
 <td>
 	<?php if(file_exists(ERP_PHYSICAL_IMAGES."invoices/{$inv['id']}.jpg")){ ?>
 		<a href="<?=ERP_IMAGES_URL?>invoices/<?=$inv['id']?>.jpg" target="_blank"><img src="<?=ERP_IMAGES_URL?>invoices/<?=$inv['id']?>.jpg" height=50></a>
@@ -85,6 +89,11 @@
 </tr>
 <?php }?>
 </tbody>
+<tfoot>
+<tr><td colspan="4" style="text-align: right !important;padding-right: 89px !important"><b>Total GRN Inv.Val&nbsp;&nbsp;<span class="tot_val">0</span></b></td>
+<td colspan="5" style="text-align: right !important;padding-right: 227px !important"></td>
+</tr>
+</tfoot>
 </table>
 </div>
 
@@ -105,6 +114,7 @@ calc_vvalue();
 var vvalue=0;
 function calc_vvalue()
 {
+	 validated_tot_price=0;
 	<?php foreach($invoices as $inv){?>
 	totals[<?=$inv['id']?>]=0;
 	<?php }?>
@@ -143,17 +153,27 @@ function calc_vvalue()
 		
 		if(isNaN(price))
 			return;
+		
 		$('.pprice',$p).html(price);	
 		qty=parseInt($(".qty",$p).html());
 		inv=parseInt($(".invoice",$p).val());
 		totals[inv]=totals[inv]+(price*qty);
+		$('input[name="grn_validated_inv_val[]"] ',$p).val(price);
+		validated_tot_price+=(price*qty);
 	});
+	$(".tot_val").html('Rs '+Math.round(validated_tot_price,2));
 	$.each(totals,function(i,v){
+		$p=$(this).parents("tr").get(0);
 		if(typeof(v)=="undefined")
 			return;
-		$("#inv_"+i).html(v);
-		$('input[name="grn_validated_inv_val"]').val(v);
+		$(".inv_"+i).html(v);
+		
+		
+		
 	});
+
+	
+	
 }
 var totals=[];
 $('.leftcont').hide();

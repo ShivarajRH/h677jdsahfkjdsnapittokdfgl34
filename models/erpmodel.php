@@ -160,9 +160,6 @@ class Erpmodel extends Model
 
 	function _notifybymail($to,$subj,$message,$fromname="Support",$from='support@snapittoday.com',$cc=array())
 	{
-		
-		return ;
-		
 		/*
 		$config['protocol'] = 'sendmail';
 		$config['mailpath'] = '/usr/sbin/sendmail';
@@ -170,7 +167,8 @@ class Erpmodel extends Model
 		$config['charset'] = 'utf8';
 		$config['wordwrap'] = TRUE;
 		*/
-		
+		if($_SERVER['HTTP_HOST']!="snapittoday.com")
+			return;
 		$this->email->clear();
 		
 		$config = array(
@@ -271,10 +269,10 @@ class Erpmodel extends Model
 		return 0;
 	}
 	
-	function searchvendorproducts($vid,$q)
+	function searchvendorproducts($vid,$q,$limit)
 	{
-		$sql="select p.*,sum(s.available_qty) as stock from m_product_info p left outer join t_stock_info s on s.product_id=p.product_id where (p.product_name like ? or p.barcode = ? ) and (p.product_id in (select product_id from m_vendor_product_link where vendor_id=?) or p.brand_id in (select brand_id from m_vendor_brand_link where vendor_id=? AND is_active=1)) group by p.product_id order by p.product_name asc";
-		$ret=$this->db->query($sql,array("%$q%",$q,$vid,$vid))->result_array();
+		$sql="select p.*,sum(s.available_qty) as stock from m_product_info p left outer join t_stock_info s on s.product_id=p.product_id where (p.product_name like ? or p.barcode = ? ) and (p.product_id in (select product_id from m_vendor_product_link where vendor_id=?) or p.brand_id in (select brand_id from m_vendor_brand_link where vendor_id=? AND is_active=1)) group by p.product_id order by p.product_name asc limit 0,?";
+		$ret=$this->db->query($sql,array("%$q%",$q,$vid,$vid,$limit))->result_array();
 		foreach($ret as $i=>$r)
 		{
 			$ret[$i]['margin']=$this->db->query("select brand_margin from m_vendor_brand_link where vendor_id=? and brand_id=? AND is_active=1",array($vid,$r['brand_id']))->row()->brand_margin;
@@ -1916,12 +1914,19 @@ courier disable ends
 				$refund+=$o['i_price'];
 		}
 		
-		$this->db->query("insert into t_refund_info(transid,amount,status,created_on,created_by) values(?,?,?,?,?)",array($transid,$refund,0,time(),$user['userid']));
-		$rid=$this->db->insert_id();
+		// check if transaction is ready to process refund amount  
+		$process_refund = $this->erpm->_valid_transforrefund($transid);
+		if($process_refund)
+		{
+			$this->db->query("insert into t_refund_info(transid,amount,status,created_on,created_by) values(?,?,?,?,?)",array($transid,$refund,0,time(),$user['userid']));
+			$rid=$this->db->insert_id();
+		}
+		
 		foreach($oids as $i=>$o)
 		{
 			$qty=$this->db->query("select quantity from king_orders where id=?",$o)->row()->quantity;
-			$this->db->query("insert into t_refund_order_item_link(refund_id,order_id,qty) values(?,?,?)",array($rid,$o,$qty));
+			if($process_refund)
+				$this->db->query("insert into t_refund_order_item_link(refund_id,order_id,qty) values(?,?,?)",array($rid,$o,$qty));
 			$this->db->query("update king_orders set status=3,actiontime=".time()." where id=? limit 1",$o);
 		}
 		$email=$this->db->query("select bill_email as m from king_orders where id=?",$o)->row()->m;
@@ -1930,6 +1935,20 @@ courier disable ends
 		$this->erpm->do_trans_changelog($transid,count($oids)." order(s) cancelled");
 		$this->session->set_flashdata("erp_pop_info","Orders cancelled");
 		redirect("admin/trans/$transid");
+	}
+	
+	/**
+	 * function to check if transaction is valid for refund process 
+	 * @param mixed $transid
+	 * @return boolean
+	 */
+	function _valid_transforrefund($transid)
+	{
+		$trans_det = $this->db->query("select * from king_transactions where transid = ? ",$transid)->row_array();
+		$status = false;
+		if($trans_det['partner_id'] == 0 && $trans_det['franchise_id'] == 0 )
+			$status = true;
+		return $status;
 	}
 	
 	function do_reship_order()
@@ -2493,6 +2512,13 @@ courier disable ends
 					}
 					
 					if($consider_for_refund==0)
+						continue;
+					
+					$transid = $rd['transid'];
+					
+					$process_refund = $this->erpm->_valid_transforrefund($transid);
+					
+					if(!$process_refund)
 						continue;
 					
 					$transid = $rd['transid'];
@@ -5442,7 +5468,7 @@ order by p.product_name asc
 		$user=$this->session->userdata("admin_user");
 		
 		if(!$user)
-			redirect("admin");
+			$ret?false:redirect("admin");
 		if($super===false)
 			return $user;
 		if($super===true)
@@ -5499,13 +5525,13 @@ order by p.product_name asc
 		
 		$user=$this->auth(PURCHASE_ORDER_ROLE);
 
-		foreach(array("name","addr1","addr2","locality","landmark","city","state","country","postcode","ledger","credit_limit","credit_days","advance","cst","pan","vat","stax","tat","rpolicy","payterms","remarks","cnt_name","cnt_desgn","cnt_mob1","cnt_mob2","cnt_telephone","cnt_fax","cnt_email1","cnt_email2","l_catid","l_brand","l_margin","l_from","l_until") as $i)
+		foreach(array("name","addr1","addr2","locality","landmark","city","state","country","postcode","ledger","credit_limit","credit_days","advance","cst","pan","vat","stax","tat","rpolicy","payterms","remarks","cnt_name","cnt_desgn","cnt_mob1","cnt_mob2","cnt_telephone","cnt_fax","cnt_email1","cnt_email2","l_catid","l_brand","l_margin","l_from","l_until","payment_type") as $i)
 			$$i=$this->input->post("$i");
 
 		
-		$inp=array($name,$addr1,$addr2,$locality,$landmark,$postcode,$city,$state,$country,$ledger,$credit_limit,$credit_days,$advance,$cst,$pan,$vat,$stax,$tat,$rpolicy,$payterms,$remarks,$admin['userid'],$vid);
+		$inp=array($name,$addr1,$addr2,$locality,$landmark,$postcode,$city,$state,$country,$ledger,$credit_limit,$credit_days,$advance,$cst,$pan,$vat,$stax,$tat,$rpolicy,$payterms,$remarks,$admin['userid'],$payment_type,$vid);
 			
-		$this->db->query("update m_vendor_info set vendor_name=?,address_line1=?,address_line2=?,locality=?,landmark=?,postcode=?,city_name=?,state_name=?,country=?,ledger_id=?,credit_limit_amount=?,credit_days=?,require_payment_advance=?,cst_no=?,pan_no=?,vat_no=?,service_tax_no=?,avg_tat=?,return_policy_msg=?,payment_terms_msg=?,remarks=?,modified_by=?,modified_on=now() where vendor_id=? limit 1",$inp);
+		$this->db->query("update m_vendor_info set vendor_name=?,address_line1=?,address_line2=?,locality=?,landmark=?,postcode=?,city_name=?,state_name=?,country=?,ledger_id=?,credit_limit_amount=?,credit_days=?,require_payment_advance=?,cst_no=?,pan_no=?,vat_no=?,service_tax_no=?,avg_tat=?,return_policy_msg=?,payment_terms_msg=?,remarks=?,modified_by=?,modified_on=now(),payment_type=? where vendor_id=? limit 1",$inp);
 		$this->db->query("delete from m_vendor_contacts_info where vendor_id=?",$vid);
 		//$this->db->query("delete from m_vendor_brand_link where vendor_id=?",$vid);
 		
@@ -5563,12 +5589,12 @@ order by p.product_name asc
 
 	function do_addvendor()
 	{
-		foreach(array("name","addr1","addr2","locality","landmark","city","state","country","postcode","ledger","credit_limit","credit_days","advance","cst","pan","vat","stax","tat","rpolicy","payterms","remarks","cnt_name","cnt_desgn","cnt_mob1","cnt_mob2","cnt_telephone","cnt_fax","cnt_email1","cnt_email2","l_catid","l_brand","l_margin","l_from","l_until") as $i)
+		foreach(array("name","addr1","addr2","locality","landmark","city","state","country","postcode","ledger","credit_limit","credit_days","advance","cst","pan","vat","stax","tat","rpolicy","payterms","payment_type","remarks","cnt_name","cnt_desgn","cnt_mob1","cnt_mob2","cnt_telephone","cnt_fax","cnt_email1","cnt_email2","l_catid","l_brand","l_margin","l_from","l_until","payment_type") as $i)
 			$$i=$this->input->post("$i");
 		$code="V".rand(1000,9999);
-		$inp=array($code,$name,$addr1,$addr2,$locality,$landmark,$postcode,$city,$state,$country,$ledger,$credit_limit,$credit_days,$advance,$cst,$pan,$vat,$stax,$tat,$rpolicy,$payterms,$remarks);
-		$this->db->query("insert into m_vendor_info(vendor_code,vendor_name,address_line1,address_line2,locality,landmark,postcode,city_name,state_name,country,ledger_id,credit_limit_amount,credit_days,require_payment_advance,cst_no,pan_no,vat_no,service_tax_no,avg_tat,return_policy_msg,payment_terms_msg,remarks,created_on)
-				values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())",$inp);
+		$inp=array($code,$name,$addr1,$addr2,$locality,$landmark,$postcode,$city,$state,$country,$ledger,$credit_limit,$credit_days,$advance,$cst,$pan,$vat,$stax,$tat,$rpolicy,$payterms,$remarks,$payment_type);
+		$this->db->query("insert into m_vendor_info(vendor_code,vendor_name,address_line1,address_line2,locality,landmark,postcode,city_name,state_name,country,ledger_id,credit_limit_amount,credit_days,require_payment_advance,cst_no,pan_no,vat_no,service_tax_no,avg_tat,return_policy_msg,payment_terms_msg,remarks,created_on,payment_type)
+				values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),?)",$inp);
 		$vid=$this->db->insert_id();
 		foreach($cnt_name as $i=>$cn)
 		{
@@ -5595,7 +5621,6 @@ order by p.product_name asc
 	{
 		
 		$_POST['poids'] = array_unique($_POST['poids']);
-		
 		$pos = array();
 		$user=$this->erpm->getadminuser();
 		$vid=$this->db->query("select vendor_id from t_po_info where po_id=?",$_POST['poids'][0])->row()->vendor_id;
@@ -5605,7 +5630,6 @@ order by p.product_name asc
 		{
 			if($this->db->query("select count(*) as t from t_grn_invoice_link a join t_grn_info b on a.grn_id = b.grn_id where purchase_inv_no = ? and purchase_inv_date = ? and vendor_id  = ?",array($no,$_POST['invdate'][$i],$vid))->row()->t)
 				continue;
-				
 			$proceed_grn++;
 		}
 		
@@ -5637,22 +5661,21 @@ order by p.product_name asc
 				$po['dp_price']=$_POST["dp_price$p"][$i];
 				
 				$po['price']=$_POST["price$p"][$i];
-				$po['tax']=$this->db->query("select vat from m_product_info where product_id=?",$po['product'])->row()->vat;
+				$po['tax']=$_POST["vat$p"][$i];
 				$po['rackbin']=$_POST['storage'.$p][$i];
 				
 				$po['location']=$this->db->query("select location_id from m_rack_bin_info where id=?",$po['rackbin'])->row()->location_id;
-				
 				$po['margin']=$poi['margin'];
+				$po['scheme_discount_value']=$poi['scheme_discount_value'];
+				
 				$po['foc']=$poi['is_foc'];
 				$po['offer']=$poi['has_offer'];
 				$po['barcode']=isset($_POST["pbarcode".$p][$i])?$_POST["pbarcode".$p][$i]:'';
 				$po['upd_pmrp']=$_POST["upd_pmrp_flag".$p][$i];
-				
 				$po['upd_dp_price']=isset($_POST["upd_dp_price".$p][$po['product']])?$_POST["upd_dp_price".$p][$po['product']]:0;
 				$pos[$p][]=$po;
 			}
 		}
-		
 		
 		if(!count($pos))
 		{
@@ -5660,17 +5683,15 @@ order by p.product_name asc
 			exit;
 		}
 		
-		 
 		$this->db->query("insert into t_grn_info(vendor_id,remarks,created_on) values(?,?,now())",array($vid,$_POST['remarks']));
 			$grn=$this->db->insert_id();
-		
 		
 		foreach($pos as $poid=>$po)
 		{
 			foreach($po as $p)
 			{
-				$inp=array($grn,$poid,$p['product'],$p['oqty'],$p['rqty'],$p['mrp'],$p['dp_price'],$p['price'],$p['tax'],$p['location'],$p['rackbin'],$p['margin'],$p['scheme_discount_value'],$p['foc'],$p['offer']);
-				$this->db->query("insert into t_grn_product_link(grn_id,po_id,product_id,invoice_qty,received_qty,mrp,dp_price,purchase_price,tax_percent,location_id,rack_bin_id,margin,scheme_discount_value,is_foc,has_offer,created_on)
+				$inp=array($grn,$poid,$p['product'],$p['oqty'],$p['rqty'],$p['mrp'],$p['dp_price'],$p['price'],$p['tax'],$p['location'],$p['rackbin'],$p['margin'],$p['foc'],$p['offer'],$p['scheme_discount_value']);
+				$this->db->query("insert into t_grn_product_link(grn_id,po_id,product_id,invoice_qty,received_qty,mrp,dp_price,purchase_price,tax_percent,location_id,rack_bin_id,margin,is_foc,has_offer,scheme_discount_value,created_on)
 						values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now())",$inp);
 
 				$this->db->query("update t_po_product_link set received_qty=received_qty+? where po_id=? and product_id=?",array($p['rqty'],$poid,$p['product']));
@@ -5689,7 +5710,6 @@ order by p.product_name asc
 						{
 							$this->db->query("update m_product_info set barcode=? where product_id=? limit 1",array($p['barcode'],$p['product_id']));
 						}
-						
 					} 
 					
 					if(!empty($pc_prod) && $p['upd_pmrp'] == 1 )
@@ -5777,9 +5797,7 @@ order by p.product_name asc
 					{
 						$this->_update_dp_byproductid($p['product_id'],$p['dp_price'],$grn);
 					}
-					
 					$p_stk_ref_id = $this->erpm->_upd_product_stock($p['product'],$p['mrp'],$p['barcode'],$p['location'],$p['rackbin'],0,$p['rqty'],4,1,$grn);
-					
 					if($this->db->query("select is_serial_required as s from m_product_info where product_id=?",$p['product_id'])->row()->s==1)
 					{
 						
@@ -5889,9 +5907,8 @@ order by p.product_name asc
 		foreach(array("inv_amounts","inv_ids","adjusted","grn","mrp","items","discount","type","vvalue","mode","inst_no","inst_date","bank","narration","grn_validated_inv_val") as $i)
 			$$i=$this->input->post($i);
 		foreach($inv_ids as $i=>$id)
-			//$this->db->query("update t_grn_invoice_link set purchase_inv_value=? where id=? limit 1",array($inv_amounts[$i],$id));
-			$this->db->query("update t_grn_invoice_link set grn_validated_inv_value=? where id=? limit 1",array($grn_validated_inv_val[$i],$id));
-			foreach($items as $i=>$item)
+			$this->db->query("update t_grn_invoice_link set purchase_inv_value=? where id=? limit 1",array($grn_validated_inv_val[$i],$id));
+		foreach($items as $i=>$item)
 		{
 			$disc=$discount[$i];
 			if($type[$i]==1)
@@ -6009,7 +6026,18 @@ order by p.product_name asc
 		if($this->db->query("select is_serial_required from m_product_info where product_id = ? ",$pid)->row()->is_serial_required)
 		{
 			// check if dp has changed and update DP for item
-			$deal_det_res  = $this->db->query("select a.dealid,orgprice,c.itemid,price from king_deals a join king_dealitems b on a.dealid = b.dealid join m_product_deal_link c on c.itemid = b.id where product_id = ? and c.is_active = 1 order by c.id desc limit 1 ",$pid);
+			//$deal_det_res  = $this->db->query("select a.dealid,orgprice,c.itemid,price from king_deals a join king_dealitems b on a.dealid = b.dealid join m_product_deal_link c on c.itemid = b.id and c.is_active = 1 where c.qty = 1 and product_id = ? and c.is_active = 1 order by c.id desc limit 1 ",$pid);
+			  $deal_det_res  = $this->db->query("select dealid,orgprice,b.itemid,price,b.qty,count(*) as t from (
+													select b.id,a.dealid,orgprice,c.itemid,price,c.qty 
+														from king_deals a 
+														join king_dealitems b on a.dealid = b.dealid 
+														join m_product_deal_link c on c.itemid = b.id and c.is_active = 1 
+														where product_id = ?  
+														order by c.id desc ) as b 
+													join m_product_deal_link c on c.itemid = b.id and c.is_active = 1 
+													group by b.id
+													having t = 1 and qty = 1 
+			  									limit 1 ",$pid);
 			if($deal_det_res->num_rows())
 			{
 				$deal_det = $deal_det_res->row_array();
@@ -7067,8 +7095,6 @@ order by p.product_name asc
 		$user=$this->erpm->getadminuser();
 		$msg=$this->input->post("msg");
 		$cheq_realize_date=$this->input->post("cheq_realizedon");
-		/* print_r($_POST);
-		exit; */
 		$r=$this->db->query("select * from pnh_t_receipt_info where receipt_id=?",$rid)->row_array();
 		$this->db->query("update pnh_t_receipt_info set reason=?,status=1,activated_by=?,activated_on=?,cheq_realized_on=?  where receipt_id=? and (is_submitted=1 or payment_mode=0) limit 1",array($msg,$user['userid'],time(),$cheq_realize_date,$rid));
 		
@@ -7085,69 +7111,66 @@ order by p.product_name asc
 		$this->erpm->flash_msg("Receipt $rid activated");
 		redirect("admin/pnh_pending_receipts");
 	}
-        
-	function get_dispatch_id_invno($invoice_no) {
-            return $this->db->query("select ref_dispatch_id from king_invoice where invoice_no=? group by invoice_no",$invoice_no)->row()->ref_dispatch_id;
-        }
-        
-        /**
-         * 
-         * @param type $fid
-         * @param type $user 
-         */
+
+    /**
+     * Function to add amount to user account & generate receipt
+     * @param type $fid
+     * @param type $user 
+     */
 	function do_pnh_topup($fid,$user)  {
 		$user=$this->erpm->getadminuser();
 		foreach(array("r_type","amount","bank","type","no","date","msg","transit_type","sel_invoice","amt_unreconcile","amt_adjusted","total_val_reconcile") as $i)
 			$$i=$this->input->post($i);
-//                    echo '<pre>'; print_r($_POST); die();
-                $inp=array("receipt_type"=>$r_type,"franchise_id"=>$fid,"bank_name"=>$bank,"receipt_amount"=>$amount,"payment_mode"=>$type,"instrument_no"=>$no,"instrument_date"=>strtotime($date),"created_by"=>$user['userid'],"created_on"=>time(),"remarks"=>$msg,"in_transit"=>$transit_type,"unreconciled_value"=>$amount);
-                // if cash receipt is added.
-		if($type == 0)
-			$inp['instrument_date'] = strtotime(date('Y-m-d')); // security deposit
-		
-                $this->db->insert("pnh_t_receipt_info",$inp); $recpt_id = $this->db->insert_id();
-                
-                //update unreconceiled value
-                if($r_type == 1){
-                    // If not security deposit we can concile the amount
-                   
-                    //$recpt_id = 119;
+        $inp=array("receipt_type"=>$r_type,"franchise_id"=>$fid,"bank_name"=>$bank,"receipt_amount"=>$amount,"payment_mode"=>$type,"instrument_no"=>$no,"instrument_date"=>strtotime($date),"created_by"=>$user['userid'],"created_on"=>time(),"remarks"=>$msg,"in_transit"=>$transit_type,"unreconciled_value"=>$amount);
 
-                    $unreconciled_value = $amount - $total_val_reconcile;
-                    if($sel_invoice) {
-                        $invoice_arr = array();
-                        foreach($sel_invoice as $i=>$invoice_no) {
-                            $unreconcile_amt = $amt_unreconcile[$i];
-                            $adjusted_amt = $amt_adjusted[$i];
-                            if($invoice_no!='' && $unreconcile_amt!='' && $adjusted_amt!='') {
-                                    $dispatch_id = $this->get_dispatch_id_invno($invoice_no);
-                                    
-                                    $sub_val = $unreconcile_amt - $adjusted_amt;
-                                    $invoice_arr['invoices'][$i]["invoice_no"] = $sel_invoice[$i];
-                                    $invoice_arr['invoices'][$i]["dispatch_id"] = $dispatch_id;
-                                    $invoice_arr['invoices'][$i]["invoice_amt"] = $unreconcile_amt;
-                                    $invoice_arr['invoices'][$i]["adjusted_amt"] = $adjusted_amt;
-                                    $invoice_arr['invoices'][$i]["unreconciled_amt"] = $sub_val;
-                                    //$invoice_arr[$i]["sub_val"] = $sub_val;
-                            }
-                        }
-                        $invoice_arr['userid'] = $user['userid'];
-                        $invoice_arr['receipt_id'] = $recpt_id;
-                        $invoice_arr['amount']=$amount;
-                        $invoice_arr['total_reconcile_val'] = $total_val_reconcile;
-                        $invoice_arr['unreconciled_value'] = $unreconciled_value;
-                        $invoice_arr['fid'] = $fid;
-                        
-                        //echo '<pre>'; print_r($invoice_arr);die();
-                        
-                        $rdata = $this->reconcile_receipt($invoice_arr);
-//                       echo '<pre>'; print_r($rdata);die();
+		// if cash receipt is added.
+		if($type == 0)
+			$inp['instrument_date'] = strtotime(date('Y-m-d'));
+		
+		$this->db->insert("pnh_t_receipt_info",$inp);
+		$recpt_id = $this->db->insert_id();
+        
+        //update unreconceiled value
+        if($r_type == 1){
+            // If not security deposit we can concile the amount
+           
+            //$recpt_id = 119;
+
+            $unreconciled_value = $amount - $total_val_reconcile;
+            if($sel_invoice) {
+                $invoice_arr = array();
+                foreach($sel_invoice as $i=>$invoice_no) {
+                    $unreconcile_amt = $amt_unreconcile[$i];
+                    $adjusted_amt = $amt_adjusted[$i];
+                    if($invoice_no!='' && $unreconcile_amt!='' && $adjusted_amt!='') {
+                            $dispatch_id = $this->get_dispatch_id_invno($invoice_no);
+
+                            $sub_val = $unreconcile_amt - $adjusted_amt;
+                            $invoice_arr['invoices'][$i]["invoice_no"] = $sel_invoice[$i];
+                            $invoice_arr['invoices'][$i]["dispatch_id"] = $dispatch_id;
+                            $invoice_arr['invoices'][$i]["invoice_amt"] = $unreconcile_amt;
+                            $invoice_arr['invoices'][$i]["adjusted_amt"] = $adjusted_amt;
+                            $invoice_arr['invoices'][$i]["unreconciled_amt"] = $sub_val;
+                            //$invoice_arr[$i]["sub_val"] = $sub_val;
                     }
                 }
-		//die("Workingon...");
+                $invoice_arr['userid'] = $user['userid'];
+                $invoice_arr['receipt_id'] = $recpt_id;
+                $invoice_arr['amount']=$amount;
+                $invoice_arr['total_reconcile_val'] = $total_val_reconcile;
+                $invoice_arr['unreconciled_value'] = $unreconciled_value;
+                $invoice_arr['fid'] = $fid;
+                
+                //echo '<pre>'; print_r($invoice_arr);die();
+                
+                $rdata = $this->reconcile_receipt($invoice_arr);
+            }
+        }
 
 //		$this->erpm->pnh_fran_account_stat($fid,0, $amount,"Topup $no $date");
-		/*$arr = array($fid,((!$r_type)?2:3),$recpt_id,$r_type,$amount,$msg,1,date('Y-m-d H:i:s'),$user['userid']);
+		
+		/*
+		$arr = array($fid,((!$r_type)?2:3),$recpt_id,$r_type,$amount,$msg,1,date('Y-m-d H:i:s'),$user['userid']);
 				$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,receipt_id,receipt_type,credit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?,?)",$arr);
 		*/
 		$franchise_det=$this->erpm->pnh_getfranchise($fid);
@@ -7333,46 +7356,30 @@ order by p.product_name asc
 	function pnh_getdeals($brandid=false,$catid=false)
 	{
 		if($brandid == 0 && $catid == 0)
-			$cond=" where i.is_pnh=1";
+			$cond=" where i.is_pnh=1 group by i.id order by i.name asc limit 100 ";
 		else if($catid != 0 && $brandid == 0 )
-			$cond=" where i.is_pnh=1 and d.catid='".$catid."'";
+			$cond=" where i.is_pnh=1 and d.catid='".$catid."' group by i.id order by i.name asc ";
 		else if($catid == 0 && $brandid != 0 )
-			$cond=" where i.is_pnh=1 and d.brandid='".$brandid."'";
+			$cond=" where i.is_pnh=1 and d.brandid='".$brandid."' group by i.id order by i.name asc ";
 		else if($catid != 0 && $brandid != 0 )
-			$cond=" where i.is_pnh=1 and d.catid='".$catid."' and d.brandid='".$brandid."'";
+			$cond=" where i.is_pnh=1 and d.catid='".$catid."' and d.brandid='".$brandid."' group by i.id order by i.name asc ";
 		
-		$sql = "select ifnull(group_concat(smd.special_margin),0) as sm,d.publish,d.brandid,d.catid,i.orgprice,
+		$sql = "select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,i.is_combo,d.publish,d.brandid,d.catid,i.orgprice,
 					i.price,i.name,i.pic,i.pnh_id,i.id as itemid,
 					b.name as brand,c.name as category 
 				from king_deals d 
 				join king_dealitems i on i.dealid=d.dealid 
 				join king_brands b on b.id=d.brandid 
 				join king_categories c on c.id=d.catid 
-				left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp()  
+				left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp()
 				$cond
-				group by i.id 
-				order by i.sno desc
-				limit 100 ";
-		 $this->db->query("select d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid where i.is_pnh=1 order by i.created_on desc,i.name asc limit 30")->result_array();
+				";
+		// $this->db->query("select d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid where i.is_pnh=1 order by i.created_on desc,i.name asc limit 30")->result_array();
 		
 		return $this->db->query($sql)->result_array();
 	}
 
 	function pnh_deals_bydealid($id=false)
-	{
-		$sql = "select ifnull(group_concat(smd.special_margin),0) as sm,d.publish,d.brandid,d.catid,i.orgprice,
-						i.price,i.name,i.pic,i.pnh_id,i.id as itemid,
-						b.name as brand,c.name as category 
-					from king_deals d 
-					join king_dealitems i on i.dealid=d.dealid 
-					join king_brands b on b.id=d.brandid 
-					join king_categories c on c.id=d.catid 
-					left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp()  
-					where i.is_pnh=1 and d.dealid='".$id."'";
-		return $this->db->query($sql)->result_array();
-	}
-	
-	function pnh_getdealsbydealid($id=false)
 	{
 		$sql = "select ifnull(group_concat(smd.special_margin),0) as sm,d.publish,d.brandid,d.catid,i.orgprice,
 						i.price,i.name,i.pic,i.pnh_id,i.id as itemid,
@@ -7397,16 +7404,16 @@ order by p.product_name asc
 		else if($catid ==0 && $brandid ==0)	
 			$cond ="and 1";
 			
-		 if($type==0)
-			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() where i.is_pnh=1 $cond group by i.id order by i.name asc limit 50")->result_array();
+		  
+		if($type==0)
+			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() where i.is_pnh=1 $cond group by i.id order by i.name asc limit 50")->result_array();
 		else if($type==1)
-			$ret=$this->db->query("select * from (select ifnull(group_concat(smd.special_margin),0) as sm,i.id,o.transid,o.time as order_time,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join king_orders o on o.itemid=i.id left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() where i.is_pnh=1 $cond group by i.id order by o.time desc) as dd group by dd.id order by dd.order_time desc limit 50")->result_array();
+			$ret=$this->db->query("select * from (select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,i.id,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() where i.is_pnh=1 $cond group by i.id ) as dd group by dd.id  limit 30")->result_array();
 		else if($type==2)
-			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,o.quantity as qty,ifnull(sum(o.quantity),0) as sold,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join king_orders o on o.itemid=i.id left outer join king_transactions t on t.transid=o.transid and t.is_pnh=1 left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() where i.is_pnh=1 $cond group by i.id order by count(o.id) desc limit 50")->result_array();
-		//else if($type==3)
-		//	$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,o.quantity as qty,ifnull(sum(o.quantity),0) as sold,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join king_orders o on o.itemid=i.id left outer join king_transactions t on t.transid=o.transid and t.is_pnh=1 left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() where i.is_pnh=1 and d.catid='".$catid."' and (o.time>".mktime(0,0,0,0,-90)." or o.time is null) and d.brandid='".$brandid."' group by i.id order by count(o.id) desc,i.name asc")->result_array();
+			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,o.quantity as qty,ifnull(sum(o.quantity),0) as sold,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join king_orders o on o.itemid=i.id left outer join king_transactions t on t.transid=o.transid and t.is_pnh=1 left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() where i.is_pnh=1 $cond group by i.id order by count(o.id) desc limit 30")->result_array();
 		return $ret;	
 	}
+	
 	
 	function pnh_getreceiptbytype($type,$st_date=false,$en_date=false,$tid=false,$pg=0)
 	{
@@ -7450,11 +7457,11 @@ order by p.product_name asc
   			$cond_params = array();
   			if($st_date)
   				$cond = " and r.activated_on between ? and ?  ";
-  		//	$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by FROM pnh_t_receipt_info r JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id LEFT OUTER JOIN king_admin a ON a.id=r.created_by LEFT OUTER JOIN king_admin d ON d.id=r.activated_by WHERE r.status=1 AND r.is_active=1 AND f.is_suspended=0 and (is_submitted=1 or r.activated_on!=0) and r.is_active=1 $cond ORDER BY activated_on desc";
+  		
   			$sql="SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by,b.bank_name AS submit_bankname,c.submitted_on,s.name AS submitted_by,c.remarks AS submittedremarks
 					FROM pnh_t_receipt_info r
 					JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
-					JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
+					LEFT JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
 					LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
 					LEFT OUTER JOIN king_admin d ON d.id=r.activated_by 
 					LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id
@@ -7480,7 +7487,7 @@ order by p.product_name asc
 			if($st_date)
 				$cond = " and unix_timestamp(c.cancelled_on) between ? and ?  ";
 			
-			$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on,c.cheq_cancelled_on,c.cancel_status,b.bank_name AS submit_bankname,c.submitted_on,s.name as submitted_by,c.remarks AS submittedremarks
+			$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on,c.cheq_cancelled_on,c.cancel_status,b.bank_name AS submit_bankname,c.submitted_on,s.name as submitted_by,c.remarks AS submittedremarks,m.name AS reversed_by
 						FROM pnh_t_receipt_info r 
 						JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
 						left JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
@@ -7488,6 +7495,7 @@ order by p.product_name asc
 						LEFT OUTER JOIN king_admin d ON d.id=r.activated_by 
 						LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id
 						LEFT JOIN king_admin s ON s.id=c.submitted_by
+						LEFT JOIN king_admin m ON m.id=r.modified_by
 						WHERE r.status in (2,3) AND r.is_active=1  $cond
 						GROUP BY r.receipt_id
 						ORDER BY activated_on DESC
@@ -7538,9 +7546,18 @@ order by p.product_name asc
 		if($type==4)
 			$sql = "SELECT r.*,b.bank_name AS submit_bankname,s.name AS submittedby,a.name AS admin,f.franchise_name,d.remarks AS submittedremarks,DATE(d.submitted_on) AS submitted_on,r.created_on  FROM `pnh_m_deposited_receipts`d JOIN `pnh_t_receipt_info` r ON r.receipt_id=d.receipt_id JOIN `pnh_m_bank_info` b ON b.id=d.bank_id JOIN king_admin s ON s.id=d.submitted_by JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id left outer join king_admin a on a.id=r.created_by WHERE r.is_submitted=1  AND r.status=0 and  r.is_active=1 and f.territory_id=? order by d.submitted_on desc";
 		if($type==5)
-			$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on FROM pnh_t_receipt_info r JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id left JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id LEFT OUTER JOIN king_admin a ON a.id=r.created_by LEFT OUTER JOIN king_admin d ON d.id=r.activated_by WHERE r.status=2 AND r.is_active=1   AND r.is_active=1 AND  f.territory_id=? ORDER BY cancelled_on DESC";
-
 		
+			$sql = " SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on,c.cheq_cancelled_on,c.cancel_status,b.bank_name AS submit_bankname,c.submitted_on,s.name AS submitted_by,c.remarks AS submittedremarks
+					FROM pnh_t_receipt_info r 
+					JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
+					LEFT JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
+					LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
+					LEFT OUTER JOIN king_admin d ON d.id=r.activated_by 
+					LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id
+					LEFT JOIN king_admin s ON s.id=c.submitted_by
+					WHERE r.status IN (2,3) AND r.is_active=1  AND  f.territory_id=?
+					GROUP BY r.receipt_id
+					ORDER BY activated_on DESC";
 			$total_rows = $this->db->query($sql,$tid)->num_rows();
 			$sql = $sql.' limit '.$pg.',50';
 			$receipts=$this->db->query($sql,$tid)->result_array();
@@ -7622,13 +7639,17 @@ order by p.product_name asc
 		if($type==4)
 			$sql = "SELECT r.*,b.bank_name AS submit_bankname,s.name AS submittedby,a.name AS admin,f.franchise_name,d.remarks AS submittedremarks,DATE(d.submitted_on) AS submitted_on,r.created_on  FROM `pnh_m_deposited_receipts`d JOIN `pnh_t_receipt_info` r ON r.receipt_id=d.receipt_id JOIN `pnh_m_bank_info` b ON b.id=d.bank_id JOIN king_admin s ON s.id=d.submitted_by JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id left outer join king_admin a on a.id=r.created_by WHERE r.is_submitted=1 AND  r.status=0 and  r.is_active=1 and r.receipt_type=? order by d.submitted_on desc";
 		if($type==5)
-			$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on
+			$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on,c.cheq_cancelled_on,c.cancel_status,b.bank_name AS submit_bankname,c.submitted_on,s.name AS submitted_by,c.remarks AS submittedremarks,m.name AS reversed_by
 						FROM pnh_t_receipt_info r 
 						JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
-						left JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
+						LEFT JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
 						LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
 						LEFT OUTER JOIN king_admin d ON d.id=r.activated_by 
-						WHERE r.status in (2,3) AND  r.is_active=1 AND r.is_active=1 and r.receipt_type=?  
+						LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id
+						LEFT JOIN king_admin s ON s.id=c.submitted_by
+						LEFT JOIN king_admin m ON m.id=r.modified_by
+						WHERE r.status IN (2,3) AND r.is_active=1  AND  r.receipt_type=?
+						GROUP BY r.receipt_id
 						ORDER BY cancelled_on DESC";
 		
 		
@@ -7666,14 +7687,18 @@ order by p.product_name asc
 		if($type==4)
 			$sql = "SELECT r.*,d.bank_id,d.is_submitted,d.status,d.remarks,d.receipt_id,f.franchise_id,f.franchise_name,DATE(d.submitted_on) AS submitted_on,r.created_on FROM `pnh_t_receipt_info`r JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id LEFT JOIN pnh_m_deposited_receipts d  ON d.receipt_id=r.receipt_id  WHERE r.is_submitted=1 AND r.status=0  AND r.franchise_id=? AND r.is_active=1 ";
 		if($type==5)
-			$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on 
+			$sql = " SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on,c.cheq_cancelled_on,c.cancel_status,b.bank_name AS submit_bankname,c.submitted_on,s.name AS submitted_by,c.remarks AS submittedremarks,m.name AS reversed_by
 						FROM pnh_t_receipt_info r 
 						JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
-						left JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
+						LEFT JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
 						LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
 						LEFT OUTER JOIN king_admin d ON d.id=r.activated_by 
-						WHERE r.status in (2,3) AND  r.is_active=1 AND r.is_active=1 and r.franchise_id=?
-						ORDER BY cancelled_on DESC";
+						LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id
+						LEFT JOIN king_admin s ON s.id=c.submitted_by
+						LEFT JOIN king_admin m ON m.id=r.modified_by
+						WHERE r.status IN (2,3) AND r.is_active=1  AND  f.franchise_id=?
+						GROUP BY r.receipt_id
+						ORDER BY activated_on DESC";
 		
 		$total_rows = $this->db->query($sql,$fid)->num_rows();
 		$sql = $sql.' limit '.$pg.',50';
@@ -7892,11 +7917,7 @@ order by p.product_name asc
 			$this->db->insert("pnh_sms_log_sent",$inp);
 			$sms_log_id = $this->db->insert_id();
 		}
-		
-
-		return;
-
-		if($_SERVER['HTTP_HOST']=="localhost")
+		if($_SERVER['HTTP_HOST']!="snapittoday.com")
 			return;
 		$exotel_sid="snapittoday";
 		$exotel_token="491140e9fbe5c507177228cf26cf2f09356e042c";
@@ -8156,13 +8177,13 @@ order by p.product_name asc
 	function get_pnh_margin($fid,$pid)
 	{
 		$itemid=$this->db->query("select id from king_dealitems where pnh_id=?",$pid)->row()->id;
-		
-		
+	
+	
 		$menuid=$this->db->query("select d.menuid,m.default_margin as margin from king_dealitems i join king_deals d on d.dealid=i.dealid JOIN pnh_menu m ON m.id=d.menuid where i.is_pnh=1 and i.pnh_id=?",$pid)->row_array();
 		
 	
 		$brandid=$this->db->query("select d.brandid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.is_pnh=1 and i.pnh_id=?",$pid)->row()->brandid;
-		
+	
 		$catid=$this->db->query("select d.catid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.is_pnh=1 and i.pnh_id=?",$pid)->row()->catid;
 		
 		$fran=$this->db->query("select * from pnh_m_franchise_info where franchise_id=?",$fid)->row_array();
@@ -8312,7 +8333,7 @@ order by p.product_name asc
 		$fran_status_arr[2]="Payment Suspension";
 		$fran_status_arr[3]="Temporary Suspension";
 		$admin = $this->auth(false);
-		foreach(array("fid","pid","qty","mid","redeem","redeem_points","mid_entrytype") as $i)
+		foreach(array("fid","pid","qty","mid","redeem","redeem_points","mid_entrytype","local_distributor_mrgn","creditdays") as $i)
 			$$i=$this->input->post($i);
 		
         $updated_by=$admin["userid"];
@@ -8464,17 +8485,20 @@ order by p.product_name asc
 		{
 			$userid = 0;
 		}
-		
-		
-		
-		
+		$transid=strtoupper("PNH".random_string("alpha",3).$this->p_genid(5));
 		$bal_discount_amt = 0;
-		
+
 		if($redeem)
 		{
 			$total-=$redeem_value;
 			$d_total-=$redeem_value;
-		}	
+			$apoints=$this->db->query("select points from pnh_member_info where user_id=?",$userid)->row()->points-$redeem_points;
+			$this->db->query("update pnh_member_info set points=points-? where user_id=? limit 1",array($redeem_points,$userid));
+			$this->db->query("insert into pnh_member_points_track(user_id,transid,points,points_after,created_on) values(?,?,?,?,?)",array($userid,$transid,-$redeem_points,$apoints,time()));
+			$this->erpm->do_trans_changelog($transid,"$redeem_points Loyalty points redeemed");
+		}
+		
+		
 		
 		//check if franchise is in suspension 
 		if($fran_status==0)
@@ -8482,244 +8506,202 @@ order by p.product_name asc
 		else	
 			$batch_enabled = 0;
 		
-		$transids = array();
-		$transids[0] = array();
-		$transids[1] = array();
+			$this->db->query("insert into king_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,trans_created_by,batch_enabled,credit_days) values(?,?,?,?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran['franchise_id'],$admin['userid'],$batch_enabled,$credit_days));
+		
 		foreach($items as $item)
 		{
-			$item['name'] = $this->db->query("select name from king_dealitems where id = ? ",$item['itemid'])->row()->name;
-			
 			// check if belongs to split invoice condiciton config
-			$split_trans=$this->db->query("SELECT i.*,d.publish,c.loyality_pntvalue FROM king_dealitems i JOIN king_deals d ON d.dealid=i.dealid JOIN pnh_menu c ON c.id = d.menuid WHERE i.is_pnh=1 AND  i.pnh_id=? AND i.pnh_id!=0 AND c.id IN(112,118,122)",$item['pid'])->row_array();
+			$split_order=$this->db->query("SELECT i.*,d.publish,c.loyality_pntvalue FROM king_dealitems i JOIN king_deals d ON d.dealid=i.dealid JOIN pnh_menu c ON c.id = d.menuid WHERE i.is_pnh=1 AND  i.pnh_id=? AND i.pnh_id!=0 AND c.id IN(112,118,122)",$item['pid'])->row_array();
 			//$split_order = 0;
-			$item['split_order'] = 0;
-			if($split_trans)
+			if($split_order)
 			{
 				$ttl_qty = $item['qty'];
-				for($k=0;$k<$ttl_qty;$k++)
-				{
-					$item['split_order'] = 1;
-					$item['qty'] = 1;
-					//$transids[1][] = $item;
-					$transids[0][] = $item;
-				}
+				$p_qty = 1;
 			}else
 			{
-				$transids[0][] = $item;
+				$ttl_qty = 1;
+				$p_qty = $item['qty'];
 			}
-		}
-		
-		$split_transid_list = array();
-		if(count($transids[0]))
-			$split_transid_list[] = $transids[0];
-		
-		/*if(count($transids[1]))
-			foreach($transids[1] as $tr_items)
-				$split_transid_list[] = array($tr_items);*/
-		
-            $batch_enabled=1;
-		$trans_grp_ref_no = ($this->db->query("select if(max(trans_grp_ref_no),max(trans_grp_ref_no)+1,400001) as n from king_transactions where trans_grp_ref_no >= 0")->row()->n);
-		
-		foreach($split_transid_list as $items)
-		{
-			$transid=strtoupper("PNH".random_string("alpha",3).$this->p_genid(5));
-                        
-                        
-                        //do packing process
-                        $ttl_num_orders=count($items);
-                        $batch_remarks='Created by pnh offline order system';
-                        //echo ("===TESTING====");
-                        //continue;
-                        
-			if($redeem && count($split_transid_list) == 1)
-			{
-				$total-=$redeem_value;
-				$d_total-=$redeem_value;
-				$apoints=$this->db->query("select points from pnh_member_info where user_id=?",$userid)->row()->points-$redeem_points;
-				$this->db->query("update pnh_member_info set points=points-? where user_id=? limit 1",array($redeem_points,$userid));
-				$this->db->query("insert into pnh_member_points_track(user_id,transid,points,points_after,created_on) values(?,?,?,?,?)",array($userid,$transid,-$redeem_points,$apoints,time()));
-				$this->erpm->do_trans_changelog($transid,"$redeem_points Loyalty points redeemed");
-			}
+				
 			
-			$this->db->query("insert into king_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,trans_created_by,batch_enabled,trans_grp_ref_no) values(?,?,?,?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran['franchise_id'],$admin['userid'],$batch_enabled,$trans_grp_ref_no));
-					
-			foreach($items as $item)
+			for($qi=0;$qi<$ttl_qty;)
 			{
 				
-					$inp=array("id"=>$this->p_genid(10,'order'),"transid"=>$transid,"userid"=>$userid,"itemid"=>$item['itemid'],"brandid"=>"");
+				$qi = $qi+$p_qty;
+				
+				$inp=array("id"=>$this->p_genid(10,'order'),"transid"=>$transid,"userid"=>$userid,"itemid"=>$item['itemid'],"brandid"=>"");
+				
+				$item['qty'] = $p_qty;
+				
+				$inp["brandid"]=$this->db->query("select d.brandid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.id=?",$item['itemid'])->row()->brandid;
+				$brandid=$inp["brandid"];
+				$catid=$this->db->query("select d.catid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.id=?",$item['itemid'])->row()->catid;
+				$menuid=$this->db->query("select d.menuid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.id=? and menuid2=0",$item['itemid'])->row()->menuid;
+				$inp["bill_person"]=$inp['ship_person']=$fran['franchise_name'];
+				$inp["bill_address"]=$inp['ship_address']=$fran['address'];
+				$inp["bill_city"]=$inp['ship_city']=$fran['city'];
+				$inp['bill_pincode']=$inp['ship_pincode']=$fran['postcode'];
+				$inp['bill_phone']=$inp['ship_phone']=$fran['login_mobile1'];
+				$inp['bill_email']=$inp['ship_email']=$fran['email_id'];
+				$inp['bill_state']=$inp['ship_state']=$fran['state'];
+				$inp['quantity']=$p_qty;//$item['qty'];
+				$inp['time']=time();
+				$inp['ship_landmark']=$inp['bill_landmark']=$fran['locality'];
+				$inp['bill_country']=$inp['ship_country']="India";
+				$inp['i_orgprice']=$item['mrp'];
+				$inp['i_price']=$item['price'];
+				$inp['i_discount']=$item['mrp']-$item['price'];
+				$inp['redeem_value']=($item['price']/($total+$redeem_value))*$redeem_value;
+				$inp['billon_orderprice']=$item['billon_orderprice'];
+				
+				if($split_order && $mid_entrytype)
+				{
 					
-					$inp["brandid"]=$this->db->query("select d.brandid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.id=?",$item['itemid'])->row()->brandid;
-					$brandid=$inp["brandid"];
-					$catid=$this->db->query("select d.catid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.id=?",$item['itemid'])->row()->catid;
-					$menuid=$this->db->query("select d.menuid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.id=? and menuid2=0",$item['itemid'])->row()->menuid;
-					$inp["bill_person"]=$inp['ship_person']=$fran['franchise_name'];
-					$inp["bill_address"]=$inp['ship_address']=$fran['address'];
-					$inp["bill_city"]=$inp['ship_city']=$fran['city'];
-					$inp['bill_pincode']=$inp['ship_pincode']=$fran['postcode'];
-					$inp['bill_phone']=$inp['ship_phone']=$fran['login_mobile1'];
-					$inp['bill_email']=$inp['ship_email']=$fran['email_id'];
-					$inp['bill_state']=$inp['ship_state']=$fran['state'];
-					$inp['quantity']=$item['qty'];
-					$inp['time']=time();
-					$inp['ship_landmark']=$inp['bill_landmark']=$fran['locality'];
-					$inp['bill_country']=$inp['ship_country']="India";
-					$inp['i_orgprice']=$item['mrp'];
-					$inp['i_price']=$item['price'];
-					$inp['i_discount']=$item['mrp']-$item['price'];
-					$inp['redeem_value']=($item['price']/($total+$redeem_value))*$redeem_value;
+					$membr_id=$this->erpm->_gen_uniquememberid();
+					if($this->db->query("select * from pnh_member_info where pnh_member_id=?",$membr_id)->num_rows()==0);
+					$inp['member_id']=$membr_id;
+					$inp['is_ordqty_splitd']=1;
 					
-					if($item['split_order'] && $mid_entrytype == 1)
-					{
-						$membr_id=$this->erpm->_gen_uniquememberid();
-						if($this->db->query("select * from pnh_member_info where pnh_member_id=?",$membr_id)->num_rows()==0);
-						$inp['member_id']=$membr_id;
-						$inp['is_ordqty_splitd']=1;
-						
-						$this->db->query("insert into king_users(name,is_pnh,createdon) values(?,1,?)",array("PNH Member: $membr_id",time()));
+					$this->db->query("insert into king_users(name,is_pnh,createdon) values(?,1,?)",array("PNH Member: $membr_id",time()));
 						$userid=$this->db->insert_id();
 						$inp['userid']=$userid;
 						$this->db->query("insert into pnh_member_info(pnh_member_id,user_id,franchise_id,created_by,created_on)values(?,?,?,?,?)",array($membr_id,$userid,$fid,$admin['userid'],time()));
-					}
-						
-					//if super scheme is enabled
-					if($has_super_scheme!=0)
-					{
-						
-						//check item enabled for super scheme
-						$check_superschdisableditem=$this->db->query("select * from pnh_superscheme_deals where is_active=0 and ? between valid_from and valid_to and itemid=? order by created_on desc limit 1",array(time(),$item['itemid']))->row_array();
-						
-						//$super_scheme_brand=$this->db->query("select * from pnh_super_scheme where brand_id=? and franchise_id = ? ",array($brandid,$fid))->result_array();
-						$super_scheme_brand=$this->db->query("select * from pnh_super_scheme where menu_id=? and cat_id=? and brand_id=? and franchise_id = ? and is_active=1",array($menuid,$catid,$brandid,$fid))->result_array();
-						if(empty($super_scheme_brand))
-							$super_scheme_brand=$this->db->query("select * from pnh_super_scheme where menu_id=? and cat_id=0 and brand_id=? and franchise_id = ? and is_active=1 order by id desc limit 1",array($menuid,$brandid,$fid))->result_array();
-						if(empty($super_scheme_brand))
-							$super_scheme_brand=$this->db->query("select * from pnh_super_scheme where menu_id=? and cat_id=? and brand_id=0 and franchise_id = ? and is_active=1 order by id desc limit 1",array($menuid,$catid,$fid))->result_array();
-						if(empty($super_scheme_brand))
-							$super_scheme_brand=$this->db->query("select * from pnh_super_scheme where menu_id=? and cat_id=0 and brand_id=0 and franchise_id = ? and is_active=1 order by id desc limit 1",array($menuid,$fid))->result_array();
-						//print_r($super_scheme_brand);
-						if(!empty($super_scheme_brand) && empty($check_superschdisableditem))
-						{ 
 							
-							foreach($super_scheme_brand as $super_scheme)
-							{ 
-								if($super_scheme['valid_from']<time() && $super_scheme['valid_to']>time() && $super_scheme['is_active'] == 1)
-								{
-									
-									$inp['super_scheme_logid']=$super_scheme['id'];
-									$inp['has_super_scheme']=1;
-									$inp['super_scheme_target']=$super_scheme['target_value'];
-									$inp['super_scheme_cashback']=$super_scheme['credit_prc'];
-								}
-							}
-						}
-					}
-						
-					if($has_member_scheme==1)
-					{
-						//check item enabled for member scheme
-						$check_mbrschdisableditem=$this->db->query("select * from pnh_membersch_deals where is_active=0 and ? between valid_from and valid_to and itemid=? order by created_on desc limit 1",array(time(),$item['itemid']))->row_array();
-						
-						$member_scheme_brand=$this->db->query("select * from imei_m_scheme where menuid=? and categoryid=? and brandid=? and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$catid,$brandid,$fid))->result_array();
-						if(empty($member_scheme_brand))
-							$member_scheme_brand=$this->db->query("select * from imei_m_scheme where menuid=? and categoryid=? and brandid=0 and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$catid,$fid))->result_array();
-						if(empty($member_scheme_brand))
-							$member_scheme_brand=$this->db->query("select * from imei_m_scheme where menuid=? and categoryid=0 and brandid=? and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$brandid,$fid))->result_array();
-						if(empty($member_scheme_brand))
-							$member_scheme_brand=$this->db->query("select * from imei_m_scheme where menuid=? and categoryid=0 and brandid=0 and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$fid))->result_array();
-						
-						if(!empty($member_scheme_brand)  && empty($check_mbrschdisableditem))
-							foreach($member_scheme_brand as $member_scheme)
-							{
-								$inp['imei_scheme_id']=$member_scheme['id'];
-								if($member_scheme['scheme_type']==0)
-									$inp['imei_reimbursement_value_perunit']=$member_scheme['credit_value'];
-								else 
-									$inp['imei_reimbursement_value_perunit']=$item['price']-($item['price']-$item['price']*$member_scheme['credit_value']/100);
-							}
-					}
-	
-					if($has_offer==1)
-					{
-						$offer_det=$this->db->query("select * from pnh_m_offers where menu_id=? and cat_id=? and brand_id=? and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$catid,$brandid,$fid))->result_array();
-						if(empty($offer_det))
-							$offer_det=$this->db->query("select * from pnh_m_offers where menu_id=? and cat_id=? and brand_id=0 and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$catid,$fid))->result_array();
-						if(empty($offer_det))
-							$offer_det=$this->db->query("select * from pnh_m_offers where menu_id=? and cat_id=0 and brand_id=? and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$brandid,$fid))->result_array();						
-						if(empty($offer_det))
-							$offer_det=$this->db->query("select * from pnh_m_offers where menu_id=? and cat_id=0 and brand_id=0 and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$fid))->result_array();
-						if(!empty($offer_det))
-						{
-							foreach($offer_det as $offer)
-							{
-								$inp['has_offer']=1;
-								$inp['offer_refid']=$offer['id'];
-							}
-						}
-					}
-			
-					if($redeem)
-						$inp['i_coup_discount']=$item['discount']+$inp['redeem_value'];
-					else
-						$inp['i_coup_discount']=$item['discount'];
-						
-					$inp['i_tax']=$item['tax'];
-					$this->db->insert("king_orders",$inp);
-					foreach($this->db->query("select group_id from m_product_group_deal_link where itemid=?",$inp['itemid'])->result_array() as $g)
-					{
-						$attr_n=array();
-						$attr_v=array();
-						foreach($this->db->query("select attribute_name_id from products_group_attributes where group_id=?",$g['group_id'])->result_array() as $p)
-						{
-							$attr_n[]=$p['attribute_name_id'];
-							$attr_v[]=$this->input->post($item['pid']."_".$p['attribute_name_id']);
-						}
-						$sql="select product_id from products_group_pids where attribute_name_id=? and attribute_value_id=?";
-						foreach($this->db->query($sql,array($attr_n[0],$attr_v[0]))->result_array() as $p)
-						{
-							$f=true;
-							foreach($attr_n as $i=>$an)
-								if($this->db->query("select 1 from products_group_pids where product_id=? and attribute_name_id=? and attribute_value_id=?",array($p['product_id'],$an,$attr_v[$i]))->num_rows()==0)
-									$f=false;
-							if($f)
-								break;
-						}
-						$this->db->insert("products_group_orders",array("transid"=>$transid,"order_id"=>$inp['id'],"product_id"=>$p['product_id']));
-					}
-					$bal_discount_amt = ($item['price']*$item['margin']['bal_discount']/100)*$item['qty'];
-					$m_inp=array("transid"=>$transid,"itemid"=>$item['itemid'],"mrp"=>$item['mrp'],"price"=>$item['price'],"base_margin"=>$item['margin']['base_margin'],"sch_margin"=>$item['margin']['sch_margin'],"bal_discount"=>$item['margin']['bal_discount'],"qty"=>$item['qty'],"final_price"=>$item['price']-$item['discount']);
-					$this->db->insert("pnh_order_margin_track",$m_inp);
+				}	
+				//if super scheme is enabled
 				
+				if($has_super_scheme!=0)
+				{
+					
+					//check item enabled for super scheme
+					$check_superschdisableditem=$this->db->query("select * from pnh_superscheme_deals where is_active=0 and ? between valid_from and valid_to and itemid=? order by created_on desc limit 1",array(time(),$item['itemid']))->row_array();
+					
+					//$super_scheme_brand=$this->db->query("select * from pnh_super_scheme where brand_id=? and franchise_id = ? ",array($brandid,$fid))->result_array();
+					$super_scheme_brand=$this->db->query("select * from pnh_super_scheme where menu_id=? and cat_id=? and brand_id=? and franchise_id = ? and is_active=1",array($menuid,$catid,$brandid,$fid))->result_array();
+					if(empty($super_scheme_brand))
+						$super_scheme_brand=$this->db->query("select * from pnh_super_scheme where menu_id=? and cat_id=0 and brand_id=? and franchise_id = ? and is_active=1 order by id desc limit 1",array($menuid,$brandid,$fid))->result_array();
+					if(empty($super_scheme_brand))
+						$super_scheme_brand=$this->db->query("select * from pnh_super_scheme where menu_id=? and cat_id=? and brand_id=0 and franchise_id = ? and is_active=1 order by id desc limit 1",array($menuid,$catid,$fid))->result_array();
+					if(empty($super_scheme_brand))
+						$super_scheme_brand=$this->db->query("select * from pnh_super_scheme where menu_id=? and cat_id=0 and brand_id=0 and franchise_id = ? and is_active=1 order by id desc limit 1",array($menuid,$fid))->result_array();
+					//print_r($super_scheme_brand);
+					if(!empty($super_scheme_brand) && empty($check_superschdisableditem))
+					{ 
+						
+						foreach($super_scheme_brand as $super_scheme)
+						{ 
+							if($super_scheme['valid_from']<time() && $super_scheme['valid_to']>time() && $super_scheme['is_active'] == 1)
+							{
+								
+								$inp['super_scheme_logid']=$super_scheme['id'];
+								$inp['has_super_scheme']=1;
+								$inp['super_scheme_target']=$super_scheme['target_value'];
+								$inp['super_scheme_cashback']=$super_scheme['credit_prc'];
+							}
+						}
+					}
+				}
+					
 				
-			}
 
-			// check if franchise is suspended 
-			if($fran_status==0)
-				$this->erpm->do_trans_changelog($transid,"PNH Offline order created");
-			else
-				$this->erpm->do_trans_changelog($transid,"Batch Disabled as Franchise is on ".$fran_status_arr[$fran_status ]);
-			
-			$trans_amt = $this->db->query("select sum((i_orgprice-(i_discount+i_coup_discount))*quantity) as amt from king_orders where transid = ? and status = 0 ",$transid)->row()->amt; 
-			
-			$this->db->query("update king_transactions set amount = ?,paid=? where transid=?",array($trans_amt,$trans_amt,$transid));
+				if($has_offer==1)
+				{
+					
+					
+					$offer_det=$this->db->query("select * from pnh_m_offers where menu_id=? and cat_id=? and brand_id=? and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$catid,$brandid,$fid))->result_array();
+					
+					if(empty($offer_det))
+						$offer_det=$this->db->query("select * from pnh_m_offers where menu_id=? and cat_id=? and brand_id=0 and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$catid,$fid))->result_array();
+					if(empty($offer_det))
+						$offer_det=$this->db->query("select * from pnh_m_offers where menu_id=? and cat_id=0 and brand_id=? and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$brandid,$fid))->result_array();
+					
+					if(empty($offer_det))
+						$offer_det=$this->db->query("select * from pnh_m_offers where menu_id=? and cat_id=0 and brand_id=0 and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$fid))->result_array();
+					
+					if(!empty($offer_det))
+					{
+						foreach($offer_det as $offer)
+						{
+							$inp['has_offer']=1;
+							$inp['offer_refid']=$offer['id'];
+						}
+					}
+					
+				}
+		
+				if($redeem)
+					$inp['i_coup_discount']=$item['discount']+$inp['redeem_value'];
+				else
+					$inp['i_coup_discount']=$item['discount'];
+				$inp['i_tax']=$item['tax'];
 				
-                    // Process to batch this transaction
-                    $this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
-                    //$this->session->set_flashdata("erp_pop_info","$transid is processed for batch");
-                        
+				if($has_member_scheme==1)
+				{
+					//check item enabled for member scheme
+					$check_mbrschdisableditem=$this->db->query("select * from pnh_membersch_deals where is_active=0 and ? between valid_from and valid_to and itemid=? order by created_on desc limit 1",array(time(),$item['itemid']))->row_array();
+					
+					$member_scheme_brand=$this->db->query("select * from imei_m_scheme where menuid=? and categoryid=? and brandid=? and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$catid,$brandid,$fid))->result_array();
+					if(empty($member_scheme_brand))
+						$member_scheme_brand=$this->db->query("select * from imei_m_scheme where menuid=? and categoryid=? and brandid=0 and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$catid,$fid))->result_array();
+					if(empty($member_scheme_brand))
+						$member_scheme_brand=$this->db->query("select * from imei_m_scheme where menuid=? and categoryid=0 and brandid=? and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$brandid,$fid))->result_array();
+					if(empty($member_scheme_brand))
+						$member_scheme_brand=$this->db->query("select * from imei_m_scheme where menuid=? and categoryid=0 and brandid=0 and franchise_id=? and is_active=1 order by created_on desc limit 1",array($menuid,$fid))->result_array();
+					
+					if(!empty($member_scheme_brand)  && empty($check_mbrschdisableditem))
+						foreach($member_scheme_brand as $member_scheme)
+						{
+							$inp['imei_scheme_id']=$member_scheme['id'];
+							if($member_scheme['scheme_type']==0)
+								$inp['imei_reimbursement_value_perunit']=$member_scheme['credit_value'];
+							else 
+								$inp['imei_reimbursement_value_perunit']=(($inp['i_orgprice']-($inp['i_discount']+$inp['i_coup_discount']))*$member_scheme['credit_value']/100);
+						}
+				}
+
+				$this->db->insert("king_orders",$inp);
+				
+				
+				foreach($this->db->query("select group_id from m_product_group_deal_link where itemid=?",$inp['itemid'])->result_array() as $g)
+				{
+					$attr_n=array();
+					$attr_v=array();
+					foreach($this->db->query("select attribute_name_id from products_group_attributes where group_id=?",$g['group_id'])->result_array() as $p)
+					{
+						$attr_n[]=$p['attribute_name_id'];
+						$attr_v[]=$this->input->post($item['pid']."_".$p['attribute_name_id']);
+					}
+					$sql="select product_id from products_group_pids where attribute_name_id=? and attribute_value_id=?";
+					foreach($this->db->query($sql,array($attr_n[0],$attr_v[0]))->result_array() as $p)
+					{
+						$f=true;
+						foreach($attr_n as $i=>$an)
+							if($this->db->query("select 1 from products_group_pids where product_id=? and attribute_name_id=? and attribute_value_id=?",array($p['product_id'],$an,$attr_v[$i]))->num_rows()==0)
+								$f=false;
+						if($f)
+							break;
+					}
+					$this->db->insert("products_group_orders",array("transid"=>$transid,"order_id"=>$inp['id'],"product_id"=>$p['product_id']));
+				}
+				
+				$bal_discount_amt = ($item['price']*$item['margin']['bal_discount']/100)*$item['qty'];
+				
+				$m_inp=array("transid"=>$transid,"itemid"=>$item['itemid'],"mrp"=>$item['mrp'],"price"=>$item['price'],"base_margin"=>$item['margin']['base_margin'],"sch_margin"=>$item['margin']['sch_margin'],"bal_discount"=>$item['margin']['bal_discount'],"qty"=>$item['qty'],"final_price"=>$item['price']-$item['discount']);
+				$this->db->insert("pnh_order_margin_track",$m_inp);
+			}
 		}
-     	//die("TESTING");
-		
 		$bal_discount_amt_msg = '';
-			if($bal_discount_amt)
-				$bal_discount_amt_msg = ', Topup Damaka Applied : Rs'.$bal_discount_amt;
-				
-		$this->erpm->pnh_fran_account_stat($fran['franchise_id'],1, $d_total,"Order $transid - Total Amount: Rs $total".$bal_discount_amt_msg,"transaction",$transid);		
+		if($bal_discount_amt)
+			$bal_discount_amt_msg = ', Topup Damaka Applied : Rs'.$bal_discount_amt;
 		
+		$this->erpm->pnh_fran_account_stat($fran['franchise_id'],1, $d_total,"Order $transid - Total Amount: Rs $total".$bal_discount_amt_msg,"transaction",$transid);
 		
 		$balance=$this->db->query("select current_balance from pnh_m_franchise_info where franchise_id=?",$fran['franchise_id'])->row()->current_balance;
 		
 		//$this->erpm->pnh_sendsms($fran['login_mobile1'],"Your order is placed successfully! Total order amount :Rs $total. Amount deducted is Rs $d_total. Your order ID is $transid Balance in your account Rs $balance",$fran['franchise_id']);
+		
 		$this->sendsms_franchise_order($transid,$d_total);
+		
 		$points=0;
 		if(!$redeem)
 		{
@@ -8744,12 +8726,15 @@ order by p.product_name asc
 			$billno=$nbill['bill_no']+1;
 		$inp=array("bill_no"=>$billno,"franchise_id"=>$franid,"transid"=>$transid,"user_id"=>$userid,"status"=>1);
 		$this->db->insert("pnh_cash_bill",$inp);
-		
+	
+		// Process to batch this transaction
+		$ttl_num_orders=count($items);
+		$batch_remarks='Created by pnh offline order system';
+
+		$this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
+
 		$this->session->set_flashdata("erp_pop_info"," PNH Order Placed");
-		
-	 
-		
-		redirect("admin/pnh_offline_order",'refresh');
+		redirect("admin/trans/$transid",'refresh');
 	}
 	
 	
@@ -11758,7 +11743,13 @@ order by action_date";
 
 		$fr_receipt_list = array();
 		$fr_receipt_heading="Receipt Details";
-		$fr_receipt_list[] = '"Slno","FranchiseName","Receipt Id","Payment Mode","Receipt Amount","Instrument Number","Payment Date","Transit type","Bank Details","Receipt AddedOn"';
+		$fr_receipt_list_head = '"Slno","FranchiseName","Receipt Id","Payment Mode","Receipt Amount","Instrument Number","Payment Date","Transit type","Bank Details","Receipt AddedOn"';
+		if($export_rtype == '3')
+			$fr_receipt_list_head .= ',"RealizedOn"';
+		$fr_receipt_list_head .= ',"Remarks"';
+		
+		$fr_receipt_list[] = $fr_receipt_list_head;
+		
 		if($res->num_rows()!=0)
 		{
 			foreach($res->result_array() as $row_f)
@@ -11774,7 +11765,12 @@ order by action_date";
 				$fr_receipt_det[] = $transit_types[$row_f['in_transit']];
 				$fr_receipt_det[] = ucwords($row_f['bank_name']);
 				$fr_receipt_det[] = ucwords(date("d/m/Y",$row_f['created_on']));
+				if($export_rtype == '3')
+					$fr_receipt_det[] .= ucwords(date("d/m/Y",$row_f['activated_on']));
+				
+				$fr_receipt_det[] = ($row_f['remarks']);
 				$fr_receipt_list[]='"'.implode('","',$fr_receipt_det).'"';
+				
 			}
 
 
@@ -12407,37 +12403,66 @@ order by action_date";
         return $this->db->query("select username from king_admin where id=?",$userid)->row()->username;
     }
 
-    function vendor_alpha_list($ch)
+	function vendor_alpha_list($ch)
+	{
+		if($ch != '09')
+		{
+			return $this->db->query("Select a.vendor_id,a.vendor_name from m_vendor_info a join t_po_info b on b.vendor_id=a.vendor_id where vendor_name like '".$ch."%'  and b.po_status not in (2,3) group by vendor_id" );	
+		}else
+		{
+			return $this->db->query("Select a.vendor_id,a.vendor_name from m_vendor_info a join t_po_info b on b.vendor_id=a.vendor_id where vendor_name REGEXP '^[0-9]' and b.po_status not in (2,3) group by vendor_id" );
+		}
+	}
+	
+	function cat_alpha_list($ch)
+	{
+		if($ch == '09')
+		{
+			return $this->db->query("Select id,name from king_categories where name REGEXP '^[0-9]' group by id order by name" );	
+		}else if($ch == '20')
+		{
+			return $this->db->query("select c.id,c.name from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid join king_orders o on o.itemid=i.id join king_transactions t on t.transid=o.transid and t.is_pnh=1 where i.is_pnh=1 group by c.name order by count(o.id) desc limit 20");
+		}else
+		{
+			return $this->db->query("Select id,name from king_categories where name like '".$ch."%' group by id order by name" );
+		}
+		
+	}
+	
+	function brand_alpha_list($ch)
+	{
+		if($ch == '09')
+		{
+			return $this->db->query("Select id,name from king_brands where name REGEXP '^[0-9]' group by id order by name" );	
+		}else if($ch == '20')
+		{
+			return $this->db->query("select b.id,b.name from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid join king_orders o on o.itemid=i.id join king_transactions t on t.transid=o.transid and t.is_pnh=1 where i.is_pnh=1 group by b.id order by count(o.id) desc limit 20");
+		}else
+		{
+			return $this->db->query("Select id,name from king_brands where name like '".$ch."%' group by id order by name" );
+		}
+	}
+	
+	/**
+     * function to log admin/logged in user activity  
+     * 
+     * @author Shariff
+     */
+    function log_admin_activity()
     {
-            if($ch != '09')
-            {
-                    return $this->db->query("Select a.vendor_id,a.vendor_name from m_vendor_info a join t_po_info b on b.vendor_id=a.vendor_id where vendor_name like '".$ch."%'  and b.po_status not in (2,3) group by vendor_id" );	
-            }else
-            {
-                    return $this->db->query("Select a.vendor_id,a.vendor_name from m_vendor_info a join t_po_info b on b.vendor_id=a.vendor_id where vendor_name REGEXP '^[0-9]' and b.po_status not in (2,3) group by vendor_id" );
-            }
-    }
-
-    function cat_alpha_list($ch)
-    {
-            if($ch != '09')
-            {
-                    return $this->db->query("Select id,name from king_categories where name like '".$ch."%' group by name" );	
-            }else
-            {
-                    return $this->db->query("Select id,name from king_categories where name REGEXP '^[0-9]' group by name" );
-            }
-    }
-    
-    function brand_alpha_list($ch)
-    {
-            if($ch != '09')
-            {
-                    return $this->db->query("Select id,name from king_brands where name like '".$ch."%' group by name" );	
-            }else
-            {
-                    return $this->db->query("Select id,name from king_brands where name REGEXP '^[0-9]' group by name" );
-            }
+    	$user = $this->erpm->auth();
+    	
+    	if($_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest')
+    		return ;
+    	
+    	$inp = array();
+    	$inp['user_id'] = $user['userid'];
+    	$inp['ipaddress'] = $_SERVER['REMOTE_ADDR'];
+    	$inp['visited_url'] = current_url();
+    	$inp['reference_method'] = $_SERVER['REQUEST_METHOD'];
+    	$inp['logged_on'] = cur_datetime();
+    	$this->db->insert('king_admin_activitylog',$inp);
+    	
     }
 	
     /**

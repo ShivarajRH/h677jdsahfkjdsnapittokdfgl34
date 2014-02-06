@@ -927,16 +927,9 @@ class Cron extends Controller{
  	* List of franchise with thr current_balance
  	*/
 
-	function sms_currentbalance($authkey='ZSDFFFFFF')
+	function sms_currentbalance()
 	{
 		
-		die();
-
-		if($authkey != '123871jnsnsd12312')
-		{
-			die();
-		}
-			
 		$this->cron_log(17,1);
 		
 		$current_balance_list_res=$this->db->query("SELECT distinct franchise_id,franchise_name,current_balance,login_mobile1,login_mobile2 FROM pnh_m_franchise_info a WHERE is_suspended !=1 ");

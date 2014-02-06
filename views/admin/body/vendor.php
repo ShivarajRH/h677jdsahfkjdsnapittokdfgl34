@@ -41,12 +41,16 @@ Total PO value
 <tr><td>Postcode :</td><td><?=$v['postcode']?></td></tr>
 <tr><td>Ledger ID :</td><td><?=$v['ledger_id']?></td></tr>
 </table>
+
+
 </div>
+
 <div id="v_financials">
 <table class="datagrid" width="400">
 <tr><td>Credit Limit :</td><td width="250"><?=$v['credit_limit_amount']?></td></tr>
 <tr><td>Credit Days :</td><td><?=$v['credit_days']?></td></tr>
-<tr><td>Payment Advance :</td><td><?=$v['require_payment_advance']?>%</td></tr>
+<tr><td>Payment Advance :</td><td><?=$v['require_payment_advance']?></td></tr>
+<tr><td>Payment Type :</td><td><? $pmt_types=array('','Cheque','Cash','DD'); echo $pmt_types[$v['payment_type']]?></td></tr>
 <tr><td>CST :</td><td><?=$v['cst_no']?></td></tr>
 <tr><td>PAN :</td><td><?=$v['pan_no']?></td></tr>
 <tr><td>VAT :</td><td><?=$v['vat_no']?></td></tr>
@@ -123,9 +127,7 @@ Total PO value
 
 
 <div id="v_pos">
-<div class="dash_bar_right">Cancelled POs : <?=$this->db->query("select count(*) as t from t_po_info where po_status=3 and vendor_id='".$v['vendor_id']."'")->row()->t; ?></div>
-<div class="dash_bar_right">Complete POs : <?=$this->db->query("select count(*) as ttl from t_po_info where po_status=2 and vendor_id='".$v['vendor_id']."'")->row()->ttl; ?></div>
-<div class="dash_bar_right">Open POs : <?=$this->db->query("select count(*) as t from t_po_info where po_status=0 and vendor_id='".$v['vendor_id']."'")->row()->t; ?></div>
+
 <table class="datagrid" style="margin-top:10px;" width="100%">
 <thead>
 <tr>
@@ -142,7 +144,7 @@ Total PO value
 <?php foreach($pos as $p){?>
 <tr>
 <td>PO<?=$p['po_id']?></td>
-<td><?=date("d/M/Y  g:ia ",strtotime($p['created_on']))?></td>
+<td><?=date("g:ia d/m/y",strtotime($p['created_on']))?></td>
 <td>Rs <?=number_format($p['total_value'])?></td>
 <td><?php switch($p['po_status']){
 	case 1:

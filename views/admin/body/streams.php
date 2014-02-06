@@ -20,7 +20,6 @@
     
     <script type="text/javascript">
     	$('#srch_stream').submit(function(){
-    		
     	});
     </script>
     

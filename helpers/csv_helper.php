@@ -33,7 +33,7 @@ if (! function_exists ( 'array_to_csv' )) {
 		ob_start ();
 		$f = fopen ( 'php://output', 'w' ) or show_error ( "Can't open php://output" );
 		if(count($column_names)){
-			fputcsv ( $f, $column_names, $delimiter ,'"');
+			fputcsv ( $f, $column_names, $delimiter ,' ');
 		}
 		$n = 0;
 		foreach ( $array as $line ) {

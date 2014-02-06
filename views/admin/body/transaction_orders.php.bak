@@ -8,6 +8,33 @@ $shipped_oids=array();
 $shipped_orders=array();
 $transid=$order['transid'];
 
+$order_status_arr=array();
+$order_status_arr[0]='Pending';
+$order_status_arr[1]='Processed';
+$order_status_arr[3]='Cancelled';
+
+$sql_trans_ttls = 'SELECT STATUS,IFNULL(amt1,amt2) AS amt,totals
+						FROM ( SELECT b.status,SUM((mrp-(discount+credit_note_amt))*a.invoice_qty) AS amt1,SUM(i_orgprice-(i_coup_discount+i_discount)*b.quantity) AS amt2,
+						COUNT(b.id) AS totals
+						FROM king_orders b 
+						LEFT JOIN king_invoice a ON a.order_id = b.id 
+						WHERE b.transid = ? GROUP BY b.status ) AS g';
+
+$trans_order_status_amt = $this->db->query($sql_trans_ttls,$transid);
+
+/*$trans_order_status_amt_arr = array();
+$trans_order_status_amt_arr[0] = 0;
+$trans_order_status_amt_arr[1] = 0;
+$trans_order_status_amt_arr[2] = 0;
+$trans_order_status_amt_arr[3] = 0;
+$trans_order_status_amt_arr[4] = 0;
+
+ foreach($trans_order_status_amt->result_array() as $to_row)
+{
+	//$trans_order_status_amt_arr[$to_row['status']] =  $to_row['amt'].$to_row['totals'];
+	
+} */
+
 $fran_status_arr=array();
 $fran_status_arr[0]="Live";
 $fran_status_arr[1]="Permanent Suspension";
@@ -17,6 +44,7 @@ $is_fran_suspended = @$this->db->query("select is_suspended from pnh_m_franchise
 
 if($is_fran_suspended)
 	$tran['batch_enabled'] = 0;
+
 
 $pbatch=$this->db->query("select i.p_invoice_no,c.courier_name as courier,bi.shipped,bi.shipped_on,bi.awb,bi.courier_id,bi.batch_id,bi.packed,bi.shipped,i.createdon,i.invoice_status,bi.p_invoice_no from proforma_invoices i left outer join shipment_batch_process_invoice_link bi on bi.p_invoice_no=i.p_invoice_no left outer join m_courier_info c on c.courier_id=bi.courier_id where i.transid=? group by i.p_invoice_no",$transid)->result_array();
 
@@ -901,5 +929,14 @@ margin-bottom:0px;
 }
 
 .btn{background: #FDFDFD;color: #454545;font-size: 10px;font-weight: bold;padding:0px 4px;display: inline-block;margin-top: 3px;text-decoration: underline;}
+.span_count_wrap {
+    background: none repeat scroll 0 0 #EAEAEA;
+    float: left;
+    font-size: 11px;
+    margin: 10px;
+    padding: 5px;
+    text-align: center;
+    width: 15%;
+}
 </style>
 <?php

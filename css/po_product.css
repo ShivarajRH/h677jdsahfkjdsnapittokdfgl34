@@ -254,6 +254,14 @@ input[type="submit"] {
 	font-size: 11px;
 	font-weight: bold;	
 }
+.mrgn_blk span
+{
+	float: left;
+	width: 205px;
+	text-align: left;
+	font-size: 11px;
+	font-weight: bold;	
+}
 #tcol1 span
 {
 	float: left;
@@ -366,4 +374,22 @@ does not support multiple backgrounds
 	color: black !important;
     border: 1px solid #F6F6F6 !important;
     background-color: #DEDEDE;
+}
+.error_inp{border:1px solid #cd0000 !important;}
+.prd_blk {
+    border-radius: 0 0 0 0 !important;
+    float: left;
+    font-size: 12px;
+    height: 18px;
+    margin-right: -1px;
+    margin-top: 0;
+    width: 265px;
+}
+
+.search_img_wrap
+ {
+    background: none repeat scroll 0 0 #FFFFFF;
+    border: 1px solid #CCCCCC;
+    float: right;
+    margin-right: 704px;
 }

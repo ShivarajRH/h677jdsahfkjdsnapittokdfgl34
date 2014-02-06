@@ -232,7 +232,11 @@
 																	where f.brand_id = ? and c.catid = ? ) ) as g 
 																group by product_id 
 																order by product_name ',array($prod_item_det['brandid'],$prod_item_det['catid'],$prod_item_det['brandid'],$prod_item_det['catid']));
-					if($similar_prods_res)
+				}else
+				{
+					$similar_prods_res = $this->db->query('select * from m_product_info where brand_id = ? and product_id != ? ',array($p['brand_id'],$p['product_id']));
+				}
+					if($similar_prods_res->num_rows())
 					{
 						foreach($similar_prods_res->result_array() as $similar_prod)
 						{
@@ -241,7 +245,7 @@
 							echo '<option value="'.($similar_prod['product_id']).'">'.($similar_prod['product_id'].' - '.$similar_prod['product_name']).'</option>';
 						} 
 					}
-				} 						
+										
 			
 				
 			?>

@@ -25,17 +25,17 @@
 </div>
 
 <div style="float:left;margin-left:20px;">
-<h4 style="margin:0px;">Invoices</h4>
+<h4 style="margin:0px;">Invoices Details</h4>
 <table id="grn_inv_list" class="datagrid">
 <thead><tr><th>Invoice No</th><th>Invoice date</th><th>Invoice Value</th><th class="hideinprint">Scan Copy</th></thead>
 <tbody>
 <?php foreach($invoices as $inv){?>
 <tr>
 <td><?=$inv['purchase_inv_no']?></td>
-<td><?=$inv['purchase_inv_date']?></td>
+<td><?= format_date($inv['purchase_inv_date'])?></td>
 <td><?=$inv['purchase_inv_value']?></td>
 <td class="hideinprint"><?php if(file_exists(ERP_PHYSICAL_IMAGES."invoices/{$inv['id']}.jpg")){?>
-<a target="_blank" href="<?=ERP_IMAGES_URL?>invoices/<?=$inv['id']?>.jpg">view</a><?php } else echo "na";?>
+<a target="_blank" href="<?=ERP_IMAGES_URL?>invoices/<?=$inv['id']?>.jpg">view</a><?php } else {?> <input type='file' name='scan_0' class='scan_file'>&nbsp;<input type='submit' value='upload' action='<?php echo site_url("admin/do_upload_scan_invoice/{$inv['grn_id']}")?>'><?php }?>
 </td>
 </tr>
 <?php }?>
@@ -64,7 +64,7 @@
 <div class="clear"></div>
 
 <h3>Products in this stock intake</h3>
-<table id="grn_prod_list" class="datagrid nofooter">
+<table id="grn_prod_list" class="datagrid nofooter" width="100%">
 <thead>
 <tr><th>Sno</th><th>Product</th><th>PO</th><th>Invoiced Qty</th><th>Received Qty</th><th>MRP</th><th>DP Price</th><th>Base Price</th><th>Tax</th><th>Purchase Price</th><th>Margin</th><th>Scheme discount</th><th>FOC</th><th>Has Offer</th></tr>
 </thead>
@@ -81,8 +81,9 @@
 <td class="hide"><?=$p['purchase_price']-($p['purchase_price']*$p['tax_percent']/100)?></td>
 <td><?=$p['tax_percent']?></td>
 <td ><?=$p['purchase_price']?></td>
-<td><?=$p['margin']?></td>
-<td><?=$p['scheme_discunt_type']==2?"Rs":""?><?=$p['scheme_discount_value']?><?=$p['scheme_discunt_type']==1?"":"%"?></td>
+<td><?=$p['margin']?>%</td>
+<!--  <td><?=$p['scheme_discunt_type']==2?"Rs":""?><?=$p['scheme_discount_value']?><?=$p['scheme_discunt_type']==1?"":"%"?></td>-->
+<td><?=$p['scheme_discount_value']?>%</td>
 <td><?=$p['is_foc']==2?"YES":"NO"?></td>
 <td><?=$p['has_offer']==2?"Yes":"NO"?></td>
 </tr>
@@ -112,5 +113,6 @@ function print_grndoc()
 		prw.focus();
 		prw.print();
 }
+$('.leftcont').hide();
 </script>
 <?php

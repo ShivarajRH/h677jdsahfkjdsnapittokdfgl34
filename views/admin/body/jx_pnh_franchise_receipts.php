@@ -57,22 +57,22 @@
 					<?php }?>
 					<tr><td><b>Payment Date</b></td><td><b>:</b></td><td><?=$pr['instrument_date']!=0?date("d/m/y",$pr['instrument_date']):""?></td></tr>
 					<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$pr['remarks']?></td></tr>
-                                        <tr>
-                                            <td>
-                                                <b>Actions</b>
-                                            </td>
-                                            <td>:</td>
-                                            <td>
-                                                <?php if($r['unreconciled_value']>0) { ?>
-                                                   <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>','<?=$r['receipt_amount'];?>','<?=$r['unreconciled_value'];?>')" class="button button-tiny button-action">Reconcile</a>
-                                            
-                                                <?php } ?>
-                                                 &nbsp;
-                                                 <?php if($r['unreconciled_value'] != $r['receipt_amount']) { ?>
-                                                    <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-primary">View Reconciled</a>
-                                                 <?php } ?>
-                                            </td>
-                                        </tr>
+                    <tr>
+                        <td>
+                            <b>Actions</b>
+                        </td>
+                        <td>:</td>
+                        <td>
+                            <?php if($r['unreconciled_value']>0) { ?>
+                               <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>','<?=$r['receipt_amount'];?>','<?=$r['unreconciled_value'];?>')" class="button button-tiny button-action">Reconcile</a>
+                        
+                            <?php } ?>
+                             &nbsp;
+                             <?php if($r['unreconciled_value'] != $r['receipt_amount']) { ?>
+                                <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-primary">View Reconciled</a>
+                             <?php } ?>
+                        </td>
+                    </tr>
 					</table>
 					</div>
 				</td>
@@ -154,8 +154,8 @@
 			</td>
 				<td><b><?php if($pro_r['status']==1) echo 'Activated'; else if($pro_r['status']==0) echo 'Pending'; else if($pro_r['status']==3) echo 'Reversed'; else echo 'Cancelled';?>
 					<?php if($pro_r['status']==1 && $pro_r['receipt_type']==1){?> <br> <br> 
-					<a class="danger_link"
-					href="<?=site_url("admin/pnh_reverse_receipt/{$pro_r['receipt_id']}")?>">reverse</a>
+					<a class="danger_link" href="<?=site_url("admin/pnh_reverse_receipt/{$pro_r['receipt_id']}")?>">reverse</a>
+					
 					<?php }?>
 				</b></td>
 				<td>
@@ -188,7 +188,9 @@
                                                     </td>
                                                     <td>:</td>
                                                     <td>
-                                                        <?php if($r['unreconciled_value']>0) { ?>
+                                                        <?php 
+                                                            echo ''.$r['unreconciled_value'];
+                                                        if($r['unreconciled_value']>0) { ?>
                                                         <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>','<?=$r['receipt_amount'];?>','<?=$r['unreconciled_value'];?>')" class="button button-tiny button-action">Reconcile</a>
                                                         <?php } ?>
                                                          &nbsp;
@@ -218,8 +220,9 @@
 			<tr>
 				<th>Receipt Details</th>
 				<Th>Amount Details</Th>
-				<th>Status</th>
+				<th>Processed Details</th>
 				<th>Realized Details</th>
+				<th>Status</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -248,41 +251,51 @@
 				</table>
 				</div>
 				</td>
+			<td>
+				<div id="processed_det">
+					<table class="datagrid1">
+					<tr><td><b>Bank</b></td><td>:</td><td><?=$r['submit_bankname']?></td></tr>
+					<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['submittedremarks']?></td></tr>
+					<tr><td><b>Deposited On</b></td><td>:</td><td><?=format_date($r['submitted_on'])?></td></tr>
+					<tr><td><b>Deposited By</b></td><td>:</td><td><?=$r['submitted_by']?></td></tr>
+					</table>
+				
+				</div>
+			</td>
+				<td>
+					<div id="realize_det">
+						<table class="datagrid1">
+						<tr><td><b>Realized On</b></td><td><b>:</b></td><td><?=$r['cheq_realized_on']!=null?format_date($r['cheq_realized_on']):format_date_ts($r['activated_on']);?></td></tr>
+						<tr><td><b>Remarks</b></td><td>:</td><td><?=$r['reason']?></td></tr>
+						<tr><td><b>Updated By</b></td><td>:</td><td><?=$r['activated_by']?></td></tr>
+						<tr><td><b>Updated On</b></td><td>:</td><td><?=format_date_ts($r['activated_on'])?></td></tr>
+						<tr><td><b>Un-Reconciled Status</b></td><td><b>:</b></td><td><?php 
+                                echo $r['unreconciled_status']; 
+                                echo " ( ".$r['unreconciled_value']." )";
+                            ?></td>
+		                </tr>
+		                <tr>
+		                        <td>
+		                            <b>Actions</b>
+		                        </td>
+		                        <td>:</td>
+		                        <td>
+		                            <?php if($r['unreconciled_value']>0) { ?>
+		                                <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>','<?=$r['receipt_amount'];?>','<?=$r['unreconciled_value'];?>')" class="button button-tiny button-action">Reconcile</a>
+		                            <?php } ?>
+		                             &nbsp;
+		                             <?php if($r['unreconciled_value'] != $r['receipt_amount']) { ?>
+		                                <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-primary">View Reconciled</a>
+		                             <?php } ?>
+		                        </td>
+		                    </tr>
+						</table>
+					</div>
+				</td>
 				<td><b><?php if($r['status']==1) echo 'Activated'; else if($r['status']==0) echo 'Pending'; else if($r['status']==3) echo 'Reversed'; else echo 'Cancelled';?></b>
 					<?php if($r['status']==1 && $r['receipt_type']==1){?> <br> <br> 
-					<a class="danger_link"
-					href="<?=site_url("admin/pnh_reverse_receipt/{$r['receipt_id']}")?>">reverse</a>
+					<a class="danger_link" href="<?=site_url("admin/pnh_reverse_receipt/{$r['receipt_id']}")?>">reverse</a>
 					<?php }?>
-				</td>
-				<td>
-				<div id="realize_det">
-				<table class="datagrid1">
-				<tr><td><b>Realized On</b></td><td><b>:</b></td><td><?=format_date_ts($r['activated_on'])?></td></tr>
-				<tr><td><b>Realized By</b></td><td><b>:</b></td><td><?=$r['activated_by']?></td></tr>
-				<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['reason']?></td></tr>
-				<tr><td><b>Un-Reconciled Status</b></td><td><b>:</b></td><td><?php 
-                                                echo $r['unreconciled_status']; 
-                                                echo " ( ".$r['unreconciled_value']." )";
-                                            ?></td>
-                                </tr>
-                                
-                                <tr>
-                                        <td>
-                                            <b>Actions</b>
-                                        </td>
-                                        <td>:</td>
-                                        <td>
-                                            <?php if($r['unreconciled_value']>0) { ?>
-                                                <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>','<?=$r['receipt_amount'];?>','<?=$r['unreconciled_value'];?>')" class="button button-tiny button-action">Reconcile</a>
-                                            <?php } ?>
-                                             &nbsp;
-                                             <?php if($r['unreconciled_value'] != $r['receipt_amount']) { ?>
-                                                <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-primary">View Reconciled</a>
-                                             <?php } ?>
-                                        </td>
-                                    </tr>
-				</table>
-				</div>
 				</td>
 			</tr>
 			<?php }?>
@@ -303,8 +316,9 @@
 			<tr>
 				<th>Receipt Details</th>
 				<Th>Payment Details</Th>
-				<th>Status</th>
+				<th>Processed Details</th>
 				<th>Cancelled Details</th>
+				<th>Status</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -374,42 +388,33 @@
 					</table>
 		</div>
 		</td>
-				<td><b><?php if($cancel['status']==1) echo 'Activated'; else if($cancel['status']==0) echo 'Pending'; else if($cancel['status']==3) echo 'Reversed'; else echo 'Cancelled';?></b>
+		<td>
+			<div>
+				<table class="datagrid1" cellpadding="0" cellspacing="0">
+				<tr><td><b>Bank</b></td><td>:</td><td><?=$cancel['submit_bankname']?></td></tr>
+				<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$cancel['submittedremarks']?></td></tr>
+				<tr><td><b>Deposited On</b></td><td>:</td><td><?=format_date($cancel['submitted_on'])?></td></tr>
+				<tr><td><b>Deposited By</b></td><td>:</td><td><?=$cancel['submitted_by']?></td></tr>
+				</table>
+			</div>
+		</td>
+		<td>
+			<div>
+				<table class="datagrid1" cellpadding="0" cellspacing="0">
+				<tr><td width="80"><b>Cancel Status</b></td><td><b>:</b></td><td><?php $cstatus=array("Reversed","Return","Bounce");?><?=$cstatus[$cancel['cancel_status']];?></td></tr>
+				<tr><td><b>Cheque Cancelled On</b></td><td><b>:</b></td><td><?=$cancel['cheq_cancelled_on']!=null?format_date($cancel['cheq_cancelled_on']):format_datetime($cancel['modified_on'])?></td></tr>
+				<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$cancel['cancel_reason']?$cancel['cancel_reason']:$cancel['reason']?></td></tr>
+				<tr><td><b>Updated By</b></td><td><b>:</b></td><td><?= $cancel['reversed_by']?$cancel['reversed_by']:$cancel['activated_by']?> </td></tr>
+				<tr><td><b>Updated On</b></td><td><b>:</b></td><td><?=$cancel['cancelled_on']!=null?format_datetime_ts($cancel['cancelled_on']):format_date_ts($cancel['modified_on'])?></td></tr>
+				</table>
+			</div>
+		</td>
+			<td><b><?php if($cancel['status']==1) echo 'Activated'; else if($cancel['status']==0) echo 'Pending'; else if($cancel['status']==3) echo 'Reversed'; else echo 'Cancelled';?></b>
 					<?php if($cancel['status']==1 && $cancel['receipt_type']==1){?> <br> <br> 
 					<a class="danger_link"
 					href="<?=site_url("admin/pnh_reverse_receipt/{$cancel['receipt_id']}")?>">reverse</a>
 					<?php }?>
 				</td>
-				<td>
-				<div id="cancel_det">
-					<table class="datagrid1">
-						<tr>
-							<td><b>Cancelled On</b>
-							</td>
-							<td><b>:</b>
-							</td>
-							<td><?=$cancel['cancelled_on']?format_datetime($cancel['cancelled_on']):format_datetime_ts($cancel['activated_on'])?>
-							</td>
-						</tr>
-						<tr>
-							<td><b>Cancelled By</b>
-							</td>
-							<td><b>:</b>
-							</td>
-							<td><?php echo $cancel['activated_by']?>
-							</td>
-						</tr>
-						<tr>
-							<td><b>Remarks</b>
-							</td>
-							<td><b>:</b>
-							</td>
-							<td><?=$cancel['cancel_reason']?$cancel['cancel_reason']:$cancel['reason']?>
-							</td>
-						</tr>
-					</table>
-				</div>
-			</td>
 			</tr>
 			<?php }?>
 		</tbody>

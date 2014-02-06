@@ -9,7 +9,9 @@
 	<table width="100%">
 		<tr>
 			<td>
-				 Search:<input type="text" name="s" class="prd_blk inp" placeholder="Search &amp; Add" > 
+				 
+			<img class="search_img_wrap" src="<?php echo base_url().'images/search_icon.png'?>">
+			<input type="text" name="s" class="prd_blk inp" placeholder="Search &amp; Add" value="" >
 			</td>
 			
 			<td>
@@ -181,19 +183,32 @@
 					<input type="hidden" class="vendor" name="sel_vendor[]" value="%vendor_id%">
 					<input type="hidden" class="partner" name="partner[]" value="%partner_id% %is_pnh%">
 					
+					
 					<a target="_blank" class="pprod_name" href="<?php echo site_url('admin/product/%product_id%') ?>">%product_name%</a> &nbsp;<b>(%product_brand%)</b>
-					<br/>
+					<br/><br/>
+					<div><span style="background-color: #FAFAFA;padding:3px;width:20px;font-weight: bold;color: blue;">Current Stock : %curr_stck%</span></div>
 					<a href="javascript:void(0)" class="pprod_name_subwrap" onclick="view_orderdet(%product_id%)">view order details&nbsp;,&nbsp;</a><a href="javascript:void(0)" class="pprod_name_subwrap" onclick="view_purchasepattern(%product_id%)">view purchase pattern</a>
-			
-					<!--  <br/>
-					Date:%last_orderdon% &nbsp;Transid:<a target="_blank" href="<?php echo site_url('admin/trans/%transid%')?>">%transid%</a></p>-->
-				</td>
+					</td>
 				
 				<td></td>
 				<td><input type="text" class="inp calc_pp mrp readonly" size=7 name="mrp[]" value="%mrpvalue%" readonly="readonly"></td>
 				<td><input type="text" title="Change/Update DP Price on change" class="inp calc_pp has_dp_price dp_price" size=5 name="dp_price[]" value="%dp_price%"></td>
-				<td><input type="text" class="inp calc_pp margin readonly" size="7" name="margin[]" readonly="readonly" value="%margin%" readonly="readonly" ></td>
 				
+				<td class="mrgn_blk" style="width:150px;font-size: 10px;" >
+				<div style="margin-bottom: 2px">
+				<span>Ven.Margin :
+				<input type="text" class="margin inp calc_pp readonly" size="8" name="margin[]" value="%margin%"  readonly="readonly"></span>
+				</div>
+				
+				<div>
+					<span>Sch.Margin : <input type="text" class="inp calc_pp discount" size=4 name="sch_discount[]" value="0" style="width:54px;border:1px solid #000000;"><input type="radio" value="1" checked class="calc_pp type_%product_id%" name="sch_type[] %product_id%">% <input type="radio" value="2" class="calc_pp type_%product_id%" name="sch_type[] %product_id%">Rs</span>
+						
+				</div>
+				<div class="marg_prc_preview">
+					<span>Tot.Margin : <input type="text" name="marg_prc %product_id%" value="" readonly="readonly" class="inp marg_prc_%product_id% readonly" size="8">%</span>
+					
+				</div>
+				</td>
 				<td class="qty_price_blk" style="width:150px;font-size: 10px;" >
 					<div style="margin-bottom: 2px">
 						<span>Open PO qty : </span>
@@ -202,32 +217,14 @@
 					
 					<div>
 						<span>Required qty : </span>
-						<span><input type="text" class="inp calc_pp qty" id="prod_qty_%product_id%"  size=4 name="qty[]" value="%require_qty%" style="border:1px solid #FF0000;width:72px;"></span>
-					</div>
-					
-					<div>
-						<span>Extra Margin :</span>
-						<span><input type="text" class="inp calc_pp discount" size=7 name="sch_discount[]" value="0" style="width:72px;border:1px solid #FF0000;"></span>	
-					</div>
-					
-					<div>
-						<span>Discount type :</span>
-						<span>
-							<select class="calc_pp type" name="sch_type[]" style="width:82px;margin-bottom: ">
-								<option value="1">percent</option>
-								<option value="2">value</option>
-							</select>
-						</span>	
+						<span><input type="text" class="inp calc_pp qty" id="prod_qty_%product_id%"  size=4 name="qty[]" value="%require_qty%" style="border:1px solid #000000;width:72px;"></span>
 					</div>
 				</td>
 				<td>
 					<div>
 						<div>
 							<input type="text" class="inp pprice readonly" readonly="readonly"  name="price[]" value="%pprice%" >
-							<span class="marg_prc_preview" style="display: none">
-								<input type="text" name="marg_prc" value="" readonly="readonly" class="inp marg_prc readonly">
-								%
-							</span>
+						
 						</div>
 					</div>
 				</td>
@@ -491,21 +488,31 @@ $('#poprodfrm').submit(function(){
 				
 				
 			if(isNaN(marg) || marg =='' )
-					marg_pending += 1;
-					
+			{
+				marg_pending += 1;
+				$('input[name="margin[]"]',this).addClass('error_inp');
+			}		
 				
 				if(isNaN(qty) || qty==0)
+				{
 					qty_pending += 1;
-	
+					 $('input[name="qty[]"]',this).addClass('error_inp');
+				}
 				if(ven==0)
+				{
 					ven_pending += 1;
-
+					$('select[name="vendor[]"]',this).addClass('error_inp');
+				}
 				if(isNaN(extra_margin))
+				{
 					invalid_extramargin += 1;
-				
+					$('input[name="sch_discount[]"]',this).addClass('error_inp');
+				}
 				if(unit_price<=0)
+				{
 					invalid_purchasevalue +=1;
-				
+					$('input[name="price[]"]',this).addClass('error_inp');
+				}
 				$(this).removeClass('row_p');
 			});
 
@@ -588,11 +595,15 @@ function expected_delivarydetails(vids)
 				 vid=$("input[name='vendor_id[]']",this).val();
 
 					if(edod.length==0 || edod=='')
-						error_flg=1;
-					
+					{
+						error_flg+=1;
+						$('input[name="edod[]"]',this).addClass('error_inp');
+					}
 					if(po_remarks.length==0 || po_remarks=='')
-						error_flg=1;
-
+					{
+						error_flg+=1;
+						$("textarea[name='po_remarks[]']",this).addClass('error_inp');
+					}
 					delivery_det_inp_str += '<div style="display:none">';
 					delivery_det_inp_str += '<input type="hidden" name="edod[]" value="'+edod+'" >';
 					delivery_det_inp_str += '<input type="hidden" name="po_remarks[]" value="'+po_remarks+'" >';
@@ -701,6 +712,8 @@ function addproduct(id,name,mrp,require)
 		template=template.replace(/--barcode--/g,o.barcode);
 		template=template.replace(/%mrpvalue%/g,o.mrp);
 		template=template.replace(/%dp_price%/g,o.dp_price);
+		cur_stk=o.cur_stk!=null?o.cur_stk:0;
+		template=template.replace(/%curr_stck%/g,cur_stk);
 		
 		//o.margin = 0;
 		
@@ -715,7 +728,7 @@ function addproduct(id,name,mrp,require)
 	 	var mrgin=$('input[name="margin[]"],tr',this).val()*1;
 	 	var sch_type=$('select[name="sch_type[]"],tr',this).val();
 	 	var extra_mrgin=$('input[name="sch_discount[]"],tr',this).val()*1;
-		
+		var pid=$('.product,tr',this).val()*1;
 	/*	if(extra_mrgin.length)
 			o.margin=o.margin+parseFloat(extra_mrgin);
 		else
@@ -729,6 +742,8 @@ function addproduct(id,name,mrp,require)
 				
 				
 				pprice=mrp-(mrp*parseFloat(o.margin+extra_mrgin)/100);
+				margin_prc=parseFloat(o.margin+extra_mrgin);
+				
 			}
 			else
 			{
@@ -1086,15 +1101,17 @@ $('input[name="s"]').autocomplete({
 
 	});
 	
-	$("#pprods .calc_pp").live("change",function(){
+	$("#pprods .discount,#pprods .margin,#pprods .mrp, #pprods .type, #pprods .qty,#pprods .dp_price,#pprods .calc_pp").live("change",function(){
 		$r=$(this).parents("tr").get(0);
 		
 		dp_price=parseFloat($(".dp_price",$r).val());
 		
 		dp_price = isNaN(dp_price)?'-1':dp_price;
 
-		sch_type= $(".type",$r).val();
-
+		
+		pid=$(".product",$r).val();
+		sch_type=parseFloat($('.type_'+pid+':checked',$r).val());
+		
 		
 		mrp=parseFloat($(".mrp",$r).val());
 		margin=parseFloat($(".margin",$r).val());
@@ -1103,15 +1120,18 @@ $('input[name="s"]').autocomplete({
 		{
 				if(sch_type == 1)
 				{
-					$('.marg_prc_preview',$r).hide();
+					
 					mmrp=mrp-(mrp*parseFloat(margin+discount)/100);
+					margin_prc=parseFloat(margin+discount);
+					$('.marg_prc_preview',$r).show();
+					$('.marg_prc_'+pid,$r).val(margin_prc);
 				}
 				else
 				{
 					mmrp=mrp-(mrp*parseFloat(margin)/100)-parseFloat(discount);
 					margin_prc=(1-(mmrp/mrp))*100;
 					$('.marg_prc_preview',$r).show();
-					$('.marg_prc',$r).val(margin_prc);
+					$('.marg_prc_'+pid,$r).val(margin_prc);
 				}
 		}
 		else
@@ -1119,8 +1139,11 @@ $('input[name="s"]').autocomplete({
 			
 				if(sch_type == 1)
 				{
-					$('.marg_prc_preview',$r).hide();
+				
 					mmrp=dp_price-(dp_price*parseFloat(margin+discount)/100);
+					margin_prc=parseFloat(margin+discount);
+					$('.marg_prc_preview',$r).show();
+					$('.marg_prc_'+pid,$r).val(margin_prc);
 					
 				}
 				else
@@ -1128,7 +1151,7 @@ $('input[name="s"]').autocomplete({
 					mmrp=dp_price-(dp_price*parseFloat(margin)/100)-parseFloat(discount);
 					margin_prc=(1-(mmrp/dp_price))*100;
 					$('.marg_prc_preview',$r).show();
-					$('.marg_prc').val(margin_prc);
+					$('.marg_prc_'+pid,$r).val(margin_prc);
 				}
 			
 			if(dp_price > mrp)

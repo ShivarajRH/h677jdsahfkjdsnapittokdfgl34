@@ -13,27 +13,28 @@ $order_status_arr[0]='Pending';
 $order_status_arr[1]='Processed';
 $order_status_arr[3]='Cancelled';
 
-$sql_trans_ttls = 'SELECT STATUS,IFNULL(amt1,amt2) AS amt,totals
-						FROM ( SELECT b.status,SUM((mrp-(discount+credit_note_amt))*a.invoice_qty) AS amt1,SUM(i_orgprice-(i_coup_discount+i_discount)*b.quantity) AS amt2,
-						COUNT(b.id) AS totals
-						FROM king_orders b 
-						LEFT JOIN king_invoice a ON a.order_id = b.id 
-						WHERE b.transid = ? GROUP BY b.status ) AS g';
+$sql_trans_ttls = 'select status,ifnull(amt1,amt2) as amt from (
+select b.status,sum((mrp-(discount+credit_note_amt))*a.invoice_qty) as amt1,
+	sum(i_orgprice-(i_coup_discount+i_discount)*b.quantity) as amt2
+	from king_orders b 
+	left join king_invoice a on a.order_id = b.id 
+	where b.transid = ?
+group by b.status )
+as g';
 
 $trans_order_status_amt = $this->db->query($sql_trans_ttls,$transid);
 
-/*$trans_order_status_amt_arr = array();
+$trans_order_status_amt_arr = array();
 $trans_order_status_amt_arr[0] = 0;
 $trans_order_status_amt_arr[1] = 0;
 $trans_order_status_amt_arr[2] = 0;
 $trans_order_status_amt_arr[3] = 0;
 $trans_order_status_amt_arr[4] = 0;
 
- foreach($trans_order_status_amt->result_array() as $to_row)
+foreach($trans_order_status_amt->result_array() as $to_row)
 {
-	//$trans_order_status_amt_arr[$to_row['status']] =  $to_row['amt'].$to_row['totals'];
-	
-} */
+	$trans_order_status_amt_arr[$to_row['status']] =  $to_row['amt'];
+}
 
 $fran_status_arr=array();
 $fran_status_arr[0]="Live";
@@ -114,7 +115,8 @@ Prepaid Voucher used : <?=$c?>
 <h2 style="margin: 3px 0px;margin-bottom: 10px;">Order Transaction : <?=$tran['transid']?></h2>
 <div class="clear"></div>
 <table class="datagrid" width="100%">
-<thead><tr><th>Transaction ID</th><th>User</th><th>Mode</th><th>Amount</th><th>Paid</th><th>Refund</th><th colspan="2">Payment Status</th><th>Init Time</th><th>Completed on</th></tr></thead>
+<thead><tr><th>Transaction ID</th><th>User</th><th>Mode</th>
+	<?php if($tran['is_pnh']){?> <th>Payment Days</th> <?php } ?><th>Amount</th><th>Paid</th><th>Refund</th><th colspan="2">Payment Status</th><th>Init Time</th><th>Completed on</th></tr></thead>
 <tbody>
 <tr>
 <td><?=$tran['transid']?></td>
@@ -158,6 +160,12 @@ default:
 	echo "Unknown";break;
 }?>
 </td>
+<?php if($tran['is_pnh']){?>
+<td>
+	<b><?php echo $tran['credit_days']?>&nbsp;Days Payment</b>
+</td>
+<?php }?>
+
 <td>Rs <?=$tran['amount']?></td>
 <td>Rs <?=$tran['paid']?><?php if($tran['mode']==0){?><br><a style="font-size:70%" href="<?=site_url("admin/callcenter/trans/{$tran['transid']}")?>">check PG details</a><?php }?></td>
 <td width="10" style="white-space:nowrap;"><?php 
@@ -252,7 +260,16 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
 </div>
 </td>
 <td width="10%" align="center">
-<div style="float:left;width:200px;padding:20px 20px;" align="center">
+	<br>
+	<div style="margin:5px;margin-top:3px;line-height: 22px;" align="center">
+		<b>Order Amount by Status</b>
+		<div align="right">Pending Orders (Rs): <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[0]+$trans_order_status_amt_arr[1]);?></span></div>
+		<div align="right">Shipped Orders (Rs): <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[2]);?></span></div>
+		<div align="right">Cancelled Orders (Rs): <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[3]);?></span></div>
+		<div align="right">Returned Orders (Rs): <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[4]);?></span></div>
+	</div>
+	<br>
+<div style="float:left;width:200px;padding:0px 20px;" align="center">
 
 <div <?=!$tran['priority']?"class='changeprior'":" title='{$tran['priority_note']}'"?> style="margin-top:10px;width:100px;display:inline-block;text-align:center;font-weight:bold;padding:15px 30px;border:1px solid #f1f1f1;<?=$tran['priority']?"":"cursor:pointer;"?>background:<?=$tran['priority']?"yellow":"#ddd"?>;text-transform:uppercase;">
 <?php if($tran['priority']){?>HIGH<?php }else{?>NORMAL<?php }?>
@@ -278,7 +295,7 @@ PROCESSED IN <span style="color:red"><?=(count($pbatch)==0?count($batch):count($
 <div >
 <h4 style="margin-bottom:0px;">Invoices Summary</h4>
 <table class="datagrid smallheader noprint" style="width: 100%">
-<thead><tr><th>Proforma ID</th><th>Invoice</th><th>Batch</th><th>Status</th><th>Date</th></thead>
+<thead><tr><th>Proforma ID</th><th>Invoice</th><th>Batch</th><th colspan="2">Status</th><th>Date</th></thead>
 <tbody>
 <?php foreach($batch as $b){?>
 <tr>
@@ -292,22 +309,14 @@ PROCESSED IN <span style="color:red"><?=(count($pbatch)==0?count($batch):count($
 	</td>
 <td><a href="<?=site_url("admin/invoice/{$b['invoice_no']}")?>" <?=$b['invoice_status']==0?'style="text-decoration:line-through;"':""?>><?=$b['invoice_no']?></a></td>
 <td><a href="<?=site_url("admin/batch/{$b['batch_id']}")?>">B<?=$b['batch_id']?></a></td>
+<?php if($b['invoice_status']==1){?>
 <td>
-	<?php 
-	if($b['invoice_status']==1){
-		echo $b['packed']&&$b['shipped']?"SHIPPED":($b['packed']?"PACKED":"Invoiced");
-		
-		if($b['shipped'] == 0 || $is_pnh==0)
-		{
-	?>
-			<a href="<?=site_url("admin/cancel_invoice/{$b['invoice_no']}")?>" class="danger_link">cancel</a>		
-	<?php
-		}
-	}else 
-		echo "CANCELLED";
-	?>
+<?=$b['packed']&&$b['shipped']?"SHIPPED":($b['packed']?"PACKED":"Invoiced")?>
 </td>
-
+<?php }else echo "<td colspan='2'>CANCELLED</td>";?>
+<?php if($b['invoice_status']==1){?>
+<td><a href="<?=site_url("admin/cancel_invoice/{$b['invoice_no']}")?>" class="danger_link">cancel</a></td>
+<?php }?>
 <td><?=date("d/m/y",$b['createdon'])?>
 </tr>
 <?php } if(empty($batch)){?>
@@ -452,13 +461,16 @@ $allow_qty_chng = 0;
 	<form id="cancelform" method="post" action="<?=site_url("admin/cancel_orders")?>">
 	<input type="hidden" name="transid" value="<?=$tran['transid']?>">
 	<h4>Orders</h4>
-	<table class="datagrid" width="100%">
+	<table class="datagrid nofooter" width="100%">
 	<thead><tr><th></th><th>Order ID</th><th>Deal</th><th>Qty</th><th>Stock Product</th><th>MRP</th><th>Offer Price</th><th>Paid</th><th>Available Stock</th><th>Status</th><th>Backend Status</th><th>Last Update on</th></tr></thead>
 	<tbody>
 	<?php $shipped_oids=array_unique($shipped_oids); foreach($orders as $o){
 		
 		if($o['status'] == 0)
 			$allow_qty_chng = 1;
+		
+		$alloted_imei_det_res = $this->db->query("select * from t_imei_update_log where alloted_order_id = ? order by id desc limit 1;",$o['id']);
+		
 		?>
 	<tr>
 	<td>
@@ -543,7 +555,36 @@ $allow_qty_chng = 0;
 			$b=$ba['batch_id'];
 	}?>
 	<div>batch: <a href="<?=site_url("admin/batch/{$b}")?>"><?=$b?></a></div>
-	<?php } if(!isset($processed[$o['id']]) && !isset($p_processed[$o['id']])) echo "na";?>
+	<?php } if(!isset($processed[$o['id']]) && !isset($p_processed[$o['id']])) echo "na";
+
+	$alloted_imei_det = array();
+	if($alloted_imei_det_res->num_rows())
+	{
+		$alloted_imei_det = $alloted_imei_det_res->row_array();
+		
+	}else
+	{
+		$alloted_imei_det = $this->db->query("select * from t_imei_no where order_id = ? ", $o['id'])->row_array();
+	}
+	
+	if(count($alloted_imei_det))
+	{
+		echo '<div style="font-size:11px;background:#fcfcfc;padding:5px;width:155px;text-align:center">
+		<b>IMEI : '.$alloted_imei_det['imei_no'].'</b> <br>';
+		echo '		<b>Activation Credit : Rs '.$o['imei_reimbursement_value_perunit'].'</b>
+		';
+		// is imei activated
+		$imei_actv_det_res = $this->db->query("select * from t_imei_no where imei_no = ? ", $alloted_imei_det['imei_no']);
+		if($imei_actv_det_res->num_rows())
+		{
+			$imei_actv_det = $imei_actv_det_res->row_array();
+			echo ' <div class="legend" >'.($imei_actv_det['is_imei_activated']?'<span style="background:green;color:white;padding:3px 5px;">Activated</span>':'<span style="background:#cd0000;color:white;padding:3px 5px;">Not Activated</span>').'</div>';
+		}
+		echo '</div>';
+	}
+	
+	?>
+	
 	</td>
 	<td>
 	<?=$o['actiontime']?format_datetime_ts($o['actiontime']):"na"?>
@@ -558,6 +599,14 @@ $allow_qty_chng = 0;
 	</div>
 	<?php }?>
 	</form>
+	
+	<div style="float:right;padding:10px;background: #f8f8f8;margin-top:3px;line-height: 22px;" align="center">
+		<b>Order Amount by Status</b>
+		<div align="right">Pending : <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[0]+$trans_order_status_amt_arr[1]);?></span></div>
+		<div align="right">Shipped : <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[2]);?></span></div>
+		<div align="right">Cancelled : <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[3]);?></span></div>
+		<div align="right">Returned : <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[4]);?></span></div>
+	</div>
 	
 	<div class="clear"></div>
 	

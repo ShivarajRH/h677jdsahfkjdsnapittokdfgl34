@@ -1703,5 +1703,75 @@ order by action_date ";
 		}
 			
 	}
+	
+	
+	function gen_fsales_rep($from='2014-01-01',$to='2014-01-10')
+	{
+		if($from == '')
+		{
+			// get first order of franchise 
+			$f_order_date_ts = $this->db->query("select min(init) as init from king_transactions where franchise_id != 0 ")->row()->init;
+			$from = strtotime(date('Y-m-d',$f_order_date_ts));
+		}
+		
+		if($to == '')
+			$to = date('Y-m-d');
+		
+		$from = strtotime($from);
+		$to = strtotime($to);
+		
+		// reset week start and end dates  
+		$from_wdno = date('w',$from);	
+		$from_week_date_ts = $from-($from_wdno*24*60*60);
+		
+		$to_wdno = date('w',$to);
+		$to_week_date_ts = $to+((6-$to_wdno)*24*60*60);
+		
+		if($to_week_date_ts < $from_week_date_ts)
+			die("invalid Dates Entered");
+		$ttl_days = ($to_week_date_ts-$from_week_date_ts)/(24*60*60);
+		
+		$csv = array();
+		$csv_head = array('Month','Week Start','Week End','Territory','Town','Franchise','RegisteredOn','Sales','Pending Amount','Uncleared Cheque','Last Shipment Value');
+		for($d=0;$d<$ttl_days;)
+		{
+			// get week start date  
+			$st_date = date('Y-m-d',$from_week_date_ts+($d*24*60*60));
+			
+			// get week end date
+			$d = $d+7;
+			
+			$en_date = date('Y-m-d',$from_week_date_ts+($d*24*60*60));
+			
+			$week_rep_data = array();
+			$sql = "select c.franchise_id,franchise_name,territory_name,town_name,c.created_on,sum(a.i_orgprice*a.quantity) as sales 
+						from king_orders a
+						join king_transactions b on a.transid = b.transid 
+						join pnh_m_franchise_info c on c.franchise_id = b.franchise_id 
+						join pnh_m_terrritory_info d on d.id = c.territory_id 
+						join pnh_towns e on e.id = c.town_id 
+						where a.status != 3 
+						and b.frachise_id > 0 
+						and from_unixtime(b.init) between date(?) and date(?)
+					group by franchise_id";
+			$res = $this->db->query($sql,array($st_date,$en_date));
+			if($res->num_rows())
+			{
+				foreach($res->result_array() as $row)
+				{
+					$week_rep_data[] = date('M',strtotime($st_date));
+					$week_rep_data[] = $st_date;
+					$week_rep_data[] = $en_date;
+					$week_rep_data[] = $row['territory_name'];
+					$week_rep_data[] = $row['town_name'];
+					$week_rep_data[] = $row['franchise_name'];
+					$week_rep_data[] = $row['franchise_name'];
+					
+				}
+			}
+			
+		}
+		
+	}
 
 }

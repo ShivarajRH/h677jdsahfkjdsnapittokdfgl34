@@ -1,4 +1,3 @@
-
 <link type="text/css" rel="stylesheet" href="<?=base_url()?>/css/stock_intake.css">
 <style>
 
@@ -19,8 +18,20 @@ h2
 }
 .view_imei
 {
-	color:#000;
+	 color: #008000;
+     margin: 0 2px;
 }
+
+#grn input[type="text"]:focus,#grn select:focus,#grn a:focus{
+	font-weight:bolder !important;
+	font-size: 110% !important; 
+	border:1px solid blue !important;
+	display: inline-block;
+	width: auto;
+	height: auto;
+}
+
+
 </style>
 
 <div class="container">
@@ -52,6 +63,7 @@ h2
 							<th width="147px">Storage</th>
 							<th width="50px">Receiving Qty</th>
 							<th width="50px">Invoice Qty</th>
+							<th width="30px">Vat(%)</th>
 							<th width="160px" style="text-align: center">Price</th>
 							<th width="83px">SubTotal</th>
 							<th></th>
@@ -62,7 +74,7 @@ h2
 						<tr>
 							<td colspan="3" align="right" class="recv_qty_wrapper" style="">Total Value of Purchased Items</td>
 							<td align="right" ><b id="grn_ttl_rqty">0</b></td>
-							<td align="right" colspan="3" ><b id="grn_ttl_value">0</b><div id="grn_ttl"></div></td>
+							<td align="right" colspan="4" ><b id="grn_ttl_value">0</b><div id="grn_ttl"></div></td>
 						</tr>
 					</tfoot>
 				</table>
@@ -120,7 +132,7 @@ h2
 		<div class="right">
 			<table>
 				<tbody>
-					<tr class="barcode%bcode% barcodereset pending_mode edit_prod_row " bcode="%bcode%" prodid="%prodid%" pid="%pid%" qty="%qty%" dp_price="%dp_price%" p_price="%price%" has_serialno="%has_serialno%">
+					<tr class="barcode%bcode% barcodereset pending_mode edit_prod_row " bcode="%bcode%" prodid="%prodid%" pid="%pid%" qty="%qty%" dp_price="%dp_price%" brandid="%brandid%" p_price="%price%" has_serialno="%has_serialno%">
 						<td>%sno%</td>
 						<td>
 	                        <input type="hidden" name="imei%pid%[]" class="imeisvvv imei%prodid%" id="list_imei_%prodid%" value="">
@@ -139,14 +151,16 @@ h2
 								<div class="add_barcode_wrap" style="float: left;margin-left:10px;">
 									<input type="hidden" style="" class="scan_pbarcode pbcodecls%prodid%" value="" name="pbarcode%pid%[]" />
 									<span class="pb_blk view_barcode%prodid%" prodid="%prodid%"></span>
-									<span style="font-size:88%;"><a style="color:#B62D64" href="javascript:void(0)" class="bcode_upd" prodid="%prodid%" pid="%pid%" >%update_barcode%</a></span>								
+									<span style="font-size:88%;"><a style="color:#B62D64" href="javascript:void(0)" class="bcode_upd"  bcode="%bcode%" prodid="%prodid%" pid="%pid%" >%update_barcode%</a></span>								
 								</div>
 							</div>
 							
 							<div class="imei_scanned_div" style="clear:both">
 								<span style="margin-left:23px">IMEI Scanned :</span> 
 								<span class="imei_scanned_status">NO</span>
+								<a href="javascript:void(0)" class="view_imei" brandid="%brandid%" prodid="%prodid%">View</a>
 							</div>
+							<div class="row_error_inp"></div>
 						</td>
 						
 						<td class="po_det_wrap_blk">
@@ -158,19 +172,21 @@ h2
 							<span class="poqty">%qty%<input type="hidden" class="popqty" value="%qty%"></span>
 						</td>
 						<td>
-	                        <input type="text" class="inp rqty qtychange" name="rqty%pid%[]" size=3 value="0" prodid="%prodid%" pid="%pid%">
+	                        <input type="text" class="inp rqty qtychange" name="rqty%pid%[]" size=3 value="0" brandid="%brandid%" prodid="%prodid%" pid="%pid%">
 	                       	<input type="hidden" value="%prodid%" name="prodid_%prodid%" id="prodid_%prodid%"/>
-	                       	<a href="javascript:void(0)" class="view_imei" prodid="%prodid%">view IMEI</a>
+	                       	
 	                       	<span class="imeis_nos_view_%prodid%"></span>
-                            <!--<span style="font-size:70%"><a href="javascript:void(0)" style="color:red;" onclick='show_add_imei(event,"%prodid%")'>%add_serial%</a></span>-->
                         </td>
                         <td>
 							<input type="text" class="inp iqty"  name="oqty%pid%[]" id="oqty_%prodid%" size=3 value="0">
 						</td>
+						<td>
+							<input type="text" class="inp vat_prc"  name="vat%pid%[]" id="vat_%prodid%" size=3 value="">
+						</td>
                         <td style="text-align: center">
 							<div class="po_qty_wrap">
 								<b>MRP(Rs.) <span class="red_star">*</span> : </b>
-										<input type="text" class="inp prod_mrp mrp_%prodid% readonly" readonly="readonly" name="mrp%pid%[]" size=5 pmrp="%mrp%" dp_price="%dp_price%" prodid="%prodid%" value="">
+										<input type="text" class="inp prod_mrp mrp_%prodid% readonly" readonly="readonly" name="mrp%pid%[]" size=5 pmrp="%mrp%" placeholder="%mrp%" dp_price="%dp_price%" prodid="%prodid%" value="">
 										
 										<div class="upd_pmrp_blk" align="center">
 											<input type="checkbox" prodid="%prodid%" value="1" class="upd_pmrp upd_mrp_chk%prodid% fl_right" name="upd_pmrp%pid%[]" >
@@ -188,7 +204,7 @@ h2
 													</div>
 											</span>
 										</div>
-										<div><b>Pur. Price(Rs.) : </b><input type="text" class="inp pprice" name="price%pid%[]" readonly="readonly" size=5 value="%ppur_price%"></div>
+										<div><b>Pur. Price(Rs.) : </b><input type="text" class="inp pprice" name="price%pid%[]" p_price="%price%"  readonly="readonly" size=5 value="%ppur_price%"></div>
 							  </div>
 						</td>
                         <td>
@@ -237,344 +253,30 @@ h2
 </div>
 
 <div id="add_barcode_dialog" class="add_barcode_dialog" title="Scan Barcode">
-	<input type="hidden" value="" id="abd_pid">
-		<input type="text" class="inp" style="width:200px;" id="abd_barcode">
+	<form >
+		<span class="prod_title"></span>
+		<input type="hidden" value="" id="abd_pid">
+		<span>Barcode : <input type="text" class="inp" style="width:200px;" id="abd_barcode"></span>
+		<span class="error_inp"></span>
+	</form>
 </div>
 	
-<div id="rqty_imei_blk_dlg" title="IMEI Numbers">
-	<input type="hidden" value="" id="imei_pid">
-	<div class="imei_nos_dlg prodid_%prodid%"></div>
+<div id="rqty_imei_blk_dlg" class="rqty_imei_blk_dlg" title="IMEI Numbers">
+	<form>
+		<span class="prod_title"></span>
+		<input type="hidden" value="" id="imei_pid">
+		<div class="imei_nos_dlg prodid_%prodid%"></div>
+		<span class="error_inp"></span>
+	</form>
 </div>
 
-<SCRIPT>
+<script type="text/javascript">
 
-$(function(){
-	$('#cus_jq_alpha_sort_wrap').jqSuAlphaSort({title:"Vendors List",'overview_title':"Vendor Po List",'char_click':function(chr,ele){ vendors(chr)},'item_click':function(id,ele){ polist_byvendor(id)}});
-});
-
-$(function(){
-	cal_invoice_value();
-	$('#scanned_summ').hide();
-	$('.view_imei').hide();
-   	$(".jq_alpha_sort_alphalist_char a").click(function() {
-      // remove classes from all
-      $(".jq_alpha_sort_alphalist_char a").removeClass("jq_alpha_active");
-      // add class to the one we clicked
-      $(this).addClass("jq_alpha_active");
-   });
-    $(".jq_alpha_sort_alphalist_char a:eq(1)").trigger('click');
-   
-   
-   $('.barcode_fixed_wrap').hide();
-   $('#grn_color_legends').hide();
-   $('.cancel_stock').hide();
-   $('.pb_blk').hide();
-});
 
 //var imeis=[];
 var pids_selected=[];
 var ttl_imei_row_scanned=0;
-$('#rqty_imei_blk_dlg').dialog({
-			autoOpen:false,
-			width:300,
-			height:300,
-			modal:true,
-			open:function(){
-					$('#rqty_imei_blk_dlg').data('process_by','');
-				
-				 	var dlgData = $("#rqty_imei_blk_dlg").data("pro_data");
-				 	var imeilist_html ='';
-				 	var scanned_imei = '';
-				 	
-						prodid = dlgData.prodid;
-						tot_rqty = dlgData.ttl_qty;	
-						pid = dlgData.pid;
-						ref_trele = dlgData.ref_tr;
-						//alert(prodid);
-						
-					var p_imei_scanned = $("#list_imei_"+prodid,ref_trele).val();
-						p_imei_scanned_arr = p_imei_scanned.split(',');
-						//imeis.push(p_imei_scanned_arr);
-						
-						imeilist_html = '<ol>'; 
-				    	for(i=0;i<tot_rqty;i++) 
-				    	{
-				    			scanned_imei = ((p_imei_scanned_arr[i]==undefined)?"":p_imei_scanned_arr[i]);				    		
-								imeilist_html += '<li>';
-								imeilist_html += '	<input type="text" class="inp imei_input dlg_imei_inp" placeholder="" name="imei_input_'+prodid+'[]" id="imei_input_'+prodid+'_'+i+'"  onchange="return validate_imeino_input(this,'+prodid+');" value="'+scanned_imei+'">';
-								imeilist_html += '	<span class="append_imei_items_'+prodid+'_'+i+'"></span>';
-								imeilist_html += '</li>';
-						}
-						imeilist_html+='</ol>';
-				 	$('.imei_nos_dlg').html(imeilist_html);
-					$('.dlg_imei_inp:first').focus();
-			},
-			close :function(){
-				if($('#rqty_imei_blk_dlg').data('process_by') == '' && $('#rqty_imei_blk_dlg').data('state') == 'add')
-				{
-					var dlgData = $("#rqty_imei_blk_dlg").data("pro_data");
-						prodid = dlgData.prodid;
-						tot_rqty = dlgData.ttl_qty;	
-						pid = dlgData.pid;
-						ref_trele = dlgData.ref_tr;
-						
-						$("#list_imei_"+prodid,ref_trele).val("");
-						$('.view_imei',ref_trele).hide();
-						$('.rqty',ref_trele).val("0").select();
-				}else
-				{
-					$('.iqty',ref_trele).val("0").select();
-				}
-			},
-			buttons:{
-				'Submit':function(){
-					
-					var dlgData = $("#rqty_imei_blk_dlg").data("pro_data");
-					ref_trele = dlgData.ref_tr;
-					$('.imei_error_inp').removeClass('imei_error_inp');
-					
-					// check if rty == imei input boxes 
-					if($('.dlg_imei_inp').length != tot_rqty)
-					{
-						alert("Require qty is not matching with total imei inputs ");
-						return false;
-					}
-					
-					var scanned_imei_nos = new Array();
-					// check ig all imei inp is entered 
-					$('.dlg_imei_inp').each(function(){
-						var scn_imei = $.trim($(this).val());
-							$(this).val(scn_imei);
-						if(scn_imei == "")
-						{
-							$(this).addClass('imei_error_inp');
-						}
-						else
-						{	
-							if($.inArray(scn_imei,scanned_imei_nos) != -1)
-								$(this).addClass('imei_error_inp');
-							else
-							{
-								$(this).attr('scninp_imei','imei_'+scn_imei);
-								scanned_imei_nos.push(scn_imei);
-								//alert(scanned_imei_nos);
-								
-							}
-						}
-					});
-					
-					if($('.imei_error_inp').length)
-					{
-						alert("Please enter valid imei/serialnos ");
-						return false;
-					}
-					
-					if(scanned_imei_nos.length == tot_rqty) 
-					{
-						
-						$.post(site_url+'/admin/jx_chkimeiforgrn',{'imeino':scanned_imei_nos.join(","),'prodid':prodid},function(resp){
-							if(resp.status == 'error')
-							{
-								alert(resp.error);
-								
-								if(resp.duplicate != undefined)
-								{
-									$.each(resp.duplicate,function(a,dup_imei){
-										$('input[scninp_imei="imei_'+dup_imei+'"]').addClass('imei_error_inp');
-									});
-								}
-								
-								return false;
-							}else
-							{
-								var imei_nos=resp.imeinos.split(",");
-								var imei_sort=imei_nos.sort();
-								
-								var imei_sort_result=[];
-									for(var i=0;i<imei_nos.length - 1;i++)
-									{
-										if (imei_sort[i + 1] == imei_sort[i]) 
-										{
-		       						    	imei_sort_result.push(imei_sort[i]); 
-		       						     }
-									}
-								
-									if(imei_sort_result.length > 0 )
-									{
-										alert((imei_sort_result.join(","))+" serial number is repeated");
-									}
-									else
-									{
-										$("#imei_pid").val(pid);
-										$("#imei_pid").data('prodid',prodid);
-										
-										// added scanned imeis to hidden input 
-										$("#list_imei_"+prodid,ref_trele).val(resp.imeinos);
-										
-										
-										if($("#list_imei_"+prodid,ref_trele).val())
-										{
-											//ttl_imei_row_scanned++;
-											$('.imei'+prodid,ref_trele).parents('tr:first').addClass('bcode_scanned');
-											$('.imei_scanned_status',ref_trele).addClass('active').html("YES");
-											$('.imei_scanned_status',ref_trele).show();
-										}else
-										{
-											$('.imei'+prodid,ref_trele).parents('tr:first').removeClass('bcode_scanned');
-										}
-											
-										//$('#summ_scanned_ttl_qty').text(ttl_imei_row_scanned);	
-										$('.pbcodecls'+prodid,ref_trele).parents('tr:first').removeClass('lastScanned').removeClass('unsc');
-										
-										$('#rqty_imei_blk_dlg').data('process_by','submit').dialog('close');
-										
-									}
-								
-							}
-						},'json');
-					}
-				}
-			}
-	});	
-	
-	
-	
-	$('#add_barcode_dialog').dialog({
-	modal:true,
-	autoOpen:false,
-	width:250,
-	height:150,
-	autoResize:true,
-	open:function(){
-	dlg = $(this);
-	
-	},
-	buttons:{
-		
-		'Submit':function(){
-			
-			var ref_trele = $(this).data('ref_tr');
-			var b_code=$("#add_barcode_dialog",this);
-			var inp_barcode=$("#abd_barcode").val();
-			var ttl_qty=$('.rqty',ref_trele).val()
-			
-				if(isNaN(inp_barcode))
-				{
-					alert("Please enter valid Barcode");
-					return false;
-				}			
-				if(inp_barcode.length > 10)
-				{
-					// deprecated for losing logical errors  
-					/*
-					$.post("<?=site_url("admin/update_barcode")?>",{pid:$('#abd_pid').val(),barcode:$('#abd_barcode').val()},function(resp){
-						$("#add_barcode_dialog").prepend();	
-					});
-					*/
-					var chk_prodid = $('#abd_pid').data('prodid');
-				
-					$('.pbcodecls'+chk_prodid,ref_trele).val($('#abd_barcode').val());
-					$("#add_barcode_dialog").hide();
-					
-					$('.view_barcode'+chk_prodid,ref_trele).html($('#abd_barcode').val());
-					
-					if($('#abd_barcode').val())
-					{
-						$('.pbcodecls'+chk_prodid,ref_trele).parents('tr:first').addClass('bcode_scanned');
-						$('.bcode_scanned_status',ref_trele).addClass('active').html("YES");
-						$('.bcode_scanned_status',ref_trele).show();
-						$('.pb_blk',ref_trele).show();
-						
-						//
-					}else
-					{
-						$('.pbcodecls'+chk_prodid,ref_trele).parents('tr:first').removeClass('bcode_scanned');
-					}
-							
-					$('.pbcodecls'+chk_prodid,ref_trele).parents('tr:first').removeClass('lastScanned').removeClass('unsc');
-					
-					$(this).dialog('close');
-					
-					$('.rqty',ref_trele).select();
-					
-				}
-				else
-				{
-					alert('Barcode should be minimum 10 characters');
-				}
-		},
-		'Cancel' :function(){
-		 $(this).dialog('close');
-		}
-	}
-});
 
-$('.dlg_imei_inp').live('keypress',function(e){
-	if((e.keyCode || e.which) == 13)
-	{
-		
-		if($(this).parent().next().find('.dlg_imei_inp') != undefined)
-			$(this).parent().next().find('.dlg_imei_inp').focus();
-		return false;
-	}
-})
-
-$('.show').click(function(){
-	var pos=[];
-	//$('.imei_nos').hide();p.po_id
-	//alert(pos);
-	
-	$('.ajax_loadresult a.selected').each(function(){
-		pos.push($(this).attr('poid'));
-	});
-	
-	if(pos.length)
-	{
-		loadpo(pos);
-		var pos_arr=[];
-		$.post('<?=site_url('admin/ven_list_bypo')?>',{pos:pos},function(data){
-			$('.page_title').html("Stock Intake for <span class='ven_title_wrap'>"+data.ven_det.vendor_name+"</span>");
-			
-			var pos_arr ="";
-			
-			$.each(data.po_id_list,function(i,p){
-				pos_arr+="<a target='_blank' href='"+site_url+'/admin/viewpo/'+p+"'>"+p+"</a>";
-				if(data.po_id_list.length-1 != i)
-				{
-					pos_arr+=",";	
-				}
-			});
-			
-			$('.selected_po_list').html("<span style='float:left'>Selected PO Ids : "+pos_arr+"</span><span style='float:right'>Total PO Value : Rs."+data.ven_det.ttl+"</span>");
-		},'json');
-		
-		$('.show').hide();
-		$('.selected_po_list').show();
-		$('#apply_grn_form').show();
-		$('.barcode_fixed_wrap').show();
-		 $('#grn_color_legends').show();
-		$('.jq_alpha_sort_wrap').hide();
-		$('#scanned_summ').show();
-		$('#grn span.name:first').focus();
-		$('.cancel_stock').show();
-		$('.inv_inp_blk').html("");
-		$('.invamount').html("");
-		$('.invdate').html("");
-	}
-	else
-	{
-		alert('Please Choose PO before Proceed');
-		return false;
-	}
-	
-});
-
-$('.view_imei').live('click',function(){
-	tot_rqty=$('.rqty',$(this).parent()).val();
-	 var trele=$(this).parents('tr:first');
-	$('#rqty_imei_blk_dlg').data("pro_data",{'prodid': $(this).attr("prodid"),'ttl_qty':tot_rqty,'ref_tr' : trele,'state':'edit'}).dialog('open');
-	
-});
 
 function vendors(ch)
 {
@@ -583,7 +285,8 @@ function vendors(ch)
 	 $.post(site_url+'/admin/vendors_list',{ch:ch},function(resp){
     	if(resp.status == 'error')
 			{
-				alert("Vendor not found for selected character");
+				//alert("Vendor not found for selected character");
+				$('.jq_alpha_sort_alphalist_itemlist').html("<div class='po_alert_wrap'>NO Vendors Found</div>");
 				$('.jq_alpha_sort_overview_content').html("<div class='po_alert_wrap'>NO Purchase Orders Found</div>");
 				return false;
 		    }
@@ -600,114 +303,6 @@ function vendors(ch)
     },'json');
 }
 
-/** function to add more product rows */
-$('.add_product_row').live('click',function(e){
-	e.preventDefault();
-	
-	var trele = $(this).parents('tr:first');
-	var new_trele = trele.next();
-	var trele_html = trele.html();
-	var trele_bcode = trele.attr('bcode');
-	var trele_rqty = $('.rqty',trele).val()*1;
-	var trele_iqty = $('.iqty',trele).val()*1;
-	var trele_mrp = $('.prod_mrp',trele).val()*1;
-	var trele_prodid = trele.attr('prodid');
-	var trele_oqty = trele.attr('qty');
-	var trele_dpprice = trele.attr('dp_price');
-	var trele_purprice = trele.attr('p_price');
-	var trele_pid = trele.attr('pid');
-	var trele_rackname = $('.stkloc').html();
-	var trele_has_serialno = trele.attr('has_serialno');
-	var trele_bcscanned = trele.hasClass('bcode_scanned');
-	//alert(trele_has_serialno);
-	
-	if(trele_rqty==0 || trele_mrp == 0 || trele_mrp == "" || trele_iqty==0 || (!trele_bcscanned && trele_bcode)) 
-	{
-		alert("Please enter valid MRP,Qty,Barcode Details to proceed");
-		if(trele_rqty == 0)
-			$('input.rqty',trele).select();
-		else if(trele_iqty == 0)
-			$('input.iqty',trele).select();
-		else if(trele_mrp == 0 || trele_mrp == "")
-			$('input.prod_mrp',trele).select();
-		else if((!trele_bcscanned && trele_bcode))
-			$('.bcode_upd',trele).focus();
-			
-		return false;
-	}
-	else
-	{
-		grow=$("#grn_template .right table tbody").html();
-		update_barcode='';
-		if(trele_bcode.length==0)
-			update_barcode="Add";
-		else
-		{
-			update_barcode="Update";
-		}
-		
-      	grow=grow.replace(/%has_serialno%/g,trele_has_serialno);
-      	grow=grow.replace(/%bcode%/g,trele_bcode);
-		grow=grow.replace(/%update_barcode%/g,update_barcode);
-		grow=grow.replace(/%prodid%/g,trele_prodid);
-		grow=grow.replace(/%pid%/g,trele_pid);
-		grow=grow.replace(/%qty%/g,trele_oqty);
-		
-		grow=grow.replace(/%mrp%/g,'');
-		if(trele_has_serialno*1)
-		{
-			grow=grow.replace(/%dp_price%/g,trele_dpprice);
-			grow=grow.replace(/%dp_price_inp%/g,'visible');
-		}
-		else
-		{
-			grow=grow.replace(/%dp_price%/g,0);
-			grow=grow.replace(/%dp_price_inp%/g,'hidden');
-		}
-		grow=grow.replace(/%price%/g,trele_purprice);
-		grow=grow.replace(/%rqty%/g,0);
-		
-		grow=grow.replace(/%ppur_price%/g,(trele_mrp*trele_purprice/trele_mrp));
-		
-		if(trele_rackname)
-			grow=grow.replace(/==rbs==/g,trele_rackname);
-		else
-			grow=grow.replace(/==rbs==/g,'<option value="10">A11-Default Rack</option>');
-		
-		trele.after(grow);
-		
-		var new_trele = trele.next();
-		$('span.name',new_trele).hide();
-		$('td:first',new_trele).html('');
-		
-		
-		if(trele_has_serialno != 1)
-			$('.imei_scanned_div',new_trele).hide();
-		else
-			$('.imei_scanned_div',new_trele).show();
-			
-		$('.pb_blk',new_trele).css('display','none');
-		$('.view_imei',new_trele).css('display','none');
-		$('.edit_mode',new_trele).removeClass('processed_mode');
-		$('td:last a',new_trele).html('<span style="margin:4px 0px 0px 14px;float:left"><img width="12px" height="12px" src="'+base_url+'/images/remove.png'+'"></span>').removeClass('add_product_row').addClass('remove_product_row');
-		
-		$('.upd_pmrp',new_trele).attr('checked',false);
-		var tabindex_cnt = 1;
-		reset_tabindex(new_trele,function(row){
-		$('input.rqty',row).select();
-		scanned_rows();
-		});
-	}
-});
-
-
-$('.remove_product_row').live('click',function(e){
-	e.preventDefault();
-	var trele = $(this).parents('tr:first');
-	$(this).parents('tr:first').fadeOut().remove();
-	trele.addClass('edit_mode');
-	scanned_rows();
-});
 
 function polist_byvendor(id)
 {
@@ -787,6 +382,726 @@ function pid_container(pid)
 	}
 	
 }
+
+
+
+function check_dup_imei(imei,prodid)
+{
+	
+	var imeis=[];
+	$(".imeis").each(function(){
+		c=$(this).val().split(",");
+		imeis=imeis.concat(c);
+	});
+	 
+	if($.inArray(imei,imeis)!=-1)
+	{
+		alert("This Serial no is already entered");return false;
+	}
+	return true;
+}
+
+function cal_invoice_value()
+{
+	inv_total=0;
+	$(".invoice_tab	 tbody tr").each(function(){
+		$i=$(this);
+		inv_inp_amount=parseFloat($(".inv_inp_amount",$i).val());
+		inv_inp_amount=isNaN(inv_inp_amount)?"":inv_inp_amount;
+		
+		inv_total +=inv_inp_amount;
+	});
+	$("#invoice_ttl_value").html(inv_total);
+}
+
+
+function calc_rec_value()
+{
+	r_total=0;
+	r_total_qty = 0;
+	$("#grn .datagrid tbody tr").each(function(){
+		$p=$(this);
+		var prodid = $('input[name="prodid[]"]',$p).val();
+		rqty=parseInt($(".rqty",$p).val());
+		rqty=isNaN(rqty)?"0":rqty;
+		pprice=parseFloat($(".pprice",$p).val());
+		pprice=isNaN(pprice)?"0":pprice;
+		
+		//var trEle = $(this).next().parents('tr:first');
+		$('.subttl_'+prodid,$p).val(rqty*pprice);
+		
+		r_total+=rqty*pprice;
+		r_total_qty += rqty;
+		
+		if(!$.trim($('.scan_pbarcode',this).val()))
+		{
+			if(rqty == 0)
+			{	
+				if($(this).hasClass('unsc'))
+				{
+					$(this).addClass('revscan').removeClass('unsc');
+				}
+			}else
+			{
+				if($(this).hasClass('revscan'))
+				{
+					$(this).addClass('unsc').removeClass('revscan');
+				}
+			}
+		}
+		
+	});
+	$("#grn_ttl_value").html("Rs "+r_total.toFixed(2));
+	$("#grn_ttl").html(r_total.toFixed(0));
+	$("#grn_ttl_rqty").html(r_total_qty);
+	$("#value_receiving").html("Rs "+r_total.toFixed(2));
+}
+
+var dpi=0,dpe=0;
+function cloneinvoice()
+{
+	dpi++;
+	temp=$("#invoice_template tbody tr").html();
+	temp=temp.replace(/%dpi%/g,dpi);
+	$(".invoice_tab tbody").append("<tr>"+temp+"</tr>");
+	$(".datepick"+dpi).datepicker({minDate:0});
+	
+	$(".invoice_tab tbody tr").each(function(i,tr){
+		$('td:first',this).text(i*1+1);
+		$('.inv_inp_blk',this).select();
+	});
+}
+
+function removeInvoiceRow(ele)
+{
+	$(ele).parents('tr:first').remove();
+	
+	var ttl_prod_rows = $('#grn .datagrid tbody tr').length;
+	$(".invoice_tab tbody tr").each(function(i,tr){
+		$('td:first',this).text(i*1+1);
+		$('.inv_inp_blk',this).select();
+	});
+}
+
+var tabindex_cnt = 1;
+var ime=[];
+function loadpo(pids)
+{
+	$("#po_loading").show();
+	$(".venl"+$("#grn_vendor").val()).show();
+	$.post('<?=site_url('admin/jx_grn_load_po')?>',{p:pids},function(data){
+		
+		pois=$.parseJSON(data);
+		g_rows="";
+		dpes=[];
+		$.each(pois,function(i,poi){
+			dpe++;
+			grow=$("#grn_template .right table tbody").html();
+			need_scan = 0;
+			update_barcode='';
+			ime.push(poi.imei_nos);
+			if(poi.bcodes.length==0)
+				update_barcode="Add";
+			else
+			{
+				update_barcode="Update";
+				need_scan = 1;
+			}
+			var add_imei='';
+			var imei_out='';
+            var tot_rqty = parseInt(poi.order_qty)-parseInt(poi.received_qty);
+          
+			if(poi.is_serial_required==1)
+			{
+				add_imei=" no.";
+				grow=grow.replace(/imeisvvv/g,"imeis");
+				
+				imei_out = print_imei_inputs(tot_rqty,poi.product_id);
+            }
+             grow=grow.replace(/%imei_nos%/g,imei_out);
+             
+            var prodbcodes = '';
+				if(poi.barcode)
+					poi.bcodes.push(poi.barcode);
+				if(poi.bcodes.length)
+					prodbcodes += poi.bcodes.join(' barcode');
+					
+			if(need_scan)
+				prodbcodes +=' unsc ';
+			
+			grow=grow.replace(/%has_serialno%/g,poi.is_serial_required);
+			grow=grow.replace(/%brandid%/g,poi.brand_id);
+			grow=grow.replace(/%update_barcode%/g,update_barcode);
+			grow=grow.replace(/%add_serial%/g,add_imei);
+			grow=grow.replace(/%bcode%/g,prodbcodes);
+			grow=grow.replace(/%prodid%/g,poi.product_id);
+			grow=grow.replace(/%sno%/g,dpe);
+			grow=grow.replace(/%pid%/g,poi.po_id);
+			grow=grow.replace(/%name%/g,'<a href="'+site_url+'/admin/product/'+poi.product_id+'" target="_blank">'+poi.product_name+'</a>');
+			grow=grow.replace(/%qty%/g,poi.order_qty);
+			
+			grow=grow.replace(/%pqty%/g,tot_rqty);
+            grow=grow.replace(/%po_mrp%/g,poi.mrp);
+			grow=grow.replace(/%mrp%/g,poi.prod_mrp);
+			if(poi.is_serial_required*1)
+			{
+				grow=grow.replace(/%dp_price%/g,poi.dp_price);
+				grow=grow.replace(/%dp_price_inp%/g,'visible');
+			}
+			else
+			{
+				grow=grow.replace(/%dp_price%/g,0);
+				grow=grow.replace(/%dp_price_inp%/g,'hidden');
+			}
+				
+				
+			grow=grow.replace(/%price%/g,poi.purchase_price);
+			grow=grow.replace(/%rqty%/g,poi.received_qty);
+			
+			grow=grow.replace(/%ppur_price%/g,(poi.prod_mrp*poi.purchase_price/poi.mrp));
+			
+			if(poi.rbs)
+				grow=grow.replace(/==rbs==/g,poi.rbs);
+			else
+				grow=grow.replace(/==rbs==/g,'<option value="10">A11-Default Rack</option>');
+			
+			grow=grow.replace(/%dpe%/g,dpe);
+			offer=foc="NO";
+			if(poi.is_foc=="1")
+				foc="YES";
+			if(poi.has_offer=="1")
+				offer="YES";
+			grow=grow.replace(/%foc%/g,foc);
+			grow=grow.replace(/%offer%/g,offer);
+			g_rows=g_rows+grow;
+			$(".expdate"+dpe).datepicker({minDate:0});
+			dpes.push(".expdate"+dpe);
+			$("#grn_pids").append('<input type="hidden" name="poids[]" value="'+poi.po_id+'">');
+			added_pos.push(poi.po_id);
+		});
+		
+		//alert(ime);
+		$("#grn .datagrid tbody").append(g_rows);
+		
+		$(dpes.join(", ")).datepicker({minDate:0});
+		
+		reset_tabindex(0,function(){});
+		
+		$("#po_loading").hide();
+		$("#loadafterselect").show();
+		calc_rec_value();
+		
+		$('#grn .datagrid tbody tr').each(function(){
+			if($(this).attr('has_serialno') == 1)
+			
+				$('.imei_scanned_div',this).show();
+			else
+				$('.imei_scanned_div',this).hide();
+				
+		});
+		
+		scanned_rows();
+		Tipped.create('.addrow_tooltip',{
+			skin: 'black',
+			hook: 'topmiddle',
+			hideOn: false,
+			closeButton: false,
+			opacity: .5,
+			hideAfter: 200,
+		});
+		$('#grn .datagrid tbody tr:first').focus();
+		
+
+	});
+}
+
+function scanned_rows(prodid)
+{
+	$('.upd_mrp_radio'+prodid).attr('checked',true);
+	var ttl_prod_rows = $('#grn .datagrid tbody tr').length;
+	var ttl_prod_rows_scanned = 0;
+	$('#grn .datagrid tbody tr').each(function(){
+		if($(this).hasClass('processed_mode'))
+				ttl_prod_rows_scanned ++;
+				
+	});
+	
+	$('#summ_scanned_ttl_qty').text(ttl_prod_rows_scanned);
+	$('#summ_ttl_qty').text(ttl_prod_rows);
+}
+
+function reset_tabindex(row,cb)
+{
+	//$('span.name').parents('tr:first').attr('tabindex',tabindex_cnt);
+	$("#grn .datagrid tbody tr").each(function(){
+		// pr index 1 loc
+		// pr index 1 mrp
+		// pr index 1 inv qty 
+		// pr index 1 recv qty
+	
+		$('.add_barcode_wrap a',this).attr('tabindex',tabindex_cnt);
+		tabindex_cnt++;
+		
+		$('select.stkloc',this).attr('tabindex',tabindex_cnt);
+		tabindex_cnt++;
+		$('input.rqty',this).attr('tabindex',tabindex_cnt);
+		tabindex_cnt++;
+		$('input.iqty',this).attr('tabindex',tabindex_cnt);
+		tabindex_cnt++;
+		$('input.vat_prc',this).attr('tabindex',tabindex_cnt);
+		tabindex_cnt++;
+		$('input.prod_mrp',this).attr('tabindex',tabindex_cnt);
+		tabindex_cnt++;
+		$('input.upd_pmrp',this).attr('tabindex',tabindex_cnt);
+		tabindex_cnt++;
+		$('.validate_edit_mode',this).attr('tabindex',tabindex_cnt);
+		tabindex_cnt++;
+	
+	});
+	
+	$('.recv_qty_wrapper').attr('tabindex',tabindex_cnt);
+	tabindex_cnt++;
+	
+	return cb(row);
+}
+
+
+
+function reset_rec_f()
+{
+	v=parseInt($("#reset_rec").val());
+	if(isNaN(v))
+	{
+		alert("Not a number");return;
+	}
+	if(confirm("Are you sure want to reset all receiving qty to "+v+" ?"))
+		$("#apply_grn_form .rqty").val(v);
+	calc_rec_value();
+}
+
+function reset_inv_f()
+{
+	v=parseInt($("#reset_inv").val());
+	if(isNaN(v))
+	{
+		alert("Not a number");
+		return false;
+	}
+	if(confirm("Are you sure want to reset all invoice qty to "+v+" ?"))
+		$("#apply_grn_form .iqty").val(v).change();
+}
+
+
+function print_imei_inputs(tot_rqty,prodid) {
+	
+	var imei_out =' <ol>';
+    var c=0;
+    for(i=0;i<tot_rqty;i++) {
+            c +=1; //<input type="text" value="" id="aid_pid">
+            imei_out +='<li>';
+			imei_out +='	<input type="text" class="inp imei_input" placeholder="IMEI No" name="imei_input_'+prodid+'[]" id="imei_input_'+prodid+'_'+c+'"" onchange="return validate_imeino_input(this,'+prodid+');" value="">';
+			imei_out +='	<span class="imei_remove" onclick="remove_input_imei('+prodid+','+c+');" id="imei_remove_'+prodid+'_'+c+'">&nbsp; <img src="'+site_url+'/images/cross.png'+'"> </span>';
+			imei_out +='	<span class="append_imei_items_'+prodid+'_'+c+'"></span>';
+			imei_out +='</li>';                        
+    }
+    imei_out+='</ol><!--<span class="imei_add" onclick="add_input_imei('+prodid+');" id="imei_add_'+prodid+'">&nbsp; Add </span>-->';
+    return imei_out;
+}
+
+
+$('.prod_mrp').live('change',function(){
+	
+	var trele = $(this).parents('tr:first');
+	var prodid = $(this).attr('prodid')*1;
+	var mrp = $(this).val();
+	var dp_price = $(this).attr('dp_price')*1;
+	var prodid = $(this).attr('prodid')*1;
+	var pmrp = $(this).attr('pmrp')*1;
+	var tot_rqty=$('.rqty').val();
+	var upd_mrp_blk = trele.find('.upd_pmrp_blk');
+	var pprice = $('.pprice',trele).attr('p_price');
+	
+		if(dp_price != 0)
+		{
+			if(mrp <= dp_price)
+			{
+				$('.row_error_inp',trele).html('<span>MRP should be greater than DP price</span>');
+				$('.prod_mrp',trele).val("");
+				return false;
+			}
+		}
+		else
+		{
+			// compute new pprice
+			new_pprice = (mrp*pprice)/pmrp;
+			$('.pprice',trele).val(new_pprice);
+			calc_rec_value();
+		}
+		
+		if(pmrp != mrp)
+			upd_mrp_blk.show();
+		else
+			upd_mrp_blk.hide();
+});
+
+$('.upd_pmrp').unbind("change").live("change",function(){
+	var prodid = $(this).attr('prodid');
+	var cur_check_stat = $(this).attr('checked');
+		$('input.upd_mrp_chk'+prodid).parents('tr:first').find('.upd_mrp_flag').val("0");
+		$('input.upd_mrp_chk'+prodid).attr('checked', false);
+		
+		if(cur_check_stat)
+		{
+			$('.upd_pmrp_flag',$(this).parents('tr:first')).val("1");
+			$(this).attr('checked',true);
+		}
+	
+});
+$('.inv_inp_amount').live("change",function(){
+	
+	trele=$(this).parents('tr:first');
+	var amount = $(this).val();
+	$(this).val(amount);
+	if(amount < 0)
+	{
+		alert("Please give valid Invoice number")
+		$(this).val("");
+		$('.inv_inp_amount',trele).focus();
+	}
+	else
+	{
+		cal_invoice_value();
+	}
+});
+
+
+$('.bcode_upd').live('click',function(e){
+	var trEle = $(this).parents('tr:first');
+	var pid = $(this).attr('pid');
+	var prodid = $(this).attr('prodid');
+	var pname = $('span.name',trEle).text();
+	
+		$("#add_imei_dialog").hide();
+		$("#add_barcode_dialog").data('ref_tr',trEle).dialog('open');
+		$(".prod_title").html("Product : "+pname);
+		$("#abd_barcode").focus().val("");
+		$("#abd_pid").val(pid);
+		$("#abd_pid").data('prodid',prodid);
+		//$(".add_barcode_dialog").dialog('open');
+});
+
+var ttl_pbcode_row_scanned=0;
+
+
+/*
+$(".datagrid tr .prod_mrp,.datagrid tr .rqty,.datagrid tr .iqty,.datagrid tr .vat_prc,.datagrid tr .prod_mrp,.datagrid tr .rqty,.datagrid tr .bcode_upd").live('focus',function(){
+	var trEle = $(this).parents('tr:first');
+	var new_trEle = trEle.next();
+	if(!trEle.hasClass('edit_mode'))
+		{
+			if($('tr.edit_mode').length)
+			{
+				// check if all elements are entered for valid inputs
+				var pmrp = $('.edit_mode .prod_mrp').val()*1;
+				var tax_pct = $('.edit_mode .vat_prc').val()*1;
+				var piqty= $('.edit_mode .iqty').val()*1;
+				var prqty = $('.edit_mode .rqty').val()*1;
+				var has_bc = $('.edit_mode').attr('bcode').length;
+				var bc_scanned = $('.edit_mode').hasClass('bcode_scanned');
+				var pmrp_inp = $('.edit_mode .prod_mrp').val();
+				 	
+				if(isNaN(pmrp))
+				{
+					alert("Please enter Valid MRP");
+					$('.edit_mode .prod_mrp').select();
+				}else if(isNaN(prqty) || prqty.toString().indexOf('.') != -1 || prqty < 0)
+				{
+					alert("Please enter Valid Qty");
+					$('.edit_mode .rqty').select();
+				}else if(isNaN(piqty))
+				{
+					alert("Please enter Valid Qty");
+					$('.edit_mode .iqty').select();
+				}
+				else if(isNaN(tax_pct))
+				{
+					alert("Please enter Valid Tax");
+					$('.edit_mode .vat_prc').select();
+				}
+				else if(pmrp > 0 &&  prqty == 0 && piqty == 0 && tax_pct == 0)
+				{
+					alert("Please enter Valid Qty and Tax");
+					$('.edit_mode .rqty').select();
+				}				
+				else if((pmrp == 0 || pmrp == "") &&  (prqty > 0) && (piqty > 0) && (tax_pct > 0)) 
+				{
+					alert("Please enter Valid MRP");
+					$('.edit_mode .prod_mrp').select();
+				}else if(has_bc && !bc_scanned && (pmrp != "" || prqty > 0 || piqty > 0 || tax_pct > 0))
+				{
+					$('.edit_mode .bcode_upd').focus().trigger('click');
+				}
+				else if((has_bc || !has_bc) && bc_scanned && (pmrp == 0 || pmrp == "" || prqty == 0 || piqty == 0 || tax_pct == 0))
+				{
+					alert("Only barcode scanned.Please enter MRP and Qty");
+					$('.edit_mode .rqty').select();
+				}
+				else if((has_bc || has_bc=='') && !bc_scanned && (pmrp_inp != "" || prqty > 0 || piqty > 0 || tax_pct > 0))
+				{
+					if(!confirm("Warning: \r\nBarcode not available, do you want to proceed without barcode"))
+					{
+						$('.edit_mode .bcode_upd').focus();	
+					}
+					else
+					{
+						$('.edit_mode').addClass('processed_mode');
+						$('.edit_mode').removeClass('edit_mode');
+						$('.edit_mode .bcode_upd',new_trEle).focus();
+					}
+				}
+				else if(prqty==0 && (pmrp == 0 || pmrp == "") && piqty==0 && tax_pct==0 &&!bc_scanned && (has_bc || has_bc==''))
+				{
+					$('.edit_mode').removeClass('edit_mode');
+				}
+				else 
+				{
+					if(pmrp > 0 && prqty > 0 && piqty > 0 && tax_pct > 0 && ((has_bc && bc_scanned) || (has_bc == "" && !bc_scanned)))
+					{
+						$('.edit_mode').addClass('processed_mode');
+						$('.edit_mode').removeClass('edit_mode');	
+					}
+				}
+			}else
+			{
+				trEle.addClass('edit_mode');
+			}
+		}
+		scanned_rows();
+});
+
+
+
+$(".datagrid tr .prod_mrp").live('focusout',function(){
+	var trEle = $(this).parents('tr:first');
+	var new_trEle = trEle.next();
+	if(trEle.hasClass('edit_mode'))
+	{
+		// check if all elements are entered for valid inputs
+		var pmrp = $('.edit_mode .prod_mrp').val()*1;
+		var piqty= $('.edit_mode .iqty').val()*1;
+		var prqty = $('.edit_mode .rqty').val()*1;
+		var tax_pct = $('.edit_mode .vat_prc').val()*1;
+		var has_bc = $('.edit_mode').attr('bcode').length;
+		var bc_scanned = $('.edit_mode').hasClass('bcode_scanned');
+		
+		var pmrp_inp=$('.edit_mode .prod_mrp').val();
+		 	
+		if(isNaN(pmrp) || pmrp < 0)
+		{
+			alert("Please enter Valid MRP");
+			$('.edit_mode .prod_mrp').select();
+		}else if(isNaN(prqty))
+		{
+			alert("Please enter Valid Qty");
+			$('.edit_mode .rqty').select();
+		}
+		else if(isNaN(tax_pct))
+		{
+			alert("Please enter Valid Tax");
+			$('.edit_mode .vat_prc').select();
+		}
+		else if(pmrp > 0 &&  prqty == 0 && piqty == 0 && tax_pct == 0)
+		{
+			alert("Please enter Valid Qty and Tax");
+			$('.edit_mode .rqty').select();
+		}else if(pmrp > 0 &&  prqty > 0 && piqty == 0 && tax_pct == 0)
+		{
+			alert("Please enter Valid Qty and Tax");
+			$('.edit_mode .iqty').select();
+		}else if(pmrp > 0 &&  prqty > 0 && piqty > 0 && tax_pct == 0)
+		{
+			alert("Please enter Tax");
+			$('.edit_mode .vat_prc').select();
+		}else if((pmrp == 0 || pmrp == "") &&  (prqty > 0) && (piqty > 0) && (tax_pct > 0)) 
+		{
+			alert("Please enter Valid MRP");
+			$('.edit_mode .prod_mrp').select();
+		}else if(has_bc && !bc_scanned && (pmrp != "" || prqty > 0 || piqty > 0 || tax_pct > 0))
+		{
+			//alert("Barcode is not scanned");
+			$('.edit_mode .bcode_upd').focus().trigger('click');
+		}
+		else if((has_bc || !has_bc) && bc_scanned && (pmrp == 0 || pmrp == "" || prqty == 0 || piqty == 0 || tax_pct == 0))
+		{
+			alert("Only barcode scanned.Please enter MRP , Qty and Tax");
+			$('.edit_mode .rqty').select();
+			
+		}
+		else if((has_bc || has_bc=='') && !bc_scanned && (pmrp != 0 || prqty > 0 || piqty > 0 || tax_pct > 0))
+		{
+			if(!confirm("Warning: \r\nBarcode not available, do you want to proceed without barcode"))
+			{
+				$('.edit_mode .bcode_upd').focus();	
+			}
+			else
+			{
+				$('.edit_mode').addClass('processed_mode');
+				$('.edit_mode').removeClass('edit_mode');
+				$('.edit_mode .bcode_upd',new_trEle).focus();
+			}
+		}
+		else if(prqty==0 && (pmrp == 0 || pmrp == "") && tax_pct == 0 && piqty==0 &&  !bc_scanned && (has_bc || has_bc==''))
+		{
+			$('.edit_mode').removeClass('edit_mode');
+		}
+		else 
+		{
+			if(pmrp > 0 && prqty > 0 && piqty > 0 && tax_pct > 0 && ((has_bc && bc_scanned) || (has_bc == "" && !bc_scanned)))
+			{
+				$('.edit_mode').addClass('processed_mode');
+				$('.edit_mode').removeClass('edit_mode');	
+			}
+		}
+	}
+	scanned_rows();
+});
+
+*/
+
+
+$(".datagrid .iqty").live("change",function(){
+	trele=$(this).parents('tr:first');
+	var tot_rqty = $('.rqty',trele).val();
+	var tot_iqty = $(this).val();
+    	tot_iqty = isNaN(tot_iqty)?0:tot_iqty;
+    	$(this).val(tot_iqty);
+    	if(tot_iqty.toString().indexOf('.') != -1 || tot_iqty < 0)
+    	{
+    		alert("Please give valid Invoice quantity");
+    		$(this).val("0");
+    		return false;
+    	}else if(tot_iqty > tot_rqty)
+    	{
+    		if(confirm("Warning: \r\nInvoice Qty is greater than required Qty.Do you want to Proceed"))
+			{
+				$('.edit_mode .vat_prc').select();	
+			}
+			else
+			{
+				$(this).val("0").select();
+			}
+    	}
+    
+});
+
+$(".inv_inp_blk").live("change",function(){
+	trele=$(this).parents('tr:first');
+    	$(this).val(inv);
+    	if(inv.toString().indexOf('.') != -1 || inv < 0)
+    	{
+    		alert("Please give valid Invoice number");
+    		$(this).val("");
+    		return false
+    	}
+});
+
+$(".datagrid .rqty").live("change",function(){
+		
+		trele=$(this).parents('tr:first');
+		var tot_rqty = $(this).val();
+    	tot_rqty = isNaN(tot_rqty)?0:tot_rqty;
+    	if(tot_rqty.toString().indexOf('.') != -1 || tot_rqty < 0)
+    	{
+    		alert("Please give valid required Qty");
+    		$(this).val("0");
+    		$('.edit_mode .rqty').select();
+    	}
+    	else
+    	{
+    		 $(this).val(tot_rqty);
+    		 var prodid = $(this).attr('prodid');
+	  		 var brandid = $(this).attr('brandid');
+	    	 var pid = $(this).attr('pid');
+	    	 var trele=$(this).parents('tr:first');
+	   		 var inp_barcode=$("#abd_barcode",trele).val();
+	  		 has_serialno=trele.attr('has_serialno')*1;
+		     calc_rec_value();
+		   	//alert(tot_rqty);
+		   // var dlgData = $("#rqty_imei_blk_dlg").data("pro_data");
+		 	var imeilist_html ='';
+		 	var scanned_imei = '';
+	
+			var p_imei_scanned = $("#list_imei_"+prodid,trele).val();
+				p_imei_scanned_arr = p_imei_scanned.split(',');
+				//imeis.push(p_imei_scanned_arr);
+				
+				imeilist_html = '<ol>'; 
+		    	for(i=0;i<tot_rqty;i++) 
+		    	{
+		    			scanned_imei = ((p_imei_scanned_arr[i]==undefined)?"":p_imei_scanned_arr[i]);				    		
+						imeilist_html += '<li>';
+						imeilist_html += '	<input type="text" class="inp imei_input dlg_imei_inp" placeholder="" name="imei_input_'+prodid+'[]" id="imei_input_'+prodid+'_'+i+'" value="'+scanned_imei+'">';
+						imeilist_html += '	<span class="append_imei_items_'+prodid+'_'+i+'"></span>';
+						imeilist_html += '</li>';
+				}
+				imeilist_html+='</ol>';
+				
+		 	$('.imei_nos_dlg').html(imeilist_html);
+			$('.dlg_imei_inp:first').focus();
+		   
+		    if(has_serialno == 1)
+		     {
+		     	if(tot_rqty > 0)
+			     {
+			     	$('.view_imei',trele).show();
+			     }
+			     else
+			     {
+			     	$('.view_imei',trele).hide();
+			     }
+		     }else
+		     {
+		     	$('.view_imei',trele).hide();
+		     }
+			 
+		    if(has_serialno == 1)
+		    {
+		    	
+		    	var p_imei_scanned = $("#list_imei_"+prodid,trele).val();
+					p_imei_scanned_arr = p_imei_scanned.split(',');
+					
+		    		if($("#list_imei_"+prodid,trele).val().length > 0)	
+				{
+					if(!confirm("Warning:\nRequired quantity is changed. All scanned IMEIs will be cleared.\nDo you want to proceed?")) 
+		            { 
+		            	// rset scannred imei ttl
+			    		$(this).val(p_imei_scanned_arr.length);
+		            	return false; 
+		            }
+		            else
+		            {
+		            	$("#list_imei_"+prodid,trele).val("");
+		            }
+		            
+				}
+				if(tot_rqty != 0)
+		    		$('#rqty_imei_blk_dlg').data("pro_data",{'prodid': $(this).attr("prodid"),'brandid': $(this).attr("brandid"),'ttl_qty':tot_rqty,'pid' : $(this).attr('pid'),'ref_tr' : trele,'state':'add'}).dialog('open');
+		    	
+		    }
+		    
+		    if(isNaN(tot_rqty*1))
+			{
+				$('.prod_mrp',trele).attr('readonly',true).addClass('readonly');
+			}else
+			{
+				$('.prod_mrp',trele).attr('readonly',false).removeClass('readonly');
+				
+				//var iqty = $('.iqty',trele).val()*1;
+					$('.iqty',trele).val("0");
+			}
+    	}
+});
+
 
 $(function(){
 	
@@ -876,7 +1191,7 @@ $(function(){
 		var scan_status = $(".processed_mode").length;
 		if(scan_status == 0)
 		{
-			alert("Please scan atleast 1 products from List before Proceed");
+			alert("Please scan atleast 1 products from List before submitting");
 			flag=false;
 			return flag;
 		}	
@@ -912,11 +1227,11 @@ $(function(){
 			var inv_mrp =$('.inv_inp_amount',trele).val(); 
 		
 			
-			if(inv_no.length == 0 || inv_date.length == 0 || inv_mrp.length == 0 || isNaN(inv_mrp*1) || isNaN(inv_no*1))
+			if(inv_no.length == 0 || inv_date.length == 0 || inv_mrp.length == 0 || isNaN(inv_mrp*1))
 			{
 				alert("Please enter valid invoice Details");
 				
-				if(inv_no.length == 0 || isNaN(inv_no*1))
+				if(inv_no.length == 0)
 				{
 					$('.inv_inp_blk').select();
 					$('.inv_inp_blk').addClass('imei_error_inp');
@@ -1026,669 +1341,476 @@ $(function(){
 });
 
 
-function check_dup_imei(imei,prodid)
-{
+/** function to add more product rows */
+$('.add_product_row').live('click',function(e){
+	e.preventDefault();
 	
-	var imeis=[];
-	$(".imeis").each(function(){
-		c=$(this).val().split(",");
-		imeis=imeis.concat(c);
-	});
-	 
-	if($.inArray(imei,imeis)!=-1)
-	{
-		alert("This Serial no is already entered");return false;
-	}
-	return true;
-}
-
-$('.prod_mrp').live('change',function(){
-	var pmrp = $(this).val();
-	var dp_price = $(this).attr('dp_price')*1;
-	var prodid = $(this).attr('prodid')*1;
 	var trele = $(this).parents('tr:first');
-	if(dp_price != 0)
-	{
-		if(pmrp <= dp_price)
-		{
-			alert('MRP should be greater than DP price');
-			$('.prod_mrp',trele).val('');
-		}
-	}
-	var pmrp = $(this).attr('pmrp')*1;
-	var prodid = $(this).attr('prodid')*1;
-	var tot_rqty=$('.rqty').val();
+	var new_trele = trele.next();
+	var trele_html = trele.html();
+	var trele_bcode = trele.attr('bcode');
+	var trele_rqty = $('.rqty',trele).val()*1;
+	var trele_vat = $('.vat_prc',trele).val()*1;
+	var trele_iqty = $('.iqty',trele).val()*1;
+	var trele_mrp = $('.prod_mrp',trele).val()*1;
+	var trele_name = $('span.name',trele).text();
+	var trele_pmrp = $('.prod_mrp',trele).attr('pmrp')*1;
+	var trele_prodid = trele.attr('prodid');
+	var trele_oqty = trele.attr('qty');
+	var trele_dpprice = trele.attr('dp_price');
+	var trele_purprice = trele.attr('p_price');
+	var trele_brandid = trele.attr('brandid');;
+	var trele_pid = trele.attr('pid');
+	var trele_rackname = $('.stkloc').html();
+	var trele_has_serialno = trele.attr('has_serialno');
+	var trele_bcscanned = trele.hasClass('bcode_scanned');
+	//alert(trele_has_serialno);
+	
+	
+	process_edit_validation(function (stat) {
+		                if (stat) {
+		                    $('.edit_mode').removeClass('edit_mode');
+		                    
+							grow=$("#grn_template .right table tbody").html();
+							update_barcode='';
+							if(trele_bcode.length==0)
+								update_barcode="Add";
+							else
+							{
+								update_barcode="Update";
+							}
+							
+					      	grow=grow.replace(/%has_serialno%/g,trele_has_serialno);
+					      	grow=grow.replace(/%bcode%/g,trele_bcode);
+							grow=grow.replace(/%update_barcode%/g,update_barcode);
+							grow=grow.replace(/%prodid%/g,trele_prodid);
+							grow=grow.replace(/%name%/g,trele_name);
+							grow=grow.replace(/%pid%/g,trele_pid);
+							grow=grow.replace(/%qty%/g,trele_oqty);
+							
+							if(trele_has_serialno*1)
+							{
+								grow=grow.replace(/%dp_price%/g,trele_dpprice);
+								grow=grow.replace(/%dp_price_inp%/g,'visible');
+							}
+							else
+							{
+								grow=grow.replace(/%dp_price%/g,0);
+								grow=grow.replace(/%dp_price_inp%/g,'hidden');
+							}
+							
+							grow=grow.replace(/%mrp%/g,trele_pmrp);
+							
+							grow=grow.replace(/%price%/g,trele_purprice);
+							grow=grow.replace(/%rqty%/g,0);
+							grow=grow.replace(/%ppur_price%/g,trele_purprice);
+							grow=grow.replace(/%brandid%/g,trele_brandid);
+							
+							if(trele_rackname)
+								grow=grow.replace(/==rbs==/g,trele_rackname);
+							else
+								grow=grow.replace(/==rbs==/g,'<option value="10">A11-Default Rack</option>');
+							
+							trele.after(grow);
+							
+							var new_trele = trele.next();
+							$('span.name',new_trele).hide();
+							$('td:first',new_trele).html('');
+							
+							
+							if(trele_has_serialno != 1)
+								$('.imei_scanned_div',new_trele).hide();
+							else
+								$('.imei_scanned_div',new_trele).show();
+								
+							$('.pb_blk',new_trele).css('display','none');
+							$('.view_imei',new_trele).css('display','none');
+							$('.edit_mode',new_trele).removeClass('processed_mode');
+							$('td:last a',new_trele).html('<span style="margin:4px 0px 0px 14px;float:left"><img width="12px" height="12px" src="'+base_url+'/images/remove.png'+'"></span>').removeClass('add_product_row').addClass('remove_product_row');
+							
+							
+							$('.prod_mrp',new_trele).val('');
+							
+							$('.upd_pmrp',new_trele).attr('checked',false);
+								tabindex_cnt = 1;
+								reset_tabindex(new_trele,function(row){
+									scanned_rows();										
+									setTimeout(function(){
+										$('.rqty',row).trigger('blur');	
+									},200)
+								});
+						} else {
+    						return false;
+						}
+    			});	
+});
+
+
+$('.remove_product_row').live('click',function(e){
+	e.preventDefault();
 	var trele = $(this).parents('tr:first');
-	var upd_mrp_blk = trele.find('.upd_pmrp_blk');
-	
-	upd_mrp_blk.show();
-});
-
-$('.upd_pmrp').unbind("change").live("change",function(){
-	var prodid = $(this).attr('prodid');
-	var cur_check_stat = $(this).attr('checked');
-		$('input.upd_mrp_chk'+prodid).parents('tr:first').find('.upd_mrp_flag').val("0");
-		$('input.upd_mrp_chk'+prodid).attr('checked', false);
-		
-		if(cur_check_stat)
-		{
-			$('.upd_pmrp_flag',$(this).parents('tr:first')).val("1");
-			$(this).attr('checked',true);
-		}
-	
-});
-$('.inv_inp_amount').live("change",function(){
-	
-	trele=$(this).parents('tr:first');
-	var amount = $(this).val();
-	$(this).val(amount);
-	if(amount < 0)
-	{
-		alert("Please give valid Invoice number")
-		$(this).val("");
-		$('.inv_inp_amount',trele).focus();
-	}
-	else
-	{
-		cal_invoice_value();
-	}
-});
-
-function cal_invoice_value()
-{
-	inv_total=0;
-	$(".invoice_tab	 tbody tr").each(function(){
-		$i=$(this);
-		inv_inp_amount=parseFloat($(".inv_inp_amount",$i).val());
-		inv_inp_amount=isNaN(inv_inp_amount)?"":inv_inp_amount;
-		
-		inv_total +=inv_inp_amount;
-	});
-	$("#invoice_ttl_value").html(inv_total);
-}
-
-
-function calc_rec_value()
-{
-	r_total=0;
-	r_total_qty = 0;
-	$("#grn .datagrid tbody tr").each(function(){
-		$p=$(this);
-		var prodid = $('input[name="prodid[]"]',$p).val();
-		rqty=parseInt($(".rqty",$p).val());
-		rqty=isNaN(rqty)?"0":rqty;
-		pprice=parseFloat($(".pprice",$p).val());
-		pprice=isNaN(pprice)?"0":pprice;
-		
-		//var trEle = $(this).next().parents('tr:first');
-		$('.subttl_'+prodid,$p).val(rqty*pprice);
-		
-		r_total+=rqty*pprice;
-		r_total_qty += rqty;
-		
-		if(!$.trim($('.scan_pbarcode',this).val()))
-		{
-			if(rqty == 0)
-			{	
-				if($(this).hasClass('unsc'))
-				{
-					$(this).addClass('revscan').removeClass('unsc');
-				}
-			}else
-			{
-				if($(this).hasClass('revscan'))
-				{
-					$(this).addClass('unsc').removeClass('revscan');
-				}
-			}
-		}
-		
-	});
-	$("#grn_ttl_value").html("Rs "+r_total.toFixed(2));
-	$("#grn_ttl").html(r_total.toFixed(0));
-	$("#grn_ttl_rqty").html(r_total_qty);
-	$("#value_receiving").html("Rs "+r_total.toFixed(2));
-}
-
-var dpi=0,dpe=0;
-function cloneinvoice()
-{
-	dpi++;
-	temp=$("#invoice_template tbody tr").html();
-	temp=temp.replace(/%dpi%/g,dpi);
-	$(".invoice_tab tbody").append("<tr>"+temp+"</tr>");
-	$(".datepick"+dpi).datepicker({minDate:0});
-	
-	$(".invoice_tab tbody tr").each(function(i,tr){
-		$('td:first',this).text(i*1+1);
-	})
-	
-}
-
-function removeInvoiceRow(ele)
-{
-	var ttl_prod_rows = $('#grn .datagrid tbody tr').length;
-	$(".invoice_tab tbody tr").each(function(i,tr){
-		$('td:first',this).text(i*1+1);
-	});
-}
-
-var tabindex_cnt = 1;
-var ime=[];
-function loadpo(pids)
-{
-	$("#po_loading").show();
-	$(".venl"+$("#grn_vendor").val()).show();
-	$.post('<?=site_url('admin/jx_grn_load_po')?>',{p:pids},function(data){
-		
-		pois=$.parseJSON(data);
-		g_rows="";
-		dpes=[];
-		$.each(pois,function(i,poi){
-			dpe++;
-			grow=$("#grn_template .right table tbody").html();
-			need_scan = 0;
-			update_barcode='';
-			ime.push(poi.imei_nos);
-			if(poi.bcodes.length==0)
-				update_barcode="Add";
-			else
-			{
-				update_barcode="Update";
-				need_scan = 1;
-			}
-			var add_imei='';
-			var imei_out='';
-            var tot_rqty = parseInt(poi.order_qty)-parseInt(poi.received_qty);
-          
-			if(poi.is_serial_required==1)
-			{
-				add_imei=" no.";
-				grow=grow.replace(/imeisvvv/g,"imeis");
-				
-				imei_out = print_imei_inputs(tot_rqty,poi.product_id);
-            }
-             grow=grow.replace(/%imei_nos%/g,imei_out);
-             
-            var prodbcodes = '';
-				if(poi.barcode)
-					poi.bcodes.push(poi.barcode);
-				if(poi.bcodes.length)
-					prodbcodes += poi.bcodes.join(' barcode');
-					
-			if(need_scan)
-				prodbcodes +=' unsc ';
-			
-			grow=grow.replace(/%has_serialno%/g,poi.is_serial_required);
-			grow=grow.replace(/%update_barcode%/g,update_barcode);
-			grow=grow.replace(/%add_serial%/g,add_imei);
-			grow=grow.replace(/%bcode%/g,prodbcodes);
-			grow=grow.replace(/%prodid%/g,poi.product_id);
-			grow=grow.replace(/%sno%/g,dpe);
-			grow=grow.replace(/%pid%/g,poi.po_id);
-			grow=grow.replace(/%name%/g,'<a href="'+site_url+'/admin/product/'+poi.product_id+'" target="_blank">'+poi.product_name+'</a>');
-			grow=grow.replace(/%qty%/g,poi.order_qty);
-			
-			grow=grow.replace(/%pqty%/g,tot_rqty);
-                        
-			grow=grow.replace(/%po_mrp%/g,poi.mrp);
-			
-			grow=grow.replace(/%mrp%/g,poi.prod_mrp);
-			if(poi.is_serial_required*1)
-			{
-				grow=grow.replace(/%dp_price%/g,poi.dp_price);
-				grow=grow.replace(/%dp_price_inp%/g,'visible');
-			}
-			else
-			{
-				grow=grow.replace(/%dp_price%/g,0);
-				grow=grow.replace(/%dp_price_inp%/g,'hidden');
-			}
-				
-				
-			grow=grow.replace(/%price%/g,poi.purchase_price);
-			grow=grow.replace(/%rqty%/g,poi.received_qty);
-			
-			grow=grow.replace(/%ppur_price%/g,(poi.prod_mrp*poi.purchase_price/poi.mrp));
-			
-			if(poi.rbs)
-				grow=grow.replace(/==rbs==/g,poi.rbs);
-			else
-				grow=grow.replace(/==rbs==/g,'<option value="10">A11-Default Rack</option>');
-			
-			grow=grow.replace(/%dpe%/g,dpe);
-			offer=foc="NO";
-			if(poi.is_foc=="1")
-				foc="YES";
-			if(poi.has_offer=="1")
-				offer="YES";
-			grow=grow.replace(/%foc%/g,foc);
-			grow=grow.replace(/%offer%/g,offer);
-			g_rows=g_rows+grow;
-			$(".expdate"+dpe).datepicker({minDate:0});
-			dpes.push(".expdate"+dpe);
-			$("#grn_pids").append('<input type="hidden" name="poids[]" value="'+poi.po_id+'">');
-			added_pos.push(poi.po_id);
-		});
-		
-		//alert(ime);
-		$("#grn .datagrid tbody").append(g_rows);
-		
-		$(dpes.join(", ")).datepicker({minDate:0});
-		
-		reset_tabindex(0,function(){});
-		
-		$("#po_loading").hide();
-		$("#loadafterselect").show();
-		calc_rec_value();
-		
-		$('#grn .datagrid tbody tr').each(function(){
-			if($(this).attr('has_serialno') == 1)
-			
-				$('.imei_scanned_div',this).show();
-			else
-				$('.imei_scanned_div',this).hide();
-				
-		});
-		
-		scanned_rows();
-		Tipped.create('.addrow_tooltip',{
-			skin: 'black',
-			hook: 'topmiddle',
-			hideOn: false,
-			closeButton: false,
-			opacity: .5,
-			hideAfter: 200,
-		});
-		$('#grn .datagrid tbody .rqty:first').select();
-
-	});
-}
-
-function scanned_rows(prodid)
-{
-	$('.upd_mrp_radio'+prodid).attr('checked',true);
-	var ttl_prod_rows = $('#grn .datagrid tbody tr').length;
-	var ttl_prod_rows_scanned = 0;
-	$('#grn .datagrid tbody tr').each(function(){
-		if($(this).hasClass('processed_mode'))
-				ttl_prod_rows_scanned ++;
-				
-	});
-	
-	$('#summ_scanned_ttl_qty').text(ttl_prod_rows_scanned);
-	$('#summ_ttl_qty').text(ttl_prod_rows);
-}
-
-function reset_tabindex(row,cb)
-{
-	//$('span.name').parents('tr:first').attr('tabindex',tabindex_cnt);
-	$("#grn .datagrid tbody tr").each(function(){
-		// pr index 1 loc
-		// pr index 1 mrp
-		// pr index 1 inv qty 
-		// pr index 1 recv qty
-	
-		$('.add_barcode_wrap a',this).attr('tabindex',tabindex_cnt);
-		tabindex_cnt++;
-		
-		$('select.stkloc',this).attr('tabindex',tabindex_cnt);
-		tabindex_cnt++;
-		$('input.rqty',this).attr('tabindex',tabindex_cnt);
-		tabindex_cnt++;
-		$('input.iqty',this).attr('tabindex',tabindex_cnt);
-		tabindex_cnt++;
-		$('input.prod_mrp',this).attr('tabindex',tabindex_cnt);
-		tabindex_cnt++;
-		$('input.upd_pmrp',this).attr('tabindex',tabindex_cnt);
-		tabindex_cnt++;
-		$('.validate_edit_mode',this).attr('tabindex',tabindex_cnt);
-		tabindex_cnt++;
-	
-	});
-	
-	return cb(row);
-}
-
-function reset_rec_f()
-{
-	v=parseInt($("#reset_rec").val());
-	if(isNaN(v))
-	{
-		alert("Not a number");return;
-	}
-	if(confirm("Are you sure want to reset all receiving qty to "+v+" ?"))
-		$("#apply_grn_form .rqty").val(v);
-	calc_rec_value();
-}
-
-function reset_inv_f()
-{
-	v=parseInt($("#reset_inv").val());
-	if(isNaN(v))
-	{
-		alert("Not a number");
-		return false;
-	}
-	if(confirm("Are you sure want to reset all invoice qty to "+v+" ?"))
-		$("#apply_grn_form .iqty").val(v).change();
-}
-
-$('.bcode_upd').live('click',function(e){
-	var trEle = $(this).parents('tr:first');
-	var pid = $(this).attr('pid');
-	var prodid = $(this).attr('prodid');
-		
-		$("#add_imei_dialog").hide();
-		$("#add_barcode_dialog").data('ref_tr',trEle).dialog('open');
-		$("#abd_barcode").focus().val("");
-		$("#abd_pid").val(pid);
-		$("#abd_pid").data('prodid',prodid);
-		//$(".add_barcode_dialog").dialog('open');
-});
-
-function show_add_barcode(pid,prodid)
-{
-	$("#add_imei_dialog").hide();
-	$("#add_barcode_dialog").dialog('open');
-	$("#abd_barcode").focus().val("");
-	$("#abd_pid").val(pid);
-	$("#abd_pid").data('prodid',prodid);
-	//$(".add_barcode_dialog").dialog('open');
-}
-
-function print_imei_inputs(tot_rqty,prodid) {
-	
-	var imei_out =' <ol>';
-    var c=0;
-    for(i=0;i<tot_rqty;i++) {
-            c +=1; //<input type="text" value="" id="aid_pid">
-            imei_out +='<li>';
-			imei_out +='	<input type="text" class="inp imei_input" placeholder="IMEI No" name="imei_input_'+prodid+'[]" id="imei_input_'+prodid+'_'+c+'"" onchange="return validate_imeino_input(this,'+prodid+');" value="">';
-			imei_out +='	<span class="imei_remove" onclick="remove_input_imei('+prodid+','+c+');" id="imei_remove_'+prodid+'_'+c+'">&nbsp; <img src="'+site_url+'/images/cross.png'+'"> </span>';
-			imei_out +='	<span class="append_imei_items_'+prodid+'_'+c+'"></span>';
-			imei_out +='</li>';                        
-    }
-    imei_out+='</ol><!--<span class="imei_add" onclick="add_input_imei('+prodid+');" id="imei_add_'+prodid+'">&nbsp; Add </span>-->';
-    return imei_out;
-}
-
-var ttl_pbcode_row_scanned=0;
-$(".datagrid tr .prod_mrp,.datagrid tr .rqty,.datagrid tr .iqty,.datagrid tr .prod_mrp,.datagrid tr .rqty,.datagrid tr .bcode_upd").live('focus',function(){
-	var trEle = $(this).parents('tr:first');
-	var new_trEle = trEle.next();
-	if(!trEle.hasClass('edit_mode'))
-		{
-			if($('tr.edit_mode').length)
-			{
-				// check if all elements are entered for valid inputs
-				var pmrp = $('.edit_mode .prod_mrp').val()*1;
-				var piqty= $('.edit_mode .iqty').val()*1;
-				var prqty = $('.edit_mode .rqty').val()*1;
-				var has_bc = $('.edit_mode').attr('bcode').length;
-				var bc_scanned = $('.edit_mode').hasClass('bcode_scanned');
-				 	
-				if(isNaN(pmrp))
-				{
-					alert("Please enter Valid MRP");
-					$('.edit_mode .prod_mrp').select();
-				}else if(isNaN(prqty) || prqty.toString().indexOf('.') != -1 || prqty < 0)
-				{
-					alert("Please enter Valid Qty");
-					$('.edit_mode .rqty').select();
-				}else if(isNaN(piqty))
-				{
-					alert("Please enter Valid Qty");
-					$('.edit_mode .iqty').select();
-				}
-				else if(pmrp > 0 &&  prqty == 0 && piqty == 0)
-				{
-					alert("Please enter Valid Qty");
-					$('.edit_mode .rqty').select();
-				}				
-				else if((pmrp == 0 || pmrp == "") &&  (prqty > 0) && (piqty > 0)) 
-				{
-					alert("Please enter Valid MRP");
-					$('.edit_mode .prod_mrp').select();
-				}else if(has_bc && !bc_scanned && (pmrp != "" || prqty > 0 || piqty > 0 ))
-				{
-					alert("Barcode is not scanned");
-					$('.edit_mode .bcode_upd').focus();
-				}
-				else if((has_bc || !has_bc) && bc_scanned && (pmrp == 0 || pmrp == "" || prqty == 0 || piqty == 0 ))
-				{
-					alert("Only barcode scanned.Please enter MRP and Qty");
-					$('.edit_mode .rqty').select();
-					
-				}
-				
-				else if((has_bc || has_bc=='') && !bc_scanned && (pmrp != "" || prqty > 0 || piqty > 0 ))
-				{
-					if(!confirm("Warning: \r\nBarcode not available, do you want to proceed without barcode"))
-					{
-						$('.edit_mode .bcode_upd').focus();	
-					}
-					else
-					{
-						$('.edit_mode').addClass('processed_mode');
-						$('.edit_mode').removeClass('edit_mode');
-						$('.rqty',new_trEle).select();
-					}
-				}
-				else if(prqty==0 && (pmrp == 0 || pmrp == "") && piqty==0 && !bc_scanned && (has_bc || has_bc==''))
-				{
-					$('.edit_mode').removeClass('edit_mode');
-				}
-				else 
-				{
-						
-					$('.edit_mode').addClass('processed_mode');
-					$('.edit_mode').removeClass('edit_mode');
-				}
-			}else
-			{
-				trEle.addClass('edit_mode');
-			}
-		}
-		scanned_rows();
-});
-
-
-
-$(".datagrid tr .prod_mrp").live('focusout',function(){
-	var trEle = $(this).parents('tr:first');
-	var new_trEle = trEle.next();
-	if(trEle.hasClass('edit_mode'))
-	{
-		// check if all elements are entered for valid inputs
-		var pmrp = $('.edit_mode .prod_mrp').val()*1;
-		var piqty= $('.edit_mode .iqty').val()*1;
-		var prqty = $('.edit_mode .rqty').val()*1;
-		var has_bc = $('.edit_mode').attr('bcode').length;
-		var bc_scanned = $('.edit_mode').hasClass('bcode_scanned');
-		 	
-		if(isNaN(pmrp) || pmrp < 0)
-		{
-			alert("Please enter Valid MRP");
-			$('.edit_mode .prod_mrp').select();
-		}else if(isNaN(prqty))
-		{
-			alert("Please enter Valid Qty");
-			$('.edit_mode .rqty').select();
-		}
-		else if(pmrp > 0 &&  prqty == 0 && piqty == 0)
-		{
-			alert("Please enter Valid Qty");
-			$('.edit_mode .rqty').select();
-		}else if((pmrp == 0 || pmrp == "") &&  (prqty > 0) && (piqty > 0)) 
-		{
-			alert("Please enter Valid MRP");
-			$('.edit_mode .prod_mrp').select();
-		}else if(has_bc && !bc_scanned && (pmrp != "" || prqty > 0 || piqty > 0 ))
-		{
-			alert("Barcode is not scanned");
-			$('.edit_mode .bcode_upd').focus();
-		}
-		else if((has_bc || !has_bc) && bc_scanned && (pmrp == 0 || pmrp == "" || prqty == 0 || piqty == 0 ))
-		{
-			alert("Only barcode scanned.Please enter MRP and Qty");
-			$('.edit_mode .rqty').select();
-			
-		}
-		else if((has_bc || has_bc=='') && !bc_scanned && (pmrp != "" || prqty > 0 || piqty > 0 ))
-		{
-			if(!confirm("Warning: \r\nBarcode not available, do you want to proceed without barcode"))
-			{
-				$('.edit_mode .bcode_upd').focus();	
-			}
-			else
-			{
-				$('.edit_mode').addClass('processed_mode');
-				$('.edit_mode').removeClass('edit_mode');
-				$('.rqty',new_trEle).select();
-			}
-		}
-		else if(prqty==0 && (pmrp == 0 || pmrp == "") && piqty==0 && !bc_scanned && (has_bc || has_bc==''))
-		{
-			$('.edit_mode').removeClass('edit_mode');
-		}
-		else 
-		{
-				
-			$('.edit_mode').addClass('processed_mode');
-			$('.edit_mode').removeClass('edit_mode');
-		}
-	}
+	$(this).parents('tr:first').fadeOut().remove();
+	trele.addClass('edit_mode');
 	scanned_rows();
 });
 
-
-$(".datagrid .iqty").live("change",function(){
-	trele=$(this).parents('tr:first');
-	var tot_rqty = $('.rqty',trele).val();
-	var tot_iqty = $(this).val();
-    	tot_iqty = isNaN(tot_iqty)?0:tot_iqty;
-    	$(this).val(tot_iqty);
-    	if(tot_iqty.toString().indexOf('.') != -1 || tot_iqty < 0)
-    	{
-    		alert("Please give valid Invoice quantity");
-    		$(this).val("0");
-    		return false;
-    	}else if(tot_iqty > tot_rqty)
-    	{
-    		if(confirm("Warning: \r\nInvoice Qty is greater than required Qty.Do you want to Proceed"))
+$('#rqty_imei_blk_dlg form').submit(function(){
+			
+	var dlgData = $("#rqty_imei_blk_dlg").data("pro_data");
+	ref_trele = dlgData.ref_tr;
+	prodid = dlgData.prodid;
+	brandid = dlgData.brandid;
+	pid = dlgData.pid;
+	tot_rqty =$('.rqty',ref_trele).val();
+	
+	$('.imei_error_inp').removeClass('imei_error_inp');
+	// check if rty == imei input boxes 
+	if($('.dlg_imei_inp').length != tot_rqty)
+	{
+		alert("Require qty is not matching with total imei inputs ");
+		return false;
+	}
+	
+	var scanned_imei_nos = new Array();
+	// check ig all imei inp is entered 
+	$('.dlg_imei_inp').each(function(){
+		var scn_imei = $.trim($(this).val());
+		$(this).val(scn_imei);
+		if(scn_imei == "")
+		{
+			$(this).addClass('imei_error_inp');
+		}
+		else
+		{	
+			if($.inArray(scn_imei,scanned_imei_nos) != -1)
 			{
-				$('.edit_mode .prod_mrp').select();	
+				alert("Please enter valid imei/serialnos :"+scn_imei);
+				$(this).addClass('imei_error_inp');
 			}
 			else
 			{
-				$(this).val("0");
+				$(this).attr('scninp_imei','imei_'+scn_imei);
+				scanned_imei_nos.push(scn_imei);
+				//alert(scanned_imei_nos);
 			}
-    	}
-    
-});
-
-$(".inv_inp_blk").live("change",function(){
-	trele=$(this).parents('tr:first');
-    	$(this).val(inv);
-    	if(inv.toString().indexOf('.') != -1 || inv < 0)
-    	{
-    		alert("Please give valid Invoice number");
-    		$(this).val("");
-    		return false
-    	}
-});
-
-$(".datagrid .rqty").live("change",function(){
-		trele=$(this).parents('tr:first');
-		var tot_rqty = $(this).val();
-    	tot_rqty = isNaN(tot_rqty)?0:tot_rqty;
-    	if(tot_rqty.toString().indexOf('.') != -1 || tot_rqty < 0)
-    	{
-    		alert("Please give valid required Qty");
-    		$(this).val("0");
-    		$('.edit_mode .rqty',trele).select();
-    	}
-    	else
-    	{
-    		$(this).val(tot_rqty);
-    
-	  		 var prodid = $(this).attr('prodid');
-	    	 var pid = $(this).attr('pid');
-	    	 var trele=$(this).parents('tr:first');
-	   		 var inp_barcode=$("#abd_barcode",trele).val();
-	    
-	  		has_serialno=trele.attr('has_serialno')*1;
-		    calc_rec_value();
-		     if(has_serialno == 1)
-		     {
-		     	if(tot_rqty > 0)
-			     {
-			     	$('.view_imei',trele).show();
-			     }
-			     else
-			     {
-			     	$('.view_imei',trele).hide();
-			     }
-		     }else
-		     {
-		     	$('.view_imei',trele).hide();
-		     }
-			 
-		    if(has_serialno == 1)
-		    {
-		    	
-		    	var p_imei_scanned = $("#list_imei_"+prodid,trele).val();
-					p_imei_scanned_arr = p_imei_scanned.split(',');
-					
-		    		if($("#list_imei_"+prodid,trele).val().length > 0)	
-				{
-					if(!confirm("Warning:\nRequired quantity is changed. All scanned IMEIs will be cleared.\nDo you want to proceed?")) 
-		            { 
-		            	// rset scannred imei ttl
-			    		$(this).val(p_imei_scanned_arr.length);
-		            	return false; 
-		            }
-		            else
-		            {
-		            	$("#list_imei_"+prodid,trele).val("");
-		            }
-		            
-				}
-				if(tot_rqty != 0)
-		    		$('#rqty_imei_blk_dlg').data("pro_data",{'prodid': $(this).attr("prodid"),'ttl_qty':tot_rqty,'pid' : $(this).attr('pid'),'ref_tr' : trele,'state':'add'}).dialog('open');
-		    	
-		    }
-		    
-		    if(isNaN(tot_rqty*1))
+		}
+	});
+	
+	if($('.imei_error_inp').length)
+	{
+		//alert("Please enter valid imei/serialnos : ");
+		return false;
+	}
+	
+	if(scanned_imei_nos.length == tot_rqty) 
+	{
+		$.post(site_url+'/admin/jx_chkimeiforgrn',{'imeino':scanned_imei_nos.join(","),'prodid':prodid,'brandid':brandid},function(resp){
+			if(resp.status == 'error')
 			{
-				$('.prod_mrp',trele).attr('readonly',true).addClass('readonly');
+				var imei_dup_list=[];
+				if(resp.duplicate != undefined)
+				{
+					$.each(resp.duplicate,function(a,dup_imei){
+						$('input[scninp_imei="imei_'+dup_imei+'"]').addClass('imei_error_inp');
+						imei_dup_list.push(dup_imei);
+					});
+				}
+				alert(imei_dup_list+" IMEI serial number already exists");
+				return false;
 			}else
 			{
-				$('.prod_mrp',trele).attr('readonly',false).removeClass('readonly');
+				var imei_nos=resp.imeinos.split(",");
+				var imei_sort=imei_nos.sort();
 				
-				//var iqty = $('.iqty',trele).val()*1;
-					$('.iqty',trele).val("0");
+				var imei_sort_result=[];
+					for(var i=0;i<imei_nos.length - 1;i++)
+					{
+						if (imei_sort[i + 1] == imei_sort[i]) 
+						{
+					    	imei_sort_result.push(imei_sort[i]); 
+					     }
+					}
+				
+					if(imei_sort_result.length > 0 )
+					{
+						alert((imei_sort_result.join(","))+" serial number is repeated");
+					}
+					else
+					{
+						$("#imei_pid").val(pid);
+						$("#imei_pid").data('prodid',prodid);
+						
+						// added scanned imeis to hidden input 
+						$("#list_imei_"+prodid,ref_trele).val(resp.imeinos);
+						
+						if($("#list_imei_"+prodid,ref_trele).val())
+						{
+							//ttl_imei_row_scanned++;
+							//$('.imei'+prodid,ref_trele).parents('tr:first').addClass('bcode_scanned');
+							$('.imei_scanned_status',ref_trele).addClass('active').html("YES");
+							$('.imei_scanned_status',ref_trele).show();
+						}else
+						{
+							//$('.imei'+prodid,ref_trele).parents('tr:first').removeClass('bcode_scanned');
+						}
+					}
 			}
-    	}
+		},'json');
+	}
+	$("#rqty_imei_blk_dlg").dialog('close');
+	return false;
 });
 
-var imeis_dump=[];
+	$('#add_barcode_dialog form').submit(function(){
+		var dlgEle = $('#add_barcode_dialog');
+		var ref_trele = dlgEle.data('ref_tr');
+		var b_code=$("#add_barcode_dialog",this);
+		var inp_barcode=$("#abd_barcode").val();
+		var ttl_qty=$('.rqty',ref_trele).val();
+			//var product_name=$('.name',trele).text();
+			
+			if(isNaN(inp_barcode))
+			{
+				$('.error_inp',dlgEle).html("Please enter valid Barcode");
+				return false;
+			}else
+			{		
+				dlgEle.dialog('close');
+					
+				var chk_prodid = $('#abd_pid').data('prodid');
+					$('.pbcodecls'+chk_prodid,ref_trele).val($('#abd_barcode').val());
+					$("#add_barcode_dialog").hide();
+					
+					$('.view_barcode'+chk_prodid,ref_trele).html($('#abd_barcode').val());
+					if($('#abd_barcode').val())
+					{
+						$('.pbcodecls'+chk_prodid,ref_trele).parents('tr:first').addClass('bcode_scanned');
+						$('.bcode_scanned_status',ref_trele).addClass('active').html("YES");
+						$('.bcode_scanned_status',ref_trele).show();
+						$('.pb_blk',ref_trele).show();
+					}else
+					{
+						$('.pbcodecls'+chk_prodid,ref_trele).parents('tr:first').removeClass('bcode_scanned');
+					}
+							
+					$('.pbcodecls'+chk_prodid,ref_trele).parents('tr:first').removeClass('lastScanned').removeClass('unsc');
+						setTimeout(function(){
+							process_edit_validation(function (stat) {
+				                if (stat) {
+				                    $('.edit_mode').removeClass('edit_mode');
+				                } else {
+				                    return false;
+				                }
+				            });	
+					},300)
+			 }
+		return false;
+	});
+	
+	$('#add_barcode_dialog').dialog({
+		modal:true,
+		autoOpen:false,
+		width:350,
+		height:150,
+		autoResize:true,
+		open:function(){
+		dlg = $(this);
+	}
+});
 
-function validate_imeino_input(e,prodid) 
-{
-    var imei_no=$(e).val();
-	    if(isNaN(imei_no)) 
+$('#rqty_imei_blk_dlg').dialog({
+		modal:true,
+		autoOpen:false,
+		width:350,
+		height:250,
+		autoResize:true,
+		open:function(){
+		dlg = $(this);
+	}
+});
+
+$('.dlg_imei_inp').live('keypress',function(e){
+	if((e.keyCode || e.which) == 13)
+	{
+		if($(this).parent().next().find('.dlg_imei_inp') != undefined)
+			$(this).parent().next().find('.dlg_imei_inp').focus();
+		return true;
+	}
+})
+
+$('.show').click(function(){
+	var pos=[];
+	//$('.imei_nos').hide();p.po_id
+	//alert(pos);
+	
+	$('.ajax_loadresult a.selected').each(function(){
+		pos.push($(this).attr('poid'));
+	});
+	
+	if(pos.length)
+	{
+		loadpo(pos);
+		var pos_arr=[];
+		$.post('<?=site_url('admin/ven_list_bypo')?>',{pos:pos},function(data){
+			$('.page_title').html("Stock Intake for <span class='ven_title_wrap'>"+data.ven_det.vendor_name+"</span>");
+			
+			var pos_arr ="";
+			
+			$.each(data.po_id_list,function(i,p){
+				pos_arr+="<a target='_blank' href='"+site_url+'/admin/viewpo/'+p+"'>"+p+"</a>";
+				if(data.po_id_list.length-1 != i)
+				{
+					pos_arr+=",";	
+				}
+			});
+			
+			$('.selected_po_list').html("<span style='float:left'>Selected PO Ids : "+pos_arr+"</span><span style='float:right'>Total PO Value : Rs."+data.ven_det.ttl+"</span>");
+		},'json');
+		
+		$('.show').hide();
+		$('.selected_po_list').show();
+		$('#apply_grn_form').show();
+		$('.barcode_fixed_wrap').show();
+		 $('#grn_color_legends').show();
+		$('.jq_alpha_sort_wrap').hide();
+		$('#scanned_summ').show();
+		$('#grn span.name:first').focus();
+		$('.cancel_stock').show();
+		$('.inv_inp_blk').html("");
+		$('.invamount').html("");
+		$('.invdate').html("");
+	}
+	else
+	{
+		alert('Please Choose PO before Proceed');
+		return false;
+	}
+	
+});
+
+$('.view_imei').live('click',function(){
+	//tot_rqty=$('.rqty',$(this).parent()).val();
+	 var trele=$(this).parents('tr:first');
+	 var tot_rqty=$('.rqty',trele).val();
+	$('#rqty_imei_blk_dlg').data("pro_data",{'prodid': $(this).attr("prodid"),'brandid':$(this).attr("brandid"),'ttl_qty':tot_rqty,'ref_tr' : trele,'state':'edit'}).dialog('open');
+	
+});
+
+
+function process_edit_validation(cb) {
+
+    // extra check to check if validation need to be done     
+    if (!$('.edit_mode').length) return cb(false);
+    var edt_trele = $('#grn tr.edit_mode');
+    $('#grn tr .error_inp').removeClass('error_inp');
+    var rqty = $('.rqty', edt_trele).val() * 1;
+    var iqty = $('.iqty', edt_trele).val() * 1;
+    var ivat = $('.vat_prc', edt_trele).val() * 1;
+    var imrp = $('.prod_mrp', edt_trele).val() * 1;
+    var has_bc = $('.bcode_upd', edt_trele).attr('bcode').length;
+	var bc_scanned = edt_trele.hasClass('bcode_scanned');
+	
+		if(bc_scanned) 
+		{
+			if (rqty) {
+		        if (iqty) {
+		            if (ivat) {
+		                if (imrp) {
+		                	edt_trele.addClass('processed_mode');
+		                } else {
+		                    $('.prod_mrp', edt_trele).addClass('error_inp');
+		                }
+		            } else {
+		                $('.vat_prc', edt_trele).addClass('error_inp');
+		            }
+		        } else {
+		            $('.iqty', edt_trele).addClass('error_inp');
+		        }
+		    } else {
+		        $('.rqty', edt_trele).addClass('error_inp');
+		    }
+	    }else
 	    {
-	        alert("Only Numbers allowed"); $(e).focus().val(""); 
-	        return false;
+	    	$('.bcode_upd', edt_trele).addClass('error_inp');
 	    }
-	    imeis_dump.push(imei_no);
+    
+    jump_torow = 1;
+    if ($('.error_inp', edt_trele).length) {
+        if ((bc_scanned?1:0)+rqty + iqty + ivat + imrp != 0) {
+            jump_torow = 0;
+            if($('#grn tr .error_inp').hasClass('bcode_upd'))
+            {
+            	$('#grn tr .error_inp').trigger('click');
+            }else
+            {
+            	$('#grn tr .error_inp').trigger('select');
+            }
+        }
+    }
+   	scanned_rows();	
+    
+    return cb(jump_torow);
 }
-$(".jq_alpha_sort_alphalist_itemlist_divwrap a").click(function() {
-	alert('1');   	
 
- });
+$(function(){
+	$('#cus_jq_alpha_sort_wrap').jqSuAlphaSort({title:"Vendors List",'overview_title':"Vendor Po List",'char_click':function(chr,ele){ vendors(chr)},'item_click':function(id,ele){ polist_byvendor(id)}});
+	
+	cal_invoice_value();
+	$('#scanned_summ').hide();
+	$('.view_imei').hide();
+   	$(".jq_alpha_sort_alphalist_char a").click(function() {
+      // remove classes from all
+      $(".jq_alpha_sort_alphalist_char a").removeClass("jq_alpha_active");
+      // add class to the one we clicked
+      $(this).addClass("jq_alpha_active");
+   });
+    $(".jq_alpha_sort_alphalist_char a:eq(1)").trigger('click');
+   
+   $('.barcode_fixed_wrap').hide();
+   $('#grn_color_legends').hide();
+   $('.cancel_stock').hide();
+   $('.pb_blk').hide();
+   
+   
+   
+   
+$('#grn tr').unbind('focus').live('focus', function () {
+    if (!$('.edit_mode').length) {
+        $(this).addClass('edit_mode');
+        process_edit_validation(function(){
+        	$('.edit_mode .bcode_upd').trigger('click');
+        });
+    } else {
+        if ($(this).hasClass('edit_mode')) { // do nothing           
+            
+        } else { // validate edit_mode row             // if valid to proceeed             
+            process_edit_validation(function (stat) {
+                if (stat) {
+                    $('.edit_mode').removeClass('edit_mode');
+                    $(this).addClass('edit_mode');
+                } else {
+                    return false;
+                }
+            });
+        }
+    }
+});
+
+$(".datagrid tr .rqty,.datagrid tr .iqty,.datagrid tr .vat_prc,.datagrid tr .bcode_upd").live('blur',function(e){
+	e.preventDefault();
+	if($(this).parents('tr:first').attr('has_serialno') != "1" && $(this).hasClass('rqty'))
+	{
+		process_edit_validation(function (stat) {
+                if (stat) {
+                    $('.edit_mode').removeClass('edit_mode');
+                } else {
+                    return false;
+                }
+            });
+     }
+});
+
+});
 
 </script>
 

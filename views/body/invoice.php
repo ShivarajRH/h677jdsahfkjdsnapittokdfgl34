@@ -9,7 +9,7 @@ $ttl_inv_list = array();
 // check if the invoice is split invoice 	
 $mem_det = array();	
 $invoice_credit_note_res = $this->db->query("select group_concat(id) as id,sum(amount) as amount from t_invoice_credit_notes a where invoice_no in (select invoice_no from king_invoice where split_inv_grpno = ? or invoice_no = ? ) ",array($invoice_no,$invoice_no));
-
+$credit_days=$this->db->query("select credit_days from king_transactions where transid=?",$transid)->row()->credit_days;
 //echo $this->db->last_query();
 
 ?>
@@ -97,7 +97,8 @@ table{
 							in.phc,in.nlc,
 							in.service_tax,
 							item.pnh_id,f.offer_text,f.immediate_payment,
-							in.invoice_qty as quantity 
+							in.invoice_qty as quantity,
+							ordert.member_id  as alloted_mem_id 
 						from king_orders as ordert
 						join king_dealitems as item on item.id=ordert.itemid 
 						join king_deals as deal on deal.dealid=item.dealid 
@@ -115,6 +116,7 @@ table{
 			$fid=$this->db->query("select t.franchise_id as fid from king_transactions t where transid=?",$trans['transid'])->row()->fid;
 			$mem_det = $this->db->query("select pnh_member_id as mid,mobile,concat(first_name,' ',last_name) as mem_name from pnh_member_info where user_id=?",$orders[0]['userid'])->row_array();
 		}
+
 
 
 		$batch=$this->db->query("select courier_id,awb from shipment_batch_process_invoice_link where invoice_no=?",$invoice_no)->row_array();
@@ -161,6 +163,14 @@ table{
 				$voucher_codes=$this->db->query("select group_concat(voucher_slno) as voucher_codes,transid from pnh_voucher_activity_log where transid=? group by transid",$orders[0]['transid'])->row_array();
 			}
 		}
+		
+		//check as imei scheme
+		$imei_credit=$order['imei_reimbursement_value_perunit'];
+	
+
+
+
+		
 
 ?>
 <div class="invoice" style="padding:10px;page-break-after:always"> 
@@ -217,7 +227,7 @@ table{
 						if($is_pnh){
 								$tin_no = '29230678061';
 								$service_no = 'AACCL2418ASD001';	
-								echo 'Local Cube commerce Pvt Ltd<br>1060,15th cross,BSK 2nd stage,bangalore -560070';
+								echo 'LocalCube Commerce Pvt Ltd<br>Plot 3B1,KIADB Industrial Area,Kumbalagudu 1st Phase,Mysore Road,Bangalore -560074';
 						}else{					
 								if($inv_createdon >= strtotime('2013-04-01'))
 								{
@@ -236,8 +246,11 @@ table{
 					</td>
 					<td align="right" valign="top">
 						<table border=1 cellspacing	=0 cellpadding=5>
-							<tr><td>Invoice<br>No:</td><td width=100><b><?=isset($invoice_no)?$invoice_no:$order['invoice_no']?>
-							</b></td>
+							<tr><td>Invoice<br>No:</td>
+							<td width=200><b><?=isset($invoice_no)?$invoice_no:$order['invoice_no']?></b><br>
+							<span style="font-size: 11px;"><b><?=$credit_days ?> Days Payment</b></span>
+							</td>
+							
 							<td>Invoice<br>Date:</td><td width="100"><b><?=date("d/m/Y",$inv_createdon)?></b></td>
 							<td>Transaction<br>
 							<div align="center">ID/Date :</div></td><td width="100"><b><?=$order['transid']?></b> 
@@ -291,6 +304,9 @@ table{
 			</table>
 			<table cellspacing=0 cellpadding=5 border=1 width="100%" style="margin-top:10px;">
 				<tr>
+					<?php if($orders[0]['alloted_mem_id']){?>
+					<td width="10"><b>MemberID</b></td>
+					<?php }?>
 					<td width="<?=$is_pnh?"70":"45"?>%"><b>Product Item Name</b></td>
 					<?php if($is_pnh){?>
 							<td align="right" width="80" ><b>MRP</b></td>
@@ -324,6 +340,8 @@ table{
 		$total_item_amount = 0;
 		
 		$s_tax_on = 0; 
+		
+		$col_span_fix = $orders[0]['alloted_mem_id']?1:0; 
 		
 		
 		$p_tax_list = array();
@@ -370,6 +388,9 @@ table{
 				
 ?>			
 			<tr>
+				<?php if($order['alloted_mem_id']){?>
+					<td width="10"><b><?php echo $order['alloted_mem_id'];?></b></td>
+				<?php }?>
 				<td>
 					<?php if($inv_type !='original'){ ?>
 						<span class="hideinprint">
@@ -385,7 +406,9 @@ table{
 							<?php $imei=$this->db->query("select imei_no from t_imei_no where order_id=?",$order['id'])->result_array(); $inos=array(); foreach($imei as $im) $inos[]=$im['imei_no'];?>
 							<?php if(!empty($inos)){?>
 							<br><b>Imeino: <?=implode(", ",$inos)?></b>
+							<br><span> Activation : <b> <?php echo $imei_credit ?></b></span>
 							<?php }?>
+							<br>
 						</span>
 						
 						<span class="showinprint">
@@ -398,6 +421,12 @@ table{
 									echo $order['print_name'].'-'.$order['pnh_id'];
 								}
 							?>
+							<?php $imei=$this->db->query("select imei_no from t_imei_no where order_id=?",$order['id'])->result_array(); $inos=array(); foreach($imei as $im) $inos[]=$im['imei_no'];?>
+							<?php if(!empty($inos)){?>
+							<br><b>Imeino: <?=implode(", ",$inos)?></b>
+							<br><span> Activation : <b> <?php echo $imei_credit ?></b></span>
+							<?php }?>
+							<br>
 						</span>
 					<?php }else
 						{
@@ -495,6 +524,8 @@ table{
 			<?php 		
 				}
 			}
+
+
 	
 			$trans_total=$this->db->query("select amount as t,cod,ship from king_transactions where transid=?",$order['transid'])->row_array();
 			$cod_ship_charges = 0;
@@ -520,8 +551,10 @@ table{
 			$stax_tot = ($sship+$ccod+$sgc); 
 		 	$s_tax_apl = ($stax_tot*$pstax/100); 
 ?>
+
+
 			<tr style="font-weight: bold;">
-				<td colspan="<?=($is_pnh&&$inv_type =='auditing')?"5":($is_pnh?"5":"4")?>" align="right">
+				<td colspan="<?=($is_pnh&&$inv_type =='auditing')?"5"+$col_span_fix:($is_pnh?"5":"4")+$col_span_fix?>" align="right">
 					&nbsp; 
 				</td>
 				<?php if(!$is_pnh){?>
@@ -845,7 +878,7 @@ table{
 						if($is_pnh){
 								$tin_no = '29230678061';
 								$service_no = 'AACCL2418ASD001';	
-								echo 'Local Cube commerce Pvt Ltd<br>1060,15th cross,BSK 2nd stage,bangalore -560070';
+								echo 'LocalCube Commerce Pvt Ltd<br>Plot 3B1,KIADB Industrial Area,Kumbalagudu 1st Phase,Mysore Road,Bangalore -560074';
 						}else{					
 								if($inv_createdon >= strtotime('2013-04-01'))
 								{
@@ -925,7 +958,7 @@ table{
 					<span class="showinprint"><?php echo $itm_ord['det']['print_name'].'-'.$itm_ord['det']['pnh_id'];?></span>
 					<span class="hideinprint"><?php echo $itm_ord['det']['name'].'-'.$itm_ord['det']['pnh_id'];?></span>
 				</td>
-			<td><?php echo implode(', ',$itm_ord['invs']);?></td>
+			<td><?php echo implode(', ',array_unique($itm_ord['invs']));?></td>
 			<td><?php echo $itm_ord['qty'];?></td>
 			<td><?php echo $itm_ord['amt'];?></td>
 		</tr>
@@ -981,7 +1014,7 @@ table{
 						if($is_pnh){
 								$tin_no = '29230678061';
 								$service_no = 'AACCL2418ASD001';	
-								echo 'Local Cube commerce Pvt Ltd<br>1060,15th cross,BSK 2nd stage,bangalore -560070';
+								echo 'LocalCube Commerce Pvt Ltd<br>Plot 3B1,KIADB Industrial Area,Kumbalagudu 1st Phase,Mysore Road,Bangalore -560074';
 						}else{					
 								if($inv_createdon >= strtotime('2013-04-01'))
 								{
@@ -1000,6 +1033,7 @@ table{
 					</td>
 					<td align="right" valign="top">
 						<table border=1 cellspacing	=0 cellpadding=5>
+							<td>Invoice<br>No:</td><td width=100><b><?=$invoice_no?></b></td>
 							<td><br>Date:</td><td width="100"><b><?=date("d/m/Y",$inv_createdon)?></b></td>
 							<td>Transaction<br><div align="center">ID/Date :</div></td>
 							<td width="100">
@@ -1047,13 +1081,14 @@ table{
 		<tr>
 			<th>No</th>
 			<th>Item</th>
-			<th>Invoice</th>
+			<th>Serialnos</th>
 			<th>Qty</th>
 			<th>Total</th>
 		</tr>
 		<?php 
 			$k1=0;
 			foreach($orderslist_byproduct as $itmid=>$itm_ord){ 
+				
 			?>
 		<tr>
 			<td><?php echo ++$k1; ?></td>
@@ -1062,14 +1097,13 @@ table{
 				
 			</td>
 			<td><?php 
+					$itm_ord['invs'] = array_filter(array_unique($itm_ord['invs']));
 					//echo implode(', ',$itm_ord['invs']);
 					foreach($itm_ord['invs'] as $i_inv)
 					{
-						$i_imei_no = @$this->db->query("select concat('-',imei_no) as inv_imei_no from t_imei_no a join king_invoice b on a.order_id = b.order_id where invoice_no = ? ",$i_inv)->row()->inv_imei_no;
-						if($i_imei_no)
-							$i_imei_no .= '<br>';
+						$i_imei_no = @$this->db->query("select group_concat(imei_no) as inv_imei_no from t_imei_no a join king_invoice b on a.order_id = b.order_id join king_orders c on c.id = b.order_id where b.invoice_no = ? and c.itemid = ? ",array($i_inv,$itmid))->row()->inv_imei_no;
 						
-						echo $i_inv.$i_imei_no;
+						echo $i_imei_no?str_replace(',', '<br>', $i_imei_no):'';
 					}
 				?>
 			</td>
@@ -1152,7 +1186,7 @@ table{
 						if($is_pnh){
 								$tin_no = '29230678061';
 								$service_no = 'AACCL2418ASD001';	
-								echo 'Local Cube commerce Pvt Ltd<br>1060,15th cross,BSK 2nd stage,bangalore -560070';
+								echo 'LocalCube Commerce Pvt Ltd<br>Plot 3B1,KIADB Industrial Area,Kumbalagudu 1st Phase,Mysore Road,Bangalore -560074';
 						}else{					
 								if($inv_createdon >= strtotime('2013-04-01'))
 								{
@@ -1448,7 +1482,10 @@ table{
 			}
 			</style>
 			<div align="center">
-					<b style="font-size: 140%">Local Cube commerce Pvt Ltd</b><br>1060,15th cross,BSK 2nd stage, <br>Bangalore -560070
+					
+					<b style="font-size: 140%">LocalCube Commerce Pvt Ltd</b><br>
+					Plot 3B1,KIADB Industrial Area,Kumbalagudu 1st Phase,Mysore Road  
+					<br>Bangalore -560074
 					<br>
 					<br>
 					<b style="font-size: 140%">Credit Note</b>
@@ -1457,7 +1494,7 @@ table{
 				<table width="100%" style="font-size: 120%" border=0 cellpadding="5" cellspacing="0">
 					<tbody>
 						<tr>
-							<td>NO : <?=$invoice_credit_note_det['id']?></td>
+							<td>Dispatch No : <?=$dispatch_id?></td>
 							<td align="right">Dated : <?=date("d/m/Y",$inv_createdon)?></td>
 						</tr>
 						<tr>
@@ -1501,7 +1538,10 @@ table{
 		<hr style="margin:0px;">	
 		<h3 style="margin-top:4px;margin-bottom: 4px;">Customer Acknowledgement</h3> 
 		<div style="margin: 3px auto">
-		<p>This it to acknowledge that we have received all products corresponding to above listed <?php echo count($ttl_inv_list) ?> Invoices of total sum of Rs <b><?php echo $ttl_inv_amt;?>/-</b></p>
+		<p>This it to acknowledge that we have received all products corresponding to above listed <?php echo count($ttl_inv_list) ?> Invoices of total sum of Rs <b><?php echo $ttl_inv_amt;?>/-</b>
+		<br>
+		<span style="font-size: 14px;"><b><?=$credit_days ?> Days Payment</b></span>
+		</p>
 		<div>
 			<table width="100%">
 				<tr>
@@ -1624,6 +1664,7 @@ function print_tax_acknowledgement(ele)
 	myWindow.focus();
 	myWindow.print();
 }
+
 
 function printdispatchdoc(ele)
 {

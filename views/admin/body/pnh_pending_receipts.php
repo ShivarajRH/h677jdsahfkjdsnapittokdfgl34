@@ -164,15 +164,15 @@ Transit Type:<select id="t_type" name="t_type"  style="width: 150px;">
 </td>
 <?php }elseif($type==1 || $type==2){ ?>
 	<td><a href="javascript:void(0)" onclick='can_rec(<?=$r['receipt_id']?>)'>Cancel</a>
-            <br>
-            <?php if($r['unreconciled_value']>0) { ?>
-                    <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>','<?=$r['receipt_amount'];?>','<?=$r['unreconciled_value'];?>')" class="button button-tiny button-action">Reconcile</a>
-            <?php } ?>
-             &nbsp;
-             <?php if($r['unreconciled_value'] != $r['receipt_amount']) { ?>
-                <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-primary">View Reconciled</a>
-             <?php } ?>
-        </td> &nbsp; &nbsp;
+        <br>
+        <?php if($r['unreconciled_value']>0) { ?>
+                <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>','<?=$r['receipt_amount'];?>','<?=$r['unreconciled_value'];?>')" class="button button-tiny button-action">Reconcile</a>
+        <?php } ?>
+         &nbsp;
+         <?php if($r['unreconciled_value'] != $r['receipt_amount']) { ?>
+            <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-primary">View Reconciled</a>
+         <?php } ?>
+    </td> &nbsp; &nbsp;
 <?php }?>
 </tr>
 <?php }?>
@@ -187,8 +187,8 @@ Transit Type:<select id="t_type" name="t_type"  style="width: 150px;">
 <th>Receipt Details</th><th>Franchisee Name</th><th>Payment Details</th><th>Payment Date</th><th>Submitted Bank Name</th><th>Remarks</th><th>Processed On</th><th>Processed By</th><th>Actions</th>
 </thead>
 <tbody>
-<?php foreach($receipts as $r){?>
-<?php
+<?php foreach($receipts as $r){
+
 $no_days = date_diff_days(date('Y-m-d'),$r['submitted_on']);
 $is_receipt_exp = 0;
 if($no_days >=4 && $r['activated_on'] == 0)
@@ -319,16 +319,7 @@ if($no_days >=4 && $r['activated_on'] == 0)
 		</table>
 	</div>
 </td>
-<!--  <td class="remarks_det">
-<?=$r['cancel_reason']?$r['cancel_reason']:$r['reason']?>
-</td>
-<td class="cash_det">
-<?=$r['cheq_cancelled_on']!=null?format_date($r['cheq_cancelled_on']):format_datetime($r['cancelled_on'])?>
-<?//=$r['cancelled_on']?format_datetime($r['cancelled_on']):format_datetime_ts($r['activated_on'])?>
-</td>
-<td class="remarks_det">
-<?= $r['activated_by']?> 
-</td>-->
+
 <td>
 	<div>
 		<table class="datagrid1" cellpadding="0" cellspacing="0">
@@ -343,11 +334,11 @@ if($no_days >=4 && $r['activated_on'] == 0)
 <td>
 	<div>
 		<table class="datagrid1" cellpadding="0" cellspacing="0">
-		<tr><td width="80"><b>Cancel Status</b></td><td><b>:</b></td><td><?php $cstatus=array(" ","Return","Bounce");?><?=$cstatus[$r['cancel_status']];?></td></tr>
-		<tr><td><b>Cheque Cancelled On</b></td><td><b>:</b></td><td><?=$r['cheq_cancelled_on']!=null?format_date($r['cheq_cancelled_on']):format_datetime($r['cancelled_on'])?></td></tr>
+		<tr><td width="80"><b>Cancel Status</b></td><td><b>:</b></td><td><?php $cstatus=array("Reversed","Return","Bounce");?><?=$cstatus[$r['cancel_status']];?></td></tr>
+		<tr><td><b>Cheque Cancelled On</b></td><td><b>:</b></td><td><?=$r['cheq_cancelled_on']!=null?format_date($r['cheq_cancelled_on']):format_datetime($r['modified_on'])?></td></tr>
 		<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['cancel_reason']?$r['cancel_reason']:$r['reason']?></td></tr>
-		<tr><td><b>Updated By</b></td><td><b>:</b></td><td><?= $r['activated_by']?> </td></tr>
-		<tr><td><b>Updated On</b></td><td><b>:</b></td><td><?=format_datetime($r['cancelled_on']);?></td></tr>
+		<tr><td><b>Updated By</b></td><td><b>:</b></td><td><?= $r['activated_by']?$r['activated_by']:$r['reversed_by']?> </td></tr>
+		<tr><td><b>Updated On</b></td><td><b>:</b></td><td><?=$r['cancelled_on']!=null?format_datetime($r['cancelled_on']):format_datetime_ts($r['modified_on'])?></td></tr>
 		</table>
 	</div>
 </td>
@@ -430,10 +421,10 @@ if($no_days >=4 && $r['activated_on'] == 0)
 <tr><td>Franchise Name</td><td>:</td><td id="can_recptfran"><b></b></td></tr>
 <tr><td>Receipt ID</td><td>:</td><td id="can_recptid"><b></b></td></tr>
 <tr><td>Cheque Number</td><td>:</td><td id="can_recptchqueno"><b></b></td></tr>
-<tr><td>Select Cheque Return Status</td><td>:</td><td><select name="cancel_status" id="cancel_status" date-required="true"><option value="0">Choose</option><option value="1">Return</option><option value="2">Bounce</option></select></td></tr>
-<tr><td>Cheque Returned On</td><td>:<span class="red_star">*</span></td><td><input type="text" name="cheq_canceled_on" value="" date-required="true"  readonly="readonly"></td></tr>
+<tr><td>Select Cheque Return Status</td><td>:<span class="red_star">*</span></td><td><select name="cancel_status" id="cancel_status" data-required="true"><option value=" ">Choose</option><option value="1">Return</option><option value="2">Bounce</option></select></td></tr>
+<tr><td>Cheque Returned On</td><td>:<span class="red_star">*</span></td><td><input type="text" name="cheq_canceled_on" value="" data-required="true"  readonly="readonly"></td></tr>
 <tr id="dbt_amt"><td>Bounce Charges</td><td>:</td><td><input type="text" name="debit_amt" id="debit_amt" > Rs </td></tr>
-<tr><td>Remarks</td><td>:</td><td><textarea name="act_remarks" id="act_remarks" data-required="true"></textarea></td></tr>
+<tr><td>Remarks</td><td>:<span class="red_star">*</span></td><td><textarea name="act_remarks" id="act_remarks" data-required="true"></textarea></td></tr>
 <tr><td><b>Notify via SMS</b></td></tr>
 <tr><td>Franchisee</td><td>:</td><td><input type="checkbox" name="sms" value="1"></td></tr>
 <tr><td>Territory Manager</td><td>:</td><td><input type="checkbox" name="tm_sms" value="1"></td></tr>
@@ -583,33 +574,33 @@ $("#cancel_receipt").dialog({
 				   $('#can_recptchqueno b').html(result.fran_receiptdet.instrument_no);
 				   $('#can_recptid b').html(result.fran_receiptdet.receipt_id);
 				}
-                },'json');
-        },
+	},'json');
+},
 	buttons:{
 		'Submit':function(){
 			var dlg= $(this);
 			var c=confirm("Are you sure you want to cancel");
 			if(c)
 			{
-                                var frm_cancel = $("#cancel_receipt_frm",this);
+			var frm_cancel = $("#cancel_receipt_frm",this);
 			 	if(frm_cancel.parsley('validate'))
 				{
-                                        $.post(site_url+'/admin/jx_cancel_processedreceipts',frm_cancel.serialize(),function(resp){
-                                            if(resp.status == 'success')
-                                            {
-                                                            $("#cancel_receipt").dialog('close');
-                                                            location.href = location.href;
-                                            }
-                                        },'json');
+					$.post(site_url+'/admin/jx_cancel_processedreceipts',frm_cancel.serialize(),function(resp){
+						if(resp.status == 'success')
+						{
+							$("#cancel_receipt").dialog('close');
+							location.href = location.href;
+						}
+					},'json');
 		 		}
-                                else
-                                {
-                                 alert('All Fields Required!!!');
-                                }
-                        }
-                        else
-                                return false;
-                        }
+				else
+				{
+					alert('All Fields Required!!!');
+				}
+			}
+			else
+				return false;
+			}
 	}
 	
 });

@@ -180,7 +180,7 @@ function rl_pgbyfilters()
 }
 $(function(){
 	$("#ds_range,#de_range").datepicker();
-	 
+	 $('.datagrid').jq_fix_header_onscroll();	
 	
 }); 
 

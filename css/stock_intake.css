@@ -52,11 +52,11 @@
 }
 .jq_alpha_sort_alphalist_itemlist_divwrap 
 {
-	  border-bottom: 1px dotted #CCCCCC;
+	border-bottom: 1px dotted #CCCCCC;
     color: #000000;
     display: block;
     font-size: 12px;
-    padding: 10px;
+    padding: 5px;
 }
 .jq_alpha_sort_alphalist_itemlist_divwrap a
 {

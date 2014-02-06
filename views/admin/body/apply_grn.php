@@ -186,7 +186,7 @@ h2
                         <td style="text-align: center">
 							<div class="po_qty_wrap">
 								<b>MRP(Rs.) <span class="red_star">*</span> : </b>
-										<input type="text" class="inp prod_mrp mrp_%prodid% readonly" readonly="readonly" name="mrp%pid%[]" size=5 pmrp="%mrp%" placeholder="%mrp%" dp_price="%dp_price%" prodid="%prodid%" value="">
+										<input type="text" class="inp prod_mrp mrp_%prodid% readonly" readonly="readonly" name="mrp%pid%[]" size=5 pmrp="%mrp%" placeholder="%po_mrp%" po_mrp="%po_mrp%" dp_price="%dp_price%" prodid="%prodid%" value="">
 										
 										<div class="upd_pmrp_blk" align="center">
 											<input type="checkbox" prodid="%prodid%" value="1" class="upd_pmrp upd_mrp_chk%prodid% fl_right" name="upd_pmrp%pid%[]" >
@@ -204,7 +204,8 @@ h2
 													</div>
 											</span>
 										</div>
-										<div><b>Pur. Price(Rs.) : </b><input type="text" class="inp pprice" name="price%pid%[]" p_price="%price%"  readonly="readonly" size=5 value="%ppur_price%"></div>
+										<div><b>Margin(%) : </b>%po_margin%(%)</div>
+										<div><b>Pur. Price(Rs.) : </b><input type="text" class="inp pprice" name="price%pid%[]" p_price="%price%"  readonly="readonly" size=5 value="%price%"></div>
 							  </div>
 						</td>
                         <td>
@@ -266,22 +267,17 @@ h2
 		<span class="prod_title"></span>
 		<input type="hidden" value="" id="imei_pid">
 		<div class="imei_nos_dlg prodid_%prodid%"></div>
-		<span class="error_inp"></span>
+		<span class="imei_error_text"></span>
 	</form>
 </div>
 
 <script type="text/javascript">
 
-
-//var imeis=[];
 var pids_selected=[];
 var ttl_imei_row_scanned=0;
 
-
 function vendors(ch)
 {
-	 //$(".jq_alpha_sort_alphalist_char a").addClass("jq_alpha_active");
-	 
 	 $.post(site_url+'/admin/vendors_list',{ch:ch},function(resp){
     	if(resp.status == 'error')
 			{
@@ -378,16 +374,11 @@ function pid_container(pid)
 	else
 	{
 		pids_selected.push(pid);
-		
 	}
-	
 }
-
-
 
 function check_dup_imei(imei,prodid)
 {
-	
 	var imeis=[];
 	$(".imeis").each(function(){
 		c=$(this).val().split(",");
@@ -427,7 +418,6 @@ function calc_rec_value()
 		pprice=parseFloat($(".pprice",$p).val());
 		pprice=isNaN(pprice)?"0":pprice;
 		
-		//var trEle = $(this).next().parents('tr:first');
 		$('.subttl_'+prodid,$p).val(rqty*pprice);
 		
 		r_total+=rqty*pprice;
@@ -475,7 +465,6 @@ function cloneinvoice()
 function removeInvoiceRow(ele)
 {
 	$(ele).parents('tr:first').remove();
-	
 	var ttl_prod_rows = $('#grn .datagrid tbody tr').length;
 	$(".invoice_tab tbody tr").each(function(i,tr){
 		$('td:first',this).text(i*1+1);
@@ -542,6 +531,7 @@ function loadpo(pids)
 			
 			grow=grow.replace(/%pqty%/g,tot_rqty);
             grow=grow.replace(/%po_mrp%/g,poi.mrp);
+            grow=grow.replace(/%po_margin%/g,poi.margin);
 			grow=grow.replace(/%mrp%/g,poi.prod_mrp);
 			if(poi.is_serial_required*1)
 			{
@@ -553,7 +543,6 @@ function loadpo(pids)
 				grow=grow.replace(/%dp_price%/g,0);
 				grow=grow.replace(/%dp_price_inp%/g,'hidden');
 			}
-				
 				
 			grow=grow.replace(/%price%/g,poi.purchase_price);
 			grow=grow.replace(/%rqty%/g,poi.received_qty);
@@ -580,7 +569,6 @@ function loadpo(pids)
 			added_pos.push(poi.po_id);
 		});
 		
-		//alert(ime);
 		$("#grn .datagrid tbody").append(g_rows);
 		
 		$(dpes.join(", ")).datepicker({minDate:0});
@@ -610,8 +598,6 @@ function loadpo(pids)
 			hideAfter: 200,
 		});
 		$('#grn .datagrid tbody tr:first').focus();
-		
-
 	});
 }
 
@@ -625,7 +611,6 @@ function scanned_rows(prodid)
 				ttl_prod_rows_scanned ++;
 				
 	});
-	
 	$('#summ_scanned_ttl_qty').text(ttl_prod_rows_scanned);
 	$('#summ_ttl_qty').text(ttl_prod_rows);
 }
@@ -661,7 +646,6 @@ function reset_tabindex(row,cb)
 	
 	$('.recv_qty_wrapper').attr('tabindex',tabindex_cnt);
 	tabindex_cnt++;
-	
 	return cb(row);
 }
 
@@ -717,6 +701,7 @@ $('.prod_mrp').live('change',function(){
 	var dp_price = $(this).attr('dp_price')*1;
 	var prodid = $(this).attr('prodid')*1;
 	var pmrp = $(this).attr('pmrp')*1;
+	var po_mrp=$(this).attr('po_mrp')*1;
 	var tot_rqty=$('.rqty').val();
 	var upd_mrp_blk = trele.find('.upd_pmrp_blk');
 	var pprice = $('.pprice',trele).attr('p_price');
@@ -733,11 +718,19 @@ $('.prod_mrp').live('change',function(){
 		else
 		{
 			// compute new pprice
-			new_pprice = (mrp*pprice)/pmrp;
+			new_pprice = (mrp*pprice)/po_mrp;
 			$('.pprice',trele).val(new_pprice);
 			calc_rec_value();
 		}
-		
+});
+
+
+$('.prod_mrp').live('keyup',function(){
+	
+	var trele = $(this).parents('tr:first');
+	var mrp = $(this).val();
+	var pmrp = $(this).attr('pmrp')*1;
+	var upd_mrp_blk = trele.find('.upd_pmrp_blk');
 		if(pmrp != mrp)
 			upd_mrp_blk.show();
 		else
@@ -789,184 +782,6 @@ $('.bcode_upd').live('click',function(e){
 		$("#abd_pid").data('prodid',prodid);
 		//$(".add_barcode_dialog").dialog('open');
 });
-
-var ttl_pbcode_row_scanned=0;
-
-
-/*
-$(".datagrid tr .prod_mrp,.datagrid tr .rqty,.datagrid tr .iqty,.datagrid tr .vat_prc,.datagrid tr .prod_mrp,.datagrid tr .rqty,.datagrid tr .bcode_upd").live('focus',function(){
-	var trEle = $(this).parents('tr:first');
-	var new_trEle = trEle.next();
-	if(!trEle.hasClass('edit_mode'))
-		{
-			if($('tr.edit_mode').length)
-			{
-				// check if all elements are entered for valid inputs
-				var pmrp = $('.edit_mode .prod_mrp').val()*1;
-				var tax_pct = $('.edit_mode .vat_prc').val()*1;
-				var piqty= $('.edit_mode .iqty').val()*1;
-				var prqty = $('.edit_mode .rqty').val()*1;
-				var has_bc = $('.edit_mode').attr('bcode').length;
-				var bc_scanned = $('.edit_mode').hasClass('bcode_scanned');
-				var pmrp_inp = $('.edit_mode .prod_mrp').val();
-				 	
-				if(isNaN(pmrp))
-				{
-					alert("Please enter Valid MRP");
-					$('.edit_mode .prod_mrp').select();
-				}else if(isNaN(prqty) || prqty.toString().indexOf('.') != -1 || prqty < 0)
-				{
-					alert("Please enter Valid Qty");
-					$('.edit_mode .rqty').select();
-				}else if(isNaN(piqty))
-				{
-					alert("Please enter Valid Qty");
-					$('.edit_mode .iqty').select();
-				}
-				else if(isNaN(tax_pct))
-				{
-					alert("Please enter Valid Tax");
-					$('.edit_mode .vat_prc').select();
-				}
-				else if(pmrp > 0 &&  prqty == 0 && piqty == 0 && tax_pct == 0)
-				{
-					alert("Please enter Valid Qty and Tax");
-					$('.edit_mode .rqty').select();
-				}				
-				else if((pmrp == 0 || pmrp == "") &&  (prqty > 0) && (piqty > 0) && (tax_pct > 0)) 
-				{
-					alert("Please enter Valid MRP");
-					$('.edit_mode .prod_mrp').select();
-				}else if(has_bc && !bc_scanned && (pmrp != "" || prqty > 0 || piqty > 0 || tax_pct > 0))
-				{
-					$('.edit_mode .bcode_upd').focus().trigger('click');
-				}
-				else if((has_bc || !has_bc) && bc_scanned && (pmrp == 0 || pmrp == "" || prqty == 0 || piqty == 0 || tax_pct == 0))
-				{
-					alert("Only barcode scanned.Please enter MRP and Qty");
-					$('.edit_mode .rqty').select();
-				}
-				else if((has_bc || has_bc=='') && !bc_scanned && (pmrp_inp != "" || prqty > 0 || piqty > 0 || tax_pct > 0))
-				{
-					if(!confirm("Warning: \r\nBarcode not available, do you want to proceed without barcode"))
-					{
-						$('.edit_mode .bcode_upd').focus();	
-					}
-					else
-					{
-						$('.edit_mode').addClass('processed_mode');
-						$('.edit_mode').removeClass('edit_mode');
-						$('.edit_mode .bcode_upd',new_trEle).focus();
-					}
-				}
-				else if(prqty==0 && (pmrp == 0 || pmrp == "") && piqty==0 && tax_pct==0 &&!bc_scanned && (has_bc || has_bc==''))
-				{
-					$('.edit_mode').removeClass('edit_mode');
-				}
-				else 
-				{
-					if(pmrp > 0 && prqty > 0 && piqty > 0 && tax_pct > 0 && ((has_bc && bc_scanned) || (has_bc == "" && !bc_scanned)))
-					{
-						$('.edit_mode').addClass('processed_mode');
-						$('.edit_mode').removeClass('edit_mode');	
-					}
-				}
-			}else
-			{
-				trEle.addClass('edit_mode');
-			}
-		}
-		scanned_rows();
-});
-
-
-
-$(".datagrid tr .prod_mrp").live('focusout',function(){
-	var trEle = $(this).parents('tr:first');
-	var new_trEle = trEle.next();
-	if(trEle.hasClass('edit_mode'))
-	{
-		// check if all elements are entered for valid inputs
-		var pmrp = $('.edit_mode .prod_mrp').val()*1;
-		var piqty= $('.edit_mode .iqty').val()*1;
-		var prqty = $('.edit_mode .rqty').val()*1;
-		var tax_pct = $('.edit_mode .vat_prc').val()*1;
-		var has_bc = $('.edit_mode').attr('bcode').length;
-		var bc_scanned = $('.edit_mode').hasClass('bcode_scanned');
-		
-		var pmrp_inp=$('.edit_mode .prod_mrp').val();
-		 	
-		if(isNaN(pmrp) || pmrp < 0)
-		{
-			alert("Please enter Valid MRP");
-			$('.edit_mode .prod_mrp').select();
-		}else if(isNaN(prqty))
-		{
-			alert("Please enter Valid Qty");
-			$('.edit_mode .rqty').select();
-		}
-		else if(isNaN(tax_pct))
-		{
-			alert("Please enter Valid Tax");
-			$('.edit_mode .vat_prc').select();
-		}
-		else if(pmrp > 0 &&  prqty == 0 && piqty == 0 && tax_pct == 0)
-		{
-			alert("Please enter Valid Qty and Tax");
-			$('.edit_mode .rqty').select();
-		}else if(pmrp > 0 &&  prqty > 0 && piqty == 0 && tax_pct == 0)
-		{
-			alert("Please enter Valid Qty and Tax");
-			$('.edit_mode .iqty').select();
-		}else if(pmrp > 0 &&  prqty > 0 && piqty > 0 && tax_pct == 0)
-		{
-			alert("Please enter Tax");
-			$('.edit_mode .vat_prc').select();
-		}else if((pmrp == 0 || pmrp == "") &&  (prqty > 0) && (piqty > 0) && (tax_pct > 0)) 
-		{
-			alert("Please enter Valid MRP");
-			$('.edit_mode .prod_mrp').select();
-		}else if(has_bc && !bc_scanned && (pmrp != "" || prqty > 0 || piqty > 0 || tax_pct > 0))
-		{
-			//alert("Barcode is not scanned");
-			$('.edit_mode .bcode_upd').focus().trigger('click');
-		}
-		else if((has_bc || !has_bc) && bc_scanned && (pmrp == 0 || pmrp == "" || prqty == 0 || piqty == 0 || tax_pct == 0))
-		{
-			alert("Only barcode scanned.Please enter MRP , Qty and Tax");
-			$('.edit_mode .rqty').select();
-			
-		}
-		else if((has_bc || has_bc=='') && !bc_scanned && (pmrp != 0 || prqty > 0 || piqty > 0 || tax_pct > 0))
-		{
-			if(!confirm("Warning: \r\nBarcode not available, do you want to proceed without barcode"))
-			{
-				$('.edit_mode .bcode_upd').focus();	
-			}
-			else
-			{
-				$('.edit_mode').addClass('processed_mode');
-				$('.edit_mode').removeClass('edit_mode');
-				$('.edit_mode .bcode_upd',new_trEle).focus();
-			}
-		}
-		else if(prqty==0 && (pmrp == 0 || pmrp == "") && tax_pct == 0 && piqty==0 &&  !bc_scanned && (has_bc || has_bc==''))
-		{
-			$('.edit_mode').removeClass('edit_mode');
-		}
-		else 
-		{
-			if(pmrp > 0 && prqty > 0 && piqty > 0 && tax_pct > 0 && ((has_bc && bc_scanned) || (has_bc == "" && !bc_scanned)))
-			{
-				$('.edit_mode').addClass('processed_mode');
-				$('.edit_mode').removeClass('edit_mode');	
-			}
-		}
-	}
-	scanned_rows();
-});
-
-*/
 
 
 $(".datagrid .iqty").live("change",function(){
@@ -1026,30 +841,8 @@ $(".datagrid .rqty").live("change",function(){
 	   		 var inp_barcode=$("#abd_barcode",trele).val();
 	  		 has_serialno=trele.attr('has_serialno')*1;
 		     calc_rec_value();
-		   	//alert(tot_rqty);
-		   // var dlgData = $("#rqty_imei_blk_dlg").data("pro_data");
-		 	var imeilist_html ='';
-		 	var scanned_imei = '';
-	
-			var p_imei_scanned = $("#list_imei_"+prodid,trele).val();
-				p_imei_scanned_arr = p_imei_scanned.split(',');
-				//imeis.push(p_imei_scanned_arr);
-				
-				imeilist_html = '<ol>'; 
-		    	for(i=0;i<tot_rqty;i++) 
-		    	{
-		    			scanned_imei = ((p_imei_scanned_arr[i]==undefined)?"":p_imei_scanned_arr[i]);				    		
-						imeilist_html += '<li>';
-						imeilist_html += '	<input type="text" class="inp imei_input dlg_imei_inp" placeholder="" name="imei_input_'+prodid+'[]" id="imei_input_'+prodid+'_'+i+'" value="'+scanned_imei+'">';
-						imeilist_html += '	<span class="append_imei_items_'+prodid+'_'+i+'"></span>';
-						imeilist_html += '</li>';
-				}
-				imeilist_html+='</ol>';
-				
-		 	$('.imei_nos_dlg').html(imeilist_html);
-			$('.dlg_imei_inp:first').focus();
-		   
-		    if(has_serialno == 1)
+		   	
+		   	if(has_serialno == 1)
 		     {
 		     	if(tot_rqty > 0)
 			     {
@@ -1066,7 +859,6 @@ $(".datagrid .rqty").live("change",function(){
 			 
 		    if(has_serialno == 1)
 		    {
-		    	
 		    	var p_imei_scanned = $("#list_imei_"+prodid,trele).val();
 					p_imei_scanned_arr = p_imei_scanned.split(',');
 					
@@ -1089,15 +881,35 @@ $(".datagrid .rqty").live("change",function(){
 		    	
 		    }
 		    
+		    var imeilist_html ='';
+		 	var scanned_imei = '';
+	
+			var p_imei_scanned = $("#list_imei_"+prodid,trele).val();
+				p_imei_scanned_arr = p_imei_scanned.split(',');
+				//imeis.push(p_imei_scanned_arr);
+				
+				imeilist_html = '<ol>'; 
+		    	for(i=0;i<tot_rqty;i++) 
+		    	{
+		    			scanned_imei = ((p_imei_scanned_arr[i]==undefined)?"":p_imei_scanned_arr[i]);				    		
+						imeilist_html += '<li>';
+						imeilist_html += '	<input type="text" class="inp imei_input dlg_imei_inp" placeholder="" name="imei_input_'+prodid+'[]" id="imei_input_'+prodid+'_'+i+'" value="'+scanned_imei+'">';
+						imeilist_html += '	<span class="append_imei_items_'+prodid+'_'+i+'"></span>';
+						imeilist_html += '</li>';
+				}
+				imeilist_html+='</ol>';
+				
+		 	$('.imei_nos_dlg').html(imeilist_html);
+			$('.dlg_imei_inp:first').focus();
+		    
+		    
 		    if(isNaN(tot_rqty*1))
 			{
 				$('.prod_mrp',trele).attr('readonly',true).addClass('readonly');
 			}else
 			{
 				$('.prod_mrp',trele).attr('readonly',false).removeClass('readonly');
-				
-				//var iqty = $('.iqty',trele).val()*1;
-					$('.iqty',trele).val("0");
+				$('.iqty',trele).val("0");
 			}
     	}
 });
@@ -1137,12 +949,15 @@ $(function(){
 			}
 			
 			bcodeRow.addClass("lastScanned");
+			$('.lastScanned .rqty').select();
+			
 			
 			setTimeout(function(){
 				$(".barcode"+scan_bc).addClass("bcode_scanned");
 			},500);
 			$(".barcode"+$(this).val()+' .scan_pbarcode').val($(this).val());
 			$(document).scrollTop($(".barcode"+$(this).val()).offset().top);
+			
 		}
 	});
 
@@ -1180,7 +995,6 @@ $(function(){
 	
 	
 	var chk_for_vendor_ids = 1;
-	
 	$("#apply_grn_form").submit(function(){
 		flag=true;
 		
@@ -1221,7 +1035,6 @@ $(function(){
 		$('.invoice_tab tbody tr',this).each(function(){
 			
 			var trele=$(this).parents('tr:first');
-			
 			var inv_no =$('.inv_inp_blk',trele).val(); 
 			var inv_date =$('.inv_inp_datepick_blk',trele).val(); 
 			var inv_mrp =$('.inv_inp_amount',trele).val(); 
@@ -1283,20 +1096,6 @@ $(function(){
 			flag = false;
 		}
 		
-		/*
-		if(inv_ttl != grn_ttl+1 || inv_ttl != grn_ttl-1)
-		{
-			if(confirm("Warning: \r\nInvoice amount and grn amount is different, do you want to proceed"))
-			{
-				return flag;	
-			}
-			else
-			{
-				flag=false;
-				return flag;
-			}
-		}
-		*/ 
 		if(flag)
 			$("#form_submit").attr("disabled",true);
 		return flag;
@@ -1449,13 +1248,23 @@ $('.add_product_row').live('click',function(e){
 $('.remove_product_row').live('click',function(e){
 	e.preventDefault();
 	var trele = $(this).parents('tr:first');
-	$(this).parents('tr:first').fadeOut().remove();
-	trele.addClass('edit_mode');
-	scanned_rows();
+	
+	if(confirm("Do you want to delete"))
+	{
+		$(this).parents('tr:first').fadeOut().remove();
+		trele.addClass('edit_mode');
+		scanned_rows();
+	}else
+	{
+		
+		trele.addClass('edit_mode');
+		$('.edit_mode .rqty').select();
+		return false;
+	}
 });
 
+var imei_dup_list=[];
 $('#rqty_imei_blk_dlg form').submit(function(){
-			
 	var dlgData = $("#rqty_imei_blk_dlg").data("pro_data");
 	ref_trele = dlgData.ref_tr;
 	prodid = dlgData.prodid;
@@ -1484,21 +1293,19 @@ $('#rqty_imei_blk_dlg form').submit(function(){
 		{	
 			if($.inArray(scn_imei,scanned_imei_nos) != -1)
 			{
-				alert("Please enter valid imei/serialnos :"+scn_imei);
+				$('.imei_error_text').html("Please enter valid imei/serialnos : "+scn_imei+" serial no already exists");
 				$(this).addClass('imei_error_inp');
 			}
 			else
 			{
 				$(this).attr('scninp_imei','imei_'+scn_imei);
 				scanned_imei_nos.push(scn_imei);
-				//alert(scanned_imei_nos);
 			}
 		}
 	});
 	
 	if($('.imei_error_inp').length)
 	{
-		//alert("Please enter valid imei/serialnos : ");
 		return false;
 	}
 	
@@ -1507,18 +1314,19 @@ $('#rqty_imei_blk_dlg form').submit(function(){
 		$.post(site_url+'/admin/jx_chkimeiforgrn',{'imeino':scanned_imei_nos.join(","),'prodid':prodid,'brandid':brandid},function(resp){
 			if(resp.status == 'error')
 			{
-				var imei_dup_list=[];
 				if(resp.duplicate != undefined)
 				{
+					imei_dup_list=[];
+					ref_trele = dlgData.ref_tr;
 					$.each(resp.duplicate,function(a,dup_imei){
-						$('input[scninp_imei="imei_'+dup_imei+'"]').addClass('imei_error_inp');
 						imei_dup_list.push(dup_imei);
+						$('input[scninp_imei="imei_'+dup_imei+'"]').addClass('imei_error_inp');
 					});
+					$('#rqty_imei_blk_dlg .imei_error_inp:first').focus();
 				}
-				alert(imei_dup_list+" IMEI serial number already exists");
-				return false;
 			}else
 			{
+				imei_dup_list=[];
 				var imei_nos=resp.imeinos.split(",");
 				var imei_sort=imei_nos.sort();
 				
@@ -1533,7 +1341,7 @@ $('#rqty_imei_blk_dlg form').submit(function(){
 				
 					if(imei_sort_result.length > 0 )
 					{
-						alert((imei_sort_result.join(","))+" serial number is repeated");
+						$('.imei_error_text').html((imei_sort_result.join(","))+" serial number is repeated");
 					}
 					else
 					{
@@ -1545,19 +1353,20 @@ $('#rqty_imei_blk_dlg form').submit(function(){
 						
 						if($("#list_imei_"+prodid,ref_trele).val())
 						{
-							//ttl_imei_row_scanned++;
-							//$('.imei'+prodid,ref_trele).parents('tr:first').addClass('bcode_scanned');
 							$('.imei_scanned_status',ref_trele).addClass('active').html("YES");
 							$('.imei_scanned_status',ref_trele).show();
 						}else
 						{
-							//$('.imei'+prodid,ref_trele).parents('tr:first').removeClass('bcode_scanned');
+						
 						}
 					}
+					$("#rqty_imei_blk_dlg").dialog('close');
+					$('.iqty',ref_trele).select();
 			}
 		},'json');
 	}
-	$("#rqty_imei_blk_dlg").dialog('close');
+	
+	
 	return false;
 });
 
@@ -1622,26 +1431,66 @@ $('#rqty_imei_blk_dlg').dialog({
 		modal:true,
 		autoOpen:false,
 		width:350,
-		height:250,
+		height:400,
 		autoResize:true,
+			
+		 buttons: {
+		    "Ok": function() { 
+		    	$('#rqty_imei_blk_dlg form').submit();},
+		    "cancel": function(){
+		    	$('#rqty_imei_blk_dlg').data('process_by','');
+				if($('#rqty_imei_blk_dlg').data('process_by') == '')
+				{
+					//alert($('#rqty_imei_blk_dlg').data('state'));
+					var dlgData = $("#rqty_imei_blk_dlg").data("pro_data");
+						prodid = dlgData.prodid;
+						brandid = dlgData.brandid;
+						tot_rqty = dlgData.ttl_qty;	
+						pid = dlgData.pid;
+						state=dlgData.state;
+						ref_trele = dlgData.ref_tr;
+						
+						if(state == 'add')
+						{
+							$("#list_imei_"+prodid,ref_trele).val("");
+							$('.view_imei',ref_trele).hide();
+							$('.rqty',ref_trele).val("0").select();
+						}else
+						{
+							$('.iqty',ref_trele).val("0").select();
+						}
+				}else
+				{
+					$('.iqty',ref_trele).val("0").select();
+				}
+				$("#rqty_imei_blk_dlg").dialog('close');
+			} 
+		  },	
 		open:function(){
-		dlg = $(this);
+			dlg = $(this);
+			$('.ui-dialog-titlebar-close').hide();
+			$('#rqty_imei_blk_dlg').data('process_by','');
+			if(!imei_dup_list.length)
+				$('.imei_error_text').html("");
+			else
+				$('.imei_error_text').html("Duplicate IMEI found : "+imei_dup_list);
 	}
 });
 
-$('.dlg_imei_inp').live('keypress',function(e){
+$('.imei_input').live('keypress',function(e){
 	if((e.keyCode || e.which) == 13)
 	{
-		if($(this).parent().next().find('.dlg_imei_inp') != undefined)
-			$(this).parent().next().find('.dlg_imei_inp').focus();
+	
+		if($(this).parent().next().find('.imei_input').length == 1)
+			$(this).parent().next().find('.imei_input').focus();
+		else
+			$("#rqty_imei_blk_dlg").parent().find(".ui-dialog-buttonpane button:contains('Ok')").focus()
 		return true;
 	}
-})
+});
 
 $('.show').click(function(){
 	var pos=[];
-	//$('.imei_nos').hide();p.po_id
-	//alert(pos);
 	
 	$('.ajax_loadresult a.selected').each(function(){
 		pos.push($(this).attr('poid'));
@@ -1776,10 +1625,13 @@ $(function(){
    
 $('#grn tr').unbind('focus').live('focus', function () {
     if (!$('.edit_mode').length) {
-        $(this).addClass('edit_mode');
-        process_edit_validation(function(){
-        	$('.edit_mode .bcode_upd').trigger('click');
+    	$(this).addClass('edit_mode');
+    	trele = $(this);
+    	process_edit_validation(function(){
+        	if(!trele.hasClass('bcode_scanned'))
+        		$('.bcode_upd',trele).trigger('click');
         });
+        
     } else {
         if ($(this).hasClass('edit_mode')) { // do nothing           
             
@@ -1862,9 +1714,6 @@ $(".datagrid tr .rqty,.datagrid tr .iqty,.datagrid tr .vat_prc,.datagrid tr .bco
         click:function(){}
     };
 }(jQuery));
-
- 
-
 </script>
 
 <?php

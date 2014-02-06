@@ -27,7 +27,7 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 </div>
 <div class="block">
 <div class="block-heading">
-<span class="vendor_det" style="float: left;margin-left: 13px;">Vendor Details</span><span class="show_vdet" style="float: right;margin-right: 13px;">Show</span>
+<span class="vendor_det" style="float: left;margin-left: 13px;">Vendor Details</span><span class="show_vdet" style="float: right;margin-right: 13px;cursor: pointer;">Show</span>
 </div> 
 
 <div class="v_disp_container">
@@ -77,7 +77,9 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 			<span type="button" class="button button-rounded button-action button-small"  id="load_unavail">Load Unavailable Products</span>
 		</div>
 			<input type="text" class="prd_blk inp " id="po_search" placeholder="Search &amp; Add">
-		<div id="po_prod_list" class="prd_srch_result closeonclick"></div>
+		<div id="po_prod_list" class="prd_srch_result closeonclick"></div> 
+		
+		
 	</div>
 
 	<h4>Purchase Products</h4>
@@ -112,21 +114,20 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 <div style="float:left;">
 <table class="datagrid nofooter">
 <b>Enter Expected Delivery Details</b>
-<tr><td align="center">Date</td><td align="center">:</td><td align="center"><input type="text"  name="e_dod"  class="datetimepick" value="" ></td><td align="center">Remarks</td><td align="center">:</td><td style="text-align:right;align:center;"><textarea style="width:350px" name="remarks"  value=""></textarea></td></tr>
+<tr><td align="center">Date</td><td align="center">:</td><td align="center"><input type="text"  name="e_dod"  class="datetimepick" value="" readonly="readonly"></td><td align="center">Remarks</td><td align="center">:</td><td style="text-align:right;align:center;"><textarea style="width:350px" name="remarks"  value=""></textarea></td></tr>
 </table>
 </div>
 <div style="float:right;margin-top:40px;margin-right:44px;">
 <span class="button button-rounded button-action button-small" onclick="submit_frm=1;$('#purchaseordefrm').trigger('submit');" style="float:right;" >Create PO</span>
 </div>
 </div>
+
 </form>
 </div>
-
 
  
 <div style="display:none">
 <table id="sl_prod_template">
-
 <tbody>
 <tr class="brand_%brandid% cat_%catid%" brandid="%brandid%"><td><input type="checkbox" class="sl_sel_prod" value="%pid%"><input type="hidden" class="pid" value="%pid%"></td><td class="psrcstat"><span class="src_stat">%prod_source_stat%</span> <a href=javascript:void(0)" prod_id="%pid%" onclick="upd_prdsourceablestat(this)" nsrc="%prod_source_stat_val%" >Change</a> </td><td>%pid%</td><td class="name" style="width: 400px;text-align: left;"><a  target="_blank" href="<?php echo site_url('admin/product/%pid%')?>">%product%</a></td><td>Rs <span class="mrp">%mrp%</span></td><td class="margin" style="display: none;" >%margin%</td><td>%stock%</td><td ><input type="text" class="i_po_qty" style="width: 40px;" value="%i_po_qty_val%"></td><td class="orders">%orders%</td></tr>
 </tbody>
@@ -146,12 +147,12 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 <b>PNH Product ID:%product_id%</b>
 </div>
 </td>
-<td><input type="text" class="mrp calc_pp inp" size="8" name="mrp[]" value=mrpvalue></td>
+<td><input type="text" class="mrp calc_pp inp readonly" size="8" name="mrp[]" value=mrpvalue readonly="readonly"></td>
 <td>
-	<div style="visibility: %dp_price_inp% "><input type="text" class="dp_price inp" size="8" name="dp_price[]" value="%dp_price%"></div>
+	<div style="visibility: %dp_price_inp% "><input type="text" title="Change/Update DP Price on change" class="calc_pp has_dp_price dp_price" size="8" name="dp_price[]" value="%dp_price%"></div>
 </td>
 
-<td><input type="text" class="margin inp calc_pp readonly" size="8" name="margin[]" value="%margin%"></td>
+<td><input type="text" class="margin inp calc_pp readonly" size="8" name="margin[]" value="%margin%"  readonly="readonly"></td>
 
 <td class="qty_price_blk" style="width:150px;font-size: 10px;" >
 <div style="margin-bottom: 2px">
@@ -301,7 +302,7 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 	</span>
 	<br><br>
 	<div class="datagrid_cont">
-	<h3 id="ttl_res">Total Products:</h3>
+	<h3 id="ttl_res"></h3>
 		<table class="datagrid datagridsort" width="100%">
 			<thead>
 				<tr brandid="%brandid%"><th><input type="checkbox" class="chk_all"></th><th>Source</th><th>Product ID</th><th>Product</th><th>Mrp</th><th style="display: none;">Margin</th><th>Stock</th><th>PO Qty</th><th>Orders[90 Days]</th></tr>
@@ -322,8 +323,6 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 <input type="hidden" name="pids" class="pids">
 <input type="hidden" name="action" class="action" value="1">
 </form>
-
-
 </div>
 
 <style>
@@ -419,6 +418,7 @@ $('.show_vdet').toggle(function(){
 
 
 $('#dlg_openpolist').dialog({'width':850,autoOpen:false,'height':500,modal:true,open:function(){
+	$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"right"});
 	var pid = $(this).data('pid');
 	$('#dlg_openpolist').html("<h3 align='center'>Loading...</h3>");
 	$.post(site_url+'/admin/jx_getopenpolistbypid/'+pid,{},function(resp){
@@ -486,7 +486,6 @@ $(".chk_all").click(function(){
 
 
 $('.datetimepick').datepicker({ minDate: 0 });
-	
 
 
 
@@ -591,10 +590,11 @@ $('select[name="stk_prod_disp"]').change(function(){
 						$('#sl_products .datagrid tbody tr.NOSTOCKNOORDER').show();
 });
 
-
 var added_po=[];
 function remove_prod_selection(ele)
 {
+	if(confirm("Are you sure want to remove product from po list?"))
+	{
 		var trEle = $(ele).parents('tr:first');
 		var rmv_prdid = $('input[name="product[]"]',trEle).val();
 			trEle.remove();
@@ -610,13 +610,16 @@ function remove_prod_selection(ele)
 			$('#pprods tbody tr').each(function(i,ele){
 				$('td:first',this).text(i*1+1);
 			});
-			
+			calc_total_pov();	
+	}		
 }
 
 
 
 function addproduct(id,name,mrp,margin,orders,qty,require)
 {
+	$("#po_search").val("");
+	
 	selected_vendorid=$("#vendorsel").val();
 
 	require = (typeof require === "undefined") ? "" : require;
@@ -652,6 +655,38 @@ function addproduct(id,name,mrp,margin,orders,qty,require)
 		template=template.replace(/--barcode--/g,o.barcode);
 		template=template.replace(/%brandid%/g,o.brand_id);
 		template=template.replace(/%product_brand%/g,o.brand_name);
+		var mrgin=$('input[name="margin[]"],tr',this).val()*1;
+	 	var sch_type=$('select[name="sch_type[]"],tr',this).val();
+	 	var extra_mrgin=$('input[name="sch_discount[]"],tr',this).val()*1;
+		
+		if(!o.dp_price.length)
+		{
+			if(sch_type == 1)
+			{
+				
+				
+				pprice=mrp-(mrp*parseFloat(o.margin+extra_mrgin)/100);
+			}
+			else
+			{
+				
+				pprice=mrp-(mrp*(parseFloat(o.margin)/100));
+				pprice=pprice-parseFloat(extra_mrgin);
+
+			}
+		}
+
+		
+		if(o.dp_price.length)
+		{
+			if(sch_type == 1)
+			
+				pprice=o.dp_price-(o.dp_price*(parseFloat(o.margin+extra_mrgin)/100));
+				
+			else
+				pprice=o.dp_price-(o.dp_price*(parseFloat(o.margin)/100));
+				pprice=pprice-parseFloat(extra_mrgin);
+		}
 		
 		$("#pprods tbody").append(template);
 		var ttl_openpo = 0;
@@ -781,7 +816,6 @@ $(function(){
 		margin=parseFloat($(".margin",$p).val());
 
 		margin = isNaN(margin)?0:margin;
-
 		
 		if(dp_price*1 > 0)
 		{
@@ -798,8 +832,10 @@ $(function(){
 				margin_prc=(1-(price/dp_price))*100;
 				$('.marg_prc_preview',$p).show();
 				$('.marg_prc').val(margin_prc);
-
 			}
+
+			if(dp_price > mrp)
+				alert("Error:: Please note DP Price cannot be greater than MRP");
 				
 		}else
 		{
@@ -836,6 +872,7 @@ $(function(){
 		search_timer=window.setTimeout(function(){
 		jHR=$.post("<?=site_url("admin/getvendorproducts")?>",{q:q,v:$("#vendoridhidden").val()},function(data){
 			$("#po_prod_list").html(data).show();
+			
 		});
 		},200);
 	}).focus(function(){
@@ -845,6 +882,9 @@ $(function(){
 	}).click(function(e){
 		e.stopPropagation();
 	});
+
+	
+		
 
 	$("#purchaseordefrm").submit(function(){
 		if(submit_frm)
@@ -859,16 +899,25 @@ $(function(){
 			var qty_pending = 0;
 			var ven_pending = 0;
 			var marg_pending = 0;
+			var invalid_extramargin = 0;
+			var invalid_purchasevalue = 0;
 				$('#pprods tbody tr:visible',this).each(function(){
 					qty = $('input[name="qty[]"]',this).val()*1;
 					marg = $('input[name="margin[]"]',this).val()*1;
+					unit_price = $('input[name="price[]"]',this).val()*1;
+					extra_margin = $('input[name="sch_discount[]"]',this).val();
 					
 					if(isNaN(marg) || marg == 0)
 						marg_pending += 1;
 					
-					if(qty==0)
+					if( isNaN(qty) || qty==0)
 						qty_pending += 1;
-					
+
+					if(unit_price<=0)
+						invalid_purchasevalue += 1;
+
+					if(isNaN(extra_margin))
+						invalid_extramargin += 1;
 				});
 				
 				if(marg_pending)
@@ -881,6 +930,11 @@ $(function(){
 					alert("Unable to submit request, please enter valid qty for purchase");
 					return false;
 				}
+				if(invalid_extramargin)
+				{
+					alert("Invalid 'Extra Margins' entered,purchase price can't be 'negative'");
+					return false;
+				}
 				if(!$('input[name="e_dod"]').val())
 				{
 					alert('"Date of Delivery" is mandatory');
@@ -891,6 +945,13 @@ $(function(){
 					alert('Please input Remarks');
 					return false;
 				}
+
+				if(invalid_extramargin)
+				{
+					alert("Please enter valid Extra Margin");
+					return false;
+				}
+				
 				if(confirm("Are you sure want to create this PO ?"))
 					return true;
 				else
@@ -934,12 +995,11 @@ $(function(){
 	$("#sl_show").click(function(){
 		$('select[name="cat_prod_disp"]').html("");
 		$("#sl_products").dialog('open');
+		$("#ttl_res").html("");
 	});
 
 	
 });
-
-
 var brand_prods=[];
 var search_timer=0,jHR=0;
 function showvendor_old(vid)
@@ -988,6 +1048,9 @@ function showvendor(vid)
 
 function loadbrandproducts()
 {
+	if($(".sl_sel_prod:checked").length==0)
+	{alert("Select atleast one product"); return false;}
+	
 	$(".sl_sel_prod:checked").each(function(){
 		tr=$($(this).parents("tr").get(0));
 		addproduct($(".pid",tr).val(),$(".name",tr).html(),$(".mrp",tr).html(),$(".margin",tr).html(),$(".orders",tr).html(),$(".i_po_qty",tr).val(),$("#vendorsel").val());
@@ -1019,11 +1082,11 @@ $("#sl_products").dialog({
 											$("#loading_bar").hide();
 											data=$.parseJSON(json);
 											brand_prods=data;
-											
+											$('#ttl_res').html("");
 											$("#sl_products .datagrid tbody").html("");
 											if(data.length)
 											{
-												$('#ttl_res').append(data.length);
+												$('#ttl_res').html('Total Products:'+data.length);
 											$.each(data,function(i,p){
 												if(!$('select[name="cat_prod_disp"] option#cat_'+p.product_cat_id).length){
 													if(p.product_cat_id != undefined){
@@ -1087,7 +1150,8 @@ $("#sl_products").dialog({
 
 								'Mark as Sourcable' :function()
 								{
-								
+									if($(".sl_sel_prod:checked").length==0)
+									{alert("Select atleast one product"); return false;}
 										var dlg = $(this);
 										var pids_arr=[];
 										$(".sl_sel_prod:checked").each(function(){
@@ -1111,6 +1175,8 @@ $("#sl_products").dialog({
 
 								'Mark as not Sourcable':function()
 								{ 
+									if($(".sl_sel_prod:checked").length==0)
+									{alert("Select atleast one product"); return false;}
 									var dlg = $(this);
 									var pids=[];
 									$(".sl_sel_prod:checked").each(function(){

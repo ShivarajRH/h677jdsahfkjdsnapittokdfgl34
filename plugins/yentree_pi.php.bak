@@ -54,10 +54,10 @@ function build_yentree($item_list, $mainclass = 'item', $subclass = 'subitem') {
 			for($k = 0; $k < count ( $item_tree_index ); $k ++) {
 				if ($item_tree_index [$k] == 0)
 					break;
-					
-				if(!isset($item_tree_index [$k + 1]))
-					continue;	
-					
+				
+				if(! isset( $item_tree_index [$k + 1] ))
+					continue;
+				
 				if (isset ( $item_config [$item_tree_index [$k + 1]] ) && isset ( $item_config [$item_tree_index [$k]] )) {
 					if (isset ( $item_config [$item_tree_index [$k + 1]] [$item_tree_index [$k]] ))
 						$item_config [$item_tree_index [$k + 1]] [$item_tree_index [$k]] [0] = $item_config [$item_tree_index [$k]];

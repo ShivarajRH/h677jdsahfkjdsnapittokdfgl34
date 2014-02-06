@@ -232,10 +232,11 @@ class Stream extends Reservation
             $arr_streams=$arr_streams_rslt->result_array();
             
 	    if($total_items>0) {
-	        $output['items']=""; 
+	        $output['items']="<table border='0' width='100%'>
+	                        <thead><tr><th></th></tr></thead>
+	                        <tbody>"; 
 	        foreach($arr_streams as $post) 
 	        {
-                    
 	            $streamed_users_list='';
 	            $arr_streamed_users_list= $this->db->query("select sau.*,ka.name,ka.username,ka.email,ka.mobile,ka.gender,ka.img_url from m_stream_post_assigned_users sau
 	 join king_admin ka on ka.id=sau.assigned_userid where ka.account_blocked!=1 and sau.post_id=?",$post['id'])->result_array();
@@ -262,7 +263,8 @@ class Stream extends Reservation
 	            
 	            $post_replies_arr=$this->get_post_reply_list($post['id']);
 	            
-	            $output['items'].='<div class="stream_item_admin_div">
+	            $output['items'].='<tr>
+	                                    <td width="100%"><div class="stream_item_admin_div">
 	                                            <div class="reply_image_div">'.$divimgurl.'</div>
 	                                            <div class="reply_box">
 	                                                    <div class="title">
@@ -282,9 +284,11 @@ class Stream extends Reservation
 	                                                    <div class="sub_reply_list" id="sub_reply_list_'.$post['id'].'">'.$post_replies_arr.'</div>
 	                                                    <div class="stream_item_reply_div" id="stream_item_reply_div_'.$post['id'].'"></div>
 	                                            </div>
-                                        </div>';
+	                                    </td>
+	                                </tr>';
 	        }
-                            
+			$output['items'].='</tbody>
+	            </table>';           
 //                  PAGINATION
                     $date_from=date("Y-m-d",$st_ts);
                     $date_to=date("Y-m-d",$en_ts);
@@ -749,144 +753,6 @@ class Stream extends Reservation
 		}
 	
 		redirect('admin/pnh_franchise_activate_imei','refresh');
-	}
-
-
-	function __auto_pnh_acc_stat_c()
-	{
-		$user=$this->auth(FINANCE_ROLE);
-		
-		$arr = array();		
-		$arr[] = array(59,18280);
-		$arr[] = array(108,18280);
-		$arr[] = array(151,18280);
-		$arr[] = array(254,10280);
-		$arr[] = array(156,18280);
-		$arr[] = array(116,18280);
-		$arr[] = array(206,18280);
-		$arr[] = array(185,18280);
-		$arr[] = array(92,18280);
-		$arr[] = array(43,18280);
-		$arr[] = array(188,18280);
-		$arr[] = array(213,18280);
-		$arr[] = array(295,18280);
-		$arr[] = array(218,18280);
-		$arr[] = array(296,18280);
-		$arr[] = array(83,18280);
-		$arr[] = array(68,18280);
-		$arr[] = array(224,18280);
-		$arr[] = array(305,10280);
-		$arr[] = array(174,18280);
-		$arr[] = array(290,17950);
-		$arr[] = array(62,18280);
-		$arr[] = array(168,18280);
-		$arr[] = array(67,18280);
-		$arr[] = array(287,18280);
-		$arr[] = array(253,18280);
-		$arr[] = array(234,10280);
-		$arr[] = array(199,10280);
-		$arr[] = array(165,18280);
-		$arr[] = array(263,18280);
-		$arr[] = array(248,18280);
-		$arr[] = array(214,18280);
-		$arr[] = array(255,18280);
-		$arr[] = array(195,10280);
-		$arr[] = array(235,18280);
-		$arr[] = array(282,18280);
-		$arr[] = array(101,18280);
-		$arr[] = array(245,18280);
-		$arr[] = array(164,18280);
-		$arr[] = array(180,18280);
-		$arr[] = array(9,10280);
-		$arr[] = array(45,18280);
-		$arr[] = array(179,18280);
-		$arr[] = array(178,18280);
-		$arr[] = array(294,18280);
-		$arr[] = array(100,18280);
-		$arr[] = array(210,10280);
-		$arr[] = array(205,18280);
-		$arr[] = array(319,10280);
-		$arr[] = array(227,18280);
-		$arr[] = array(293,18280);
-		$arr[] = array(237,18280);
-		$arr[] = array(103,8780);
-		$arr[] = array(240,10280);
-		$arr[] = array(288,18280);
-		$arr[] = array(187,18280);
-		$arr[] = array(57,18280);
-		$arr[] = array(238,10280);
-		$arr[] = array(197,18280);
-		$arr[] = array(311,10610);
-		$arr[] = array(125,10280);
-		$arr[] = array(182,18280);
-		$arr[] = array(85,18280);
-		$arr[] = array(247,18280);
-		$arr[] = array(257,18280);
-		$arr[] = array(37,18280);
-		$arr[] = array(26,17950);
-		$arr[] = array(28,18280);
-		$arr[] = array(279,18280);
-		$arr[] = array(231,18280);
-		$arr[] = array(261,18280);
-		$arr[] = array(226,18280);
-		$arr[] = array(320,10280);
-		$arr[] = array(291,18280);
-		$arr[] = array(130,18280);
-		$arr[] = array(340,18280);
-		$arr[] = array(66,18280);
-		$arr[] = array(167,18280);
-		$arr[] = array(171,18280);
-		$arr[] = array(285,18280);
-		$arr[] = array(266,18280);
-		$arr[] = array(181,18280);
-		$arr[] = array(292,18280);
-		$arr[] = array(77,10730);
-		$arr[] = array(65,18280);
-		$arr[] = array(148,18280);
-		$arr[] = array(228,10280);
-		$arr[] = array(232,18280);
-		$arr[] = array(268,18280);
-		$arr[] = array(51,18280);
-		$arr[] = array(87,18280);
-		$arr[] = array(58,18280);
-		$arr[] = array(126,18280);
-		$arr[] = array(133,18280);
-		$arr[] = array(249,18280);
-		$arr[] = array(225,18280);
-		$arr[] = array(115,18280);
-		$arr[] = array(236,18280);
-		$arr[] = array(52,18280);
-		$arr[] = array(200,18280);
-		
-		
-		$fr_list_det = $arr;
-		 
-		for($f=0;$f<count($fr_list_det);$f++)
-		{
-			$fr_det = $fr_list_det[$f];
-			$fid = $fr_det[0];
-			
-			$amount = $fr_det[1];
-			$type = 0;
-			$desc = 'Non recoverable goods sent to franchisee(storeking spikes, monitor & optical mouse)';
-			$sms = 0;
-			$receipt_id = 0;
-			
-			if($this->db->query("select count(*) as t from pnh_franchise_account_summary where franchise_id = ? and remarks = ? ",array($fid,$desc))->row()->t)
-				continue ;
-			
-			$mob=$this->db->query("select login_mobile1 as m from pnh_m_franchise_info where franchise_id=?",$fid)->row()->m;
-			
-			$acc_stat_id = $this->erpm->pnh_fran_account_stat($fid,$type,$amount,$desc,"correction",$fid);
-			$trans_type = 5;
-			if($receipt_id)
-				$trans_type = 3;
-			
-			$arr = array($fid,$receipt_id,$trans_type,$acc_stat_id,$type?$amount:0,!$type?$amount:0,$desc,1,date('Y-m-d H:i:s'),$user['userid']);
-			$this->db->query("insert into pnh_franchise_account_summary (franchise_id,receipt_id,action_type,acc_correc_id,debit_amt,credit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?,?,?)",$arr);
-			echo anchor_popup('admin/pnh_franchise/'.$fid,$fid).'<br>';
-		}
-		
 	}
 	
 	/**

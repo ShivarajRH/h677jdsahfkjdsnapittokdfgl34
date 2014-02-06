@@ -52,9 +52,10 @@
 
 	<form method="post" id="poprodfrm" autocomplete="off">
 		<!--<input type="button" value="show offer" style="font-size: 10px;" id="offer_details">-->
-	
+		<div id="expected_del_det_payload" style="display: none;"></div>
 		<div style="margin-bottom:22px;clear:both;">
 			<table class="datagrid datagridsort" id="pprods" width="100%" cellpadding="8">
+			
 				<thead>
 					<tr>
 						<th width="10px">S.No</th>
@@ -86,6 +87,16 @@
 	</form>
 </div>
 	
+<div id="delivery_det_dlg" Title="Update Expected Delivery Details" style="display: none;">
+	<table class="datagrid nofooter" width="100%">
+		<thead>
+			<th>Vendor</th>
+			<th>Expected Delivery Date</th>
+			<th>Remarks</th>
+		</thead>
+		<tbody></tbody>
+	</table>
+</div>
 <div id="sl_products" title="Choose and add to current order">
 	<span style="float: left">
 			<b>Show</b> :
@@ -460,6 +471,7 @@ var psubmit= false;
 $('#poprodfrm').submit(function(){
 	if(!psubmit)
 	{
+		vids=[];
 		var block_frm_submit = 0;
 		var qty_pending = 0;
 		var ven_pending = 0;
@@ -467,15 +479,18 @@ $('#poprodfrm').submit(function(){
 		var invalid_extramargin = 0;
 		var invalid_purchasevalue = 0;
 		var frmEle = $(this);
-		$('.datagrid tbody tr',frmEle).addClass('row_p');
-			$('.datagrid tbody tr:visible',frmEle).each(function(){
+		$('#pprods.datagrid tbody tr',frmEle).addClass('row_p');
+			$('#pprods.datagrid tbody tr:visible',frmEle).each(function(){
 				qty = $('input[name="qty[]"]',this).val()*1;
 				ven = $('select[name="vendor[]"]',this).val()*1;
+				vids.push(ven);
 				marg = $('input[name="margin[]"]',this).val()*1;
 				unit_price = $('input[name="price[]"]',this).val()*1;
 				extra_margin = $('input[name="sch_discount[]"]',this).val();
-
-				if(isNaN(marg) || marg =='' )
+				
+				
+				
+			if(isNaN(marg) || marg =='' )
 					marg_pending += 1;
 					
 				
@@ -518,10 +533,11 @@ $('#poprodfrm').submit(function(){
 				alert("Please enter valid Extra Margin");
 				return false;
 			}
-			
+		
 			if(confirm('Are You sure want to place PO?'))
 			{
-				return true;
+					expected_delivarydetails(vids);
+					return false;
 			}
 			else
 				return false;
@@ -529,6 +545,79 @@ $('#poprodfrm').submit(function(){
 	}
 });
 
+function expected_delivarydetails(vids)
+{
+	$("#delivery_det_dlg").data('vids',vids).dialog('open');
+}
+	$("#delivery_det_dlg").dialog({
+	modal:true,
+	autoOpen:false,
+	width:'550',
+	height:'450',
+	open:function(){
+		dlg = $(this);
+		$.post(site_url+'/admin/get_vendor_details',{vids:dlg.data('vids')},function(resp){
+
+			if(resp.status=='success')
+			{
+				var expected_delivary_det_html='';
+				$.each(resp.vdet,function(a,b){
+					
+					expected_delivary_det_html+='<tr><td valign="top"><input type="hidden" name="vendor_id[]" value='+b.vendor_id+'><input type="text" name="vname"  size="17"  readonly="readonly" value='+b.vendor_name+'></td><td valign="top"><input type="text" name="edod[]" value="" size="17" class=" inp datepic"></td><td valign="top"><textarea name="po_remarks[]" value=""></textarea></td></tr>';
+						$("#delivery_det_dlg tbody").html(expected_delivary_det_html);
+					});
+				$('#delivery_det_dlg .datepic').each(function(i,dpEle){
+					if(!$(this).hasClass('hasDatepicker'))
+						$(this).datepicker({minDate:0});
+				});
+			}
+			
+			},'json');
+		
+		},
+		buttons:{
+			'Submit':function(){
+				var dlg= $(this);
+				var error_flg=0;
+				var frmEle = $("#delivery_det_dlg");
+				var delivery_det_inp_str = '';
+				$("#delivery_det_dlg tbody tr").each(function(){
+					
+				 edod=$("input[name='edod[]']",this).val();
+				 po_remarks=$("textarea[name='po_remarks[]']",this).val();
+				 vid=$("input[name='vendor_id[]']",this).val();
+
+					if(edod.length==0 || edod=='')
+						error_flg=1;
+					
+					if(po_remarks.length==0 || po_remarks=='')
+						error_flg=1;
+
+					delivery_det_inp_str += '<div style="display:none">';
+					delivery_det_inp_str += '<input type="hidden" name="edod[]" value="'+edod+'" >';
+					delivery_det_inp_str += '<input type="hidden" name="po_remarks[]" value="'+po_remarks+'" >';
+					delivery_det_inp_str += '<input type="hidden" name="vendor_id[]" value="'+vid+'" >';
+					delivery_det_inp_str += '</div>';
+				});
+				
+				if(error_flg)
+				{
+					delivery_det_inp_str = '';
+					alert("Please enter valid expected delivery details");
+					return false;
+				}
+				else
+				{
+					
+					$("#expected_del_det_payload").html(delivery_det_inp_str);
+					psubmit = true;
+					$("#poprodfrm").submit();
+					$(this).dialog('close');
+				}
+			},
+			
+		}
+	});
 
 function loadbrandproducts()
 {

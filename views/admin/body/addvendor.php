@@ -25,17 +25,20 @@
 		</ul>
 		
 		<div id="v_details">
-			<table>
-			<tr><td>Name <span class="red_star">*</span> :</td><td><input type="text" name="name" class="inp val_req" value="<?=$v?"{$v['vendor_name']}":""?>"></td></tr>
-			<tr><td>Address Line 1 :</td><td><input type="text" name="addr1" class="inp" size="40" value="<?=$v?"{$v['address_line1']}":""?>"></td></tr>
-			<tr><td>Address Line 2 :</td><td><input type="text" name="addr2" class="inp" size="30" value="<?=$v?"{$v['address_line2']}":""?>"></td></tr>
-			<tr><td>Locality :</td><td><input type="text" name="locality" class="inp" value="<?=$v?"{$v['locality']}":""?>"></td></tr>
-			<tr><td>Landmark :</td><td><input type="text" name="landmark" class="inp" value="<?=$v?"{$v['landmark']}":""?>"></td></tr>
-			<tr><td>City <span class="red_star">*</span> :</td><td><input type="text" name="city" class="inp val_req" value="<?=$v?"{$v['city_name']}":""?>"></td></tr>
-			<tr><td>State :</td><td><input type="text" name="state" class="inp" value="<?=$v?"{$v['state_name']}":""?>"></td></tr>
-			<tr><td>Country :</td><td><input type="text" name="country" class="inp" value="<?=$v?"{$v['country']}":""?>"></td></tr>
-			<tr><td>Postcode :</td><td><input type="text" name="postcode" class="inp" value="<?=$v?"{$v['postcode']}":""?>"></td></tr>
-			</table>
+			<div align="left">
+				<table>
+				<tr><td>Name :<span class="red_star">*</span> </td><td><input type="text" name="name" class="inp val_req" value="<?=$v?"{$v['vendor_name']}":""?>"></td></tr>
+				<tr><td>Address Line 1 :</td><td><input type="text" name="addr1" class="inp" size="40" value="<?=$v?"{$v['address_line1']}":""?>"></td></tr>
+				<tr><td>Address Line 2 :</td><td><input type="text" name="addr2" class="inp" size="30" value="<?=$v?"{$v['address_line2']}":""?>"></td></tr>
+				<tr><td>Locality :</td><td><input type="text" name="locality" class="inp" value="<?=$v?"{$v['locality']}":""?>"></td></tr>
+				<tr><td>Landmark :</td><td><input type="text" name="landmark" class="inp" value="<?=$v?"{$v['landmark']}":""?>"></td></tr>
+				<tr><td>City <span class="red_star">*</span> :</td><td><input type="text" name="city" class="inp val_req" value="<?=$v?"{$v['city_name']}":""?>"></td></tr>
+				<tr><td>State :</td><td><input type="text" name="state" class="inp" value="<?=$v?"{$v['state_name']}":""?>"></td></tr>
+				<tr><td>Country :</td><td><input type="text" name="country" class="inp" value="<?=$v?"{$v['country']}":""?>"></td></tr>
+				<tr><td>Postcode :</td><td><input type="text" name="postcode" class="inp" value="<?=$v?"{$v['postcode']}":""?>"></td></tr>
+				</table>
+			</div>
+			
 		</div>
 		<div id="v_financials">
 			<table>
@@ -43,7 +46,15 @@
 			<tr><td>Credit Limit :<span class="red_star">*</span></td><td><input type="text" name="credit_limit" class="inp" value="<?=$v?"{$v['credit_limit_amount']}":""?>"></td></tr>
 			<tr><td>Credit Days :<span class="red_star">*</span></td><td><input type="text" name="credit_days" class="inp" value="<?=$v?"{$v['credit_days']}":""?>"></td></tr>
 			<tr><td>Payment Advance :</td><td><input type="text" name="advance" class="inp" size=3 value="<?=$v?"{$v['require_payment_advance']}":""?>">%</td></tr>
-			<tr><td>Payment Terms :<span class="red_star">*</span></td><td><select name="payterms"><option value="">Select</option><option value="1">Cheque</option><option value="2">Cash</option><option value="3">DD</option></select></td></tr>
+			<tr><td>Payment Type :<span class="red_star">*</span></td><td>
+			<select name="payment_type">
+            <option <?php if ($v['payment_type'] == 0 ) echo 'selected'; ?> value="0">Select</option>
+            <option <?php if ($v['payment_type'] == 1 ) echo 'selected'; ?> value="1">Cheque</option>
+			<option <?php if ($v['payment_type'] == 2 ) echo 'selected'; ?> value="2">Cash</option>
+			<option <?php if ($v['payment_type'] == 3 ) echo 'selected'; ?> value="3">DD</option>
+			</select>
+			</td>
+			</tr>
 			<tr><td>CST :</td><td><input type="text" name="cst" class="inp" value="<?=$v?"{$v['cst_no']}":""?>"></td></tr>
 			<tr><td>PAN :</td><td><input type="text" name="pan" class="inp" value="<?=$v?"{$v['pan_no']}":""?>"></td></tr>
 			<tr><td>VAT :</td><td><input type="text" name="vat" class="inp" value="<?=$v?"{$v['vat_no']}":""?>"></td></tr>
@@ -54,7 +65,7 @@
 		<div id="v_extra">
 			<table>
 			<tr><td>Return Policy :</td><td><textarea class="inp" name="rpolicy"><?=$v?"{$v['return_policy_msg']}":""?></textarea></td></tr>
-			<!--  <tr><td>Payment Terms :</td><td><textarea class="inp" name="payterms"><?=$v?"{$v['payment_terms_msg']}":""?></textarea></td></tr>-->
+			 <tr><td>Payment Terms :</td><td><textarea class="inp" name="payterms"><?=$v?"{$v['payment_terms_msg']}":""?></textarea></td></tr>
 			<tr><td>Remarks :</td><td><textarea class="inp" name="remarks"><?=$v?"{$v['remarks']}":""?></textarea></td></tr>
 			</table>
 		</div>
@@ -521,7 +532,34 @@ $('#venfrm').submit(function()
 		alert("Link atlease one brand for this vendor");
 		return false;
 	}
-	
+	var payment_error_status=0;
+
+	var payment_type=$('select[name="payment_type"]').val()*1;
+	var credit_days =$('input[name="credit_days"]').val()*1;
+	var credit_limit = $('input[name="credit_limit"]').val()*1;
+
+	if(payment_type==0)
+	{
+		payment_error_status=1;
+		$('select[name="payment_type"]').addClass('error_inp');
+	}
+
+	if(isNaN(credit_days))
+	{
+		payment_error_status=1;
+		$('input[name="credit_days"]').addClass('error_inp');
+	}
+	if(isNaN(credit_limit))
+	{
+		payment_error_status=1;
+		$('input[name="credit_limit"]').addClass('error_inp');
+	}
+	if(payment_error_status)
+	{
+		$('.error_inp:first').focus();
+		alert("Invalid Finance Details");
+		return false;
+	}
 	var bm_error_status = 0;
 	$('.edit_vblink_chk:checked').each(function(){
 		var $r = $(this).parents('tr:first');

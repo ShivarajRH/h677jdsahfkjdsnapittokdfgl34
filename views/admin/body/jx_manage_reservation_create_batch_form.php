@@ -11,7 +11,7 @@
     <form method="post" action="">
         <table width="100%" border="0" cellspacing="0" cellpadding="5">
            <tr>
-               <td>Select Territory :<span class="mark">*</span></td>
+               <td>Select Territory:</td>
                <td>
                    <input type="hidden" name="dlg_sel_town" id="dlg_sel_town" value="<?=$sel_town_id;?>" />
                    <input type="hidden" name="dlg_sel_franchise" id="dlg_sel_franchise" value="<?=$sel_fran_id;?>" />
@@ -47,7 +47,7 @@
                     </div></td>
             </tr> */ ?>
             <tr>
-                <td>Select Menu :<span class="mark">*</span></td>
+                <td>Select Menu: <span class="mark">*</span></td>
                 <td>
                     <select name="sel_batch_menu" id="sel_batch_menu" style="width: 204px;">
                         <option value="00">All</option>
@@ -118,7 +118,7 @@ $("#sel_batch_menu").live("change",function(e) {
 $("#dlg_sel_territory").live("change",function() {
     var terrid=$(this).find(":selected").val();
 //        if(terrid=='00') {          $(".sel_status").html("Please select territory."); return false;        }
-    /*$.post(site_url+"/admin/jx_suggest_townbyterrid/"+terrid,function(resp) {
+    /*$.post(site_url+"admin/jx_suggest_townbyterrid/"+terrid,function(resp) {
         if(resp.status=='success') {
              //print(resp.towns);
             var obj = jQuery.parseJSON(resp.towns);

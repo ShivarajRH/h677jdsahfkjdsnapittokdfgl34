@@ -109,7 +109,7 @@
 			</tr>
 			<tr>
 				<td>Reason </td>
-				<td><textarea class="inp" name="reason" style="width:500px;height: 150px;"></textarea></td>
+				<td><textarea class="inp" name="reason" style="width:82%;height: 150px;"></textarea></td>
 			</tr>
 			<tr>
 				<td>Expire previous Scheme</td>
@@ -155,44 +155,44 @@
 </style>
 
 <script>
-
+$('#choose_menu,#bulk_schtype,#select_cat,#select_brand').chosen();
 
 
 function select_all_franchises()
 {
-	$('.list-inlineblk input[name="fids[]"]').attr('checked',true);
-	$('.list-inlineblk ').addClass('selected');
+	$('#fran_list .list-inlineblk:visible input[name="fids[]"]').attr('checked',true);
+	$('#fran_list .list-inlineblk:visible').addClass('selected');
 }
 
 function unselect_all_franchises()
 {
-	$('.list-inlineblk input[name="fids[]"]').attr('checked',false);
-	$('.list-inlineblk ').removeClass('selected');
+	$('#fran_list .list-inlineblk:visible input[name="fids[]"]').attr('checked',false);
+	$('#fran_list .list-inlineblk:visible ').removeClass('selected');
 }
 
 
 function select_all_deals()
 {
-	$('.list-inlineblk input[name="dealids[]"]').attr('checked',true);
-	$('.list-inlineblk ').addClass('selected');
+	$('#deal_list .list-inlineblk:visible input[name="dealids[]"]').attr('checked',true);
+	$('#deal_list .list-inlineblk:visible ').addClass('selected');
 }
 function unselect_all_deals()
 {
-	$('.list-inlineblk input[name="dealids[]"]').attr('checked',false);
-	$('.list-inlineblk ').removeClass('selected');
+	$('#deal_list .list-inlineblk:visible input[name="dealids[]"]').attr('checked',false);
+	$('#deal_list .list-inlineblk:visible ').removeClass('selected');
 }
 
-$('#choose_menu,#bulk_schtype,#select_cat,#select_brand').chosen();
+
 $(function(){
 	prepare_daterange("d_start","d_end");
 	$("#m_applyfrm").datepicker();
 });
-
+ 
 
 $('.list-inlineblk').live('click',function(e){
 	e.preventDefault();
 	
-	fr_chk_ele = $('input[name="fids[]"]',this);
+	fr_chk_ele = $('input[type="checkbox"]',this);
 	if(fr_chk_ele.attr('checked'))
 	{
 		fr_chk_ele.attr('checked',false);
@@ -202,22 +202,6 @@ $('.list-inlineblk').live('click',function(e){
 		fr_chk_ele.attr('checked',true);
 		$(this).addClass('selected');
 	}
-
-	deal_chk_ele=$('input[name="dealids[]"]',this);
-	if(deal_chk_ele.attr('checked'))
-	{
-		deal_chk_ele.attr('checked',false);
-		$(this).removeClass('selected');
-	}else
-	{
-		deal_chk_ele.attr('checked',true);
-		$(this).addClass('selected');
-	}
-});
-
-
-$('input[name="fids[]"]').live('change',function(e){
-	e.preventDefault();
 });
 
 
@@ -290,7 +274,7 @@ $('#choose_menu').change(function(){
 	var sel_sch_type=$("#bulk_schtype").val();
 	var sel_menuid=$(this).val();
 		$('#franchise_filter').hide();
-		$('#fran_list').html('').trigger('liszt:updated');
+		$('#fran_list').html('<h3 align="center"><b>Loading Franchise List,Please wait...</b></h3>');
 		$.getJSON(site_url+'/admin/get_franchisebymenu_id/'+sel_menuid+'/0'+'/0/'+sel_sch_type,function(resp){
 			if(resp.status=='error')
 			{
@@ -327,15 +311,15 @@ $('#choose_menu').change(function(){
 				$('#franchise_filter').show();
 			}
 	
-			$('#fran_list').html(menufranchiselist_html).trigger('liszt:updated');
-			$('#fran_list').trigger('change');
+			$('#fran_list').html(menufranchiselist_html);
+			
 		});
 });
 $('#choose_menu').change(function(){
 	
 	if($(this).val())
 	{
-		$('#select_cat').html("").trigger("lizst:updated");
+		$('#select_cat').html('<option value="">Loading...</option>').trigger("lizst:updated");
 		$.getJSON(site_url+'/admin/jx_load_allcatsbymenu/'+$(this).val(),'',function(resp){
 		var cat_html='';
 		if(resp.status =='error')
@@ -362,7 +346,7 @@ $('#select_cat').change(function(){
 
 	if($(this).val())
 	{
-		$("#select_brand").html("").trigger("lizst:updated");
+		$("#select_brand").html("<option value=''>Loading...</option>").trigger("lizst:updated");
 		$.getJSON(site_url+'/admin/jx_load_allbrandsbycat/'+$(this).val(),'',function(resp){
 		var brand_html='';
 		if(resp.status=='error')
@@ -375,7 +359,6 @@ $('#select_cat').change(function(){
 			brand_html+='<option value="0">All</option>';
 			$.each(resp.brand_list,function(i,b){
 				brand_html+='<option value="'+b.brandid+'">'+b.name+'</option>';
-				$('#fran_list').trigger('change');
 			});
 		}
 		$('#select_brand').html(brand_html).trigger("liszt:updated");
@@ -431,14 +414,15 @@ $(".close_filters").toggle(function() {
 $("select[name='fil_territory']").live('change',function(){
 	var sel_menuid= $('#choose_menu').val();
 	var tid=$(this).val();
-	$("select[name='fil_town']").html('').trigger('liszt:updated');
+	$("select[name='fil_town']").html('<option value="">Loading...</option>');
 	if($(this).val() == '')
 	{
-		$('.list-inlineblk').show();
+		$('#fran_list .list-inlineblk').show();
+		$("select[name='fil_town']").html('<option value="">Choose</option>');
 	}else
 	{
-		$('.list-inlineblk').hide();
-		$('.list-inlineblk.terr_'+tid).show();
+		$('#fran_list .list-inlineblk').hide();
+		$('#fran_list .list-inlineblk.terr_'+tid).show();
 
 		//get the towns by territory
 		$.post(site_url+'/admin/get_franchisebymenu_id/'+sel_menuid+'/'+tid ,function(resp){
@@ -449,7 +433,7 @@ $("select[name='fil_territory']").live('change',function(){
 			}
 			else
 			{
-				terr_linkedtwn_html +='<option value=" ">Choose</option>';
+				terr_linkedtwn_html +='<option value="">Choose</option>';
 				
 				$.each(resp.menu_fran_list,function(i,itm){
 					
@@ -463,7 +447,7 @@ $("select[name='fil_territory']").live('change',function(){
 					}
 				});
 			}
-			$("select[name='fil_town']").html(terr_linkedtwn_html).trigger('liszt:updated');
+			$("select[name='fil_town']").html(terr_linkedtwn_html);
 		},'json');
 	}
 });
@@ -473,11 +457,11 @@ $("select[name='fil_town']").live('change',function(){
 	var twn=$(this).val();
 	if($(this).val() == '')
 	{
-		$('.list-inlineblk').show();
+		$("select[name='fil_territory']").trigger('change');
 	}else
 	{
-		$('.list-inlineblk').hide();
-		$('.list-inlineblk.twn_'+twn).show();
+		$('#fran_list .list-inlineblk').hide();
+		$('#fran_list .list-inlineblk.twn_'+twn).show();
 	}
 });
 
@@ -528,7 +512,7 @@ $('.disc_ondeal').live('click',function(){
 		
 		$('#sourceble_filter').show();
 		$('.show_deal').show();
-		$('#deal_list').html('').trigger('liszt:updated');
+		$('#deal_list').html('<h3 align="center"><b>Loading Deal List,Please wait...</b></h3>');
 		$.getJSON(site_url+'/admin/jx_to_getdeals_bybrandcatmenu/'+sel_menu+'/'+sel_brand+'/'+sel_cat ,function(resp){
 			if(resp.status=='errorr')
 			{
@@ -544,15 +528,13 @@ $('.disc_ondeal').live('click',function(){
 				});
 			}
 	
-			$('#deal_list').html(menudeallist_html).trigger('liszt:updated');
-			$('#deal_list').trigger('change');
+			$('#deal_list').html(menudeallist_html);
 		});
 	}
 	
 });
 
 $("#select_brand").change(function(){
-	$('#fran_list').trigger('change');
 	if($(this).val()!='')
 	{
 		var sel_menu=$('#choose_menu').val()*1;
@@ -567,7 +549,7 @@ $("#select_brand").change(function(){
 				});
 			}
 
-			});
+		});
 	}
 });
 </script>

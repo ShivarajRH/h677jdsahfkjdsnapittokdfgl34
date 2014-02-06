@@ -1,22 +1,5 @@
 <?php 
 	$user=$this->erpm->auth(PURCHASE_ORDER_ROLE);
-	if($po['date_of_delivery']!=null)
-	{
-		
-		$no_days = date_diff_days(date('Y-m-d'),$po['date_of_delivery']);
-		$is_po_exp = 0;
-		
-		if($no_days > 0 && $no_days != 0)
-		{
-			
-			$poid=$po['po_id'];
-			$remarks='By System';
-			if($this->db->query("select * from t_po_info where po_status not in(2,3) and po_id=?",$poid)->num_rows()!=0)
-				$this->db->query("update t_po_info set po_status=3,status_remarks=?,modified_on=now(),modified_by=? where po_id=? limit 1",array($remarks,$user['userid'],$poid));
-			$is_po_exp = 1;
-		}
-	}
-	
 	//check if po has grn
 	$has_grn=0;
 	if($this->db->query("select * from t_grn_product_link where po_id=?",$po['po_id'])->num_rows()!=0)
@@ -112,7 +95,7 @@ $po_status_arr[3]="Cancelled";?>
 <th style="text-align:right;">Unit Price</th>
 <th style="text-align:right;">Sub Total</th>
 <th></th>
-<!-- <th style="text-align:right;">Action</th> -->
+
 </thead>
 <tbody>
 <?php $sno=1; foreach($items as $i){
@@ -144,9 +127,6 @@ $po_status_arr[3]="Cancelled";?>
 </tfoot>
 </table>
 <br>
-<!--  <div style="float:right;margin-right: 65px;margin-top:-11px;">
-<b>Total Purchase Value:Rs&nbsp;&nbsp;<?=format_price($ttl_po_val)?></b>
-</div>-->
 
 </div>
 
@@ -195,8 +175,8 @@ $po_status_arr[3]="Cancelled";?>
 <thead><th>Slno</th><th>Grn ID</th><th>Product</th><th>Invoiced Qty</th><th>Received Qty</th><th>MRP</th><th>Tax</th><th>Purchase Price</th><th>Invoice</th><th>Amount</th><th>Accounted Status</th><th>Stock Intake By</th><th>Created on</th></thead>
 <tbody>
 <?php if($grns){ $i=1;foreach($grns->result_array() as $grn){?>
-<tr><td><?=$i?></td><td><a target="_blank" href="<?php echo site_url("admin/viewgrn/{$grn['grn_id']}")?>"><?=$grn['grn_id']?></a></td><td><a href="<?=site_url("admin/product/{$grn['product_id']}")?>"><?=$grn['product_name']?></a></td><td><?=$grn['invoice_qty']?></td><td><?=$grn['received_qty']?></td><td><?=$grn['mrp']?></td><td><?=$grn['tax_percent']?></td><td><?=$grn['purchase_price']?></td><td><?=$grn['purchase_inv_no']?></td><td><?=$grn['purchase_inv_value']?></td><td><?=$grn['payment_status']==0?'UnAccounted':'Accounted';?></td><td><?=$this->db->query("select a.name from king_admin a join t_stock_update_log l on l.grn_id=? where a.id=l.created_by",$grn['grn_id'])->row()->name?></td><td><?=format_datetime($grn['created_on'])?></td></tr>
-<?php }$i++;?>
+<tr><td><?=$i++;?></td><td><a target="_blank" href="<?php echo site_url("admin/viewgrn/{$grn['grn_id']}")?>"><?=$grn['grn_id']?></a></td><td><a href="<?=site_url("admin/product/{$grn['product_id']}")?>"><?=$grn['product_name']?></a></td><td><?=$grn['invoice_qty']?></td><td><?=$grn['received_qty']?></td><td><?=$grn['mrp']?></td><td><?=$grn['tax_percent']?></td><td><?=$grn['purchase_price']?></td><td><?=$grn['purchase_inv_no']?></td><td><?=$grn['purchase_inv_value']?></td><td><b><?=$grn['payment_status']==0?'UnAccounted':'Accounted';?></b></td><td><?=$this->db->query("select a.name from king_admin a join t_stock_update_log l on l.grn_id=? where a.id=l.created_by",$grn['grn_id'])->row()->name?></td><td><?=format_datetime($grn['created_on'])?></td></tr>
+<?php }?>
 <?php }?>
 </tbody>
 </table>

@@ -36,7 +36,9 @@
 
 	$min_assets['js'][] = '../js/jquery.bpopup.js';//BY S
 	$min_assets['js'][] = '../js/jquery-sticky.js';//BY S
-		$min_assets['js'][] = '../js/jquery.slimscroll.min.js';//BY Sur
+	$min_assets['js'][] = '../js/jquery.slimscroll.min.js';//BY Sur
+	$min_assets['js'][] = '../js/jquery.fix_header_onscroll.js';//BY S
+	
 	
 	//JQplot Plugins for analytics view
 	$min_assets['plot_js'][] = '../js/jq_plot/jquery.jqplot.min.js';//BY Sur

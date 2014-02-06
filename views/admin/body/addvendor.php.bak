@@ -40,9 +40,10 @@
 		<div id="v_financials">
 			<table>
 			<tr><td>Ledger ID :</td><td><input type="text" name="ledger" class="inp" value="<?=$v?"{$v['ledger_id']}":""?>"></td></tr>
-			<tr><td>Credit Limit :</td><td><input type="text" name="credit_limit" class="inp" value="<?=$v?"{$v['credit_limit_amount']}":""?>"></td></tr>
-			<tr><td>Credit Days :</td><td><input type="text" name="credit_days" class="inp" value="<?=$v?"{$v['credit_days']}":""?>"></td></tr>
+			<tr><td>Credit Limit :<span class="red_star">*</span></td><td><input type="text" name="credit_limit" class="inp" value="<?=$v?"{$v['credit_limit_amount']}":""?>"></td></tr>
+			<tr><td>Credit Days :<span class="red_star">*</span></td><td><input type="text" name="credit_days" class="inp" value="<?=$v?"{$v['credit_days']}":""?>"></td></tr>
 			<tr><td>Payment Advance :</td><td><input type="text" name="advance" class="inp" size=3 value="<?=$v?"{$v['require_payment_advance']}":""?>">%</td></tr>
+			<tr><td>Payment Terms :<span class="red_star">*</span></td><td><select name="payterms"><option value="">Select</option><option value="1">Cheque</option><option value="2">Cash</option><option value="3">DD</option></select></td></tr>
 			<tr><td>CST :</td><td><input type="text" name="cst" class="inp" value="<?=$v?"{$v['cst_no']}":""?>"></td></tr>
 			<tr><td>PAN :</td><td><input type="text" name="pan" class="inp" value="<?=$v?"{$v['pan_no']}":""?>"></td></tr>
 			<tr><td>VAT :</td><td><input type="text" name="vat" class="inp" value="<?=$v?"{$v['vat_no']}":""?>"></td></tr>
@@ -53,7 +54,7 @@
 		<div id="v_extra">
 			<table>
 			<tr><td>Return Policy :</td><td><textarea class="inp" name="rpolicy"><?=$v?"{$v['return_policy_msg']}":""?></textarea></td></tr>
-			<tr><td>Payment Terms :</td><td><textarea class="inp" name="payterms"><?=$v?"{$v['payment_terms_msg']}":""?></textarea></td></tr>
+			<!--  <tr><td>Payment Terms :</td><td><textarea class="inp" name="payterms"><?=$v?"{$v['payment_terms_msg']}":""?></textarea></td></tr>-->
 			<tr><td>Remarks :</td><td><textarea class="inp" name="remarks"><?=$v?"{$v['remarks']}":""?></textarea></td></tr>
 			</table>
 		</div>
@@ -66,7 +67,7 @@
 					<td>Designation : </td><td><input type="text" class="inp" name="cnt_desgn[]" value="<?=$c['contact_designation']?>"></td>
 					</tr>
 					<tr>
-					<td>Mobile 1 : </td><td><input type="text" class="inp" name="cnt_mob1[]" value="<?=$c['mobile_no_1']?>"></td>
+					<td>Mobile 1 :<span class="red_star">*</span> </td><td><input type="text" class="inp" name="cnt_mob1[]" value="<?=$c['mobile_no_1']?>"></td>
 					<td>Mobile 2 : </td><td><input type="text" class="inp" name="cnt_mob2[]" value="<?=$c['mobile_no_2']?>"></td>
 					</tr>
 					<tr>
@@ -520,7 +521,7 @@ $('#venfrm').submit(function()
 		alert("Link atlease one brand for this vendor");
 		return false;
 	}
-
+	
 	var bm_error_status = 0;
 	$('.edit_vblink_chk:checked').each(function(){
 		var $r = $(this).parents('tr:first');
@@ -548,6 +549,7 @@ $('#venfrm').submit(function()
 				bm_error_status = 1;
 				$('input[name="l_until[]"]',$r).addClass('error_inp');
 			}
+			
 	});
 
 	if(bm_error_status)
