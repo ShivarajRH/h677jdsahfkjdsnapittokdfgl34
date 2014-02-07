@@ -430,7 +430,7 @@
 		{
 	?>	
 	<table class="datagrid">
-	<thead><th>Description</th><th>Credit (Rs)</th><th>Debit (Rs)</th><th>Corrected On</th></thead>
+            <thead><th>Description</th><th>Credit (Rs)</th><th>Debit (Rs)</th><th>Corrected On</th><th>Action</th></thead>
 	<tbody>
 	<?php foreach($account_stat as $ac_st){
 	?>
@@ -439,6 +439,15 @@
 		<td><?php echo $ac_st['credit_amt']?></td>
 		<td><?php echo $ac_st['debit_amt']?></td>
 		<td><?php echo format_datetime($ac_st['created_on'])?></td>
+                <td>
+                    <?php
+                    if($ac_st['type'] == '1' && $ac_st['debit_amt'] > 0 ) { //Only if debit entry
+                        echo '<a href="javascript:void(0);" onclick="reconcile_dr_amount(this,\''.$ac_st["acc_correc_id"].'\',\''.$ac_st["debit_amt"].'\',\''.$ac_st["unreconciled_amount"].'\')" class="button button-tiny_wrap cursor button-primary">Reconcile</a>';
+                    }
+                    else {
+                        echo '--';
+                    }?>
+                </td>
 	</tr>
 	<?php }?>
 	</tbody>
@@ -529,16 +538,15 @@ else if($type=="unreconcile")
 				<td>
 				<div id="realize_det">
 				<table class="datagrid1">
-				<tr><td><b>Realized On</b></td><td><b>:</b></td><td><?=format_date_ts($r['activated_on'])?></td></tr>
-				<tr><td><b>Realized By</b></td><td><b>:</b></td><td><?=$r['activated_by']?></td></tr>
-				<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['reason']?></td></tr>
-                                <tr><td><b>Un-Reconciled Status</b></td><td><b>:</b></td><td><?php 
-                                                echo $r['unreconciled_status']; 
-                                                echo " ( ".$r['unreconciled_value']." )";
-                                            ?></td>
-                                </tr>
-                                
-                                <tr>
+                                    <tr><td><b>Realized On</b></td><td><b>:</b></td><td><?=format_date_ts($r['activated_on'])?></td></tr>
+                                    <tr><td><b>Realized By</b></td><td><b>:</b></td><td><?=$r['activated_by']?></td></tr>
+                                    <tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['reason']?></td></tr>
+                                    <tr><td><b>Un-Reconciled Status</b></td><td><b>:</b></td><td><?php 
+                                                    echo $r['unreconciled_status']; 
+                                                    echo " ( ".$r['unreconciled_value']." )";
+                                                ?></td>
+                                    </tr>
+                                    <tr>
                                         <td>
                                             <b>Actions</b>
                                         </td>

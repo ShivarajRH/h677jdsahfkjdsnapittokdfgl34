@@ -163,16 +163,7 @@ Transit Type:<select id="t_type" name="t_type"  style="width: 150px;">
 <a href="javascript:void(0)" onclick='can_rec(<?=$r['receipt_id']?>)'>Cancel</a> &nbsp; &nbsp;
 </td>
 <?php }elseif($type==1 || $type==2){ ?>
-	<td><a href="javascript:void(0)" onclick='can_rec(<?=$r['receipt_id']?>)'>Cancel</a>
-        <br>
-        <?php if($r['unreconciled_value']>0) { ?>
-                <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>','<?=$r['receipt_amount'];?>','<?=$r['unreconciled_value'];?>')" class="button button-tiny button-action">Reconcile</a>
-        <?php } ?>
-         &nbsp;
-         <?php if($r['unreconciled_value'] != $r['receipt_amount']) { ?>
-            <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-primary">View Reconciled</a>
-         <?php } ?>
-    </td> &nbsp; &nbsp;
+	<td><a href="javascript:void(0)" onclick='can_rec(<?=$r['receipt_id']?>)'>Cancel</a></td> &nbsp; &nbsp;
 <?php }?>
 </tr>
 <?php }?>
@@ -187,8 +178,8 @@ Transit Type:<select id="t_type" name="t_type"  style="width: 150px;">
 <th>Receipt Details</th><th>Franchisee Name</th><th>Payment Details</th><th>Payment Date</th><th>Submitted Bank Name</th><th>Remarks</th><th>Processed On</th><th>Processed By</th><th>Actions</th>
 </thead>
 <tbody>
-<?php foreach($receipts as $r){
-
+<?php foreach($receipts as $r){?>
+<?php
 $no_days = date_diff_days(date('Y-m-d'),$r['submitted_on']);
 $is_receipt_exp = 0;
 if($no_days >=4 && $r['activated_on'] == 0)
@@ -585,18 +576,18 @@ $("#cancel_receipt").dialog({
 			var frm_cancel = $("#cancel_receipt_frm",this);
 			 	if(frm_cancel.parsley('validate'))
 				{
-					$.post(site_url+'/admin/jx_cancel_processedreceipts',frm_cancel.serialize(),function(resp){
-						if(resp.status == 'success')
-						{
-							$("#cancel_receipt").dialog('close');
-							location.href = location.href;
-						}
-					},'json');
+			 		 $.post(site_url+'/admin/jx_cancel_processedreceipts',frm_cancel.serialize(),function(resp){
+					 if(resp.status == 'success')
+                         {
+							 $("#cancel_receipt").dialog('close');
+							 location.href = location.href;
+                         }
+	                },'json');
 		 		}
-				else
-				{
-					alert('All Fields Required!!!');
-				}
+            	else
+		            {
+		             alert('All Fields Required!!!');
+		            }
 			}
 			else
 				return false;

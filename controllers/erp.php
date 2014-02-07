@@ -23981,10 +23981,12 @@ die; */
 	
 		}else if($type=='acct_stat')
 		{
-			$sql="SELECT debit_amt,credit_amt,remarks,status,created_on
+			$sql="SELECT a.acc_correc_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,status,a.created_on,rcon.unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as unreconciled_amount
 						FROM `pnh_franchise_account_summary` a
-						WHERE a.franchise_id=? and (a.action_type = 5 or a.action_type = 6)
-						order by created_on desc";
+						left join pnh_franchise_account_stat fcs on fcs.id = a.acc_correc_id
+                                                left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.id
+						WHERE a.franchise_id= ? and (a.action_type = 5 or a.action_type = 6)
+						order by a.created_on desc";
 	
 			$total_records=$this->db->query($sql,$fid)->num_rows;
 	
@@ -26984,13 +26986,13 @@ die; */
      */
     function jx_get_unreconciled_invoice_list($fid) {
         $user = $this->erpm->auth(FINANCE_ROLE);
-        $rdata['fran_invoices']=$this->db->query("select * from (select i.invoice_no,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),rcon.unreconciled) as inv_amount,group_concat(distinct i.invoice_no) as grp_invs
+        $rdata['fran_invoices']=$this->db->query("select * from (select i.invoice_no,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),rcon.unreconciled) as inv_amount
                                                         from king_invoice i
                                                         join king_transactions tr on tr.transid=i.transid
                                                         left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
                                                         where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id= ? #and i.invoice_no is null 
                                                         group by i.invoice_no,i.transid order by i.invoice_no asc) as g where g.inv_amount > 0 ",$fid)->result_array();
-        echo json_encode($rdata);//,i.transid,tr.franchise_id,from_unixtime(i.createdon),,count(i.invoice_no) as num_invs,group_concat(i.mrp) as grp_mrp,
+        echo json_encode($rdata);
     }
     
 	/**
@@ -27049,4 +27051,50 @@ die; */
 	
             echo json_encode($rdata);
     }
+    
+    /**
+     * Function to load unreconciled debit notes ids with amount info in JSON format
+     * @param type $fid int
+     */
+    function jx_get_unreconciled_debit_notes_list($fid) {
+        $user = $this->erpm->auth(FINANCE_ROLE);
+        
+        $rdata['fran_debit_notes']=$this->db->query("select * from (select fcs.id as debit_note_id,fcs.amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as inv_amount
+                                                    from pnh_franchise_account_stat fcs
+                                                    left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.id
+                                                    where fcs.type=1 and fcs.franchise_id = ?
+                                                    order by fcs.created_on desc) as g where g.inv_amount > 0",$fid)->result_array();
+        echo json_encode($rdata);
+    }
+    
+    
+  /*   function jx_debitnote_reconcile_form_submit($fid) {
+       foreach(array('dg_i_debit_note_id','dg_i_debit_amount','dg_i_unreconciled_value') as $i )
+            $$i =$this->input->post($i);
+        
+        $unreconcile_amt = $amt_unreconcile[$i];
+        $adjusted_amt = $amt_adjusted[$i];
+        if($invoice_no!='' && $unreconcile_amt!='' && $adjusted_amt!='') {
+                        $invoice_arr['invoices'][$i]["debit_note_id"] = $sel_invoice[$i];
+                        $invoice_arr['invoices'][$i]["invoice_no"] = 0;
+                        $invoice_arr['invoices'][$i]["dispatch_id"] = 0;
+                    }
+                    $invoice_arr['invoices'][$i]["invoice_amt"] = $unreconcile_amt;
+                    $invoice_arr['invoices'][$i]["adjusted_amt"] = $adjusted_amt;
+                    $invoice_arr['invoices'][$i]["unreconciled_amt"] = $sub_val;
+            }
+        }
+        $invoice_arr['userid'] = $user['userid'];
+        $invoice_arr['receipt_id'] = $recpt_id;
+        $invoice_arr['amount']=$amount;
+        $invoice_arr['total_reconcile_val'] = $total_val_reconcile;
+        $invoice_arr['unreconciled_value'] = $unreconciled_value;
+        $invoice_arr['fid'] = $fid;
+
+        //echo '<pre>'; print_r($invoice_arr);die();
+
+        $rdata = $this->erpm->reconcile_receipt($invoice_arr);
+    }
+    */
+    
 }

@@ -163,8 +163,7 @@ Transit Type:<select id="t_type" name="t_type"  style="width: 150px;">
 <a href="javascript:void(0)" onclick='can_rec(<?=$r['receipt_id']?>)'>Cancel</a> &nbsp; &nbsp;
 </td>
 <?php }elseif($type==1 || $type==2){ ?>
-	<td>
-		<a href="javascript:void(0)" onclick='can_rec(<?=$r['receipt_id']?>)'>Cancel</a>
+	<td><a href="javascript:void(0)" onclick='can_rec(<?=$r['receipt_id']?>)'>Cancel</a>
         <br>
         <?php if($r['unreconciled_value']>0) { ?>
                 <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>','<?=$r['receipt_amount'];?>','<?=$r['unreconciled_value'];?>')" class="button button-tiny button-action">Reconcile</a>

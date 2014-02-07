@@ -1057,5 +1057,42 @@ $.each(arr, function (index, value) {
     console.log(arr) //[1, 2, [1,1]]
 #=================================================================
                 
-                
-                
+++===============================================================
+In JavaScript:
+
+  // JavaScript CLASS STRUCTRUE
+  function Dog(name) {
+    this.name = name;
+  }
+Dog.prototype.getName = function () {
+    return this.name;
+  };
+  Dog.prototype.say = function () {
+    return 'Woof!';
+  };
+
+  var fido = new Dog('Fido');
+  fido.name; // "Fido"
+
+fido.say(); // "Woof!"
+
+implement inheritance in JavaScript.
+
+  function Wolf() {
+    this.awesome = true;
+  }
+  
+  Wolf.prototype.ears = 2;
+  
+  function Dog() {
+    this.hugs = true;
+  }
+  
+  Dog.prototype = new Wolf();
+  
+  var fido = new Dog();
+  
+  fido.ears; // 2
+  fido.awesome; // true
+  fido.hugs; // true
+++===============================================================

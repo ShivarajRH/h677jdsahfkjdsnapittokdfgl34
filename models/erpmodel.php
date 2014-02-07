@@ -7111,61 +7111,73 @@ order by p.product_name asc
 		$this->erpm->flash_msg("Receipt $rid activated");
 		redirect("admin/pnh_pending_receipts");
 	}
-
-    /**
-     * Function to add amount to user account & generate receipt
-     * @param type $fid
-     * @param type $user 
-     */
+        
+        /**
+         * Function to return dispatch id of given invoice no
+         * @param type $invoice_no int
+         * @return type int
+         */
+        function get_dispatch_id_invno($invoice_no) {
+            return $this->db->query("select ref_dispatch_id from king_invoice where invoice_no=? group by invoice_no",$invoice_no)->row()->ref_dispatch_id;
+        }
+        
+        /**
+         * Function to add amount to user account & generate receipt
+         * @param type $fid
+         * @param type $user 
+         */
 	function do_pnh_topup($fid,$user)  {
 		$user=$this->erpm->getadminuser();
-		foreach(array("r_type","amount","bank","type","no","date","msg","transit_type","sel_invoice","amt_unreconcile","amt_adjusted","total_val_reconcile") as $i)
+		foreach(array("r_type","amount","bank","type","no","date","msg","transit_type","sel_invoice","amt_unreconcile","amt_adjusted","total_val_reconcile","document_type") as $i)
 			$$i=$this->input->post($i);
-        $inp=array("receipt_type"=>$r_type,"franchise_id"=>$fid,"bank_name"=>$bank,"receipt_amount"=>$amount,"payment_mode"=>$type,"instrument_no"=>$no,"instrument_date"=>strtotime($date),"created_by"=>$user['userid'],"created_on"=>time(),"remarks"=>$msg,"in_transit"=>$transit_type,"unreconciled_value"=>$amount);
+            $inp=array("receipt_type"=>$r_type,"franchise_id"=>$fid,"bank_name"=>$bank,"receipt_amount"=>$amount,"payment_mode"=>$type,"instrument_no"=>$no,"instrument_date"=>strtotime($date),"created_by"=>$user['userid'],"created_on"=>time(),"remarks"=>$msg,"in_transit"=>$transit_type,"unreconciled_value"=>$amount);
 
 		// if cash receipt is added.
 		if($type == 0)
 			$inp['instrument_date'] = strtotime(date('Y-m-d'));
 		
-		$this->db->insert("pnh_t_receipt_info",$inp);
-		$recpt_id = $this->db->insert_id();
+		$this->db->insert("pnh_t_receipt_info",$inp);$recpt_id = $this->db->insert_id();
         
-        //update unreconceiled value
-        if($r_type == 1){
-            // If not security deposit we can concile the amount
-           
-            //$recpt_id = 119;
+                //update unreconceiled value
+                if($r_type == 1){
+//                    $recpt_id = 119;
+                    $unreconciled_value = $amount - $total_val_reconcile;
+                    if($sel_invoice) {
+                        $invoice_arr = array();
+                        foreach($sel_invoice as $i=>$invoice_no) {
+                            $docu_type = $document_type[$i];
+                            $unreconcile_amt = $amt_unreconcile[$i];
+                            $adjusted_amt = $amt_adjusted[$i];
+                            if($invoice_no!='' && $unreconcile_amt!='' && $adjusted_amt!='') {
+                                    if($docu_type == 'inv') {
+                                        $dispatch_id = $this->get_dispatch_id_invno($invoice_no);
+                                        $sub_val = $unreconcile_amt - $adjusted_amt;
+                                        $invoice_arr['invoices'][$i]["debit_note_id"] = 0;
+                                        $invoice_arr['invoices'][$i]["invoice_no"] = $sel_invoice[$i];
+                                        $invoice_arr['invoices'][$i]["dispatch_id"] = $dispatch_id;
+                                    }
+                                    elseif($docu_type == 'dr') {
+                                        $invoice_arr['invoices'][$i]["debit_note_id"] = $sel_invoice[$i];
+                                        $invoice_arr['invoices'][$i]["invoice_no"] = 0;
+                                        $invoice_arr['invoices'][$i]["dispatch_id"] = 0;
+                                    }
+                                    $invoice_arr['invoices'][$i]["invoice_amt"] = $unreconcile_amt;
+                                    $invoice_arr['invoices'][$i]["adjusted_amt"] = $adjusted_amt;
+                                    $invoice_arr['invoices'][$i]["unreconciled_amt"] = $sub_val;
+                            }
+                        }
+                        $invoice_arr['userid'] = $user['userid'];
+                        $invoice_arr['receipt_id'] = $recpt_id;
+                        $invoice_arr['amount']=$amount;
+                        $invoice_arr['total_reconcile_val'] = $total_val_reconcile;
+                        $invoice_arr['unreconciled_value'] = $unreconciled_value;
+                        $invoice_arr['fid'] = $fid;
 
-            $unreconciled_value = $amount - $total_val_reconcile;
-            if($sel_invoice) {
-                $invoice_arr = array();
-                foreach($sel_invoice as $i=>$invoice_no) {
-                    $unreconcile_amt = $amt_unreconcile[$i];
-                    $adjusted_amt = $amt_adjusted[$i];
-                    if($invoice_no!='' && $unreconcile_amt!='' && $adjusted_amt!='') {
-                            $dispatch_id = $this->get_dispatch_id_invno($invoice_no);
+                        //echo '<pre>'; print_r($invoice_arr);die();
 
-                            $sub_val = $unreconcile_amt - $adjusted_amt;
-                            $invoice_arr['invoices'][$i]["invoice_no"] = $sel_invoice[$i];
-                            $invoice_arr['invoices'][$i]["dispatch_id"] = $dispatch_id;
-                            $invoice_arr['invoices'][$i]["invoice_amt"] = $unreconcile_amt;
-                            $invoice_arr['invoices'][$i]["adjusted_amt"] = $adjusted_amt;
-                            $invoice_arr['invoices'][$i]["unreconciled_amt"] = $sub_val;
-                            //$invoice_arr[$i]["sub_val"] = $sub_val;
+                        $rdata = $this->reconcile_receipt($invoice_arr);
                     }
                 }
-                $invoice_arr['userid'] = $user['userid'];
-                $invoice_arr['receipt_id'] = $recpt_id;
-                $invoice_arr['amount']=$amount;
-                $invoice_arr['total_reconcile_val'] = $total_val_reconcile;
-                $invoice_arr['unreconciled_value'] = $unreconciled_value;
-                $invoice_arr['fid'] = $fid;
-                
-                //echo '<pre>'; print_r($invoice_arr);die();
-                
-                $rdata = $this->reconcile_receipt($invoice_arr);
-            }
-        }
 
 //		$this->erpm->pnh_fran_account_stat($fid,0, $amount,"Topup $no $date");
 		
@@ -12529,7 +12541,7 @@ order by action_date";
 
             // 1. pnh_t_receipt_reconcilation
             $input_data = array(
-                    'debit_note_id'=> 0
+                    'debit_note_id'=> $arr['debit_note_id']
                     ,'invoice_no'=>$arr['invoice_no']
                     ,'dispatch_id'=>$arr['dispatch_id']
                     ,'inv_amount'=>$arr['invoice_amt']

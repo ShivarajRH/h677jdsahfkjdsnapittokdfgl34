@@ -1,7 +1,7 @@
-<link rel='stylesheet' type='text/css' href="<?php echo base_url().'css/sk_franchise.css'?>">
-<link rel='stylesheet' type='text/css' href="<?php echo base_url().'css/fullcalendar.css'?>">
-<script type='text/javascript' src="<?php echo base_url().'js/fullcalendar.min.js'?>"></script>
-<script type='text/javascript' src="<?php echo base_url().'js/jquery-ui-timepicker-addon.js'?>"></script>
+<link rel='stylesheet' type='text/css' href="<?php echo base_url().'/css/sk_franchise.css'?>">
+<link rel='stylesheet' type='text/css' href="<?php echo base_url().'/css/fullcalendar.css'?>">
+<script type='text/javascript' src="<?php echo base_url().'/js/fullcalendar.min.js'?>"></script>
+<script type='text/javascript' src="<?php echo base_url().'/js/jquery-ui-timepicker-addon.js'?>"></script>
 <script>
 $(function(){
     $( ".tsk_stdate" ).datepicker({
@@ -27,46 +27,6 @@ $(function(){
 });
 </script>
 
-<style>
-    /*Set 1*/
-.container_div
-{
-	visibility:hidden
-}
-.leftcont
-{
-	display: none
-}
-.fran_suspendlink
-{
-	border-radius:5px;
-	background:#f77;
-	display:inline-block;
-	padding:3px 7px;
-	color:#fff;
-	cursor: pointer;
-}
-.fran_suspendlink:hover
-{
-	background:#f00;
-	text-decoration:none;
-}
-li.required
-{
-	color: #cd0000;list-style: none
-}
-li.required{color: #cd0000;list-style: none}
-.jqplot-highlighter-tooltip, .jqplot-canvasOverlay-tooltip
-{
-	font-size: 13px !important;
-    margin-left:10px;margin-top:-5px;
-    background:none repeat scroll 0 0 #FFFFFF !important; 
-}
-.sbutton span {
-    color: #FFFFFF;
-}
-.close_btn{padding:1px 6px;color:#FFF !important;font-weight: bold;background: #cd0000;border:1px solid #B44F4F}
-</style>
 <?php 
 	$f=$fran; 
 	$menus=array();
@@ -250,7 +210,7 @@ li.required{color: #cd0000;list-style: none}
 		</div>
 		<!-- Invoice Credit Notes START -->
 		
-		<!-- franchise status log START --> 
+		<!-- franchise status log START -->
 		<div id="status_log">
 			<div class="tab_view">
 				<ul class="fran_tabs">
@@ -263,57 +223,64 @@ li.required{color: #cd0000;list-style: none}
 				<?php $log_res=$this->db->query("SELECT l.*,a.name FROM franchise_suspension_log l JOIN king_admin a ON a.id=suspended_by WHERE franchise_id=? AND suspension_type IN(0,1,2,3)",$f['franchise_id'])?>
 				<?php if($log_res->num_rows()){?>
 					<div id="permant_suspn">
-					
-					<table class="datagrid">
-					<thead><th>Suspended Type</th><th>Reason</th><th>Suspended On</th><th>Suspended By</th></thead>
-					<?php
-					foreach($log_res->result_array() as $l){
-					if( $l['suspension_type']==1){?>
-					<tr>
-					<td><?php echo $fran_status_arr[$l['suspension_type']]?></td>
-					<td><?php echo $l['reason']?></td>
-					<td><?php echo format_datetime_ts($l['suspended_on'])?></td>
-					<td><?php echo $l['name']?></td>
-					</tr>
-					<?php }?>
-					
-					<?php } ?>
-					
-					
-					</table>
-					</div>
-					
+						<table class="datagrid">
+							<thead>
+								<th>Suspended Type</th>
+								<th>Reason</th>
+								<th>Suspended On</th>
+								<th>Suspended By</th>
+							</thead>
+							
+							<?php
+								foreach($log_res->result_array() as $l){
+									if( $l['suspension_type']==1){?>
+									<tr>
+									<td><?php echo $fran_status_arr[$l['suspension_type']]?></td>
+									<td><?php echo $l['reason']?></td>
+									<td><?php echo format_datetime_ts($l['suspended_on'])?></td>
+									<td><?php echo $l['name']?></td>
+									</tr>
+									<?php }?>
+								<?php } ?>
+						</table>
+					 </div>
+			
 					<div id="payment_suspn">
-					<table class="datagrid">
-					<thead><th>Suspended Type</th><th>Reason</th><th>Suspended On</th><th>Suspended By</th></thead>
-					<?php 
-					foreach($log_res->result_array() as $l){
-					if( $l['suspension_type']==2){?>
-					<tr>
-					<td><?php echo $fran_status_arr[$l['suspension_type']]?></td>
-					<td><?php echo $l['reason']?></td>
-					<td><?php echo format_datetime_ts($l['suspended_on'])?></td>
-					<td><?php echo $l['name']?></td>
-					<?php } ?>
-					</tr>
-					<?php }?>
-					</table>
+						<table class="datagrid">
+							<thead>
+								<th>Suspended Type</th><th>Reason</th><th>Suspended On</th><th>Suspended By</th>
+							</thead>
+							<?php 
+							foreach($log_res->result_array() as $l){
+								if( $l['suspension_type']==2){?>
+									<tr>
+										<td><?php echo $fran_status_arr[$l['suspension_type']]?></td>
+										<td><?php echo $l['reason']?></td>
+										<td><?php echo format_datetime_ts($l['suspended_on'])?></td>
+										<td><?php echo $l['name']?></td>
+									</tr>
+								<?php } ?>
+							 <?php }?>
+						</table>
 					</div>
 			
 					<div id="live_suspn">
-					<table class="datagrid">
-					<thead><th>Reason</th><th>Unsuspended On</th><th>Suspended By</th></thead>
-					<?php 
-					foreach($log_res->result_array() as $l){
-					if( $l['suspension_type']==0){?>
-					<tr>
-					<td><?php echo $l['reason']?></td>
-					<td><?php echo format_datetime_ts($l['suspended_on'])?></td>
-					<td><?php echo $l['name']?></td>
-					<?php } ?>
-					</tr>
-					<?php }?>
-					</table>
+						<table class="datagrid">
+							<thead>
+								<th>Reason</th><th>Unsuspended On</th><th>Suspended By</th>
+							</thead>
+						
+							<?php 
+							foreach($log_res->result_array() as $l){
+								if( $l['suspension_type']==0){?>
+									<tr>
+										<td><?php echo $l['reason']?></td>
+										<td><?php echo format_datetime_ts($l['suspended_on'])?></td>
+										<td><?php echo $l['name']?></td>
+									</tr>
+								<?php } ?>
+							<?php }?>
+						</table>
 					</div>
 			
 					<div id="temp_suspn">
@@ -321,6 +288,7 @@ li.required{color: #cd0000;list-style: none}
 							<thead>
 								<th>Suspended Type</th><th>Reason</th><th>Suspended On</th><th>Suspended By</th>
 							</thead>
+						
 							<?php 
 							foreach($log_res->result_array() as $l){
 								if( $l['suspension_type']==3){?>
@@ -424,7 +392,6 @@ li.required{color: #cd0000;list-style: none}
 				<div class="module_cont_block">
 					<div class="module_cont_block_grid_total fl_left">
 						<span class="stat total">Total : <b>10</b></span> 
-	
 					</div>
 					
 					<div class="module_cont_block_filters fl_right">
@@ -463,101 +430,86 @@ li.required{color: #cd0000;list-style: none}
 					<div class="module_cont_grid_block_pagi">
 					</div>	
 				</div>
-				
-				
-				<div class="module_cont_block_grid" style="clear:both">
-					<table class="datagrid" width="100%">
-						<thead>
-							<th width="20">Sno</th>
-							<th width="30">Return ID</th>
-							<th width="150">Returned On</th>
-							<th width="80">Returned By</th>
-							<th width="30">Invoice no</th>
-							<th width="30">Order no</th>
-							<th width="200">Product name</th>
-							<th width="30">Qty</th>
-							<th width="100">Returned For</th>
-							<th width="100">Current Status</th>
-							<th width="100">Last Updated On</th>
-							<th width="100">Last Updated By</th>
-							<th width="100">Remarks</th>
-						</thead>
-						<tbody></tbody>
-					</table>	
-				</div>
-				<div class="module_cont_grid_block_pagi">
-					
-				</div>	
 			</div>
-		</div>
-		
-	</div>	
-	<!-- List Franchise Returns End -->
-	<?php  if($is_prepaid){?>
-	<!-- prepaid voucher activity Start -->
-	<div id="voucher_activity">
-				<b>Voucher Activity</b>
-				<div class="dash_bar_right" style="padding: 12px 6px;">
-					<b>Voucher Book Value:<?php echo 'Rs'.format_price($this->db->query("SELECT SUM(`value`) AS ttl_value FROM `pnh_t_voucher_details` WHERE franchise_id=? AND `status`<=1 AND is_alloted=1 ",$f['franchise_id'])->row()->ttl_value)?></b>
-				</div>
-
-				<div class="dash_bar_right" style="padding: 12px 6px;">
-					<b>Activated Voucher Value:<?php echo 'Rs'.format_price($this->db->query("SELECT SUM(`value`) AS ttl_value FROM `pnh_t_voucher_details` WHERE franchise_id=? AND `status`>=3 AND is_alloted=1 and is_activated=1",$f['franchise_id'])->row()->ttl_value)?></b>
-				</div>
-
-				<div class="dash_bar_right" style="padding: 12px 6px;">
-					<b>Not Activated Voucher Value:<?php echo 'Rs'.format_price($this->db->query("SELECT SUM(`value`) AS ttl_value FROM `pnh_t_voucher_details` WHERE franchise_id=? AND `status`<=1 AND is_alloted=1 and is_activated=0",$f['franchise_id'])->row()->ttl_value)?></b>
-				</div>
-				<br> <br>
-
-				<div class="tab_view">
+		</div>	
+		<!-- List Franchise Returns End -->
+	
+		<?php  if($is_prepaid){?>
+		<!-- prepaid voucher activity Start -->
+		<div id="voucher_activity">
+			<b>Voucher Activity</b>
+			<div class="dash_bar_right" style="padding: 12px 6px;">
+				<b>Voucher Book Value:<?php echo 'Rs'.format_price($this->db->query("SELECT SUM(`value`) AS ttl_value FROM `pnh_t_voucher_details` WHERE franchise_id=? AND `status`<=1 AND is_alloted=1 ",$f['franchise_id'])->row()->ttl_value)?></b>
+			</div>
+	
+			<div class="dash_bar_right" style="padding: 12px 6px;">
+				<b>Activated Voucher Value:<?php echo 'Rs'.format_price($this->db->query("SELECT SUM(`value`) AS ttl_value FROM `pnh_t_voucher_details` WHERE franchise_id=? AND `status`>=3 AND is_alloted=1 and is_activated=1",$f['franchise_id'])->row()->ttl_value)?></b>
+			</div>
+	
+			<div class="dash_bar_right" style="padding: 12px 6px;">
+				<b>Not Activated Voucher Value:<?php echo 'Rs'.format_price($this->db->query("SELECT SUM(`value`) AS ttl_value FROM `pnh_t_voucher_details` WHERE franchise_id=? AND `status`<=1 AND is_alloted=1 and is_activated=0",$f['franchise_id'])->row()->ttl_value)?></b>
+			</div>
+			<br> <br>
+	
+			<div class="tab_view">
 				<ul class="fran_tabs">
-				<li><a href="#book_orders" onclick="load_voucher_activity(this,'book_orders',0,0)" id="book_orders_tab">
-								Book orders</a></li>
-					<li><a href="#inactivated_vouchers" onclick="load_voucher_activity(this,'inactivated_vouchers',0,0)">Inactive
-								Vouchers</a></li>
-								
-						<li><a href="#activated_vouchers"
+					<li>
+						<a href="#book_orders" onclick="load_voucher_activity(this,'book_orders',0,0)" id="book_orders_tab">Book orders</a>
+					</li>
+					<li>
+						<a href="#inactivated_vouchers" onclick="load_voucher_activity(this,'inactivated_vouchers',0,0)">Inactive
+							Vouchers</a>
+					</li>
+							
+					<li>
+						<a href="#activated_vouchers"
 							onclick="load_voucher_activity(this,'activated_vouchers',0,0)">Activated
-						</a></li>
-						<li><a href="#fully_redeemed_vouchers"
-							onclick="load_voucher_activity(this,'fully_redeemed_vouchers',0,0)">Fully
-								Redeemed</a></li>
-						<li><a href="#partially_redeemed_vouchers"
+						</a>
+					</li>
+					
+					<li>
+						<a href="#fully_redeemed_vouchers"
+								onclick="load_voucher_activity(this,'fully_redeemed_vouchers',0,0)">Fully
+						Redeemed</a>
+					</li>
+					
+					<li>
+						<a href="#partially_redeemed_vouchers"
 							onclick="load_voucher_activity(this,'partially_redeemed_vouchers',0,0)">Partially
-								Redeemed</a></li>
-						
-					</ul>
-					
-					<div id="book_orders">
-						<h3>Book orders</h3>
-						<div class="tab_content"></div>
-					</div>
-					
-					<div id="inactivated_vouchers">
-						<h3>Inactive Vouchers</h3>
-						<div class="tab_content"></div>
-					</div>
-					
-					<div id="activated_vouchers">
-						<h3>Activated Voucher</h3>
-						<div class="tab_content"></div>
-					</div>
-
-					<div id="fully_redeemed_vouchers">
-						<h3>Fully Redeemed Voucher</h3>
-						<div class="tab_content"></div>
-					</div>
-
-					<div id="partially_redeemed_vouchers">
-						<h3>Partially Redeemed Voucher</h3>
-						<div class="tab_content"></div>
-					</div>
+							Redeemed</a>
+					</li>
+				</ul>
+				
+				<div id="book_orders">
+					<h3>Book orders</h3>
+					<div class="tab_content"></div>
 				</div>
-				<!-- End of tab -->
-			</div><!-- Activity div blk end -->
-<?php } ?>
+				
+				<div id="inactivated_vouchers">
+					<h3>Inactive Vouchers</h3>
+					<div class="tab_content"></div>
+				</div>
+				
+				<div id="activated_vouchers">
+					<h3>Activated Voucher</h3>
+					<div class="tab_content"></div>
+				</div>
+
+				<div id="fully_redeemed_vouchers">
+					<h3>Fully Redeemed Voucher</h3>
+					<div class="tab_content"></div>
+				</div>
+
+				<div id="partially_redeemed_vouchers">
+					<h3>Partially Redeemed Voucher</h3>
+					<div class="tab_content"></div>
+				</div>
+			</div>
+			<!-- End of tab -->
+		</div>
+		<!-- Activity div blk end -->
 	<!-- prepaid voucher activity End -->
+	<?php }?>
 	
 	<!-- IMEI slno log Start-->
 	<?php if($is_membrsch_applicable){?>
@@ -835,6 +787,8 @@ li.required{color: #cd0000;list-style: none}
 										</tbody>
 									</table>
 								<?php } ?>
+										
+									
 								<div style="background: #eee; padding: 5px;">
 									<form id="d_ac_form"
 										action="<?=site_url("admin/pnh_download_stat/{$f['franchise_id']}")?>"
@@ -1207,13 +1161,13 @@ li.required{color: #cd0000;list-style: none}
 						<form action="<?=site_url("admin/pnh_change_app_version")?>">
 							<input type="hidden" name="fid" value="<?=$f['franchise_id']?>">
 								<p>	Change to New Version : <select id="fran_ver_change">
-																<option value="0">select</option>
-																<?php foreach($this->db->query("select version_no,id from pnh_app_versions where id>?",$f['app_version'])->result_array() as $v){?>
-																<option value="<?=$v['id']?>">
-																	<?=$v['version_no']?>
-																</option>
-																<?php }?>
-															</select>
+                                                                                                        <option value="0">select</option>
+                                                                                                        <?php foreach($this->db->query("select version_no,id from pnh_app_versions where id>?",$f['app_version'])->result_array() as $v){?>
+                                                                                                        <option value="<?=$v['id']?>">
+                                                                                                                <?=$v['version_no']?>
+                                                                                                        </option>
+                                                                                                        <?php }?>
+                                                                                                </select>
 								</p>
 						</form>
 					</td>	
@@ -1254,17 +1208,17 @@ li.required{color: #cd0000;list-style: none}
 					Ordered : <span>Rs <?=format_price($ordered_tilldate,2)?></span>
 				</div>
 			</div>
-
+                        <div class="clear"></div>
 			<?php if(1){?>
-				<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 500px;font-size: 12px;">
-					<h4 style="background: #6B7899; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Make a Topup/Security Deposit</h4>
+				<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; min-width: 500px;font-size: 12px;">
+					<h4 style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Make a Topup/Security Deposit</h4>
 					<form method="post" id="top_form" action="<?=site_url("admin/pnh_topup/{$fran['franchise_id']}")?>">
 						<table cellpadding=3 width="100%">
-	                        <tr>
-	                            <td></td>
-	                            <td></td>
-	                            <td><span class="error_status"></span></td>
-	                        </tr>
+							<tr>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td><span class="error_status"></span></td>
+                                                        </tr>
 							<tr>
 								<td>Type</td><td>:</td>
 								<td>
@@ -1277,9 +1231,9 @@ li.required{color: #cd0000;list-style: none}
 							<tr>
 								<td>Amount (Rs)</td><td>:</td>
 								<td><input type="text" class="inp amount money" name="amount" id="receipt_amount" size=5 value="">
-                                        <span class="reconciled_total">Adjusted Amount: <abbr title="Amount">0</abbr>
-                                        <input type="hidden" name="total_val_reconcile" id="total_val_reconcile" value="" />
-                                    </span>
+                                                                        <span class="reconciled_total">Adjusted Amount: <abbr title="Amount">0</abbr>
+                                                                        <input type="hidden" name="total_val_reconcile" id="total_val_reconcile" value="" />
+                                                                    </span>
 								</td>
 							</tr>
 							<tr>
@@ -1311,15 +1265,17 @@ li.required{color: #cd0000;list-style: none}
 								<td class="label">Instrument Date</td><td> :</td>
 								<td><input type="text" name="date" id="sec_date" size=15></td>
 							</tr>
-							<tr>
-								<td>Select Invoices</td><td> :</td>
-								<td><a href="javascript:void(0);" class="button button-tiny_wrap cursor button-primary clone_rows">+</a>
-                                        <table border="0" cellspacing="0" cellpadding="2">
-                                            <tbody id="reconcile_row"></tbody>
-                                        </table>
-                                </td>
-							</tr>
-							<tr class="inst_msg">
+                                                        <tr>
+                                                                <td>Reconcile</td><td> :</td>
+                                                                <td>
+                                                                        <a href="javascript:void(0);" class="button button-tiny_wrap cursor button-primary clone_rows_invoice">+</a>
+                                                                        <!--<a href="javascript:void(0);" class="button button-tiny_wrap cursor button-primary clone_rows_debitnote">Debit Note</a>-->
+                                                                        <table border="0" cellspacing="0" cellpadding="2">
+                                                                            <tbody id="reconcile_row"></tbody>
+                                                                        </table>
+                                                                </td>
+                                                        </tr>
+                                                        <tr class="inst_msg">
 								<td>Message</td><td> :</td>
 								<td><textarea class="msg" name="msg" style="width:350px;height:80px;" ></textarea></td>
 							</tr>
@@ -1331,8 +1287,7 @@ li.required{color: #cd0000;list-style: none}
 				</div>
 
 				<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 580px;font-size: 12px;">
-						<h4 style="background: #6B7899; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Account
-							Statement Correction</h4>
+						<h4	style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Account Statement Correction</h4>
 						<form method="post" id="acc_change_form" action="<?=site_url("admin/pnh_acc_stat_c/{$fran['franchise_id']}")?>">
 							<input type="hidden" name="is_manual_corr" value="1">
 							<table cellpadding=3>
@@ -1341,7 +1296,7 @@ li.required{color: #cd0000;list-style: none}
 									<td><select name="type">
 											<option value="0">In (credit)</option>
 											<option value="1">Out (debit)</option>
-										</select></td>
+									</select></td>
 								</tr>
 								<tr>
 									<td>Amount (Rs)</td><td>:</td>
@@ -1379,7 +1334,7 @@ li.required{color: #cd0000;list-style: none}
 						<?php if($this->erpm->auth(FINANCE_ROLE,true)){ ?>
 						<li><a href="#security_cheques" >Security Cheque Details</a></li>
 						<?php } ?>
-						<li><a href="#unreconcile" onclick="load_receipts(this,'unreconcile',0,<?=$f['franchise_id']?>,100)">Un-Reconciled</a></li>
+                                                <li><a href="#unreconcile" onclick="load_receipts(this,'unreconcile',0,<?=$f['franchise_id']?>,100)">Un-Reconciled</a></li>
 					</ul>
 					
 					<div id="pending">
@@ -1444,7 +1399,7 @@ li.required{color: #cd0000;list-style: none}
 				<div id="acct_stat">
 					<div class="tab_content"></div>
 				</div>
-				<div id="unreconcile">
+                                <div id="unreconcile">
 					<div class="tab_content"></div>
 				</div>
 			</div>
@@ -1476,7 +1431,7 @@ li.required{color: #cd0000;list-style: none}
 											<td><?=$m['mid_end']?></td>
 											<td><?=date("d/m/y",$m['created_on'])?></td>
 											<td><?=$m['admin']?></td>
-										<?php }?>
+											<?php }?>
 									
 									</tbody>
 								</table>
@@ -1558,7 +1513,7 @@ li.required{color: #cd0000;list-style: none}
 											</select>
 											</td>
 										</tr>
-										
+											
 										<tr>
 											<td>Brand </td><td>:</td>
 											<td><select name="brand"  class="select_brand"  data-placeholder="Select Brand" style="width:250px;" data-required="true"></select>
@@ -1576,6 +1531,7 @@ li.required{color: #cd0000;list-style: none}
 											<td><textarea class="inp" name="reason" style="width: 300px;height: 100px;" data-required="true" ></textarea>
 											</td>
 										</tr>
+										
 										<tr>
 											<td>Expire Previous Schemes</td><td>:</td><td><input type="checkbox" name="expire_schdisc" value="1" checked></td>
 										</tr>
@@ -1615,10 +1571,10 @@ li.required{color: #cd0000;list-style: none}
 										
 										<tr>
 											<td>Category </td><td>:</td>
-											<td>
-												<select name="cat" class="select_cat"  data-placeholder="Select Category" style="width:250px;" data-required="true" ></select>
-												</select>
-											</td>
+												<td>
+													<select name="cat" class="select_cat"  data-placeholder="Select Category" style="width:250px;" data-required="true" ></select>
+													</select>
+												</td>
 										</tr>
 											
 										<tr>
@@ -1728,10 +1684,12 @@ li.required{color: #cd0000;list-style: none}
 							</table>
 						</div>
 					</form>
-				</div>
+				</div>	
 			</tr>			
 	</div>
-			
+
+					</td>
+				
 
 				<div class="clear"></div>
 			</table>
@@ -1955,8 +1913,11 @@ li.required{color: #cd0000;list-style: none}
 					</form>
 				</div>
 
-            </div>
-    </div>
+
+				</div>
+
+
+				</div>
 <!-- Franchise suspend form START -->
 	<div id="fran_suspend" title="Suspend Franchise" style="overflow: hidden;">
 		<form id="suspend_reasonfrm" method="post"
@@ -2029,53 +1990,1923 @@ li.required{color: #cd0000;list-style: none}
 	
 	<div id="inv_transitlogdet_dlg" title="Shipment Transit Log">
 		<h3 style="margin:3px 0px;"></h3>
-		<div id="inv_transitlogdet_tbl"></div>
-	</div>
-	<div id="dlg_unreconcile_view_list" style="display:none;">
-    </div>
-    <div id="dlg_unreconcile_form" style="display:none;">
-        <h3>Select invoices for reconciliation </h3>
-        <form id="dl_submit_reconcile_form">
-            <table class="datagrid1" width="100%">
-                <tr><td width="150">Receipt #</td><th>
-                        <input type="text" readonly='true' id="dg_i_receipt_id" name="dg_i_receipt_id" value="" size="6" class="inp"/></th></tr>
-                <tr><td width="150">Receipt Amount</td><th>
-                        Rs. <input type="text" readonly='true' id="dg_i_receipt_amount" name="dg_i_receipt_amount" value="" size="6" class="inp money"/></th></tr>
-                <tr><td width="150">Unreconcile Amount</td><th>
-                        Rs. <input type="text" readonly='true' id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value="" size="6" class="inp money"/></th></tr>
-            </table>
-            <div>&nbsp;</div>
-            <div class="dg_error_status"></div>
-                <table class="datagrid nofooter" width="100%">
-                    <thead> <tr><th>Invoice No</th><th width="100">Invoice Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
-                    <tbody class='dlg_invs_list'>
-                            <tr id='dg_reconcile_row_1' class="dg_invoice_row">
-                                <td>
-                                    <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange='dg_fn_inv_selected(this,1);'></select>
-                                </td>
-                                <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=6></td>
-                                <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value=''></td>
-                                <td>
-                                    <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick='dg_add_invoice_row(this);'> + </a>
-                                </td>
-                            </tr>
-                    </tbody>
-                    <tfoot class="nofooter">
-                        <tr>
-                            <td colspan="2">
-                                <span style="float:right;">Total reconciled (Rs.):</span><br>
-                                <span style="float:right;">Un-reconciled after Reconcile (Rs.):</span>
-                            </td>
-                            <td align="left">
-                                <input type="text" readonly='true' name="ttl_reconciled" class="dg_l_total_adjusted_val money" value="0" size="6" /><br>
-                                <input type="text" readonly='true' name="ttl_unreconciled_after" class="dg_ttl_unreconciled_after money" value="0" size="6" />
-                            </td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </form>
-    </div>
+		<div id="inv_transitlogdet_tbl">
+			
+		</div>
+	</div>		
+        
+        <div id="dlg_unreconcile_view_list" style="display:none;">
+        </div>
+        <div id="dlg_unreconcile_form" style="display:none;">
+                <h3>Select invoices for reconciliation </h3>
+                <form id="dl_submit_reconcile_form">
+                    <table class="datagrid1" width="100%">
+                        <tr><td width="150">Receipt #</td><th>
+                                <input type="text" readonly='true' id="dg_i_receipt_id" name="dg_i_receipt_id" value="" size="6" class="inp"/></th></tr>
+                        <tr><td width="150">Receipt Amount</td><th>
+                                Rs. <input type="text" readonly='true' id="dg_i_receipt_amount" name="dg_i_receipt_amount" value="" size="6" class="inp money"/></th></tr>
+                        <tr><td width="150">Unreconcile Amount</td><th>
+                                Rs. <input type="text" readonly='true' id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value="" size="6" class="inp money"/></th></tr>
+                    </table>
+                    <div>&nbsp;</div>
+                    <div class="dg_error_status"></div>
+                        <table class="datagrid nofooter" width="100%">
+                            <thead> <tr><th>Invoice No</th><th width="100">Invoice Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
+                            <tbody class='dlg_invs_list'>
+                                    <tr id='dg_reconcile_row_1' class="dg_invoice_row">
+                                        <td>
+                                            <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange='dg_fn_inv_selected(this,1);'></select>
+                                        </td>
+                                        <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=6></td>
+                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value=''></td>
+                                        <td>
+                                            <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick='dg_add_invoice_row(this);'> + </a>
+                                        </td>
+                                    </tr>
+                            </tbody>
+                            <tfoot class="nofooter">
+                                <tr>
+                                    <td colspan="2">
+                                        <span style="float:right;">Total reconciled (Rs.):</span><br>
+                                        <span style="float:right;">Un-reconciled after Reconcile (Rs.):</span>
+                                    </td>
+                                    <td align="left">
+                                        <input type="text" readonly='true' name="ttl_reconciled" class="dg_l_total_adjusted_val money" value="0" size="6" /><br>
+                                        <input type="text" readonly='true' name="ttl_unreconciled_after" class="dg_ttl_unreconciled_after money" value="0" size="6" />
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </form>
+            </div>
+            <div id="dlg_debit_note_block">
+                <h3>Reconcile the debit note</h3>
+                <form id="dg_debit_note_form">
+                    <table class="datagrid1" width="100%">
+                        <tr><td width="150">Debit Note id #</td><th>
+                                <input type="text" readonly='true' id="dg_i_debit_note_id" name="dg_i_debit_note_id" value="" size="6" class="inp"/></th></tr>
+                        <tr><td width="150">Debit Amount</td><th>
+                                Rs. <input type="text" readonly='true' id="dg_i_debit_amount" name="dg_i_debit_amount" value="" size="6" class="inp money"/></th></tr>
+                        <tr><td width="150">Unreconcile Amount</td><th>
+                                Rs. <input type="text" readonly='true' id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value="" size="6" class="inp money"/></th></tr>
+                        <tr><td width="150">Reconcile Remarks</td><th>
+                                <textarea id="dg_i_remarks" name="dg_i_remarks" class="textarea" style="width:193px; height: 70px;"></textarea></th></tr>
+                    </table>
+<!--                    <div>&nbsp;</div>
+                    <div class="dg_error_status"></div>
+                        <table class="datagrid nofooter" width="100%">
+                            <thead> <tr><th>Invoice No</th><th width="100">Invoice Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
+                            <tbody class='dlg_invs_list'>
+                                    <tr id='dg_reconcile_row_1' class="dg_invoice_row">
+                                        <td>
+                                            <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange='dg_fn_inv_selected(this,1);'></select>
+                                        </td>
+                                        <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=6></td>
+                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value=''></td>
+                                        <td>
+                                            <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick='dg_add_invoice_row(this);'> + </a>
+                                        </td>
+                                    </tr>
+                            </tbody>
+                            <tfoot class="nofooter">
+                                <tr>
+                                    <td colspan="2">
+                                        <span style="float:right;">Total reconciled (Rs.):</span><br>
+                                        <span style="float:right;">Un-reconciled after Reconcile (Rs.):</span>
+                                    </td>
+                                    <td align="left">
+                                        <input type="text" readonly='true' name="ttl_reconciled" class="dg_l_total_adjusted_val money" value="0" size="6" /><br>
+                                        <input type="text" readonly='true' name="ttl_unreconciled_after" class="dg_ttl_unreconciled_after money" value="0" size="6" />
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>-->
+                </form>
+            </div>
+</div>
+<script>
+
+ var twnlnk_franchise_html='';
+
+function load_ship_del_calender()
+{
+		  var date = new Date();
+		  var d = date.getDate();
+		  var m = date.getMonth();
+		  var y = date.getFullYear();
+
+		  $('.shipment_log').fullCalendar({
+			  	editable: false,
+			  	droppable: false,
+		   		draggable: false,
+		   		
+			   	header: {
+		 		left: 'prev,next today',
+		 		center: 'title',
+		 		right: 'month,basicWeek,agendaDay'
+		 		},
+		 		
+		   	
+		   	selectable: true,
+			selectHelper: true,
+			
+			events: function(start, end, callback){
+					 var franchise_id='<?php echo $fran['franchise_id'] ?>';
+					 // $('.ttl_amount_shipped').text(0);
+					  //$('.ttl_amount_delivered').text(0);
+				 	$('.shipment_log').fullCalendar('removeEvents')
+				 		$.post(site_url+'/admin/jx_franchise_shipment_logonload',{'start': start.getTime(),'end': end.getTime(), 'fid':franchise_id},function(result){
+				 				//$('.ttl_amount_shipped').html("Rs. "+result.ttl_amt_shipped);
+				 				//$('.ttl_amount_delivered').html("Rs. "+result.ttl_amt_delivered);
+                    		    callback(result.ship_del_list);
+                    	},'json');
+                    	
+              },
+		    eventRender: function(event, element) {
+				var amount = event.amount;
+					if(event.type == 'shipment')
+					{element.find('.fc-event-title').html('Shipped Value <br /><b>Rs. '+amount+'</b>').parent().addClass('shipped_event');}
+					else if(event.type == 'delivery')
+					{element.find('.fc-event-title').html('Delivered Value <br /><b>Rs. '+amount+'</b>').parent().addClass('delivered_event');}
+						
+		    },
+		     eventClick: function(calEvent, jsEvent, view) {
+					var date=calEvent.start;
+					var event_type=calEvent.type;
+				 	var sel_date = (date.getDate())>9?(date.getDate()):'0'+(date.getDate());
+				 	var sel_mnth = (date.getMonth()+1)>9?(date.getMonth()+1):'0'+(date.getMonth()+1);
+			  	 	var sel_year = date.getFullYear();
+			     	var ship_date = sel_year+'-'+(sel_mnth)+'-'+sel_date;
+			     	var delivery_date = sel_year+'-'+(sel_mnth)+'-'+sel_date;
+				 	var franchise_id='<?php echo $fran['franchise_id'] ?>';
+				 
+						if(event_type == "shipment")
+						{
+							var title = 'Shipment Log on '+sel_date+'/'+(sel_mnth)+'/'+sel_year;
+								$( "#ship_log_dlg" ).data({'sel_date':sel_date,'sel_mnth':sel_mnth, 'sel_year':sel_year, 'fid':franchise_id, 'ship_date':ship_date }).dialog('open','option','title',title);
+								$( "#ship_log_dlg" ).dialog('option','title',title);
+						}else if(event_type == "delivery")
+						{
+							var title = 'Delivery Log on '+sel_date+'/'+(sel_mnth)+'/'+sel_year;
+								$( "#delivery_log_dlg" ).data({'sel_date':sel_date,'sel_mnth':sel_mnth, 'sel_year':sel_year, 'fid':franchise_id, 'delivery_date':delivery_date }).dialog('open','option','title',title);
+								$( "#delivery_log_dlg" ).dialog('option','title',title);
+						 }
+		  }
+	});
+	
+}
+
+$(function(){
+
+	if(location.hash != '#ship_log')
+	{
+		$('.ship_log').click(function(e){
+			if(!$('.shipment_log').hasClass( 'fc' ))
+				load_ship_del_calender();
+		});
+	}else
+	{
+		load_ship_del_calender();
+	}
+});
+
+   
+$("#ship_log_dlg" ).dialog({
+		modal:true,
+		autoOpen:false,
+		width:'1000',
+		height:'450',
+		autoResize:true,
+		open:function(){
+		dlg = $(this);
+
+		var ship_date=$(this).data('ship_date');
+		var sel_date=$(this).data('sel_date');
+		var sel_mnth=$(this).data('sel_mnth');
+		var sel_year=$(this).data('sel_year');
+		// ajax request fetch task details
+	   $.post(site_url+'/admin/jx_franchise_shipment_log_bydate',{sel_date:$(this).data('sel_date'), sel_mnth:$(this).data('sel_mnth'), sel_year:$(this).data('sel_year'), fid:$(this).data('fid'), ship_date:$(this).data('ship_date')},function(result){
+	   if(result.status == 'failure')
+		{
+			 $('#ship_log_dlg_wrap').html('No Shipments on '+ship_date);
+			 return false;
+	    }
+	    else
+		{
+	    	var shipment_det='';
+	    	var k=1;
+	    	 
+	    	 shipment_det +='<table class="datagrid" width="100%"  ><tr><th width="5%">Sl.No</th><th>TransID</th><th>Invoice</th>';
+	    	 shipment_det +='<th>Item</th><th>Quantity</th><th>Amount</th><th></th></tr>';
+	    	 $.each(result.ship_det,function(i,s1){
+	    	 	s = s1[0];
+	    	 	
+	    	 		shipment_det +='<tr>';
+	    	 		shipment_det +='	<td rowspan="'+s1.invoices.length+'">'+(k++)+'</td>';
+	    	 		shipment_det +='	<td rowspan="'+s1.invoices.length+'"><a href="'+site_url+'/admin/trans/'+s1.transid+'" target="_blank">'+s1.transid+'</a><br /><span style="font-size:10px;font-weight:bold">Ordered On : '+s1.ord_on+'</span> </td>';
+	    	 		j=0;
+	    	 		$.each(s1.invoices,function(a,b){
+	    	 			if(j!=0)
+	    	 				shipment_det +='<tr>';			
+	    	 			shipment_det +='<td><a href="'+site_url+'/admin/invoice/'+b.invoice_no+'" target="_blank">'+b.invoice_no+'</a></td>';
+		    	 		shipment_det +='	<td><a href="'+site_url+'/admin/pnh_deal/'+b.itemid+'" target="_blank">'+b.name+'</a></td>';
+		    	 		shipment_det +='	<td>'+b.qty+'</td>';
+		    	 		shipment_det +='	<td>'+b.amount+'</td>';
+		    	 		shipment_det +='	<td><a class="link_btn" onclick="get_invoicetransit_log(this,'+b.invoice_no+')" href="javascript:void(0)">View Transit Log</a></td>';
+		    	 		if(j!=0)
+	    	 				shipment_det +='</tr>';
+	    	 				j++;	
+	    	 		});
+	    	 		shipment_det +='</tr>';
+	    	 });			
+	    	 shipment_det +='<tfoot class="nofooter"><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td></td><td></td><td></td></tr></tfoot>';
+	    	 $('#ship_log_dlg_wrap').html(shipment_det);	
+		}
+	  },'json');
+	}
+});
+$("#delivery_log_dlg" ).dialog({
+		modal:true,
+		autoOpen:false,
+		width:'1000',
+		height:'450',
+		autoResize:true,
+		open:function(){
+		dlg = $(this);
+
+		var delivery_date=$(this).data('delivery_date');
+		var sel_date=$(this).data('sel_date');
+		var sel_mnth=$(this).data('sel_mnth');
+		var sel_year=$(this).data('sel_year');
+		// ajax request fetch task details
+	   $.post(site_url+'/admin/jx_franchise_delivery_log_bydate',{sel_date:$(this).data('sel_date'), sel_mnth:$(this).data('sel_mnth'), sel_year:$(this).data('sel_year'), fid:$(this).data('fid'), delivery_date:$(this).data('delivery_date')},function(result){
+	   if(result.status == 'failure')
+		{
+			 $('#delivery_log_dlg_wrap').html('No deliveries on '+delivery_date);
+			 return false;
+	    }
+	    else
+		{
+	    	var delivery_det='';
+	    	var k=1;
+	    	 
+	    	 delivery_det +='<table class="datagrid" width="100%"  ><tr><th width="5%">Sl.No</th><th>TransID</th><th>Invoice</th>';
+	    	 delivery_det +='<th>Item</th><th>Quantity</th><th>Amount</th><th></th></tr>';
+	    	 $.each(result.delivery_det,function(i,s1){
+	    	 	s = s1[0];
+	    	 	
+	    	 		delivery_det +='<tr>';
+	    	 		delivery_det +='	<td rowspan="'+s1.invoices.length+'">'+(k++)+'</td>';
+	    	 		delivery_det +='	<td rowspan="'+s1.invoices.length+'"><a href="'+site_url+'/admin/trans/'+s1.transid+'" target="_blank">'+s1.transid+'</a><br /><span style="font-size:10px;font-weight:bold">Ordered On : '+s1.ord_on+'</span></td>';
+	    	 		j=0;
+	    	 		$.each(s1.invoices,function(a,b){
+	    	 			if(j!=0)
+	    	 				delivery_det +='<tr>';			
+	    	 			delivery_det +='<td><a href="'+site_url+'/admin/invoice/'+b.invoice_no+'" target="_blank">'+b.invoice_no+'</a></td>';
+		    	 		delivery_det +='	<td><a href="'+site_url+'/admin/pnh_deal/'+b.itemid+'" target="_blank">'+b.name+'</a></td>';
+		    	 		delivery_det +='	<td>'+b.qty+'</td>';
+		    	 		delivery_det +='	<td>'+b.amount+'</td>';
+		    	 		delivery_det +='	<td><a class="link_btn" onclick="get_invoicetransit_log(this,'+b.invoice_no+')" href="javascript:void(0)">View Transit Log</a></td>';
+		    	 		if(j!=0)
+	    	 				delivery_det +='</tr>';
+	    	 				j++;	
+	    	 		});
+	    	 		delivery_det +='</tr>';
+	    	 	});
+	    	  delivery_det +='<tfoot class="nofooter"><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td></td><td></td><td></td></tr></tfoot>';
+	    	 $('#delivery_log_dlg_wrap').html(delivery_det);	
+		
+		}
+	  },'json');
+	}
+});
+
+function get_invoicetransit_log(ele,invno)
+{
+	$('#inv_transitlogdet_dlg').data({'invno':invno,}).dialog('open');
+}
+
+var refcont = null;
+$('#inv_transitlogdet_dlg').dialog({width:'900',height:'auto',autoOpen:false,modal:true,
+											open:function(){
+
+												
+												//,'width':refcont.width()
+												//$('div[aria-describedby="inv_transitlogdet_dlg"]').css({'top':(refcont.offset().top+15+refcont.height())+'px','left':refcont.offset().left});
+												
+												$('#inv_transitlogdet_tbl').html('loading...');
+												$.post(site_url+'/admin/jx_invoicetransit_det','invno='+$(this).data('invno'),function(resp){
+													if(resp.status == 'error')
+													{
+														alert(resp.error);
+													}else
+													{
+														var inv_transitlog_html = '<table class="datagrid" width="100%"><thead><th width="30%">Msg</th><th width="10%">Status</th><th width="10%">Handle By</th><th width="10%">Logged On</th><th width="15%">SMS</th></thead><tbody>';
+														$.each(resp.transit_log,function(i,log){
+															inv_transitlog_html += '<tr><td>'+log[5]+'</td><td>'+log[1]+'</td><td>'+log[2]+'('+log[4]+')</td><td>'+log[3]+'</td><td>'+log[6]+'</td></tr>';
+														});
+														inv_transitlog_html += '</tbody></table>';
+														$('#inv_transitlogdet_tbl').html(inv_transitlog_html);
+
+														$('#inv_transitlogdet_dlg h3').html('Invoice no :<span style="color:blue;font-size:12px">'+resp.invoice_no+'</span>  Franchise name: <span style="color:orange;font-size:12px">'+resp.Franchise_name +'</span> Town : <span style="color:gray;font-size:12px">'+resp.town_name+'</span>'+' ManifestoNo :'+resp.manifesto_id);
+
+
+														
+														
+													}
+												},'json');
+											}
+									});	
+	
+$('.tab_view').tabs();
+$('#loading_container_div').remove();
+$('.container_div').css('visibility','visible');
+
+
+
+$('.select_brand').chosen();
+$('.select_cat').chosen();
+$('.sus_type').chosen();
+
+$('.sus_type').change(function(){
+
+	if($(this).val()==2)
+		$('.credit_edit').show();
+	else
+		$('.credit_edit').hide();
+});
+/*function load_allbrands()
+{
+	var brands_html='<option value=""></option>';
+	$.getJSON(site_url+'/admin/jx_getallbrands','',function(resp){
+		if(resp.status == 'error')
+		{
+			alert(resp.message);
+		}
+		else
+		{
+			brands_html+='<option value="0">All</option>';
+			$.each(resp.brand_list,function(i,b){
+			brands_html+='<option value="'+b.id+'">'+b.name+'</option>';
+			});
+		}
+		
+		$('select[name="brand"]').html(brands_html);
+		$('select[name="brand"]').trigger("liszt:updated");
+		
+	});
+}
+
+function load_allcatgory()
+{
+	var cat_html='<option value=""></option>';
+	$.getJSON(site_url+'/admin/jx_getallcategory','',function(resp){
+		if(resp.status == 'error')
+		{
+			alert(resp.message);
+		}
+		else
+		{
+			cat_html+='<option value="0">All</option>';
+			$.each(resp.cat_list,function(i,c){
+				cat_html+='<option value="'+c.id+'">'+c.name+'</option>';
+			});
+		}
+		
+		$('select[name="cat"]').html(cat_html);
+		$('select[name="cat"]').trigger("liszt:updated");
+		
+	});
+}*/
+
+	var fil_ordersby = 'all';
+	
+	function load_franchise_orders(stat)
+	{
+		if(stat != 1)
+			fil_ordersby = stat;
+				
+		
+		$('.tab_list .selected').removeClass('selected');
+		$('.tab_list .'+fil_ordersby).addClass('selected');
+			
+				
+		$('#franchise_ord_list_frm input[name="type"]').val(fil_ordersby);
+		
+		$('.franchise_ord_list_content').html("<div style='margin-top:15px'>Loading...</div>");
+		$.post($('#franchise_ord_list_frm').attr('action'),$('#franchise_ord_list_frm').serialize()+'&stat='+stat,function(resp){
+			$('.franchise_ord_list_content').html(resp);
+		});
+		return false;
+	}
+$(function(){
+	$('#menu_det_tab').hide();
+	
+	var fran_reg_date = "<?php echo date('m/d/Y',$f['created_on'])?>";
+	prepare_daterange('ord_fil_from','ord_fil_to');
+	$("#d_start,#d_end").datepicker({minDate:0});
+	$("#frm,#to").datepicker({dateFormat:'dd-mm-yy'});
+	prepare_daterange('msch_start','msch_end');
+	$('#msch_applyfrm').datepicker();
+	$("#sec_date").datepicker();
+	$( "#d_ac_from").datepicker({
+	      changeMonth: true,
+	      dateFormat:'yy-mm-dd',
+	      numberOfMonths: 1,
+	      maxDate:0,
+	      minDate: new Date(fran_reg_date),
+	    	onClose: function( selectedDate ) {
+	        $( "#d_ac_to" ).datepicker( "option", "minDate", selectedDate );
+	      }
+	    });
+	    $( "#d_ac_to" ).datepicker({
+	      changeMonth: true,
+	      dateFormat:'yy-mm-dd',
+	      numberOfMonths: 1,
+	      maxDate:0,
+	      onClose: function( selectedDate ) {
+	        $( "#d_ac_from" ).datepicker( "option", "maxDate", selectedDate );
+	      }
+	    });
+	
+	
+	 
+	$(".inst_type").change(function(){
+		$(".inst").hide();
+		if($(this).val()=="1")
+		{
+			$(".inst").show().val("");
+			$(".inst_no .label").html("Cheque No");
+			$(".inst_date .label").html("Cheque Date");
+		}
+		else if($(this).val()=="2")
+		{
+			$(".inst").show().val("");
+			$(".inst_no .label").html("DD No");
+			$(".inst_date .label").html("DD Date");
+		}
+		else if($(this).val()=="3")
+		{
+			$(".inst").show().val("");
+			$(".inst_date .label").html("Transfer Date");
+			$(".inst_no").hide();
+		}
+	}).val("0").change();
+
+					
+	$("#sch_form").data('psubumit',false).submit(function(){
+		if($("#d_start").val().length==0 || $("#d_end").val().length==0)
+		{
+			$("#sch_form").data('psubumit',false);
+			alert("Enter start date and end date");
+			return false;
+		}
+		
+		var sch_disc = $('input[name="discount"]',this).val();
+			sch_disc = $.trim(sch_disc)*1;
+			if(isNaN(sch_disc))
+			{
+				$("#sch_form").data('psubumit',false);
+				alert("invalid discount entered");
+				return false;
+			}else
+			{
+				$.post(site_url+'/admin/jx_check_schemexist/<?php echo $fran['franchise_id']?>','',function(resp){
+					if(resp.status == 'error')
+					{
+						$("#sch_form").data('psubumit',false);
+						alert(resp.message);
+												
+					}else
+					{
+						$("#sch_form").data('psubumit',true);
+						$("#sch_form").submit();
+						$("#sch_hist").dialog('close');
+					} 
+				});
+			}
+		//alert(resp.message);
+		//return $(this).data('psubumit');
+	});
+	
+
+	$('.analytics').click(function(){
+		setTimeout(function(){
+			fran_menu_stat();
+			payment_order_stat();
+			brands_byfranch();	
+		},400);
+	});
+	
+	
+	if(location.hash == '#analytics')
+		$('.analytics').click();
+	
+	
+	$(".credit_form").submit(function(){
+		if(!is_integer($("input[name=limit]",$(this)).val()))
+		{
+			alert("Enter a number");
+			return false;
+		}
+		reason=prompt("Please mention a resaon");
+		if(reason.length==0)
+			return false;
+		$(".c_reason",$(this)).val(reason);
+		return true;
+	});
+	$("#bank_form").submit(function(){
+		f=true;
+		$("input",$(this)).each(function(){
+			if($(this).val().length==0)
+			{
+				alert($("td:first",$(this).parents("tr").get(0)).text());
+				f=false;
+				return false;
+			}
+			return f;
+		});
+	});
+
+	$("#top_form").submit(function(){
+		 
+		 $('input[type="text"]').each(function(){
+		 	$(this).val($.trim($(this).val()))
+		 });
+		 
+		var error_msgs = new Array();
+		var inst_type = $('select[name="type"]',this).val();
+		var bank = $('input[name="bank"]',this).val();
+		var inst_no = $('input[name="no"]',this).val();
+		var dateval = $('input[name="date"]',this).val();
+		
+			if(!is_numeric($(".amount",$(this)).val()))
+				error_msgs.push("Enter a valid amount");
+			
+			var inst_type_str = 'Cash';	
+				if(inst_type == 1)
+					inst_type_str = 'Cheque';
+				else if(inst_type == 2) 	
+					inst_type_str = 'DD';
+				else if(inst_type == 3) 	
+					inst_type_str = 'Transfer';
+					
+			// validate cash entry 
+			if(inst_type != 0)
+			{
+				if(!bank.length)
+					error_msgs.push("Enter Bank Name");
+					
+				if(!inst_no.length && inst_type != 3)
+					error_msgs.push("Enter "+inst_type_str+" no");
+					
+				if(!dateval.length)
+					error_msgs.push("Enter "+inst_type_str+" Date ");
+						
+			}
+			
+			if($(".msg",$(this)).val().length==0)
+				error_msgs.push("Please enter Message");
+                            
+                        var sts = validate_selected_invoice_val();
+                        if(sts !== true) {
+                           error_msgs.push(sts);
+                        }
+                        var reconciled_total= format_number( $("abbr",".reconciled_total").html() );
+                        $("#total_val_reconcile").val(reconciled_total);
+
+                if(error_msgs.length)
+                {
+                        alert("Errors:\n"+error_msgs.join("\n"));
+                        return false;
+                }
+                
+		if(!confirm("Are you sure you want add this receipt ?"))
+			return false;
+		
+		if(inst_type == 0)
+		{
+			$('input[name="bank"]',this).val("");
+			$('input[name="date"]',this).val("");
+		}
+		
+		if(inst_type == 3 || inst_type == 0 )
+			$('input[name="no"]',this).val("");
+		
+	});
+	
+	$("#acc_change_form").submit(function(){
+		 $('input[type="text"]').each(function(){
+		 	$(this).val($.trim($(this).val()))
+		 });
+		 
+		var error_msgs = new Array();
+		
+			if(!$('input[name="amount"]',this).val().length)
+				error_msgs.push("Enter amount");
+				
+			if(!$('input[name="desc"]',this).val().length)
+				error_msgs.push("Enter description");
+			
+			if(error_msgs.length)
+			{
+				alert("Invalid Inputs Entered \n\n"+error_msgs.join("\n"));
+				return false;
+			}
+			
+			if(!confirm("Are you sure you want to make this correction ?"))
+				return false;
+		 
+	});
+	
+
+	$("#allot_mid_form").submit(function(){
+		if($("input[name=start]",$(this)).val().length!=8 || $("input[name=end]",$(this)).val().length!=8 || $("input[name=start]",$(this)).val().charAt(0)!="2" || $("input[name=end]",$(this)).val().charAt(0)!="2")
+		{
+			alert("Please enter valid MID");
+			return false;
+		}
+		return true;
+	});
+
+	$("#d_ac_form").submit(function(){
+		if($("#d_ac_from").val().length==0 || $("#d_ac_to").val().length==0)
+		{
+			alert("Please enter valid from and to date");
+			return false;
+		}
+		return true;
+	});
+
+	$("#fran_ver_change").change(function(){
+		if($(this).val()=="0")
+			return;
+		if(confirm("Are you sure to change the version?"))
+			location="<?=site_url("admin/pnh_fran_ver_change/{$fran['franchise_id']}")?>/"+$(this).val();
+	});
+	load_franchise_orders('all');
+});
+function give_sch_discnt_frm()
+{
+	$('#sch_hist').dialog('open');
+	//load_allbrands();
+	//load_allcatgory();
+}
+$( "#sch_hist" ).dialog({
+	modal:true,
+	autoOpen:false,
+	width:500,
+	height:500,
+	autoResize:true,
+	open:function(){
+	dlg = $(this);
+	
+	},
+	buttons:{
+		'Cancel' :function(){
+		 $(this).dialog('close');
+		},
+		'Submit':function(){
+			var sch_form=$("#sch_form",this);
+			if(sch_form.parsley('validate'))
+			{
+				//sch_form.submit();
+
+				if($("#d_start").val().length==0 || $("#d_end").val().length==0)
+				{
+					alert("Enter start date and end date");
+					return false;
+				}
+
+				var sch_disc = $('input[name="discount"]',this).val();
+					sch_disc = $.trim(sch_disc)*1;
+					if(isNaN(sch_disc))
+					{
+						alert("invalid discount entered");
+						return false;
+					}
+					if(sch_disc > 20)
+					{
+						alert("Maximum 10% is allowed for scheme discount");
+						return false;
+					}	
+
+				$.post(site_url+'/admin/jx_check_schemexist/<?php echo $f['franchise_id']?>',$("#sch_form").serialize(),function(resp){
+					if(resp.status == 'error')
+					{
+						alert(resp.message);
+					}else
+					{
+						$("#sch_form").submit();
+						$("#sch_hist").dialog('close');
+					} 
+				},'json');
+			}
+			else
+			{
+				alert("All fileds are required");
+			}
+		},
+	}
+});
+
+function load_bankdetails()
+{
+	$('#bank').dialog('open');
+}
+
+$( "#bank" ).dialog({
+	modal:true,
+	autoOpen:false,
+	width:'600',
+	height:'auto',
+	open:function(){
+	dlg = $(this);
+	},
+	buttons:{
+		'Close' :function(){
+		 $(this).dialog('close');
+		}
+	}
+});
+
+//------menber list handle------
+function members_details(fid)
+{
+	$('#members').data({'fid':fid}).dialog('open');
+}
+
+$( "#members" ).dialog({
+	modal:true,
+	autoOpen:false,
+	width:'700',
+	height:'auto',
+	open:function(){
+		dlg = $(this);
+		var fid=$(this).data('fid');
+		var html_cnt='';
+		$( "#members table" ).remove();	
+		load_members(fid,0);
+	},
+	buttons:{
+		'Close' :function(){
+		 	$(this).dialog('close');
+		}
+	}
+});
+
+$("#members .m_pg a").live("click",function(e){
+	e.preventDefault();
+	var link_parts=$(this).attr('href').split('/');
+		load_members($( "#members" ).data('fid'),link_parts[link_parts.length-1]*1);
+});
+
+function load_members(fid,pg)
+{
+	$( "#members table" ).remove();
+	var html_cnt='';
+	$.post(site_url+"/admin/jx_get_members_by_franchise/1/"+fid+'/'+pg,{},function(res){
+		if(res.status=='error')
+		{
+			alert(res.msg);
+		}else{
+			html_cnt+="<table class='datagrid' width='100%'><thead><tr><th>Member ID</th><th>Name</th><th>City</th><th>Created On</th></tr></thead><tody>";
+			$.each(res.members,function(a,b){
+				html_cnt+="<tr>";
+				html_cnt+="	<td><a href='"+site_url+"admin/pnh_viewmember/"+b.user_id+"' class='link'>"+b.pnh_member_id+"</a></td>";
+				html_cnt+="	<td>"+b.first_name+" "+b.last_name+"</td>";
+				html_cnt+="	<td>"+b.city+"</td>";
+				
+				html_cnt+="	<td>"+((b.created_on==0)?'registration form not updated yet':(get_unixtimetodatetime(b.created_on)))+"</td>";	
+				html_cnt+="</tr>";
+				
+			});
+			html_cnt+="<tr>";
+			html_cnt+="	<td colspan='4' align='right' class='m_pg pagination'>"+res.pagination+"</td>";		
+			html_cnt+="</tr>";
+			html_cnt+="</tbody></table>";
+				
+		}
+		
+		$("#members").append(html_cnt);
+			
+	},'json');
+	
+}
+
+//------menber list handle end------
+
+//-----------receipts handle---------
+function load_receipts(ele,type,pg,fid,limit)
+{
+	$($(ele).attr('href')+' div.tab_content').html('<div align="center"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
+
+	$.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+limit+'/'+pg*1,'',function(resp){
+		$($(ele).attr('href')+' div.tab_content').html(resp.page);
+		$($(ele).attr('href')+' div.tab_content .datagridsort').tablesorter();
+		
+	},'json');
+}
+
+$(".receipt_pg a").live('click',function(e){
+	e.preventDefault();
+	var link_det=$(this).attr('href').split('/');
+	var fid=link_det[2];
+	var type=link_det[3];
+	var pg=link_det[4];
+	
+	$.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+pg*1,'',function(resp){
+		$("#"+type+' div.tab_content').html(resp.page);
+		$("#"+type+' div.tab_content .datagridsort').tablesorter();
+		
+	},'json');
+});
+
+$(".account_statement").click(function(){$(".pending_receipt").trigger('click');});
+//-----------receipts handle end---------
+function load_scheme_disc_history()
+{
+	$('#schme_disc_history').dialog('open');
+}
+
+$( "#schme_disc_history" ).dialog({
+	modal:true,
+	autoOpen:false,
+	width:'900',
+	height:'auto',
+	open:function(){
+		dlg = $(this);
+	},
+	buttons:{
+		'Close' :function(){
+		 $(this).dialog('close');
+		}
+	}
+});
+
+
+function init_frmap() {
+  	$('.fran_menu').chosen();
+}
+$(function(){
+	$('.leftcont').hide();	
+});
+$('.schmenu').chosen();
+
+var sel_menuid=0;
+
+$(function(){
+
+	$('.select_cat').change(function(){
+	//alert($(this).val());
+	//sel_menuid=$('.schmenu').val();
+	sel_catid=$(this).val();
+	if(sel_catid!='0')
+	{
+		$(".select_brand").html('').trigger("liszt:updated");
+		$.getJSON(site_url+'/admin/jx_load_allbrandsbycat/'+sel_catid,'',function(resp){
+		var brands_html='';
+		if(resp.status=='error')
+		{
+			alert(resp.message);
+		}
+		else
+		{
+			brands_html+='<option value=""></option>';
+			brands_html+='<option value="0">All</option>';
+			$.each(resp.brand_list,function(i,b){
+			brands_html+='<option value="'+b.brandid+'">'+b.name+'</option>';
+			});
+		}
+		 $('.select_brand').html(brands_html).trigger("liszt:updated");
+		 $('.select_brand').trigger('change');
+		});
+	}
+/*	else
+	{
+		load_allbrands();
+	}*/
+});
+
+$('.schmenu').change(function()
+{
+	var sel_menuid=$(this).val();
+	//var sel_brandid=$(this).val();
+	if(sel_menuid!='0')
+	{
+		$(".select_cat").html('').trigger("liszt:updated");
+		$.getJSON(site_url+'/admin/jx_load_allcatsbymenu/'+sel_menuid,'',function(resp){
+			var cats_html='';
+				if(resp.status=='error')
+				{
+					alert(resp.message);
+				}
+				else
+				{
+					cats_html+='<option value=""></option>';
+					cats_html+='<option value="0">All</option>';
+					$.each(resp.cat_list,function(i,b){
+					cats_html+='<option value="'+b.catid+'">'+b.name+'</option>';
+					});
+				}
+		 	$('.select_cat').html(cats_html).trigger("liszt:updated");
+		 	$('.select_cat').trigger('change');
+		});
+	}
+
+});
+
+});
+
+
+$( ".fran_tabs a" ).click(function()
+{
+	window.location.hash = $(this).attr('href');   
+	window.scrollTo(0,0); 
+});
+
+
+/*$(".transit_link").click(function(e){
+	if(!confirm("Are you sure want change to 'IN Hand' status?"))
+	{
+		e.preventDefault();
+		return false;
+	}
+	return true;
+});*/
+
+$('#r_type').change(function(){
+	r=$(this).val();
+	if(r=='0')
+	{
+		$(".inst_type option[value="+1+"]").hide();
+	}
+	else
+	{
+		$(".inst_type option[value="+1+"]").show();
+	}
+});
+
+function change_status(rid)
+{
+	$('#remarks_changestatus').data('receipt_id',rid).dialog('open');
+}
+
+$('#remarks_changestatus').dialog({
+
+	model:true,
+	autoOpen:false,
+	width:'500',
+	height:'330',
+	open:function(){
+		dlg = $(this);
+		$('#transit_rmks input[name="rid"]',this).val(dlg.data('receipt_id'));
+		$("#r_receiptid b",this).html(dlg.data('receipt_id'));
+		$("#transit_rmks",this).attr('action',site_url+'/admin/pnh_change_receipt_trans_type/'+dlg.data('receipt_id')); 
+	},
+	buttons:{
+		'Submit':function(){
+			var transit_rmksfrm = $("#transit_rmks",this);
+			 	if(transit_rmksfrm.parsley('validate'))
+				{
+					$('#transit_rmks').submit();
+					$(this).dialog('close');
+				}
+		       else
+		       {
+		       		alert('Remarks Need to be addedd!!!');
+		       }
+		},
+		'Cancel':function()
+		{
+			$(this).dialog('close');
+		},
+	}
+	
+});
+
+
+function give_supersch()
+{
+	$("#pnh_superschme").dialog('open');
+}
+
+$('#fran_misc_logs').tabs();
+$('#activity_menu_tabs').tabs();
+
+$("#pnh_superschme").dialog({
+	modal:true,
+	autoOpen:false,
+	width:'500',
+	height:'500',
+	open:function(){
+		
+	},
+	buttons:{
+		'Cancel':function(){
+			$(this).dialog('close');
+		},
+		'Submit':function(){
+			var sch_form=$("#super_schform",this);
+			if(sch_form.parsley('validate'))
+			{
+				$.post(site_url+'/admin/jx_check_schemexist/<?php echo $f['franchise_id']?>',$("#super_schform").serialize(),function(resp){
+					if(resp.status == 'error')
+					{
+						alert(resp.message);
+						return false;
+					}else
+					{
+						$("#super_schform").data('psubumit',true);
+						$("#super_schform").submit();
+						$("#pnh_superschme").dialog('close');
+					} 
+				},'json');
+			}
+			else
+			{
+				alert("All fileds are required");
+			}
+		},
+	}
+});
+
+function give_membrsch()
+{
+	$('#pnh_membersch').dialog('open');
+}
+
+$("#pnh_membersch").dialog({
+	modal:true,
+	autoOpen:false,
+	width:'500',
+	height:'500',
+	open:function(){
+		
+	},
+	buttons:{
+		'Cancel':function(){
+			$(this).dialog('close');
+		},
+		'Submit':function(){
+			var mbr_schfrm=$('#membr_schform');
+			if(mbr_schfrm.parsley('validate'))
+			{
+				$.post(site_url+'/admin/jx_check_mbrschmenu/<?php echo $f['franchise_id']?>',$("#membr_schform").serialize(),function(resp){
+					if(resp.status == 'error')
+					{
+						alert(resp.message);
+						return false;
+					}else
+					{
+						$('#membr_schform').data('psubumit',true);
+						$('#membr_schform').submit();
+						$("#pnh_membersch").dialog('close');
+					}
+				},'json');
+			}
+				else
+				{
+					alert("All fileds are required");
+				}
+			},
+		}
+	
+	});
+</script>
+
+	<script>
+		$('input[name="return_on_date"],input[name="return_on_date_end"]').datepicker({});
+		
+		$('input[name="return_on_date"],input[name="return_on_date_end"]').change(function(){
+			$('input[name="return_kwd_srch"]').val('');
+			load_return_prods(0);
+		});
+		
+		$('input[name="return_kwd_srch"]').change(function(){
+			$('input[name="return_on_date"]').val('');
+			$('input[name="return_on_date_end"]').val('');
+		});
+		
+		//$('select[name="order_by_mnth"]').change(function(){
+			
+			//fran_menu_stat();
+		//});
+		$("#grid_list_frm_to").bind("submit",function(e){
+			$('#payment_stat .payment_stat_view').unbind('jqplotDataClick');
+		    e.preventDefault();
+		    fran_menu_stat();
+		    payment_order_stat();
+		    brands_byfranch();
+		    return false;
+		});
+		
+		
+		 
+		function load_all_return_prods(pg)
+		{
+			$('input[name="return_kwd_srch"]').val('');
+			$('input[name="return_on_date"]').val('');
+			$('input[name="return_on_date_end"]').val('');
+			load_return_prods(pg);
+		}
+		function load_return_prods(pg)
+		{
+			$('#return_products .module_cont_block_grid .datagrid tbody').html('<tr><td colspan="8"><div align="center"><img src="'+base_url+'/images/loading_bar.gif'+'"> </div></td></tr>');
+			
+			var ret_params = {};
+				ret_params.fid = "<?php echo $f['franchise_id'] ?>";
+				ret_params.return_on = $('input[name="return_on_date"]').val();
+				ret_params.return_on_end = $('input[name="return_on_date_end"]').val();
+				ret_params.return_srch_kwd = $('input[name="return_kwd_srch"]').val();
+				
+				if(!(ret_params.return_on && ret_params.return_on_end))
+				{
+					ret_params.return_on = '';
+					ret_params.return_on_end = '';
+				}
+				
+				$('#return_products .module_cont_block_grid_total .total b').text("");
+				
+			$.post(site_url+'/admin/jx_getreturnprodsbyfid/'+pg,ret_params,function(resp){
+				if(resp.status == 'error')
+				{
+					alert(resp.error)
+				}else
+				{
+					$('#return_products .module_cont_block_grid_total .total b').text(resp.total);
+					if(resp.fran_rplist.length == 0)
+					{
+						$('#return_products .module_cont_block_grid .datagrid tbody').html('<tr><td colspan="12"><div align="center">No Data found</div></td></tr>');			
+					}else
+					{
+						var ret_prodlist_html = '';
+							$.each(resp.fran_rplist,function(a,b){
+								ret_prodlist_html += '<tr>'
+														+'<td>'+(pg+a+1)+'</td>'
+														+'<td><a target="_blank" href="'+site_url+'/admin/view_pnh_invoice_return/'+b.return_id+'"><b>'+b.return_id+'</b></a></td>'
+														+'<td>'+formatDateTime(new Date(b.created_on*1000))+'</td>'
+														+'<td>'+b.return_by+'</td>'
+														+'<td>'+b.invoice_no+'</td>'
+														+'<td>'+b.order_id+'</td>'
+														+'<td style="line-height:20px;"><a href="'+site_url+'/admin/product/'+b.product_id+'"><b>'+b.product_name+'</b></a>  '+(b.barcode?' <br> Barcode :'+b.barcode:'')+' '+(b.imei_no?' <br> IMEINO :'+b.imei_no:'')+' '+' </td>'
+														+'<td>'+b.qty+'</td>'
+														+'<td>'+resp.return_cond[b.condition_type]+'</td>'
+														+'<td>'+resp.return_process_cond[b.status]+'</td>'
+														+'<td>'+formatDateTime(new Date(b.remarks.created_on*1000))+'</td>'
+														+'<td>'+b.remarks.remark_by+'</td>'
+														+'<td>'+b.remarks.remarks+'</td>'
+														
+													+'</tr>';
+							});
+						$('#return_products .module_cont_block_grid .datagrid tbody').html(ret_prodlist_html);
+						
+						$('#return_products .module_cont_grid_block_pagi').html(resp.fran_rplist_pagi);
+						
+						$('#return_products .module_cont_grid_block_pagi a').unbind('click').click(function(e){
+								e.preventDefault();
+								
+							var link_part = $(this).attr('href').split('/');
+							var link_pg = link_part[link_part.length-1]*1;
+								if(isNaN(link_pg))
+									link_pg = 0;
+									
+								load_return_prods(link_pg);	
+						});
+						
+					}
+				}
+			},'json');
+		}
+		load_return_prods(0);
+		
+		function load_credit_notes(pg)
+		{
+			$.post(site_url+'/admin/jx_getfrancreditnotes/'+pg,'fid=<?php echo $f['franchise_id'] ?>',function(resp){
+				if(resp.status == 'error')
+				{
+					alert(resp.error)
+				}else
+				{
+					$('#credit_notes .module_cont_block_grid_total .total b').text(resp.total);
+					if(resp.fran_crnotelist.length == 0)
+					{
+						$('#credit_notes .module_cont_block_grid .datagrid tbody').html('<tr><td colspan="12"><div align="center">No Data found</div></td></tr>');			
+					}else
+					{
+						var crnotelist_html = '';
+							$.each(resp.fran_crnotelist,function(a,b){
+								crnotelist_html += '<tr>'
+														+'<td>'+(pg+a+1)+'</td>'
+														+'<td>'+b.credit_note_id+'</td>'
+														+'<td><a target="_blank" href="'+site_url+'/admin/invoice/'+b.invoice_no+'"><b>'+b.invoice_no+'</b></a></td>'
+														+'<td>'+b.order_id+'</td>'
+														+'<td>'+b.credit_note_amt+'</td>'
+														+'<td>'+formatDateTime(new Date(b.createdon*1000))+'</td>'
+													+'</tr>';
+							});
+						$('#credit_notes .module_cont_block_grid .datagrid tbody').html(crnotelist_html);
+						
+						$('#credit_notes .module_cont_grid_block_pagi').html(resp.fran_crnotelist_pagi);
+						
+						$('#credit_notes .module_cont_grid_block_pagi a').unbind('click').click(function(e){
+								e.preventDefault();
+								
+							var link_part = $(this).attr('href').split('/');
+							var link_pg = link_part[link_part.length-1]*1;
+								if(isNaN(link_pg))
+									link_pg = 0;
+									
+								load_credit_notes(link_pg);	
+						});
+						
+					}
+				}
+			},'json');
+		}
+		
+		load_credit_notes(0)
+
+		//console.log(franchise_id).val();
+		function  load_voucher_activity(ele,type,franchise_id,pg)
+		{
+			var franchise_id = '<?php echo $f['franchise_id'];?>';
+			
+			$($(ele).attr('href')+' div.tab_content').html('<div align="center"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
+			$.post(site_url+'/admin/jx_getpnh_voucher_activitylog/'+type+'/'+franchise_id+'/'+pg*1,'',function(resp){
+				$($(ele).attr('href')+' div.tab_content').html(resp.log_data+resp.pagi_links);
+				$($(ele).attr('href')+' div.tab_content .datagridsort').tablesorter();
+				
+			},'json');
+		}
+
+		$("#voucher_tab").click(function(){
+				$("#book_orders_tab").trigger("click");
+			});
+
+	/*	function load_allshipped_imei(ele,type,franchise_id,pg)
+		/*{
+			type = 1;
+			pg = 0;
+			var franchise_id = '<?php echo $f['franchise_id'];?>';
+			$('#shipped_imeimobslno div.tab_content').html('<div align="center"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
+			$.post(site_url+'/admin/jx_load_all_shipped_mobimei/'+type+'/'+franchise_id+'/'+pg*1,'',function(resp){
+				$('#shipped_imeimobslno div.tab_content').html(resp.log_data+resp.pagi_links);
+				$('#shipped_imeimobslno div.tab_content .datagridsort').tablesorter();
+			},'json');
+		}*/
+
+		$('input[name="active_ondate"],input[name="active_ondate_end"]').datepicker();
+
+		$('input[name="active_ondate"],input[name="active_ondate_end"],select[name="date_type"]').change(function(){
+			if($('input[name="active_ondate"]').val() != '' && $('input[name="active_ondate_end"]').val() != '')
+			{
+				load_shipped_imei(0);
+				$('input[name="imei_srch_kwd"]').val('');
+			}
+		});
+
+		$('select[name="imei_status"]').change(function(){
+				load_shipped_imei(0);
+				$('input[name="imei_srch_kwd"]').val('');
+		});
+
+		
+		
+
+	function load_allshipped_imei(pg)
+	{
+		$('select[name="imei_status"]').val('');
+		$('input[name="imei_srch_kwd"]').val('');
+		$('input[name="active_ondate"]').val('');
+		$('input[name="active_ondate_end"]').val('');
+		load_shipped_imei(pg);
+	}
+	
+	function load_shipped_imei(pg)
+	{
+		$('#shipped_imeimobslno .module_cont_block_grid .datagrid tbody').html('<tr><td colspan="8"><div align="center"><img src="'+base_url+'/images/loading_bar.gif'+'"> </div></td></tr>');
+		var imei_params = {};
+		
+			imei_params.fid = "<?php echo $f['franchise_id'] ?>";
+			imei_params.date_type = $('select[name="date_type"]').val();
+			imei_params.imei_status = $('select[name="imei_status"]').val();
+			imei_params.active_ondate = $('input[name="active_ondate"]').val();
+			imei_params.active_ondate_end = $('input[name="active_ondate_end"]').val();
+			imei_params.imei_srch_kwd = $('input[name="imei_srch_kwd"]').val();
+			
+			if(!(imei_params.active_ondate && imei_params.active_ondate_end))
+			{
+				imei_params.active_ondate = '';
+				imei_params.active_ondate_end = '';	
+			}
+			if(!imei_params.imei_status)
+				imei_params.imei_status = '';
+		
+			$.post(site_url+'/admin/jx_load_all_shipped_mobimei/'+pg,imei_params,function(resp){
+				
+				if(resp.status == 'error')
+				{
+					alert(resp.error);
+				}else
+				{
+					$('#shipped_imeimobslno .module_cont_block_grid_total .total b').text(resp.total_rows);
+					if(resp.ship_imei_det.length == 0)
+					{
+						$('#shipped_imeimobslno .module_cont_block_grid .datagrid tbody').html('<tr><td colspan="12"><div align="center">No Data found</div></td></tr>');			
+					}else
+					{
+						var shipped_imeilist_html = '';
+							$.each(resp.ship_imei_det,function(a,b){
+								if(b.is_imei_activated==0)
+									b.is_imei_activated='No';
+								else
+									b.is_imei_activated='Yes';
+								if(b.imei_activated_on === null)
+									b.imei_activated_on='--na--';
+								shipped_imeilist_html += '<tr>'
+														+'<td>'+(pg+a+1)+'</td>'
+														+'<td>'+b.product_name+'</td>'
+														+'<td><a target="_blank" href="'+site_url+'/admin/invoice/'+b.invoice_no+'"><b>'+b.invoice_no+'</b></a></td>'
+														+'<td>'+b.imei_no+'</td>'
+														+'<td>'+b.paid+'</td>'
+														+'<td>'+b.orderd_on+'</td>'
+														+'<td>'+b.is_imei_activated+'</td>'
+														+'<td>'+b.credit_value+''+resp.imei_cre_type[b.scheme_type]+'</td>'
+														
+														
+														+'<td>'+b.imei_activation_credit+'</td>'
+														+'<td>'+b.imei_activated_on+'</td>'
+													+'</tr>';
+							});
+						$('#shipped_imeimobslno .module_cont_block_grid .datagrid tbody').html(shipped_imeilist_html);
+						
+						$('#shipped_imeimobslno .module_cont_grid_block_pagi').html(resp.shipped_imeilist_pagi);
+						
+						$('#shipped_imeimobslno .module_cont_grid_block_pagi a').unbind('click').click(function(e){
+								e.preventDefault();
+								
+							var link_part = $(this).attr('href').split('/');
+							var link_pg = link_part[link_part.length-1]*1;
+								if(isNaN(link_pg))
+									link_pg = 0;
+									
+								load_shipped_imei(link_pg);	
+						});
+						
+					}
+				}
+			},'json');
+				
+	}
+	load_shipped_imei(0);
+		
+		$('.log_pagination a').live('click',function(e){
+			e.preventDefault();
+			$.post($(this).attr('href'),'',function(resp){
+				$('#'+resp.type+' div.tab_content').html(resp.log_data+resp.pagi_links);
+				$('#'+resp.type+' div.tab_content .datagridsort').tablesorter();
+			},'json');
+		});
+
+
+		function reson_forsuspenfran(fid)
+		{
+			$("#fran_suspend").data('franchise_id',fid).dialog('open');
+		}
+		
+		$("#fran_suspend").dialog({
+			modal:true,
+			autoOpen:false,
+			width:'519',
+			height:'300',
+			open:function(){
+				var dlg=$(this);
+				$('.credit_edit').hide();
+				$('#suspend_reasonfrm input[name="franchise_id"]',this).val(dlg.data('franchise_id'));
+				$('#suspend_reasonfrm select[name="sus_type"]',this).trigger('change');
+				//$("#r_receiptid b",this).html(dlg.data('receipt_id'));
+				$("#suspend_reasonfrm",this).attr('action',site_url+'/admin/pnh_suspend_fran/'+dlg.data('franchise_id'));
+			},
+		buttons:{
+			'Submit':function(){
+				var dlg= $(this);
+				var frm_fransuspend = $("#suspend_reasonfrm",this);
+					 if(frm_fransuspend.parsley('validate')){
+
+						 frm_fransuspend.submit();
+						 $("#fran_suspend").dialog('close');
+					}
+		            else
+		            {
+		            	
+		            }
+			},
+			'Cancel':function(){
+				$(this).dialog('close');
+			}
+		}
+		});
+
+		function reson_forunsuspension(fid)
+		{
+			$("#unsuspend_fran").data('unsuspend_fid',fid).dialog('open');
+		}
+
+		$("#unsuspend_fran").dialog({
+			modal:true,
+			autoOpen:false,
+			width:'500',
+			height:'300',
+			open:function(){
+				var dlg=$(this);
+				$('#unsuspend_reasonfrm input[name="unsuspend_fid"]',this).val(dlg.data('unsuspend_fid'));
+				$("#unsuspend_reasonfrm",this).attr('action',site_url+'/admin/pnh_unsuspend_fran/'+dlg.data('unsuspend_fid'));
+			},
+			buttons:{
+			'Submit':function(){
+				var unsuspendfran_form=$("#unsuspend_reasonfrm",this);
+				if(unsuspendfran_form.parsley('validate')){
+					unsuspend_reasonfrm.submit();
+					$("#unsuspend_fran").dialog('close');
+				}
+				else
+				{
+					
+				}
+			},
+			'Cancel':function(){
+				$(this).dialog('close');
+				}
+			}
+
+		});
+		
+		function payment_order_stat()
+		{
+			var start_date=$('#frm').val();
+    		var end_date=$('#to').val();
+			var franid = "<?php echo $this->uri->segment(3);?>";
+			$('.head_wrap').html("Orders & Payments summary for period of "+start_date+" "+end_date);
+			$('#payment_stat .payment_stat_view').html('<div class="anmtd_loading_img"><span></span></div>'); 
+			$.getJSON(site_url+'/admin/jx_order_payment_det/'+start_date+'/'+end_date+'/'+franid,'',function(resp)
+	    	{
+	    		if(resp.summary == 0 && resp.payment == 0 && shipped==0)
+				{
+					$('#payment_stat .payment_stat_view').html("<div class='fr_alert_wrap' style='padding:113px 0px'>No Sales statisticks found between "+start_date+" and "+end_date+"</div>" );	
+				}
+				else
+				{
+					// reformat data ;
+					$('#ttl_order_amt').html("Total Ordered : "+resp.ttl_summary);
+					$('#paymrent_order_amt').html("Total Paid : "+resp.ttl_payment);
+					$('#shipped_order_amt').html("Total Shipped : "+resp.ttl_shipped);
+					 var types = ['Order Placed','shipped', 'Cheque Date','Cash in Bank'];
+					$('#payment_stat .payment_stat_view').empty();
+					var summary=resp.summary;
+					var payment=resp.payment;
+					var shipped=resp.shipped;
+					var realized=resp.realized;
+					plot2 = $.jqplot('payment_stat .payment_stat_view', [summary,shipped,payment,realized], {
+				       	seriesDefaults: {
+				        showMarker:true,
+				        pointLabels: { show:true }
+				      },
+				      axesDefaults: {
+					        tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
+					        tickOptions: {
+					          fontFamily: 'tahoma',
+					          fontSize: '11px',
+					          angle: -30
+					        }
+					    },
+					    legend: {
+			                show: true,
+			                location: 'ne',
+			                placement: 'inside',
+			                labels: types
+			            },
+				        axes:{
+					        xaxis:{
+					          renderer: $.jqplot.CategoryAxisRenderer,
+					          ticks:resp.ticks,
+					          	label:'Date',
+						          labelOptions:{
+						            fontFamily:'Arial',
+						            fontSize: '14px'
+						          },
+						          labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+					        },
+					        yaxis:{
+						          min : 0,
+								  label:'Sales & Payment in Rs',
+						          labelOptions:{
+						            fontFamily:'Arial',
+						            fontSize: '14px'
+						          },
+						          labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+						        }
+					      }
+					});	
+					$('#payment_stat .payment_stat_view').bind('jqplotDataClick', function(ev,seriesIndex,pointIndex,data) {
+						if(seriesIndex == 0)
+						{
+							var date = summary[pointIndex][2];
+							var amt = summary[pointIndex][1];
+							ord_det(date,amt,franid);
+						}
+					 });
+				}	
+		    });
+		}
+		
+		function ord_det(date,amt,franid)
+		{
+			$.post(site_url+'/admin/jx_order_det_franchise_id/',{date:date,franid:franid},function(resp){
+			if(resp.status == 'error')
+			{
+				alert(resp.error);
+			}else
+			{
+				 var list = '';
+				 list += '<h4>Order Details on '+date+'<span style="float:right">Total Value : '+amt+'</span></h4>';
+				 list +='<span class="popclose_button b-close"><span>X</span></span><div style="overflow:auto;float:left;height:265px;width:600px;">';
+				 list += '<table class="datagrid" width="100%"><thead><tr><th>Sl.No</th><th>Product Name</th><th>Brand Name</th><th>Quantity</th><th>Amount</th></tr></thead><tbody>';
+					$.each(resp.ord_det,function(a,b){
+						list += '<tr>'
+												+'<td>'+(++a)+'</td>'
+												+'<td>'+b.product_name+'</td>'
+												+'<td>'+b.name+'</td>'
+												+'<td>'+b.q+'</td>'
+												+'<td>'+b.total_value+'</td>'
+											+'</tr>';
+					});
+				list += '</tbody></table></div>';
+				$('#fr_det_popup').html(list);
+				
+			}
+			},'json');
+			$('#fr_det_popup').bPopup({
+			easing: 'easeOutBack', //uses jQuery easing plugin
+			    speed: 450,
+			    transition: 'slideDown'
+			});
+		}
+		
+		function fran_menu_stat()
+		{
+			var start_date=$('#frm').val();
+    		var end_date=$('#to').val();
+			var franid = "<?php echo $this->uri->segment(3);?>";
+			
+			$.getJSON(site_url+'/admin/jx_order_getsales_bymenu/'+franid+'/'+start_date+'/'+end_date,'',function(resp){
+				// reformat data ;
+				$('#fr_order_stat .order_piestat_view').empty();
+				var resp = resp.result;
+				plot3 = jQuery.jqplot('fr_order_stat .order_piestat_view', [resp], 
+				{
+					seriesDefaults:{
+			            renderer: jQuery.jqplot.PieRenderer,
+			            pointLabels: { show: true },
+		                rendererOptions: {
+		                    // Put data labels on the pie slices.
+		                    // By default, labels show the percentage of the slice.
+		                    showDataLabels: true,
+		                  }
+			        },
+			        highlighter: {
+					    show: true,
+					    useAxesFormatters: false, // must be false for piechart   
+					    tooltipLocation: 's',
+					    formatString:'Menu : %s'
+					},
+					grid: {borderWidth:0, shadow:false,background:'#ccc'},
+			        legend:{show:true}
+			        
+			    });
+			    $('#fr_order_stat .order_piestat_view').bind('jqplotDataClick', function(ev,seriesIndex,pointIndex,data) {
+			    	$('.fr_menu_by_mn').show();
+			    	$('#menu_det_tab').show();
+			    	var menu_id = resp[pointIndex][2];
+			    	var menu_name = resp[pointIndex][0];
+			    	
+			    	 //top sold products list for selected menu
+					 prods_bymenu(menu_id,menu_name);
+					 
+					 // top sold brands for selected menu
+					 brands_bymenu(menu_id,menu_name);
+			    });
+			});
+		}
+		
+		function brands_byfranch()
+		{
+			var franid = "<?php echo $this->uri->segment(3);?>";
+			var fran_name="<?php echo $f['franchise_name']?>";
+			var start_date=$('#frm').val();
+    		var end_date=$('#to').val();
+    		$('#top_brand_bymenu_stat .fr_brand_stat_view').html('<div class="bar"><span></span></div>'); 
+							
+			$.getJSON(site_url+'/admin/jx_brandsbyfranid/'+franid+'/'+start_date+'/'+end_date,'',function(resp){
+			$('#top_brand_bymenu_stat .stat_head_wrap').html("Top Brands for "+fran_name);
+			if(resp.summary == 0)
+			{
+				$('#top_brand_bymenu_stat .fr_brand_stat_view').html("<div class='fr_alert_wrap' style='padding:113px 10px'>No brands ordered from "+start_date+" to "+end_date+"</div>")	
+			}
+			else
+			{
+				// reformat data ;
+				$('#top_brand_bymenu_stat .fr_brand_stat_view').empty();
+				plot2 = $.jqplot('top_brand_bymenu_stat .fr_brand_stat_view', [resp.summary], {
+			       	 seriesDefaults:{
+			            renderer:$.jqplot.BarRenderer,
+			            rendererOptions: {
+			                // Set the varyBarColor option to true to use different colors for each bar.
+			                // The default series colors are used.
+			                varyBarColor: true
+			            },pointLabels: { show: true }
+			        },
+				    axesDefaults: {
+				        tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
+				        tickOptions: {
+				          fontFamily: 'tahoma',
+				          fontSize: '11px',
+				          angle: -30
+				        }
+				    },
+				    axes:{
+				        xaxis:{
+				          renderer: $.jqplot.CategoryAxisRenderer,
+				          	label:'Brands',
+					          labelOptions:{
+					            fontFamily:'Arial',
+					            fontSize: '14px'
+					          },
+					          labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+				        },
+				        yaxis:{
+					          
+							  label:'Total Sales in Rs',
+					          labelOptions:{
+					            fontFamily:'Arial',
+					            fontSize: '14px'
+					          },
+					          labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+					        }
+				      }
+					});
+					$('#top_brand_bymenu_stat .fr_brand_stat_view').bind('jqplotDataClick', function(ev,seriesIndex,pointIndex,data) {
+				    	
+				    });
+				}
+			});
+		}
+		
+		function brands_bymenu(id,name)
+		{
+			var franid = "<?php echo $this->uri->segment(3);?>";
+			var start_date=$('#frm').val();
+    		var end_date=$('#to').val();
+			$('#top_brand_bymenu_stat .fr_brand_stat_view').html('<div class="bar"><span></span></div>'); 
+			$.getJSON(site_url+'/admin/jx_brandsbymenuid/'+id+'/'+franid+'/'+start_date+'/'+end_date,'',function(resp){
+			$('#top_brand_bymenu_stat .stat_head_wrap').html("Brands of "+name+" menu ");
+			if(resp.summary == 0)
+			{
+				$('#top_brand_bymenu_stat .fr_brand_stat_view').html("<div class='fr_alert_wrap' style='padding:113px 10px'>No brands for "+name+" menu</div>")
+			}
+			else
+			{
+				// reformat data ;
+				$('#top_brand_bymenu_stat .fr_brand_stat_view').empty();
+				plot2 = $.jqplot('top_brand_bymenu_stat .fr_brand_stat_view', [resp.summary], {
+			       	 seriesDefaults:{
+			            renderer:$.jqplot.BarRenderer,
+			            rendererOptions: {
+			                // Set the varyBarColor option to true to use different colors for each bar.
+			                // The default series colors are used.
+			                varyBarColor: true
+			            },pointLabels: { show: true }
+			        },
+				    axesDefaults: {
+				        tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
+				        tickOptions: {
+				          fontFamily: 'tahoma',
+				          fontSize: '11px',
+				          angle: -30
+				        }
+				    },
+				    axes:{
+				        xaxis:{
+				          renderer: $.jqplot.CategoryAxisRenderer,
+				          	label:'Brands',
+					          labelOptions:{
+					            fontFamily:'Arial',
+					            fontSize: '14px'
+					          },
+					          labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+				        },
+				        yaxis:{
+					          
+							  label:'Total Sales in Rs',
+					          labelOptions:{
+					            fontFamily:'Arial',
+					            fontSize: '14px'
+					          },
+					          labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+					        }
+				      }
+					});
+					$('#top_brand_bymenu_stat .fr_brand_stat_view').bind('jqplotDataClick', function(ev,seriesIndex,pointIndex,data) {
+				    	
+				    });
+				}
+			});
+		}
+		
+		function prods_bymenu(id,name)
+		{
+			var franid = "<?php echo $this->uri->segment(3);?>";
+			var start_date=$('#frm').val();
+    		var end_date=$('#to').val();
+    		$('.fr_top_sold').html('<div class="bar"><span></span></div>'); 
+			$.post("<?=site_url("admin/jx_prod_det_bymenu")?>",{menu_id:id,franid:franid,start_date:start_date,end_date:end_date},function(resp){
+				$('#menu_det_tab .stat_head_wrap').html("Top sold Products of "+name+" menu ");
+					var topsold_prod_list="";
+				 
+				 	if(resp.status == 'error')
+				 	{
+				 		topsold_prod_list +='<span>'+resp.message+'</span>';
+				 		$('.fr_top_sold').html(topsold_prod_list);
+				 	}
+				 	else
+				 	{
+				 		topsold_prod_list +='<table class="datagrid" width="100%"><thead><tr><th>Product Name</th><th>Date</th><th>Qty Sold</th><th>Total Value</th></tr></thead><tbody>';
+				 		$.each(resp.top_prod_list,function(i,p){
+							topsold_prod_list +='<tr><td><a target="blank" href="'+site_url+'/admin/product/'+p.product_id+'">'+p.product_name+'</a></td><td>'+p.d+'</td><td>'+p.qty_sold+'</td><td>'+p.total_value+'</td></tr>';	
+						});
+				 		topsold_prod_list +='</tbody></table>';
+				 		$('.fr_top_sold').html(topsold_prod_list);
+				 	}
+			 },'json');
+		}
+		
+		function mark_prepaid_franchise(fid,flag)
+		{
+			$("#mark_prepaid_franchise").data('franchise_id',fid,'p_flg',flag).dialog('open');
+		}
+		
+		$("#mark_prepaid_franchise").dialog({
+			modal:true,
+			autoOpen:false,
+			width:'519',
+			height:'300',
+			open:function(){
+				var dlg=$(this);
+				if(dlg.data('p_flg'))
+					$('#mark_prepaid_franchise').dialog('option', 'title','Unmark prepaid reason');
+				else
+					$('#mark_prepaid_franchise').dialog('option', 'title','Mark prepaid reason');
+				
+				$('#mark_prepaid_franchise_form input[name="prepaid_franchise_id"]',this).val(dlg.data('franchise_id'));
+				$("#mark_prepaid_franchise_form",this).attr('action',site_url+'/admin/mark_prepaid_franchise/'+dlg.data('franchise_id'));
+			},
+		buttons:{
+			'Submit':function(){
+				var dlg= $(this);
+				var prepaid_reson = $("#mark_prepaid_franchise_form",this);
+					 if(prepaid_reson.parsley('validate')){
+
+						 prepaid_reson.submit();
+						 $("#mark_prepaid_franchise").dialog('close');
+					}
+		            else
+		            {
+		            	alert('All Fields are required!!!');
+		            }
+			},
+			'Cancel':function(){
+				$(this).dialog('close');
+			}
+		}
+		});
+	 
+					$('#dlg_add_security_cheque_det').dialog({
+																width:400,
+																height:'auto',
+																autoOpen:false,
+																modal:true,
+																buttons:{
+																	'Add':function(){
+																		var dlg = $('#dlg_add_security_cheque_det');
+																		
+																		var f_schq_bankname = $('input[name="f_schq_bankname"]',dlg).val();
+																		var f_schq_no = $('input[name="f_schq_no"]',dlg).val();
+																		var f_schq_date = $('input[name="f_schq_date"]',dlg).val();
+																		var f_schq_amt = $('input[name="f_schq_amt"]',dlg).val();
+																		var f_schq_colon = $('input[name="f_schq_colon"]',dlg).val();
+																		
+																		var error_str = new Array();
+																			
+																			if(!f_schq_bankname.length)
+																				error_str.push("Please enter bankname");
+																			if(!f_schq_no.length)
+																				error_str.push("Please cheque no");
+																			if(!f_schq_date.length)
+																				error_str.push("Please cheque date");
+																			if(!f_schq_amt.length)
+																				error_str.push("Please cheque amount(Rs)");
+																			if(!f_schq_colon.length)
+																				error_str.push("Please enter cheque collected date");
+																			
+																			if(error_str.length)
+																			{
+																				alert(error_str.join("\r\n"));
+																			}else
+																			{
+																				$.post(site_url+'/admin/jx_add_security_chqdet',$('form',dlg).serialize(),function(resp){
+																					if(resp.status == 'error')
+																					{
+																						alert(resp.error);
+																					}else
+																					{
+																						
+																						$('#security_cheques table tbody').append('<tr><td>'+$('#security_cheques table tbody tr').length+'</td><td>'+f_schq_no+'</td><td>'+f_schq_bankname+'</td><td>'+f_schq_date+'</td><td>'+f_schq_amt+'</td><td>'+f_schq_colon+'</td></tr>');
+																						dlg.dialog('close');
+																					}
+																				},'json');
+																			}
+																	}
+																}
+														});
+					function load_add_security_cheque_dlg()
+					{
+						$('#dlg_add_security_cheque_det').dialog('open');
+					}
+					
+					$('input[name="f_schq_date"],input[name="f_schq_colon"]').datepicker({dateFormat:'yy-mm-dd'});
+					
+		function tgl_addcalllog_msg(ele)
+		{
+			if($(ele).hasClass('show_addmsgfrm'))
+			{
+				$(ele).removeClass('show_addmsgfrm');
+				$(ele).text('Add Message');
+				$(ele).removeClass('close_btn');
+				$(ele).removeClass('fl_right');
+			}else
+			{
+				$(ele).addClass('show_addmsgfrm');
+				$(ele).addClass('close_btn');
+				$(ele).addClass('fl_right');
+				$(ele).text('X');
+			}
+			
+			$("form",$(ele).parents('td:first')).toggle();
+			
+		}
+		function load_recent_calllog(url,fid)
+		{
+			if(url)
+				req_url = url;
+			else
+				req_url = site_url+'/admin/jx_get_franchise_calllog/'+fid;
+				
+			$.post(req_url,'',function(resp){
+					if(resp.status == 'error')
+					{
+						$('#recent_call_log tbody').html("<tr><td colspan='3' align='center'>No Data found</td></tr>");
+						$('#recent_call_log #call_log_pagi').html("");
+					}else
+					{
+						var html = '';
+						$.each(resp.call_log_list,function(i,det){
+								html += '<tr>';
+								html += '	<td width="140">'+(det.created_on)+'</td>';
+								html += '	<td width="150" style="text-transform:capitalize">'+det.name+'</td>';
+								html += '	<td> '+(det.msg.length?'<p style="margin:0px;padding:5px;background:#fdfdfd">'+det.msg+'</p>':'')+' ';
+								html += '		<div style="padding:0px;" ><a href="javascript:void(0)" class="" style="font-size: 85%;" onclick=tgl_addcalllog_msg(this)  >Add Message</a>';
+								html += '		<form method="post" style="display: none;" action="'+site_url+'/admin/pnh_update_call_log/'+det.id+'" >';
+								html += '		<textarea name="msg" style="width:99%;height:60px;clear:both">'+det.msg+'</textarea>';
+								html += '		<input type="submit" value="Submit">';
+								html += '	</form></div></td>';
+								html += '</tr>';	
+						});
+						$('#recent_call_log tbody').html(html);
+						$('#recent_call_log #call_log_pagi').html(resp.call_log_pagi);
+						
+						$('#call_log_pagi a').unbind('click').click(function(e){
+							e.preventDefault();
+							load_recent_calllog($(this).attr('href'));
+						});
+					}
+			},'json');
+		}
+		load_recent_calllog('',<?php echo $f['franchise_id'];?>);
+			
+	
+</script>
 <script>
 // <![CDATA[
     var franchise_id = "<?=$franchise_id;?>";
@@ -2084,7 +3915,7 @@ li.required{color: #cd0000;list-style: none}
     var franchise_name = "<?php echo $f['franchise_name']?>";
 // ]]>
 </script>
-<script type="text/javascript" src='<?=base_url()."/js/pnh_franchise.js"; ?>'></script>
-<!--<link type="text/css" rel="stylesheet" href="<?=base_url().'/css/pnh_franchise.css';?>" />-->
-
+<script type="text/javascript" src='<?=base_url()."/js/pnh_franchise_reconcile.js"; ?>'></script>
+ 
 <?php
+	

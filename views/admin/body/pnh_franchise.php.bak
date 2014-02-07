@@ -250,48 +250,18 @@ li.required{color: #cd0000;list-style: none}
 		</div>
 		<!-- Invoice Credit Notes START -->
 		
-		<!-- franchise status log START -->
+		<!-- franchise status log START --> 
 		<div id="status_log">
 			<div class="tab_view">
 				<ul class="fran_tabs">
-					  <li><a href="#permant_suspn">Permanent Suspension</a></li>
+					<li><a href="#permant_suspn">Permanent Suspension</a></li>
 					<li><a href="#payment_suspn">Payment Suspension</a></li>
 					<li><a href="#temp_suspn">Temporary Suspension</a></li>
 					<li><a href="#live_suspn">Unsuspended Log</a></li>
 				</ul>
 				
-				<div class="module_cont_block_grid" style="clear:both">
-					<table class="datagrid" width="100%">
-						<thead>
-							<th width="20">#</th>
-							<th width="30">CreditNote ID</th>
-							<th width="30">Invoice no</th>
-							<th width="30">Order no</th>
-							<th width="30">Amount (Rs)</th>
-							<th width="100">Created On</th>
-						</thead>
-						<tbody></tbody>
-					</table>	
-				</div>
-				<div class="module_cont_grid_block_pagi">
-					
-				</div>
-			</div>
-		</div>	
-	</div>
-	<!-- franchise status log START -->
-			<div id="status_log">
-				<div class="tab_view">
-					<ul class="fran_tabs">
-						  <li><a href="#permant_suspn">Permanent Suspension</a></li>
-						<li><a href="#payment_suspn">Payment Suspension</a></li>
-						<li><a href="#temp_suspn">Temporary Suspension</a></li>
-						<li><a href="#live_suspn">Unsuspended Log</a></li>
-					</ul>
-					<?php $log_res=$this->db->query("SELECT l.*,a.name FROM franchise_suspension_log l JOIN king_admin a ON a.id=suspended_by WHERE franchise_id=? AND suspension_type IN(0,1,2,3)",$f['franchise_id'])?>
-					
-					<?php if($log_res->num_rows()){?>
-					
+				<?php $log_res=$this->db->query("SELECT l.*,a.name FROM franchise_suspension_log l JOIN king_admin a ON a.id=suspended_by WHERE franchise_id=? AND suspension_type IN(0,1,2,3)",$f['franchise_id'])?>
+				<?php if($log_res->num_rows()){?>
 					<div id="permant_suspn">
 					
 					<table class="datagrid">
@@ -1344,10 +1314,10 @@ li.required{color: #cd0000;list-style: none}
 							<tr>
 								<td>Select Invoices</td><td> :</td>
 								<td><a href="javascript:void(0);" class="button button-tiny_wrap cursor button-primary clone_rows">+</a>
-                                        <table border="0" cellspacing="0" cellpadding="2">
-                                            <tbody id="reconcile_row"></tbody>
-                                        </table>
-                                </td>
+                                                                        <table border="0" cellspacing="0" cellpadding="2">
+                                                                            <tbody id="reconcile_row"></tbody>
+                                                                        </table>
+                                                                </td>
 							</tr>
 							<tr class="inst_msg">
 								<td>Message</td><td> :</td>
@@ -2062,7 +2032,7 @@ li.required{color: #cd0000;list-style: none}
 		<div id="inv_transitlogdet_tbl"></div>
 	</div>
 	<div id="dlg_unreconcile_view_list" style="display:none;">
-    </div>
+        </div>
     <div id="dlg_unreconcile_form" style="display:none;">
         <h3>Select invoices for reconciliation </h3>
         <form id="dl_submit_reconcile_form">
@@ -2115,6 +2085,6 @@ li.required{color: #cd0000;list-style: none}
 // ]]>
 </script>
 <script type="text/javascript" src='<?=base_url()."/js/pnh_franchise.js"; ?>'></script>
-<!--<link type="text/css" rel="stylesheet" href="<?=base_url().'/css/pnh_franchise.css';?>" />-->
+<link type="text/css" rel="stylesheet" href="<?=base_url().'/css/pnh_franchise.css';?>" />
 
 <?php
