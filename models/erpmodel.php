@@ -7130,7 +7130,7 @@ order by p.product_name asc
 		$user=$this->erpm->getadminuser();
 		foreach(array("r_type","amount","bank","type","no","date","msg","transit_type","sel_invoice","amt_unreconcile","amt_adjusted","total_val_reconcile","document_type") as $i)
 			$$i=$this->input->post($i);
-            $inp=array("receipt_type"=>$r_type,"franchise_id"=>$fid,"bank_name"=>$bank,"receipt_amount"=>$amount,"payment_mode"=>$type,"instrument_no"=>$no,"instrument_date"=>strtotime($date),"created_by"=>$user['userid'],"created_on"=>time(),"remarks"=>$msg,"in_transit"=>$transit_type,"unreconciled_value"=>$amount);
+                $inp=array("receipt_type"=>$r_type,"franchise_id"=>$fid,"bank_name"=>$bank,"receipt_amount"=>$amount,"payment_mode"=>$type,"instrument_no"=>$no,"instrument_date"=>strtotime($date),"created_by"=>$user['userid'],"created_on"=>time(),"remarks"=>$msg,"in_transit"=>$transit_type,"unreconciled_value"=>$amount);
 
 		// if cash receipt is added.
 		if($type == 0)
@@ -7161,16 +7161,16 @@ order by p.product_name asc
                                         $invoice_arr['invoices'][$i]["invoice_no"] = 0;
                                         $invoice_arr['invoices'][$i]["dispatch_id"] = 0;
                                     }
-                                    $invoice_arr['invoices'][$i]["invoice_amt"] = $unreconcile_amt;
-                                    $invoice_arr['invoices'][$i]["adjusted_amt"] = $adjusted_amt;
-                                    $invoice_arr['invoices'][$i]["unreconciled_amt"] = $sub_val;
+                                    $invoice_arr['invoices'][$i]["invoice_amt"] = round($unreconcile_amt,2);
+                                    $invoice_arr['invoices'][$i]["adjusted_amt"] = round($adjusted_amt,2);
+                                    $invoice_arr['invoices'][$i]["unreconciled_amt"] = round($sub_val,2);
                             }
                         }
                         $invoice_arr['userid'] = $user['userid'];
                         $invoice_arr['receipt_id'] = $recpt_id;
-                        $invoice_arr['amount']=$amount;
-                        $invoice_arr['total_reconcile_val'] = $total_val_reconcile;
-                        $invoice_arr['unreconciled_value'] = $unreconciled_value;
+                        $invoice_arr['amount']=round($amount,2);
+                        $invoice_arr['total_reconcile_val'] = round($total_val_reconcile,2);
+                        $invoice_arr['unreconciled_value'] = round($unreconciled_value,2);
                         $invoice_arr['fid'] = $fid;
 
                         //echo '<pre>'; print_r($invoice_arr);die();
@@ -12556,7 +12556,7 @@ order by action_date";
 
             //2. pnh_t_receipt_reconcilation_log
             $input_data2 = array(
-                'credit_note_id'=> 0
+                'credit_note_id'=> $arr['credit_note_id']
                 ,'receipt_id'=>$receipt_id
                 ,'reconcile_id'=>$reconcile_id
                 ,'reconcile_amount'=>$arr['adjusted_amt']

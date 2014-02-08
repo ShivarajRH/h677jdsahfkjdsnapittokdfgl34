@@ -403,6 +403,9 @@ function prepare_daterange(a,b){
 	    });
 }
 
+/**
+ * Function to convert unix time to date and time
+ */
 function get_unixtimetodatetime(utime)
 {
 	var date = new Date(utime * 1000);

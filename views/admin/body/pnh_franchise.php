@@ -1269,7 +1269,6 @@ $(function(){
                                                                 <td>Reconcile</td><td> :</td>
                                                                 <td>
                                                                         <a href="javascript:void(0);" class="button button-tiny_wrap cursor button-primary clone_rows_invoice">+</a>
-                                                                        <!--<a href="javascript:void(0);" class="button button-tiny_wrap cursor button-primary clone_rows_debitnote">Debit Note</a>-->
                                                                         <table border="0" cellspacing="0" cellpadding="2">
                                                                             <tbody id="reconcile_row"></tbody>
                                                                         </table>
@@ -2011,22 +2010,77 @@ $(function(){
                     <div>&nbsp;</div>
                     <div class="dg_error_status"></div>
                         <table class="datagrid nofooter" width="100%">
-                            <thead> <tr><th>Invoice No</th><th width="100">Invoice Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
+                            <thead> <tr><th>#</th><th>Document type</th><th>Invoice No</th><th width="100">Invoice Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
                             <tbody class='dlg_invs_list'>
                                     <tr id='dg_reconcile_row_1' class="dg_invoice_row">
+                                        <td>1</td>
+                                        <td><select id='document_type' name='document_type[]' onchange="dg_recon_change_document_type(this,'dlg_selected_invoices_1','dg_reconcile_row_1','dlg_invs_list');"><option value='inv' selected>Invoice</option><option value='dr'>Debit Note</option></select></td>
                                         <td>
-                                            <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange='dg_fn_inv_selected(this,1);'></select>
+                                            <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange="dg_fn_inv_selected(this,1,'dg_reconcile_row','dlg_invs_list');"></select>
                                         </td>
                                         <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=6></td>
-                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value=''></td>
+                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value='' onchange="dg_show_unconcile_total(this,'dg_reconcile_row','dlg_invs_list');"></td>
                                         <td>
-                                            <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick='dg_add_invoice_row(this);'> + </a>
+                                            <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick="dg_add_invoice_row(this,'dg_reconcile_row','dlg_invs_list');"> + </a>
                                         </td>
                                     </tr>
                             </tbody>
                             <tfoot class="nofooter">
                                 <tr>
-                                    <td colspan="2">
+                                    <td colspan="4">
+                                        <span style="float:right;">Total reconciled (Rs.):</span><br>
+                                        <span style="float:right;">Un-reconciled after Reconcile (Rs.):</span>
+                                    </td>
+                                    <td align="left">
+                                        <input type="text" readonly='true' name="ttl_reconciled" class="dg_l_total_adjusted_val money" value="0" size="6" /><br>
+                                        <input type="text" readonly='true' name="ttl_unreconciled_after" class="dg_ttl_unreconciled_after money" value="0" size="6" />
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                            <!--<tr><td width="150">Reconcile Remarks</td><th><textarea id="dg_i_remarks" name="remarks" class="textarea" style="width:193px; height: 70px;"></textarea></th></tr>-->
+                        </table>
+                    </form>
+            </div>
+        
+        
+        
+            <div id="dlg_credit_note_block" style="display:none;"><!-- Credit note dialog -->
+                <h3>Reconcile the Credit Note</h3>
+                <form id="dg_credit_note_form">
+                    <table class="datagrid1" width="100%">
+                        <tr><td width="150">Credit Note id #</td><th>
+                                <input type="text" readonly='true' id="dg_i_credit_note_id" name="dg_i_credit_note_id" value="" size="6" class="inp"/></th></tr>
+                        <tr><td width="150">Credit Amount</td><th>
+                                Rs. <input type="text" readonly='true' id="dg_i_credit_amount" name="dg_i_credit_amount" value="" size="6" class="inp money"/></th></tr>
+                        <tr><td width="150">Unreconcile Amount</td><th>
+                                Rs. <input type="text" readonly='true' id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value="" size="6" class="inp money"/></th></tr>
+<!--                        <tr><td width="150">Reconcile Remarks</td><th>
+                                <textarea id="dg_i_remarks" name="remarks" class="textarea" style="width:193px; height: 70px;"></textarea></th></tr>-->
+                    </table>
+                   <div>&nbsp;</div>
+                   
+                    <div class="dg_error_status"></div>
+                        <table class="datagrid nofooter" width="100%">
+                            <thead> <tr><th>#</th><th>Document type</th><th>Invoice No</th><th width="100">Invoice Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
+                            <tbody class='dlg_credits_list'>
+                                
+                                    <tr id='dg_cr_reconcile_row_1' class="dg_invoice_row">
+                                        <td>1</td>
+                                        <td><select id='document_type' name='document_type[]' onchange="dg_recon_change_document_type(this,'dlg_selected_invoices_1','dg_cr_reconcile_row_1','dlg_credits_list');"><option value='inv' selected>Invoice</option><option value='dr'>Debit Note</option></select></td>
+                                        <td>
+                                            <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange="dg_fn_inv_selected(this,1,'dg_cr_reconcile_row','dlg_credits_list');"></select>
+                                        </td>
+                                        <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=6></td>
+                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value='' onchange="dg_show_unconcile_total(this,'dg_reconcile_row','dlg_invs_list');"></td>
+                                        <td>
+                                            <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick="dg_add_invoice_row(this,'dg_cr_reconcile_row','dlg_credits_list');"> + </a>
+                                        </td>
+                                    </tr>
+                            </tbody>
+                            <tfoot class="nofooter">
+                                <tr>
+                                    <td colspan="4">
                                         <span style="float:right;">Total reconciled (Rs.):</span><br>
                                         <span style="float:right;">Un-reconciled after Reconcile (Rs.):</span>
                                     </td>
@@ -2038,51 +2092,6 @@ $(function(){
                                 </tr>
                             </tfoot>
                         </table>
-                    </form>
-            </div>
-            <div id="dlg_debit_note_block">
-                <h3>Reconcile the debit note</h3>
-                <form id="dg_debit_note_form">
-                    <table class="datagrid1" width="100%">
-                        <tr><td width="150">Debit Note id #</td><th>
-                                <input type="text" readonly='true' id="dg_i_debit_note_id" name="dg_i_debit_note_id" value="" size="6" class="inp"/></th></tr>
-                        <tr><td width="150">Debit Amount</td><th>
-                                Rs. <input type="text" readonly='true' id="dg_i_debit_amount" name="dg_i_debit_amount" value="" size="6" class="inp money"/></th></tr>
-                        <tr><td width="150">Unreconcile Amount</td><th>
-                                Rs. <input type="text" readonly='true' id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value="" size="6" class="inp money"/></th></tr>
-                        <tr><td width="150">Reconcile Remarks</td><th>
-                                <textarea id="dg_i_remarks" name="dg_i_remarks" class="textarea" style="width:193px; height: 70px;"></textarea></th></tr>
-                    </table>
-<!--                    <div>&nbsp;</div>
-                    <div class="dg_error_status"></div>
-                        <table class="datagrid nofooter" width="100%">
-                            <thead> <tr><th>Invoice No</th><th width="100">Invoice Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
-                            <tbody class='dlg_invs_list'>
-                                    <tr id='dg_reconcile_row_1' class="dg_invoice_row">
-                                        <td>
-                                            <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange='dg_fn_inv_selected(this,1);'></select>
-                                        </td>
-                                        <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=6></td>
-                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value=''></td>
-                                        <td>
-                                            <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick='dg_add_invoice_row(this);'> + </a>
-                                        </td>
-                                    </tr>
-                            </tbody>
-                            <tfoot class="nofooter">
-                                <tr>
-                                    <td colspan="2">
-                                        <span style="float:right;">Total reconciled (Rs.):</span><br>
-                                        <span style="float:right;">Un-reconciled after Reconcile (Rs.):</span>
-                                    </td>
-                                    <td align="left">
-                                        <input type="text" readonly='true' name="ttl_reconciled" class="dg_l_total_adjusted_val money" value="0" size="6" /><br>
-                                        <input type="text" readonly='true' name="ttl_unreconciled_after" class="dg_ttl_unreconciled_after money" value="0" size="6" />
-                                    </td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
-                        </table>-->
                 </form>
             </div>
 </div>

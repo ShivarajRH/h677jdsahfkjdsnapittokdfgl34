@@ -2214,6 +2214,38 @@ SELECT a.acc_correc_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,status,a.crea
 						order by a.created_on desc;
 
 # =============================================================================================
-alter table `pnh_t_receipt_reconcilation` add column `remarks` text   NULL  after `is_invoice_cancelled`;
+alter table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation` drop column `remarks`;
+alter table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation_log` add column `remarks` varchar (100)  NULL  after `created_by`;
 # =============================================================================================
 
+# Feb_07_2014
+
+
+-- new 
+SELECT a.acc_correc_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,status,a.created_on,rcon.unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as unreconciled_amount
+						FROM `pnh_franchise_account_summary` a
+						left join pnh_franchise_account_stat fcs on fcs.id = a.acc_correc_id
+				left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+				left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id 
+						WHERE a.franchise_id='43' and (a.action_type = 5 or a.action_type = 6)
+						order by a.created_on desc;
+
+select * from pnh_t_receipt_reconcilation_log;
+select * from pnh_franchise_account_stat;
+
+-- new get unreconciled receipts & credit notes
+select * from pnh_t_receipt_info 
+where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = '43' and status in (0,1) order by created_on desc
+
+select * from (
+select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,rcon.unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as unreconciled_amount
+from pnh_franchise_account_stat fcs
+left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+where fcs.type = '0' and fcs.franchise_id = '43' order by fcs.created_on desc
+) as g where g.unreconciled_amount > 0;
+
+
+select * from pnh_t_receipt_info where receipt_id = '5387';
+select * from pnh_t_receipt_reconcilation_log where receipt_id = '5387'
+select * from pnh_t_receipt_reconcilation where id in ('1','2','3','4','5','6','7');

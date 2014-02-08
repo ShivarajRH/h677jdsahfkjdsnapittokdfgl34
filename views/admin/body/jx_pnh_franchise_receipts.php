@@ -441,8 +441,8 @@
 		<td><?php echo format_datetime($ac_st['created_on'])?></td>
                 <td>
                     <?php
-                    if($ac_st['type'] == '1' && $ac_st['debit_amt'] > 0 ) { //Only if debit entry
-                        echo '<a href="javascript:void(0);" onclick="reconcile_dr_amount(this,\''.$ac_st["acc_correc_id"].'\',\''.$ac_st["debit_amt"].'\',\''.$ac_st["unreconciled_amount"].'\')" class="button button-tiny_wrap cursor button-primary">Reconcile</a>';
+                    if($ac_st['type'] == '0' && $ac_st['credit_amt'] > 0 ) { //Only if debit entry
+                        echo '<a href="javascript:void(0);" onclick="reconcile_cr_amount(this,\''.$ac_st["acc_correc_id"].'\',\''.$ac_st["credit_amt"].'\',\''.$ac_st["unreconciled_amount"].'\')" class="button button-tiny_wrap cursor button-primary">Reconcile</a>';
                     }
                     else {
                         echo '--';
@@ -492,83 +492,139 @@ else if($type=="unreconcile")
 	<div align="right" class="receipt_pg fl_right">
 		<?php echo $pagination;?>
 	</div>
-	<div class="receipt_totals"><b>Total Receipts: </b><?php echo $total_records;?>&nbsp;&nbsp;<b>Total value:</b> Rs <?php echo formatInIndianStyle($realized_ttlvalue['total'])?></div>
-	 <div class="clear"></div>
-	 <table class="datagrid smallheader"  width="100%" >
-		<thead>
-			<tr>
-				<th>Receipt Details</th>
-				<Th>Amount Details</Th>
-				<th>Status</th>
-				<th>Realized Details</th>
-			</tr>
-		</thead>
-		<tbody>
-			<?php foreach($receipt_log as $r){?>
-			<tr>
-				<td>
-				<div id="receipt_det">
-					<table class="datagrid1" >
-						<tr><td><b>Receipt Id</b></td><td><b>:</b></td><td><?php echo $r['receipt_id']?></td></tr>
-						<tr><td><b>created on</b></td><td><b>:</b></td><td><?php echo date("g:ia d/m/y",$r['created_on'])?></td></tr>
-						<tr><td><b>Created by</b></td><td><b>:</b></td><td><b><?=$r['admin']?></b></td></tr>
-					</table>
-				</div>
-				</td>
-				<td >
-				<div id="cash_det">
-				<table class="datagrid1">
-					<tr><td><b><?php $modes=array("cash","Cheque","DD","Transfer");?>Payment Mode</b></td><td><b>:</b></td><td><?=$modes[$r['payment_mode']]?>&nbsp;&nbsp;<b>Rs <?=$r['receipt_amount']?></b></td></tr>
-					<tr><td><b>Type</b></td><td><b>:</b></td><td><?=$r['receipt_type']==0?"Deposit":"Topup"?></td></tr>
-					<?php if($r['payment_mode']!=0){?>
-					<tr><td><b>Cheque no</b></td><td><b>:</b></td><td><?=$r['instrument_no']?></td></tr>
-					<?php }?>
-					<?php if($r['bank_name']){?><tr><td><b>Bank</b></td><td><b>:</b></td><td><?=$r['bank_name']?></td></tr><?php }?>
-					<tr><td><b>Payment Date</b></td><td><b>:</b></td><td><?=$r['instrument_date']!=0?date("d/m/Y",$r['instrument_date']):""?></td></tr>
-					<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['remarks']?></td></tr>
-				</table>
-				</div>
-				</td>
-				<td><b><?php if($r['status']==1) echo 'Activated'; else if($r['status']==0) echo 'Pending'; else if($r['status']==3) echo 'Reversed'; else echo 'Cancelled';?></b>
-					<?php if($r['status']==1 && $r['receipt_type']==1){?> <br> <br> 
-					<a class="danger_link"
-					href="<?=site_url("admin/pnh_reverse_receipt/{$r['receipt_id']}")?>">reverse</a>
-					<?php }?>
-				</td>
-				<td>
-				<div id="realize_det">
-				<table class="datagrid1">
-                                    <tr><td><b>Realized On</b></td><td><b>:</b></td><td><?=format_date_ts($r['activated_on'])?></td></tr>
-                                    <tr><td><b>Realized By</b></td><td><b>:</b></td><td><?=$r['activated_by']?></td></tr>
-                                    <tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['reason']?></td></tr>
-                                    <tr><td><b>Un-Reconciled Status</b></td><td><b>:</b></td><td><?php 
-                                                    echo $r['unreconciled_status']; 
-                                                    echo " ( ".$r['unreconciled_value']." )";
-                                                ?></td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <b>Actions</b>
-                                        </td>
-                                        <td>:</td>
-                                        <td>
-                                            <?php if($r['unreconciled_value']>0) { ?>
-                                                <!--<a href="javascript:void(0)" id="clk_reconcile_action" receipt_id="<?=$r['receipt_id'];?>" franchise_id='<?=$r['franchise_id'];?>' receipt_amount='<?=$r['receipt_amount'];?>' unreconciled_value='<?=$r['unreconciled_value'];?>' class="button button-tiny button-action">Reconcile</a>-->
-                                                    <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>','<?=$r['receipt_amount'];?>','<?=$r['unreconciled_value'];?>')" class="button button-tiny button-action">Reconcile</a>
-                                            <?php } ?>
-                                             &nbsp;
-                                             <?php if($r['unreconciled_value'] != $r['receipt_amount']) { ?>
-                                                <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-primary">View Reconciled</a>
-                                             <?php } ?>
-                                        </td>
-                                    </tr>
-                                </table>
-				</div>
-				</td>
-			</tr>
-			<?php }?>
-		</tbody>
-	</table>
+        <div class="clear"></div>
+         <div id="tabs-unreconcile" style="float:left;">
+             <ul>
+                    <li><a class="receipts" href="#un-receipts" >Receipts</a></li>
+                    <li><a class="cr_notes" href="#un-credits">Credit Notes</a></li>
+            </ul>
+             
+            <div id="un-receipts"> 
+             
+                    <div class="receipt_totals"><b>Total Receipts: </b><?php echo $total_records;?>&nbsp;&nbsp;<b>Total value:</b> Rs <?php echo formatInIndianStyle($realized_ttlvalue['total'])?></div>
+	 
+                    <table class="datagrid smallheader"  width="100%" >
+                           <thead>
+                                   <tr>
+                                           <th>Receipt Details</th>
+                                           <Th>Amount Details</Th>
+                                           <th>Status</th>
+                                           <th>Realized Details</th>
+                                   </tr>
+                           </thead>
+                           <tbody>
+                                   <?php foreach($receipt_log as $r){?>
+                                   <tr>
+                                           <td>
+                                           <div id="receipt_det">
+                                                   <table class="datagrid1" >
+                                                           <tr><td><b>Receipt Id</b></td><td><b>:</b></td><td><?php echo $r['receipt_id']?></td></tr>
+                                                           <tr><td><b>created on</b></td><td><b>:</b></td><td><?php echo date("g:ia d/m/y",$r['created_on'])?></td></tr>
+                                                           <tr><td><b>Created by</b></td><td><b>:</b></td><td><b><?=$r['admin']?></b></td></tr>
+                                                   </table>
+                                           </div>
+                                           </td>
+                                           <td >
+                                           <div id="cash_det">
+                                           <table class="datagrid1">
+                                                   <tr><td><b><?php $modes=array("cash","Cheque","DD","Transfer");?>Payment Mode</b></td><td><b>:</b></td><td><?=$modes[$r['payment_mode']]?>&nbsp;&nbsp;<b>Rs <?=$r['receipt_amount']?></b></td></tr>
+                                                   <tr><td><b>Type</b></td><td><b>:</b></td><td><?=$r['receipt_type']==0?"Deposit":"Topup"?></td></tr>
+                                                   <?php if($r['payment_mode']!=0){?>
+                                                   <tr><td><b>Cheque no</b></td><td><b>:</b></td><td><?=$r['instrument_no']?></td></tr>
+                                                   <?php }?>
+                                                   <?php if($r['bank_name']){?><tr><td><b>Bank</b></td><td><b>:</b></td><td><?=$r['bank_name']?></td></tr><?php }?>
+                                                   <tr><td><b>Payment Date</b></td><td><b>:</b></td><td><?=$r['instrument_date']!=0?date("d/m/Y",$r['instrument_date']):""?></td></tr>
+                                                   <tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['remarks']?></td></tr>
+                                           </table>
+                                           </div>
+                                           </td>
+                                           <td><b><?php if($r['status']==1) echo 'Activated'; else if($r['status']==0) echo 'Pending'; else if($r['status']==3) echo 'Reversed'; else echo 'Cancelled';?></b>
+                                                   <?php if($r['status']==1 && $r['receipt_type']==1){?> <br> <br> 
+                                                   <a class="danger_link"
+                                                   href="<?=site_url("admin/pnh_reverse_receipt/{$r['receipt_id']}")?>">reverse</a>
+                                                   <?php }?>
+                                           </td>
+                                           <td>
+                                           <div id="realize_det">
+                                           <table class="datagrid1">
+                                               <tr><td><b>Realized On</b></td><td><b>:</b></td><td><?=format_date_ts($r['activated_on'])?></td></tr>
+                                               <tr><td><b>Realized By</b></td><td><b>:</b></td><td><?=$r['activated_by']?></td></tr>
+                                               <tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['reason']?></td></tr>
+                                               <tr><td><b>Un-Reconciled Status</b></td><td><b>:</b></td><td><?php 
+                                                               echo $r['unreconciled_status']; 
+                                                               echo " ( ".$r['unreconciled_value']." )";
+                                                           ?></td>
+                                               </tr>
+                                               <tr>
+                                                   <td>
+                                                       <b>Actions</b>
+                                                   </td>
+                                                   <td>:</td>
+                                                   <td>
+                                                       <?php if($r['unreconciled_value']>0) { ?>
+                                                           <!--<a href="javascript:void(0)" id="clk_reconcile_action" receipt_id="<?=$r['receipt_id'];?>" franchise_id='<?=$r['franchise_id'];?>' receipt_amount='<?=$r['receipt_amount'];?>' unreconciled_value='<?=$r['unreconciled_value'];?>' class="button button-tiny button-action">Reconcile</a>-->
+                                                               <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>','<?=$r['receipt_amount'];?>','<?=$r['unreconciled_value'];?>')" class="button button-tiny button-action">Reconcile</a>
+                                                       <?php } ?>
+                                                        &nbsp;
+                                                        <?php if($r['unreconciled_value'] != $r['receipt_amount']) { ?>
+                                                           <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$r['receipt_id'];?>','<?=$r['franchise_id'];?>')" class="button button-tiny button-primary">View Reconciled</a>
+                                                        <?php } ?>
+                                                   </td>
+                                               </tr>
+                                           </table>
+                                           </div>
+                                           </td>
+                                   </tr>
+                                   <?php }?>
+                           </tbody>
+                   </table>
+            </div>
+         
+            <div id="un-credits">
+                
+                <div class="receipt_totals"><b>Total Credit notes: </b><?php echo $total_credit_records;?>&nbsp;&nbsp;<b>Total value:</b> Rs <?php echo formatInIndianStyle($realized_ttlvalue['total'])?></div>
+                <div class="clear"></div>
+                <b>Credit Notes Log</b>
+               <?php 
+                       if($credits_log)
+                       {
+               ?>	
+               <table class="datagrid">
+                   <thead><th>Credit Note Id</th><th>Description</th><th>Credit (Rs)</th><th>Un-Reconciled Amount (Rs)</th><th>Corrected On</th><th>Action</th></thead>
+               <tbody>
+               <?php foreach($credits_log as $ac_st){
+               ?>
+               <tr>
+                       <td><?php echo $ac_st['credit_note_id']?></td>
+                       <td><?php echo $ac_st['desc']?></td>
+                       <td><?php echo $ac_st['amount']?></td>
+                       <td><?php echo $ac_st['unreconciled_amount']?></td>
+                       <td><?php echo format_datetime($ac_st['created_on'])?></td>
+                       <td>
+                           <?php
+                           if($ac_st['type'] == '0' && $ac_st['amount'] > 0 ) { //Only if debit entry
+                               echo '<a href="javascript:void(0);" onclick="reconcile_cr_amount(this,\''.$ac_st["credit_note_id"].'\',\''.$ac_st["amount"].'\',\''.$ac_st["unreconciled_amount"].'\')" class="button button-tiny_wrap cursor button-primary">Reconcile</a>';
+                           }
+                           else {
+                               echo '--';
+                           }?>
+                       </td>
+               </tr>
+               <?php }?>
+               </tbody>
+               </table>
+               <?php 
+                       }else
+                       {
+                               echo 'No Data found';
+                       }
+               ?>
+         </div>
+         
+         <script>
+            $( "#tabs-unreconcile" ).tabs();
+        </script>
+    </div>
 <?php 
 }
 ?>

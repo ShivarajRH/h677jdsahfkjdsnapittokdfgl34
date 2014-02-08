@@ -1100,4 +1100,4 @@ insert  into `m_batch_config`(`id`,`batch_grp_name`,`assigned_menuid`,`batch_siz
 #Feb_04_2014
 alter table `pnh_t_receipt_reconcilation` add column `is_invoice_cancelled` int (20) DEFAULT '0' NULL  after `modified_by`,change `modified_on` `modified_on` varchar (50)  NULL;
 alter table `pnh_t_receipt_reconcilation_log` add column `is_invoice_cancelled` int (20) DEFAULT '0' NULL  after `reconcile_id`;
-alter table `pnh_t_receipt_reconcilation` add column `remarks` text   NULL  after `is_invoice_cancelled`
+alter table `pnh_t_receipt_reconcilation_log` add column `remarks` varchar (100)  NULL  after `created_by`

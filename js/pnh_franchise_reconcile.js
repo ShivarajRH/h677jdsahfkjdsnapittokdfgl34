@@ -56,7 +56,7 @@ if(error_msgs.length)
             icount = icount+1;
             html += "<tr class='invoice_row' id='reconcile_row_"+icount+"'>\n\
                             <td>"+icount+"</td>\n\
-                            <td><select id='document_type' name='document_type[]' onchange='recon_change_document_type(this,"+icount+");'><option value='inv' selected>Invoice</option><option value='dr'>Debit Note</option></select></td>\n\
+                            <td><select id='document_type' name='document_type[]' onchange=\"recon_change_document_type(this,'selected_invoices_"+icount+"','reconcile_row_"+icount+"');\"><option value='inv' selected>Invoice</option><option value='dr'>Debit Note</option></select></td>\n\
                             <td>\n\
                                 <select size='2' name='sel_invoice[]' id='selected_invoices_"+icount+"' class='sel_invoices' onchange='fn_inv_selected(this,"+icount+");'>\n\
                                 </select>\n\
@@ -71,8 +71,9 @@ if(error_msgs.length)
                 load_unconciled_invoices(invs_id);
         });
         
-        function recon_change_document_type(elt,icount) {
-            var invs_id = $("#selected_invoices_"+icount);
+        function recon_change_document_type(elt,sel_invoices,row_name) {
+            var row = $("#"+row_name);
+            var invs_id = $("#"+sel_invoices,row); //, $("#"+row)
             var document_type = $(elt).find(":selected").val(); 
             
             if(document_type == 'inv') {
@@ -83,7 +84,6 @@ if(error_msgs.length)
             }
             
         }
-        
         
         function load_unconciled_invoices(invs_sel) {
             //on click
@@ -143,6 +143,8 @@ if(error_msgs.length)
         var amt_adjusted = $("#amt_adjusted_"+rowid).val();
         var reconciled_total= parseFloat( $("abbr",".reconciled_total").html() );
         var sub_amount = reconciled_total - amt_adjusted;
+        
+        sub_amount = sub_amount ? sub_amount : 0
         $("abbr",".reconciled_total").html(sub_amount);
 
         if(rowid == 0)
@@ -303,12 +305,8 @@ if(error_msgs.length)
     });
     
     function clk_reconcile_action(elt,receipt_id,franchise_id,receipt_amount,unreconciled_value) {
-            /*$("#clk_reconcile_action").live("click",function() {
-            var elt=$(this); var receipt_id = elt.attr("receipt_id"); var franchise_id = elt.attr("franchise_id"); var receipt_amount = elt.attr("receipt_amount");var unreconciled_value = elt.attr("unreconciled_value");*/
-
             // set data
             var dlg = $("#dlg_unreconcile_form");
-//            $(".dg_l_receipt_id",dlg).html(receipt_id);$(".dg_l_receipt_amount",dlg).html(receipt_amount+" Rs.");$(".dg_l_unreconciled_value",dlg).html(unreconciled_value+" Rs.");
             
             $("#dg_i_receipt_id",dlg).val(receipt_id);$("#dg_i_receipt_amount",dlg).val(receipt_amount);$("#dg_i_unreconciled_value",dlg).val(unreconciled_value);
 
@@ -318,52 +316,62 @@ if(error_msgs.length)
             load_unconciled_invoices(invs_id);
     }
     
-    function dg_add_invoice_row(elt) {
+    function dg_add_invoice_row(elt,row_name,rowparent) {
+            dg_icount = dg_icount + 1;
+            var rowname = row_name+"_"+dg_icount;
+            var dg_rowname = $("#"+row_name);
+            var dg_rowparent = $("."+rowparent);
+            
+            
             var recon_list = '';
-            var dg_i_unreconciled_value= format_number( $("#dg_i_unreconciled_value").val() );
-            var dg_l_total_adjusted_val= format_number( $(".dg_l_total_adjusted_val").val() );
+            var dg_i_unreconciled_value= format_number( $("#dg_i_unreconciled_value",dg_rowname ).val() );
+            var dg_l_total_adjusted_val= format_number( $(".dg_l_total_adjusted_val",dg_rowname ).val() );
             
             if( dg_i_unreconciled_value == dg_l_total_adjusted_val ) { // if unredconciled and adjusted amount is same no more adjustments
                 alert("All amount adjusted."); return false;
             }
-            dg_icount = dg_icount + 1;
             //alert(dg_icount);
-            recon_list += "<tr class='dg_invoice_row' id='dg_reconcile_row_"+dg_icount+"'>\n\
+            recon_list += "<tr id='"+rowname+"' class='dg_invoice_row'>\n\
+                            <td>"+dg_icount+"</td>\n\
+                            <td><select id='document_type' name='document_type[]' onchange=\"dg_recon_change_document_type(this,'dlg_selected_invoices_"+dg_icount+"','"+rowname+"');\"><option value='inv' selected>Invoice</option><option value='dr'>Debit Note</option></select></td>\n\
                             <td>\n\
-                                <select size='2' name='sel_invoice[]' id='dg_selected_invoices_"+dg_icount+"' class='dg_sel_invoices' onchange='dg_fn_inv_selected(this,"+dg_icount+");'></select>\n\
+                                <select size='2' name='sel_invoice[]' id='dg_selected_invoices_"+dg_icount+"' class='dg_sel_invoices' onchange=\"dg_fn_inv_selected(this,'"+dg_icount+"','"+rowname+"','"+rowparent+"');\"></select>\n\
                             </td>\n\
                             <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_"+dg_icount+"' size=6></td>\n\
                             <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_"+dg_icount+"' size=6 value=''></td>\n\
-                            <td><a href='javascript:void(0);' class='button button-tiny_wrap cursor button-caution' onclick='dg_remove_row("+dg_icount+");'>-</a></td>\n\
+                            <td><a href='javascript:void(0);' class='button button-tiny_wrap cursor button-caution' onclick='dg_remove_row("+dg_icount+",'"+rowname+"');'>-</a></td>\n\
                         </tr>";
-                var dlg = $("#dlg_unreconcile_form");
-                $(".dlg_invs_list",dlg).append(recon_list);
-
-                var invs_id = $("#dg_selected_invoices_"+dg_icount,dlg);
+                //var dlg = $("#dlg_unreconcile_form");
+                dg_rowparent.append(recon_list);
+                var aaaa= "#"+rowname+" #dg_selected_invoices_"+dg_icount;
+                var invs_id = $(aaaa,dg_rowparent);
+                
                 load_unconciled_invoices(invs_id);
     }
     
     var dg_add_inv_btn = true;
-    function dg_fn_inv_selected(elt,dg_icount)
+    function dg_fn_inv_selected(elt,dg_icount,row_name,rowparent)
     {
-            var rpt_unreconciled_value = $("#dg_i_unreconciled_value").val();
-            var error_status = $(".dg_error_status").html("");
+            var row =  $("#"+row_name+"_"+dg_icount);
+        
+            var rpt_unreconciled_value = $(row+" #dg_i_unreconciled_value",rowparent).val();
+            var error_status = $(row+" .dg_error_status",rowparent).html("");
             
             if(rpt_unreconciled_value == 0) {
                 error_status.html("No Unreconciled amount."); return false;
             }
-            var amt_unreconcile = $("#dg_amt_unreconcile_"+dg_icount);
-            var amt_adjusted = $("#dg_amt_adjusted_"+dg_icount);
-            var invoice_row = $("#dg_reconcile_row_"+dg_icount);
-            var sel_invoice_dropbox = $("#dg_selected_invoices_"+dg_icount);
+            var amt_unreconcile = $(row+" #dg_amt_unreconcile_"+dg_icount,rowparent);
+            var amt_adjusted = $(row+" #dg_amt_adjusted_"+dg_icount,rowparent);
+            var invoice_row = $(row+" #dg_reconcile_row_"+dg_icount,rowparent);
+            var sel_invoice_dropbox = $(row+" #dg_selected_invoices_"+dg_icount,rowparent);
             
-            var reconciled_total= format_number( $(".dg_l_total_adjusted_val").val() );
+            var reconciled_total= format_number( $(row+" .dg_l_total_adjusted_val",rowparent).val() );
             var sel_inv = $(elt).find(':selected').val();
             var sel_inv_amount = format_number( $(elt).find(':selected').attr("inv_amount") );
             
             //if(reconciled_total < rpt_unreconciled_value) {
                    
-                    if($(".dg_invoice_row").hasClass("inv_"+sel_inv)) { //if row having inv_{invid} class then the invoice already selected
+                    if($(".dg_invoice_row",row).hasClass("inv_"+sel_inv)) { //if row having inv_{invid} class then the invoice already selected
                          sel_invoice_dropbox.val("").trigger("liszt:updated");
                          error_status.html("Already this invoice selected"); return false;
                     }
@@ -385,17 +393,17 @@ if(error_msgs.length)
                         amt_adjusted.val(i_sub_total);
                         //alert("Invoice amount cannot be more than the receipt amount!");
                     }
-                    $(".dg_amt_adjusted").trigger("change");
+                    dg_show_unconcile_total(); //$(".dg_amt_adjusted",rowparent).trigger("change");
 
             //} else {   alert("Invoice amount cannot be more than the receipt!");  }
             return false;
         }
                 
-        $(".dg_amt_adjusted").live("change",function() {
-            dg_show_unconcile_total();
-        });
+        //$(".dg_amt_adjusted").live("change",function() {
+         //   dg_show_unconcile_total();
+        //});
         
-        function dg_show_unconcile_total() {
+        function dg_show_unconcile_total(elt) { //,'dg_reconcile_row','dlg_invs_list'
             var invs_total = 0;
             $(".dg_amt_adjusted").each(function(i,row) {
                 var amount = $(this).val();
@@ -403,7 +411,7 @@ if(error_msgs.length)
                     invs_total += format_number(amount);
                 }
             });
-            //var ttl_unreconciled_after = parseFloat( $(".dg_ttl_unreconciled_after").val() );
+            var ttl_unreconciled_after = parseFloat( $(".dg_ttl_unreconciled_after").val() );
             var unreconcile_receipt_amount = format_number( $("#dg_i_unreconciled_value").val() );
             
             $(".dg_l_total_adjusted_val").val( format_number ( invs_total ) );
@@ -434,17 +442,17 @@ if(error_msgs.length)
     }
     
     $(window).resize(function() {
-       $("#dlg_unreconcile_form,#dlg_unreconcile_view_list,#dlg_debit_note_block").dialog("option","position",["center","center"]); 
+       $("#dlg_unreconcile_form,#dlg_unreconcile_view_list,#dlg_credit_note_block").dialog("option","position",["center","center"]); 
     });
 
-    $("#dlg_debit_note_block").dialog({
+    $("#dlg_credit_note_block").dialog({
         autoOpen:false
         ,modal:true
-        ,width:"382"
-        ,height:"317"
+        ,width:"682"
+        ,height:"617"
         ,buttons:{
             "Reconcile":function() {
-                var dl_submit_reconcile_form= $("#dl_submit_reconcile_form");
+                var dl_submit_reconcile_form= $("#dg_credit_note_form");
                 if(dl_submit_reconcile_form.parsley('validate')) {
                     $.post(site_url+"/admin/jx_debitnote_reconcile_form_submit/"+franchise_id,dl_submit_reconcile_form.serialize(),function(resp) {
                         if(resp.status=='success') {
@@ -465,7 +473,8 @@ if(error_msgs.length)
                 }
             }
             ,"Close":function() {
-                $(".dg_amt_unreconcile,.dg_amt_adjusted,.dg_l_total_adjusted_val,.dg_ttl_unreconciled_after").val(0);
+                var dlg = $("#dg_credit_note_form");
+                $(".dg_amt_unreconcile,.dg_amt_adjusted,.dg_l_total_adjusted_val,.dg_ttl_unreconciled_after",dlg).val(0);
                 $(".dg_sel_invoices").val("").trigger("liszt:updated");
                 $(".dg_invoice_row").removeClass().addClass("dg_invoice_row");
                 dg_icount = 1;
@@ -474,12 +483,31 @@ if(error_msgs.length)
         }
     });
     
-    function reconcile_dr_amount(elt,debit_note_id,debit_amt,unreconciled_amount) {
-        var dlg = $("#dg_debit_note_form");
-        $("#dg_i_debit_note_id",dlg).val(debit_note_id);$("#dg_i_debit_amount",dlg).val(debit_amt);$("#dg_i_unreconciled_value",dlg).val(unreconciled_amount);
+    function reconcile_cr_amount(elt,credit_note_id,credit_amt,unreconciled_amount) {
+        var dlg = $("#dg_credit_note_form");
+        
+        $("#dg_i_credit_note_id",dlg).val(credit_note_id);$("#dg_i_credit_amount",dlg).val(credit_amt);$("#dg_i_unreconciled_value",dlg).val(unreconciled_amount);
 
-        $("#dlg_debit_note_block").dialog('open').dialog("option","title","Reconcile the Debit note id #"+debit_note_id);
+        $("#dlg_credit_note_block").dialog('open').dialog("option","title","Reconcile the Credit Note id #"+credit_note_id);
 
-        var invs_id = $("#dlg_selected_invoices_1");
+        var invs_id = $("#dlg_selected_invoices_1",dlg);
         load_unconciled_invoices(invs_id);
     }
+    
+    function dg_recon_change_document_type(elt,sel_invoices,row_name,parent) {
+            var row = $("#"+row_name);
+            
+            var invs_id = $("#"+row_name+" #"+sel_invoices,parent); //, $("#"+row)
+            
+            var document_type = $(elt).find(":selected").val(); 
+            
+            if(document_type == 'inv') {
+                load_unconciled_invoices(invs_id);
+            }
+            else if(document_type == 'dr') {
+                load_unconciled_debit_notes(invs_id);
+            }
+            
+        }
+
+    
