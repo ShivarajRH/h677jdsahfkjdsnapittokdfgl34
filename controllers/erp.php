@@ -23889,7 +23889,7 @@ die; */
 	/**
 	 * function for manage the franchise receipts
 	 */
-	function jx_pnh_franchise_reports($fid,$type,$limit=10,$pg=0)
+	function jx_pnh_franchise_reports($fid,$type,$cr_tab=0,$limit=10,$pg=0)
 	{
 		$this->erpm->auth();
 		$output=array();
@@ -24015,21 +24015,34 @@ die; */
 			$total_records=$this->db->query($sql,$fid)->num_rows;
         		$sql.=" limit $pg , $limit ";
                         $data['receipt_log']=$this->db->query($sql,$fid)->result_array();
+                        $data['ttl_receipts_val']=$this->db->query("select sum(receipt_amount) as ttl_receipts_val from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) order by created_on desc",$fid)->row()->ttl_receipts_val;
                         
                         // credit notes
-                        $credits_log_sql = "select * from ( select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,rcon.unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as unreconciled_amount
-                                                                from pnh_franchise_account_stat fcs
-                                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-                                                                left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-                                                                where fcs.type = '0' and fcs.franchise_id = ? order by fcs.created_on desc ) as g where g.unreconciled_amount > 0 ";
-                        $total_credit_records=$this->db->query($credits_log_sql,$fid)->num_rows();
-        		$credits_log_sql .= " limit $pg , $limit ";
+                        $credits_log_sql = "select * from (select distinct fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on
+                                                ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount,fcs.unreconciled_status
+                                                from pnh_franchise_account_stat fcs
+                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+                                                where fcs.type = '0'
+                                                and fcs.franchise_id = ?
+                                                order by fcs.created_on desc) as g where g.unreconciled_amount > 0 ";
+                        $count_credit_records=$this->db->query($credits_log_sql,$fid)->num_rows();
+                        $data['count_credit_records'] = $count_credit_records;
+                        
+                        $data['total_credit_amount'] = $this->db->query("select round(sum(amount),2) ttl_cr_amount,round(sum(unreconciled_amount),2) as ttl_un_cr_amount from (select distinct fcs.amount,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+                                                                            from pnh_franchise_account_stat fcs
+                                                                            left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+                                                                            where fcs.type = '0'
+                                                                            and fcs.franchise_id = ?
+                                                                            order by fcs.created_on desc) as g where g.unreconciled_amount > 0",$fid)->row()->ttl_un_cr_amount;
+                        
+                        $credits_log_sql .= " limit $pg , $limit ";
                         $data['credits_log']=$this->db->query($credits_log_sql,$fid)->result_array();
-                        $data['total_credit_records'] = $total_credit_records;
+                        $cr_tab = 1;
+                        $data['cr_pagination']=$this->_prepare_pagination("admin/jx_pnh_franchise_reports/$fid/$type/$cr_tab/$limit",$count_credit_records,$limit,7);
 		}
 	
 		$data['total_records']=$total_records;
-		$data['pagination']=$this->_prepare_pagination("admin/jx_pnh_franchise_reports/$fid/$type/$limit",$total_records,$limit,6);
+		$data['pagination']=$this->_prepare_pagination("admin/jx_pnh_franchise_reports/$fid/$type/$cr_tab/$limit",$total_records,$limit,7);
 		$output['page']=$this->load->view('admin/body/jx_pnh_franchise_receipts',$data,true);
 	
 		echo json_encode($output);
@@ -27005,9 +27018,24 @@ die; */
         echo json_encode($rdata);
     }
     
-	/**
-	 * Function to save reconciled invoices or credit notes
-	 */
+    /**
+     * Function to load unreconciled debit notes ids with amount info in JSON format
+     * @param type $fid int
+     */
+    function jx_get_unreconciled_debit_notes_list($fid) {
+        $user = $this->erpm->auth(FINANCE_ROLE);
+        
+        $rdata['fran_debit_notes']=$this->db->query("select * from (select fcs.id as debit_note_id,fcs.amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as inv_amount
+                                                        from pnh_franchise_account_stat fcs
+                                                        left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.id
+                                                        where fcs.type=1 and fcs.franchise_id = ?
+                                                        order by fcs.created_on desc) as g where g.inv_amount > 0",$fid)->result_array();
+        echo json_encode($rdata);
+    }
+    
+    /**
+     * Function to save reconciled invoices or credit notes
+     */
     function jx_dl_submit_reconcile_form($fid) {
         $user = $this->erpm->auth(FINANCE_ROLE);
                 //$rdata['post'] = $_POST; echo json_encode($rdata); die();
@@ -27044,10 +27072,12 @@ die; */
                             $invoice_arr['invoices'][$i]["invoice_amt"] = round($unreconcile_amt,2);
                             $invoice_arr['invoices'][$i]["adjusted_amt"] = round($adjusted_amt,2);
                             $invoice_arr['invoices'][$i]["unreconciled_amt"] = round($sub_val,2);
+                            $invoice_arr['document_type'] = $docu_type;
                     }
             }
             $invoice_arr['userid'] = $user['userid'];
             $invoice_arr['receipt_id'] = $dg_i_receipt_id;
+            $invoice_arr['credit_note_id'] = 0;
             $invoice_arr['amount']=round($dg_i_receipt_amount,2);
             $invoice_arr['total_reconcile_val'] = round($ttl_reconciled,2);
             $invoice_arr['unreconciled_value'] = round($ttl_unreconciled_after,2);
@@ -27068,23 +27098,11 @@ die; */
 	
             echo json_encode($rdata);
     }
-    
+        
     /**
-     * Function to load unreconciled debit notes ids with amount info in JSON format
+     * Function to reconcile the credit notes by invoice no or debit ids
      * @param type $fid int
      */
-    function jx_get_unreconciled_debit_notes_list($fid) {
-        $user = $this->erpm->auth(FINANCE_ROLE);
-        
-        $rdata['fran_debit_notes']=$this->db->query("select * from (select fcs.id as debit_note_id,fcs.amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as inv_amount
-                                                    from pnh_franchise_account_stat fcs
-                                                    left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.id
-                                                    where fcs.type=1 and fcs.franchise_id = ?
-                                                    order by fcs.created_on desc) as g where g.inv_amount > 0",$fid)->result_array();
-        echo json_encode($rdata);
-    }
-    
-    
      function jx_creditnote_reconcile_form_submit($fid) {
         $user = $this->erpm->auth(FINANCE_ROLE);
         
@@ -27095,7 +27113,8 @@ die; */
                         ,"amt_unreconcile"
                         ,"amt_adjusted"
                         ,"ttl_reconciled"
-                        ,"ttl_unreconciled_after") as $i )
+                        ,"ttl_unreconciled_after"
+                        ,"document_type") as $i )
             $$i =$this->input->post($i);
         
        //update unreconceiled value
@@ -27120,17 +27139,20 @@ die; */
                             $invoice_arr['invoices'][$i]["invoice_amt"] = round($unreconcile_amt,2);
                             $invoice_arr['invoices'][$i]["adjusted_amt"] = round($adjusted_amt,2);
                             $invoice_arr['invoices'][$i]["unreconciled_amt"] = round($sub_val,2);
+                            $invoice_arr['document_type'] = $docu_type;
                     }
             }
             $invoice_arr['userid'] = $user['userid'];
-            $invoice_arr['receipt_id'] = $dg_i_receipt_id;
-            $invoice_arr['amount']=round($dg_i_receipt_amount,2);
+            $invoice_arr['receipt_id'] = 0;
+            $invoice_arr['credit_note_id'] = $dg_i_credit_note_id; //imp
+            $invoice_arr['amount']=round($dg_i_credit_amount,2); // imp
             $invoice_arr['total_reconcile_val'] = round($ttl_reconciled,2);
             $invoice_arr['unreconciled_value'] = round($ttl_unreconciled_after,2);
             $invoice_arr['fid'] = $fid;
 
+
             //$rdata['inputdata'] = $invoice_arr;
-            echo '<pre>'; print_r($invoice_arr);die();
+            //echo '<pre>'; print_r($invoice_arr);die();
             $result = $this->erpm->reconcile_receipt($invoice_arr);
                 
             if(count($result) ) {

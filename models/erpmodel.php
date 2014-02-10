@@ -7164,10 +7164,12 @@ order by p.product_name asc
                                     $invoice_arr['invoices'][$i]["invoice_amt"] = round($unreconcile_amt,2);
                                     $invoice_arr['invoices'][$i]["adjusted_amt"] = round($adjusted_amt,2);
                                     $invoice_arr['invoices'][$i]["unreconciled_amt"] = round($sub_val,2);
+                                    $invoice_arr['document_type'] = $docu_type;
                             }
                         }
                         $invoice_arr['userid'] = $user['userid'];
                         $invoice_arr['receipt_id'] = $recpt_id;
+                        $invoice_arr['credit_note_id'] = 0;
                         $invoice_arr['amount']=round($amount,2);
                         $invoice_arr['total_reconcile_val'] = round($total_val_reconcile,2);
                         $invoice_arr['unreconciled_value'] = round($unreconciled_value,2);
@@ -7912,7 +7914,7 @@ order by p.product_name asc
 			$nbal=$bal+$amount;
 		else
 			$nbal=$bal-$amount;
-		$inp=array("franchise_id"=>$fid,"type"=>$type,"amount"=>$amount,"balance_after"=>$nbal,"desc"=>$desc,"action_for"=>$action_for,"ref_id"=>$ref_id,"created_on"=>time());
+		$inp=array("franchise_id"=>$fid,"type"=>$type,"amount"=>$amount,"balance_after"=>$nbal,"desc"=>$desc,"action_for"=>$action_for,"ref_id"=>$ref_id,"created_on"=>time(),"unreconciled_value"=>$amount,"unreconciled_status"=>'pending');
 		$this->db->insert("pnh_franchise_account_stat",$inp);
 		$acc_stat_id = $this->db->insert_id();
 		$this->db->query("update pnh_m_franchise_info set current_balance=? where franchise_id=? limit 1",array($nbal,$fid));
@@ -12533,10 +12535,12 @@ order by action_date";
         $output = array();
         $userid = $invoice_arr['userid'];
         $receipt_id = $invoice_arr['receipt_id'];
+        $credit_note_id = $invoice_arr['credit_note_id'];
         $amount = $invoice_arr['amount'];
         $total_reconcile_val = $invoice_arr['total_reconcile_val'];
-        $fid = $invoice_arr['fid'];
         $unreconciled_value = $invoice_arr['unreconciled_value'];
+        $fid = $invoice_arr['fid'];
+        $document_type = $invoice_arr['document_type'];
         foreach($invoice_arr['invoices'] as $i=>$arr) {
 
             // 1. pnh_t_receipt_reconcilation
@@ -12556,7 +12560,7 @@ order by action_date";
 
             //2. pnh_t_receipt_reconcilation_log
             $input_data2 = array(
-                'credit_note_id'=> $arr['credit_note_id']
+                'credit_note_id'=> $credit_note_id
                 ,'receipt_id'=>$receipt_id
                 ,'reconcile_id'=>$reconcile_id
                 ,'reconcile_amount'=>$arr['adjusted_amt']
@@ -12567,8 +12571,7 @@ order by action_date";
             $this->db->insert("pnh_t_receipt_reconcilation_log",$input_data2);
             $output[$i]['log_id'] = $this->db->insert_id();
         }
-
-        //3.  pnh_t_receipt_info
+        
         if($unreconciled_value == 0)
             $unreconciled_status = "done";
         elseif($unreconciled_value < $amount)
@@ -12576,9 +12579,20 @@ order by action_date";
         else
             $unreconciled_status = "pending";
 
-        $input_data3 = array("unreconciled_value"=>$unreconciled_value,"unreconciled_status"=>$unreconciled_status);
-        $where_data = array("receipt_id" => $receipt_id,"franchise_id" => $fid );
-        $this->db->update("pnh_t_receipt_info",$input_data3,$where_data);
+        if($receipt_id != 0 && $receipt_id != '') {
+                //3.  pnh_t_receipt_info
+                $input_data3 = array("unreconciled_value"=>$unreconciled_value,"unreconciled_status"=>$unreconciled_status);
+                $where_data = array("receipt_id" => $receipt_id,"franchise_id" => $fid );
+                $this->db->update("pnh_t_receipt_info",$input_data3,$where_data);
+        }
+        elseif($credit_note_id != 0 && $credit_note_id != '') {
+                //3.  pnh_t_receipt_info
+                
+                $input_data3 = array("unreconciled_value"=>$unreconciled_value,"unreconciled_status"=>$unreconciled_status);
+                $where_data = array("id" => $credit_note_id,"franchise_id" => $fid );
+                $this->db->update("pnh_franchise_account_stat",$input_data3,$where_data);
+            
+        }
         $output['lst_qry'] = $this->db->last_query();
         
         return $output;

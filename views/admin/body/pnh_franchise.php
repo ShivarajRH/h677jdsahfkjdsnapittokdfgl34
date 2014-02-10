@@ -2005,7 +2005,7 @@ $(function(){
                         <tr><td width="150">Receipt Amount</td><th>
                                 Rs. <input type="text" readonly='true' id="dg_i_receipt_amount" name="dg_i_receipt_amount" value="" size="6" class="inp money"/></th></tr>
                         <tr><td width="150">Unreconcile Amount</td><th>
-                                Rs. <input type="text" readonly='true' id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value="" size="6" class="inp money"/></th></tr>
+                                Rs. <input type="text" readonly='true' id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value="" size="6" class="dg_i_unreconciled_value inp money"/></th></tr>
                     </table>
                     <div>&nbsp;</div>
                     <div class="dg_error_status"></div>
@@ -2014,14 +2014,14 @@ $(function(){
                             <tbody class='dlg_invs_list'>
                                     <tr id='dg_reconcile_row_1' class="dg_invoice_row">
                                         <td>1</td>
-                                        <td><select id='document_type' name='document_type[]' onchange="dg_recon_change_document_type(this,'dlg_selected_invoices_1','dg_reconcile_row_1','dlg_invs_list');"><option value='inv' selected>Invoice</option><option value='dr'>Debit Note</option></select></td>
+                                        <td><select id='document_type' name='document_type[]' onchange="dg_recon_change_document_type(this,'dlg_selected_invoices_1','dg_reconcile_row_1','dlg_invs_list','dlg_unreconcile_form');"><option value='inv' selected>Invoice</option><option value='dr'>Debit Note</option></select></td>
                                         <td>
-                                            <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange="dg_fn_inv_selected(this,1,'dg_reconcile_row','dlg_invs_list');"></select>
+                                            <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange="dg_fn_inv_selected(this,1,'dg_reconcile_row_1','dlg_invs_list','dlg_unreconcile_form');"></select>
                                         </td>
                                         <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=6></td>
-                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value='' onchange="dg_show_unconcile_total(this,'dg_reconcile_row','dlg_invs_list');"></td>
+                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value='' onchange="dg_show_unconcile_total('dlg_unreconcile_form');"></td>
                                         <td>
-                                            <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick="dg_add_invoice_row(this,'dg_reconcile_row','dlg_invs_list');"> + </a>
+                                            <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick="dg_add_invoice_row(this,'dg_reconcile_row','dlg_invs_list','dlg_unreconcile_form');"> + </a>
                                         </td>
                                     </tr>
                             </tbody>
@@ -2054,7 +2054,7 @@ $(function(){
                         <tr><td width="150">Credit Amount</td><th>
                                 Rs. <input type="text" readonly='true' id="dg_i_credit_amount" name="dg_i_credit_amount" value="" size="6" class="inp money"/></th></tr>
                         <tr><td width="150">Unreconcile Amount</td><th>
-                                Rs. <input type="text" readonly='true' id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value="" size="6" class="inp money"/></th></tr>
+                                Rs. <input type="text" readonly='true' id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value="" size="6" class="dg_i_unreconciled_value inp money"/></th></tr>
 <!--                        <tr><td width="150">Reconcile Remarks</td><th>
                                 <textarea id="dg_i_remarks" name="remarks" class="textarea" style="width:193px; height: 70px;"></textarea></th></tr>-->
                     </table>
@@ -2064,17 +2064,16 @@ $(function(){
                         <table class="datagrid nofooter" width="100%">
                             <thead> <tr><th>#</th><th>Document type</th><th>Invoice No</th><th width="100">Invoice Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
                             <tbody class='dlg_credits_list'>
-                                
-                                    <tr id='dg_cr_reconcile_row_1' class="dg_invoice_row">
+                                    <tr id='dg_credit_row_1' class="dg_credit_row">
                                         <td>1</td>
-                                        <td><select id='document_type' name='document_type[]' onchange="dg_recon_change_document_type(this,'dlg_selected_invoices_1','dg_cr_reconcile_row_1','dlg_credits_list');"><option value='inv' selected>Invoice</option><option value='dr'>Debit Note</option></select></td>
+                                        <td><select id='document_type' name='document_type[]' onchange="dg_recon_change_document_type(this,'dlg_selected_invoices_1','dg_credit_row_1','dlg_credits_list','dlg_credit_note_block');"><option value='inv' selected>Invoice</option><option value='dr'>Debit Note</option></select></td>
                                         <td>
-                                            <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange="dg_fn_inv_selected(this,1,'dg_cr_reconcile_row','dlg_credits_list');"></select>
+                                            <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange="dg_fn_inv_selected(this,1,'dg_credit_row_1','dlg_credits_list','dlg_credit_note_block');"></select>
                                         </td>
                                         <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=6></td>
-                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value='' onchange="dg_show_unconcile_total(this,'dg_reconcile_row','dlg_invs_list');"></td>
+                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value='' onchange="dg_show_unconcile_total('dlg_credit_note_block');"></td>
                                         <td>
-                                            <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick="dg_add_invoice_row(this,'dg_cr_reconcile_row','dlg_credits_list');"> + </a>
+                                            <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick="dg_add_invoice_row(this,'dg_credit_row','dlg_credits_list','dlg_credit_note_block');"> + </a>
                                         </td>
                                     </tr>
                             </tbody>
@@ -2811,8 +2810,8 @@ function load_members(fid,pg)
 function load_receipts(ele,type,pg,fid,limit)
 {
 	$($(ele).attr('href')+' div.tab_content').html('<div align="center"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
-
-	$.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+limit+'/'+pg*1,'',function(resp){
+        var cr_tab = 0;
+	$.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+cr_tab+'/'+limit+'/'+pg*1,'',function(resp){
 		$($(ele).attr('href')+' div.tab_content').html(resp.page);
 		$($(ele).attr('href')+' div.tab_content .datagridsort').tablesorter();
 		
@@ -2824,9 +2823,10 @@ $(".receipt_pg a").live('click',function(e){
 	var link_det=$(this).attr('href').split('/');
 	var fid=link_det[2];
 	var type=link_det[3];
-	var pg=link_det[4];
+	var cr_tab=link_det[4];
+	var pg=link_det[5];
 	
-	$.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+pg*1,'',function(resp){
+	$.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+cr_tab+'/'+pg*1,'',function(resp){
 		$("#"+type+' div.tab_content').html(resp.page);
 		$("#"+type+' div.tab_content .datagridsort').tablesorter();
 		

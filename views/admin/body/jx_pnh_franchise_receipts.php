@@ -489,9 +489,7 @@
 else if($type=="unreconcile")
 {
 ?>	
-	<div align="right" class="receipt_pg fl_right">
-		<?php echo $pagination;?>
-	</div>
+	
         <div class="clear"></div>
          <div id="tabs-unreconcile" style="float:left;">
              <ul>
@@ -500,8 +498,11 @@ else if($type=="unreconcile")
             </ul>
              
             <div id="un-receipts"> 
-             
-                    <div class="receipt_totals"><b>Total Receipts: </b><?php echo $total_records;?>&nbsp;&nbsp;<b>Total value:</b> Rs <?php echo formatInIndianStyle($realized_ttlvalue['total'])?></div>
+                    <div align="right" class="receipt_pg fl_right">
+                           <?php echo $pagination;?>
+                   </div>
+                
+                    <div class="receipt_totals"><b>Total Receipts: </b><?php echo $total_records;?>&nbsp;&nbsp;<b>Total value:</b> Rs <?php echo formatInIndianStyle($ttl_receipts_val)?></div>
 	 
                     <table class="datagrid smallheader"  width="100%" >
                            <thead>
@@ -582,23 +583,28 @@ else if($type=="unreconcile")
          
             <div id="un-credits">
                 
-                <div class="receipt_totals"><b>Total Credit notes: </b><?php echo $total_credit_records;?>&nbsp;&nbsp;<b>Total value:</b> Rs <?php echo formatInIndianStyle($realized_ttlvalue['total'])?></div>
-                <div class="clear"></div>
-                <b>Credit Notes Log</b>
+                <div align="right" class="receipt_pg fl_right">
+                        <?php echo $cr_pagination; ?>
+                </div>
+
+                <div class="receipt_totals"><b>Total Credit notes: </b><?php echo $count_credit_records;?>&nbsp;&nbsp;<b>Total value:</b> Rs <?php echo formatInIndianStyle($total_credit_amount)?></div>
                <?php 
-                       if($credits_log)
-                       {
-               ?>	
-               <table class="datagrid">
-                   <thead><th>Credit Note Id</th><th>Description</th><th>Credit (Rs)</th><th>Un-Reconciled Amount (Rs)</th><th>Corrected On</th><th>Action</th></thead>
-               <tbody>
-               <?php foreach($credits_log as $ac_st){
+                    if($credits_log) {
                ?>
+                <div class="clear"></div>
+                
+                <b>Credit Notes Log</b>
+                
+               <table class="datagrid smallheader" width="100%">
+                   <thead><th>#</th><th>Credit Note Id</th><th>Description</th><th>Credit (Rs)</th><th>Un-Reconciled Amount (Rs)</th><th>Corrected On</th><th>Action</th></thead>
+               <tbody>
+               <?php foreach($credits_log as $c=>$ac_st){ ?>
                <tr>
+                       <td><?php echo ++$c; ?></td>
                        <td><?php echo $ac_st['credit_note_id']?></td>
                        <td><?php echo $ac_st['desc']?></td>
                        <td><?php echo $ac_st['amount']?></td>
-                       <td><?php echo $ac_st['unreconciled_amount']?></td>
+                       <td><?php echo $ac_st['unreconciled_amount']?> <span class="small_text">(<?php echo $ac_st['unreconciled_status']?>)</span></td>
                        <td><?php echo format_datetime($ac_st['created_on'])?></td>
                        <td>
                            <?php
@@ -616,7 +622,7 @@ else if($type=="unreconcile")
                <?php 
                        }else
                        {
-                               echo 'No Data found';
+                               echo '<div class="clear center">No Data found</div>';
                        }
                ?>
          </div>
@@ -628,7 +634,7 @@ else if($type=="unreconcile")
 <?php 
 }
 ?>
-
+<!--
 <div align="right" class="receipt_pg">
-	<?php echo $pagination;?>
-</div>
+	<?php //  echo $pagination;?>
+</div>-->

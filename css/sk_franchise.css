@@ -322,3 +322,6 @@ h4
 
 .datagrid tfoot td { text-align:inherit;}
 .money { text-align: right; }
+.center {
+    text-align: center;
+}
