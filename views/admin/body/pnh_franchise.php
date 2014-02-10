@@ -1969,6 +1969,9 @@ $(function(){
 	<div id="delivery_log_dlg" >
 		<div id="delivery_log_dlg_wrap"></div>
 	</div>
+	<div id="ordered_log_dlg" >
+		<div id="order_log_dlg_wrap"></div>
+	</div>
 	
 	<div id="inv_transitlogdet_dlg" title="Shipment Transit Log">
 		<h3 style="margin:3px 0px;"></h3>
@@ -2022,6 +2025,8 @@ function load_ship_del_calender()
 					{element.find('.fc-event-title').html('Shipped Value <br /><b>Rs. '+amount+'</b>').parent().addClass('shipped_event');}
 					else if(event.type == 'delivery')
 					{element.find('.fc-event-title').html('Delivered Value <br /><b>Rs. '+amount+'</b>').parent().addClass('delivered_event');}
+					else if(event.type == 'ordered')
+					{element.find('.fc-event-title').html('Ordered Value <br /><b>Rs. '+amount+'</b>').parent().addClass('ordered_event');}
 						
 		    },
 		     eventClick: function(calEvent, jsEvent, view) {
@@ -2032,6 +2037,7 @@ function load_ship_del_calender()
 			  	 	var sel_year = date.getFullYear();
 			     	var ship_date = sel_year+'-'+(sel_mnth)+'-'+sel_date;
 			     	var delivery_date = sel_year+'-'+(sel_mnth)+'-'+sel_date;
+			     	var ordered_date = sel_year+'-'+(sel_mnth)+'-'+sel_date;
 				 	var franchise_id='<?php echo $fran['franchise_id'] ?>';
 				 
 						if(event_type == "shipment")
@@ -2044,6 +2050,11 @@ function load_ship_del_calender()
 							var title = 'Delivery Log on '+sel_date+'/'+(sel_mnth)+'/'+sel_year;
 								$( "#delivery_log_dlg" ).data({'sel_date':sel_date,'sel_mnth':sel_mnth, 'sel_year':sel_year, 'fid':franchise_id, 'delivery_date':delivery_date }).dialog('open','option','title',title);
 								$( "#delivery_log_dlg" ).dialog('option','title',title);
+						 }else if(event_type == "ordered")
+						{
+							var title = 'Items Ordered on '+sel_date+'/'+(sel_mnth)+'/'+sel_year;
+								$( "#ordered_log_dlg" ).data({'sel_date':sel_date,'sel_mnth':sel_mnth, 'sel_year':sel_year, 'fid':franchise_id, 'ordered_date':ordered_date }).dialog('open','option','title',title);
+								$( "#ordered_log_dlg" ).dialog('option','title',title);
 						 }
 		  }
 	});
@@ -2064,7 +2075,60 @@ $(function(){
 	}
 });
 
-   
+$("#ordered_log_dlg" ).dialog({
+		modal:true,
+		autoOpen:false,
+		width:'1000',
+		height:'450',
+		autoResize:true,
+		open:function(){
+		dlg = $(this);
+
+		var ordered_date=$(this).data('ordered_date');
+		var sel_date=$(this).data('sel_date');
+		var sel_mnth=$(this).data('sel_mnth');
+		var sel_year=$(this).data('sel_year');
+		// ajax request fetch task details
+	   $.post(site_url+'/admin/jx_franchise_ordered_log_bydate',{sel_date:$(this).data('sel_date'), sel_mnth:$(this).data('sel_mnth'), sel_year:$(this).data('sel_year'), fid:$(this).data('fid'), ordered_date:$(this).data('ordered_date')},function(result){
+	   if(result.status == 'failure')
+		{
+			 $('#order_log_dlg_wrap').html('No Orders on '+ordered_date);
+			 return false;
+	    }
+	    else
+		{
+	    	var order_det='';
+	    	var k=1;
+	    	 
+	    	 order_det +='<table class="datagrid" width="100%"  ><tr><th width="5%">Sl.No</th><th>TransID</th><th>Itemid</th>';
+	    	 order_det +='<th>Item</th><th>Quantity</th><th>Commission</th><th>Amount</th></tr>';
+	    	 $.each(result.order_det,function(i,s1){
+	    	 	s = s1[0];
+	    	 	
+	    	 		order_det +='<tr>';
+	    	 		order_det +='	<td rowspan="'+s1.itemid.length+'">'+(k++)+'</td>';
+	    	 		order_det +='	<td rowspan="'+s1.itemid.length+'"><a href="'+site_url+'/admin/trans/'+s1.transid+'" target="_blank">'+s1.transid+'</a></td>';
+	    	 		j=0;
+	    	 		$.each(s1.itemid,function(a,b){
+	    	 			if(j!=0)
+	    	 				order_det +='<tr>';			
+	    	 			order_det +='<td>'+b.itemid+'</a></td>';
+		    	 		order_det +='	<td><a href="'+site_url+'/admin/pnh_deal/'+b.itemid+'" target="_blank">'+b.name+'</a></td>';
+		    	 		order_det +='	<td>'+b.qty+'</td>';
+		    	 		order_det +='	<td>'+b.com+'</td>';
+		    	 		order_det +='	<td>'+b.amount+'</td>';
+		    	 		if(j!=0)
+	    	 				order_det +='</tr>';
+	    	 				j++;	
+	    	 		});
+	    	 		order_det +='</tr>';
+	    	 });			
+	    	 order_det +='<tfoot class="nofooter"><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_com+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td></td><td></td><td></td></tr></tfoot>';
+	    	 $('#order_log_dlg_wrap').html(order_det);	
+		}
+	  },'json');
+	}
+});   
 $("#ship_log_dlg" ).dialog({
 		modal:true,
 		autoOpen:false,
@@ -2090,7 +2154,7 @@ $("#ship_log_dlg" ).dialog({
 	    	var k=1;
 	    	 
 	    	 shipment_det +='<table class="datagrid" width="100%"  ><tr><th width="5%">Sl.No</th><th>TransID</th><th>Invoice</th>';
-	    	 shipment_det +='<th>Item</th><th>Quantity</th><th>Amount</th><th></th></tr>';
+	    	 shipment_det +='<th>Item</th><th>Quantity</th><th>Commission</th><th>Amount</th><th></th></tr>';
 	    	 $.each(result.ship_det,function(i,s1){
 	    	 	s = s1[0];
 	    	 	
@@ -2104,6 +2168,7 @@ $("#ship_log_dlg" ).dialog({
 	    	 			shipment_det +='<td><a href="'+site_url+'/admin/invoice/'+b.invoice_no+'" target="_blank">'+b.invoice_no+'</a></td>';
 		    	 		shipment_det +='	<td><a href="'+site_url+'/admin/pnh_deal/'+b.itemid+'" target="_blank">'+b.name+'</a></td>';
 		    	 		shipment_det +='	<td>'+b.qty+'</td>';
+		    	 		shipment_det +='	<td>'+b.com+'</td>';
 		    	 		shipment_det +='	<td>'+b.amount+'</td>';
 		    	 		shipment_det +='	<td><a class="link_btn" onclick="get_invoicetransit_log(this,'+b.invoice_no+')" href="javascript:void(0)">View Transit Log</a></td>';
 		    	 		if(j!=0)
@@ -2112,7 +2177,7 @@ $("#ship_log_dlg" ).dialog({
 	    	 		});
 	    	 		shipment_det +='</tr>';
 	    	 });			
-	    	 shipment_det +='<tfoot class="nofooter"><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td></td><td></td><td></td></tr></tfoot>';
+	    	 shipment_det +='<tfoot class="nofooter"><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_com+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td></td><td></td><td></td></tr></tfoot>';
 	    	 $('#ship_log_dlg_wrap').html(shipment_det);	
 		}
 	  },'json');
@@ -2144,7 +2209,7 @@ $("#delivery_log_dlg" ).dialog({
 	    	var k=1;
 	    	 
 	    	 delivery_det +='<table class="datagrid" width="100%"  ><tr><th width="5%">Sl.No</th><th>TransID</th><th>Invoice</th>';
-	    	 delivery_det +='<th>Item</th><th>Quantity</th><th>Amount</th><th></th></tr>';
+	    	 delivery_det +='<th>Item</th><th>Quantity</th><th>Commission</th><th>Amount</th><th></th></tr>';
 	    	 $.each(result.delivery_det,function(i,s1){
 	    	 	s = s1[0];
 	    	 	
@@ -2158,6 +2223,7 @@ $("#delivery_log_dlg" ).dialog({
 	    	 			delivery_det +='<td><a href="'+site_url+'/admin/invoice/'+b.invoice_no+'" target="_blank">'+b.invoice_no+'</a></td>';
 		    	 		delivery_det +='	<td><a href="'+site_url+'/admin/pnh_deal/'+b.itemid+'" target="_blank">'+b.name+'</a></td>';
 		    	 		delivery_det +='	<td>'+b.qty+'</td>';
+		    	 		delivery_det +='	<td>'+b.com+'</td>';
 		    	 		delivery_det +='	<td>'+b.amount+'</td>';
 		    	 		delivery_det +='	<td><a class="link_btn" onclick="get_invoicetransit_log(this,'+b.invoice_no+')" href="javascript:void(0)">View Transit Log</a></td>';
 		    	 		if(j!=0)
@@ -2166,7 +2232,7 @@ $("#delivery_log_dlg" ).dialog({
 	    	 		});
 	    	 		delivery_det +='</tr>';
 	    	 	});
-	    	  delivery_det +='<tfoot class="nofooter"><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td></td><td></td><td></td></tr></tfoot>';
+	    	  delivery_det +='<tfoot class="nofooter"><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_com+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td></td><td></td><td></td></tr></tfoot>';
 	    	 $('#delivery_log_dlg_wrap').html(delivery_det);	
 		
 		}
@@ -3359,9 +3425,15 @@ $("#pnh_membersch").dialog({
 					var realized=resp.realized;
 					plot2 = $.jqplot('payment_stat .payment_stat_view', [summary,shipped,payment,realized], {
 				       	seriesDefaults: {
-				        showMarker:true,
-				        pointLabels: { show:true }
-				      },
+							showMarker:true,
+							pointLabels: { show:true }
+						},
+					     series:[
+					     			{showMarker:true,pointLabels: { show:true }},
+					     			{showMarker:true,pointLabels: { show:true }},
+					     			{showMarker:true,pointLabels: { show:true }},
+					     			{showMarker:true,pointLabels: { show:true }},
+					     		],
 				      axesDefaults: {
 					        tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
 					        tickOptions: {
@@ -3371,6 +3443,7 @@ $("#pnh_membersch").dialog({
 					        }
 					    },
 					    legend: {
+					    	//renderer: $.jqplot.EnhancedLegendRenderer,
 			                show: true,
 			                location: 'ne',
 			                placement: 'inside',
@@ -3398,6 +3471,29 @@ $("#pnh_membersch").dialog({
 						        }
 					      }
 					});	
+					
+					$('#payment_stat .payment_stat_view').data('jqplotObj',plot2);
+					$('#payment_stat .payment_stat_view table.jqplot-table-legend tr.jqplot-table-legend').live('click',function(){
+						var indx = $('#payment_stat .payment_stat_view table.jqplot-table-legend tr.jqplot-table-legend').index(this);
+						var jqplotObj =$('#payment_stat .payment_stat_view').data('jqplotObj');
+						
+							if($('#payment_stat .payment_stat_view').data('selectedSeries') == undefined)
+								$('#payment_stat .payment_stat_view').data('selectedSeries',[true,true,true,true]);
+								
+							var serSelArr = $('#payment_stat .payment_stat_view').data('selectedSeries');
+								if(serSelArr[indx])
+									serSelArr[indx] = false;
+								else
+									serSelArr[indx] = true;
+								 
+								 $('#payment_stat .payment_stat_view').data('selectedSeries',serSelArr);
+					        
+					        jqplotObj.options.series[indx].showLine=serSelArr[indx];
+					        jqplotObj.options.series[indx].showMarker=serSelArr[indx];
+					        jqplotObj.options.series[indx].pointLabels.show=serSelArr[indx];
+					        jqplotObj.replot(jqplotObj.options);
+					});
+					
 					$('#payment_stat .payment_stat_view').bind('jqplotDataClick', function(ev,seriesIndex,pointIndex,data) {
 						if(seriesIndex == 0)
 						{
@@ -3405,7 +3501,7 @@ $("#pnh_membersch").dialog({
 							var amt = summary[pointIndex][1];
 							ord_det(date,amt,franid);
 						}
-					 });
+					});
 				}	
 		    });
 		}
@@ -3796,6 +3892,10 @@ $("#pnh_membersch").dialog({
 	
 </script>
 
+<style type="text/css">
+	.jqplot-table-legend{z-index: 99999;cursor: pointer}
+	#ui-datepicker-div{z-index: 99999999 !important}
+</style>
  
 <?php
 	

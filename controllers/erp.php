@@ -24775,14 +24775,14 @@ die; */
 		
 		
 		//print_r($transids);exit;
-		$sql='select c.transid,c.batch_enabled,sum(o.i_coup_discount) as com,
+		$sql='select c.transid,c.batch_enabled,sum(i.credit_note_amt) as com,
 						i.invoice_no,
 						date_format(date(a.shipped_on), "%d/%m/%Y") as s_date,o.transid,d.name,sum(i.invoice_qty) as quantity,
 						o.status,o.itemid,
 						date_format(from_unixtime(o.time),"%d/%m/%Y") as time,o.actiontime,
 						i_orgprice,
 						date(a.shipped_on),
-						sum((i.mrp-i.discount)*i.invoice_qty) as amt
+						round(sum((i.mrp-(i.discount+i.credit_note_amt))*i.invoice_qty),2) as amt
 					from shipment_batch_process_invoice_link a
 					join king_invoice i on i.invoice_no=a.invoice_no
 					join king_orders o on o.id = i.order_id
@@ -24792,6 +24792,7 @@ die; */
 					group by i.invoice_no,o.itemid';
 		$ship_details_res=$this->db->query($sql,array($fid,$ship_date));
 		$output['ttl_amt']=0;
+		$output['ttl_com']=0;
 		$output['ttl_qty']=0;
 		
 		if($ship_details_res->num_rows())
@@ -24801,20 +24802,23 @@ die; */
 			$output['status']='success';
 			foreach($ship_details_res->result_array() as $t)
 			{
+				$t['com']=format_price($t['com']);
 				$t['amount']=format_price($t['amt']);
 				$output['ttl_amt']+=$t['amt'];
+				$output['ttl_com']+=$t['com'];
 				$output['ttl_qty']+=$t['quantity'];
 				$ship_details[]=$t;
 				
 				if(!isset($ship_details_trans[$t['transid']]))
 				{
-					$ship_details_trans[$t['transid']]=array('transid'=>$t['transid'],ord_on=>$t['time'],'amount'=>0,'invoices'=>array());
+					$ship_details_trans[$t['transid']]=array('transid'=>$t['transid'],ord_on=>$t['time'],'amount'=>0,'com'=>0,'invoices'=>array());
 				}
 				$ship_details_trans[$t['transid']]['amount'] += $t['amt'];
 				$ship_details_trans[$t['transid']]['ord_on'] = $t['time'];
-				array_push($ship_details_trans[$t['transid']]['invoices'],array('invoice_no'=>$t['invoice_no'],'itemid'=>$t['itemid'],'name'=>$t['name'],'qty'=>$t['quantity'],'amount'=>$t['amt'],'ord_on'=>$t['time']));
+				array_push($ship_details_trans[$t['transid']]['invoices'],array('invoice_no'=>$t['invoice_no'],'itemid'=>$t['itemid'],'name'=>$t['name'],'qty'=>$t['quantity'],'amount'=>$t['amt'],'com'=>$t['com'],'ord_on'=>$t['time']));
 			}
 			$output['ttl_amt']=format_price($output['ttl_amt']);
+			$output['ttl_com']=format_price($output['ttl_com']);
 			$output['ship_det']=$ship_details_trans;
 		}else
 		{
@@ -24822,6 +24826,69 @@ die; */
 			$output['message']='No Log Found';
 		}				
 					
+		echo json_encode($output);	
+	}
+
+	/*
+	 * Ajax function to load shipments details for a franchise on selected date
+	 * 
+	 * 
+	 */
+	function jx_franchise_ordered_log_bydate()
+	{
+		$cal_date=$this->input->post('sel_date');
+		$cal_mnth=$this->input->post('sel_mnth');
+		$cal_year=$this->input->post('sel_year');
+		$ordered_date=$this->input->post('ordered_date');
+		$fid=$this->input->post('fid');
+		
+		
+		//print_r($transids);exit;
+		$sql='select c.transid,sum(o.i_coup_discount) as com,
+							date_format(from_unixtime(o.time),"%d/%m/%Y") as s_date,o.transid,d.name,sum(o.quantity) as quantity,
+							o.status,o.itemid,i_orgprice,o.itemid,
+							round(SUM((i_orgprice-(i_coup_discount+i_discount))*o.quantity),2) as amt
+							from king_orders o 
+							join king_transactions c on c.transid = o.transid
+							join king_dealitems d on d.id = o.itemid
+							where c.franchise_id = ? and o.status!=3 and  c.is_pnh = 1 and date_format(from_unixtime(o.time),"%Y-%m-%d")=date(?)  
+							group by o.itemid';
+		$order_details_res=$this->db->query($sql,array($fid,$ordered_date));
+		$output['ttl_amt']=0;
+		$output['ttl_com']=0;
+		$output['ttl_qty']=0;
+		
+		if($order_details_res->num_rows())
+		{
+			$order_details=array();
+			$order_details_trans=array();
+			$output['status']='success';
+			foreach($order_details_res->result_array() as $t)
+			{
+				
+				$t['amount']=format_price($t['amt']);
+				$output['ttl_amt']+=$t['amt'];
+				$output['ttl_com']+=$t['com'];
+				$output['ttl_qty']+=$t['quantity'];
+				$order_details[]=$t;
+				
+				
+				if(!isset($order_details_trans[$t['transid']]))
+				{
+					$order_details_trans[$t['transid']]=array('transid'=>$t['transid'],'amount'=>0,'com'=>0,'itemid'=>array());
+				}
+				$order_details_trans[$t['transid']]['amount'] += $t['amt'];
+				array_push($order_details_trans[$t['transid']]['itemid'],array('itemid'=>$t['itemid'],'name'=>$t['name'],'qty'=>$t['quantity'],'amount'=>$t['amt'],'com'=>$t['com']));
+			}
+			
+			$output['ttl_amt']=format_price($output['ttl_amt']);
+			$output['ttl_com']=format_price($output['ttl_com']);
+			$output['order_det']=$order_details_trans;
+		}else
+		{
+			$output['status']='failure';
+			$output['message']='No Log Found';
+		}				
 		echo json_encode($output);	
 	}
 	
@@ -24838,14 +24905,14 @@ die; */
 		$delivery_date=$this->input->post('delivery_date');
 		$fid=$this->input->post('fid');
 		
-		$sql='select c.transid,c.batch_enabled,sum(o.i_coup_discount) as com,
+		$sql='select c.transid,c.batch_enabled,sum(i.credit_note_amt) as com,
 						i.invoice_no,
 						date_format(date(e.logged_on), "%d/%m/%Y") as s_date,o.transid,d.name,sum(i.invoice_qty) as quantity,
 						o.status,o.itemid,
 						date_format(from_unixtime(o.time),"%d/%m/%Y") as time,o.actiontime,
 						i_orgprice,
 						date(a.shipped_on),
-						sum((i.mrp-i.discount)*i.invoice_qty) as amt
+						round(sum((i.mrp-(i.discount+i.credit_note_amt))*i.invoice_qty),2) as amt
 					from shipment_batch_process_invoice_link a
 					join king_invoice i on i.invoice_no=a.invoice_no
 					join king_orders o on o.id = i.order_id
@@ -24857,6 +24924,7 @@ die; */
 		$delivery_details_res=$this->db->query($sql,array($fid,$delivery_date));
 		$output['ttl_amt']=0;
 		$output['ttl_qty']=0;
+		$output['ttl_com']=0;
 		
 		if($delivery_details_res->num_rows())
 		{
@@ -24865,21 +24933,23 @@ die; */
 			$output['status']='success';
 			foreach($delivery_details_res->result_array() as $t)
 			{
-				
+				$t['com']=format_price($t['com']);
 				$t['amount']=format_price($t['amt']);
 				$output['ttl_amt']+=$t['amt'];
+				$output['ttl_com']+=$t['com'];
 				$output['ttl_qty']+=$t['quantity'];
 				$delivery_details[]=$t;
 				
 				if(!isset($delivery_details_trans[$t['transid']]))
 				{
-					$delivery_details_trans[$t['transid']]=array('transid'=>$t['transid'],ord_on=>$t['time'],'amount'=>0,'invoices'=>array());
+					$delivery_details_trans[$t['transid']]=array('transid'=>$t['transid'],ord_on=>$t['time'],'amount'=>0,'com'=>0,'invoices'=>array());
 				}
 				$delivery_details_trans[$t['transid']]['amount'] += $t['amt'];
 				$delivery_details_trans[$t['transid']]['ord_on'] = $t['time'];
-				array_push($delivery_details_trans[$t['transid']]['invoices'],array('invoice_no'=>$t['invoice_no'],'itemid'=>$t['itemid'],'name'=>$t['name'],'qty'=>$t['quantity'],'amount'=>$t['amt'],'ord_on'=>$t['time']));
+				array_push($delivery_details_trans[$t['transid']]['invoices'],array('invoice_no'=>$t['invoice_no'],'itemid'=>$t['itemid'],'name'=>$t['name'],'qty'=>$t['quantity'],'amount'=>$t['amt'],'com'=>$t['com'],'ord_on'=>$t['time']));
 			}
 			$output['ttl_amt']=format_price($output['ttl_amt']);
+			$output['ttl_com']=format_price($output['ttl_com']);
 			$output['delivery_det']=$delivery_details_trans;
 		}else
 		{
@@ -24907,7 +24977,16 @@ die; */
 		$st_dt=gmdate("Y-m-d", $st_d);
 		$en_dt=gmdate("Y-m-d", $en_d);
 		 
-		$sql='(select c.transid as title,sum((i.mrp-i.discount)*i.invoice_qty) as amount,date(a.shipped_on) as start,date(a.shipped_on) as end,"shipment" as type
+		$sql=' (		select c.transid as title,ROUND(SUM((o.i_orgprice-o.i_discount)*o.quantity),2) as amount,date_format(from_unixtime(o.time),"%Y-%m-%d") as start,date_format(from_unixtime(o.time),"%Y-%m-%d") as end,"ordered" as type
+						from king_orders o 
+						join king_transactions c on c.transid = o.transid
+						where c.franchise_id = ? and o.status!=3 and c.is_pnh = 1
+						and date_format(from_unixtime(o.time),"%Y-%m-%d") between ? and ? 
+						group by date_format(from_unixtime(o.time),"%Y-%m-%d")
+				)
+				union
+				(
+						select c.transid as title,sum((i.mrp-i.discount)*i.invoice_qty) as amount,date(a.shipped_on) as start,date(a.shipped_on) as end,"shipment" as type
 						from shipment_batch_process_invoice_link a
 						join king_invoice i on i.invoice_no=a.invoice_no
 						join king_orders o on o.id = i.order_id
@@ -24915,8 +24994,8 @@ die; */
 						join king_dealitems d on d.id = o.itemid 
 						where c.franchise_id = ? and o.status in (1,2) and a.shipped = 1 and  c.is_pnh = 1 
 						and date(a.shipped_on) between ? and ? 
-						group by date(a.shipped_on)
-				)
+						group by date(a.shipped_on)				
+				)		
 				union
 				(
 						select c.transid as title,sum((i.mrp-i.discount)*i.invoice_qty) as amount,date(e.logged_on) as start,date(e.logged_on) as end,"delivery" as type
@@ -24928,13 +25007,15 @@ die; */
 							join pnh_invoice_transit_log e on e.invoice_no = i.invoice_no and e.status = 3 
 							where c.franchise_id = ? and o.status in (1,2) and a.shipped = 1 and  c.is_pnh = 1
 							and date(e.logged_on) between ? and ? 
-						group by date(e.logged_on) 
-				)';
+							group by date(e.logged_on) 
+				)
+				';
 		
-		$ship_del_list_res=$this->db->query($sql,array($fid,$st_dt,$en_dt,$fid,$st_dt,$en_dt));
+		$ship_del_list_res=$this->db->query($sql,array($fid,$st_dt,$en_dt,$fid,$st_dt,$en_dt,$fid,$st_dt,$en_dt));
 		
 		$output['ttl_amt_shipped']=0;
 		$output['ttl_amt_delivered']=0;
+		$output['ttl_amt_ordered']=0;
 		if($ship_del_list_res->num_rows())
 		{
 			$output['status']='success';
@@ -24949,11 +25030,16 @@ die; */
 				{
 					$output['ttl_amt_delivered']+=$t['amount'];
 				}
+				if($t['type']=='ordered')
+				{
+					$output['ttl_amt_ordered']+=$t['amount'];
+				}
 				$t['amount']=format_price($t['amount']);
 				$ship_del_list[]=$t;
 			}
 			$output['ttl_amt_shipped']=format_price($output['ttl_amt_shipped']);
 			$output['ttl_amt_delivered']=format_price($output['ttl_amt_delivered']);
+			$output['ttl_amt_ordered']=format_price($output['ttl_amt_ordered']);
 			$output['ship_del_list']=$ship_del_list;
 		}else
 		{
