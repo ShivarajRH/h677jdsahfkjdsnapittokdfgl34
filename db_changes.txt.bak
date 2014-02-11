@@ -1079,7 +1079,7 @@ CREATE TABLE `king_admin_activitylog` (
                           PRIMARY KEY (`id`)                                     
                         );
 ALTER TABLE `snapitto_dbexisting`.`m_vendor_info` ADD COLUMN `payment_type` INT(1) DEFAULT 0 NULL AFTER `require_payment_advance`;
-   ALTER TABLE `snapitto_dbexisting`.`king_orders` ADD COLUMN `credit_days` INT(11) DEFAULT 0 NULL AFTER `is_paid`; 
+
 
 #Jan_24_2014
 create table `pnh_t_receipt_reconcilation` (  `id` bigint (20) NOT NULL AUTO_INCREMENT , `debit_note_id` bigint (20) DEFAULT '0', `invoice_no` bigint (20) , `dispatch_id` int (100) , `inv_amount` float (50) DEFAULT '0', `unreconciled` float (50) DEFAULT '0', `created_on` int (50) , `created_by` int (20) , `modified_on` int (50) , `modified_by` int (20) , PRIMARY KEY ( `id`))  

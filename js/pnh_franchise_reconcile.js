@@ -47,11 +47,11 @@ if(error_msgs.length)
                 alert("All Amount Adjusted.");
                 return false;
             }
-            //alert(icount);
+            
             var html='';
             
             if(icount == 0)
-                html +="<tr><th>#</th><th>Type</th><th>Document No</th><th>Un-reconcile Amount</th><th>Adjusted Amount</th><th>&nbsp;</th></tr>";
+                html +="<tr><th>#</th><th>Type</th><th>Document No</th><th>Un-reconciled (Rs.)</th><th>Adjusted (Rs.)</th><th>&nbsp;</th></tr>";
             
             icount = icount+1;
             html += "<tr class='invoice_row' id='reconcile_row_"+icount+"'>\n\
@@ -208,14 +208,20 @@ if(error_msgs.length)
         
     function show_unconcile_total() {
         var invs_total = 0;
+            
         $(".amt_adjusted").each(function(i,row) {
             var amount = $(this).val();
-            if(amount!='') {
-                //print( parseFloat(amount ) );
-                invs_total += parseFloat(amount);
+            if(amount!='' ) {
+                if( !isNaN(amount) ) {
+                    invs_total += format_number(amount);
+                }
+                else {
+                    $(this).focus();
+                    alert("Invalid number entered for adjustment.");return false;
+                }
             }
         });
-
+        
         $("abbr",".reconciled_total").html( format_number ( invs_total ) );
     }
 
@@ -243,14 +249,14 @@ if(error_msgs.length)
         $.post(site_url+"/admin/jx_get_fran_reconcile_list/"+receipt_id+"/"+franchise_id,{},function(resp) {
             if(resp.status == 'success') {
                 recon_list += "<h3>View reconciled list for Receipt #"+receipt_id+"</h3>\n\
-                                <table class='datagrid1'>\n\
+                                <table class='datagrid1' cellpadding='4' cellspacing='1'>\n\
                                     <tr><td>Receipt #</td><th>"+resp.receipt_det.receipt_id+"</th></tr>\n\
                                     <tr><td>Receipt Amount</td><th>Rs. "+format_number(resp.receipt_det.receipt_amount)+"</th></tr>\n\
                                     <tr><td>Un reconciled Amount</td><th>Rs. "+format_number(resp.receipt_det.unreconciled_value)+" </th></tr>\n\
                                     <tr><td>Created On</td><th>"+resp.receipt_det.created_date+"</th></tr></table>";
-                recon_list += "<br><table width='100%' class='datagrid'><tr><th>#</th><th>Invoice No</th><th>Invoice Amount</th><th>Reconciled Value</th><th>Unreconciled Amount</th><th>Created By</th><th>Created On</th></tr>";
+                recon_list += "<br><table width='100%' class='datagrid'><tr><th>#</th><th>Document No</th><th>Debitnote Id</th><th>Invoice (Rs.)</th><th>Reconciled (Rs.)</th><th>Unreconciled (Rs.)</th><th>Created By</th><th>Created On</th></tr>";
                 $.each(resp.reconcile_list,function(i,recon) {
-                    recon_list += "<tr><td>"+(++i)+"</td><td>"+recon.invoice_no+"</td><td>"+recon.inv_amount+"</td><td>"+recon.reconcile_amount+"</td><td>"+recon.unreconciled+"</td><td>"+recon.username+"</td><td>"+recon.created_date+"</td>";
+                    recon_list += "<tr><td>"+(++i)+"</td><td>"+recon.invoice_no+"</td><td>"+((!recon.debit_note_id)?'--':recon.debit_note_id)+"</td><td>"+recon.inv_amount+"</td><td>"+recon.reconcile_amount+"</td><td>"+((!recon.unreconciled)?'Nill':recon.unreconciled)+"</td><td>"+recon.username+"</td><td>"+recon.created_date+"</td>";
                 });
                 recon_list += "</table>";
             }
@@ -274,6 +280,18 @@ if(error_msgs.length)
         ,buttons:{
             "Reconcile":function() {
                 var dl_submit_reconcile_form= $("#dl_submit_reconcile_form");
+                
+                var error_msgs = new Array();
+                var sts = dg_validate_selected_invoice_val($(this));
+                if(sts !== true) {
+                   error_msgs.push(sts);
+                }
+                if(error_msgs.length)
+		{
+			alert("Errors:\n"+error_msgs.join("\n"));
+			return false;
+		}
+                
                 if(dl_submit_reconcile_form.parsley('validate')) {
                     $.post(site_url+"/admin/jx_dl_submit_reconcile_form/"+franchise_id,dl_submit_reconcile_form.serialize(),function(resp) {
                         if(resp.status=='success') {
@@ -426,7 +444,7 @@ if(error_msgs.length)
                     }
                     else {
                         $(this).focus();
-                        alert("Invalid number entered for adjustment amount.");return false;
+                        alert("Invalid number entered for adjustment.");return false;
                     }
                 }
             });
@@ -529,4 +547,45 @@ if(error_msgs.length)
             
     }
 
+    function dg_validate_selected_invoice_val(dlg) {
+        var err_status=true;
+        $(".dg_amt_unreconcile",dlg).each(function(i,row){
+            if($(row).val() != '') { // selected invoice
+                var addi_val = $(".dg_amt_adjusted:eq("+i+")",dlg);
+                if(addi_val.val() == '') { //additional value is empty
+                    //$(".error_status").html("Please enter additional amount!");
+                    addi_val.focus();
+                    return err_status = "Please specify adjusted amount for selected invoices";
+                    
+                }
+            }
+        });
+        return err_status;
+    }
     
+    function clk_view_reconciled_credit_value(elt,credit_note_id,franchise_id) {
+        var recon_list='';
+        $.post(site_url+"/admin/jx_get_fran_credit_reconcile_list/"+credit_note_id+"/"+franchise_id,{},function(resp) {
+            if(resp.status == 'success') {
+                //credit_note_id,franchise_id,`type`,amount,`desc`,created_on,is_correction,unreconciled_value,unreconciled_status
+                recon_list += "<h3>View reconciled list for Credit Note #"+credit_note_id+"</h3>\n\
+                                <table class='datagrid1' cellpadding='4' cellspacing='1'>\n\
+                                    <tr><td>Receipt #</td><th>"+resp.credit_note_det.credit_note_id+"</th></tr>\n\
+                                    <tr><td>Receipt Amount</td><th>Rs. "+format_number(resp.credit_note_det.amount)+"</th></tr>\n\
+                                    <tr><td>Un reconciled Amount</td><th>Rs. "+format_number(resp.credit_note_det.unreconciled_value)+" </th></tr>\n\
+                                    <tr><td>Created On</td><th>"+resp.credit_note_det.created_date+"</th></tr></table>";
+                recon_list += "<br><table width='100%' class='datagrid'><tr><th>#</th><th>Document No</th><th>Debitnote Id</th><th>Invoice (Rs.)</th><th>Reconciled (Rs.)</th><th>Unreconciled (Rs.)</th><th>Created By</th><th>Created On</th></tr>";
+                $.each(resp.reconcile_list,function(i,recon) {
+                    recon_list += "<tr><td>"+(++i)+"</td><td>"+recon.invoice_no+"</td><td>"+((!recon.debit_note_id)?'--':recon.debit_note_id)+"</td><td>"+recon.inv_amount+"</td><td>"+recon.reconcile_amount+"</td><td>"+((!recon.unreconciled)?'Nill':recon.unreconciled)+"</td><td>"+recon.username+"</td><td>"+recon.created_date+"</td>";
+                });
+                recon_list += "</table>";
+            }
+            else if(resp.status == 'fail') {
+                recon_list += resp.response;
+            }
+            else {
+                alert(resp);return false;
+            }
+            $("#dlg_unreconcile_view_list").html(recon_list).dialog('open').dialog("option","title","Reconciled list of Receipt #"+receipt_id);
+        },'json');
+    }

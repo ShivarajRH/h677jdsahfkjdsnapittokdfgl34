@@ -942,7 +942,6 @@
 		
 		$order_cond = "group by date(from_unixtime(ki.init)) order by date(from_unixtime(ki.init)) asc";
 		$payment_cond = "group by date(from_unixtime(instrument_date)) order by date(from_unixtime(instrument_date)) asc";
-		$realized_cond = "group by date(from_unixtime(activated_on)) order by date(from_unixtime(activated_on)) asc";
 		
 		 $sales = "select date_format(from_unixtime(ki.init),'%d-%m-%Y') as mn,sum(a.quantity) as q,ROUND(SUM((i_orgprice-(i_coup_discount+i_discount))*a.quantity),2) as total_value
 					from king_orders a
@@ -967,7 +966,7 @@
 					LEFT OUTER JOIN king_admin a ON a.id=r.created_by
 					WHERE r.status=1 AND r.is_active=1 AND (is_submitted=1 or r.activated_on!=0) and r.is_active=1 and r.franchise_id='".$fid."'
 					and date_format(from_unixtime(activated_on),'%Y-%m-%d') between '".$st."' and '".$en."'
-					$realized_cond";		
+					$payment_cond";		
 		 
 		$shipped = "select ifnull(sum((b.mrp-(b.discount+b.credit_note_amt))*b.invoice_qty),0) as amt,date_format(a.shipped_on,'%d-%m-%Y') as mn
 					from shipment_batch_process_invoice_link a

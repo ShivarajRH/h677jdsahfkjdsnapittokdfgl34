@@ -308,6 +308,7 @@ h4
     line-height: 16.4px;
     margin-left: 7px;
     padding: 0 9.92px;
+    cursor:pointer;
 }
 .sel_invoices,.dg_sel_invoices { 
     width:207px; 

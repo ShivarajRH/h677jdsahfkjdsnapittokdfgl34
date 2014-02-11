@@ -12552,7 +12552,7 @@ order by action_date";
             */
     }
 
-	/**
+    /**
     * Function to reconcile the receipts
     * @param type $invoice_arr array
     * @return type array

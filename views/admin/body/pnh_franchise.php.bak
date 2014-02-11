@@ -1231,7 +1231,7 @@ $(function(){
 							<tr>
 								<td>Amount (Rs)</td><td>:</td>
 								<td><input type="text" class="inp amount money" name="amount" id="receipt_amount" size=5 value="">
-                                        <span class="reconciled_total">Total Adjusted (Rs.): <abbr title="Amount">0</abbr>
+                                        <span class="reconciled_total">Adjusted Amount: <abbr title="Amount">0</abbr>
                                             <input type="hidden" name="total_val_reconcile" id="total_val_reconcile" value="" />
                                         </span>
 								</td>
@@ -2644,12 +2644,12 @@ $(function(){
 			if($(".msg",$(this)).val().length==0)
 				error_msgs.push("Please enter Message");
 
-                var sts = validate_selected_invoice_val();
-                if(sts !== true) {
-                   error_msgs.push(sts);
-                }
-                var reconciled_total= format_number( $("abbr",".reconciled_total").html() );
-                $("#total_val_reconcile").val(reconciled_total);
+            var sts = validate_selected_invoice_val();
+            if(sts !== true) {
+               error_msgs.push(sts);
+            }
+            var reconciled_total= format_number( $("abbr",".reconciled_total").html() );
+            $("#total_val_reconcile").val(reconciled_total);
 
 		if(error_msgs.length)
 		{
@@ -4020,7 +4020,6 @@ $("#pnh_membersch").dialog({
 	.jqplot-table-legend{z-index: 99999;cursor: pointer}
 	#ui-datepicker-div{z-index: 99999999 !important}
 </style>
-
 <script>
 // <![CDATA[
     var franchise_id = "<?=$franchise_id;?>";

@@ -85,19 +85,10 @@ function endisable_sel(act,brandid,catid)
             $('.jq_alpha_sort_alphalist_item_wrap a',ele).live('click',function(){
             	$('.jq_alpha_sort_alphalist_item_wrap .selected a').parent().removeClass('selected');
             	$(this).parent().addClass('selected');
-            	
             	if($('.cat_lst_tab').hasClass('selected_alpha_list'))
-            		
-        		{
-        			options.item_click_bybrand($(this).attr('brandid'),this);
-        			options.itemlist_click_bybrand($(this).attr('brandid'),this);
-        		}
+            		options.item_click_bybrand($(this).attr('brandid'),this);
             	else 
-            	{
             		options.item_click($(this).attr('catid'),this);
-            		options.itemlist_click_bycat($(this).attr('catid'),this);
-            	}
-            		
             });
             
         });
@@ -110,7 +101,7 @@ function endisable_sel(act,brandid,catid)
 
 $(function(){
 	
-	$('#cus_jq_alpha_sort_wrap').jqSuAlphaSort({title:"List of Categories",overview_title:"List of Deals",'char_click':function(chr,ele){ cat_bychar(chr)},'item_click':function(catid,ele){ deallist_bycat(0,catid,0,0)},'item_click_bybrand':function(brandid,ele){ deallist_bycat(brandid,0,0,0)},'itemlist_click_bybrand':function(brandid,ele){category_list(brandid)},'itemlist_click_bycat':function(catid,ele){brand_list(catid)}});
+	$('#cus_jq_alpha_sort_wrap').jqSuAlphaSort({title:"List of Categories",overview_title:"List of Deals",'char_click':function(chr,ele){ cat_bychar(chr)},'item_click':function(catid,ele){ deallist_bycat(0,catid,0,0)},'item_click_bybrand':function(brandid,ele){ deallist_bycat(brandid,0,0,0)}});
 		$(".jq_alpha_sort_alphalist_char a").click(function() {
 	      // remove classes from all
 	      $(".jq_alpha_sort_alphalist_char a").removeClass("jq_alpha_active");
@@ -187,9 +178,12 @@ $('.latest').live('click',function(){
 
 $('.most').live('click',function(){
 	var catid =$(this).attr('catid')*1;
-	var brandid =$('.Brands_bychar_list_content_listdata.selected_class').attr('bid')*1;
-	alert(brandid);
-	alert(catid);
+	var brandid =$(this).attr('brandid')*1;
+	if(catid !=0 && brandid == 0)
+		deallist_bycat(0,catid,2);
+	else if(catid ==0 && brandid != 0)
+		deallist_bycat(brandid,0,2);
+	else	
 		deallist_bycat(brandid,catid,2);
 	$('.most').addClass("selected_type");
 	

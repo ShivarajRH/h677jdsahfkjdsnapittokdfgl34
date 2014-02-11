@@ -2399,4 +2399,72 @@ select * from (select fcs.id as debit_note_id,fcs.amount,rcon.unreconciled as un
                                                         where fcs.type=1 and fcs.franchise_id = '17'
                                                         order by fcs.created_on desc) as g where g.inv_amount > 0;
 
-select * from pnh_t_receipt_reconcilation
+select * from pnh_t_receipt_reconcilation;
+
+# Feb_10_2014
+
+ALTER TABLE `king_orders` ADD COLUMN `credit_days` INT(11) DEFAULT 0 NULL AFTER `is_paid`; 
+
+select md5('shivaraj');
+dshariuuudgs5h1d28-fs234234arabin445221
+
+select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.invoice_no,rcon.debit_note_id
+                    ,rcon.inv_amount,rcon.unreconciled
+                    ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date,a.username
+                from pnh_t_receipt_info r 
+                join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id and is_reversed = 0
+                join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+                join king_admin a on a.id=rcon.created_by
+                where r.franchise_id = '43' and r.receipt_id = '5382';
+
+select * from pnh_t_receipt_info where receipt_id = '5388'
+select * from pnh_t_receipt_reconcilation_log where receipt_id = '5388'
+select * from pnh_t_receipt_reconcilation where id in ("8","9");
+
+select 25000 - 56 - 399;
+
+select * from pnh_franchise_account_stat where type='0' and franchise_id = '43';
+
+SELECT r.*,m.name AS modifiedby,f.franchise_name,a.name AS admin
+						FROM pnh_t_receipt_info r
+						JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id
+						LEFT OUTER JOIN king_admin a ON a.id=r.created_by
+						LEFT OUTER JOIN king_admin m ON m.id=r.modified_by
+						WHERE r.status=0 AND r.is_active=1 and is_submitted=0 and r.status=0 and r.franchise_id= '43'
+						ORDER BY instrument_date asc
+
+SELECT a.acc_correc_id,fcs.franchise_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,status,a.created_on,rlog.reconcile_amount
+,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value , round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+						FROM `pnh_franchise_account_summary` a
+						left join pnh_franchise_account_stat fcs on fcs.id = a.acc_correc_id
+                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+                                                left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id 
+						WHERE a.franchise_id='43' and (a.action_type = 5 or a.action_type = 6)
+						order by a.created_on desc;
+
+
+
+#// get credit note info
+select * from pnh_t_receipt_reconcilation_log where credit_note_id = '27060'
+select * from pnh_t_receipt_reconcilation where id in ("15");
+select * from pnh_franchise_account_stat
+
+select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.invoice_no,rcon.debit_note_id
+                    ,rcon.inv_amount,rcon.unreconciled
+                    ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date,a.username
+                from pnh_franchise_account_stat fcs
+                join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id and rlog.is_reversed = 0
+                join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+                join king_admin a on a.id=rcon.created_by
+                where fcs.franchise_id = '43' and fcs.id = '27062'
+
+#pnh_franchise_account_summary
+select id as credit_note_id,franchise_id,`type`,amount,`desc`,is_correction,unreconciled_value,unreconciled_status,rlog.created_on
+from pnh_franchise_account_stat fcs
+join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+where type=0 and franchise_id='43' and id='27062' order by rlog.created_on desc;
+
+select id as credit_note_id,franchise_id,`type`,amount,`desc`,is_correction,unreconciled_value,unreconciled_status,rlog.created_on
+from pnh_franchise_account_stat fcs
+join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+where type=0 and franchise_id='43' and id='27062' order by rlog.created_on desc;
