@@ -26,8 +26,8 @@ class Admin extends Erp {
 		$this->load->library("email");
 		$this->erpm->loadroles();
 
-		if($this->erpm->auth())
-			$this->erpm->log_admin_activity();
+		//if($this->erpm->auth(false,true))
+			//$this->erpm->log_admin_activity();
 		
 		/*
 		if($_SERVER['HTTP_HOST']!="localhost" && $_SERVER['HTTP_HOST']!="sand43.snapittoday.com" && $_SERVER['HTTP_HOST']!="erp69.sand43.snapittoday.com" && $_SERVER['HTTP_HOST']!="dashboard.snapittoday.com")

@@ -194,7 +194,7 @@ h4
 .datagrid1 td{border-right:none;border-left:none;border-bottom:none;font-size: 12px;padding:2px;color: #444;text-transform: capitalize}
 .datagrid1 td a{text-transform: capitalize}
 .datagrid1 td b{font-weight: bold;font-size: 11px;}
-.module_cont{padding:2px;}
+.module_cont{padding;2px;}
 .module_cont .module_cont_title{margin:5px 0px;}
 .module_cont .module_cont_block{clear:both;}
 .module_cont .module_cont_block .module_cont_block_grid_total{margin:3px 0px;}

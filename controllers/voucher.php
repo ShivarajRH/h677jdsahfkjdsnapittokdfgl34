@@ -1704,4 +1704,133 @@ order by action_date ";
 			
 	}
 
+
+	function gen_fsales_rep_upd($from='',$to='')
+	{
+		ini_set("max_execution_time",6000);
+		ini_set("display_errors",1);
+		ini_set("memory_limit",'1024M');
+		
+		if($from == '')
+		{	
+			// get first order of franchise
+			$f_order_date_ts = $this->db->query("select min(init) as init from king_transactions where franchise_id != 0 ")->row()->init;
+			$from = strtotime(date('Y-m-d',$f_order_date_ts));
+		}
+		
+	
+		if($to == '')
+			$to = date('Y-m-d');
+	
+		$from = strtotime($from);//2013-11-30 23:59:36
+		$to = strtotime($to);//2014-01-31 23:59:36
+	
+		// reset week start and end dates
+		$from_wdno = date('w',$from);
+		$from_week_date_ts = $from-($from_wdno*24*60*60);
+	
+		$to_wdno = date('w',$to);
+		$to_week_date_ts = $to+((6-$to_wdno)*24*60*60);
+	
+	
+		if($to_week_date_ts < $from_week_date_ts)
+			die("invalid Dates Entered");
+		$ttl_days = ($to_week_date_ts-$from_week_date_ts)/(24*60*60);
+	
+	
+		$csv_head = array();
+		$csv_head = '"Month","Week Start","Week End","Territory","Town","FranchiseID","Franchise","RegisteredOn","Sales(Rs)","Pending Amount(Rs)","Uncleared Payment(Rs)","Last Shipment Value(Rs)","Sales Till Date"'."\r\n";
+		
+		for($d=0;$d<$ttl_days;)
+		{
+	
+			// get week start date
+			$st_date = date('Y-m-d',$from_week_date_ts+($d*24*60*60));
+			//	echo $st_date.'<br>';
+	
+			// get week end date
+			$d = $d+7;
+	
+			$en_date = date('Y-m-d',$from_week_date_ts+($d*24*60*60));
+	
+			//echo $st_date.'<br>'.$en_date.'<br>';
+			$sql = "select c.franchise_id,franchise_name,territory_name,town_name,c.created_on,sum(a.i_orgprice*a.quantity) as sales
+			from king_orders a
+			join king_transactions b on a.transid = b.transid
+			join pnh_m_franchise_info c on c.franchise_id = b.franchise_id
+			join pnh_m_territory_info d on d.id = c.territory_id
+			join pnh_towns e on e.id = c.town_id
+			where a.status != 3
+			and b.franchise_id > 0
+			and date(from_unixtime(b.init)) between date(?) and date(?)
+			group by franchise_id";
+	
+			$res = $this->db->query($sql,array($st_date,$en_date));
+	
+			//echo $this->db->last_query();
+	
+			if($res->num_rows())
+			{
+				foreach($res->result_array() as $row)
+				{
+					
+					$fr_id = $row['franchise_id'];
+					//till date sales
+					$sales_tilldate =$this->db->query("select sum(i_orgprice*quantity) as sales  from king_orders a join king_transactions b on a.transid = b.transid where a.status != 3 and b.franchise_id = ? ",$row['franchise_id'])->row()->sales;
+	
+					$last_shipment_val = $pending_amt = $uncleared_payment = 0;
+					
+					
+					$last_shipment_val = @$this->db->query("select ref_dispatch_id,sum(amt)  as last_dispatch_amt from (
+																	select a.invoice_no,ref_dispatch_id,date(shipped_on) as shipped_on,(a.mrp-a.discount)*a.invoice_qty as amt 
+																		from king_invoice a 
+																		join shipment_batch_process_invoice_link b on a.invoice_no = b.invoice_no
+																		join king_orders c on c.id = a.order_id 
+																		join king_transactions d on d.transid = c.transid							
+																		where a.invoice_status = 1 and d.franchise_id = ? and c.status != 3 
+																		and date(b.shipped_on) between date(?) and date(?)  
+																	group by a.invoice_no,a.order_id 
+																	having amt > 0 
+																	) as g
+																	group by g.ref_dispatch_id 
+																	order by g.ref_dispatch_id desc 
+																	limit 1 ",array($fr_id,$st_date,$en_date))->row()->last_dispatch_amt;
+					
+					$uncleared_payment = @$this->db->query("
+															select franchise_id,sum(receipt_amount) as ramt 
+																from pnh_t_receipt_info 
+																where date(from_unixtime(created_on)) <= date(?)
+																and (activated_on = 0 or (date(from_unixtime(activated_on)) > date(?)) ) 
+																and payment_mode = 1 and franchise_id = ? and receipt_type = 1
+															group by franchise_id;",array($en_date,$en_date,$fr_id))->row()->ramt;
+					
+					$pending_amt = @$this->db->query("select sum(debit_amt-credit_amt) as pending_amt from pnh_franchise_account_summary where franchise_id = ? and date(created_on) <= date(?) ",array($fr_id,$en_date))->row()->pending_amt;
+					 
+					
+					$week_rep_data = array();
+					$week_rep_data[] = ucwords(date('M',strtotime($st_date)));
+					$week_rep_data[] = $st_date;
+					$week_rep_data[] = $en_date;
+					$week_rep_data[] = ucwords($row['territory_name']);
+					$week_rep_data[] = ucwords($row['town_name']);
+					$week_rep_data[] = ucwords($row['franchise_id']);
+					$week_rep_data[] = ucwords($row['franchise_name']);
+					$week_rep_data[] = format_date_ts($row['created_on']);
+					$week_rep_data[] = format_price($row['sales'],0);
+					$week_rep_data[] = format_price($pending_amt*1,2);
+					$week_rep_data[] = format_price($uncleared_payment*1,2);
+					$week_rep_data[] = format_price($last_shipment_val*1,2);
+					$week_rep_data[] = format_price($sales_tilldate*1,2);
+					$csv_head .='"'.implode('","',$week_rep_data).'"'."\r\n";
+				}
+			}
+		}
+		header('Content-Type: application/csv');
+		header('Content-Disposition: attachment; filename=Franchise_Week_REPORT.csv');
+		header('Pragma: no-cache');
+		echo $csv_head;
+		
+	}
+
+
 }

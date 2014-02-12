@@ -16,7 +16,7 @@ $order_status_arr[3]='Cancelled';
 
 $sql_trans_ttls = 'select status,ifnull(amt1,amt2) as amt from (
 select b.status,sum((mrp-(discount+credit_note_amt))*a.invoice_qty) as amt1,
-	sum(i_orgprice-(i_coup_discount+i_discount)*b.quantity) as amt2
+	sum((i_orgprice-(i_coup_discount+i_discount))*b.quantity) as amt2
 	from king_orders b 
 	left join king_invoice a on a.order_id = b.id 
 	where b.transid = ?
@@ -117,7 +117,7 @@ Prepaid Voucher used : <?=$c?>
 <div class="clear"></div>
 <table class="datagrid" width="100%">
 <thead><tr><th>Transaction ID</th><th>User</th><th>Mode</th>
-	<?php if($tran['is_pnh']){?> <th>Payment Credit Days</th> <?php } ?><th>Amount</th><th>Paid</th><th>Refund</th><th colspan="2">Payment Status</th><th>Init Time</th><th>Completed on</th></tr></thead>
+	<?php if($tran['is_pnh']){?> <th>Payment Days</th> <?php } ?><th>Amount</th><th>Paid</th><th>Refund</th><th colspan="2">Payment Status</th><th>Init Time</th><th>Completed on</th></tr></thead>
 <tbody>
 <tr>
 <td><?=$tran['transid']?></td>
@@ -162,12 +162,7 @@ default:
 </td>
 <?php if($tran['is_pnh']){?>
 <td>
-	<b><?php echo $tran['credit_days']?>&nbsp;Days</b>
-	<br>
-	<div style="padding:5px;background:#ffffaa;text-align: center;" >
-		Payment Clearence 
-		<div>On or Before <br /> <b>(<?php echo format_date_ts($tran['init']+($tran['credit_days']*24*60*60))?>)</b></div>
-	</div>
+	<b><?php echo $tran['credit_days']?>&nbsp;Days Payment</b>
 </td>
 <?php }?>
 
@@ -574,7 +569,7 @@ $allow_qty_chng = 0;
 	
 	if(count($alloted_imei_det))
 	{
-		echo '<div style="font-size:11px;background:#fcfcfc;padding:5px;">
+		echo '<div style="font-size:11px;background:#fcfcfc;padding:5px;width:155px;text-align:center">
 		<b>IMEI : '.$alloted_imei_det['imei_no'].'</b> <br>';
 		echo '		<b>Activation Credit : Rs '.$o['imei_reimbursement_value_perunit'].'</b>
 		';

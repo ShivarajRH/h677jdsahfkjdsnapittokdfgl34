@@ -128,8 +128,8 @@ class Datamodel extends Model
 	
 	function getdealsafter()
 	{
-		ini_set('memory_limit','512M');
-		ini_set('max_execution_time','3600');
+		ini_set('memory_limit','1024M');
+		ini_set('max_execution_time','6000');
 		$this->auth_token();
 		if(!isset($this->uris[3]))
 			return array("error"=>"Required itemid is missing");
@@ -140,7 +140,7 @@ class Datamodel extends Model
 		$after=$after['sno'];
 		
 		$page=isset($this->uris[4])?$this->uris[4]:1;
-		$l=200;
+		$l=500;
 		
 		return $this->output_deals($this->db->query("select pnh_id as pid,i.gender_attr,i.id as itemid,i.name,d.tagline,m.name as menu,m.id as menu_id,c.name as category,d.catid as category_id,mc.name as main_category,c.type as main_category_id,b.name as brand,d.brandid as brand_id,i.orgprice as mrp,i.price as price,i.store_price,i.is_combo, concat('".IMAGES_URL."items/',d.pic,'.jpg') as image_url,d.description,i.shipsin as ships_in,d.keywords from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join pnh_menu m on m.id=d.menuid left outer join king_categories mc on mc.id=c.type where d.publish=1 and is_pnh=1 and i.sno>? order by d.sno asc limit ".(($page-1)*$l).", $l",$after)->result_array());
 	}
