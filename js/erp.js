@@ -26,8 +26,8 @@ $(function(){
 //	$(".datagrid thead").html("<tr>"+$("#temp_dg tr:first").html()+"</tr>");
 //	$("#temp_dg tr:first").remove();
 //	$(".datagrid tbody").html($("#temp_dg").html());
-	$(".datagrid").append("<tfoot></tfoot>");
-	$(".datagrid:not(.nofooter) tfoot").html("<tr><td colspan='100'><a href='javascript:void(0)' class='dg_print'>print</a></td></tr>");
+	$(".datagrid:not(.nofooter)").append("<tfoot></tfoot>");
+	$(".datagrid tfoot").html("<tr><td colspan='100'><a href='javascript:void(0)' class='dg_print'>print</a></td></tr>");
 	if(typeof submenu == "undefined")
 	{
 		$("#content .leftcont").html("<ul>"+$(".menu").html()+"<ul>");
@@ -405,7 +405,7 @@ function get_unixtimetodatetime(utime)
 	var y=date.getFullYear();
     var m=date.getMonth()+1;
     var d=date.getDate();
-    var h=(date.getHours() > 9)?date.getHours()-12:date.getHours();
+    var h=date.getHours();
     var mi=date.getMinutes();
     var s=date.getSeconds();
     var datetime=d+'/'+m+'/'+y+' '+h+':'+mi+':'+s;

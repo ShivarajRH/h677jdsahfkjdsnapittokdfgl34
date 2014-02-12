@@ -299,16 +299,16 @@ input.readonly{
 .tabcont{
 	padding:10px;
 }
-.srch_result_pop {
-    background: none repeat scroll 0 0 rgb(238, 238, 238);
-    border: 1px solid rgb(170, 170, 170);
-    display: none;
-    margin-left: 55px;
-    margin-top: 26px;
-    max-height: 219px;
-    overflow: auto;
-    position: absolute;
-    width: 195px;
+.srch_result_pop{
+display:none;
+position:absolute;
+width:600px;
+max-height:230px;
+overflow:auto;
+background:#eee;
+border:1px solid #aaa;
+margin-left:650px !important;
+margin-top: -3px;
 }
 .srch_result_pop a{
 display:block;
@@ -415,13 +415,12 @@ ul.disc_tags_cont li{
 		font-size:14px;
 		margin:5px;
 		font-family:arial;
-		/*float:left;*/
+		float:left;
 		min-width:160px;
 		max-width:400px;
 		white-space:nowrap;
 		background:#FFFAD6;
 		border:1px dashed #F4EB9A;
-		float: right;
 	}
 	.dash_bar_red{
 		background:#f67;
@@ -902,7 +901,7 @@ fieldset{border-color:#eee;background:#FAFAFA}
 .fl_right{float: right;}
 .clearboth{clear:both}
 	
-.page_wrap{padding:10px;}
+.page_wrap{width: 99%;}
 .page_wrap .page_title{margin:7px 0px}
 .page_wrap .page_topbar{clear: both;}
 	
@@ -1098,7 +1097,7 @@ a.total_pop {    font-size: 11px;     text-align: center;    float: right;   pad
 .stream_item_admin_div .reply_box {    float: left; margin: 10px 0 0 10px;    font-size: 13px;    width: 94%;}
 .stream_item_admin_div .reply_box .reply_date {    font-size: 11px;    padding: 5px;}
 .stream_item_admin_div .reply_box .reply_link {    margin: 0 0 5px 0px;    font-size: 12px; cursor: pointer;}
-.stream_item_admin_div .reply_box .reply_desc {     clear: both;     width: inherit;     margin:20px 0px 5px 5px;     padding:10px;    background:#f5f5f5;     color: #000000;     border-radius: 3px;font-size: 12px; }
+.stream_item_admin_div .reply_box .reply_desc {     clear: both;     width: inherit;     margin:20px 0px 5px 5px;     padding:10px;    background:#f5f5f5;     color: #000000;     border-radius: 3px; }
 .stream_item_admin_div .reply_box .reply_actions {    color: #006699;}
 .stream_item_admin_div .reply_box .title {    float: left;}
 .stream_item_admin_div .reply_box .title_to {    float: left;    font-size: 14px;    clear: right; padding-top: 2px;}
@@ -1124,26 +1123,5 @@ a.total_pop {
 	border-radius: 30px;
 }
 
-.stream_item_admin_div .reply_box .reply_desc {
-clear: both;
-width: inherit;
-margin: 20px 0px 5px 5px;
-padding: 10px;
-background: #F5F5F5;
-color: #000;
-border-radius: 3px;
-line-height: 20px;
-font-size: 12px !important;
-}
 
-fieldset {
-	background: #f9f9f9;
-	border: 1px solid #F1F1F1;
-	padding: 5px 20px;
-}
-fieldset legend{
-	padding: 5px;
-	background: #FFF;
-	margin-left: -10px;
-}
-		
+.ui-tabs .ui-widget-header{font-size: 12px;}		

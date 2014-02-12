@@ -3913,20 +3913,8 @@ class Erp extends Stream
 		$this->session->set_flashdata("erp_pop_info","Proforma Invoice cancelled");
 		$bid=$this->db->query("select batch_id from shipment_batch_process_invoice_link where p_invoice_no=?",$p_invoice)->row()->batch_id;
 
-		$is_batch_open = $this->db->query("select count(*) as t from (
-			select  a.batch_id,a.p_invoice_no,sum(1) as total,sum(b.invoice_status) as ttl_active,sum(if(a.invoice_no,1,0)) as ttl_invoiced 
-				from shipment_batch_process_invoice_link a
-				join proforma_invoices b on a.p_invoice_no = b.p_invoice_no 
-				join shipment_batch_process c on c.batch_id = a.batch_id 
-				where a.batch_id = ?  
-			group by a.batch_id
-			having ttl_active != ttl_invoiced 
-			) as g ",$bid)->row()->t;
-	
-			if($is_batch_open)
-				$this->db->query("update shipment_batch_process set status=1 where batch_id=? limit 1",$bid);
-			else
-				$this->db->query("update shipment_batch_process set status=2 where batch_id=? limit 1",$bid);
+		// update batch status
+		$this->erpm->update_batch_status($bid);
 		
 		redirect("admin/proforma_invoice/$p_invoice");
 	}
@@ -4103,15 +4091,17 @@ group by g.product_id ");
 		//$data['prods']=$this->erpm->getprodproclist($bid);
 		
 		$data['prods'] = $this->db->query("select product_id,product,location,sum(rqty) as qty from ( 
-select a.product_id,c.product_name as product,concat(concat(rack_name,bin_name),'::',b.mrp) as location,a.qty as rqty 
-	from t_reserved_batch_stock a 
-	join t_stock_info b on a.stock_info_id = b.stock_id 
-	join m_product_info c on c.product_id = b.product_id 
-	join m_rack_bin_info d on d.id = b.rack_bin_id 
-	join shipment_batch_process_invoice_link e on e.p_invoice_no = a.p_invoice_no and invoice_no = 0 
-	where e.batch_id in (?)
-group by a.id  ) as g 
-group by product_id,location",$bid)->result_array();
+                            select a.product_id,c.product_name as product,concat(concat(rack_name,bin_name),'::',b.mrp) as location,a.qty as rqty 
+                                    from t_reserved_batch_stock a 
+                                    join t_stock_info b on a.stock_info_id = b.stock_id 
+                                    join m_product_info c on c.product_id = b.product_id 
+                                    join m_rack_bin_info d on d.id = b.rack_bin_id 
+                                    join shipment_batch_process_invoice_link e on e.p_invoice_no = a.p_invoice_no and invoice_no = 0
+									join proforma_invoices p on p.p_invoice_no = a.p_invoice_no and p.invoice_status = 1   	 
+                                    where e.batch_id in (?)
+                            group by a.id  ) as g 
+                            group by product_id,location
+					order by product",$bid)->result_array();
 		
 		$this->load->view("admin/body/product_proc_list",$data);
 	}
