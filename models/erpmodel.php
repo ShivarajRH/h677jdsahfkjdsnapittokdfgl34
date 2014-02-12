@@ -2482,6 +2482,10 @@ courier disable ends
 		}
 		$user=$this->erpm->getadminuser();
 		$bid=$this->db->query("select batch_id from shipment_batch_process_invoice_link where p_invoice_no=?",$p_invoice)->row()->batch_id;
+		
+		// update batch status 
+		$this->erpm->update_batch_status($bid);
+		
 		// Status is marked only invoiced in this stage for pnh invoices    
 		if($inv_trans_det['is_pnh'])
 		{
@@ -2497,10 +2501,6 @@ courier disable ends
 				foreach($inv_nos_res->result_array() as $inv_det)
 					$this->db->query("update king_invoice set ref_dispatch_id = ? where invoice_no = ? ",array($new_dispatch_id,$inv_det['invoice_no']));
 			
-			if($this->db->query("select count(1) as l from shipment_batch_process_invoice_link where batch_id=?",$bid)->row()->l<=$this->db->query("select count(1) as l from shipment_batch_process_invoice_link where invoice_no!=0 and batch_id=$bid")->row()->l)
-				$this->db->query("update shipment_batch_process set status=2 where batch_id=? limit 1",$bid);
-			else
-				$this->db->query("update shipment_batch_process set status=1 where batch_id=? limit 1",$bid);
 			
 			
 			
@@ -2511,10 +2511,6 @@ courier disable ends
 		}else
 		{
 			
-			if($this->db->query("select count(1) as l from shipment_batch_process_invoice_link where batch_id=?",$bid)->row()->l<=$this->db->query("select count(1) as l from shipment_batch_process_invoice_link where packed=1 and batch_id=$bid")->row()->l+$this->db->query("select count(1) as l from shipment_batch_process_invoice_link bi join proforma_invoices i on i.p_invoice_no=bi.p_invoice_no where bi.batch_id=$bid and bi.packed=0 and i.invoice_status=0")->row()->l)
-				$this->db->query("update shipment_batch_process set status=2 where batch_id=? limit 1",$bid);
-			else
-				$this->db->query("update shipment_batch_process set status=1 where batch_id=? limit 1",$bid);
 			
 			$this->session->set_flashdata("erp_pop_info","Packed status updated");
 			
@@ -2528,6 +2524,28 @@ courier disable ends
 			redirect("admin/invoice/$invoice_no");
 			*/
 			
+	}
+	
+	/**
+	 * function to update batch status by checking if any open proforma available for generating invoice 
+	 * @param unknown_type $bid
+	 */
+	function update_batch_status($bid)
+	{
+		//if($this->db->query("select count(1) as l from shipment_batch_process_invoice_link where batch_id=?",$bid)->row()->l<=$this->db->query("select count(1) as l from shipment_batch_process_invoice_link where packed=1 and batch_id=$bid")->row()->l+$this->db->query("select count(1) as l from shipment_batch_process_invoice_link bi join proforma_invoices i on i.p_invoice_no=bi.p_invoice_no where bi.batch_id=$bid and bi.packed=0 and i.invoice_status=0")->row()->l)
+		$has_active_proforma = $this->db->query("select * from (
+				select a.batch_id,a.p_invoice_no,sum(a.invoice_no) as inv
+				from shipment_batch_process_invoice_link a
+				join proforma_invoices b on a.p_invoice_no = b.p_invoice_no
+				join shipment_batch_process c on c.batch_id = a.batch_id
+				where b.invoice_status = 1
+				and a.batch_id = ?
+				group by p_invoice_no ) as g
+				having inv = 0 ",$bid)->num_rows();
+		if($has_active_proforma)
+			$this->db->query("update shipment_batch_process set status=1 where batch_id=? limit 1",$bid);
+		else
+			$this->db->query("update shipment_batch_process set status=2 where status!=2 and batch_id=? limit 1",$bid);
 	}
 	
 	function do_addtransmsg($transid)
@@ -5927,9 +5945,9 @@ order by p.product_name asc
 
 		$sql="SELECT a.*,b.id as brand_id,b.name AS brand_name,d.menuid,ifnull(m.name,m1.name) AS menu,v.vendor_id,r.vendor_name,date_format(from_unixtime(o.time),'%d/%m/%Y') as last_orderdon,o.transid,t.partner_id,p.name AS partner_name,t.is_pnh,po.po_id as is_po_raised
 				FROM m_product_info a
-				join m_product_deal_link l on l.product_id=a.product_id and l.is_active = 1 
-				JOIN king_dealitems di ON di.id= l.itemid  
-				JOIN king_deals d ON d.dealid=di.dealid 
+				left join m_product_deal_link l on l.product_id=a.product_id
+				left JOIN king_dealitems di ON di.id= l.itemid
+				left JOIN king_deals d ON d.dealid=di.dealid
 				left JOIN king_brands b ON a.brand_id = b.id
 				left JOIN pnh_menu m ON m.id=d.menuid and di.is_pnh = 1
 				left JOIN king_menu m1 ON m1.id=d.menuid and di.is_pnh = 0
@@ -5941,7 +5959,7 @@ order by p.product_name asc
 				LEFT JOIN t_po_product_link po ON po.product_id=a.product_id
 				WHERE a.product_id=?
 				group by a.product_id
-			";
+				";
 		$r=$this->db->query($sql,$id)->row_array();
 
 
@@ -8012,7 +8030,6 @@ order by p.product_name asc
 			$userid = 0;
 		}
 		$transid=strtoupper("PNH".random_string("alpha",3).$this->p_genid(5));
-
 		if($redeem)
 		{
 			$total-=$redeem_value;

@@ -24,7 +24,9 @@
 	width: 100%;
 }
 
-
+#ui-datepicker-div {
+	top: 602px !important;
+}
 
 .src {
 	background: #afa;

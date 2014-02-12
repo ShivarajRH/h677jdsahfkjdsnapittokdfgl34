@@ -681,14 +681,19 @@
 		});
 		if(f==false) return;
 		imei_payload="";
+		var imei_payload_confirm = new Array();
 		for(i=0;i<done_pids.length;i++)
 		{
 			if($(".imei"+done_pids[i]).length!=0)
-				{
-					$(".imei"+done_pids[i]).each(function(){
-					imei_payload=imei_payload+'<input type="hidden" name="imei'+done_pids[i]+'[]" value="'+$(this).val()+'">';
+			{
+				$(".imei"+done_pids[i]).each(function(){
+					if(imei_payload_confirm[$(this).val()] == undefined)
+					{
+						imei_payload_confirm[$(this).val()] = 1;
+						imei_payload=imei_payload+'<input type="hidden" name="imei'+done_pids[i]+'[]" value="'+$(this).val()+'">';
+					}
 				});
-				}
+			}
 		}
 
 		var sel_stk_inps = '';

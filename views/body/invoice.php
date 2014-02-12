@@ -10,6 +10,7 @@ $ttl_inv_list = array();
 $mem_det = array();	
 $invoice_credit_note_res = $this->db->query("select group_concat(id) as id,sum(amount) as amount from t_invoice_credit_notes a where invoice_no in (select invoice_no from king_invoice where split_inv_grpno = ? or invoice_no = ? ) ",array($invoice_no,$invoice_no));
 $credit_days=$this->db->query("select credit_days from king_transactions where transid=?",$transid)->row()->credit_days;
+
 //echo $this->db->last_query();
 
 ?>
@@ -248,7 +249,9 @@ table{
 						<table border=1 cellspacing	=0 cellpadding=5>
 							<tr><td>Invoice<br>No:</td>
 							<td width=200><b><?=isset($invoice_no)?$invoice_no:$order['invoice_no']?></b><br>
-							<span style="font-size: 11px;"><b>Maximum Credit : <?=$credit_days ?> Days</b></span>
+							<?php if($is_pnh){?>
+								<span style="font-size: 11px;"><b><?=$credit_days ?> Days Payment</b></span>
+							<?php } ?>
 							</td>
 							
 							<td>Invoice<br>Date:</td><td width="100"><b><?=date("d/m/Y",$inv_createdon)?></b></td>
@@ -406,10 +409,11 @@ table{
 							<?php $imei=$this->db->query("select imei_no from t_imei_no where order_id=?",$order['id'])->result_array(); $inos=array(); foreach($imei as $im) $inos[]=$im['imei_no'];?>
 							<?php if(!empty($inos)){?>
 							<br><b>Imeino: <?=implode(", ",$inos)?></b>
+							<?php if($is_pnh) {?>
+							<br><span> Activation : <b> <?php echo $imei_credit ?></b></span>
+							<?php }?>
 							<?php }?>
 							<br>
-							<span> Activation : <b> <?php echo $imei_credit ?></b></span>
-						
 						</span>
 						
 						<span class="showinprint">
@@ -422,6 +426,12 @@ table{
 									echo $order['print_name'].'-'.$order['pnh_id'];
 								}
 							?>
+							<?php $imei=$this->db->query("select imei_no from t_imei_no where order_id=?",$order['id'])->result_array(); $inos=array(); foreach($imei as $im) $inos[]=$im['imei_no'];?>
+							<?php if(!empty($inos)){?>
+							<br><b>Imeino: <?=implode(", ",$inos)?></b>
+							<br><span> Activation : <b> <?php echo $imei_credit ?></b></span>
+							<?php }?>
+							<br>
 						</span>
 					<?php }else
 						{
@@ -1533,7 +1543,12 @@ table{
 		<hr style="margin:0px;">	
 		<h3 style="margin-top:4px;margin-bottom: 4px;">Customer Acknowledgement</h3> 
 		<div style="margin: 3px auto">
-		<p>This it to acknowledge that we have received all products corresponding to above listed <?php echo count($ttl_inv_list) ?> Invoices of total sum of Rs <b><?php echo $ttl_inv_amt;?>/-</b></p>
+		<p>This it to acknowledge that we have received all products corresponding to above listed <?php echo count($ttl_inv_list) ?> Invoices of total sum of Rs <b><?php echo $ttl_inv_amt;?>/-</b>
+		<br>
+		<?php if($is_pnh) {?>
+		<span style="font-size: 14px;"><b><?=$credit_days ?> Days Payment</b></span>
+		<?php } ?>
+		</p>
 		<div>
 			<table width="100%">
 				<tr>

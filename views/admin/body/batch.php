@@ -1,3 +1,7 @@
+<?php 
+	// update batch status
+	$this->erpm->update_batch_status($batch['batch_id']);
+?>
 <style>
 	.leftcont{display: none}
 	.subdatagrid{width: 100%}

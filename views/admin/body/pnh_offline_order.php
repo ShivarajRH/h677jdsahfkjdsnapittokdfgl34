@@ -250,12 +250,12 @@ text-align: center;width: 60px;"><b>OldMRP:</b> <span style="color: #cd0000;font
 <td><span class="stotal">%lcost%</span></td>
 <td><input type="text" name="quote[]" size=4></td>
 <td><a href="javascript:void(0)" onclick='remove_psel(this)'>remove</a><br>
-<!--<a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">view</a>-->
+<a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">view</a>
 </td>
 </tr>
 </tbody> 
 </table>
- 
+
 <style>
 
 #display_fr_totals{
