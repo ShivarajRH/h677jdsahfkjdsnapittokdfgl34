@@ -69,7 +69,7 @@ define('ERP_PHYSICAL_IMAGES',"images/erp_images/");
 
 define('HTTP_IS_AJAX', isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
 
-define('GLOBAL_BATCH_ID', 5000);
+define('GLOBAL_BATCH_ID', 6000);
 
 /* End of file constants.php */
 /* Location: ./system/application/config/constants.php */

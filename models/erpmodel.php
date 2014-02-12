@@ -12485,26 +12485,26 @@ order by action_date";
     	
     }
 
-	/**
-	 * function to get franchise IMEI Scheme discount by franchise id and PNHID
-	 */
-	function get_fransuperschdisc_pid($fid,$pid)
-	{
-		$ddet_res = $this->db->query("select menuid,catid,brandid from king_deals a join king_dealitems b on a.dealid = b.dealid where pnh_id = ? ",$pid);
-		if($ddet_res->num_rows())
-		{
-			$ddet = $ddet_res->row_array();
-			$super_sch_det= @$this->db->query("SELECT *,DATE_FORMAT(DATE(FROM_UNIXTIME(valid_to)),'%d/%m/%Y') AS valid_to
-										FROM `pnh_super_scheme`
-										WHERE franchise_id = ? AND brand_id = ? AND cat_id = ? AND menu_id = ?
-										AND UNIX_TIMESTAMP() BETWEEN valid_from AND valid_to
-										AND is_active = 1 ORDER BY id DESC LIMIT 1",array($fid,$ddet['brandid'],$ddet['catid'],$ddet['menuid']));
-		if($super_sch_det->num_rows()!=0)
-			return $super_sch_det->row_array();
-		}
-		return 0;
-	}
-	
+    /**
+     * function to get franchise IMEI Scheme discount by franchise id and PNHID
+     */
+    function get_fransuperschdisc_pid($fid,$pid)
+    {
+            $ddet_res = $this->db->query("select menuid,catid,brandid from king_deals a join king_dealitems b on a.dealid = b.dealid where pnh_id = ? ",$pid);
+            if($ddet_res->num_rows())
+            {
+                    $ddet = $ddet_res->row_array();
+                    $super_sch_det= @$this->db->query("SELECT *,DATE_FORMAT(DATE(FROM_UNIXTIME(valid_to)),'%d/%m/%Y') AS valid_to
+                                                                            FROM `pnh_super_scheme`
+                                                                            WHERE franchise_id = ? AND brand_id = ? AND cat_id = ? AND menu_id = ?
+                                                                            AND UNIX_TIMESTAMP() BETWEEN valid_from AND valid_to
+                                                                            AND is_active = 1 ORDER BY id DESC LIMIT 1",array($fid,$ddet['brandid'],$ddet['catid'],$ddet['menuid']));
+            if($super_sch_det->num_rows()!=0)
+                    return $super_sch_det->row_array();
+            }
+            return 0;
+    }
+
     /**
      * 
      * @param type $order_id

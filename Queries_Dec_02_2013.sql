@@ -2449,6 +2449,12 @@ select * from pnh_t_receipt_reconcilation_log where credit_note_id = '27060'
 select * from pnh_t_receipt_reconcilation where id in ("15");
 select * from pnh_franchise_account_stat
 
+
+select * from pnh_t_receipt_info where receipt_id = '5388'
+select * from pnh_t_receipt_reconcilation_log where receipt_id = '5388'
+select * from pnh_t_receipt_reconcilation where id in ("8","9");
+
+
 select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.invoice_no,rcon.debit_note_id
                     ,rcon.inv_amount,rcon.unreconciled
                     ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date,a.username
@@ -2468,3 +2474,106 @@ select id as credit_note_id,franchise_id,`type`,amount,`desc`,is_correction,unre
 from pnh_franchise_account_stat fcs
 join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
 where type=0 and franchise_id='43' and id='27062' order by rlog.created_on desc;
+
+# Feb_11_2014
+
+select * from king_orders;
+
+select *,from_unixtime(batched_on) from shipment_batch_process_invoice_link where batch_id = '6000' and batched_by = '37' order by id desc;
+#=================================
+
+	ALTER TABLE `m_vendor_info` ADD COLUMN `payment_type` INT(1) DEFAULT 0 NULL AFTER `require_payment_advance`;
+	ALTER TABLE `king_orders` ADD COLUMN `credit_days` INT(11) DEFAULT 0 NULL AFTER `is_paid`; 
+
+
+ALTER TABLE `king_orders` ADD COLUMN `is_paid` TINYINT(11) DEFAULT 0 NULL AFTER `partner_order_id`; 
+ALTER TABLE `king_transactions` ADD COLUMN `credit_days` INT(11) DEFAULT 0 NULL AFTER `trans_grp_ref_no`;
+
+alter table m_product_info add column product_cat_id int(11) default 0 after brand_id;
+
+UPDATE m_product_info a 
+	JOIN (
+		SELECT itemid,product_id,catid,COUNT(*) AS t
+		FROM m_product_deal_link a 
+		JOIN king_dealitems b ON b.id = a.itemid
+		JOIN king_deals c ON c.dealid = b.dealid 
+		WHERE a.itemid IS NOT NULL AND a.itemid > 0 
+		GROUP BY a.itemid
+		HAVING t = 1 ) AS  h ON a.product_id = h.product_id 
+		SET a.product_cat_id = h.catid;
+		
+		
+UPDATE m_product_info a 
+	JOIN (
+		SELECT itemid,d.product_id,c.catid
+		FROM m_product_group_deal_link a 
+		JOIN king_dealitems b ON b.id = a.itemid
+		JOIN king_deals c ON c.dealid = b.dealid 
+		JOIN products_group_pids d ON d.group_id = a.group_id 
+		WHERE a.itemid IS NOT NULL AND a.itemid > 0 
+	)  AS  h ON a.product_id = h.product_id AND a.product_cat_id = 0 
+	SET a.product_cat_id = h.catid;
+#=================================
+
+select *,from_unixtime(batched_on) from shipment_batch_process_invoice_link where batch_id = '5779' and batched_by = '37' order by id desc;
+
+-- 
+select * from (select distinct fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
+,rlog.reconcile_amount                                                
+,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+												,fcs.unreconciled_status
+												
+                                                from pnh_franchise_account_stat fcs
+                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+                                                where fcs.type = '0'
+                                                and fcs.franchise_id = '43'
+                                                order by fcs.created_on desc) as g where g.unreconciled_amount > 0;
+-- 
+select * from pnh_t_receipt_reconcilation_log
+
+-- get unreconciled invoices
+select * from (select distinct i.invoice_no,rcon.unreconciled,round( sum( i.mrp - i.discount - i.credit_note_amt )  * i.invoice_qty , 2) as amount
+,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),min(rcon.unreconciled) ) as inv_amount
+#,if(rlog.reconcile_amount is null,round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+		from king_invoice i
+		join king_transactions tr on tr.transid=i.transid
+		left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
+		left join pnh_t_receipt_reconcilation_log rlog on rlog.reconcile_id = rcon.id #and rlog.is_reversed = 0
+		where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id= '43' #and i.invoice_no is null 
+		group by i.invoice_no,i.transid order by i.invoice_no asc) as g where g.inv_amount > 0;
+
+-- view receipts
+select * from pnh_t_receipt_reconcilation_log where credit_note_id = '27060'
+select * from pnh_t_receipt_reconcilation where id in ("15");
+select * from pnh_franchise_account_stat
+
+
+select * from pnh_t_receipt_info where receipt_id = '5388'
+select * from pnh_t_receipt_reconcilation where invoice_no = '200696'
+select * from pnh_t_receipt_reconcilation_log where reconcile_id in ("8","10",'21','22');
+
+
+-- new
+
+-- new get unreconciled invoices
+select * from (select distinct i.invoice_no,rcon.unreconciled,round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2) as amount
+,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),rcon.unreconciled) as inv_amount
+		from pnh_t_receipt_reconcilation rcon
+
+
+
+ king_invoice i
+		join king_transactions tr on tr.transid=i.transid
+		left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
+		left join pnh_t_receipt_reconcilation_log rlog on rlog.reconcile_id = rcon.id #and rlog.is_reversed = 0
+		where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id= '43' #and i.invoice_no is null 
+		group by i.invoice_no,i.transid order by i.invoice_no asc) as g where g.inv_amount > 0;
+
+
+# Feb_12_2014
+
+select * from king_invoice i 
+left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no
+where i.invoice_no = '200696';
+
+select * from pnh_t_receipt_reconcilation where invoice_no='200696' order by created_on desc limit 1
