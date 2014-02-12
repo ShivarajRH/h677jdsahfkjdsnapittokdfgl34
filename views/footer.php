@@ -187,8 +187,6 @@ foreach($rec_views as $rv){?>
 <div>For Assistance:</div>
 <table cellspacing=0 cellpadding=1>
 	<tr><td>Email : </td><td><b><?=CS_EMAIL?></b></td></tr>
-	<tr><td>Call </td><td><?=CS_TELEPHONE?></b></td></tr>
-	<tr><td></td><td><div style="font-size:80%">(10.30 am - 6.30 pm Mon-Sat)</div></td></tr>
 </table>
 </div>
 </td>

@@ -14,7 +14,7 @@ if(!function_exists('format_price')){
 	function format_price($num,$d=2)
 	{
 		$num = round($num,$d); 
-		list($no,$dec) = explode('.',$num);
+		list($no,$dec) = @explode('.',$num);
 		
 		$n = formatInIndianStyle($no);
 		$n .= $d?'.'.str_pad($dec,$d,'0'):'';

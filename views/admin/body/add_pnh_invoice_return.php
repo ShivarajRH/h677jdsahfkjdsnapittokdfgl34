@@ -3,7 +3,7 @@
 	<div class="page_topbar" >
 		<h2 class="page_title fl_left">Add PNH Return</h2>	
 		<div class="page_action_buttons fl_right" align="right">
-			<a class="button button-rounded button-flat-primary button-tiny" href="<?php echo site_url('admin/pnh_invoice_returns');?>">List Returns</a>
+			<a class="button button-rounded button-flat-primary button-tiny" href="<?php echo site_url('admin/pnh_invoice_returns/'.$type);?>">List Returns</a>
 		</div>
 	</div>
 	<div style="clear:both">&nbsp;</div>
@@ -11,14 +11,15 @@
 		
 		<div class="form_block">
 			<div class="scan_invoice_form_wrap">
-				<form id="scan_invoice_form" action="<?php echo site_url('admin/jx_getinvoiceorditems') ?>" method="post">
-					<b>Enter Invoice/Serail no</b> : <input type="text" name="scaninp" value="" class="inp" style="width: 200px;">
+				<form id="scan_invoice_form" action="<?php echo site_url('admin/jx_getinvoiceorditems/'.$type) ?>" method="post">
+					<b>Scan or Enter Invoice no</b> : <input type="text" name="scaninp" value="" class="inp" style="width: 200px;">
 					<input type="submit" value="Submit" style="padding:3px 10px;">
 				</form>
 			</div>
 			<br />
 			<div id="inv_return_scan_list">
 				<form action="<?php echo site_url('admin/process_add_pnh_invoice_return') ?>" method="post">
+					<input type="hidden" value="" id="inv_for" name="inv_for">
 					<table class="datagrid" width="100%">
 						<thead>
 							<th width="100"><b>Invoice</b></th>	
@@ -57,7 +58,7 @@
 	.hasError{color: #cd0000;font-weight: bold;font-size: 11px;background:#cd0000;color:#FFF;border-radius:3px;padding:1px 3px;}
 </style>
 <script type="text/javascript">
-	
+var type="<?php echo $type;?>";	
 var return_condhtml = '';
 var return_reasonhtml = '';
 var return_prod_imei_list = new Array();
@@ -85,6 +86,7 @@ var return_prod_imei_list = new Array();
 						$('input[name="scaninp"]',this).focus();
 					}else
 					{
+							$("#inv_for").val(resp.inv_for);
 						
 							return_condhtml = '';
 							$.each(resp.return_cond,function(a,b){
@@ -95,7 +97,15 @@ var return_prod_imei_list = new Array();
 								return_reasonhtml += '<option value="'+a+'">'+b+'</option>';
 							});
 							
-						
+						//order from det
+						var order_from_det='';
+						if(resp.order_from)
+						{ 
+							order_from_det='<span style="font-size:11px;">'+resp.cust+'<br>('+resp.order_from+')</span> ';
+						}else{
+							order_from_det='<span style="font-size:11px;"><a href="'+site_url+'/admin/pnh_franchise/'+resp.franchise_id+'">'+resp.franchise_name+'</a></span>';
+						}
+
 						var ttl_scanned = $('#inv_return_scan_list table tbody tr td.invno').length;
 						var rowHtml = '';
 						var inv_orders = 0;
@@ -113,10 +123,13 @@ var return_prod_imei_list = new Array();
 									return_prod_imei_list[oid] = item.imei_list; 
 								ttl_scanned = 0;
 								is_all_processed = 1;
+								
 								$.each(item.product_list,function(k,prod1){
 									$.each(prod1,function(j,prod){
+										
 										if((item.quantity*prod.qty - prod.pen_return_qty) != 0)
-										{
+									 	{
+											
 											cspan = 0;
 											rowHtml += '<tr>';
 											if(j==0)
@@ -260,7 +273,7 @@ var return_prod_imei_list = new Array();
 		
 		var bc = $(this).val();
 		var pid = $(this).attr('pid');
-			$.post(site_url+'/admin/jx_chkvalidprodbc',{bc:bc,pid:pid},function(resp){
+			$.post(site_url+'/admin/jx_chkvalidprodbc/'+type,{bc:bc,pid:pid},function(resp){
 				if(resp.status == 'success')
 				{
 					stat_ele.removeClass('hasError');

@@ -40,13 +40,13 @@
 		</tr>
 		
 		<tr>
-			<td style="float: right;"><input type="button" id="load_vdrbrnd_link" value="Load"></td>
+			<td style="float: right;"><input type="button" id="load_vdrbrnd_link" value="Load" class="button button-rounded button-flat-secondary button-small"></td>
 		</tr>
 	</table>
 	
 	<div id="brand_vndr_link" >
 		<h3 class="margin_update_header">Vendor Margin</h3>
-		<form action="<?php echo site_url('admin/bulk_update')?>" method="post" id="vendor_mrgin_bulk_update_form">
+		<form action="<?php echo site_url('admin/vmargin_bulk_update')?>" method="post" id="vendor_mrgin_bulk_update_form">
 			<table class="datagrid" width="100%" id="brand_vndr_link_tbl">
 				<thead>
 					<th>&nbsp;</th>
@@ -60,13 +60,13 @@
 				<tbody></tbody>
 			</table>
 			<br><br>
-			<input type='button' onclick='update_margin()' value='Submit' style='float:right;'>
+			<input type='button' onclick='update_margin()' value='Submit' style='float:right;' class="button button-action button-rounded button-small">
 		</form>
 	</div>
 </div>
 
 <script>
-	$(".l_applicabledate_frm").datepicker();
+	$(".l_applicabledate_frm").datepicker({minDate:0});
 	
 	$('#brand_vndr_link').hide();
 	$('.brand').chosen();
@@ -198,8 +198,8 @@ $("#load_vdrbrnd_link").click(function(){
 						  		+"	<td><input type='hidden' disabled='disabled' class='inp' name='l_brand[]' value="+v.brand_id+">"+v.brand_name+"</td>"
 						  		+"	<td><input type='hidden' disabled='disabled' class='inp' name='l_vendor[]' value="+v.vendor_id+"><a  href='"+site_url+'/admin/vendor/'+v.vendor_id+"' target='_blank'>"+v.vendor_name+"</a></td>"
 						  		+"	<td><input type='text' disabled='disabled'  class='inp' name='l_margin[]' value="+v.brand_margin+"></td>"
-						  		+"	<td><input type='text' disabled='disabled'  class='inp datepic l_applicabledate_frm' name='l_from[]' value="+v.applicable_from+"></td>"
-						  		+"	<td><input type='text' disabled='disabled'  class='inp datepic l_applicabledate_frm'  name='l_untill[]' value="+v.applicable_till+"></td>"
+						  		+"	<td><input type='text' disabled='disabled'  class='inp datepic l_applicabledate_frm' name='l_from[]' value="+v.applicable_from+"  readonly='readonly'></td>"
+						  		+"	<td><input type='text' disabled='disabled'  class='inp datepic l_applicabledate_frm'  name='l_untill[]' value="+v.applicable_till+" readonly='readonly'></td>"
 						  		//+"	<td><a href='javascript:void(0)'  onclick='remove_vblink(this)' >remove</a></td>"+
 						  		+"</tr>";
 						$(tblRow).appendTo("#brand_vndr_link_tbl tbody");
@@ -208,10 +208,10 @@ $("#load_vdrbrnd_link").click(function(){
 
 				$('#brand_vndr_link_tbl .l_applicabledate_frm ').each(function(i,dpEle){
 					if(!$(this).hasClass('hasDatepicker'))
-						$(this).datepicker();
+						$(this).datepicker({minDate:0});
 					
 					if(!$('#cat_brandtable .to_date:eq('+i+')').hasClass('hasDatepicker'))
-						$('#cat_brandtable .to_date:eq('+i+')').datepicker();
+						$('#cat_brandtable .to_date:eq('+i+')').datepicker({minDate:0});
 					
 				});
 			}
@@ -233,19 +233,52 @@ $("#load_vdrbrnd_link").click(function(){
 
 function update_margin()
 {
-	 if($('.datepic').val() == 0)
+	 /*if($('.datepic').val() == 0)
 	  {
     	 alert('Applicable  date must be filled');
  	    return false;
 	        
-	     }
+	     }*/
 	if($('.edit_vblink_chk:checked').length == 0 )
 	{
 	    alert('Select Margin to be updated');
 	    return false;
     }
-   
+	var bm_error_status = 0;
+	
+	$('.edit_vblink_chk:checked').each(function(){
+		var $r = $(this).parents('tr:first');
+		var margin=$('input[name="l_margin[]"]',$r).val()*1;
+		var appl_frm=$('input[name="l_from[]"]',$r).val();
+		var appl_to=$('input[name="l_untill[]"]',$r).val();
+		
+			if(isNaN(margin))
+			{
+				bm_error_status = 1;
+				$('input[name="l_margin[]"]',$r).addClass('error_inp');
+			}else if(margin == 0)
+			{
+				bm_error_status = 1;
+				$('input[name="l_margin[]"]',$r).addClass('error_inp');
+			}
 
+			if(appl_frm == "")
+			{
+				bm_error_status = 1;
+				$('input[name="l_from[]"]',$r).addClass('error_inp');
+			}
+			if(appl_to == "")
+			{
+				bm_error_status = 1;
+				$('input[name="l_untill[]"]',$r).addClass('error_inp');
+			}
+	});
+	if(bm_error_status)
+	{
+		$('.error_inp:first').focus();
+		alert("Invalid Margin value and Dates selected");
+		return false;
+	}
 	else
 	{
 		$('#vendor_mrgin_bulk_update_form').submit();
@@ -253,7 +286,7 @@ function update_margin()
 }
 </script>
 <style>
-
+.error_inp{border:1px solid #cd0000 !important;}
 td.selected{
 	background: #b4defe !important;
 }

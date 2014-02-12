@@ -1,7 +1,7 @@
 <div class="container">
 <h2>Create Voucher</h2>
 
-<form method="post" id="voucherfrm">
+<form method="post" id="voucherfrm" data-validate="parsley">
 
 
 <div style="margin:10px 0px;padding:5px;background:#eee;">
@@ -25,7 +25,7 @@ foreach($grns as $vendor=>$ps){?>
 <h4 style="margin:3px;background:#555;color:#fff;padding:5px;"><?=$vendor?></h4>
 <div class="ajax_loadresult static_pos">
 <?php foreach($ps as $p){?>
-<div><a href="javascript:void(0)" onclick="$('#vendor_sel').val('<?=$p['vendor_id']?>');addgrn('<?=$p['grn_id']?>','<?=$p['amount']?>','<?=$p['created_on']?>','<?=$p['pos']?>')">GRN<?=$p['grn_id']?> <span><?=date("d/m/y",strtotime($p['created_on']))?></span></a></div>
+<div><a href="javascript:void(0)" onclick="$('#vendor_sel').val('<?=$p['vendor_id']?>');addgrn('<?=$p['grn_id']?>','<?=$p['amount']?>','<?=format_datetime($p['created_on'])?>','<?=$p['pos']?>')">GRN<?=$p['grn_id']?> <span><?=date("d/m/y",strtotime($p['created_on']))?></span></a></div>
 <?php }?>
 </div>
 </td>
@@ -60,7 +60,7 @@ foreach($grns as $vendor=>$ps){?>
 
 <div id="grns" style="display:none;">
 <h3 style="margin-bottom:0px;">Payments for Stocks</h3>
-<table class="datagrid">
+<table class="datagrid nofooter">
 <thead>
 <tr>
 <th>GRN No</th><th>Adjusted Payment</th><th>POs</th><th>Raised on</th>
@@ -85,9 +85,9 @@ foreach($grns as $vendor=>$ps){?>
 <div style="padding:15px 0px;">
 <h3>Voucher Details</h3>
 <table style="background:#FFFFEF;padding:5px;" cellpadding=4>
-<tr class="aftrvload"><td>Voucher Value</td><td>Rs <input size=9 type="text" class="vvalue" name="vvalue"></td></tr>
+<tr class="aftrvload"><td>Voucher Value</td><td>Rs <input size=9 type="text" class="vvalue" name="vvalue" data-required="true"></td></tr>
 <tr class="aftrvload"><td>Payment Mode</td><td>
-<select name="mode">
+<select name="mode" data-required="true">
 <option value="1">Cash</option>
 <option value="2">Cheque</option>
 <option value="3">DD</option>
@@ -97,11 +97,11 @@ foreach($grns as $vendor=>$ps){?>
 <tr class="aftrvload"><td>Instrument No</td><td><input type="text" name="inst_no"></td></tr>
 <tr class="aftrvload"><td>Instrument Date</td><td><input type="text" name="inst_date" class="idate"></td></tr>
 <tr class="aftrvload"><td>Issued Bank</td><td><input type="text" name="bank"></td></tr>
-<tr class="aftrvload"><td>Narration</td><td><input type="text" name="narration" style="width:250px;"></td></tr>
+<tr class="aftrvload"><td>Narration</td><td><input type="text" name="narration" style="width:250px;" data-required="true"></td></tr>
 </table>
 </div>
 
-<input type="submit" value="Create Voucher">
+<input type="submit" value="Create Voucher" class="button button-rounded button-action button-small" style="float: right;">
 
 </form>
 
@@ -111,7 +111,7 @@ foreach($grns as $vendor=>$ps){?>
 <tbody>
 <tR>
 <td><a href="<?=site_url("admin/viewgrn")?>/%grnno%" target="_blank">GRN%grnno%</a><input type="hidden" name="grns[]" value="%grnno%"></td>
-<td>Rs <input type="text" class="inp" name="adjusted_grn[]" value="%grnamount%" size=5></td>
+<td>Rs <input type="text" class="inp readonly" name="adjusted_grn[]" value="%grnamount%" size=8 readonly="readonly"></td>
 <td>%pos%</td>
 <td>%grndate%</td>
 </tR>
@@ -214,7 +214,13 @@ $(function(){
 			alert("No GRNs or POs loaded");
 			return false;
 		}
-		return confirm("Are you sure?");
+		var voucher_frm=$("#voucherfrm");
+		if(voucher_frm.parsley('validate'))
+		{
+			 return confirm("Are you sure?");
+		}
+		
+		
 	});
 });
 </script>

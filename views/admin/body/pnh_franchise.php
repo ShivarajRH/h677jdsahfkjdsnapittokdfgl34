@@ -1172,7 +1172,6 @@ $(function(){
 								</p>
 						</form>
 					</td>	
-
 				</tr>
 			</table>
 		</fieldset>
@@ -1210,12 +1209,17 @@ $(function(){
 					Ordered : <span>Rs <?=format_price($ordered_tilldate,2)?></span>
 				</div>
 			</div>
-
+                        <div class="clear"></div>
 			<?php if(1){?>
-				<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 500px;font-size: 12px;">
+				<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; min-width: 500px;font-size: 12px;">
 					<h4 style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Make a Topup/Security Deposit</h4>
 					<form method="post" id="top_form" action="<?=site_url("admin/pnh_topup/{$fran['franchise_id']}")?>">
 						<table cellpadding=3 width="100%">
+							<tr>
+                                <td></td>
+                                <td></td>
+                                <td><span class="error_status"></span></td>
+                            </tr>
 							<tr>
 								<td>Type</td><td>:</td>
 								<td>
@@ -1227,8 +1231,10 @@ $(function(){
 							</tr>
 							<tr>
 								<td>Amount (Rs)</td><td>:</td>
-								<td><input type="text" class="inp amount" name="amount"
-									size=5>
+								<td><input type="text" class="inp amount money" name="amount" id="receipt_amount" size=5 value="">
+                                        <span class="reconciled_total">Adjusted Amount: <abbr title="Amount">0</abbr>
+                                            <input type="hidden" name="total_val_reconcile" id="total_val_reconcile" value="" />
+                                        </span>
 								</td>
 							</tr>
 							<tr>
@@ -1260,7 +1266,16 @@ $(function(){
 								<td class="label">Instrument Date</td><td> :</td>
 								<td><input type="text" name="date" id="sec_date" size=15></td>
 							</tr>
-							<tr class="inst_msg">
+                            <tr>
+                                    <td>Reconcile</td><td> :</td>
+                                    <td>
+                                            <a href="javascript:void(0);" class="button button-tiny_wrap cursor button-primary clone_rows_invoice">+</a>
+                                            <table border="0" cellspacing="0" cellpadding="2">
+                                                <tbody id="reconcile_row"></tbody>
+                                            </table>
+                                    </td>
+                            </tr>
+                            <tr class="inst_msg">
 								<td>Message</td><td> :</td>
 								<td><textarea class="msg" name="msg" style="width:350px;height:80px;" ></textarea></td>
 							</tr>
@@ -1272,14 +1287,14 @@ $(function(){
 				</div>
 
 				<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 580px;font-size: 12px;">
-						<h4	style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Account
-							Statement Correction</h4>
+						<h4	style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Account Statement Correction</h4>
 						<form method="post" id="acc_change_form" action="<?=site_url("admin/pnh_acc_stat_c/{$fran['franchise_id']}")?>">
 							<input type="hidden" name="is_manual_corr" value="1">
 							<table cellpadding=3>
 								<tr>
 									<td width="100">Type</td><td>:</td>
-									<td><select name="type"><option value="0">In (credit)</option>
+									<td><select name="type">
+											<option value="0">In (credit)</option>
 											<option value="1">Out (debit)</option>
 									</select></td>
 								</tr>
@@ -1319,6 +1334,7 @@ $(function(){
 						<?php if($this->erpm->auth(FINANCE_ROLE,true)){ ?>
 						<li><a href="#security_cheques" >Security Cheque Details</a></li>
 						<?php } ?>
+                         <li><a href="#unreconcile" onclick="load_receipts(this,'unreconcile',0,<?=$f['franchise_id']?>,100)">Un-Reconciled</a></li>
 					</ul>
 					
 					<div id="pending">
@@ -1381,6 +1397,9 @@ $(function(){
 				</div>
 				
 				<div id="acct_stat">
+					<div class="tab_content"></div>
+				</div>
+                <div id="unreconcile">
 					<div class="tab_content"></div>
 				</div>
 			</div>
@@ -1810,7 +1829,6 @@ $(function(){
 						</div>  
 					</div>
 				</div>
-
 				<div id="images">
 					<table width="100%" cellpadding=10>
 						<tr>
@@ -1979,7 +1997,106 @@ $(function(){
 			
 		</div>
 	</div>		
-
+        
+        <div id="dlg_unreconcile_view_list" style="display:none;">
+        </div>
+        <div id="dlg_unreconcile_form" style="display:none;">
+                <h3>Select invoices for reconciliation </h3>
+                <form id="dl_submit_reconcile_form">
+                    <table class="datagrid1" width="100%">
+                        <tr><td width="150">Receipt #</td><th>
+                                <input type="text" readonly='true' id="dg_i_receipt_id" name="dg_i_receipt_id" value="" size="6" class="inp"/></th></tr>
+                        <tr><td width="150">Receipt Amount</td><th>
+                                Rs. <input type="text" readonly='true' id="dg_i_receipt_amount" name="dg_i_receipt_amount" value="" size="6" class="inp money"/></th></tr>
+                        <tr><td width="150">Unreconcile Amount</td><th>
+                                Rs. <input type="text" readonly='true' id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value="" size="6" class="dg_i_unreconciled_value inp money"/></th></tr>
+                    </table>
+                    <div>&nbsp;</div>
+                    <div class="dg_error_status"></div>
+                        <table class="datagrid nofooter" width="100%">
+                            <thead> <tr><th>#</th><th>Document type</th><th>Invoice No</th><th width="100">Invoice Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
+                            <tbody class='dlg_invs_list'>
+                                    <tr id='dg_reconcile_row_1' class="dg_invoice_row">
+                                        <td>1</td>
+                                        <td><select id='document_type' name='document_type[]' onchange="dg_recon_change_document_type(this,'dlg_selected_invoices_1','dg_reconcile_row_1','dlg_invs_list','dlg_unreconcile_form');"><option value='inv' selected>Invoice</option><option value='dr'>Debit Note</option></select></td>
+                                        <td>
+                                            <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange="dg_fn_inv_selected(this,1,'dg_reconcile_row_1','dlg_invs_list','dlg_unreconcile_form');"></select>
+                                        </td>
+                                        <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=6></td>
+                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value='' onchange="dg_show_unconcile_total('dlg_unreconcile_form');"></td>
+                                        <td>
+                                            <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick="dg_add_invoice_row(this,'dg_reconcile_row','dlg_invs_list','dlg_unreconcile_form');"> + </a>
+                                        </td>
+                                    </tr>
+                            </tbody>
+                            <tfoot class="nofooter">
+                                <tr>
+                                    <td colspan="4">
+                                        <span style="float:right;">Total reconciled (Rs.):</span><br>
+                                        <span style="float:right;">Un-reconciled after Reconcile (Rs.):</span>
+                                    </td>
+                                    <td align="left">
+                                        <input type="text" readonly='true' name="ttl_reconciled" class="dg_l_total_adjusted_val money" value="0" size="6" /><br>
+                                        <input type="text" readonly='true' name="ttl_unreconciled_after" class="dg_ttl_unreconciled_after money" value="0" size="6" />
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                            <!--<tr><td width="150">Reconcile Remarks</td><th><textarea id="dg_i_remarks" name="remarks" class="textarea" style="width:193px; height: 70px;"></textarea></th></tr>-->
+                        </table>
+                    </form>
+            </div>
+        
+        
+        
+            <div id="dlg_credit_note_block" style="display:none;"><!-- Credit note dialog -->
+                <h3>Reconcile the Credit Note</h3>
+                <form id="dg_credit_note_form">
+                    <table class="datagrid1" width="100%">
+                        <tr><td width="150">Credit Note id #</td><th>
+                                <input type="text" readonly='true' id="dg_i_credit_note_id" name="dg_i_credit_note_id" value="" size="6" class="inp"/></th></tr>
+                        <tr><td width="150">Credit Amount</td><th>
+                                Rs. <input type="text" readonly='true' id="dg_i_credit_amount" name="dg_i_credit_amount" value="" size="6" class="inp money"/></th></tr>
+                        <tr><td width="150">Unreconcile Amount</td><th>
+                                Rs. <input type="text" readonly='true' id="dg_i_unreconciled_value" name="dg_i_unreconciled_value" value="" size="6" class="dg_i_unreconciled_value inp money"/></th></tr>
+<!--                        <tr><td width="150">Reconcile Remarks</td><th>
+                                <textarea id="dg_i_remarks" name="remarks" class="textarea" style="width:193px; height: 70px;"></textarea></th></tr>-->
+                    </table>
+                   <div>&nbsp;</div>
+                   
+                    <div class="dg_error_status"></div>
+                        <table class="datagrid nofooter" width="100%">
+                            <thead> <tr><th>#</th><th>Document type</th><th>Invoice No</th><th width="100">Invoice Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
+                            <tbody class='dlg_credits_list'>
+                                    <tr id='dg_credit_row_1' class="dg_credit_row">
+                                        <td>1</td>
+                                        <td><select id='document_type' name='document_type[]' onchange="dg_recon_change_document_type(this,'dlg_selected_invoices_1','dg_credit_row_1','dlg_credits_list','dlg_credit_note_block');"><option value='inv' selected>Invoice</option><option value='dr'>Debit Note</option></select></td>
+                                        <td>
+                                            <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange="dg_fn_inv_selected(this,1,'dg_credit_row_1','dlg_credits_list','dlg_credit_note_block');"></select>
+                                        </td>
+                                        <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=6></td>
+                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value='' onchange="dg_show_unconcile_total('dlg_credit_note_block');"></td>
+                                        <td>
+                                            <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick="dg_add_invoice_row(this,'dg_credit_row','dlg_credits_list','dlg_credit_note_block');"> + </a>
+                                        </td>
+                                    </tr>
+                            </tbody>
+                            <tfoot class="nofooter">
+                                <tr>
+                                    <td colspan="4">
+                                        <span style="float:right;">Total reconciled (Rs.):</span><br>
+                                        <span style="float:right;">Un-reconciled after Reconcile (Rs.):</span>
+                                    </td>
+                                    <td align="left">
+                                        <input type="text" readonly='true' name="ttl_reconciled" class="dg_l_total_adjusted_val money" value="0" size="6" /><br>
+                                        <input type="text" readonly='true' name="ttl_unreconciled_after" class="dg_ttl_unreconciled_after money" value="0" size="6" />
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                </form>
+            </div>
 </div>
 <script>
 
@@ -2526,10 +2643,17 @@ $(function(){
 			
 			if($(".msg",$(this)).val().length==0)
 				error_msgs.push("Please enter Message");
-		
+
+            var sts = validate_selected_invoice_val();
+            if(sts !== true) {
+               error_msgs.push(sts);
+            }
+            var reconciled_total= format_number( $("abbr",".reconciled_total").html() );
+            $("#total_val_reconcile").val(reconciled_total);
+
 		if(error_msgs.length)
 		{
-			alert("Invalid Inputs Entered \n\n"+error_msgs.join("\n"));
+			alert("Errors:\n"+error_msgs.join("\n"));
 			return false;
 		}
 		
@@ -2752,8 +2876,8 @@ function load_members(fid,pg)
 function load_receipts(ele,type,pg,fid,limit)
 {
 	$($(ele).attr('href')+' div.tab_content').html('<div align="center"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
-
-	$.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+limit+'/'+pg*1,'',function(resp){
+    var cr_tab = 0;
+	$.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+cr_tab+'/'+limit+'/'+pg*1,'',function(resp){
 		$($(ele).attr('href')+' div.tab_content').html(resp.page);
 		$($(ele).attr('href')+' div.tab_content .datagridsort').tablesorter();
 		
@@ -2765,9 +2889,10 @@ $(".receipt_pg a").live('click',function(e){
 	var link_det=$(this).attr('href').split('/');
 	var fid=link_det[2];
 	var type=link_det[3];
-	var pg=link_det[4];
+	var cr_tab=link_det[4];
+	var pg=link_det[5];
 	
-	$.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+pg*1,'',function(resp){
+	$.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+cr_tab+'/'+pg*1,'',function(resp){
 		$("#"+type+' div.tab_content').html(resp.page);
 		$("#"+type+' div.tab_content .datagridsort').tablesorter();
 		
@@ -2776,7 +2901,6 @@ $(".receipt_pg a").live('click',function(e){
 
 $(".account_statement").click(function(){$(".pending_receipt").trigger('click');});
 //-----------receipts handle end---------
-
 function load_scheme_disc_history()
 {
 	$('#schme_disc_history').dialog('open');
@@ -2804,7 +2928,6 @@ function init_frmap() {
 $(function(){
 	$('.leftcont').hide();	
 });
-
 $('.schmenu').chosen();
 
 var sel_menuid=0;
@@ -2960,12 +3083,10 @@ $("#pnh_superschme").dialog({
 		'Cancel':function(){
 			$(this).dialog('close');
 		},
-
 		'Submit':function(){
 			var sch_form=$("#super_schform",this);
 			if(sch_form.parsley('validate'))
 			{
-
 				$.post(site_url+'/admin/jx_check_schemexist/<?php echo $f['franchise_id']?>',$("#super_schform").serialize(),function(resp){
 					if(resp.status == 'error')
 					{
@@ -3896,6 +4017,16 @@ $("#pnh_membersch").dialog({
 	.jqplot-table-legend{z-index: 99999;cursor: pointer}
 	#ui-datepicker-div{z-index: 99999999 !important}
 </style>
+
+<script>
+// <![CDATA[
+    var franchise_id = "<?=$franchise_id;?>";
+    var frn_version_url = "<?=site_url("admin/pnh_fran_ver_change/{$fran['franchise_id']}")?>";
+    var f_created_on = "<?php echo date('m/d/Y',$f['created_on'])?>";
+    var franchise_name = "<?php echo $f['franchise_name']?>";
+// ]]>
+</script>
+<script type="text/javascript" src='<?=base_url()."/js/pnh_franchise_reconcile.js"; ?>'></script>
  
 <?php
 	

@@ -30,7 +30,7 @@ Date range : <input type="text" class="inp" size=10 id="s_from"> to <input type=
 <td><?=$g['received']?></td>
 <td><?=$g['invoiced']?></td>
 <td>Rs <?=number_format($g['invoice_value'],2)?></td>
-<td><?=date("g:ia d/m/y",strtotime($g['created_on']))?></td>
+<td><?=format_datetime($g['created_on'])?></td>
 </Tr>
 <?php }?>
 </tbody>

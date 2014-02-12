@@ -227,31 +227,31 @@ ul.tabs li.active
 <div class="container page_wrap" style="padding:10px">
 
 
-<div style="float:right">
-	<div>
-	<?php $d=$deal; $stock=$this->erpm->do_stock_check(array($d['id'])); if(empty($stock)){?>
-	<h5 style="color:red;margin:10px;font-size: 14px">OUT OF STOCK</h5>
-	<?php }else{?>
-	<h5 style="color:green;margin:10px;font-size: 14px">IN-STOCK</h5>
-	<?php }?>
-	</div>
-</div>
-
 <div style="width:75%;">	
 	<?=$deal['menu_name']?>  &raquo; 
 	<a href="<?=site_url("admin/viewcat/{$deal['catid']}")?>"><?=$deal['category']?></a>  &raquo; 
 	<a href="<?=site_url("admin/viewbrand/{$deal['brandid']}")?>"><?=$deal['brand']?></a>
 </div>
 
-<h3 class="page_title">
-	<br>
-	<?=$deal['name']?> <a style="font-size: 9px;" href="<?=site_url("admin/pnh_editdeal/{$deal['id']}")?>">Edit</a> 
-</h3>
-
+<div class="fl_left" style="width:67%">
+	<h3 class="page_title">
+		<br>
+		<?=$deal['name']?> <a style="font-size: 9px;" href="<?=site_url("admin/pnh_editdeal/{$deal['id']}")?>">Edit</a> 
+	</h3>
+	<span class="stock_wrap" style="width:15%;">
+		<div>
+		<?php $d=$deal; $stock=$this->erpm->do_stock_check(array($d['id'])); if(empty($stock)){?>
+		<h5 style="color:red;margin:10px;font-size: 14px">OUT OF STOCK</h5>
+		<?php }else{?>
+		<h5 style="color:green;margin:10px;font-size: 14px">IN-STOCK</h5>
+		<?php }?>
+		</div>
+	</span>
+</div>
 <div class="body_center_content">
 	<div class="">
 		<div class="">
-			<ul class="tabs"> 
+			<ul class="tabs" style="clear:both"> 
 		        <li rel="deal_det" style="margin-left:10px;" class="active" >Deal Details</li>
 		        <li rel="prod_linked">Product Linked</li>
 		        <li rel="prc_chanlog">Price Changelog</li>
@@ -272,11 +272,15 @@ ul.tabs li.active
 									</tr>
 									<tr><td>Deal Name :</td><Td style="font-weight:bold;"><?=$deal['name']?></Td></tr>
 									<tr><td>Print Name :</td><Td style="font-weight:bold;"><?=$deal['print_name']?$deal['print_name']:$deal['name']?></Td></tr>
+									<tr>
+									<td>Status :</td><td><?=$d['publish']==1?"Enabled":"Disabled"?> 
+									<a class="danger_link" href="<?=site_url("admin/pnh_pub_deal/{$d['id']}/{$d['publish']}")?>">change</a></td></tr>
 									<tr><td>Tagline :</td><td><?=$deal['tagline']?></td></tr>
 									<tr><td>MRP :</td><td>Rs <?=$deal['orgprice']?></td></tr>
-									<tr><td>Offer price/Dealer Price :</td><td>Rs <?=$deal['price']?></td></tr>
+									<tr><td><b>Offer price/Dealer Price </b>:</td><td>Rs <?=$deal['price']?></td></tr>
 									<tr><td>Store price :</td><td>Rs <?=$deal['store_price']?></td></tr>
 									<tr><td>NYP price :</td><td>Rs <?=$deal['nyp_price']?></td></tr>
+									
 									<tr><td>Bill on Orderprice :</td><td><?=$deal['billon_orderprice']?'Yes':'No'?></td></tr>
 									<tr><Td>Gender Attribute :</Td><td><?=$deal['gender_attr']?></td></tr>
 									<tr><Td>Max Allowed Qty <br>(for franchise per day):</Td><td><?=$deal['max_allowed_qty']?></td></tr>
@@ -294,9 +298,7 @@ ul.tabs li.active
 									<tr><td>Modified by :</td><Td style="font-weight:bold;"><?=$deal['mod_name']?></Td></tr>
 									
 									<?php $d=$deal;?>
-									<tr>
-									<td>Status :</td><td><?=$d['publish']==1?"Enabled":"Disabled"?> 
-									<a class="danger_link" href="<?=site_url("admin/pnh_pub_deal/{$d['id']}/{$d['publish']}")?>">change</a></td></tr>
+									
 									<tr>
 									<?php $sch_status=$this->db->query("select 1 from pnh_superscheme_deals where itemid=? and is_active=0 and ? between valid_from and valid_to order by created_on desc  limit 1 ",array($deal['id'],time()))->row();?>
 									

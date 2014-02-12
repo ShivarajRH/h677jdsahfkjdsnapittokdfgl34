@@ -65,6 +65,7 @@ define("CRON_IMAGES_LOC","/home/snapitto/cron_images_updater/imgs/subfolder/imag
 
 define('HTTP_IS_AJAX', isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
 
+define('GLOBAL_BATCH_ID', 6000);
 
 /* End of file constants.php */
 /* Location: ./system/application/config/constants.php */

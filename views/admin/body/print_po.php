@@ -2,68 +2,87 @@
 	<head>
 		<title>Po Print</title>
 		<style>
-			body{font-family: arial;margin:10px;}
-			.print_tbl{font-size: 14px;}
-			.print_tbl th{font-size: 14px;padding:5px}
-			.print_tbl td{font-size: 12px;vertical-align: top;}
-			.task_info{margin:0px;}
-			.task_info .task_town_name{border-bottom: 1px solid #000;text-align: center;padding:3px;}
-			.task_info .task_name{border-bottom: 1px solid #000;text-align: center;padding:3px;}
-			.print_tbl table{font-size: 14px;border-collapse: collapse;border-collapse: collapse;margin-bottom: 5px;}
-			.print_tbl table th{font-size: 12px;}
-			.print_tbl table td{padding:5px;}
+			body{font-family: arial;margin:10px;font-size: 80%;width: 970px;margin:0px auto;padding:10px;}
+			@media print {.hideinprint{display: none}}
+			.print_tbl{border-collapse: collapse;}
+			.print_tbl th{font-size: 90%;padding:5px;border:1px solid #000;}
+			.print_tbl td{font-size: 80%;vertical-align: top;padding:5px;border:1px solid #000;}
 			.tsk_blck{margin:5px;}
+			p{margin:4px 0px}
+			.fl_left{float:left;}
+			.fl_right{float:right;}
 		</style>
 	</head>
 	<body onload="window.print()">
-	 <div id="header">
-			<input style="float: right;" type="button" value="Close" onClick="window.close()" class="hide" id="noprint">
-			<input style="float: right;margin-right: 10px;" type="button" value="Print" onClick="window.print()" class="hide" id="noprint" >
-	</div>	
+		<h1 style="text-align: center;">Purchase Order</h1>
+		<div align="right" class="hideinprint">
+			<input type="button" value="Print" onClick="window.print()" >
+			<input type="button" value="Close" onClick="window.close()" >
+		</div>	
+		<div id="container">
+			<div class="clear">
+				<div align="left" class="fl_left" style="width: 35%">
+					<b>Purchase From :</b>
+					<p><?= $vendor_details['vendor_name'];?><?=ucwords($vendor_details['address_line_1']) . $vendor_details['address_line_2'].'<br>'.ucwords($vendor_details['city_name']).$vendor_details['post_code'] ?></p>
+				</div>
+				<div align="center" class="fl_left" style="width: 30%">
+					&nbsp;
+				</div>
+				<div align="right" class="fl_right" style="width: 35%">
+					<div><b>PO refno:</b> #<?=$poid?></div>
+					<div><b>PO Date:</b> <?=format_date($po_det['created_on'])?></div>
+					<div><b>Expected DOD:</b> <?=format_date($po_det['date_of_delivery'])?></div>
+				</div>
+			</div>
+			<div class="clear">&nbsp;</div>
 			
-		
-<div id="container">
-<div align="left">
-<h3 >Local Cube commerce Pvt Ltd</h3>
-<br><br>
-<b style='font-size: 11px;'>Purchase From</b><br>
-<b><?= $vendor_details['vendor_name'];?></b>
-<b style="font-size: 12px;margin-top:29px;margin-left:-140px;"><?=ucwords($vendor_details['address_line_1']) . $vendor_details['address_line_2'].'<br>'.ucwords($vendor_details['city_name']).$vendor_details['post_code'] ?></b><br>
-<b style="font-size: 12px;"><?=$vendor_details['mobile_no_1'].','.$vendor_details['mobile_no_2'] ?></b>
-</div>
-<div class="clear"></div>
-<div align="right" >
-<table>
-<!--  <h4 style="margin-top: -47px;margin-right: 28px;">Purchase Order</h4>-->
-<div align="right" style="margin-top: -53px;">
-<tr><td><b style="margin-right: 4px;font-size: 18px;">Purchase Order</b></td></tr>
-<tr><td><b style="margin-right: 4px;font-size: 11px;">POno:<?=$poid?></b></td></tr>
-<tr><td><b style="margin-right: 4px;font-size: 11px;">Date:<?=format_date($po_det['created_on'])?></b></td></tr>
-</div>
-</table>
-</div>
-<div class="clear"></div>
-<div align="center">
-<table class="print_tbl" border=1 cellspacing="0" cellpadding="0" width="100%" >
-<thead><th>Slno</th><th>Product name</th><th>Qty</th><th>Unit price</th><th>Sub Total </th></thead>
-<?php if($po_product_list){
-	$i=1;
-	foreach($po_product_list as $po){
-?>
-<tbody><tr><td style="text-align:center;"><?=$i;?></td><td><?=$po['product_name'] ?></td><td style="text-align:center;"><?=$po['order_qty'] ?></td><td style="text-align:right;"><?=format_price($po['purchase_price'])?></td><td style="text-align:right;"><?=format_price($po['purchase_price']*$po['order_qty'])?></td></tr></tbody>
-<?php $i++;}}?>
-</table>
-</div>
-<div class="clear"></div>
-
-<div align="left" style="margin-left: 0px;font-size:12px;">
-<b>Comment:</b><br>
-<?=$po_det['remarks'] ?>
-</div>
-<div align="right" style="margin-right:2px;margin-top: -19px;">
-<b>Total:Rs <?=format_price($ttl_po_value) ?></b><br>
-</div>
-<div >
-
-</div>
-</div>
+			<div align="center">
+				<table class="print_tbl" border="0" cellspacing="0" cellpadding="4" width="100%" >
+					<thead><tr><th>Slno</th><th style="text-align: left">Product name</th><th style="text-align: right">Mrp</th><th style="text-align: right">Unit price</th><th style="text-align: right">Qty</th><th style="text-align: right">Sub Total </th></tr></thead>
+					<tbody>
+					<?php
+						$ttl_order_qty = 0; 
+						$ttl_order_price = 0;
+						if($po_product_list)
+						{
+							$i=1;
+							foreach($po_product_list as $po){
+								$ttl_order_qty += $po['order_qty'];
+								$po_p_price = $po['purchase_price']*$po['order_qty'];
+								$ttl_order_price += $po_p_price;
+					?>
+								<tr>
+									<td width="1%" style="text-align:center;" width="10"><?=$i;?></td>
+									<td><?=$po['product_name'] ?></td>
+									<td width="1%" style="text-align:right;"><?=$po['mrp']?></td>
+									<td width="1%" style="text-align:right;"><?=format_price($po['purchase_price'])?></td>
+									<td width="1%" style="text-align:right;"><?=$po['order_qty'] ?></td>
+									<td width="1%" style="text-align:right;"><?=format_price($po_p_price)?></td>
+								</tr>
+					<?php 
+								$i++;
+							}
+						}
+					?>
+					<tfoot>
+						<tr>
+							<td colspan="4" align="right"><b>Total</b></td>
+							<td align="right"><b><?php echo format_price($ttl_order_qty,0);?></b></td>
+							<td align="right"><b><?php echo format_price($ttl_order_price,2);?></b></td>
+						</tr>
+					</tfoot>
+					</tbody>
+				</table>
+			</div>
+			<div class="clear" style="margin-top:10px;">
+				<div align="right"  class="fl_right">
+					Total Purchase Order Value : <b> Rs <?=format_price($ttl_order_price,2) ?></b>
+				</div>
+				<div align="left" class="fl_left">
+					<b>PO Remarks:</b>
+					<p><?=$po_det['remarks'] ?></p>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

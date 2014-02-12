@@ -57,6 +57,7 @@ define("PAGED_LIMIT",12);
 
 
 
+define("VOUCHERMENU",500);
 
 define("PNH_MEMBER_FEE",50);
 

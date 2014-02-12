@@ -2,6 +2,9 @@
 	$only_superadmin = $this->erpm->auth(true,true);
 	$p=$product;
 ?>
+<style>
+.leftcont{display: none}
+</style>
 <div class="container">
 <h2><?=$p['product_name']?> <a style="font-size: 11px;" href="<?=site_url("admin/editproduct/{$p['product_id']}")?>">edit</a></h2>
 
@@ -213,9 +216,6 @@
 				if($prod_item_det_res->num_rows())
 				{
 					$prod_item_det = $prod_item_det_res->row_array();
-				
-				
-				
 					$similar_prods_res = $this->db->query('select * from (
 																(select d.product_id,d.product_name 
 																	from m_product_deal_link a 

@@ -1,3 +1,12 @@
+<script type="text/javascript" src="<?php echo base_url();?>/js/jquery.jgrowl.min.js"></script>
+<link rel="stylesheet" href="<?php echo base_url();?>/css/jquery.jgrowl.min.css" type="text/css"/>
+<style>
+	div.jGrowl div.jGrowl-notification, div.jGrowl div.jGrowl-closer,div.jGrowl div.jGrowl-message
+	{background: #fcfcfc !important;opacity:1;font-family: arial}
+	div.caller_info{}
+	div.caller_info h3{margin:3px 0px;display: inline-block}
+	div.caller_info .button{color:#FFF !important;}
+</style>
 <?php 
 
 	$pnh_exec_const_val=$this->db->query("select value from user_access_roles where const_name='PNH_EXECUTIVE_ROLE'")->row()->value;
@@ -30,26 +39,28 @@
 	$menu["prod"]=array("products"=>"Products","products_group"=>"Products Group","categories"=>"Categories","brands"=>"Brands","prods_bulk_upload"=>"Product bulk upload","products_group_bulk_upload"=>"Products group bulk upload","export_data"=>"Export Data","prod_mrp_update"=>"MRP Update","product_price_changelog"=>"Price Changelog","product_src_changelog"=>"Product Sourceable ChangeLog","list_deals_nsrc_prod"=>"Deals - Products not sourceable");
 	$menu['stock']=array("storage_locs"=>"Storage Locations","rackbins"=>"Rack & Bins","vendors"=>"Vendors","purchaseorders"=>"View POs","purchaseorder"=>"Create PO","apply_grn"=>"Stock Intake","stock_intake_list"=>"Stock Intakes Summary","stock_unavail_report"=>"Stock Unavailability Report","warehouse_summary"=>"Warehouse Summary","unavail_product_ageing_report"=>"Ageing Report");
 	$menu['front']=array("menu"=>"Menu","deals"=>"Deals","deals_table"=>"Deals table","deals_bulk_upload"=>"Deals Bulk upload","freesamples"=>"Free Samples","variants"=>"Variants","cache_control"=>"Cache Control","activity"=>"Activity","vars"=>"Vars","deal_price_changelog"=>"Price Changelog","partner_deal_prices"=>"Bulk partner deal price update","auto_image_updater"=>"Auto Image updater");
-	$menu["selling"]=array("orders"=>"Orders","order_summary"=>"Order Summary","bulk_cancelorders"=>"Bulk Cancel Orders","partner_orders"=>"Partner Orders","partner_order_import"=>"Partner Order Import","offline"=>"Offline Orders","callcenter"=>"Recent Transaction","sales_analytics_graph"=>'Sales Graph');
-	$menu['shipment']=array("batch_process"=>"Shipment batch process","pending_batch_process"=>"Pending Shipment batch process",'update_partnerorder_manifesto'=>"Update HS18 Manifesto","outscan/0"=>"Outscan Order" ,"generate_kfile"=>"Generate kfile","print_franlabels"=>"Print Franchise Delivery Labels","pnh_pending_shipments"=>"PNH Manifesto","update_ship_kfile"=>"Update shipment kfile","courier"=>"Courier","pnh_shipment_sms_notify"=>"PNH Shipment SMS Notification","packed_list"=>"Packed Summary","outscan_list"=>"Outscan Summary");
+	$menu["selling"]=array("orders"=>"Orders","order_summary"=>"Order Summary","bulk_cancelorders"=>"Bulk Cancel Orders","partner_orders"=>"Partner Orders","partner_order_import"=>"Partner Order Import","uplaod_partner_settelment_details"=>"Upload partner payment","offline"=>"Offline Orders","callcenter"=>"Recent Transaction","sales_analytics_graph"=>'Sales Graph');
+	$menu['shipment']=array("batch_process"=>"Shipment batch process","pending_batch_process"=>"Pending Shipment batch process","manage_trans_reservations"=>"Manage Transaction Reservations",'update_partnerorder_manifesto'=>"Update HS18 Manifesto","outscan/0"=>"Outscan Order" ,"generate_kfile"=>"Generate kfile","print_franlabels"=>"Print Franchise Delivery Labels","pnh_pending_shipments"=>"PNH Manifesto","update_ship_kfile"=>"Update shipment kfile","courier"=>"Courier","pnh_shipment_sms_notify"=>"PNH Shipment SMS Notification","packed_list"=>"Packed Summary","outscan_list"=>"Outscan Summary","pnh_ship_log"=>"Ship Log","pnh_invoice_returns/sit"=>"Invoice return");
 	$menu['crm']=array("support"=>"Customer Support/Tickets","users"=>"Site Users","review"=>"Reviews","callcenter"=>"Recent transactions","stock_checker"=>"Stock Checker");
 	$menu['accounting']=array("vouchers"=>"Vouchers","create_voucher"=>"Create Voucher","pending_pay_grns"=>"Ready for payment","add_bankdetails"=>"Add Bank Details","pending_grns"=>"Unaccounted Stock Intakes","adminusers"=>"Admin Access","roles"=>"User Roles","clients"=>"Corporate Clients","client_orders"=>"Corporate Orders","client_invoices"=>"Corporate Invoices","pending_refunds_list"=>"Pending Refunds","partners"=>"Partners","deals_report"=>"Deals Report","pnh_investor_report"=>"PNH Sales Report","investor_report"=>"Investor Report","pnh_executive_account_log"=>"PNH Executive Paid Log");
 	$menu['marketing']=array("featured_newsletter"=>"Newsletter","announcements"=>"Announcements","stats"=>"Stats","coupons"=>"Coupons","cashback_campaigns"=>"Cashback Campaigns","pointsys"=>"Loyalty Points","headtotoe"=>"Head to toe");
 	
 	//$menu['pnh']=array("pnh_franchises"=>"Franchises","pnh_class"=>"Admin","pnh_deals"=>"Deals","pnh_members"=>"Members","list_employee"=>"Employees","pnh_special_margins"=>"Special Margins","pnh_offline_order"=>"Place Order",'pnh_invoice_returns'=>"PNH Invoice Returns","pnh_quotes"=>"Franchise Requests","pnh_pending_receipts"=>"Pending Receipts","pnh_comp_details"=>"Company Details","pnh_catalogue"=>"Products Catalogue","pnh_special_margins"=>"Discounts","pnh_add_credits"=>"Add Credit","pnh_gen_statement"=>"Generate Account Statement",'pnh_sales_report'=>"PNH Sales Report","pnh_employee_sales_summary"=>"Employee Sales Summary","export_pnh_sales_report"=>"Export PNH Franchise Sales");
 	
-	$menu['pnh']=array("pnh_franchises"=>"Franchises","pnh_class"=>"Admin","pnh_deals"=>"Deals","pnh_members"=>"Members","list_employee"=>"Employees","pnh_special_margins"=>"Special Margins","pnh_receiptsbytype/1"=>"Pending Receipts","pnh_receipt_upd_log"=>"Receipts Update Log","pnh_special_margins"=>"Discounts","pnh_reports"=>"Reports","pnh_voucher_book"=>"Manage Voucher Books");
+	$menu['pnh']=array("pnh_franchises"=>"Franchises","pnh_class"=>"Admin","pnh_deals"=>"Deals","list_allmenumargin"=>"Manage Menu Margin","pnh_members"=>"Members","list_employee"=>"Employees","pnh_special_margins"=>"Special Margins","pnh_receiptsbytype/1"=>"Pending Receipts","pnh_receipt_upd_log"=>"Receipts Update Log","pnh_special_margins"=>"Discounts","pnh_reports"=>"Reports","pnh_voucher_book"=>"Manage Voucher Books");
 	$menu['streams']=array("streams"=>"View Streams","stream_create"=>"Create Stream",'streams_manager'=>"Streams Manager");
-	$submenu['list_employee']=array("list_employee"=>"Employees","add_employee"=>"Add Employees","assignment_histroy"=>"Assignment Histroy","roletree_view"=>"Role Tree View","calender"=>"Calender View","manage_routes"=>"Routes","pnh_exsms_log"=>"PNH SMS Log");
+	$submenu['list_employee']=array("list_employee"=>"Employees","add_employee"=>"Add Employees","assignment_histroy"=>"Assignment Histroy","roletree_view"=>"Role Tree View","calender"=>"Calender View","manage_routes"=>"Routes","pnh_exsms_log"=>"PNH SMS Log","employee_exp_incentive_track"=>"Employee Expense and Incentive Tracking");
 	$submenu['add_bankdetails']=array("list_allbanks"=>"Banks");
 	$submenu['products']=array("addproduct"=>"Add Product","products_report"=>"Product report");
 	$submenu['categories']=array("addcat"=>"Add Category");
 	$submenu['brands']=array("addbrand"=>"Add Brand");
-	$submenu['vendors']=array("addvendor"=>"Add Vendor");
+	$submenu['vendors']=array("addvendor"=>"Add Vendor","vendor_margin_bulk_update"=>"vendor margin bulk update");
 	$submenu['support']=array("addticket"=>"Add Ticket");
 	//$submenu['generate_manifesto']=array("pnh_pending_shipments"=>"Pending shipments for delivery","generate_manifesto"=>"Generate Manifesto","view_manifesto_sent_log"=>"View Driver Sent Log");
-	$submenu['pnh_pending_shipments']=array("outscan/1"=>"Already Packed- Outscan","pnh_pending_shipments"=>"Choose shipments for delivery","view_manifesto_sent_log"=>"Print manifesto ","shipments_transit_log"=>"Shipments Transit log","update_bulk_lrdetails"=>"Bulk Update LR Details","pnh_scan_delivery_akw"=>"Scan delivery acknowledgement");
+	$submenu['pnh_pending_shipments']=array("outscan/1"=>"Already Packed- Outscan","pnh_pending_shipments"=>"Choose shipments for delivery","view_manifesto_sent_log"=>"Print manifesto ","shipments_transit_log"=>"Shipments Transit log","update_bulk_lrdetails"=>"Bulk Update LR Details","pnh_scan_delivery_akw"=>"Scan delivery acknowledgement","print_invoice_acknowledgementbydate"=>"Manage Acknowledgements");
 	$submenu['courier']=array("towns_courier_priority"=>"Manage Towns Courier Priority");
+	$submenu['uplaod_partner_settelment_details']=array("view_partner_settelment_log"=>"View Settelment Log");
+
 	
 	
 	//$submenu['paflist'] = array("createpaf"=>"Create PAF","paflist"=>"List all PAF");
@@ -62,7 +73,7 @@
 	$submenu['pnh_franchises']=array("pnh_addfranchise"=>"Add franchise","orders_status_summary"=>"Order Status Summary","fr_hyg_anlytcs_report"=>"Franchise Hygenie Analytics ","pnh_quotes"=>"Franchise Requests",'pnh_invoice_returns'=>"Manage Returns","pnh_add_credits"=>"Add Credit","export_pnh_sales_report"=>"Export PNH Franchise Sales","list_activesuperscheme"=>"Super Scheme Log","pnh_franchise_activate_imei"=>"Franchise IMEI Activation","pnh_activation"=>"SMS Alternative Activations");
 	
 	$submenu['menu']=array("addmenu"=>"Add Menu");
-	$submenu['deals']=array("adddeal"=>"Add Deal","pnh_catalogue"=>"Products Catalogue","deal_product_link_update_log"=>"Deal product link updates log");
+	$submenu['deals']=array("adddeal"=>"Add Deal","pnh_catalogue"=>"Products Catalogue","deal_product_link_update_log"=>"Deal product link updates log","deal_img_currection"=>"Deal image currection");
 	
 	$submenu['orders']=array('orders/1'=>'Pending Orders','partial_shipment'=>'Partial Shipment Orders','disabled_but_possible_shipment'=>'Disabled But Possible','product_order_summary'=>'Product Order Summ Last 90 Days');
 	
@@ -271,101 +282,120 @@ background: #6B6A6A;}
 #hd #searchresults a span.viewall { text-align: center;}
 
 </style>
+
+<div style="display:none">
+	<div id="franchise_call_panel" title="Franchise Call Panel"></div>
+</div>
+
 <script type="text/javascript">
-    var userid="<?php echo $user["userid"];?>"; 
-    $(document).ready(function() {
-        $.post(site_url+'admin/jx_get_stream_notifications/'+userid,{},function(rdata){
-            if(rdata>0 && rdata!='')
-                    $(".notify_block").css({"background-color": "brown", "padding":"2px 10px"}).html(rdata);
-            return false;
-        });
-        $(".notify_block").bind("click",function() { var update=1; // print(userid);
-            $.post(site_url+'admin/jx_get_stream_notifications/'+userid+'/'+update,{},function(rdata){
-                if(rdata>0 && rdata!='')
-                    $(".notify_block").css({"background-color": "brown"}).html(rdata); 
-                return false;
-            });
-            return true;
-        });
-        return false;
-    });
+    var userid="<?php echo $user["userid"];?>";
+
     
-$(function(){
-	$("#searchbox").focus(function(){
-		sr=$(this);
-		if(sr.val()=="Search...")
-		{
-			sr.css("color","#000");
-			sr.val("");
-		}
-	});
-	$("#searchbox").blur(function(){
-		sr=$(this);
-		if(sr.val().length==0)
-		{
-			sr.css("color","#aaa");
-			sr.val("Search...");
-		}
-	});
-	$("#searchbox").keypress(function(e){
-		 
-		if(e.which==13)
-		{
-			$("#searchkeyword").val($(this).val());
-			$("#searchform").submit();
-		}
-	});
-	$("#searchtrigh").click(function(){
-		if($("#searchbox").val()=="Search...")
-		{
-			alert("inpput!!!");return;
-		}
-		$("#searchkeyword").val($("#searchbox").val());
-		$("#searchform").submit();
-	});
+	
 
-	var data_request = null;
+    function get_panel_alerts()
+	{
+		
+		 $.post(site_url+'/admin/get_panel_alerts','',function(resp){
+		 	if(resp.status == 'success')
+		 	{
+		 		$('#strip_itemlist_wrap').show();
+		 		var tick_width = resp.quote_list.length*500; 
+		 		
+		 		var ticker_html = '<div class="strip_itemlist" style="width:'+tick_width+'px;font-size:12px;position:relative;left:0px;">';
+		 			$.each(resp.quote_list,function(a,b){
+		 				ticker_html += '<div class="strip_item"  style="width:400px;display:inline;margin-right:10px;">  '+(a+1)+') '+b+' </div> ';
+		 			});
+		 			ticker_html += '</div>';
+		 		$('#strip_itemlist_wrap').html(ticker_html);
+		 		
+		 		var tick_width = 0;
+		 			$('#strip_itemlist_wrap .strip_item').each(function(){
+		 				tick_width += ($(this).width()+10)*1;
+		 			});
+		 			var tspan = tick_width*20;
+		 			
+		 			if(tick_width < $(document).width())
+		 				tick_width = $(document).width();
+		 				
+		 			$('#strip_itemlist_wrap .strip_itemlist').width(tick_width);
+		 			
+		 		animate_strip(tick_width,tspan);
+		 	}else
+		 	{
+		 		$('#strip_itemlist_wrap').hide();
+		 		setTimeout(function(){
+		 			get_panel_alerts();
+		 		},10000);
+		 	}
+		 	
+		 	if(resp.call_info.callsid != undefined)
+		 	{
+			 	if(!$('.caller_info_'+resp.call_info.callsid).length)
+			 	{
+				 	var caller_det_html = '';
+				 		caller_det_html += '<div class="caller_info caller_info_'+resp.call_info.callsid+'">';
+				 		caller_det_html += '	<p>You have a Call from <b>'+resp.call_info.from_type+'</b></p>';
+				 		caller_det_html += '	<div>Name : <h3>'+resp.call_info.caller_name+'</h3> </div> ';
+			 			caller_det_html += '	<div>Mobile : <h3>'+resp.call_info.from+'</h3> </div> ';
+				 		if(resp.call_info.from_type == 'franchise')
+				 		{
+				 			caller_det_html += '	<div><a target="_blank" fid="'+resp.call_info.ref_id+'" href="'+site_url+'/admin/pnh_franchise/'+resp.call_info.ref_id+'" class="button button-tiny button-royal button-rounded fran_call_btn">View More info</a> <a href="javascript:void(0)" onclick="close_callerinfo()" class="button button-tiny button-caution button-rounded">Close</a></div> ';
+				 		}else if(resp.call_info.from_type == 'employee')
+				 		{
+				 			caller_det_html += '	<div><a target="_blank" href="'+site_url+'/admin/view_employee/'+resp.call_info.ref_id+'" class="button button-tiny button-success button-rounded">View more info</a></div> ';
+				 		}
+				 		caller_det_html += '</div>';
+				 	
+			 		$.jGrowl(caller_det_html, {
+			 			sticky:true,
+						beforeClose: function() {
+							return true;
+						},
+						position:'bottom-right'
+					});
+			 		$('.jGrowl-close').hide();
+			 	}
+		 	}else
+		 	{
+		 		$('.jGrowl-close').trigger('click');
+			}
+		 },'json');
+	}
 
-	$("#searchform").submit(function(){
-		var srch_val = $.trim($("#searchbox").val());
-			$("#searchbox").val(srch_val);
-			$("#searchkeyword").val(srch_val);
-	});
-	
-	
-	$("#suggestions").css({ 'box-shadow' : '#888 5px 10px 10px', // Added when CSS3 is standard
-		'-webkit-box-shadow' : '#888 5px 10px 10px', // Safari
-		'-moz-box-shadow' : '#888 5px 10px 10px'});
-	
-	// Fade out the suggestions box when not active
-	 $("#searchbox").blur(function(){
-	 	$('#suggestions').fadeOut();
-	 }).keyup(function(){
-	 	inputString = $(this).val();
-	 	
-	 	if(inputString.length == 0) {
-			$('#suggestions').fadeOut(); // Hide the suggestions box
-		} else {
-			$('#suggestions').show(); // Show the suggestions box
-			$('#suggestions').html("<p id='searchresults'><span class='category'>Loading...</span></p>");
-			
-			if(data_request)
-				data_request.abort();
-			
-			data_request = $.post(site_url+'/admin/jx_searchbykwd', {kwd: ""+inputString+""}, function(data) { // Do an AJAX call
-				$('#suggestions').html(data); // Fill the suggestions box
-			});
-		}
-	 });
-	 
-	 $('#searchresults .viewall').live('click',function(){
-	 	$("#searchform").submit();
-	 });
-	
-});
- 
+    $(function(){
 
+    	$('#franchise_call_panel').dialog({
+    		autoOpen:false,
+    		width:'1000px',
+    		height:'auto',
+    		autoResize:true,
+    		modal:true,
+    		open:{
+    			
+        	}
+    	});
+    	$('.fran_call_btn').live('click',function(e){
+        	e.preventDefault();
+    		var param = {fid:$(this).attr('fid')};
+    			$.post(site_url+'/admin/pnh_jx_loadfranchisebyid',param,function(resp){
+    				$('#franchise_call_panel').html(resp).dialog('open');
+    			});
+    			
+    		return false;
+    	});
+    });
+	
+
+	function close_callerinfo()
+	{
+		$('.jGrowl-close').trigger('click');
+	}
+	
 </script>
+<style>
+.ui-dialog{z-index:999999 !important;}
+</style>
 <?php 
 $menu=$tmenu;
 ?>

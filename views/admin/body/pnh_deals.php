@@ -6,7 +6,7 @@
 	<h2 style="float: left;margin:0px;width: 50%">Manage PNH Deals</h2>
 		
 		<div class="filters_wrap"><img class="search_img_wrap" src="<?php echo base_url().'images/search_icon.png'?>">
-			<input type="text" name="deal_name" class="deal_prd_blk inp" placeholder="Search by Deal Name" >
+			<input type="text" name="srch_deals" class="deal_prd_blk inp" placeholder="Search by Deal Name" >
 		</div>
 		<div class="legends_outer_wrap">
 			<span class="legends_color_notsrc_wrap">&nbsp;</span> - Not Published &nbsp; &nbsp; &nbsp;
@@ -134,18 +134,20 @@ $('.Brands_bychar_list_content_listdata').live("click",function(){
 	var brandid =$(this).attr('bid')*1;
 	var catid =$(this).attr('cid')*1;
 	
-	$(this).toggleClass("selected_class");
-	  if($(this).hasClass('selected_class'))
-	  {
-	  	$('.selected_class').removeClass('selected_class');
-	  	$(this).addClass('selected_class');
-	  	 deallist_bycat(brandid,catid,0);
-	  }
-	  else
-	  { 
-	  	deallist_bycat(0,catid,0);
-	  }
-		 $('.left_filter_wrap').show();
+		$(this).toggleClass("selected_class");
+	  	if($(this).hasClass('selected_class'))
+	  	{
+	  		$('.selected_class').removeClass('selected_class');
+	  		$(this).addClass('selected_class');
+	  	 	//deallist_bycat(brandid,catid,0);
+	  	 	filter_deallist($(this).text(),'brand');
+	  	}
+	  	else
+	  	{ 
+		  	//deallist_bycat(0,catid,0);
+	  		filter_deallist('','all');
+	  	}
+		$('.left_filter_wrap').show();
 });
 
 $('.all').live('click',function(){
@@ -215,6 +217,8 @@ $('select[name="publish_wrap"]').live('change',function(){
 
 function published_deals(v)
 {
+	filter_deallist('','all');
+	return ;
 	if(v != 'all')
 	{
 		var i=1;
@@ -312,20 +316,49 @@ $('input[name="search_name"]').live('keyup',function(){
 	});
 });
 
-$('input[name="deal_name"]').live('keyup',function(){
-	var chr=$('input[name="deal_name"]').val();
-	
+function filter_deallist(tag,by)
+{
+	var srch_inp =  $('input[name="srch_deals"]').val();
+	var publish_status = $('select[name="publish_wrap"]').val();
+	var bc_sel = ($('.Brands_bychar_list_content_listdata.selected_class').length?($('.Brands_bychar_list_content_listdata.selected_class').text()):0);
 	$(".sk_deal_filter_wrap").each(function(){
-		name=$(this).attr('name');
-		if(name.match(chr,'ig'))
+			
+			search_text=$(this).attr('name')+' '+$(this).attr('brand')+' '+$(this).attr('category');
+			
+			var row_stat = 1;
+				if(publish_status != $(this).attr('publish') && (publish_status != 'all'))
+					row_stat = 0;
+			
+			// check if any brand cat is selected 
+			if(bc_sel && row_stat)
 			{
+				tag = bc_sel;
+				if(search_text.match(tag,'ig'))
+					row_stat = 1;
+				else 
+					row_stat = 0;
+			}
+			
+			// check if search data is entered 
+			if(srch_inp.length && (row_stat==1))
+			{
+				tag = srch_inp;
+				if(!search_text.match(tag,'ig'))
+					row_stat = 0;
+			}
+
+			if(row_stat == 1)
 				$(this).show();
-			}
-		else
-			{
+			else
 				$(this).hide();
-			}
+		
 	});
+
+	$('.total_wrap').html("Total Deals : "+$(".sk_deal_filter_wrap:visible").length);
+}
+
+$('input[name="srch_deals"]').live('keyup',function(){
+	filter_deallist($(this).val(),'search');
 });
 
 $('.stock_det_close').live("click",function(){
@@ -335,6 +368,8 @@ $('.stock_det_close').live("click",function(){
 
 function deallist_bycat(brandid,catid,type)
 {
+	$('input[name="srch_deals"]').val('');
+
 	//$('.jq_alpha_sort_overview_content').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
 	$('.sk_deal_container').css('opacity','0.5');//$('.jq_alpha_sort_overview_content').css('opacity','0.5');
 	if(catid != 0 && brandid==0)
@@ -351,7 +386,7 @@ function deallist_bycat(brandid,catid,type)
 				brand_linkedcat_html+='';
 				$.each(resp.brand_list,function(i,b){
 					brand_linkedcat_html+='<a class="Brands_bychar_list_content_listdata" cid="'+b.catid+'" bid="'+b.brandid+'">'+b.brand_name+'</a>';
-					$('.Brands_bychar_list_head').html('<h4>List of Brand for '+b.category_name+'</h4><span class="close_btn">hide</span>');
+					$('.Brands_bychar_list_head').html('<span class="close_btn button button-tiny button-rounded ">Hide</span><h4>List of Brand for <i>'+b.category_name+'</i></h4>');
 				});
 			}
 			$('.Brands_bychar_list_content').html(brand_linkedcat_html);
@@ -370,7 +405,7 @@ function deallist_bycat(brandid,catid,type)
 				cat_linkedcat_html+='';
 				$.each(resp.cat_list,function(i,b){
 					cat_linkedcat_html+='<a class="Brands_bychar_list_content_listdata" cid="'+b.catid+'" bid="'+b.brandid+'">'+b.category_name+'</a>';
-					$('.Brands_bychar_list_head').html('<h4>List of Categories for '+b.brand_name+'</h4><span class="close_btn">hide</span>');
+					$('.Brands_bychar_list_head').html('<span class="close_btn button button-tiny button-rounded ">Hide</span><h4>List of Categories for <i>'+b.brand_name+'</i></h4>');
 				});
 			}
 			$('.Brands_bychar_list_content').html(cat_linkedcat_html);
@@ -402,7 +437,7 @@ function deallist_bycat(brandid,catid,type)
 				d_lst+='</span>';
 				d_lst+='<span class="left_filter_mrp_wrap">MRP Filter : <input type="text" class="inp" id="f_from" size=4> to <input type="text" class="inp" id="f_to" size=4> <button type="button" style="margin-top:-5px" class="button button-rounded button-action button-tiny" onclick="filter_deals_bymrp()">Filter</button></span>';
 				//d_lst+='<span class="ttl_deals_wrap">Total Deals : '+resp.ttl_deals+'</span>';
-				d_lst+='<span class="publish_wrap"><b>Published :</b> <select name="publish_wrap"><option value="all">Choose</option><option value="1">Yes</option><option value="0">No</option></select></span>';
+				d_lst+='<span class="publish_wrap"><b>Published :</b> <select name="publish_wrap"><option value="all">Choose</option><option value="1" selected >Yes</option><option value="0">No</option></select></span>';
 				d_lst+='<span class="left_filter_wrap"><span class="filter_opts"><a class="most" href="javascript:void(0)" val="2"  brandid="'+brandid+'" catid="'+catid+'">Most</a></span><span><a href="javascript:void(0)" class="latest" val="1" brandid="'+brandid+'" catid="'+catid+'" >Latest</a></span><span><a href="javascript:void(0)" val="0" class="all" brandid="'+brandid+'" catid="'+catid+'" style="border-right:none !important;width:34.4%">Clear</a></span></span>';
 				d_lst+='<span class="total_wrap">Total Deals : '+resp.ttl_deals+'</span></div>';
 				d_lst+='<div class="sk_deal_container">';
@@ -425,7 +460,7 @@ function deallist_bycat(brandid,catid,type)
 						var enable='';
 						var background='background:none repeat scroll 0 0 #FFAAAA !important';
 					}
-						d_lst+='<tr style="'+background+'" class="sk_deal_filter_wrap deals_'+d.catid+'" publish="'+d.publish+'" mrp="'+d.orgprice+'" name="'+d.name+'" ref_id="'+d.itemid+'">';
+						d_lst+='<tr style="'+background+'" class="sk_deal_filter_wrap deals_'+d.catid+'" publish="'+d.publish+'" mrp="'+d.orgprice+'" name="'+d.name+'" brand="'+d.brand+'" category="'+d.category+'" ref_id="'+d.itemid+'">';
 				 			//d_lst+='<img src="'+images_url+'/items/small/'+d.pic+'.jpg'+'">';
 		 					d_lst+='<td><span>'+d.pnh_id+'</span></td>';
 		 					d_lst+='<td><span class="title"><a target="_blank" href="'+site_url+'/admin/pnh_deal/'+d.itemid+'">'+d.name+'</a></td>';
@@ -472,6 +507,8 @@ function deallist_bycat(brandid,catid,type)
 					$('.most').addClass('selected_type');
 					$('.latest').removeClass('selected_type');
 				}
+
+				$('select[name="publish_wrap"]').trigger('change');
 			}
 	},'json');	
 	
@@ -546,7 +583,7 @@ $(".Brands_bychar_list_head span").live("click",function() {
 	var $this = $(this);
     // target only the content which is a sibling
     $('.Brands_bychar_list_content').slideToggle(200, function () {
-        $this.text($(this).is(':visible') ? 'hide' : 'show');
+        $this.text($(this).is(':visible') ? 'Hide' : 'Show');
         
     });
     $(".Brands_bychar_list_head").show();

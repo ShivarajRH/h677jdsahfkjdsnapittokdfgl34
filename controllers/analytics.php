@@ -1,6 +1,6 @@
 <?php
-	include APPPATH.'/controllers/voucher.php';
-	class Analytics extends Voucher
+	include APPPATH.'/controllers/reservation.php';
+	class Analytics extends Reservation
 	{
 		
 		function pnh_state_analytics($sid=false)
