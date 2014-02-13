@@ -1103,4 +1103,3 @@ alter table `pnh_t_receipt_reconcilation_log` add column `remarks` varchar (100)
 
 #Feb_08_2014
 alter table `pnh_franchise_account_stat` add column `unreconciled_value` double   NULL  after `is_correction`, add column `unreconciled_status` varchar (11) DEFAULT 'pending' NULL  after `unreconciled_value`;
-

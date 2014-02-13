@@ -1,4 +1,3 @@
-<style>.leftcont{display:none;}</style>
 <?php 
 	$v=false;
 	if(isset($vendor))
@@ -7,229 +6,227 @@
 ?>
 <div class="page_wrap">
 	<div class="page_top" >
-		<h2 class="page_title">
-			<?php 
-				echo $v?'Edit Vendor Details':'Add Vendor';
-			?>
-		</h2>
+		<div class="page_topbar_left fl_left">
+			<h2 class="page_title"><?=$v?$v['vendor_name']:'New Vendor'; ?></h2>
+		</div>
 	</div>
 	<div class="page_content">
+	
 		<form method="post" id="venfrm"  autocomplete="off">
-			<div class="tab_view">
-				<ul>
-					<li><a href="#v_details">Basic Details</a></li>
-					<li><a href="#v_financials">Finance Details</a></li>
-					<li><a href="#v_extra">Extra Details</a></li>
-					<li><a href="#v_contacts">Contacts</a></li>
-					<li><a href="#v_linkbrands" class="link_br">Brands Margin Details</a></li>
-				</ul>
-				<div id="v_details">
-					<div align="left">
-						<table cellpadding="5" cellspacing="0">
-							<tr><td>Name :<span class="red_star">*</span> </td><td><input type="text" name="name" size="30" class="inp val_req" value="<?=$v?"{$v['vendor_name']}":""?>"></td></tr>
-							<tr>
-								<td>Address Line 1 :</td>
-								<td>
-									<textarea rows="5" cols="45" name="addr1" class="inp"><?=$v?"{$v['address_line1']}":""?></textarea>
-								</td>
-							</tr>
-							<tr>
-								<td>Address Line 2 :</td>
-								<td>
-									<textarea rows="5" cols="45" name="addr2" class="inp"><?=$v?"{$v['address_line2']}":""?></textarea>
-								</td>
-							</tr>
-							<tr><td>Locality :</td><td><input type="text" size="30" name="locality" class="inp" value="<?=$v?"{$v['locality']}":""?>"></td></tr>
-							<tr><td>Landmark :</td><td><input type="text" size="30"  name="landmark" class="inp" value="<?=$v?"{$v['landmark']}":""?>"></td></tr>
-							<tr><td>City <span class="red_star">*</span> :</td><td><input size="30"  type="text" name="city" class="inp val_req" value="<?=$v?"{$v['city_name']}":""?>"></td></tr>
-							<tr><td>State :</td><td><input type="text" name="state" class="inp" size="30"  value="<?=$v?"{$v['state_name']}":""?>"></td></tr>
-							<tr><td>Country :</td><td><input type="text" name="country" class="inp" size="30"  value="<?=$v?"{$v['country']}":""?>"></td></tr>
-							<tr><td>Postcode :</td><td><input type="text" name="postcode" class="inp" size="8"  value="<?=$v?"{$v['postcode']}":""?>"></td></tr>
-						</table>
-					</div>
-				</div>
-				<div id="v_financials">
-					<table cellpadding="5" cellspacing="0">
-						<tr><td>Ledger ID :</td><td><input type="text" name="ledger" class="inp" value="<?=$v?"{$v['ledger_id']}":""?>"></td></tr>
-						<tr><td>Credit Limit :<span class="red_star">*</span></td><td><input type="text" name="credit_limit" class="inp" value="<?=$v?"{$v['credit_limit_amount']}":""?>"></td></tr>
-						<tr><td>Credit Days :<span class="red_star">*</span></td><td><input size="3" type="text" name="credit_days" class="inp" value="<?=$v?"{$v['credit_days']}":""?>"></td></tr>
-						<tr><td>Payment Advance (%):</td><td><input type="text" name="advance" class="inp" size=3 value="<?=$v?"{$v['require_payment_advance']}":""?>"></td></tr>
-						<tr><td>Payment Type :<span class="red_star">*</span></td><td>
-						<select name="payment_type">
-			            <option <?php if ($v['payment_type'] == 0 ) echo 'selected'; ?> value="0">Select</option>
-			            <option <?php if ($v['payment_type'] == 1 ) echo 'selected'; ?> value="1">Cheque</option>
-						<option <?php if ($v['payment_type'] == 2 ) echo 'selected'; ?> value="2">Cash</option>
-						<option <?php if ($v['payment_type'] == 3 ) echo 'selected'; ?> value="3">DD</option>
-						</select>
-						</td>
-						</tr>
-						<tr><td>CST no:</td><td><input type="text" name="cst" class="inp" value="<?=$v?"{$v['cst_no']}":""?>"></td></tr>
-						<tr><td>PAN no:</td><td><input type="text" name="pan" class="inp" value="<?=$v?"{$v['pan_no']}":""?>"></td></tr>
-						<tr><td>VAT (%):</td><td><input type="text" name="vat" class="inp" value="<?=$v?"{$v['vat_no']}":""?>"></td></tr>
-						<tr><td>Service Tax :</td><td><input type="text" name="stax" class="inp" value="<?=$v?"{$v['service_tax_no']}":""?>"></td></tr>
-						<tr><td>Average TAT :</td><td><input type="text" name="tat" class="inp" value="<?=$v?"{$v['avg_tat']}":""?>"></td></tr>
-					</table>
-				</div>
-				<div id="v_extra">
-					<table cellpadding="5" cellspacing="0">
-						<tr><td>Return Policy :</td><td><textarea rows="6" cols="60  class="inp" name="rpolicy"><?=$v?"{$v['return_policy_msg']}":""?></textarea></td></tr>
-					 	<tr><td>Payment Terms :</td><td><textarea rows="6" cols="60"  class="inp" name="payterms"><?=$v?"{$v['payment_terms_msg']}":""?></textarea></td></tr>
-						<tr><td>Remarks :</td><td><textarea rows="6" cols="60"  class="inp" name="remarks"><?=$v?"{$v['remarks']}":""?></textarea></td></tr>
-					</table>
-				</div>
-				<div id="v_contacts">
-					<input type="button" value="+ new contact" onclick='clone_vcnt()'>
-					<div id="v_contact_cont">
-						<?php if($v){foreach($contacts as $c){?>
-						<table cellpadding="5" cellspacing="0">
-							<tr>
-								<td>Name : </td><td><input type="text" class="inp" name="cnt_name[]" value="<?=$c['contact_name']?>"></td>
-								<td>Designation : </td><td><input type="text" class="inp" name="cnt_desgn[]" value="<?=$c['contact_designation']?>"></td>
-							</tr>
-							<tr>
-								<td>Mobile 1 :<span class="red_star">*</span> </td><td><input type="text" class="inp" name="cnt_mob1[]" value="<?=$c['mobile_no_1']?>"></td>
-								<td>Mobile 2 : </td><td><input type="text" class="inp" name="cnt_mob2[]" value="<?=$c['mobile_no_2']?>"></td>
-							</tr>
-							<tr>
-								<td>Telephone : </td><td><input type="text" class="inp" name="cnt_telephone[]" value="<?=$c['telephone_no']?>"></td>
-								<td>FAX : </td><td><input type="text" class="inp" name="cnt_fax[]" value="<?=$c['fax_no']?>"></td>
-							</tr>
-							<tr>
-								<td>Email 1 : </td><td><input type="text" class="inp" name="cnt_email1[]" value="<?=$c['email_id_1']?>"></td>
-								<td>Email 2 : </td><td><input type="text" class="inp" name="cnt_email2[]" value="<?=$c['email_id_2']?>"></td>
-							</tr>
-						</table>
-						<?php } }?>
-					</div>
-				</div>
-			
-				<div id="v_linkbrands">
-					<div class="po_filter_wrap2">
-						<div style="width:49%;float:left">
-							<span><b style="margin:3px 5px;float: left">Filter by : </b></span> 
-							<select name="fil_cat" class="fil_cat" style='width:200px;' data-placeholder='Category'>
-							</select>
-						</div>
-						
-						<div style="width:49%;float:right">
-							<span><b style="margin:3px 5px;float: left">Filter by : </b></span>
-							<select name='fil_brand' class='fil_brand' style="width:200px;" data-placeholder='Brand'>
-							</select>
-						</div>
-					</div>
-					
-					<div>Category : <button type="button" class="add_pop">Add</button></div>
-					<div id="po_filter_wrap1" style="display:none;" title="Add Category">
-						<div class="po_filter_blk">
-							<div id="filter_prods">
-								<table cellspacing='10'>
-									<tr>
-										<td><b style="float:left;margin:3px 5px">Category : </b></td><td><select name="select_cat" class="select_cat" style='width:230px;'>
-											<option value="">Select Category</option>
-											<?php $cats=$this->db->query("select id,name from king_categories  GROUP BY name order by name asc")->result_array();?>
-											<?php foreach($cats as $c){?>
-												<option value="<?php echo $c['id']?>"><?php echo $c['name']?></option>
-											<?php }?></select></td></tr>
-									<tr class='show_brand'>
-										<td><b style="float:left;margin:3px 15px">Brand : </b></td>
-										<td><select name='select_brand' class='select_brand' style="width:220px;height:300px;" multiple="true" data-placeholder='Select Brand'><option value=''>select brand</option></select></td>
-									</tr>
-								</table>
-							</div>	
-						</div>
-					</div>
-				
-				<table class="datagrid nofooter v_lbtable" width="100%">
-					<thead>
-						<tr>
-							<th>&nbsp;</th>
-							<th>Brand</th>
-							<th>Category</th>
-							<th>Margin %</th>
-							<th>Applicable From</th>
-							<th colspan=2>Applicable Until</th>
-						</tr>
-					</thead>
-					<tbody>
-					<?php if($v){ foreach($cat_brands as $i=>$b){
-						$no_days = date_diff_days(date('Y-m-d'),$b['applicable_till']);
-						$is_exp = 0;
-						if($no_days>0)
-							$is_exp = 1;
-						
-					?>
-						<tr class="brands_cat_det <?php echo $is_exp?'warn':''?>">
-							<td><input type="checkbox" class="edit_vblink_chk" ></td>
-							<td><input type="hidden" disabled="disabled" class="inp" name="l_brand[]" value="<?=$b['brand_id']?>"><?=$b['brand_name']?></td>
-							<td>
-							<input type="hidden" disabled="disabled" class="inp" name="l_catid[]" value="<?=$b['cat_id']?>"><?=$b['category_name']? $b['category_name'] :'All'?>&nbsp;<a style=" font-size: 10px;"id="show_cat" href="javascript:void(0)" onclick="load_allcatsofbrand(<?php echo $b['brand_id']?>)">edit cat</a></td>
-							<td><input type="text" disabled="disabled" class="inp " name="l_margin[]" value="<?=$b['brand_margin']?>"></td>
-							<td><input type="text" disabled="disabled"  class="inp  datepic lb_date lb_date<?=$i?>" name="l_from[]" value="<?php echo $b['applicable_from']!=0 ? $b['applicable_from']:0;?>" readonly="readonly"></td>
-							<td><input type="text" disabled="disabled"  class="inp  datepic lb_date lb_date<?=$i?>t" name="l_until[]" value="<?php echo $b['applicable_till']!=0 ? $b['applicable_till']:0;?>"readonly="readonly"></td>
-							<td><a href="javascript:void(0)" onclick="remove_catbrandvblink(this)" >remove</a></td>
-						</tr>
-					<?php }}?>
-					</tbody>
+			<input type="submit" value="Submit" style="float:right;margin-left: 188px;margin-top: -35px;" class="button button-action button-rounded button-small">
+		
+		<div class="tab_view">
+		<ul>
+			<li><a href="#v_details">Basic Details</a></li>
+			<li><a href="#v_financials">Finance Details</a></li>
+			<li><a href="#v_extra">Extra Details</a></li>
+			<li><a href="#v_contacts">Contacts</a></li>
+			<li><a href="#v_linkbrands" class="link_br">Brands Margin Details</a></li>
+		</ul>
+		
+		<div id="v_details">
+			<div align="left">
+				<table>
+				<tr><td>Name :<span class="red_star">*</span> </td><td><input type="text" name="name" class="inp val_req" value="<?=$v?"{$v['vendor_name']}":""?>"></td></tr>
+				<tr><td>Address Line 1 :</td><td><input type="text" name="addr1" class="inp" size="40" value="<?=$v?"{$v['address_line1']}":""?>"></td></tr>
+				<tr><td>Address Line 2 :</td><td><input type="text" name="addr2" class="inp" size="30" value="<?=$v?"{$v['address_line2']}":""?>"></td></tr>
+				<tr><td>Locality :</td><td><input type="text" name="locality" class="inp" value="<?=$v?"{$v['locality']}":""?>"></td></tr>
+				<tr><td>Landmark :</td><td><input type="text" name="landmark" class="inp" value="<?=$v?"{$v['landmark']}":""?>"></td></tr>
+				<tr><td>City <span class="red_star">*</span> :</td><td><input type="text" name="city" class="inp val_req" value="<?=$v?"{$v['city_name']}":""?>"></td></tr>
+				<tr><td>State :</td><td><input type="text" name="state" class="inp" value="<?=$v?"{$v['state_name']}":""?>"></td></tr>
+				<tr><td>Country :</td><td><input type="text" name="country" class="inp" value="<?=$v?"{$v['country']}":""?>"></td></tr>
+				<tr><td>Postcode :</td><td><input type="text" name="postcode" class="inp" value="<?=$v?"{$v['postcode']}":""?>"></td></tr>
 				</table>
+			</div>
+			
+		</div>
+		<div id="v_financials">
+			<table>
+			<tr><td>Ledger ID :</td><td><input type="text" name="ledger" class="inp" value="<?=$v?"{$v['ledger_id']}":""?>"></td></tr>
+			<tr><td>Credit Limit :<span class="red_star">*</span></td><td><input type="text" name="credit_limit" class="inp" value="<?=$v?"{$v['credit_limit_amount']}":""?>"></td></tr>
+			<tr><td>Credit Days :<span class="red_star">*</span></td><td><input type="text" name="credit_days" class="inp" value="<?=$v?"{$v['credit_days']}":""?>"></td></tr>
+			<tr><td>Payment Advance :</td><td><input type="text" name="advance" class="inp" size=3 value="<?=$v?"{$v['require_payment_advance']}":""?>">%</td></tr>
+			<tr><td>Payment Type :<span class="red_star">*</span></td><td>
+			<select name="payment_type">
+            <option <?php if ($v['payment_type'] == 0 ) echo 'selected'; ?> value="0">Select</option>
+            <option <?php if ($v['payment_type'] == 1 ) echo 'selected'; ?> value="1">Cheque</option>
+			<option <?php if ($v['payment_type'] == 2 ) echo 'selected'; ?> value="2">Cash</option>
+			<option <?php if ($v['payment_type'] == 3 ) echo 'selected'; ?> value="3">DD</option>
+			</select>
+			</td>
+			</tr>
+			<tr><td>CST :</td><td><input type="text" name="cst" class="inp" value="<?=$v?"{$v['cst_no']}":""?>"></td></tr>
+			<tr><td>PAN :</td><td><input type="text" name="pan" class="inp" value="<?=$v?"{$v['pan_no']}":""?>"></td></tr>
+			<tr><td>VAT :</td><td><input type="text" name="vat" class="inp" value="<?=$v?"{$v['vat_no']}":""?>"></td></tr>
+			<tr><td>Service Tax :</td><td><input type="text" name="stax" class="inp" value="<?=$v?"{$v['service_tax_no']}":""?>"></td></tr>
+			<tr><td>Average TAT :</td><td><input type="text" name="tat" class="inp" value="<?=$v?"{$v['avg_tat']}":""?>"></td></tr>
+			</table>
+		</div>
+		<div id="v_extra">
+			<table>
+			<tr><td>Return Policy :</td><td><textarea class="inp" name="rpolicy"><?=$v?"{$v['return_policy_msg']}":""?></textarea></td></tr>
+			 <tr><td>Payment Terms :</td><td><textarea class="inp" name="payterms"><?=$v?"{$v['payment_terms_msg']}":""?></textarea></td></tr>
+			<tr><td>Remarks :</td><td><textarea class="inp" name="remarks"><?=$v?"{$v['remarks']}":""?></textarea></td></tr>
+			</table>
+		</div>
+		<div id="v_contacts">
+			<input type="button" value="+ new contact" onclick='clone_vcnt()'>
+			<div id="v_contact_cont">
+				<?php if($v){foreach($contacts as $c){?>
+				<table>
+					<tr><td>Name : </td><td><input type="text" class="inp" name="cnt_name[]" value="<?=$c['contact_name']?>"></td>
+					<td>Designation : </td><td><input type="text" class="inp" name="cnt_desgn[]" value="<?=$c['contact_designation']?>"></td>
+					</tr>
+					<tr>
+					<td>Mobile 1 :<span class="red_star">*</span> </td><td><input type="text" class="inp" name="cnt_mob1[]" value="<?=$c['mobile_no_1']?>"></td>
+					<td>Mobile 2 : </td><td><input type="text" class="inp" name="cnt_mob2[]" value="<?=$c['mobile_no_2']?>"></td>
+					</tr>
+					<tr>
+					<td>Telephone : </td><td><input type="text" class="inp" name="cnt_telephone[]" value="<?=$c['telephone_no']?>"></td>
+					<td>FAX : </td><td><input type="text" class="inp" name="cnt_fax[]" value="<?=$c['fax_no']?>"></td>
+					</tr>
+					<tr>
+					<td>Email 1 : </td><td><input type="text" class="inp" name="cnt_email1[]" value="<?=$c['email_id_1']?>"></td>
+					<td>Email 2 : </td><td><input type="text" class="inp" name="cnt_email2[]" value="<?=$c['email_id_2']?>"></td>
+					</tr>
+				</table>
+				<?php } }?>
+			</div>
+		</div>
+		
+		<div id="v_linkbrands">
+			<div class="po_filter_wrap2">
+				<div style="width:49%;float:left">
+					<span><b style="margin:3px 5px;float: left">Filter by : </b></span> 
+					<select name="fil_cat" class="fil_cat" style='width:200px;' data-placeholder='Category'>
+					</select>
+				</div>
+				
+				<div style="width:49%;float:right">
+					<span><b style="margin:3px 5px;float: left">Filter by : </b></span>
+					<select name='fil_brand' class='fil_brand' style="width:200px;" data-placeholder='Brand'>
+						
+					</select>
 				</div>
 			</div>
-			<input type="submit" value="<?php echo !$v?'Add Vendor':'Update '?>" style="float:right;margin-top: 11px;" class="button button-action button-rounded button-small">
-		</form>
-	</div>
-
-	<div id="all_catdiv" title="Categories" style="display:none;">
-		<form id="update_cat_margin"  method="post" action ="<?php echo site_url('admin/to_update_brand_marg_bycat/'.$vendor_id)?>" >
-			<input type="hidden" name="brandid" id="brandid" value="">
-			<table class="datagrid" id="cat_brandtable" width="100%">
-				<thead>
-					<th></th>
+			
+			<div>Category : <button type="button" class="add_pop">Add</button></div>
+			<div id="po_filter_wrap1" style="display:none;" title="Add Category">
+				<div class="po_filter_blk">
+					<div id="filter_prods">
+					<table cellspacing='10'>
+							<tr><td><b style="float:left;margin:3px 5px">Category : </b></td><td><select name="select_cat" class="select_cat" style='width:230px;'>
+									<option value="">Select Category</option>
+									<?php $cats=$this->db->query("select id,name from king_categories  GROUP BY name order by name asc")->result_array();?>
+									<?php foreach($cats as $c){?>
+										<option value="<?php echo $c['id']?>"><?php echo $c['name']?></option>
+									<?php }?></select></td></tr>
+									
+							
+							
+							<tr class='show_brand'>
+							<td><b style="float:left;margin:3px 15px">Brand : </b></td>
+							<td><select name='select_brand' class='select_brand' style="width:220px;height:300px;" multiple="true" data-placeholder='Select Brand'><option value=''>select brand</option></select></td>
+							</tr>
+							</table>
+					</div>	
+				</div>
+			</div>
+		
+		<table class="datagrid v_lbtable" width="100%">
+			<thead>
+				<tr>
+					<th>&nbsp;</th>
 					<th>Brand</th>
 					<th>Category</th>
 					<th>Margin %</th>
 					<th>Applicable From</th>
 					<th colspan=2>Applicable Until</th>
-					</tr>
-				</thead>
-				<tbody></tbody>
-			</table>
+				</tr>
+			</thead>
+			<tbody>
+			<?php if($v){ foreach($cat_brands as $i=>$b){
+				$no_days = date_diff_days(date('Y-m-d'),$b['applicable_till']);
+				$is_exp = 0;
+				if($no_days>0)
+					$is_exp = 1;
+				
+			?>
+				<tr class="brands_cat_det <?php echo $is_exp?'warn':''?>">
+					<td><input type="checkbox" class="edit_vblink_chk" ></td>
+					<td><input type="hidden" disabled="disabled" class="inp" name="l_brand[]" value="<?=$b['brand_id']?>"><?=$b['brand_name']?></td>
+					<td>
+					<input type="hidden" disabled="disabled" class="inp" name="l_catid[]" value="<?=$b['cat_id']?>"><?=$b['category_name']? $b['category_name'] :'All'?>&nbsp;<a style=" font-size: 10px;"id="show_cat" href="javascript:void(0)" onclick="load_allcatsofbrand(<?php echo $b['brand_id']?>)">edit cat</a></td>
+					<td><input type="text" disabled="disabled" class="inp " name="l_margin[]" value="<?=$b['brand_margin']?>"></td>
+					<td><input type="text" disabled="disabled"  class="inp  datepic lb_date lb_date<?=$i?>" name="l_from[]" value="<?php echo $b['applicable_from']!=0 ? $b['applicable_from']:0;?>" readonly="readonly"></td>
+					<td><input type="text" disabled="disabled"  class="inp  datepic lb_date lb_date<?=$i?>t" name="l_until[]" value="<?php echo $b['applicable_till']!=0 ? $b['applicable_till']:0;?>"readonly="readonly"></td>
+					<td><a href="javascript:void(0)" onclick="remove_catbrandvblink(this)" >remove</a></td>
+				</tr>
+			<?php }}?>
+			</tbody>
+		</table>
+		</div>
+		</div>
+		
+		<input type="submit" value="Submit" style="float:right;margin-top: 11px;" class="button button-action button-rounded button-small">
+		
 		</form>
-	</div>
+</div>
+
+<div id="all_catdiv" title="Categories" style="display:none;">
+<form id="update_cat_margin"  method="post" action ="<?php echo site_url('admin/to_update_brand_marg_bycat/'.$vendor_id)?>" >
+<input type="hidden" name="brandid" id="brandid" value="">
+<table class="datagrid" id="cat_brandtable" width="100%">
+<thead>
+<th></th>
+<th>Brand</th>
+<th>Category</th>
+
+<th>Margin %</th>
+<th>Applicable From</th>
+<th colspan=2>Applicable Until</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</form>
+</div>
 
 </div>
 
 <div style="display:none">
-	<table id="lb_template" class="datagrid">
-		<tbody>
-			<tr>
-				<td>&nbsp;</td>
-				<td><input type="hidden" name="l_brand[]" value="%brandid%">%brand%</td>
-				<td><input type="hidden" name="l_cat[]" value="%catid%">%cat%</td>
-				<td><input type="text" class="inp" name="l_margin[]" value="10"></td>
-				<td><input type="text" class="inp lb_date lb_date%di%" name="l_from[]" readonly="readonly"></td>
-				<td><input type="text" class="inp lb_date lb_date%di%t" name="l_until[]" readonly="readonly"></td>
-				<td><a href="javascript:void(0)" onclick="remove_catbrandvblink(this)" >remove</a>
-			</tr>
-		</tbody>
-	</table>
+<table id="lb_template" class="datagrid">
+<tbody>
+<tr>
+<td>&nbsp;</td>
+<td><input type="hidden" name="l_brand[]" value="%brandid%">%brand%</td>
+<td><input type="hidden" name="l_cat[]" value="%catid%">%cat%</td>
+
+<td><input type="text" class="inp" name="l_margin[]" value="10"></td>
+<td><input type="text" class="inp lb_date lb_date%di%" name="l_from[]" readonly="readonly"></td>
+<td><input type="text" class="inp lb_date lb_date%di%t" name="l_until[]" readonly="readonly"></td>
+<td><a href="javascript:void(0)" onclick="remove_catbrandvblink(this)" >remove</a>
+</tr>
+</tbody>
+</table>
 </div>
 
 <table id="cnt_clone">
-	<tr>
-		<td>Name : </td><td><input type="text" class="inp" name="cnt_name[]"></td>
-		<td>Designation : </td><td><input type="text" class="inp" name="cnt_desgn[]"></td>
-	</tr>
-	<tr>
-		<td>Mobile 1 : </td><td><input type="text" class="inp" name="cnt_mob1[]"></td>
-		<td>Mobile 2 : </td><td><input type="text" class="inp" name="cnt_mob2[]"></td>
-	</tr>
-	<tr>
-		<td>Telephone : </td><td><input type="text" class="inp" name="cnt_telephone[]"></td>
-		<td>FAX : </td><td><input type="text" class="inp" name="cnt_fax[]"></td>
-	</tr>
-	<tr>
-		<td>Email 1 : </td><td><input type="text" class="inp" name="cnt_email1[]"></td>
-		<td>Email 2 : </td><td><input type="text" class="inp" name="cnt_email2[]"></td>
-	</tr>
+<tr><td>Name : </td><td><input type="text" class="inp" name="cnt_name[]"></td>
+<td>Designation : </td><td><input type="text" class="inp" name="cnt_desgn[]"></td>
+</tr>
+<tr>
+<td>Mobile 1 : </td><td><input type="text" class="inp" name="cnt_mob1[]"></td>
+<td>Mobile 2 : </td><td><input type="text" class="inp" name="cnt_mob2[]"></td>
+</tr>
+<tr>
+<td>Telephone : </td><td><input type="text" class="inp" name="cnt_telephone[]"></td>
+<td>FAX : </td><td><input type="text" class="inp" name="cnt_fax[]"></td>
+</tr>
+<tr>
+<td>Email 1 : </td><td><input type="text" class="inp" name="cnt_email1[]"></td>
+<td>Email 2 : </td><td><input type="text" class="inp" name="cnt_email2[]"></td>
+</tr>
 </table>
 
 <style>
@@ -971,7 +968,7 @@ h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;font-size: 11
 	padding:7px 10px 9px;
 }
 
-
+.leftcont{display:none;}
 .error_inp{border:1px solid #cd0000 !important;}
 
 .warn td{background: #FDD2D2 !important;}

@@ -1231,7 +1231,7 @@ $(function(){
 							<tr>
 								<td>Amount (Rs)</td><td>:</td>
 								<td><input type="text" class="inp amount money" name="amount" id="receipt_amount" size=5 value="">
-                                        <span class="reconciled_total">Adjusted Amount: <abbr title="Amount">0</abbr>
+                                        <span class="reconciled_total">Total Adjusted (Rs.): <abbr title="Amount">0</abbr>
                                             <input type="hidden" name="total_val_reconcile" id="total_val_reconcile" value="" />
                                         </span>
 								</td>
@@ -2022,9 +2022,9 @@ $(function(){
                                             <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange="dg_fn_inv_selected(this,1,'dg_reconcile_row_1','dlg_invs_list','dlg_unreconcile_form');"></select>
                                         </td>
                                         <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=6></td>
-                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value='' onchange="dg_show_unconcile_total('dlg_unreconcile_form');"></td>
+                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value='' onchange="dg_show_unconcile_total(this);" dialog-name="dlg_unreconcile_form"></td>
                                         <td>
-                                            <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick="dg_add_invoice_row(this,'dg_reconcile_row','dlg_invs_list','dlg_unreconcile_form');"> + </a>
+                                            <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick="dg_add_invoice_row(this,'dg_invoice_row','dlg_invs_list','dlg_unreconcile_form');"> + </a>
                                         </td>
                                     </tr>
                             </tbody>
@@ -2074,7 +2074,7 @@ $(function(){
                                             <select size='2' name='sel_invoice[]' id='dlg_selected_invoices_1' class='dg_sel_invoices' onchange="dg_fn_inv_selected(this,1,'dg_credit_row_1','dlg_credits_list','dlg_credit_note_block');"></select>
                                         </td>
                                         <td><input type='text' readonly='true' class='inp dg_amt_unreconcile money' name='amt_unreconcile[]' id='dg_amt_unreconcile_1' size=6></td>
-                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value='' onchange="dg_show_unconcile_total('dlg_credit_note_block');"></td>
+                                        <td><input type='text' class='inp dg_amt_adjusted money' name='amt_adjusted[]' id='dg_amt_adjusted_1' size=6 value='' onchange="dg_show_unconcile_total(this);" dialog-name="dlg_credit_note_block"></td>
                                         <td>
                                             <a href='javascript:void(0)' class='button button-tiny_wrap button-primary' onclick="dg_add_invoice_row(this,'dg_credit_row','dlg_credits_list','dlg_credit_note_block');"> + </a>
                                         </td>
@@ -2644,12 +2644,12 @@ $(function(){
 			if($(".msg",$(this)).val().length==0)
 				error_msgs.push("Please enter Message");
 
-            var sts = validate_selected_invoice_val();
-            if(sts !== true) {
-               error_msgs.push(sts);
-            }
-            var reconciled_total= format_number( $("abbr",".reconciled_total").html() );
-            $("#total_val_reconcile").val(reconciled_total);
+                var sts = validate_selected_invoice_val();
+                if(sts !== true) {
+                   error_msgs.push(sts);
+                }
+                var reconciled_total= format_number( $("abbr",".reconciled_total").html() );
+                $("#total_val_reconcile").val(reconciled_total);
 
 		if(error_msgs.length)
 		{
@@ -4020,6 +4020,7 @@ $("#pnh_membersch").dialog({
 	.jqplot-table-legend{z-index: 99999;cursor: pointer}
 	#ui-datepicker-div{z-index: 99999999 !important}
 </style>
+
 <script>
 // <![CDATA[
     var franchise_id = "<?=$franchise_id;?>";

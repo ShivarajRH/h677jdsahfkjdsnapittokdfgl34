@@ -1,63 +1,91 @@
-<style>.leftcont{display:none}</style>
 <link type="text/css" rel="stylesheet" href="<?php echo base_url();?>css/po_product.css" />
 
-<div class="page_wrap">
-	<h2 class="page_title">Purchase Order - Productwise</h2>
-	
-	<div class="clearboth">
-		<div class="fl_right">
-			<a href="javascript:void(0)" id="load_unavail" class="button button-rounded button-action button-small" style="float:right;" onclick="show()">Load unavailable products</a>
-			<form name="tcol" onsubmit="return false" style="float:right;margin:7px;">
-				<b>Show Offer</b> : <input type="checkbox" name="col1" onclick="toggleVis(this.name)"> 
-			</form>
-		</div>
-		<div class="srch_box fl_left">
-			<input type="text" name="srch_prod" class="prd_blk inp" placeholder="Search Products by Product name" value="" >
+<div class="container">
+	<h2>Purchase Order - Productwise</h2>
+
+	<!-- <div> 
+	</div> -->
+
+	<table width="100%">
+		<tr>
+			<td>
+				 
 			<img class="search_img_wrap" src="<?php echo base_url().'images/search_icon.png'?>">
-		</div>
-	</div>
+			<input type="text" name="s" class="prd_blk inp" placeholder="Search &amp; Add" value="" >
+			</td>
+			
+			<td>
+				<a href="javascript:void(0)" id="load_unavail" class="button button-rounded button-action button-small" style="float:right;" onclick="show()">Load unavailable products</a>
+				<form name="tcol" onsubmit="return false" style="float:right;margin:7px;">
+					<b>Show Offer</b> : <input type="checkbox" name="col1" onclick="toggleVis(this.name)"> 
+				</form>
+				
+			</td>
+		</tr>
+	</table>
 
 	<div class="po_filters">
 		  <span title="Toggle Filter Block" class="close_filters">
 	  			<span class="close_btn"><b>Show</b></span>
-	            <span class="filter_heading">Filters:</span>
+	            <h3 class="filter_heading">Filters:</h3>
 	      </span>
 	 	 <div id="filter_prods" >
-			<span><b>Menu&nbsp;</b> <select name="fil_menu"></select></span> 
-			<span><b>Brand</b><select name="fil_brand"></select></span>
-			<span id="load_othrunavlibleprod"><input type="button" value="Show & load" id="sl_show"></span> 
-			<span><b>Vendor&nbsp; </b><select name="fil_vendor"></select></span> 
-			<!--<span><b>Order by&nbsp; </b><select name="fil_partner"></select></span>-->
-		</div>
+			<span>
+				<b>Menu&nbsp;</b> <select name="fil_menu"></select> 
+			</span> &nbsp; 
+			
+			<b>Brand &nbsp;</b>
+			<select name="fil_brand"></select> &nbsp; 
+				<span id="load_othrunavlibleprod">
+					<input type="button" value="Show & load" id="sl_show">
+				</span> 
+				
+				<span>
+					<b>Vendor&nbsp; </b> 
+					<select name="fil_vendor"></select>
+				</span> 
+				
+				<!--<span>
+					<b>Order by&nbsp; </b>
+					<select name="fil_partner"></select>
+				</span>-->
+			</div>
 	</div>
 
 	<form method="post" id="poprodfrm" autocomplete="off">
 		<!--<input type="button" value="show offer" style="font-size: 10px;" id="offer_details">-->
 		<div id="expected_del_det_payload" style="display: none;"></div>
 		<div style="margin-bottom:22px;clear:both;">
-			<table class="datagrid " id="pprods" width="100%" cellpadding="8">
+			<table class="datagrid datagridsort" id="pprods" width="100%" cellpadding="8">
+			
 				<thead>
 					<tr>
 						<th width="10px">S.No</th>
-						<th width="320px">Product Name</th>
+						<th width="320px">Product</th>
 						<th width="10px"></th>
-						<th width="80px">MRP (Rs)</th>
-						<th width="80px">DP Price (Rs)</th>
-						<th width="80px">Margin </th>
-						<th width="230px"> Order Qty & price Details</th>
+						<th width="80px">MRP</th>
+						<th width="80px">DP Price</th>
+						<th width="80px">Margin</th>
+						<th width="230px" style=""> Qty & price Details</th>
 						<th width="130px">Purchase Price </th>
 						<th >Vendor </th>
 						<th name="tcol1" id="tcol1" class="bold" style="text-align: center;display:none;" >Offer</th>
-						<th width="20px" style="text-align: center">Actions</th> 
+						<th  width="20px" style="text-align: center">Actions</th> 
 					</tr>
 				</thead>
 				<tbody>
 				</tbody>
 			</table>
 		</div>
-		<div id="show_submit" width="100%" >
-			<button type="submit" class="button button-rounded button-action button-small" style="float: right;">Create PO</button>
-		</div>
+		<table id="show_submit" width="100%" >
+			<tr>
+				<td>
+					
+					<button type="submit" class="button button-rounded button-action button-small" style="float: right;">Create PO</button>
+					
+				</td>
+			</tr>
+		</table>
 	</form>
 </div>
 	
@@ -73,22 +101,24 @@
 </div>
 <div id="sl_products" title="Choose and add to current order">
 	<span style="float: left">
-		<b>Show</b> :
-		<select name="stk_prod_disp">
-			<option value="1">All Products</option>
-			<option value="2">Orders With no Stock</option>
-		</select> 
+			<b>Show</b> :
+			<select name="stk_prod_disp">
+				<option value="1">All Products</option>
+				<option value="2">Orders With no Stock</option>
+			</select> 
 	</span>
+
+	
 	<span style="float: right" id="cat_prod_disp">
-		<b>Categories</b> :
-		<select name="cat_prod_disp">
+			<b>Categories</b> :
+			<select name="cat_prod_disp">
 			<option value="0">Select Category</option>
-		</select>
+			</select>
 	</span>
 	<br><br>
 	
 	<div class="datagrid_cont">
-		<h3 id="ttl_res"></h3>
+	<h3 id="ttl_res"></h3>
 		<table class="datagrid datagridsort" width="100%">
 			<thead>
 				<tr><th><input type="checkbox" class="chk_all"></th><th>Source</th><th>Product ID</th><th>Product</th><th>Mrp</th><th style="display: none;">Margin</th><th>Stock</th><th>PO Qty</th><th>Orders[90 Days]</th></tr>
@@ -164,16 +194,19 @@
 				<td><input type="text" class="inp calc_pp mrp readonly" size=7 name="mrp[]" value="%mrpvalue%" readonly="readonly"></td>
 				<td><input type="text" title="Change/Update DP Price on change" class="inp calc_pp has_dp_price dp_price" size=5 name="dp_price[]" value="%dp_price%"></td>
 				
-				<td class="mrgn_blk" style="width:170px;font-size: 10px;text-align: right;" >
+				<td class="mrgn_blk" style="width:150px;font-size: 10px;" >
 				<div style="margin-bottom: 2px">
-					<span>Ven.Margin :<input type="text" class="margin inp calc_pp readonly" size="8" name="margin[]" value="%margin%"  readonly="readonly"></span>
+				<span>Ven.Margin :
+				<input type="text" class="margin inp calc_pp readonly" size="8" name="margin[]" value="%margin%"  readonly="readonly"></span>
 				</div>
+				
 				<div>
-					<span>Sch.Margin : <input type="text" class="inp calc_pp discount" size=4 name="sch_discount[]" value="0" style="width:54px;border:1px solid #000000;"></span>
-					<div align="right">	<input type="radio" value="1" checked class="calc_pp type_%product_id%" name="sch_type[] %product_id%">% <input type="radio" value="2" class="calc_pp type_%product_id%" name="sch_type[] %product_id%">Rs</div>
+					<span>Sch.Margin : <input type="text" class="inp calc_pp discount" size=4 name="sch_discount[]" value="0" style="width:54px;border:1px solid #000000;"><input type="radio" value="1" checked class="calc_pp type_%product_id%" name="sch_type[] %product_id%">% <input type="radio" value="2" class="calc_pp type_%product_id%" name="sch_type[] %product_id%">Rs</span>
+						
 				</div>
 				<div class="marg_prc_preview">
-					<span>Tot.Margin(%) : <input type="text" name="marg_prc %product_id%" value="" readonly="readonly" class="inp marg_prc_%product_id% readonly" size="8"></span>
+					<span>Tot.Margin : <input type="text" name="marg_prc %product_id%" value="" readonly="readonly" class="inp marg_prc_%product_id% readonly" size="8">%</span>
+					
 				</div>
 				</td>
 				<td class="qty_price_blk" style="width:150px;font-size: 10px;" >
@@ -184,13 +217,14 @@
 					
 					<div>
 						<span>Required qty : </span>
-						<span><input type="text" class="inp calc_pp qty" id="prod_qty_%product_id%"  size=3 name="qty[]" value="%require_qty%" style="border:1px solid #000000;width:50px;"></span>
+						<span><input type="text" class="inp calc_pp qty" id="prod_qty_%product_id%"  size=4 name="qty[]" value="%require_qty%" style="border:1px solid #000000;width:72px;"></span>
 					</div>
 				</td>
 				<td>
 					<div>
 						<div>
 							<input type="text" class="inp pprice readonly" readonly="readonly"  name="price[]" value="%pprice%" >
+						
 						</div>
 					</div>
 				</td>
@@ -235,67 +269,54 @@
 	
 	<div id="purchase_productdet" title="Purchase Pattern Details">
 		<form id="purchase_productdet_frm" method="post" data-validate="parsley" action="<?php// echo site_url('admin/to_load_purchaseprod_details')?>" >
-			<input type="hidden" name="purchase_pid" id="purchase_pid">
-			<div class="module_type1">
-				<h4 class="module_type1_title">Last 7 days Purchase</h4>
-				<div class="module_type1_content">
-					<table class="datagrid smallheader" width="100%" id="last7_pdet">
-						<thead>
-							<th align='left'  width="50%"">Vendor Details</th>
-							<th align='left'  width="25%">Quantity</th>
-							<th align='left' width="25%" >Margin</th>
-						</thead>
-						<tbody>
-						</tbody>
-					</table>
-				</div>
-			</div>
-			<div class="module_type1">
-				<h4 class="module_type1_title">Last 30 days Purchase</h4>
-				<div class="module_type1_content">
-					<table class="datagrid smallheader" width="100%" id="last30_pdet">
-						<thead>
-							<th align='left'  width="50%"">Vendor Details</th>
-							<th align='left'  width="25%">Quantity</th>
-							<th align='left' width="25%" >Margin</th>
-						</thead>
-						<tbody>
-						</tbody>
-					</table>
-				</div>
-			</div>
-			<div class="module_type1">
-				<h4 class="module_type1_title">Last 60 days Purchase</h4>	
-				<div class="module_type1_content">
-					<table class="datagrid smallheader" width="100%" id="last60_pdet">
-						<thead>
-							<th  align='left'  width="50%"">Vendor Details</th>
-							<th align='left' width="25%">Quantity</th>
-							<th align='left' width="25%">Margin</th>
-						</thead>
-						<tbody>
-						</tbody>
-					</table>
-				</div>
-			</div>
-			<div class="module_type1">
-				<h4 class="module_type1_title">Last 90 days Purchase</h4>
-				<div class="module_type1_content">
-					<table class="datagrid smallheader" width="100%" id="last90_pdet">
-						<thead>
-							<th align='left'  width="50%"">Vendor Details</th>
-							<th align='left' width="25%">Quantity</th>
-							<th align='left' width="25%">Margin</th>
-						</thead>
-						<tbody>
-						</tbody>
-					</table>
-				</div>
-			</div>
+		<input type="hidden" name="purchase_pid" id="purchase_pid">
+			<table class="datagrid smallheader" width="100%" id="last7_pdet">
+				<h4>Last 7 days Purchase</h4>
+				<thead>
+					<th align='left'  width="50%"">Vendor Details</th>
+					<th align='left'  width="25%">Quantity</th>
+					<th align='left' width="25%" >Margin</th>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+			<table class="datagrid smallheader" width="100%" id="last30_pdet">
+				<h4>Last 30 days Purchase</h4>
+				<thead>
+					<th align='left'  width="50%"">Vendor Details</th>
+					<th align='left'  width="25%">Quantity</th>
+					<th align='left' width="25%" >Margin</th>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+				
+			<table class="datagrid smallheader" width="100%" id="last60_pdet">
+				<h4>Last 60 days Purchase</h4>
+				<thead>
+					<th  align='left'  width="50%"">Vendor Details</th>
+					<th align='left' width="25%">Quantity</th>
+					<th align='left' width="25%">Margin</th>
+				</thead>
+				<tbody>
+				
+				</tbody>
+			</table>
+			
+			<table class="datagrid smallheader" width="100%" id="last90_pdet">
+				<h4>Last 90 days Purchase</h4>
+				<thead>
+					<th align='left'  width="50%"">Vendor Details</th>
+					<th align='left' width="25%">Quantity</th>
+					<th align='left' width="25%">Margin</th>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
 		</form>
 	</div>
 	
-	<div id="modal" style="display:none;" align="center">
+	<div id="modal" style="display:none;align="center">
 		<div id="loading" align="center">
 			Loading.Please wait...<br /><br />
 			<img src="<?php echo base_url().'images/jx_loading.gif'?>" alt="" />
@@ -660,193 +681,193 @@ function addproduct(id,name,mrp,require)
 		return;
 	}
 
-	$('#pprods tbody ').append('<tr class="loading_row_data"><td colspan="10" align="center"><img src="'+base_url+'/images/loading_bar.gif'+'"></td></tr>');
-	$.post(site_url+"/admin/jx_productdetails",{id:id},function(data){
+	$.post("<?=site_url("admin/jx_productdetails")?>",{id:id},function(data){
 		o=$.parseJSON(data);
 		i=added_po.length;
-		$('#pprods tbody tr.loading_row_data').remove();
-	 	$("input[name='srch_prod']").val("");
-	 
-		if(data.length && data!=undefined && o.product_id != undefined)
+
+	 $("input[name='s']").val(" ");
+		
+	if(data.length && data!=undefined && o.product_id != undefined)
+	{
+
+		
+		
+		template=$("#p_clone_template tbody").html();
+		template=template.replace(/%sno%/g,i+1);
+		template=template.replace(/%require_qty%/g,require?require:o.require_qty);
+		template=template.replace(/%product_id%/g,o.product_id);
+		template=template.replace(/%brand_id%/g,o.brand_id);
+
+		template=template.replace(/%cat_id%/g,o.catid);
+		
+		template=template.replace(/%menuid%/g,o.menuid);
+		template=template.replace(/%brand_name%/g,o.brand_name);
+		template=template.replace(/%menu%/g,o.menu);
+		template=template.replace(/%vendor_id%/g,o.vendor_id);
+	
+		template=template.replace(/%product_name%/g,o.product_name);
+		template=template.replace(/%last_orderdon%/g,o.last_orderdon);
+		template=template.replace(/%transid%/g,o.transid);
+		template=template.replace(/%product_brand%/g,o.brand_name);
+		template=template.replace(/--barcode--/g,o.barcode);
+		template=template.replace(/%mrpvalue%/g,o.mrp);
+		template=template.replace(/%dp_price%/g,o.dp_price);
+		cur_stk=o.cur_stk!=null?o.cur_stk:0;
+		template=template.replace(/%curr_stck%/g,cur_stk);
+		
+		//o.margin = 0;
+		
+		template=template.replace(/%margin%/g,o.margin);
+		template=template.replace(/%foc%/g,"foc"+i);
+		template=template.replace(/%offer%/g,"offer"+i);
+		
+		mrp=parseFloat(o.mrp);
+
+		
+	
+	 	var mrgin=$('input[name="margin[]"],tr',this).val()*1;
+	 	var sch_type=$('select[name="sch_type[]"],tr',this).val();
+	 	var extra_mrgin=$('input[name="sch_discount[]"],tr',this).val()*1;
+		var pid=$('.product,tr',this).val()*1;
+	/*	if(extra_mrgin.length)
+			o.margin=o.margin+parseFloat(extra_mrgin);
+		else
+			o.margin=o.margin;*/
+
+		
+		if(!o.dp_price.length)
+		{
+			if(sch_type == 1)
+			{
+				
+				
+				pprice=mrp-(mrp*parseFloat(o.margin+extra_mrgin)/100);
+				margin_prc=parseFloat(o.margin+extra_mrgin);
+				
+			}
+			else
+			{
+				
+				pprice=mrp-(mrp*(parseFloat(o.margin)/100));
+				pprice=pprice-parseFloat(extra_mrgin);
+
+			}
+		}
+
+		
+		if(o.dp_price.length)
+		{
+			if(sch_type == 1)
+			
+				pprice=o.dp_price-(o.dp_price*(parseFloat(o.margin+extra_mrgin)/100));
+				
+			else
+				pprice=o.dp_price-(o.dp_price*(parseFloat(o.margin)/100));
+				pprice=pprice-parseFloat(extra_mrgin);
+		}
+		if(pprice.length)
 		{
 			
-			template=$("#p_clone_template tbody").html();
-			template=template.replace(/%sno%/g,i+1);
-			template=template.replace(/%require_qty%/g,require?require:o.require_qty);
-			template=template.replace(/%product_id%/g,o.product_id);
-			template=template.replace(/%brand_id%/g,o.brand_id);
-	
-			template=template.replace(/%cat_id%/g,o.catid);
-			
-			template=template.replace(/%menuid%/g,o.menuid);
-			template=template.replace(/%brand_name%/g,o.brand_name);
-			template=template.replace(/%menu%/g,o.menu);
-			template=template.replace(/%vendor_id%/g,o.vendor_id);
-		
-			template=template.replace(/%product_name%/g,o.product_name);
-			template=template.replace(/%last_orderdon%/g,o.last_orderdon);
-			template=template.replace(/%transid%/g,o.transid);
-			template=template.replace(/%product_brand%/g,o.brand_name);
-			template=template.replace(/--barcode--/g,o.barcode);
-			template=template.replace(/%mrpvalue%/g,o.mrp);
-			template=template.replace(/%dp_price%/g,o.dp_price);
-			cur_stk=o.cur_stk!=null?o.cur_stk:0;
-			template=template.replace(/%curr_stck%/g,cur_stk);
-			
-			//o.margin = 0;
-			
-			template=template.replace(/%margin%/g,o.margin);
-			template=template.replace(/%foc%/g,"foc"+i);
-			template=template.replace(/%offer%/g,"offer"+i);
-			
-			mrp=parseFloat(o.mrp);
-	
-			
-		
-		 	var mrgin=$('input[name="margin[]"],tr',this).val()*1;
-		 	var sch_type=$('select[name="sch_type[]"],tr',this).val();
-		 	var extra_mrgin=$('input[name="sch_discount[]"],tr',this).val()*1;
-			var pid=$('.product,tr',this).val()*1;
-		/*	if(extra_mrgin.length)
-				o.margin=o.margin+parseFloat(extra_mrgin);
-			else
-				o.margin=o.margin;*/
-	
-			
-			if(!o.dp_price.length)
-			{
-				if(sch_type == 1)
-				{
-					
-					
-					pprice=mrp-(mrp*parseFloat(o.margin+extra_mrgin)/100);
-					margin_prc=parseFloat(o.margin+extra_mrgin);
-					
-				}
-				else
-				{
-					
-					pprice=mrp-(mrp*(parseFloat(o.margin)/100));
-					pprice=pprice-parseFloat(extra_mrgin);
-	
-				}
-			}
-	
-			
-			if(o.dp_price.length)
-			{
-				if(sch_type == 1)
-				
-					pprice=o.dp_price-(o.dp_price*(parseFloat(o.margin+extra_mrgin)/100));
-					
-				else
-					pprice=o.dp_price-(o.dp_price*(parseFloat(o.margin)/100));
-					pprice=pprice-parseFloat(extra_mrgin);
-			}
-			if(pprice.length)
-			{
-				
-				template=template.replace(/%pprice%/g,pprice);
-			}
-			if(o.purchase_price)
-			{
-				template=template.replace(/%pprice%/g,o.purchase_price);
-			}
-			if(o.mrp && !o.purchase_price)
-			{
-				template=template.replace(/%pprice%/g,o.mrp);
-			}
-			vendors="";
-			$.each(o.vendors,function(i,v){
-				vendors=vendors+'<option value="'+v.vendor_id+'">'+v.vendor+'</option>';
-			});
-	
-			
-			
-			
-			partners="";
-			$.each(o.partners,function(i,v){
-	
-				if(v.partner_id==0 && v.is_pnh==1)
-				{
-					v.partner_id='PNH';
-					v.partner_name='PayNearHome';
-				}
-				if(v.partner_id==0 && v.is_pnh==0)
-				{
-					v.partner_id='SNP';
-					v.partner_name='Snapittoday';
-				}
-				partners=partners+'<option value="'+v.partner_id+'">'+v.partner_name+'</option>';
-	
-	
-				if(!$('select[name="fil_partner"] option#partner_'+v.partner_id).length){
-					if(v.partner_id != undefined)
-					{
-						if(v.is_pnh==1 && v.partner_id==0)
-						{
-							v.partner_id='PNH';
-							v.partner_name='PayNearHome';
-						}
-					 if(v.is_pnh==0 && v.partner_id==0)
-						{
-						 	v.partner_id='SNP';
-							v.partner_name='Snapittoday';
-						}
-						$('select[name="fil_partner"]').append('<option id="partner_'+v.partner_id+'" value="'+v.partner_id+'">'+v.partner_name+'</option>');
-					}
-				}
-				
-			});
-			template=template.replace(/%vendorlist%/g,vendors);
-	
-			template=template.replace(/%partnerlist%/g,partners);
-			$("#pprods tbody").append(template);
-			var ttl_openpo = 0;
-			if(o.is_po_raised != null)
-			{
-				is_po_raised_html = "";
-				$.each(o.is_po_raised,function(i,p){
-					if(p.po_order_qty<0)
-						p.po_order_qty=0;
-						//is_po_raised_html+="<div><ul><a href='"+site_url+'/admin/viewpo/'+p.po_id+"' target='_blank'>"+p.po_id+"</a>"+'-'+'<input type="text" readonly="readonly" style="background-color: #F1F1F1" size="2" value='+p.po_order_qty+' ></ul></div>';
-						ttl_openpo += p.po_order_qty*1;
-					});
-			}
-			
-			$("#is_po_raised_"+o.product_id).html('<a href="javascript:void(0)" onclick="load_openpolist('+o.product_id+')" ><b>'+ttl_openpo+'</b></a>');
-			
-			if(!o.dp_price.length)
-			{
-				$('#pprods tbody .has_dp_price:last').css('visibility','hidden');	
-			}else
-			{
-				$('#pprods tbody .has_dp_price:last').css('visibility','visible');
-			}
-			
-			added_po.push(id);
-	
-			if(!$('select[name="fil_brand"] option#brand_'+o.brand_id).length){
-				if(o.brand_id != undefined){
-				$('select[name="fil_brand"]').append('<option id="brand_'+o.brand_id+'" value="'+o.brand_id+'">'+o.brand_name+'</option>');
-				}
-			}
-			if(!$('select[name="fil_menu"] option#menu_'+o.menuid).length){
-				if(o.menuid!=undefined){
-					$('select[name="fil_menu"]').append('<option id="menu_'+o.menuid+'" value="'+o.menuid+'">'+o.menu+'</option>');
-				}
-			}
-			if(!$('select[name="fil_vendor"] option#vendor_'+o.vendor_id).length){
-				if(o.vendor_id != undefined){
-				$('select[name="fil_vendor"]').append('<option id="vendor_'+o.vendor_id+'" value="'+o.vendor_id+'">'+o.vendor_name+'</option>');
-				}
-			}
-	
-			$('#pprods tbody tr.loading_row_data').remove();
-			$('#pprods tbody tr:last .discount').trigger('change');
-			
-	
+			template=template.replace(/%pprice%/g,pprice);
 		}
+		if(o.purchase_price)
+		{
+			template=template.replace(/%pprice%/g,o.purchase_price);
+		}
+		if(o.mrp && !o.purchase_price)
+		{
+			template=template.replace(/%pprice%/g,o.mrp);
+		}
+		vendors="";
+		$.each(o.vendors,function(i,v){
+			vendors=vendors+'<option value="'+v.vendor_id+'">'+v.vendor+'</option>';
+		});
+
+		
+		
+		
+		partners="";
+		$.each(o.partners,function(i,v){
+
+			if(v.partner_id==0 && v.is_pnh==1)
+			{
+				v.partner_id='PNH';
+				v.partner_name='PayNearHome';
+			}
+			if(v.partner_id==0 && v.is_pnh==0)
+			{
+				v.partner_id='SNP';
+				v.partner_name='Snapittoday';
+			}
+			partners=partners+'<option value="'+v.partner_id+'">'+v.partner_name+'</option>';
+
+
+			if(!$('select[name="fil_partner"] option#partner_'+v.partner_id).length){
+				if(v.partner_id != undefined)
+				{
+					if(v.is_pnh==1 && v.partner_id==0)
+					{
+						v.partner_id='PNH';
+						v.partner_name='PayNearHome';
+					}
+				 if(v.is_pnh==0 && v.partner_id==0)
+					{
+					 	v.partner_id='SNP';
+						v.partner_name='Snapittoday';
+					}
+					$('select[name="fil_partner"]').append('<option id="partner_'+v.partner_id+'" value="'+v.partner_id+'">'+v.partner_name+'</option>');
+				}
+			}
+			
+		});
+		template=template.replace(/%vendorlist%/g,vendors);
+
+		template=template.replace(/%partnerlist%/g,partners);
+		$("#pprods tbody").append(template);
+		var ttl_openpo = 0;
+		if(o.is_po_raised != null)
+		{
+			is_po_raised_html = "";
+			$.each(o.is_po_raised,function(i,p){
+				if(p.po_order_qty<0)
+					p.po_order_qty=0;
+					//is_po_raised_html+="<div><ul><a href='"+site_url+'/admin/viewpo/'+p.po_id+"' target='_blank'>"+p.po_id+"</a>"+'-'+'<input type="text" readonly="readonly" style="background-color: #F1F1F1" size="2" value='+p.po_order_qty+' ></ul></div>';
+					ttl_openpo += p.po_order_qty*1;
+				});
+		}
+		
+		$("#is_po_raised_"+o.product_id).html('<a href="javascript:void(0)" onclick="load_openpolist('+o.product_id+')" ><b>'+ttl_openpo+'</b></a>');
+		
+		if(!o.dp_price.length)
+		{
+			$('#pprods tbody .has_dp_price:last').css('visibility','hidden');	
+		}else
+		{
+			$('#pprods tbody .has_dp_price:last').css('visibility','visible');
+		}
+		
+		added_po.push(id);
+
+		if(!$('select[name="fil_brand"] option#brand_'+o.brand_id).length){
+			if(o.brand_id != undefined){
+			$('select[name="fil_brand"]').append('<option id="brand_'+o.brand_id+'" value="'+o.brand_id+'">'+o.brand_name+'</option>');
+			}
+		}
+		if(!$('select[name="fil_menu"] option#menu_'+o.menuid).length){
+			if(o.menuid!=undefined){
+				$('select[name="fil_menu"]').append('<option id="menu_'+o.menuid+'" value="'+o.menuid+'">'+o.menu+'</option>');
+			}
+		}
+		if(!$('select[name="fil_vendor"] option#vendor_'+o.vendor_id).length){
+			if(o.vendor_id != undefined){
+			$('select[name="fil_vendor"]').append('<option id="vendor_'+o.vendor_id+'" value="'+o.vendor_id+'">'+o.vendor_name+'</option>');
+			}
+		}
+
+		
+		
+
+	}
 	});
 }
 
@@ -880,52 +901,57 @@ $(function(){
 			}
 			else
 			{
-				$('.po_filters').show();
-				$('select[name="fil_brand"]').html('<option value="">Choose</option>');
-				$('select[name="fil_menu"]').html('<option value="">Choose</option>');
-				$('select[name="fil_vendor"]').html('<option value="">Choose</option>');
-				$('select[name="fil_partner"]').html('<option value="">Choose</option>');
+			
+			$('.po_filters').show();
+			$('select[name="fil_brand"]').html('<option value="">Choose</option>');
+			$('select[name="fil_menu"]').html('<option value="">Choose</option>');
+			$('select[name="fil_vendor"]').html('<option value="">Choose</option>');
+			$('select[name="fil_partner"]').html('<option value="">Choose</option>');
+
 			
 				$.each(os,function(i,o){
 					addproduct(o.product_id, "", "",0);
 				});
 								
 
-				var brand_list = [];
-					$('select[name="fil_brand"] option').each(function(){
-						brand_list[$(this).text().replace(' ','_')]=$(this).val();
-					});
-					$('select[name="fil_brand"]').html('<option value="">Choose</option>');
-					$.each(brand_list,function(a,b){
-						$('select[name="fil_brand"]').append('<option id="brand_'+a+'" value="'+a+'">'+b+'</option>');
-					});
-				var menu_list = [];
-					$('select[name="fil_menu"] option').each(function(){
-						menu_list[$(this).text().replace(' ','_')]=$(this).val();
-					});
-					$.each(menu_list,function(a,b){
-						$('select[name="menu_list"]').append('<option id="menu_'+a+'" value="'+a+'">'+b+'</option>');
-					});
-				var vendor_list = [];
-					$('select[name="fil_vendor"] option').each(function(){
-						vendor_list[$(this).text().replace(' ','_')]=$(this).val();
-					});
-					$.each(vendor_list,function(a,b){
-						$('select[name="vendor_list"]').append('<option id=vendor_'+a+'" value="'+a+'">'+b+'</option>');
-					});
-	
+			var brand_list = [];
+				$('select[name="fil_brand"] option').each(function(){
+					brand_list[$(this).text().replace(' ','_')]=$(this).val();
+				});
+				$('select[name="fil_brand"]').html('<option value="">Choose</option>');
+				$.each(brand_list,function(a,b){
+					$('select[name="fil_brand"]').append('<option id="brand_'+a+'" value="'+a+'">'+b+'</option>');
+				});
+			var menu_list = [];
+				$('select[name="fil_menu"] option').each(function(){
+					menu_list[$(this).text().replace(' ','_')]=$(this).val();
+				});
+				$.each(menu_list,function(a,b){
+					$('select[name="menu_list"]').append('<option id="menu_'+a+'" value="'+a+'">'+b+'</option>');
+				});
+			var vendor_list = [];
+				$('select[name="fil_vendor"] option').each(function(){
+					vendor_list[$(this).text().replace(' ','_')]=$(this).val();
+				});
+				$.each(vendor_list,function(a,b){
+					$('select[name="vendor_list"]').append('<option id=vendor_'+a+'" value="'+a+'">'+b+'</option>');
+				});
+
 				var partner_list = [];
-					$('select[name="fil_partner"] option').each(function(){
-						partner_list[$(this).text().replace(' ','_')]=$(this).val();
-					});
-					$.each(partner_list,function(a,b){
-						$('select[name="partner_list"]').append('<option id=partner_'+a+'" value="'+a+'">'+b+'</option>');
-					});
+				$('select[name="fil_partner"] option').each(function(){
+					partner_list[$(this).text().replace(' ','_')]=$(this).val();
+				});
+				$.each(partner_list,function(a,b){
+					$('select[name="partner_list"]').append('<option id=partner_'+a+'" value="'+a+'">'+b+'</option>');
 					
-				$('#filter_prods').show();
-				$("#load_othrunavlibleprod").hide();
+				});
+				
+			$('#filter_prods').show();
+			$("#load_othrunavlibleprod").hide();
+		
 			
-			}
+			
+	}
 		});
 	}).attr("disabled",false);
 
@@ -1020,15 +1046,16 @@ $(function(){
 		}
 	
 	 });
-});
+	 });
 	
 
-$('input[name="srch_prod"]').autocomplete({
+$('input[name="s"]').autocomplete({
+
 	source:site_url+'/admin/jx_searchproducts_json',
-	minLength: 2,
-	select:function(event, ui ){
+	 minLength: 2,
+	 select:function(event, ui ){
 		addproduct(ui.item.id ,ui.item.label,ui.item.mrp);
-	}
+		 }
 });
 	
 	$("#sl_show").click(function(){
@@ -1038,7 +1065,9 @@ $('input[name="srch_prod"]').autocomplete({
 	});
 
 	
-	$('select[name="fil_vendor"]').live("change",function(){
+
+	
+	 $('select[name="fil_vendor"]').live("change",function(){
 			var vendorid=$(this).val();
 			var vtext=$('select[name="fil_vendor"] option:selected').html();
 			//alert(vtext);
@@ -1074,7 +1103,7 @@ $('input[name="srch_prod"]').autocomplete({
 	
 	$("#pprods .discount,#pprods .margin,#pprods .mrp, #pprods .type, #pprods .qty,#pprods .dp_price,#pprods .calc_pp").live("change",function(){
 		$r=$(this).parents("tr").get(0);
-
+		
 		dp_price=parseFloat($(".dp_price",$r).val());
 		
 		dp_price = isNaN(dp_price)?'-1':dp_price;
@@ -1087,11 +1116,6 @@ $('input[name="srch_prod"]').autocomplete({
 		mrp=parseFloat($(".mrp",$r).val());
 		margin=parseFloat($(".margin",$r).val());
 		discount=parseFloat($(".discount",$r).val())*1;
-
-		if(isNaN(discount))
-			discount = 0;
-		
-		
 		if(dp_price == -1)
 		{
 				if(sch_type == 1)
@@ -1248,16 +1272,19 @@ $("#purchase_productdet").dialog({
 				if(result.last_7daydet != undefined)
 				{
 					$.each(result.last_7daydet,function(p,m){
-						pofr_orderdrow += "<tr>"	
-											+"<td text-align='right'>"+m.vendor_name+"</td>"
-											+"<td text-align='right'>"+m.ttl_qty+"</td>"
-											+"<td text-align='right'>"+m.margin+"</td>"
-											+"</tr>";
+						pofr_orderdrow +=
+							
+							"<tr>"	
+							
+							+"<td text-align='right'>"+m.vendor_name+"</td>"
+							+"<td text-align='right'>"+m.ttl_qty+"</td>"
+							+"<td text-align='right'>"+m.margin+"</td>"
+							+"</tr>";
 					});
 					
 				}else
 				{
-					pofr_orderdrow +="<tr><td colspan='3' align='center'>No Record Found</td></tr>";
+					pofr_orderdrow +="<b style='align:center;'>No Record Found</b>";
 				}
 				$("#last7_pdet tbody").html(pofr_orderdrow);
 				var pofr_orderdrow = '';
@@ -1265,17 +1292,19 @@ $("#purchase_productdet").dialog({
 				if(result.last_30daydet != undefined)
 				{
 					$.each(result.last_30daydet,function(p,m){
-						pofr_orderdrow += "<tr>"	
-											//+"<td align='center'>"+'Last 30 Days'+"</td>"
-											+"<td text-align='right'>"+m.vendor_name+"</td>"
-											+"<td text-align='right'>"+m.ttl_qty+"</td>"
-											+"<td text-align='right'>"+m.margin+"</td>"
-											+"</tr>";
+						pofr_orderdrow +=
+							
+							"<tr>"	
+							//+"<td align='center'>"+'Last 30 Days'+"</td>"
+							+"<td text-align='right'>"+m.vendor_name+"</td>"
+							+"<td text-align='right'>"+m.ttl_qty+"</td>"
+							+"<td text-align='right'>"+m.margin+"</td>"
+							+"</tr>";
 					});
 					
 				}else
 				{
-					pofr_orderdrow +="<tr><td colspan='3' align='center'>No Record Found</td></tr>";
+					pofr_orderdrow +="<b style='align:center;'>No Record Found</b>";
 				}
 				
 				$("#last30_pdet tbody").html(pofr_orderdrow);
@@ -1296,7 +1325,7 @@ $("#purchase_productdet").dialog({
 				}
 				else
 				{
-					pomid_orderdrow +="<tr><td colspan='3' align='center'>No Record Found</td></tr>";
+					pomid_orderdrow +="<b style='align:center;'>No Record Found</b>";
 				}
 				$("#last60_pdet tbody").html(pomid_orderdrow);
 
@@ -1315,19 +1344,19 @@ $("#purchase_productdet").dialog({
 					
 				}else
 				{
-					polast_orderdrow +="<tr><td colspan='3' align='center'>No Record Found</td></tr>";
+					polast_orderdrow +="<b style='align:center;'>No Record Found</b>";
 				}
 				$("#last90_pdet tbody").html(polast_orderdrow);
 				
 			}
 		},'json');
 	},
-	buttons:{
-		'Close' :function(){
-		 $(this).dialog('close');
-		},
-		
-	}
+buttons:{
+	'Close' :function(){
+	 $(this).dialog('close');
+	},
+	
+}
 });
 
 
@@ -1380,7 +1409,7 @@ $('.partner_det a.tgl_viewtransids').live("click",function(e){
 		$('.partner_det',ele.parent().parent()).html(qcktiphtml).hide(); 
 	}
 });
-
+$('.leftcont').hide();
 
 
 

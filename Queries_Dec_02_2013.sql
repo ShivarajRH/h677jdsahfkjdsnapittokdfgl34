@@ -2576,4 +2576,70 @@ select * from king_invoice i
 left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no
 where i.invoice_no = '200696';
 
-select * from pnh_t_receipt_reconcilation where invoice_no='200696' order by created_on desc limit 1
+select * from pnh_t_receipt_reconcilation where invoice_no='200696' order by created_on desc limit 1;
+
+select distinct * from (select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
+                                                ,rlog.reconcile_amount
+                                                ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+                                                ,fcs.unreconciled_status
+                                                from pnh_franchise_account_stat fcs
+                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+
+                                                where fcs.type = '0'
+                                                and fcs.franchise_id = '43'
+                                                order by fcs.created_on desc) as g where g.unreconciled_amount > 0
+
+-- new & final to get unique unreconculed credit notes 
+select * from (
+		select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
+			,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.amount,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
+			,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+			,fcs.unreconciled_status
+			from pnh_franchise_account_stat fcs 
+			left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+			where fcs.type = '0' and fcs.franchise_id = '43'
+			group by fcs.id 
+			order by fcs.created_on desc
+) as g where g.unreconciled_amount > 0;
+
+select distinct * from (
+
+		select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
+			,rlog.reconcile_amount
+			,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+
+			,fcs.unreconciled_status
+			from pnh_franchise_account_stat fcs
+			join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+
+			where fcs.type = '0'
+			and fcs.franchise_id = '43'
+			order by fcs.created_on desc
+
+) as g where g.unreconciled_amount > 0;
+
+
+select * from (
+		select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
+			,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.amount,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
+			,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+			,fcs.unreconciled_status
+			from pnh_franchise_account_stat fcs 
+			left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+			where fcs.type = '0' and fcs.franchise_id = '43'
+			group by fcs.id 
+			order by fcs.created_on desc
+) as g where g.unreconciled_amount > 0;
+
+#=> 57
+
+select a.id
+	from pnh_sch_discount_brands a 
+	join pnh_m_franchise_info b on a.franchise_id = b.franchise_id
+	where dealid != 0 and brandid = 76916829 and b.territory_id = 22 and unix_timestamp() between valid_from and valid_to and a.is_sch_enabled = 1;
+
+
+update pnh_sch_discount_brands a 
+	join pnh_m_franchise_info b on a.franchise_id = b.franchise_id
+	set a.is_sch_enabled = 0 
+	where dealid != 0 and brandid = 76916829 and b.territory_id = 22 and unix_timestamp() between valid_from and valid_to and a.is_sch_enabled = 1;

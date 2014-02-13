@@ -21,7 +21,7 @@ $po_status_arr[3]="Cancelled";?>
 	</span>
 	<h2>Purchase Order : <?=$po['po_id']?></h2>
 
-<fieldset style="width: 70%;">
+<fieldset style=" width: 70%;">
 <legend><b>PO Details</b></legend>
 <table>
 <tr>
@@ -60,10 +60,6 @@ $po_status_arr[3]="Cancelled";?>
 <span><b><?php echo $po_status_arr[$po['po_status']] ?></b></span>
 <?php }?>
 </td></tr>
-<tr>
-	<td>Notify By Mail</td>
-	<td><?php echo $po['notify_vendor']?'Notified':'<a href="javascript:void(0)" id="notify_vendorbymail" class="butto button-tiny button-action">Notify</a>'?></td>
-</tr>
 <?php if($po['modified_on']!=null){?>
 <tr><td><b>Updated on</b></td><td>|</td><td><?=format_date($po['modified_on']) ?></td></tr>
 <tr><td><b>Status Remarks</b></td><td>|</td><td><?=$po['status_remarks']?></td></tr>
@@ -202,36 +198,6 @@ $po_status_arr[3]="Cancelled";?>
 </table>
 </form>
 </div>
-<?php 
-	$email_tmpl = 'Dear '.$po['vendor_name'].',
-
-PFA of Purchase Order : #'.$po['po_id'].'
-
-
-
-Thanks
-'.$user['email'];
-?>
-<div style="display: none">
-	<div id="notify_vendorbymail_dlg" title="Send Email Notification to Vendor">
-		<form action="<?php echo site_url('admin/jx_notifypobymail')?>" method="post">
-			<table style="border-collapse: collapse;background: #f1f1f1;" width="100%" cellpadding="5" cellspacing="0">
-				<tr>
-					<td width="100"><b>PO no</b><br><span id="notify_vendorbymail_poid"><?=$po['po_id'] ?></span></td>
-				</tr>
-				<tr>
-					<td><b>Vendor</b><br><span id="notify_vendorbymail_venname"><?=$po['vendor_name'] ?></span></td>
-				</tr>
-				<tr>
-					<td><b>Subject</b><br><input type="text" value="Storeking Purchase Order:<?=$po['po_id'] ?>"  id="notify_vendorbymail_subject" style="width: 99%"></td>
-				</tr>
-				<tr>
-					<td valign="top"><b>Message</b><br><textarea id="notify_vendorbymail_message" style="width: 99%;height:150px;"><?php echo $email_tmpl;?></textarea></td>
-				</tr>
-			</table>
-		</form>
-	</div>
-</div>
 
 <script>
 $('.leftcont').hide();
@@ -240,31 +206,6 @@ function update_po_det(po_id)
 {
 	$('#update_po_delivery_det').data('po_id',po_id).dialog('open');
 }
-
-$('#notify_vendorbymail').click(function(){
-	$('#notify_vendorbymail_dlg').dialog('open');
-});
-
-$('#notify_vendorbymail_dlg').dialog({
-	modal:true,
-	autoOpen:false,
-	autoResize:true,
-	width:'600',
-	height:'auto',
-	open:function(){
-		
-	},
-	buttons:{
-		'Cancel' :function(){
-		 	$(this).dialog('close');
-		},
-		'Submit':function(){
-			 
-		},
-	}
-});
-
-
 $('#update_po_delivery_det').dialog({
 	modal:true,
 	autoOpen:false,

@@ -15,7 +15,7 @@ $order_status_arr[3]='Cancelled';
 
 $sql_trans_ttls = 'select status,ifnull(amt1,amt2) as amt from (
 select b.status,sum((mrp-(discount+credit_note_amt))*a.invoice_qty) as amt1,
-	sum((i_orgprice-(i_coup_discount+i_discount))*b.quantity) as amt2
+	sum(i_orgprice-(i_coup_discount+i_discount)*b.quantity) as amt2
 	from king_orders b 
 	left join king_invoice a on a.order_id = b.id 
 	where b.transid = ?

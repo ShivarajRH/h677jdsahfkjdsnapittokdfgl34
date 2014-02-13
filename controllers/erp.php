@@ -2192,8 +2192,6 @@ class Erp extends Stream
 			list($bc,$mrp,$ps_loc_id,$ps_rb_id) = explode('_',$mrp_prod);
 		}
 		
-		
-		
 		// stock outu processed from the selected product 
 		if($type == 0)
 		{
@@ -2983,14 +2981,22 @@ class Erp extends Stream
 		$this->load->view("admin",$data);
 	}
 	
-	function warehouse_summary($type=0,$id=0)
+	function warehouse_summary($type=0,$brandid=0,$catid=0,$menuid=0)
 	{
+		if($catid==0)
+			$cond='p.brand_id='.$brandid.'';
+		else if($brandid=='all')
+			$cond='p.product_cat_id='.$catid.'';
+		else
+			$cond='p.brand_id='.$brandid.' and p.product_cat_id='.$catid.'';
 		$user=$this->auth(PRODUCT_MANAGER_ROLE|DEAL_MANAGER_ROLE);
 		if($type==1)
 		{
-			$data['products']=$this->db->query("select p.product_id,p.product_name,sum(s.available_qty) as stock,sum(s.available_qty*s.mrp) as stock_value,p.mrp from m_product_info p join t_stock_info s on s.product_id=p.product_id where p.brand_id=$id group by p.product_id having sum(s.available_qty)!=0 ")->result_array();
-			$data['pagetitle']="Products in Stock for brand: ".$this->db->query("select name from king_brands where id=?",$id)->row()->name;
+			$data['products']=$this->db->query("select p.product_id,p.product_name,sum(s.available_qty) as stock,sum(s.available_qty*s.mrp) as stock_value,p.mrp from m_product_info p join t_stock_info s on s.product_id=p.product_id where $cond group by p.product_id having sum(s.available_qty)!=0 ")->result_array();
+			$data['pagetitle']="Products in Stock for brand: ".$this->db->query("select name from king_brands where id=?",$brandid)->row()->name;
+			$data['category']="<span>Category: <b>".$this->db->query("select name from king_Categories where id=?",$catid)->row()->name."</b></span>";			
 		}
+		
 		$data['page']="warehouse_summary";
 		$this->load->view("admin",$data);
 	}
@@ -4311,7 +4317,8 @@ group by g.product_id ");
                                     join t_stock_info b on a.stock_info_id = b.stock_id 
                                     join m_product_info c on c.product_id = b.product_id 
                                     join m_rack_bin_info d on d.id = b.rack_bin_id 
-                                    join shipment_batch_process_invoice_link e on e.p_invoice_no = a.p_invoice_no and invoice_no = 0 
+                                    join shipment_batch_process_invoice_link e on e.p_invoice_no = a.p_invoice_no and invoice_no = 0
+									join proforma_invoices p on p.p_invoice_no = a.p_invoice_no and p.invoice_status = 1   	 
                                     where e.batch_id in (?)
                             group by a.id  ) as g 
                             group by product_id,location",$bid)->result_array();
@@ -6235,9 +6242,6 @@ group by g.product_id ");
 				
 				$prod['max_allowed_qty'] = $this->db->query("select max_allowed_qty from king_dealitems where pnh_id = ? ",$pid)->row()->max_allowed_qty;
 				$prod['imei_disc'] = $this->erpm->get_franimeischdisc_pid($fid,$pid);
-                
-				// get pid super scheme 
-				$prod['super_sch']= $this->erpm->get_fransuperschdisc_pid($fid,$pid);
 				
 				// get pid ordered total for today.
 				$prod['max_ord_qty'] = $this->erpm->get_maxordqty_pid($fid,$pid);
@@ -19348,24 +19352,17 @@ order by action_date";
 		 * @param unknown_type $brandid
 		 */
 		
-		function jx_load_allcatsbymenu($menuid=0,$catid=0)
+		function jx_load_allcatsbymenu($menuid=0)
 		{
-			$output=array();
-			$cond='';
 			
-			if($menuid)
-				$cond.=' and menuid='.$menuid;
-			if($catid )
-				$cond.=' and catid='.$catid;
-				
-			$catlist_res=@$this->db->query("SELECT DISTINCT catid,brandid,menuid,c.name,b.name as brandname
-												FROM king_deals a
+			$output=array();
+			
+			$catlist_res=$this->db->query("SELECT DISTINCT catid,brandid,menuid,c.name,b.name as brandname FROM king_deals a
 												JOIN  king_categories c ON c.id=a.catid
 												JOIN king_brands b ON b.id=a.brandid
-												WHERE menuid2=0 $cond
+												WHERE menuid2=0 and menuid=?
 												group by catid
-												order by c.name 
-												");
+												order by c.name",$menuid);
 			if($catlist_res->num_rows())
 			{
 				$output['cat_list']=$catlist_res->result_array();
@@ -23984,14 +23981,14 @@ die; */
 		}else if($type=='acct_stat')
 		{
 			$sql="SELECT a.acc_correc_id,fcs.franchise_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,status,a.created_on,rlog.reconcile_amount
-                                                ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value , round(fcs.unreconciled_value,2)  )) as unreconciled_amount,fcs.unreconciled_status
+                        ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value , round(fcs.unreconciled_value,2)  )) as unreconciled_amount,fcs.unreconciled_status
 						FROM `pnh_franchise_account_summary` a
 						left join pnh_franchise_account_stat fcs on fcs.id = a.acc_correc_id
                                                 left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-                                                left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id 
+                                                left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
 						WHERE a.franchise_id=? and (a.action_type = 5 or a.action_type = 6)
 						order by a.created_on desc";
-	
+
 			$total_records=$this->db->query($sql,$fid)->num_rows;
 	
 			$sql.=" limit $pg , $limit ";
@@ -24011,7 +24008,7 @@ die; */
 	
 			$data['credit_log']=$this->db->query($sql,$fid)->result_array();
 		}
-        else if($type=="unreconcile")
+                else if($type=="unreconcile")
 		{
                         // receipts
 			$sql="select * from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) order by created_on desc";
@@ -24021,15 +24018,17 @@ die; */
                         $data['ttl_receipts_val']=$this->db->query("select sum(receipt_amount) as ttl_receipts_val from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) order by created_on desc",$fid)->row()->ttl_receipts_val;
                         
                         // credit notes
-                        $credits_log_sql = "select * from (select distinct fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
-                                                ,rlog.reconcile_amount
+                        $credits_log_sql = "select * from (select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
+                                                ,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.amount,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
                                                 ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
                                                 ,fcs.unreconciled_status
-                                                from pnh_franchise_account_stat fcs
+                                                from pnh_franchise_account_stat fcs 
                                                 left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-                                                where fcs.type = '0'
-                                                and fcs.franchise_id = ?
-                                                order by fcs.created_on desc) as g where g.unreconciled_amount > 0 ";
+
+                                                where fcs.type = '0' and fcs.franchise_id = '43'
+                                                group by fcs.id 
+                                                order by fcs.created_on desc
+                                                ) as g where g.unreconciled_amount > 0 ";
                         $count_credit_records=$this->db->query($credits_log_sql,$fid)->num_rows();
                         $data['count_credit_records'] = $count_credit_records;
                         
@@ -27116,7 +27115,7 @@ die; */
     function jx_get_unreconciled_debit_notes_list($fid) {
         $user = $this->erpm->auth(FINANCE_ROLE);
         
-        $rdata['fran_debit_notes']=$this->db->query("select * from (select fcs.id as debit_note_id,fcs.amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2), min(rcon.unreconciled) ) as inv_amount
+        $rdata['fran_debit_notes']=$this->db->query("select * from (select fcs.id as debit_note_id,fcs.amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2), (rcon.unreconciled) ) as inv_amount
                                                         from pnh_franchise_account_stat fcs
                                                         left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.id
                                                         where fcs.type=1 and fcs.franchise_id = ?
@@ -27254,10 +27253,72 @@ die; */
                 $rdata['status'] = 'error';
                 $rdata['message'] = $invoice_arr;
             }
-	
-            echo json_encode($rdata);
+			echo json_encode($rdata);
     }
-    
+
+	/**
+	 * function to load racklocation alloted for brands
+	 * @param unknown_type $brandid
+	 */
+	function jx_prod_bybrand($bid=0)
+	{
+		$user=$this->auth();
+		$products=$this->erpm->getproductsforbrand($bid);
+		if($products)
+		{
+			$output['products']=$products;
+			$output['status']='success';
+		}
+		else
+		{
+			$output['status']="error";
+			$output['message']="No Products found";
+			
+		}
+		echo json_encode($output);
+	}
+
+	function jx_allot_rack_forproduct()
+	{
+		$rack_id=$this->input->post('rack_loc');
+		$ids=$this->input->post('ids');
+		
+		if($ids)
+		{
+			foreach($ids as $i)
+			{
+				$this->db->query("update m_product_info set loc_rb_id=? where product_id=? ",array($rack_id,$i));
+			}
+			
+		}
+	}
+	
+	/**
+	 * function to print warehouse summary
+	 * @param unknown_type $brandid
+	 */
+	function print_brands_summary($brandid=0,$catid=0,$menuid=0)
+	{
+		$user=$this->auth(PURCHASE_ORDER_ROLE);
+		if($catid==0)
+			$cond='p.brand_id='.$brandid.'';
+		else if($brandid=='all')
+			$cond='p.product_cat_id='.$catid.'';
+		else
+			$cond='p.brand_id='.$brandid.' and p.product_cat_id='.$catid.'';
+		
+		//brand name in po
+		$po_brand_name=$this->db->query("SELECT name as brand_name from king_brands where id=?",$brandid)->row()->brand_name;
+		
+		$data['products']=$this->db->query("select p.product_id,p.product_name,sum(s.available_qty) as stock,sum(s.available_qty*s.mrp) as stock_value,p.mrp from m_product_info p join t_stock_info s on s.product_id=p.product_id where $cond group by p.product_id having sum(s.available_qty)!=0 ")->result_array();
+		$data['page']='print_brands_summary';
+		$data['po_brand_name']=$po_brand_name;
+		$data['brandid']=$brandid;
+		$data['catid']=$catid;
+		$this->load->view('admin/body/print_brands_summary',$data);
+		
+	}
+
     /**
      * Function to get list of reconciled invoices or dr data of given credit note id
      * @param type $credit_note_id int 

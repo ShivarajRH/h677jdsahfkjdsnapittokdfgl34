@@ -1154,4 +1154,3 @@ fieldset legend{
 	margin-left: -10px;
 }
 .red_star{color: #cd0000;font-size: 20px;font-weight: bold;margin-left: 5px;}
-.ui-tabs .ui-widget-header{font-size: 12px;}

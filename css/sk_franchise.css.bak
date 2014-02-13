@@ -65,10 +65,6 @@ li.required
 {
 	background-color:#008000;
 }
-.fc-event-skin.ordered_event
-{
-	background-color:#11110F;
-}
 .dash_bar_right
 {
 	font-size: 11px;

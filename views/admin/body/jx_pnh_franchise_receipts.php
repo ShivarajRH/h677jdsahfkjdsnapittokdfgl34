@@ -57,30 +57,30 @@
 					<?php }?>
 					<tr><td><b>Payment Date</b></td><td><b>:</b></td><td><?=$pr['instrument_date']!=0?date("d/m/y",$pr['instrument_date']):""?></td></tr>
 					<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$pr['remarks']?></td></tr>
-                                        <tr><td><b>Un-Reconciled Status</b></td><td><b>:</b></td><td><?php 
-                                                    $franchise_id = $pr['franchise_id'];
-                                                    $receipt_id = $pr['receipt_id'];
-                                                    $receipt_amount = $pr['receipt_amount'];
-                                                    $unreconciled_status = $pr['unreconciled_status'];
-                                                    $unreconciled_value = $pr['unreconciled_value'];
-                                                    
-                                                       echo $unreconciled_status; 
-                                                       echo " ( ".$unreconciled_value." )";?></td>
-                                       </tr>
-                                       <tr>
-                                           <td><b>Actions</b></td>
-                                           <td>:</td>
-                                           <td><?php 
-                                               if($unreconciled_value>0) { ?>
-                                                       <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$receipt_id;?>','<?=$franchise_id;?>','<?=$receipt_amount;?>','<?=$unreconciled_value;?>')" class="button button-tiny button-action">Reconcile</a>
-                                               <?php } ?>
-                                                &nbsp;
-                                                <?php if($unreconciled_value != $receipt_amount) { ?>
-                                                   <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$receipt_id;?>','<?=$franchise_id;?>')" class="button button-tiny button-primary">View Reconciled</a>
-                                                <?php } ?></td>
-                                       </tr>
-                                    </table>
-                                    </div>
+                    <tr><td><b>Un-Reconciled Status</b></td><td><b>:</b></td><td><?php 
+                                $franchise_id = $pr['franchise_id'];
+                                $receipt_id = $pr['receipt_id'];
+                                $receipt_amount = $pr['receipt_amount'];
+                                $unreconciled_status = $pr['unreconciled_status'];
+                                $unreconciled_value = $pr['unreconciled_value'];
+                                
+                                   echo $unreconciled_status; 
+                                   echo " ( ".$unreconciled_value." )";?></td>
+                   </tr>
+                   <tr>
+                       <td><b>Actions</b></td>
+                       <td>:</td>
+                       <td><?php 
+                           if($unreconciled_value>0) { ?>
+                                   <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$receipt_id;?>','<?=$franchise_id;?>','<?=$receipt_amount;?>','<?=$unreconciled_value;?>')" class="button button-tiny button-action">Reconcile</a>
+                           <?php } ?>
+                            &nbsp;
+                            <?php if($unreconciled_value != $receipt_amount) { ?>
+                               <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$receipt_id;?>','<?=$franchise_id;?>')" class="button button-tiny button-primary">View Reconciled</a>
+                            <?php } ?></td>
+                   </tr>
+                </table>
+                </div>
 				</td>
 				<td><b><?php if($pr['status']==1) echo 'Activated'; else if($pr['status']==0) echo 'Pending'; else if($pr['status']==3) echo 'Reversed'; else echo 'Cancelled';?></b>
 					<?php if($pr['status']==1 && $pr['receipt_type']==1){?> <br> <br> 
@@ -276,27 +276,27 @@
 						<tr><td><b>Updated By</b></td><td>:</td><td><?=$r['activated_by']?></td></tr>
 						<tr><td><b>Updated On</b></td><td>:</td><td><?=format_date_ts($r['activated_on'])?></td></tr>
 						<tr><td><b>Un-Reconciled Status</b></td><td><b>:</b></td><td><?php 
-                                                    $franchise_id = $r['franchise_id'];
-                                                    $receipt_id = $r['receipt_id'];
-                                                    $receipt_amount = $r['receipt_amount'];
-                                                    $unreconciled_status = $r['unreconciled_status'];
-                                                    $unreconciled_value = $r['unreconciled_value'];
-                                                    
-                                                       echo $unreconciled_status; 
-                                                       echo " ( ".$unreconciled_value." )";?></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><b>Actions</b></td>
-                                                    <td>:</td>
-                                                    <td><?php 
-                                                        if($unreconciled_value>0) { ?>
-                                                                <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$receipt_id;?>','<?=$franchise_id;?>','<?=$receipt_amount;?>','<?=$unreconciled_value;?>')" class="button button-tiny button-action">Reconcile</a>
-                                                        <?php } ?>
-                                                         &nbsp;
-                                                         <?php if($unreconciled_value != $receipt_amount) { ?>
-                                                            <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$receipt_id;?>','<?=$franchise_id;?>')" class="button button-tiny button-primary">View Reconciled</a>
-                                                         <?php } ?></td>
-                                                </tr>
+                            $franchise_id = $r['franchise_id'];
+                            $receipt_id = $r['receipt_id'];
+                            $receipt_amount = $r['receipt_amount'];
+                            $unreconciled_status = $r['unreconciled_status'];
+                            $unreconciled_value = $r['unreconciled_value'];
+                            
+                               echo $unreconciled_status; 
+                               echo " ( ".$unreconciled_value." )";?></td>
+                        </tr>
+                        <tr>
+                            <td><b>Actions</b></td>
+                            <td>:</td>
+                            <td><?php 
+                                if($unreconciled_value>0) { ?>
+                                        <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$receipt_id;?>','<?=$franchise_id;?>','<?=$receipt_amount;?>','<?=$unreconciled_value;?>')" class="button button-tiny button-action">Reconcile</a>
+                                <?php } ?>
+                                 &nbsp;
+                                 <?php if($unreconciled_value != $receipt_amount) { ?>
+                                    <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$receipt_id;?>','<?=$franchise_id;?>')" class="button button-tiny button-primary">View Reconciled</a>
+                                 <?php } ?></td>
+                        </tr>
 						</table>
 					</div>
 				</td>
@@ -433,12 +433,13 @@
 {
 ?>
 	<b>Account Statement Correction Log</b>
+        <div class="clear"></div>
 	<?php 
-            if($account_stat)
-            {
+		if($account_stat)
+		{
 	?>	
 	<table class="datagrid" width='100%'>
-            <thead><th>Description</th><th>Credit (Rs)</th><th>Debit (Rs)</th><th>Corrected On</th><th>Un-Reconciled Rs.</th><th>Actions</th></thead>
+    <thead><th>Correction Id</th><th>Description</th><th>Credit (Rs)</th><th>Debit (Rs)</th><th>Corrected On</th><th>Un-Reconciled Status</th><th>Actions</th></thead>
 	<tbody>
 	<?php foreach($account_stat as $ac_st){
             $credit_amount = $ac_st['credit_amt'];
@@ -446,8 +447,11 @@
             $unreconciled_amount = $ac_st["unreconciled_amount"];
             $unreconciled_status = $ac_st["unreconciled_status"];
             $reconcile_amount = $ac_st["reconcile_amount"];
+            $ac_type = $ac_st['type']; 
+            $ac_type_msg = ($ac_type)?'Dr':'Cr';
 	?>
 	<tr>
+		<td><?php echo $credit_note_id; ?></td>
 		<td><?php echo $ac_st['remarks']; ?></td>
 		<td><?php echo $credit_amount; ?></td>
 		<td><?php echo $ac_st['debit_amt']; ?></td>
@@ -457,7 +461,8 @@
                             }else echo '--';
                             ?>
                 <td><?php
-                        if($ac_st['type'] == '0' && $credit_amount > 0 ) { //Only if credit entry
+                    if($ac_type == '0') {
+                        if( $credit_amount > 0 ) { //Only if credit entry
                             if($unreconciled_amount>0) { ?>
                                 <a href="javascript:void(0);" onclick="reconcile_cr_amount(this,'<?=$credit_note_id;?>','<?=$credit_amount;?>','<?=$unreconciled_amount;?>')" class="button button-tiny button-action cursor">Reconcile</a>
                            <?php }
@@ -468,17 +473,19 @@
                                 <!--<span>Rs. <?php // echo $reconcile_amount;?></span>-->
                                 &nbsp;&nbsp;<a href="javascript:void(0);" onclick="clk_view_reconciled_credit_value(this,'<?=$credit_note_id;?>','<?=$ac_st["franchise_id"];?>','<?=$reconcile_amount;?>')" class="button button-tiny button-primary cursor">View Reconciled</a><?php
                         }
-                        ?>
+                    }
+                    else echo '--';
+                ?>
                 </td>
 	</tr>
 	<?php }?>
 	</tbody>
 	</table>
-	<?php
-            }else
-            {
-                    echo 'No Data found';
-            }
+	<?php 
+		}else
+		{
+			echo 'No Data found';
+		}
 	?>		
 <?php 
 }else if($type=="actions")
@@ -623,7 +630,7 @@ else if($type=="unreconcile")
                     <?php foreach($credits_log as $c=>$un_ac_st){ 
                         $credit_note_id = $un_ac_st["credit_note_id"];
                         $credit_amount = $un_ac_st['amount'];
-                        $reconcile_amount = $un_ac_st['reconcile_amount'];
+                        $ttl_reconcile_amount = $un_ac_st['ttl_reconcile_amount'];
                         $unreconciled_amount = $un_ac_st['unreconciled_amount'];
                     ?>
                     <tr>
@@ -642,9 +649,9 @@ else if($type=="unreconcile")
                                 }
                                 else echo '--';
 
-                                if($reconcile_amount > 0) { ?>
-                                        <!--<span>Rs. <?php // echo $reconcile_amount;?></span>-->
-                                        &nbsp;&nbsp;<a href="javascript:void(0);" onclick="clk_view_reconciled_credit_value(this,'<?=$credit_note_id;?>','<?=$un_ac_st["franchise_id"];?>','<?=$reconcile_amount;?>')" class="button button-tiny button-primary cursor">View Reconciled</a><?php
+                                if($ttl_reconcile_amount > 0) { ?>
+                                        <!--<span>Rs. <?php // echo $ttl_reconcile_amount;?></span>-->
+                                        &nbsp;&nbsp;<a href="javascript:void(0);" onclick="clk_view_reconciled_credit_value(this,'<?=$credit_note_id;?>','<?=$un_ac_st["franchise_id"];?>','<?=$ttl_reconcile_amount;?>')" class="button button-tiny button-primary cursor">View Reconciled</a><?php
                                 } 
                                 ?>
                          </td>

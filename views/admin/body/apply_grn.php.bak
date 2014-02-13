@@ -132,7 +132,7 @@ h2
 		<div class="right">
 			<table>
 				<tbody>
-					<tr class="barcode%bcode% barcodereset pending_mode edit_prod_row " bcode="%bcode%" prodid="%prodid%" pid="%pid%" qty="%qty%" dp_price="%dp_price%" brandid="%brandid%" p_price="%price%" po_mrp="%po_mrp%" po_margin="%po_margin%" has_serialno="%has_serialno%">
+					<tr class="barcode%bcode% barcodereset pending_mode edit_prod_row " bcode="%bcode%" prodid="%prodid%" pid="%pid%" qty="%qty%" dp_price="%dp_price%" brandid="%brandid%" p_price="%price%" has_serialno="%has_serialno%">
 						<td>%sno%</td>
 						<td>
 	                        <input type="hidden" name="imei%pid%[]" class="imeisvvv imei%prodid%" id="list_imei_%prodid%" value="">
@@ -181,7 +181,7 @@ h2
 							<input type="text" class="inp iqty"  name="oqty%pid%[]" id="oqty_%prodid%" size=3 value="0">
 						</td>
 						<td>
-							<input type="text" class="inp vat_prc" placeholder="%vat%"  name="vat%pid%[]" id="vat_%prodid%" size=3 value="">
+							<input type="text" class="inp vat_prc"  name="vat%pid%[]" id="vat_%prodid%" size=3 value="">
 						</td>
                         <td style="text-align: center">
 							<div class="po_qty_wrap">
@@ -224,6 +224,7 @@ h2
 		<table>
 			<tbody>
 				<tr>
+					
 					<td><?=$i++?></td>
 					<td><input type="text" name="invno[]" class="inp inv_inp_blk" class="invno"></td>
 					<td><input type="text" name="invdate[]" class="inp invdate inv_inp_datepick_blk datepick%dpi%" class=""></td>
@@ -253,13 +254,11 @@ h2
 </div>
 
 <div id="add_barcode_dialog" class="add_barcode_dialog" title="Scan Barcode">
-	<form>
-		<div style="line-height: 20px">
-			<span class="prod_title"></span>
-			<input type="hidden" value="" id="abd_pid">
-			<div>Barcode : <input type="text" class="inp" style="width:200px;" id="abd_barcode"></div>
-			<span class="error_inp"></span>
-		</div>
+	<form >
+		<span class="prod_title"></span>
+		<input type="hidden" value="" id="abd_pid">
+		<span>Barcode : <input type="text" class="inp" style="width:200px;" id="abd_barcode"></span>
+		<span class="error_inp"></span>
 	</form>
 </div>
 	
@@ -534,8 +533,6 @@ function loadpo(pids)
             grow=grow.replace(/%po_mrp%/g,poi.mrp);
             grow=grow.replace(/%po_margin%/g,poi.margin);
 			grow=grow.replace(/%mrp%/g,poi.prod_mrp);
-			grow=grow.replace(/%vat%/g,poi.vat);
-			
 			if(poi.is_serial_required*1)
 			{
 				grow=grow.replace(/%dp_price%/g,poi.dp_price);
@@ -779,7 +776,7 @@ $('.bcode_upd').live('click',function(e){
 	
 		$("#add_imei_dialog").hide();
 		$("#add_barcode_dialog").data('ref_tr',trEle).dialog('open');
-		$(".prod_title").html("Product : <a target='_blank' href='"+site_url+'/admin/product/'+pid+"'>"+pname+'</a>');
+		$(".prod_title").html("Product : "+pname);
 		$("#abd_barcode").focus().val("");
 		$("#abd_pid").val(pid);
 		$("#abd_pid").data('prodid',prodid);
@@ -1163,8 +1160,6 @@ $('.add_product_row').live('click',function(e){
 	var trele_purprice = trele.attr('p_price');
 	var trele_brandid = trele.attr('brandid');;
 	var trele_pid = trele.attr('pid');
-	var trele_pomrp = trele.attr('po_mrp');
-	var trele_pomargin = trele.attr('po_margin');
 	var trele_rackname = $('.stkloc').html();
 	var trele_has_serialno = trele.attr('has_serialno');
 	var trele_bcscanned = trele.hasClass('bcode_scanned');
@@ -1204,14 +1199,11 @@ $('.add_product_row').live('click',function(e){
 							}
 							
 							grow=grow.replace(/%mrp%/g,trele_pmrp);
-							grow=grow.replace(/%vat%/g,trele_vat);
 							
 							grow=grow.replace(/%price%/g,trele_purprice);
 							grow=grow.replace(/%rqty%/g,0);
 							grow=grow.replace(/%ppur_price%/g,trele_purprice);
 							grow=grow.replace(/%brandid%/g,trele_brandid);
-							grow=grow.replace(/%po_margin%/g,trele_pomargin);
-							grow=grow.replace(/%po_mrp%/g,trele_pomrp);
 							
 							if(trele_rackname)
 								grow=grow.replace(/==rbs==/g,trele_rackname);
@@ -1257,13 +1249,14 @@ $('.remove_product_row').live('click',function(e){
 	e.preventDefault();
 	var trele = $(this).parents('tr:first');
 	
-	if(confirm("Do you want to remove this product entry ?"))
+	if(confirm("Do you want to delete"))
 	{
 		$(this).parents('tr:first').fadeOut().remove();
 		trele.addClass('edit_mode');
 		scanned_rows();
 	}else
 	{
+		
 		trele.addClass('edit_mode');
 		$('.edit_mode .rqty').select();
 		return false;
@@ -1378,7 +1371,6 @@ $('#rqty_imei_blk_dlg form').submit(function(){
 });
 
 	$('#add_barcode_dialog form').submit(function(){
-		
 		var dlgEle = $('#add_barcode_dialog');
 		var ref_trele = dlgEle.data('ref_tr');
 		var b_code=$("#add_barcode_dialog",this);
@@ -1605,6 +1597,7 @@ function process_edit_validation(cb) {
         }
     }
    	scanned_rows();	
+    
     return cb(jump_torow);
 }
 

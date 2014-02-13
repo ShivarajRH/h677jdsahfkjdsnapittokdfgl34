@@ -102,19 +102,17 @@ Orders this month
 Orders prev month
 </div>
 
-<div class="dash_bar qtipblk" qtip-txt="Sales Value : Rs <?=format_price($this->db->query("select sum((i_orgprice-(i_discount+i_coup_discount))*quantity) as l from king_orders a join king_transactions b on a.transid = b.transid where date(from_unixtime(b.init)) >= ? ",date('Y-m-01'))->row()->l,0)?>" > 
+<div class="dash_bar qtipblk" qtip-txt="Sales Value : Rs <?=format_price($this->db->query("select sum(i_orgprice-(i_discount+i_coup_discount)*quantity) as l from king_orders a join king_transactions b on a.transid = b.transid where date(from_unixtime(b.init)) >= ? ",date('Y-m-01'))->row()->l,0)?>" > 
 <span>Rs <?=format_price($this->db->query("select sum(i_orgprice*quantity) as l from king_orders where time>?",mktime(0,0,0,date("n"),1))->row()->l,0)?></span>
  this month
 </div>
 
-<div class="dash_bar qtipblk" qtip-txt="Sales Value : Rs <?=format_price($this->db->query("select sum((i_orgprice-(i_discount+i_coup_discount))*quantity) as l from king_orders a join king_transactions b on a.transid = b.transid where b.init between ? and ?",array(mktime(0,0,0,date("n")-1,1),mktime(0,0,0,date("n"),1)))->row()->l,0)?>" >
+<div class="dash_bar qtipblk" qtip-txt="Sales Value : Rs <?=format_price($this->db->query("select sum(i_orgprice-(i_discount+i_coup_discount)*quantity) as l from king_orders a join king_transactions b on a.transid = b.transid where b.init between ? and ?",array(mktime(0,0,0,date("n")-1,1),mktime(0,0,0,date("n"),1)))->row()->l,0)?>" >
 <span>Rs <?=format_price($this->db->query("select sum(i_orgprice*quantity) as l from king_orders where time between ? and ?",array(mktime(0,0,0,date("n")-1,1),mktime(0,0,0,date("n"),1)))->row()->l,0)?></span>
  prev month
 </div>
 
-<?php 
-	} 
-?>
+<?php } ?>
 
 
 <script>

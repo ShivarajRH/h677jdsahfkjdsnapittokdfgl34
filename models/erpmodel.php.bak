@@ -12521,7 +12521,7 @@ order by action_date";
 										AND UNIX_TIMESTAMP() BETWEEN valid_from AND valid_to
 										AND is_active = 1 ORDER BY id DESC LIMIT 1",array($fid,$ddet['brandid'],$ddet['catid'],$ddet['menuid']));
 		if($super_sch_det->num_rows()!=0)
-			return $super_sch_det->row_array();
+		        return $super_sch_det->row_array();
 		}
 		return 0;
 	}

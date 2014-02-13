@@ -1,4 +1,4 @@
-<style>.contenttable .leftcont{display:none;}.security_details td{padding:5px 10px !important;} .security_details .datagrid td{padding:2px !important;}</style>
+<!--<style>.contenttable .leftcont{display:none;}.security_details td{padding:5px 10px !important;} .security_details .datagrid td{padding:2px !important;}</style>-->
 <div class="container" style="padding:5px;">
 <div style="position:absolute;top:0px;right:60px;"><a href="javascript:void(0)" style="background:#ffaa00;border:1px solid #aaa;border-top:0px;text-decoration:none;display:block;padding:0px 5px 1px 5px;border-radius:0px 0px 5px 5px;color:#555;" onclick='$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"})'>show menu</a></div>
 <div style="clear: both;overflow: hidden;">
@@ -1183,7 +1183,7 @@ $(function(){
 
 			if(mid==0 && menu_id != 112)
 			{
-				if(confirm("Instant Registration is required because Other than Electronic items are there in the Cart"))
+				if(confirm("Instant Registration is required because Other than Mobile & Tablet items are in the Cart"))
 					 mem_reg();
 				 return false;
 			}
@@ -1198,12 +1198,36 @@ $(function(){
 			return false;
 		}
 			
-	if(invalid_qty)
+		var invalid_qty=0;
+		var invalid_local_distrbutor_mrgn=0;
+		var frmEle = $(this);
+		$(' #prods_order  tbody tr',frmEle).addClass('row_p');
+		$(' #prods_order tbody tr:visible',frmEle).each(function(){
+			
+			var qty=$('.qty',this).val()*1;
+			var extra_mrgn=$(".local_dist_mrgn",this).val();
+			
+			if(isNaN(qty) || qty<=0)
+				invalid_qty+=1;
+
+			if(isNaN(extra_mrgn) || extra_mrgn == '')
+				invalid_local_distrbutor_mrgn+=1;
+			
+			$(this).removeClass('row_p');
+		});	
+		$('#prods_order tbody tr.row_p',frmEle).remove();
+		
+		if(invalid_qty)
 		{
 			alert("Invalid Quantity entered");
 			return false;
 		}
-		
+		/*if(invalid_local_distrbutor_mrgn)
+		{
+			alert("Please update valid Margin");
+			return false;
+		}
+		*/
 		if(confirm("Total order value : Rs "+total+"\nAre you sure want to place the order?"))
 		{
 			
@@ -1255,7 +1279,7 @@ $(function(){
 				qty_e = 0;
 			}
 		
-		var qty_m = $(".qty",p).attr('pmax_ord_qty')*1;
+                        var qty_m = $(".qty",p).attr('pmax_ord_qty')*1;
 		
 			if(qty_e > qty_m)
 			{
@@ -1370,6 +1394,7 @@ $(function(){
 			template=template.replace(/%stock%/g,p.stock);
 			template=template.replace(/%confirm_stock%/g,p.confirm_stock);
 			template=template.replace(/%margin_amt%/g,Math.ceil(p.price-p.lcost));
+			template=template.replace(/%lcl_distribtor_mrgn%/g,p.local_distbtr_margin);
 			
 			
 			if(p.max_allowed_qty*1 == 0)
@@ -1390,7 +1415,7 @@ $(function(){
 				else
 					var imei= (p.lcost*p.imei_disc.credit_value)/100 ;
 					
-				template=template.replace(/%imei_sch_disc%/g,"<span style='font-size:11px;' class='tip_popup imei_wrap' title='On IMEI Activation'><b>IMEI Activation per Qty: </b>(Rs."+imei+") </span> ");
+				template=template.replace(/%imei_sch_disc%/g,"<span style='font-size:11px;' class='tip_popup imei_wrap' title='On IMEI Activation'><b>IMEI Activation: </b>(Rs."+imei+") </span> ");
 			}else
 			{
 				template=template.replace(/%imei_sch_disc%/g,"");
@@ -1407,7 +1432,16 @@ $(function(){
 
 			template=template.replace(/%mrp%/g,p.mrp);
 			$("#prods_order tbody").append(template);
-			
+			/*jQuery(document).ready(function() {
+			 	Tipped.create('.tip_popup',{
+			 	 skin: 'black',
+			 	  hook: 'topleft',
+			 	  hideOn: false,
+			 	  closeButton: true,
+			 	 	opacity: .5,
+			 	 	hideAfter: 200,
+				 });
+			 });*/
 			 tooltip();
 			pids.push(p.pid);
 			

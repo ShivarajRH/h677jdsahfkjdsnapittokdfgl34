@@ -1,4 +1,4 @@
-<!--<style>.contenttable .leftcont{display:none;}.security_details td{padding:5px 10px !important;} .security_details .datagrid td{padding:2px !important;}</style>-->
+<style>.contenttable .leftcont{display:none;}.security_details td{padding:5px 10px !important;} .security_details .datagrid td{padding:2px !important;}</style>
 <div class="container" style="padding:5px;">
 <div style="position:absolute;top:0px;right:60px;"><a href="javascript:void(0)" style="background:#ffaa00;border:1px solid #aaa;border-top:0px;text-decoration:none;display:block;padding:0px 5px 1px 5px;border-radius:0px 0px 5px 5px;color:#555;" onclick='$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"})'>show menu</a></div>
 <div style="clear: both;overflow: hidden;">
@@ -65,8 +65,8 @@
 </div>
 
 <b style="float: right;margin-right:398px;margin-top:-44px;margin-bottom:25px;font-size: 11px;background-color:<?php echo $fr_status_color?>;color:#fff;padding:2px 3px;border-radius:3px;"><?php echo $fran_status_arr[$fran_status];?></b>
-<a href="javascript:void(0)" onclick="load_scheme_details()" style="float: right;margin-top: -39px;margin-right:156px;" class="button button-primary">Scheme &amp; Menu Details</a>
-<a href="<?php echo site_url('/admin/pnh_deals')?>" target="_blank" style="float:left;margin-top: -38px;margin-left:1171px;" class="button button-primary">GoTo Deals</a>
+<a href="javascript:void(0)" onclick="load_scheme_details()" style="float: right;margin-top: -39px;margin-right:156px;" class="button">Scheme &amp; Menu Details</a>
+<a href="<?php echo site_url('/admin/pnh_deals')?>" target="_blank" style="float:left;margin-top: -38px;margin-left:1171px;" class="button">GoTo Deals</a>
 <div class="fixed_bottom" id="srch_deals_cont">Search Deal : <div id="srch_results"></div><input type="text" class="inp" style="width:320px;" id="p_srch" autocomplete="off" ></div>
 <div class="fixed_bottom" style="left:480px;">PNH PRODUCT ID : <input type="text" class="inp" maxlength="8" size=30 id="p_pid" autocomplete="off" ><input type="button" value="Add" class="add_product"></div>
 <div class="fixed_bottom" style="left:935px;">Barcode : <input type="text" class="inp" size=20 id="p_barcode" autocomplete="off" ><input type="button" value="Add" class="add_b_product"></div>
@@ -156,7 +156,7 @@
 
 <table class="datagrid nofooter" id="prods_order">
 <thead><tr><th width="3%">Sno</th><th>Product Name</th><th width="3%">MRP<br>(Rs)</th><th width="6%">Offer price/<br>DP price<br>(Rs)</th>
-			<th width="8%">Discount <br>(Rs)</th><th width="8%">Landing Price<br>(Rs)</th>
+			<th width="8%">Discount <br>(Rs)</th><th width="12%">Landing Price<br>(Rs)</th>
 			<th width="7%">Qty</th>
 			<th width="7%">Sub Total <br> (Rs)</th> <th width="5%">Quote</th><th width="3%">Actions</th></tr></thead>
 <tbody>
@@ -242,7 +242,7 @@ background: wheat !important;
 text-align: center;width: 60px;"><b>OldMRP:</b> <span style="color: #cd0000;font-size: 13px;">%oldmrp%</span></div>
 </td>
 <td><span class="price">%price%</span></td>
-<td><span class="price tip_popup" title="Discount">Rs %margin_amt% &nbsp;(%margin%%)</span>
+<td><span class="price tip_popup" title="Discount">%margin_amt% &nbsp;(%margin%%)</span>
 						
 						
 					
@@ -678,7 +678,6 @@ $('#req_quote_dlg').dialog({
 												req_plist += '	<td>'+$(this).attr('mrp')+'</td>';
 												req_plist += '	<td>'+$(this).attr('price')+'</td>';
 												req_plist += '	<td><span style="background-color:#89c403;">'+format_number($(this).attr('lcost'))+'</span></td>';
-												req_plist += '	<td></td>';
 												req_plist += '	<td><input type="text" size="4" name="qty[]" value="'+$('input[name="qty[]"]',this).val()+'"></td>';
 												req_plist += '	<td><input type="text" size="4" name="quote[]" value="'+$('input[name="quote[]"]',this).val()+'"></td>';
 												req_plist += '	<td><a href="javascript:void(0)" class="remove_btn"><b>[X]</b></a> </td>';
@@ -1021,7 +1020,6 @@ $('#reg_mem_dlg').dialog({
 
 var balance=0,credit=0;
 var goodtogo=0;
-var distribtor_mrgn = new Array();
 
 function final_cancel()
 {
@@ -1164,9 +1162,6 @@ $(function(){
 		$("#prods_order .qty").each(function(){
 			qty.push($(this).val());
 		});
-		$("#prods_order .local_dist_mrgn").each(function(){
-			distribtor_mrgn.push($(this).val());
-		});
 		var menu_qty=qty;
 		var menuid=menuids;
 		var mid = $("input[name='mid']",$(this)).val().length;
@@ -1183,7 +1178,7 @@ $(function(){
 
 			if(mid==0 && menu_id != 112)
 			{
-				if(confirm("Instant Registration is required because Other than Mobile & Tablet items are in the Cart"))
+				if(confirm("Instant Registration is required because Other than Electronic items are there in the Cart"))
 					 mem_reg();
 				 return false;
 			}
@@ -1198,36 +1193,12 @@ $(function(){
 			return false;
 		}
 			
-		var invalid_qty=0;
-		var invalid_local_distrbutor_mrgn=0;
-		var frmEle = $(this);
-		$(' #prods_order  tbody tr',frmEle).addClass('row_p');
-		$(' #prods_order tbody tr:visible',frmEle).each(function(){
-			
-			var qty=$('.qty',this).val()*1;
-			var extra_mrgn=$(".local_dist_mrgn",this).val();
-			
-			if(isNaN(qty) || qty<=0)
-				invalid_qty+=1;
-
-			if(isNaN(extra_mrgn) || extra_mrgn == '')
-				invalid_local_distrbutor_mrgn+=1;
-			
-			$(this).removeClass('row_p');
-		});	
-		$('#prods_order tbody tr.row_p',frmEle).remove();
-		
-		if(invalid_qty)
+	if(invalid_qty)
 		{
 			alert("Invalid Quantity entered");
 			return false;
 		}
-		/*if(invalid_local_distrbutor_mrgn)
-		{
-			alert("Please update valid Margin");
-			return false;
-		}
-		*/
+		
 		if(confirm("Total order value : Rs "+total+"\nAre you sure want to place the order?"))
 		{
 			
@@ -1279,7 +1250,7 @@ $(function(){
 				qty_e = 0;
 			}
 		
-                        var qty_m = $(".qty",p).attr('pmax_ord_qty')*1;
+		var qty_m = $(".qty",p).attr('pmax_ord_qty')*1;
 		
 			if(qty_e > qty_m)
 			{
@@ -1394,7 +1365,6 @@ $(function(){
 			template=template.replace(/%stock%/g,p.stock);
 			template=template.replace(/%confirm_stock%/g,p.confirm_stock);
 			template=template.replace(/%margin_amt%/g,Math.ceil(p.price-p.lcost));
-			template=template.replace(/%lcl_distribtor_mrgn%/g,p.local_distbtr_margin);
 			
 			
 			if(p.max_allowed_qty*1 == 0)
@@ -1415,7 +1385,7 @@ $(function(){
 				else
 					var imei= (p.lcost*p.imei_disc.credit_value)/100 ;
 					
-				template=template.replace(/%imei_sch_disc%/g,"<span style='font-size:11px;' class='tip_popup imei_wrap' title='On IMEI Activation'><b>IMEI Activation: </b>(Rs."+imei+") </span> ");
+				template=template.replace(/%imei_sch_disc%/g,"<span style='font-size:11px;' class='tip_popup imei_wrap' title='On IMEI Activation'><b>IMEI Activation per Qty: </b>(Rs."+imei+") </span> ");
 			}else
 			{
 				template=template.replace(/%imei_sch_disc%/g,"");
@@ -1432,16 +1402,7 @@ $(function(){
 
 			template=template.replace(/%mrp%/g,p.mrp);
 			$("#prods_order tbody").append(template);
-			/*jQuery(document).ready(function() {
-			 	Tipped.create('.tip_popup',{
-			 	 skin: 'black',
-			 	  hook: 'topleft',
-			 	  hideOn: false,
-			 	  closeButton: true,
-			 	 	opacity: .5,
-			 	 	hideAfter: 200,
-				 });
-			 });*/
+			
 			 tooltip();
 			pids.push(p.pid);
 			
