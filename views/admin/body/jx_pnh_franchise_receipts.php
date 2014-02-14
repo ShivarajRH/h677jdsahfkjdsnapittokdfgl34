@@ -629,20 +629,20 @@ else if($type=="unreconcile")
                     <tbody>
                     <?php foreach($credits_log as $c=>$un_ac_st){ 
                         $credit_note_id = $un_ac_st["credit_note_id"];
-                        $credit_amount = $un_ac_st['amount'];
+                        $credit_amount = $un_ac_st['credit_amt'];
                         $ttl_reconcile_amount = $un_ac_st['ttl_reconcile_amount'];
                         $unreconciled_amount = $un_ac_st['unreconciled_amount'];
                     ?>
                     <tr>
                         <td><?php echo ++$c; ?></td>
-                        <td><?php echo format_datetime($un_ac_st['created_on'])?></td>
+                        <td><?php echo $un_ac_st['created_on']; ?></td>
                         <td><?php echo $credit_note_id;?></td>
-                        <td><?php echo $un_ac_st['desc']?></td>
+                        <td><?php echo $un_ac_st['remarks']?></td>
                         <td>Rs. <?php echo $credit_amount; ?></td>
                         <td>Rs. <span><?=$unreconciled_amount;?></span></td>
                         <td><span class="small_text"><?php echo ucfirst($un_ac_st['unreconciled_status']); ?></span></td>
                         <td><?php
-                                if($un_ac_st['type'] == '0' && $credit_amount > 0 ) { //Only if credit entry
+                                if($un_ac_st['action_type'] == '0' && $credit_amount > 0 ) { //Only if credit entry
                                     if($unreconciled_amount>0) ?>
                                         <a href="javascript:void(0);" onclick="reconcile_cr_amount(this,'<?=$credit_note_id;?>','<?=$credit_amount;?>','<?=$unreconciled_amount;?>')" class="button button-tiny button-action cursor">Reconcile</a>
                                    <?php

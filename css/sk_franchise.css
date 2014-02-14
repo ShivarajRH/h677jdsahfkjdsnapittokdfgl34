@@ -326,9 +326,9 @@ h4
 .error_status,.dg_error_status { font-size: 12px; color:#B44F4F; }
 
 .datagrid tfoot td { text-align:inherit;}
-.money { text-align: right; width: 78px; }
+.money { text-align: left; width: 78px; }
 .center {
     text-align: center;
 }
-.ui-widget-content a { color: #ffffff; }
+.ui-widget-content a { color: #313022; }
 #dg_i_receipt_id,#dg_i_credit_note_id,#dg_i_receipt_amount,#dg_i_credit_amount,#dg_i_unreconciled_value,.dg_l_total_adjusted_val,.dg_ttl_unreconciled_after { background: none !important; border: none !important; box-shadow:none;text-align:left; }

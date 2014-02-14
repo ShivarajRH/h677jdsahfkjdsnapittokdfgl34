@@ -1211,7 +1211,7 @@ $(function(){
                         <div class="clear"></div>
 			<?php if(1){?>
 				<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; min-width: 500px;font-size: 12px;">
-					<h4 style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Make a Topup/Security Deposit</h4>
+					<h4 style="background: #9B9794; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Make a Topup/Security Deposit</h4>
 					<form method="post" id="top_form" action="<?=site_url("admin/pnh_topup/{$fran['franchise_id']}")?>">
 						<table cellpadding=3 width="100%">
 							<tr>
@@ -1286,7 +1286,7 @@ $(function(){
 				</div>
 
 				<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 580px;font-size: 12px;">
-						<h4	style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Account Statement Correction</h4>
+						<h4	style="background: #9B9794; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Account Statement Correction</h4>
 						<form method="post" id="acc_change_form" action="<?=site_url("admin/pnh_acc_stat_c/{$fran['franchise_id']}")?>">
 							<input type="hidden" name="is_manual_corr" value="1">
 							<table cellpadding=3>
@@ -2013,7 +2013,7 @@ $(function(){
                     <div>&nbsp;</div>
                     <div class="dg_error_status"></div>
                         <table class="datagrid nofooter" width="100%">
-                            <thead> <tr><th>#</th><th>Document type</th><th>Invoice No</th><th width="100">Invoice Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
+                            <thead> <tr><th>#</th><th>Document type</th><th>Document No</th><th width="100">Document Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
                             <tbody class='dlg_invs_list'>
                                     <tr id='dg_reconcile_row_1' class="dg_invoice_row">
                                         <td>1</td>
@@ -2065,7 +2065,7 @@ $(function(){
                    
                     <div class="dg_error_status"></div>
                         <table class="datagrid nofooter" width="100%">
-                            <thead> <tr><th>#</th><th>Document type</th><th>Invoice No</th><th width="100">Invoice Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
+                            <thead> <tr><th>#</th><th>Document type</th><th>Document No</th><th width="100">Document Amount (Rs.)</th><th width="100">Adjusted Amount (Rs.)</th><th>&nbsp;</th></tr></thead>
                             <tbody class='dlg_credits_list'>
                                     <tr id='dg_credit_row_1' class="dg_credit_row">
                                         <td>1</td>

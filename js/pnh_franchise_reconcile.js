@@ -330,7 +330,8 @@ if(error_msgs.length)
             ,"Close":function() {
                 var dlg = $(this);
                 //$("#dl_submit_reconcile_form").clearForm();
-                $(".dg_amt_unreconcile,.dg_amt_adjusted,.dg_l_total_adjusted_val,.dg_ttl_unreconciled_after",dlg).val(0);
+                $(".dg_amt_unreconcile",dlg).val(0);
+                $(".dg_amt_adjusted,.dg_l_total_adjusted_val,.dg_ttl_unreconciled_after",dlg).val(0);
                 $(".dg_sel_invoices",dlg).val("").trigger("liszt:updated");
                 $(".dg_invoice_row",dlg).removeClass().addClass("dg_invoice_row");
                 dg_icount = 1;
@@ -433,19 +434,30 @@ if(error_msgs.length)
             }
 
             //new 
-            var i_sub_total = sel_inv_amount + reconciled_total;
+            var available_rpt_unreconciled_value = rpt_unreconciled_value - reconciled_total;
+            var new_reconcile_amount = 0;
+            if(available_rpt_unreconciled_value>sel_inv_amount){
+                new_reconcile_amount = sel_inv_amount;
+            }
+            else{
+                new_reconcile_amount = available_rpt_unreconciled_value;
+            }
+            /*var i_sub_total = sel_inv_amount + reconciled_total;
             if(i_sub_total < rpt_unreconciled_value) {
                 if(dg_icount) {
                     amt_unreconcile.val(sel_inv_amount);
                     amt_adjusted.val(sel_inv_amount);
                 }//else {$("#amt_unreconcile").val(sel_inv_amount);$("#amt_adjusted").val(sel_inv_amount);}
             }
-            else {
+            else {                
                 var i_sub_total = rpt_unreconciled_value - reconciled_total;
                 amt_unreconcile.val(sel_inv_amount);
                 amt_adjusted.val(i_sub_total);
                 //alert("Invoice amount cannot be more than the receipt amount!");
-            }
+            }*/
+            amt_unreconcile.val(sel_inv_amount);
+            amt_adjusted.val(new_reconcile_amount);
+            
             //dg_show_unconcile_total(dlgname);
             amt_adjusted.trigger("change");
                     
@@ -460,12 +472,14 @@ if(error_msgs.length)
             var amt_unreconcile = $("#"+rowname+" .dg_amt_unreconcile",dlg).val();
             var amt_adjusted = $("#"+rowname+" .dg_amt_adjusted",dlg);
             
+            var receipt_amount = $("#dg_i_unreconciled_value",dlg).val();
+            
             var amt_adjusted_amount = amt_adjusted.val();
             
 //            alert(rowname+"-"+amt_unreconcile+"-"+amt_adjusted_amount);
             
             // is adjusted amount is greater than invoice amount?
-            if( amt_adjusted_amount > amt_unreconcile ) {
+            if( amt_adjusted_amount > amt_unreconcile && amt_adjusted_amount > receipt_amount) {
                 amt_adjusted.val(0).focus();  $(elt).trigger("change");
                 alert("Adjusted amount is greater than invoice amount");
                 return false;

@@ -24008,7 +24008,7 @@ die; */
 	
 			$data['credit_log']=$this->db->query($sql,$fid)->result_array();
 		}
-        else if($type=="unreconcile")
+                else if($type=="unreconcile")
 		{
                         // receipts
 			$sql="select * from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) order by created_on desc";
@@ -27255,6 +27255,69 @@ die; */
             }
 			echo json_encode($rdata);
     }
+
+	/**
+	 * function to load racklocation alloted for brands
+	 * @param unknown_type $brandid
+	 */
+	function jx_prod_bybrand($bid=0)
+	{
+		$user=$this->auth();
+		$products=$this->erpm->getproductsforbrand($bid);
+		if($products)
+		{
+			$output['products']=$products;
+			$output['status']='success';
+		}
+		else
+		{
+			$output['status']="error";
+			$output['message']="No Products found";
+			
+		}
+		echo json_encode($output);
+	}
+
+	function jx_allot_rack_forproduct()
+	{
+		$rack_id=$this->input->post('rack_loc');
+		$ids=$this->input->post('ids');
+		
+		if($ids)
+		{
+			foreach($ids as $i)
+			{
+				$this->db->query("update m_product_info set loc_rb_id=? where product_id=? ",array($rack_id,$i));
+			}
+			
+		}
+	}
+	
+	/**
+	 * function to print warehouse summary
+	 * @param unknown_type $brandid
+	 */
+	function print_brands_summary($brandid=0,$catid=0,$menuid=0)
+	{
+		$user=$this->auth(PURCHASE_ORDER_ROLE);
+		if($catid==0)
+			$cond='p.brand_id='.$brandid.'';
+		else if($brandid=='all')
+			$cond='p.product_cat_id='.$catid.'';
+		else
+			$cond='p.brand_id='.$brandid.' and p.product_cat_id='.$catid.'';
+		
+		//brand name in po
+		$po_brand_name=$this->db->query("SELECT name as brand_name from king_brands where id=?",$brandid)->row()->brand_name;
+		
+		$data['products']=$this->db->query("select p.product_id,p.product_name,sum(s.available_qty) as stock,sum(s.available_qty*s.mrp) as stock_value,p.mrp from m_product_info p join t_stock_info s on s.product_id=p.product_id where $cond group by p.product_id having sum(s.available_qty)!=0 ")->result_array();
+		$data['page']='print_brands_summary';
+		$data['po_brand_name']=$po_brand_name;
+		$data['brandid']=$brandid;
+		$data['catid']=$catid;
+		$this->load->view('admin/body/print_brands_summary',$data);
+		
+	}
 
     /**
      * Function to get list of reconciled invoices or dr data of given credit note id

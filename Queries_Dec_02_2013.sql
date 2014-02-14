@@ -2358,7 +2358,7 @@ order by fcs.created_on desc) as g where g.unreconciled_amount > 0;
 truncate table `pnh_t_receipt_reconcilation`;
 truncate table `pnh_t_receipt_reconcilation_log`;
 update pnh_t_receipt_info set unreconciled_value = receipt_amount,unreconciled_status = 'pending' where receipt_amount !=0;
-update pnh_franchise_account_stat set unreconciled_value = amount,unreconciled_status = 'pending' where amount !=0;
+update pnh_franchise_account_summary set unreconciled_value = credit_amt,unreconciled_status = 'pending' where credit_amt !=0;
 
 #==========================================================
 select * from pnh_t_receipt_reconcilation_log
@@ -2643,3 +2643,117 @@ update pnh_sch_discount_brands a
 	join pnh_m_franchise_info b on a.franchise_id = b.franchise_id
 	set a.is_sch_enabled = 0 
 	where dealid != 0 and brandid = 76916829 and b.territory_id = 22 and unix_timestamp() between valid_from and valid_to and a.is_sch_enabled = 1;
+
+# Feb_13_2014
+
+select * from pnh_t_receipt_info where receipt_id = '5392';
+select * from pnh_t_receipt_reconcilation rcon where rcon.id='29';
+
+################### Show reconcile fields ##########################
+-- new
+select * from pnh_t_receipt_reconcilation_log rlog
+left join pnh_t_receipt_reconcilation rcon on rcon.id=rlog.reconcile_id
+where rlog.receipt_id = '5392';
+###########################################################
+
+-- 1 TOTAL UNRECONCILE AMOUNT 
+select round(sum(amount),2) ttl_cr_amount,round(sum(unreconciled_amount),2) as ttl_un_cr_amount from (select distinct fcs.amount,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+			from pnh_franchise_account_stat fcs
+			left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+			where fcs.type = '0'
+			and fcs.franchise_id = '17'
+			order by fcs.created_on desc) as g where g.unreconciled_amount > 0;
+
+-- 2 UNRECONCILE LIST 
+select * from (select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
+		,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.amount,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
+		,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+		,fcs.unreconciled_status
+		from pnh_franchise_account_stat fcs 
+		left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+		where fcs.type = '0' and fcs.franchise_id = '17'
+		group by fcs.id 
+		order by fcs.created_on desc
+		) as g where g.unreconciled_amount > 0;
+
+-- 2 UNRECONCILE LIST TOTAL
+select round(sum(amount),2) ttl_cr_amount,round(sum(unreconciled_amount),2) as ttl_un_cr_amount from (
+
+		select fcs.amount,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.amount,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
+		,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+		
+		from pnh_franchise_account_stat fcs 
+		left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+		where fcs.type = '0' and fcs.franchise_id = '17'
+		group by fcs.id 
+		order by fcs.created_on desc
+		) as g where g.unreconciled_amount > 0;
+
+select * from king_invoice where invoice_no = '20141019623';
+
+select * from pnh_t_receipt_reconcilation_log
+
+select * from pnh_t_receipt_reconcilation where invoice_no = '20141019623'
+
+select * from pnh_t_receipt_info where receipt_id = '5394'
+
+select * from pnh_franchise_account_stat where type='0' and franchise_id = '59';
+
+#==============================================================
+alter table `pnh_franchise_account_summary` add column `unreconciled_value` double  DEFAULT '0' NULL  after `created_by`, add column `unreconciled_status` varchar (50) DEFAULT 'pending' NULL  after `unreconciled_value`;
+#==============================================================
+
+-- new get list of franchise summary
+select * from (
+select fcs.acc_correc_id as credit_note_id,fcs.action_type,fcs.credit_amt,fcs.remarks,DATE_FORMAT(fcs.created_on,'%e/%m/%Y') as created_on,fcs.franchise_id
+                                                ,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.credit_amt,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
+                                                ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.credit_amt,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+                                                ,fcs.unreconciled_status
+                                                from pnh_franchise_account_summary fcs 
+                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id                                                where fcs.action_type = '5' and fcs.franchise_id = '59' and credit_amt !='0'
+                                                group by fcs.acc_correc_id 
+                                                order by fcs.created_on desc
+) as g where g.unreconciled_amount > 0;
+
+
+-- new get list of franchise summary SUM - TOTAL
+select round(sum(credit_amt),2) ttl_cr_amount,round(sum(unreconciled_amount),2) as ttl_un_cr_amount from ( select fcs.credit_amt
+                                                ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.credit_amt,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+                                                from pnh_franchise_account_summary fcs 
+                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id                                                where fcs.action_type = '5' and fcs.franchise_id = '59' and credit_amt !='0'
+                                                group by fcs.acc_correc_id 
+                                                order by fcs.created_on desc
+) as g where g.unreconciled_amount > 0;
+
+ #==========================================================
+-- // RESET RECONCILE TABLE
+truncate table `pnh_t_receipt_reconcilation`;
+truncate table `pnh_t_receipt_reconcilation_log`;
+update pnh_t_receipt_info set unreconciled_value = receipt_amount,unreconciled_status = 'pending' where receipt_amount !=0;
+update pnh_franchise_account_summary set unreconciled_value = credit_amt,unreconciled_status = 'pending' where credit_amt !=0;
+
+#==========================================================
+
+select * from pnh_franchise_account_summary where action_type = '5' and franchise_id = '59' and credit_amt !='0';
+
+
+select * from pnh_t_receipt_reconcilation where invoice_no = '20141019623'
+
+select * from pnh_t_receipt_info where receipt_id = '5394'
+
+select * from pnh_franchise_account_stat where type='0' and franchise_id = '59';
+
+select * from pnh_t_receipt_reconcilation where invoice_no = '20141019623' or debit_note_id = '0';
+
+select * from (select distinct i.invoice_no,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2), rcon.unreconciled ) as inv_amount
+                                                        from king_invoice i
+                                                        join king_transactions tr on tr.transid=i.transid
+                                                        left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
+                                                        where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id= '59' #and i.invoice_no is null 
+                                                        group by i.invoice_no,i.transid order by i.invoice_no asc) as g where g.inv_amount > 0;
+
+select * from (select fcs.id as debit_note_id,fcs.amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2), (rcon.unreconciled) ) as inv_amount
+                                                        from pnh_franchise_account_stat fcs
+                                                        left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.id
+                                                        where fcs.type=1 and fcs.franchise_id = '59'
+                                                        order by fcs.created_on desc) as g where g.inv_amount > 0;

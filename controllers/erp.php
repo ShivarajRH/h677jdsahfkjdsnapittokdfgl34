@@ -2551,8 +2551,8 @@ class Erp extends Stream
 		
 		if($inv_trans_det['is_pnh'])
 		{
-			$arr = array($inv_trans_det['franchise_id'],1,$inv_trans_det['invoice_no'],$inv_trans_det['inv_amt'],'',1,date('Y-m-d H:i:s'),$user['userid']);
-			$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,invoice_no,credit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?)",$arr);
+			$arr = array($inv_trans_det['franchise_id'],1,$inv_trans_det['invoice_no'],$inv_trans_det['inv_amt'],'',1,date('Y-m-d H:i:s'),$user['userid'],$inv_trans_det['inv_amt'],'pending');
+			$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,invoice_no,credit_amt,remarks,status,created_on,created_by,unreconciled_value,unreconciled_status) values(?,?,?,?,?,?,?,?,?,?)",$arr);
 			
 			// cancel credit note raised against invoice.
 			$credit_note_id = $this->db->query("select credit_note_id from king_invoice where invoice_no = ? ",$invno)->row()->credit_note_id;
@@ -2560,8 +2560,9 @@ class Erp extends Stream
 			{
 				//cancel credit note 
 				$this->db->query("update t_invoice_credit_notes set is_active = 0,modified_on=now() where id = ? ",$credit_note_id);
-				$arr = array($inv_trans_det['franchise_id'],7,$inv_trans_det['invoice_no'],$this->db->query('select amount from t_invoice_credit_notes where id = ? ',$credit_note_id)->row()->amount,'credit note cancelled',1,date('Y-m-d H:i:s'),$user['userid']);
-				$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,invoice_no,debit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?)",$arr);
+                                $amount = $this->db->query('select amount from t_invoice_credit_notes where id = ? ',$credit_note_id)->row()->amount;
+				$arr = array($inv_trans_det['franchise_id'],7,$inv_trans_det['invoice_no'],$amount,'credit note cancelled',1,date('Y-m-d H:i:s'),$user['userid'],$amount,'pending');
+				$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,invoice_no,debit_amt,remarks,status,created_on,created_by,unreconciled_value,unreconciled_status) values(?,?,?,?,?,?,?,?,?,?)",$arr);
 			}
 		}
 		
@@ -4378,8 +4379,8 @@ group by g.product_id ");
 		if($receipt_id)
 			$trans_type = 3;
 		
-		$arr = array($fid,$receipt_id,$trans_type,$acc_stat_id,$type?$amount:0,!$type?$amount:0,$desc,1,date('Y-m-d H:i:s'),$user['userid']);
-		$this->db->query("insert into pnh_franchise_account_summary (franchise_id,receipt_id,action_type,acc_correc_id,debit_amt,credit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?,?,?)",$arr);
+		$arr = array($fid,$receipt_id,$trans_type,$acc_stat_id,$type?$amount:0,!$type?$amount:0,$desc,1,date('Y-m-d H:i:s'),$user['userid'],$amount,'pending');
+		$this->db->query("insert into pnh_franchise_account_summary (franchise_id,receipt_id,action_type,acc_correc_id,debit_amt,credit_amt,remarks,status,created_on,created_by,unreconciled_value,unreconciled_status) values(?,?,?,?,?,?,?,?,?,?,?,?)",$arr);
 			
 		if($sms)
 			$this->erpm->pnh_sendsms($mob,"Amount of Rs $amount has been ".($type==0?"credited to":"debited from")." your franchise account against '$desc'",$fid);
@@ -6016,8 +6017,7 @@ group by g.product_id ");
 		$fid=$this->input->post('fid');
 		$barcode=$_POST['barcode'];
 		
-		$sql = "SELECT i.pnh_id AS pid  
-						FROM m_product_info p  
+		$sql = "SELECT i.pnh_id AS pid  FROM m_product_info p  
 						JOIN m_product_deal_link l ON l.product_id=p.product_id 
 						JOIN king_dealitems i ON i.id=l.itemid AND i.is_pnh=1 
 						JOIN king_deals d ON d.dealid=i.dealid  
@@ -6202,7 +6202,7 @@ group by g.product_id ");
 					$prod_mrp_changelog = $prod_mrp_changelog_res->row_array();
 					$prod['oldmrp']=$prod_mrp_changelog['old_mrp'];
 				}
-				else 
+				else
 				{
 					$prod['oldmrp']='-';
 				}
@@ -6243,17 +6243,20 @@ group by g.product_id ");
 				$prod['max_allowed_qty'] = $this->db->query("select max_allowed_qty from king_dealitems where pnh_id = ? ",$pid)->row()->max_allowed_qty;
 				$prod['imei_disc'] = $this->erpm->get_franimeischdisc_pid($fid,$pid);
 				
+                                // get pid super scheme  
+                                $prod['super_sch']= $this->erpm->get_fransuperschdisc_pid($fid,$pid);
+        
 				// get pid ordered total for today.
 				$prod['max_ord_qty'] = $this->erpm->get_maxordqty_pid($fid,$pid);
 				
 				unset($prod['is_combo']);
 			}else
 			{
-				$menu = $this->db->query("select c.name  
-												from king_dealitems a
-												join king_deals b on a.dealid = b.dealid 
-												join pnh_menu c on c.id = b.menuid 
-												where pnh_id = ? ",$pid)->row()->name;
+				$menu = $this->db->query("select c.name 
+                                                                        from king_dealitems a
+                                                                        join king_deals b on a.dealid = b.dealid 
+                                                                        join pnh_menu c on c.id = b.menuid 
+                                                                        where pnh_id = ? ",$pid)->row()->name;
 												
 				$prod = array('error'=>$menu." Menu not linked to franchise");
 			}
@@ -6851,7 +6854,7 @@ group by g.product_id ");
 			
 			//update credit note to account summary 
 			$arr = array($franid,7,$credit_note_id,$invno,$imei_credit,'imeino : '.$imeino,1,date('Y-m-d H:i:s'),$user['userid']);
-			$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,credit_note_id,invoice_no,credit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?,?)",$arr);
+			$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,credit_note_id,invoice_no,credit_amt,remarks,status,created_on,created_by,unreconciled_value,unreconciled_status) values(?,?,?,?,?,?,?,?,?,?,?)",$arr);
 			
 			$this->db->query("update t_imei_no set ref_credit_note_id = ? where imei_no = ? and ref_credit_note_id = 0 ",array($credit_note_id,$imeino));
 			
@@ -16269,8 +16272,8 @@ order by action_date";
 				
 					if($inv_trans_det['franchise_id'])
 					{
-						$arr = array($inv_trans_det['franchise_id'],1,$inv_trans_det['invoice_no'],$inv_trans_det['inv_amt'],'Product Return - Order:'.$return_prod_order_no,1,date('Y-m-d H:i:s'),$user['userid']);
-						$this->db->query("insert into pnh_franchise_account_summary (is_returned,franchise_id,action_type,invoice_no,credit_amt,remarks,status,created_on,created_by) values(1,?,?,?,?,?,?,?,?)",$arr);
+						$arr = array($inv_trans_det['franchise_id'],1,$inv_trans_det['invoice_no'],$inv_trans_det['inv_amt'],'Product Return - Order:'.$return_prod_order_no,1,date('Y-m-d H:i:s'),$user['userid'],$inv_trans_det['inv_amt'],'pending');
+						$this->db->query("insert into pnh_franchise_account_summary (is_returned,franchise_id,action_type,invoice_no,credit_amt,remarks,status,created_on,created_by,unreconciled_value,unreconciled_status) values(1,?,?,?,?,?,?,?,?,?,?)",$arr);
 						// auto debit credit note from statement.
 					
 						// cancel credit note raised against invoice.
@@ -16279,8 +16282,9 @@ order by action_date";
 						{
 							//cancel credit note
 							$this->db->query("update t_invoice_credit_notes set is_active = 0,modified_on=now() where id = ? ",$credit_note_id);
-							$arr = array($inv_trans_det['franchise_id'],7,$inv_trans_det['invoice_no'],$this->db->query('select amount from t_invoice_credit_notes where id = ? ',$credit_note_id)->row()->amount,'credit note cancelled - '.$return_prod_order_no,1,date('Y-m-d H:i:s'),$user['userid']);
-							$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,invoice_no,debit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?)",$arr);
+                                                        $cr_amt = $this->db->query('select amount from t_invoice_credit_notes where id = ? ',$credit_note_id)->row()->amount;
+							$arr = array($inv_trans_det['franchise_id'],7,$inv_trans_det['invoice_no'],$cr_amt,'credit note cancelled - '.$return_prod_order_no,1,date('Y-m-d H:i:s'),$user['userid'],$cr_amt,'pending');
+							$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,invoice_no,debit_amt,remarks,status,created_on,created_by,unreconciled_value,unreconciled_status) values(?,?,?,?,?,?,?,?,?,?)",$arr);
 						}
 					}
 				}
@@ -19974,8 +19978,8 @@ order by action_date";
 					$acc_stat_id = $this->erpm->pnh_fran_account_stat($fid,$type,$amount,$desc,"correction",$fid);
 					$trans_type = 5;
 				
-					$arr = array($fid,$receipt_id,$trans_type,$acc_stat_id,$type?$amount:0,!$type?$amount:0,$desc,1,date('Y-m-d H:i:s'),$user['userid']);
-					$this->db->query("insert into pnh_franchise_account_summary (franchise_id,receipt_id,action_type,acc_correc_id,debit_amt,credit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?,?,?)",$arr);
+					$arr = array($fid,$receipt_id,$trans_type,$acc_stat_id,$type?$amount:0,!$type?$amount:0,$desc,1,date('Y-m-d H:i:s'),$user['userid'],$amount,'pending');
+					$this->db->query("insert into pnh_franchise_account_summary (franchise_id,receipt_id,action_type,acc_correc_id,debit_amt,credit_amt,remarks,status,created_on,created_by,unreconciled_value,unreconciled_status) values(?,?,?,?,?,?,?,?,?,?,?,?)",$arr);
 				}
 				
 				$empid=$tm_info['employee_id'];
@@ -22720,7 +22724,7 @@ die; */
 							$acc_stat_id = $this->erpm->pnh_fran_account_stat($s['franchise_id'],$type,$amount,$desc,"correction",$s['franchise_id']);
 						if($this->db->affected_rows()>0)
 							$remarks="super scheme cash back";
-						$this->db->query("insert into pnh_franchise_account_summary(franchise_id,action_type,acc_correc_id,credit_amt,status,created_on,remarks)values(?,6,?,?,1,now(),?)",array($s['franchise_id'],$acc_correc_id,$amount,$remarks));
+						$this->db->query("insert into pnh_franchise_account_summary(franchise_id,action_type,acc_correc_id,credit_amt,status,created_on,remarks,unreconciled_value,unreconciled_status) values(?,6,?,?,1,now(),?,?,?)",array($s['franchise_id'],$acc_correc_id,$amount,$remarks,$amount,'pending'));
 
 					}
 				}
@@ -24008,7 +24012,7 @@ die; */
 	
 			$data['credit_log']=$this->db->query($sql,$fid)->result_array();
 		}
-                else if($type=="unreconcile")
+        else if($type=="unreconcile")
 		{
                         // receipts
 			$sql="select * from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) order by created_on desc";
@@ -24018,26 +24022,27 @@ die; */
                         $data['ttl_receipts_val']=$this->db->query("select sum(receipt_amount) as ttl_receipts_val from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) order by created_on desc",$fid)->row()->ttl_receipts_val;
                         
                         // credit notes
-                        $credits_log_sql = "select * from (select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
-                                                ,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.amount,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
-                                                ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
-                                                ,fcs.unreconciled_status
-                                                from pnh_franchise_account_stat fcs 
-                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-
-                                                where fcs.type = '0' and fcs.franchise_id = '43'
-                                                group by fcs.id 
-                                                order by fcs.created_on desc
-                                                ) as g where g.unreconciled_amount > 0 ";
+                        $credits_log_sql = "select * from (select fcs.acc_correc_id as credit_note_id,fcs.action_type,fcs.credit_amt,fcs.remarks,DATE_FORMAT(fcs.created_on,'%e/%m/%Y') as created_on,fcs.franchise_id
+                                                            ,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.credit_amt,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
+                                                            ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.credit_amt,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+                                                            ,fcs.unreconciled_status
+                                                            from pnh_franchise_account_summary fcs 
+                                                            left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id 
+                                                            where fcs.action_type = '5' and fcs.franchise_id = ? and credit_amt !='0'
+                                                            group by fcs.acc_correc_id 
+                                                            order by fcs.created_on desc
+                                                        ) as g where g.unreconciled_amount > 0";
                         $count_credit_records=$this->db->query($credits_log_sql,$fid)->num_rows();
                         $data['count_credit_records'] = $count_credit_records;
                         
-                        $data['total_credit_amount'] = $this->db->query("select round(sum(amount),2) ttl_cr_amount,round(sum(unreconciled_amount),2) as ttl_un_cr_amount from (select distinct fcs.amount,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
-                                                                            from pnh_franchise_account_stat fcs
-                                                                            left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-                                                                            where fcs.type = '0'
-                                                                            and fcs.franchise_id = ?
-                                                                            order by fcs.created_on desc) as g where g.unreconciled_amount > 0",$fid)->row()->ttl_un_cr_amount;
+                        $data['total_credit_amount'] = $this->db->query("select round(sum(credit_amt),2) ttl_cr_amount,round(sum(unreconciled_amount),2) as ttl_un_cr_amount from ( select fcs.credit_amt
+                                                                        ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.credit_amt,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+                                                                        from pnh_franchise_account_summary fcs 
+                                                                        left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id
+                                                                        where fcs.action_type = '5' and fcs.franchise_id = ? and credit_amt !='0'
+                                                                        group by fcs.acc_correc_id 
+                                                                        order by fcs.created_on desc
+                                                                        ) as g where g.unreconciled_amount > 0",$fid)->row()->ttl_un_cr_amount;
                         
                         $credits_log_sql .= " limit $pg , $limit ";
                         $data['credits_log']=$this->db->query($credits_log_sql,$fid)->result_array();
