@@ -1,6 +1,6 @@
 <?php
-include APPPATH.'/controllers/reservation.php';
-class Stream extends Reservation 
+include APPPATH.'/controllers/analytics.php';
+class Stream extends Analytics 
 {
     /**
      * Function to get count of unreplied comments
@@ -324,16 +324,16 @@ class Stream extends Reservation
                                     where stream_id=?
                                     group by su.user_id order by ka.name",$streamid)->result_array();
 //            $output.="<option value='00'>All</option>";
-    foreach($arr_userids as $assigneduser) {
-        if($user['userid'] == $assigneduser['user_id']) {
-            $output.="";
+            foreach($arr_userids as $assigneduser) {
+                if($user['userid'] == $assigneduser['user_id']) {
+                    $output.="";
+                }
+                else {
+                    $output.="<option value='".$assigneduser['user_id']."'>".$assigneduser['name']."</option>";
+                       }
+                    }
+                echo $output;
         }
-        else {
-            $output.="<option value='".$assigneduser['user_id']."'>".$assigneduser['name']."</option>";
-               }
-            }
-        echo $output;
-    }
 
     /**
      * Store the stream post

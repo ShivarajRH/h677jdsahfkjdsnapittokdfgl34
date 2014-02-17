@@ -109,7 +109,7 @@ if(error_msgs.length)
             $.post(site_url+"/admin/jx_get_unreconciled_debit_notes_list/"+franchise_id,{},function(resp) {
                     if(resp.fran_debit_notes.length) {
                         $.each(resp.fran_debit_notes,function(i,invoice) {
-                            invs += "<option value='"+invoice.debit_note_id+"' inv_amount='"+invoice.inv_amount+"'>"+invoice.debit_note_id+" (Dr. Rs."+invoice.amount+") </option>\n";
+                            invs += "<option value='"+invoice.debit_note_id+"' inv_amount='"+invoice.inv_amount+"'>Dr. "+invoice.debit_note_id+" (Rs."+invoice.amount+") </option>\n";
                         });
                     }
                     else 
@@ -449,7 +449,7 @@ if(error_msgs.length)
                     amt_adjusted.val(sel_inv_amount);
                 }//else {$("#amt_unreconcile").val(sel_inv_amount);$("#amt_adjusted").val(sel_inv_amount);}
             }
-            else {                
+            else {
                 var i_sub_total = rpt_unreconciled_value - reconciled_total;
                 amt_unreconcile.val(sel_inv_amount);
                 amt_adjusted.val(i_sub_total);

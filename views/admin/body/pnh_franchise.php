@@ -1333,7 +1333,7 @@ $(function(){
 						<?php if($this->erpm->auth(FINANCE_ROLE,true)){ ?>
 						<li><a href="#security_cheques" >Security Cheque Details</a></li>
 						<?php } ?>
-                         <li><a href="#unreconcile" onclick="load_receipts(this,'unreconcile',0,<?=$f['franchise_id']?>,100)">Un-Reconciled</a></li>
+                                                <li><a href="#unreconcile" onclick="load_receipts(this,'unreconcile',0,<?=$f['franchise_id']?>,10)">Un-Reconciled</a></li>
 					</ul>
 					
 					<div id="pending">
@@ -1398,7 +1398,7 @@ $(function(){
 				<div id="acct_stat">
 					<div class="tab_content"></div>
 				</div>
-                <div id="unreconcile">
+                                <div id="unreconcile">
 					<div class="tab_content"></div>
 				</div>
 			</div>
@@ -2878,7 +2878,7 @@ function load_members(fid,pg)
 function load_receipts(ele,type,pg,fid,limit)
 {
 	$($(ele).attr('href')+' div.tab_content').html('<div align="center"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
-    var cr_tab = 0;
+        var cr_tab = 0;
 	$.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+cr_tab+'/'+limit+'/'+pg*1,'',function(resp){
 		$($(ele).attr('href')+' div.tab_content').html(resp.page);
 		$($(ele).attr('href')+' div.tab_content .datagridsort').tablesorter();
@@ -2893,8 +2893,10 @@ $(".receipt_pg a").live('click',function(e){
 	var type=link_det[3];
 	var cr_tab=link_det[4];
 	var pg=link_det[5];
-	
-	$.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+cr_tab+'/'+pg*1,'',function(resp){
+        var limit=link_det[6];
+	//alert(pg);
+        
+        $.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+cr_tab+'/'+pg*1+'/'+limit,'',function(resp){
 		$("#"+type+' div.tab_content').html(resp.page);
 		$("#"+type+' div.tab_content .datagridsort').tablesorter();
 		

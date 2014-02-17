@@ -65,8 +65,9 @@ class Erpmodel extends Model
 			
             $replied_on = time();
             $status=1;
-            $stream_id = $this->db->query("select stream_id from m_stream_posts where id = ? ",$post_id)->row()->stream_id;
-            $posted_by = $this->db->query("select posted_by from m_stream_posts where id = ? ",$post_id)->row()->posted_by;
+            $post_det = $this->db->query("select * from m_stream_posts where id = ? ",$post_id)->row();
+            $stream_id = $post_det->stream_id;
+            $posted_by = $post_det->posted_by;
 			
             // notify by email on reply posted 
 			$stream_title = ucwords($this->db->query("select title from m_streams where id = ? ",$stream_id)->row()->title);
@@ -76,12 +77,12 @@ class Erpmodel extends Model
 			array_push($assigned_to,$posted_by);
 			
 			$this->db->query("insert into m_stream_post_reply(description,post_id,replied_by,replied_on,status) values(?,?,?,?,?)",array($this->prep($description),$post_id,$replied_by,$replied_on,$status));
-			
+			$reply_id = $this->db->insert_id();
 			foreach($assigned_to as $assignuserid) 
-            {
+                        {
 				
 				$arr_assiuser=$this->db->query("select name,email from king_admin where id=?",$assignuserid)->row_array();
-                $arr_adminuser=$this->db->query("select name,email from king_admin where id=?",$replied_by)->row_array();
+                                $arr_adminuser=$this->db->query("select name,email from king_admin where id=?",$replied_by)->row_array();
 				$message = '<h3>Hi '.($arr_assiuser['name']).' </h3>
 								<p>
 									Reply Posted under <b>'.$stream_title.'</b> Stream, posted by <b>'.(($assignuserid==$replied_by)?'You':$arr_adminuser['name']).'</b>
@@ -91,10 +92,24 @@ class Erpmodel extends Model
 								</blockquote>
 								<br>
 								<br>
-								<b>Storeking</b> 
-							';
-					
-                $this->_notifybymail(array($arr_assiuser['email']),"$stream_title Stream - New Message #$post_id Posted from ".(($assignuserid==$replied_by)?'You':$arr_adminuser['name']),$message,"Storeking Streams");
+								<b>Storeking</b> ';
+                                
+                                $message .= '<br><br><br>
+                                                <div style="padding:10px;">
+                                                    <h3> #'.$post_id.'.   '.nl2br($this->prep($post_det->description)).'</h3>
+                                                </div>';
+                                $post_reply_det = $this->db->query("select * from m_stream_post_reply where post_id=? and id != ? order by replied_on desc limit 100",array($post_id,$reply_id))->result_array();
+                                foreach($post_reply_det as $reply_det) {
+
+                                        $arr_replieduser=$this->db->query("select name,email from king_admin where id=?",$reply_det['replied_by'])->row_array();
+
+                                        $message .= '<blockquote style="background:#f8f8f8; padding:10px 10px 10px 20px;">'.nl2br($this->prep($reply_det['description'])).' 
+                                                        <span style="margin-right:5px;">'.($reply_det['replied_on']).'</span><span style="font-size:9px;float:right;">By '.$arr_replieduser['name'].'</span>
+                                                    </blockquote>';
+                                }
+				            
+                                $this->_notifybymail(array($arr_assiuser['email']),"$stream_title Stream - New Message #$post_id Posted from ".(($assignuserid==$replied_by)?'You':$arr_replieduser['name']),$message,"Storeking Streams");
+                                
                 
 			}
        }
@@ -137,7 +152,7 @@ class Erpmodel extends Model
 						
 						
 						$message = '<h3>Hi '.($arr_assiuser['name']).' </h3>
-									 
+
 									<p>
 										New Message under <b>'.$stream_title.'</b> Stream, posted by <b>'.(($assignuserid==$user['userid'])?'You':$arr_adminuser['name']).'</b>
 									</p>	
@@ -152,7 +167,7 @@ class Erpmodel extends Model
 						
                         $this->_notifybymail(array($arr_assiuser['email']),"$stream_title Stream - New Message #$post_id Posted from ".(($assignuserid==$user['userid'])?'You':$arr_adminuser['name']),$message,"Storeking Streams");
 						
-						$this->db->query("update m_stream_post_assigned_users set mail_sent=1 where userid=? and post_id=? and streamid=? and assigned_userid=?",array($user_id,$post_id,$stream_id,$assignuserid));		
+			$this->db->query("update m_stream_post_assigned_users set mail_sent=1 where userid=? and post_id=? and streamid=? and assigned_userid=?",array($user_id,$post_id,$stream_id,$assignuserid));
                 }
             }
         }
@@ -192,7 +207,7 @@ class Erpmodel extends Model
 		
 		$this->email->send();
 		
-		//echo $this->email->print_debugger();
+		echo $this->email->print_debugger();
  
 	}
 
@@ -7152,8 +7167,6 @@ order by p.product_name asc
 		$user=$this->erpm->getadminuser();
 		foreach(array("r_type","amount","bank","type","no","date","msg","transit_type","sel_invoice","amt_unreconcile","amt_adjusted","total_val_reconcile","document_type") as $i)
 			$$i=$this->input->post($i);
-                
-                   // echo '<pre>';print_r($_POST);die("TESTING");
 		$inp=array("receipt_type"=>$r_type,"franchise_id"=>$fid,"bank_name"=>$bank,"receipt_amount"=>$amount,"payment_mode"=>$type,"instrument_no"=>$no,"instrument_date"=>strtotime($date),"created_by"=>$user['userid'],"created_on"=>time(),"remarks"=>$msg,"in_transit"=>$transit_type,"unreconciled_value"=>$amount);
 		
 		// if cash receipt is added.

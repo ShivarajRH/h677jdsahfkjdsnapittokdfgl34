@@ -2757,3 +2757,41 @@ select * from (select fcs.id as debit_note_id,fcs.amount,rcon.unreconciled as un
                                                         left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.id
                                                         where fcs.type=1 and fcs.franchise_id = '59'
                                                         order by fcs.created_on desc) as g where g.inv_amount > 0;
+
+# Feb_14_2014
+
+select * from m_stream_posts where id  = 
+select * from m_stream_posts 
+
+select * from m_stream_post_reply where post_id='70'
+
+select * from king_admin
+0487cc982f7db39c51695026e4bdc692
+ef8d47b9747e620fb3d29d17269c4c33
+select md5('suresh')
+
+franchise_id = '59';
+
+select * from m_stream_post_reply where post_id='740' order by replied_on desc limit 100 # and id != ?
+
+select * from  pnh_franchise_account_summary where action_type='5' and debit_amt != 0 and franchise_id = '59';
+
+-- old old
+select * from (select fcs.id as debit_note_id,fcs.amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2), (rcon.unreconciled) ) as inv_amount
+                                                        from pnh_franchise_account_stat fcs
+                                                        left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.id
+                                                        where fcs.type=1 and fcs.franchise_id = '59'
+                                                        order by fcs.created_on desc) as g where g.inv_amount > 0;
+
+-- NEW NEW to get list of debit entries:
+select * from (select fcs.acc_correc_id as debit_note_id,fcs.debit_amt as amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.debit_amt, 2), (rcon.unreconciled) ) as inv_amount
+			from pnh_franchise_account_summary fcs
+			left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.acc_correc_id
+			where fcs.action_type='5' and fcs.franchise_id = '17' and debit_amt != 0
+			order by fcs.created_on desc
+) as g where g.inv_amount > 0
+
+======================================
+# Feb_17_2014
+
+

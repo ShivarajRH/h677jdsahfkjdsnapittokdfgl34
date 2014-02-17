@@ -219,6 +219,7 @@
 		<?php echo $pagination;?>
 	</div>
 	<div class="receipt_totals"><b>Total Receipts: </b><?php echo $total_records;?>&nbsp;&nbsp;<b>Total value:</b> Rs <?php echo formatInIndianStyle($realized_ttlvalue['total'])?></div>
+            
 	 <div class="clear"></div>
 	 <table class="datagrid smallheader"  width="100%" >
 		<thead>
@@ -470,7 +471,7 @@
                         else echo '--';
                         
                         if($reconcile_amount > 0) { ?>
-                                <!--<span>Rs. <?php // echo $reconcile_amount;?></span>-->
+                                <span>Rs. <?php echo $reconcile_amount;?></span>
                                 &nbsp;&nbsp;<a href="javascript:void(0);" onclick="clk_view_reconciled_credit_value(this,'<?=$credit_note_id;?>','<?=$ac_st["franchise_id"];?>','<?=$reconcile_amount;?>')" class="button button-tiny button-primary cursor">View Reconciled</a><?php
                         }
                     }
@@ -674,7 +675,7 @@ else if($type=="unreconcile")
 <?php 
 }
 ?>
-<!--
-<div align="right" class="receipt_pg">
-	<?php //  echo $pagination;?>
+
+<!--<div align="right" class="receipt_pg">
+	<?php // echo $pagination;?>
 </div>-->
