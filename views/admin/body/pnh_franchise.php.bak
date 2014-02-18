@@ -2895,7 +2895,7 @@ $(".receipt_pg a").live('click',function(e){
 	var pg=link_det[5];
 	var limit=link_det[6];
         
-    $.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+cr_tab+'/'+pg*1+'/'+limit,'',function(resp){
+        $.post(site_url+'/admin/jx_pnh_franchise_reports/'+fid+'/'+type+'/'+cr_tab+'/'+pg*1+'/'+limit,'',function(resp){
 		$("#"+type+' div.tab_content').html(resp.page);
 		$("#"+type+' div.tab_content .datagridsort').tablesorter();
 		

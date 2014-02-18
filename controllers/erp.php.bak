@@ -27029,11 +27029,11 @@ die; */
         $user = $this->erpm->auth(FINANCE_ROLE);
         //select * from  pnh_franchise_account_summary where action_type='5' and debit_amt != 0 and franchise_id = '59'
         $rdata['fran_debit_notes']=$this->db->query("select * from (select fcs.acc_correc_id as debit_note_id,fcs.debit_amt as amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.debit_amt, 2), (rcon.unreconciled) ) as inv_amount
-                        from pnh_franchise_account_summary fcs
-                        left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.acc_correc_id
-                        where fcs.action_type='5' and debit_amt != 0 and fcs.franchise_id = ?
-                        order by fcs.created_on desc
-                    ) as g where g.inv_amount > 0",$fid)->result_array();
+                                                                                    from pnh_franchise_account_summary fcs
+                                                                                    left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.acc_correc_id
+                                                                                    where fcs.action_type='5' and debit_amt != 0 and fcs.franchise_id = ?
+                                                                                    order by fcs.created_on desc
+                                                                                ) as g where g.inv_amount > 0",$fid)->result_array();
         echo json_encode($rdata);
     }
     

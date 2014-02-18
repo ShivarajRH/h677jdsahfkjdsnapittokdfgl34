@@ -1,3 +1,121 @@
+<style>
+	.list-inlineblk{
+			background: none repeat scroll 0 0 #F7F7F7;
+		    cursor: pointer;
+		    float: left;
+		    font-size: 12px;
+		    font-weight: 600;
+		    height: 26px;
+		    margin: 2px;
+		    padding: 6px 5px 5px 2px;
+		    vertical-align: top;
+		    width: 19%;
+	}
+	.deallist-inlineblk{
+		    background: none repeat scroll 0 0 #F7F7F7;
+		    cursor: pointer;
+		    float: left;
+		    font-size: 12px;
+		    font-weight: bold;
+		    height: 70px;
+		    margin: 2px;
+		    padding: 4px 5px;
+		    width: 32%;
+	}
+	.deallist-inlineblk span {
+	    display: inline-block;
+	    float: right;
+	    margin-top: 1px;
+	    text-align: left;
+	    width: 88%;
+	}
+	.deallist-inlineblk .sel_deal_disc_type {
+	     	float: right;
+		    margin: 0 5px;
+		    width: 18%;
+	}
+	.deallist-inlineblk .sel_deal_disc_val {
+	     	float: right;
+		    padding: 3px;
+		    width: 26%;
+	}
+	#franchise_filter
+	{
+		overflow:hidden;padding:5px 3px;font-size: 11px;background: #DFDFDF;
+	}
+	.list-inlineblk.selected{
+		background: #ffffD0;
+	}
+	.deallist-inlineblk.selected{
+		background: #ffffD0;
+	}
+	.deallist-inlineblk span.error_txt{
+		color:#cd0000;
+	}
+	.list-inlineblk span.error_txt{
+		color:#cd0000;
+	}
+	.show_deal{display:none;}
+	#msch_type,#credit_value,.super_scheme,.leftcont
+	{display: none;}
+	.sch_disc
+	{background-color:#AAFFAA;}
+	.nombrsch
+	{background-color:#FFAAAA;}
+	.nosupersch
+	{background-color:#DCEBF9;}
+	.type_fil_wrap b
+	{
+		  background: none repeat scroll 0 0 #FDFDFD;
+	    float: left;
+	    margin: 0 2px;
+	    padding: 4px 19px;
+	    cursor:pointer;
+	}
+	.selected_type
+	{
+		 background: none repeat scroll 0 0 #FF0000 !important;
+		 color:#fff !important;
+	}
+	.highlight_option
+	{
+		 background: none repeat scroll 0 0 #FF0000 !important;
+		 color:#fff !important;
+	}
+	.breadcrumb_wrap
+	{
+		padding:4px;
+	}
+	.breadcrumb_wrap b
+	{
+		color: #777777;
+	    font-size: 9px;
+	    padding: 0;
+	}
+	.add_row
+	{
+		cursor:pointer;
+	}
+	.remove_row
+	{
+		cursor:pointer;
+	}
+	#select_filter
+	{
+		margin-left: 30px;
+	}
+	#select_filter a
+	{
+		background: none repeat scroll 0 0 #FDFDFD;
+	    float: right;
+	    font-size: 11px;
+	    font-weight: bold;
+	    margin: 0 3px;
+	    padding: 4px;
+	    text-decoration:none;
+	    cursor:pointer;
+	}
+</style>
 <div class="container">
 	<h2>Add Discounts for Franchises</h2>
 	<div class="clear"></div>
@@ -7,31 +125,11 @@
 				<td width="10%"><b>Discount Type</b></td>
 				<td>
 					<select name="bulk_schtype" id="bulk_schtype" style="width:150px;">
-						<option value="1">Scheme Discount</option>
-						<option value="3">IMEI Scheme</option>
-						<option value="2">Super Scheme</option>
+						<option col_text="Discount" col_title="Deals" col_extra="" value="1">Scheme Discount</option>
+						<option col_text="Credit Cash" col_title="" col_extra="Credit Value"  value="3">IMEI Scheme</option>
+						<option col_text="Target Value" col_title="" col_extra="Credit Prec." value="2">Super Scheme</option>
 					</select>
 				</td>
-			</tr>
-			<tr id="msch_type">
-				<td><b>Credit Cash</b></td>
-				<td><input type="text" name="mscheme_val" class="inp" size=6> in <label><input type="radio" name="mscheme_type" value=1 checked="checked">%</label> <label><input type="radio" name="mscheme_type" value=0>Rs</label></td>
-			</tr>
-			<tr id="credit_value">
-				<td><b>Credit Value</b></td>
-				<td><input type="text" name="credit_value"></td>
-			</tr>
-			<tr class="super_scheme">
-				<td><b>Target Value</b></td>
-				<td><input type="text" name="target_value"></td>
-			</tr>
-			<tr class="super_scheme">
-				<td><b>Credit Percent</b></td>
-				<td><input type="text" name="credit_prc" size="4">%</td>
-			</tr>
-			<tr id="sch_disc">
-				<td><b>Discount</b></td>
-				<td><input type="text" name="discount" value="1" size="4">%</td>
 			</tr>
 			<tr>
 				<td><b>Menu</b></td>
@@ -39,23 +137,55 @@
 					<select name="menu" data-placeholder="Choose" id="choose_menu" style="min-width: 180px;">
 						<option value="0">Choose</option>
 					<?php foreach($this->db->query("select id,name from pnh_menu where status = 1 order by name asc")->result_array() as $menu){?>
-					<option value="<?php echo $menu['id']?>"><?php echo $menu['name']?></option>
+						<option value="<?php echo $menu['id']?>"><?php echo $menu['name']?></option>
 					<?php }?>
 					</select>
 				</td>
 			</tr>
 			<tr>
-				<td><b>Category</b></td>
-				<td><select name="cat" id="select_cat" data-placeholder="Choose" style="width: 200px;" ></select></td>
+				<td><b>Configure</b></td>
+				<td>
+					 <div id="cat_brand_input_blk">
+						<table class="datagrid" cellpadding="0" cellspacing="0">
+							<thead>
+								<tr><th>Sl.no</th><th>Category</th><th>Brand</th><th>Type</th><th class="disc_text">Discount</th><th class="extra_col"></th><th>Franchises</th><th class="col_head">Deals</th><th>&nbsp;</th></tr>
+							</thead>
+							<tbody id="brand_group">
+								<tr>
+									<td><span>1</span></td>
+									<td><select name="category[]" class="select_cat" data-placeholder="Choose" style="width: 200px;"></select></td>
+									<td><select name="brand[]" class="select_brand" data-placeholder="Choose" style="width: 200px;" ></select></td>
+									<td><select name="disc_type[]" class="disc_type" data-placeholder="Choose" style="width: 50px;" >
+											<option value="1">%</option>
+											<option value="0">Rs</option>
+										</select>
+									</td>
+									<td><input type="text" name="disc_val[]" value="0" size="10"></td>
+									<td>
+										<input type="text" class="ext_input" name="scheme_val[]" value="0" size="10">
+										<select name="mscheme_type[]" class="mscheme_type" data-placeholder="Choose" style="width: 50px;" >
+											<option value="1">%</option>
+											<option value="0">Rs</option>
+										</select>
+									</td>
+									<td>
+										<input type="hidden" class="sel_fids" name="fran_ids[]" value="" >
+										<a href="javascript:void(0)" onclick="sel_fran_btn(this)" class="button button-tiny button-action sel_fran_btn">Choose</a>
+										<span class="franch_selected"></span>
+									</td>
+									<td class="deals_td">
+										<input type="hidden" class="sel_dealids" name="deal_ids[]" value="" >
+										<a href="javascript:void(0)"  onclick="sel_deal_btn(this)" class="button button-tiny button-action sel_deal_btn">Choose</a>
+										<span class="deals_selected"></span>
+									</td>
+									<td><div class="button button-tiny row_addedit_btn" >+</div></td>
+								</tr>
+							</tbody> 
+						</table>
+					</div>	
+				</td>
 			</tr>
-			<tr>
-				<td><b>Brand</b></td>
-				<td><select name="brand" id="select_brand" data-placeholder="Choose" style="width: 200px;" ></select></td>
-			</tr>
-			<tr class="disc_ondeal">
-				<td><b>Discount on Deal</b></td>
-				<td><input type="checkbox" name="disc_ondeal" value="1"></td>
-			</tr>
+		 	
 			<tr class="show_deal">
 				<td><b>Deals</b></td>
 				<td>
@@ -71,45 +201,13 @@
 					<div class="clear"></div>
 				</td>
 			</tr>
-			
-			
 			<tr>
-				<td valign="center"><b>Franchises</b></td>
-				<td>
-		 	 		<div id="franchise_filter" align="right" style="overflow:hidden;padding:5px 3px;font-size: 11px;display: none;background: #DFDFDF;width:95.5%">
-		 	 			<span class="type_fil_wrap fl_left">
-							<b class="all">All</b>
-							<b class="sch_allot">Scheme Alloted</b>
-							<b class="sch_not_allot">Scheme Not Alloted</b>						
-						</span>
-						<span class="breadcrumb_wrap fl_left">
-							<b id="menu_name"></b> >> <b id="cat_name"></b> >> <b id="brand_name"></b> 
-						</span>
-						<div class="fl_right" id="ter_twn_filter">
-							<span>
-								<b>Territory&nbsp;</b> <select name="fil_territory" style="font-size: 11px;"><option value="">All</option></select> 
-							</span> &nbsp; 
-							<span>
-								<b>Town&nbsp; </b> 
-								<select name="fil_town"  style="font-size: 11px;"><option value="">All</option></select>
-							</span>
-						</div> 
-					</div>
-					<div style="clear:both">
-						<div id="fran_list"></div>
-						<div class="clear"></div>
-						<div style="padding-top:5px;">select : <input onclick='select_all_franchises()' type="button" value="All"> <input onclick='unselect_all_franchises()' type="button" value="None"></div>
-					</div>
-					<div class="clear"></div>
-				</td>
+				<td><b>Scheme Validity</b></td>
+				<td> From <input type="text" class="inp" size="10" name="start" id="d_start"> To  <input type="text" class="inp" size="10" name="end" id="d_end"></td>
 			</tr>
 			<tr id="msch_applyfrm">
 				<td><b>Apply From</b></td>
 				<td><input type="text" class="inp" size="10" name="msch_applyfrm" id="m_applyfrm"></td>
-			</tr>
-			<tr>
-				<td><b>Scheme Validity</b></td>
-				<td> From <input type="text" class="inp" size="10" name="start" id="d_start"> To  <input type="text" class="inp" size="10" name="end" id="d_end"></td>
 			</tr>
 			<tr>
 				<td><b>Reason</b></td>
@@ -125,108 +223,457 @@
 			</tr>
 		</table>
 	</form>
-
 </div>
 
-<style>
-	.list-inlineblk{
-		  background: none repeat scroll 0 0 #F7F7F7;
-		    cursor: pointer;
-		    float: left;
-		    font-size: 11px;
-		    height: 30px;
-		    margin: 1px;
-		    padding: 5px 1px;
-		    vertical-align: top;
-		    width: 24%;
-	}
-	
-	.list-inlineblk span {
-	    display: inline-block;
-	    float: right;
-	    margin-top: 1px;
-	    text-align: left;
-	    width: 88%;
-	}
-	.list-inlineblk.selected{
-		background: #ffffD0;
-	}
-	.list-inlineblk span.error_txt{
-		color:#cd0000;
-	}
-		.show_deal{display:none;}
-</style>
+<div id="franchise_det_dlg" title="Available Franchise List">
+	<div id="franchise_filter" align="right">
+ 	 	<span class="type_fil_wrap fl_left">
+			<b class="all">All</b>
+			<b class="sch_allot">Scheme Alloted</b>
+			<b class="sch_not_allot">Scheme Not Alloted</b>						
+		</span>
+		<div class="fl_right" id="ter_twn_filter">
+			<select name="fil_territory"></select> &nbsp;
+			<select name="fil_town"></select>
+		</div>
+		<div class="fl_left" id="select_filter">
+			<a class="sel_all_wrap" onclick="unselect_all_franchises()"><span>Unselect All</span></a>
+			<a class="unsel_all_wrap" onclick="select_all_franchises()"><span>Select All</span></a>
+		</div>
+	</div>
+	<div id="franchise_det" title="Franchise List"></div>
+</div>
+
+<div id="deals_det_dlg" title="Available Deals List">
+	<div class="fl_right" id="select_filter">
+		<a onclick="unselect_all_franchises()"><span>Unselect All</span></a>
+		<a onclick="select_all_franchises()"><span>Select All</span></a>
+	</div>
+	<div class="deals_list" title="Deals List"></div>
+</div>
 
 <script>
-$('#choose_menu,#bulk_schtype,#select_cat,#select_brand').chosen();
 
+$('#choose_menu,#bulk_schtype,.select_cat,.select_brand,.disc_type').chosen();
 
-function select_all_franchises()
+function sel_fran_btn(ele)
 {
-	$('#fran_list .list-inlineblk:visible input[name="fids[]"]').attr('checked',true);
-	$('#fran_list .list-inlineblk:visible').addClass('selected');
+	var trele=$(ele).parents('tr:first');
+	var catid=$('.select_cat',trele).val()*1;
+	var brandid=$('.select_brand',trele).val()*1;
+	var fids=$('.sel_fids',trele).val();
+	
+	if($('.sel_fran_btn',trele).hasClass('franlist_selected'))
+		var status=0;
+	else
+		status=1;	
+	
+	if(catid !=0 && brandid !='')
+		$('#franchise_det_dlg').data({'menu_id':$('.choose_menuid').val(),'trele':trele,'status':status,'fids':fids}).dialog("open");
+	else
+	{
+		alert("Please Choose Category & Brand before Proceed");
+		return false;
+	}
 }
 
-function unselect_all_franchises()
+function sel_deal_btn(ele)
 {
-	$('#fran_list .list-inlineblk:visible input[name="fids[]"]').attr('checked',false);
-	$('#fran_list .list-inlineblk:visible ').removeClass('selected');
+	var trele=$(ele).parents('tr:first');
+	var catid=$('.select_cat',trele).val()*1;
+	var brandid=$('.select_brand',trele).val()*1;
+	if($('.sel_deal_btn',trele).hasClass('deallist_selected'))
+		var status=0;
+	else
+		status=1;	
+	
+	if(catid !=0 && brandid !=0 )
+	{
+		$('#deals_det_dlg').data({'menu_id':$('.choose_menuid').val(),'trele':trele,'status':status,'catid':catid,'brandid':brandid}).dialog("open");
+	}
+	else
+	{
+		alert("Please Choose Category and Brand");
+		return false
+	}	
 }
+ 
+$(function(){
+	//prepare_daterange("d_start","d_end");
+	$('#d_start').datepicker({minDate:0});
+	$('#msch_applyfrm').hide();
+	$('#d_end').datepicker();
+	$("#m_applyfrm").datepicker();
+	$('#fran_list').hide();
+	$('.breadcrumb_wrap').hide();
+	$('.ext_input').hide();
+	$('.mscheme_type').hide();
+	$('.sel_dealids').val();
+	$('.sel_fids').val();
+	$('#bulk_schtype').val('1');
+});
+
+function sort_select_list(obj)
+{
+	var options = $('option',obj);
+	var arr = options.map(function(_, o) { return { t: $(o).text(), v: o.value }; }).get();
+		arr.sort(function(o1, o2) { return o1.t > o2.t ? 1 : o1.t < o2.t ? -1 : 0; });
+		options.each(function(i, o) {
+	  		o.value = arr[i].v;
+	  		$(o).text(arr[i].t);
+		});
+}
+
+$("#franchise_det_dlg" ).dialog({
+		modal:true,
+		autoOpen:false,
+		width:'1200',
+		height:'550',
+		autoResize:true,
+		open:function(){
+			dlg = $(this);
+			var menuid=$('#choose_menu').val();
+			var catid=$('.select_cat').val();
+			var brandid=$('.select_brand').val();
+			var type=$("#bulk_schtype").val();
+			var trele=dlg.data('trele');
+			var status=dlg.data('status');
+			var fids=dlg.data('fids');
+			var fid=$('.sel_fids',trele).val();
+			fid_arr=fid.split(",");
+			
+			if(status != 0)	
+			{
+				$.getJSON(site_url+'/admin/get_franchisebymenu_id/'+menuid+'/0'+'/0/'+type,function(resp){
+					if(resp.status=='error')
+					{
+						$('#franchise_det').html(resp.message);
+					}
+					else
+					{
+						var menufranchiselist_html='';
+						$.each(resp.menu_fran_list,function(i,itm){
+							
+						if($.inArray(itm.fid,resp.has_nosch)!=-1)
+							var no_schfid=itm.fid;
+							
+						menufranchiselist_html+='<div class="list-inlineblk fid_'+itm.fid+' terr_'+itm.territory_id+' twn_'+itm.town_id+' sch_'+no_schfid+' "  fid='+itm.fid+' ><input type="checkbox" class="terr_'+itm.territory_id+'" name="fids[]" value="'+itm.fid+'":checked > <span class="'+(itm.is_suspended!="0"?'error_txt':'')+'">'+itm.franchise_name+'</span></div>';
+							
+						if(!$('select[name="fil_territory"] option#territory_'+itm.territory_id).length){
+							if(itm.territory_id!=undefined){
+								$('select[name="fil_territory"]').append('<option id="territory_'+itm.territory_id+'" value="'+itm.territory_id+'">'+itm.territory_name+'</option>');
+							}
+						}
+				
+						if(!$('select[name="fil_town"] option#town_'+itm.town_id).length){
+							if(itm.town_id!=undefined){
+								$('select[name="fil_town"]').append('<option id="town_'+itm.town_id+'" value="'+itm.town_id+'">'+itm.town_name+'</option>');
+							}
+						}
+					});
+				$('#franchise_det').html(menufranchiselist_html);
+			}
+					
+			$('select[name="fil_territory"]').prepend('<option value=""> All</option');
+			$('select[name="fil_town"]').prepend('<option value=""> All</option');
+			sort_select_list($('select[name="fil_territory"]'));
+			sort_select_list($('select[name="fil_town"]'));
+			$('select[name="fil_territory"]').val("");
+			$('select[name="fil_town"]').val("");
+			
+			$.getJSON(site_url+'/admin/jx_check_has_scheme/'+menuid+'/'+catid+'/'+brandid+'/'+type,function(resp){
+				if(resp.status=='success')
+				{
+					if(resp.has_sch_disc.length != 0)
+					{
+						$.each(resp.has_sch_disc,function(i,itm){
+							$('#franchise_det .list-inlineblk.fid_'+itm.franchise_id).addClass('sch_disc');
+							$('#franchise_det .list-inlineblk.fid_'+itm.franchise_id).show();
+						});
+					}else
+					{
+						$('#franchise_det .list-inlineblk').removeClass('sch_disc');
+					}
+				}
+			});
+		});
+	}
+	else
+	{
+		$('.list-inlineblk').removeClass('selected');
+		$('.list-inlineblk:visible input[name="fids[]"]').attr('checked',false);
+		
+		for(var i=0;i<fid_arr.length;i++)
+		{
+			$('.list-inlineblk.fid_'+fid_arr[i]+' input[name="fids[]"]').attr('checked',true);
+			$('.list-inlineblk.fid_'+fid_arr[i]).addClass('selected');
+		}
+	}
+	},
+	buttons: {
+	    "submit": function() {
+	    	dlg = $(this);
+	    	$('.sel_fids',trele).val();
+	    	var trele=dlg.data('trele');
+	    
+	    	var fids=[];
+    		$('.selected',dlg).each(function(){
+    			fids.push($(this).attr('fid'));
+    		});
+    		
+    		$('.sel_fids',trele).val(fids);
+    		$('.franch_selected',trele).html("<b>"+fids.length+"</b> selected");
+    		$('.sel_fran_btn',trele).addClass('franlist_selected');
+    		$(this).dialog('close');
+	   }
+	} 
+});
+
+$('#franchise_filter .all').live('click',function(){
+	$('.type_fil_wrap b').removeClass("selected_type");
+	$('.type_fil_wrap .all').addClass("selected_type");
+	var tid=$("select[name='fil_territory']").val();
+	var townid=$("select[name='fil_town']").val();
+	
+	if(tid && !townid)
+	{
+		$('.list-inlineblk').hide();
+		$('.list-inlineblk.terr_'+tid).show();
+	}else if(tid && townid)
+	{
+		$('.list-inlineblk').hide();
+		$('.list-inlineblk.terr_'+tid+'.twn_'+townid).show();
+	}else if(!tid && !townid)
+	{
+		$('.list-inlineblk').show();
+	}
+});
+
+
+$('#franchise_filter .sch_allot').live('click',function(){
+	$('.type_fil_wrap b').removeClass("selected_type");
+	$('.type_fil_wrap .sch_allot').addClass("selected_type");
+	var tid=$("select[name='fil_territory']").val();
+	var townid=$("select[name='fil_town']").val();
+	
+	if(tid && !townid)
+	{
+		$('.list-inlineblk').hide();
+		$('.list-inlineblk.terr_'+tid+'.sch_disc').show();
+	}else if(tid && townid)
+	{
+		
+		$('.list-inlineblk').hide();
+		$('.list-inlineblk.terr_'+tid+'.twn_'+townid+'.sch_disc').show();
+	}else if(!tid && !townid)
+	{
+		$('.list-inlineblk').hide();
+		$('.sch_disc').show();
+	}
+});
+
+$('#franchise_filter  .sch_not_allot').live('click',function(){
+	$('.type_fil_wrap b').removeClass("selected_type");
+	$('.type_fil_wrap .sch_not_allot').addClass("selected_type");
+	
+	var tid=$("select[name='fil_territory']").val();
+	var townid=$("select[name='fil_town']").val();
+	if(tid && !townid)
+	{
+		$('.list-inlineblk').hide();
+		$('.list-inlineblk.terr_'+tid+'.sch_undefined').show();
+	}else if(tid && townid)
+	{
+		$('.list-inlineblk').hide();
+		$('.list-inlineblk.terr_'+tid+'.twn_'+townid+'.sch_undefined').show();
+	}else if(!tid && !townid)
+	{
+		$('.list-inlineblk').hide();
+		$('.sch_undefined').show();
+	}
+});
+
+$("#deals_det_dlg" ).dialog({
+		modal:true,
+		autoOpen:false,
+		width:'1200',
+		height:'550',
+		autoResize:true,
+		open:function(){
+			dlg = $(this);
+			var menuid=$('#choose_menu').val();
+			var type=$("#bulk_schtype").val();
+			var catid=dlg.data('catid');
+			var brandid=dlg.data('brandid');
+			var trele=dlg.data('trele');
+			var status=dlg.data('status');
+			var dealid=$('.sel_dealids',trele).val();
+			dealids_arr=dealid.split(",");
+			
+			if(status!=0)
+			{
+				$.getJSON(site_url+'/admin/jx_to_getdeals_bybrandcatmenu/'+menuid+'/'+brandid+'/'+catid ,function(resp){
+					if(resp.status=='errorr')
+					{
+						$('#deal_list').html(resp.message);
+					}
+					else
+					{
+						var menudeallist_html='';
+							$.each(resp.deal_list,function(i,itm){
+								menudeallist_html+='<div class="deallist-inlineblk dealid_'+itm.id+'"  dealid='+itm.id+' >';
+								menudeallist_html+='<input type="checkbox" name="dealids[]" value="'+itm.id+'":checked dealid='+itm.id+'>'; 
+								menudeallist_html+='<span class="'+(itm.is_sourceable=="0"?'error_txt':'')+'">'+itm.name+'<br /> [DP Price : <b>'+itm.price+'</b>]</span> <select class="sel_deal_disc_type"><option value="1">%</option><option value="0">Rs</option></select> <input type="text" class="sel_deal_disc_val" value=""> ';
+								menudeallist_html+='</div>';
+							});
+						$('.deals_list').html(menudeallist_html);
+					}
+					
+				});
+			}
+			else
+			{
+				$('.deallist-inlineblk ').removeClass('selected');
+				$('.deallist-inlineblk :visible input[name="fids[]"]').attr('checked',false);
+				
+				for(var i=0;i<dealids_arr.length;i++)
+				{
+					$('.deallist-inlineblk.dealid_'+dealids_arr[i]+' input[name="fids[]"]').attr('checked',true);
+					$('.deallist-inlineblk.dealid_'+dealids_arr[i]).addClass('selected');
+				}
+			}			
+	},
+	buttons: {
+	    "submit": function() {
+	    	dlg = $(this);
+	    	var trele=dlg.data('trele');
+	    	var dealids=[];
+	    	var ids=[];
+	    	
+	    		$('.selected',dlg).each(function(){
+	    			dealids.push($(this).attr('dealid')+':'+$('.sel_deal_disc_type',this).val()+':'+$('.sel_deal_disc_val',this).val());
+	    			ids.push($(this).attr('dealid'));
+	    		});
+	    		
+	    		$('.sel_dealids',trele).val(ids);
+	    		$('.deals_selected',trele).html("<b>"+dealids.length+"</b> selected");
+	    		$('.sel_deal_btn',trele).addClass('deallist_selected');
+	    	$(this).dialog('close');
+	   }
+	} 
+});
+
+$('#cat_brand_input_blk table tbody .row_addedit_btn').live('click',function(e){
+	e.preventDefault();
+	
+	var tbody = $(this).parents('tbody:first');
+	var trele = $(this).parents('tr:first');
+	
+	if($(this).hasClass('rmv'))
+	{
+		if(confirm("Are you sure do you want to remove this row"))
+		{
+			trele.remove();
+			$('tr',tbody).each(function(i,j){
+				$('td:first span',this).html(i+1);
+			});
+		}
+	}else
+	{
+		var tr_tmpl = '<tr>'+trele.html()+'</tr>'; 
+			tbody.append(tr_tmpl);
+		var new_trele = $('tr:last',tbody);
+			$('.chzn-container',new_trele).remove();
+			
+			$('.chzn-container',new_trele).remove();
+			$('.chzn-done',new_trele).attr("id","").removeClass('chzn-done').show();
+			
+			$('.select_brand',new_trele).html("");
+			$('.sel_fids',new_trele).val('');
+			$('input[name="disc_type"]',new_trele).val("");
+			$('input[name="disc_val"]',new_trele).val("");
+			$('.ext_input',new_trele).val("");
+			$('.sel_fran_btn',new_trele).removeClass('franlist_selected');
+			$('.sel_deal_btn',new_trele).removeClass('deallist_selected');
+			$('.franch_selected',new_trele).html("");
+			$('.deals_selected',new_trele).html("");
+			$('.select_cat',new_trele).val("").chosen();
+			$('.select_brand',new_trele).val("").chosen();
+			$('.disc_type',new_trele).val("").chosen();
+			$('.row_addedit_btn',new_trele).html("-").addClass('rmv');
+			$('td:first span',new_trele).html($('tr',tbody).length);
+	}
+});
+
+$('.list-inlineblk').live('click',function(e){
+	var fr_chk_ele=$(this).attr('fid');
+	
+	if(!$('.list-inlineblk.fid_'+fr_chk_ele+' input').attr('checked'))
+
+		$('.list-inlineblk.fid_'+fr_chk_ele+'').removeClass('selected');
+	else
+		$('.list-inlineblk.fid_'+fr_chk_ele+'').addClass('selected');
+});
+
+$('.deallist-inlineblk input[name="dealids[]"]').live('click',function(e){
+	//e.preventDefault();
+	var fr_chk_ele=$(this).attr('dealid');
+	
+	if(!$('.deallist-inlineblk.dealid_'+fr_chk_ele+' input').attr('checked'))
+
+		$('.deallist-inlineblk.dealid_'+fr_chk_ele+'').removeClass('selected');
+	else
+		$('.deallist-inlineblk.dealid_'+fr_chk_ele+'').addClass('selected');
+});
+
+$('.sel_all_wrap').live('click',function(){
+	$('#select_filter a').removeClass('highlight_option');
+	$('.sel_all_wrap').addClass('highlight_option');	
+});
+$('.unsel_all_wrap').live('click',function(){
+	$('#select_filter a').removeClass('highlight_option');
+	$('.unsel_all_wrap').addClass('highlight_option');	
+});
 
 
 function select_all_deals()
 {
-	$('#deal_list .list-inlineblk:visible input[name="dealids[]"]').attr('checked',true);
-	$('#deal_list .list-inlineblk:visible ').addClass('selected');
+	$('.deallist-inlineblk input').attr('checked',true);
+	$('.deallist-inlineblk').addClass('selected');
 }
+
 function unselect_all_deals()
 {
-	$('#deal_list .list-inlineblk:visible input[name="dealids[]"]').attr('checked',false);
-	$('#deal_list .list-inlineblk:visible ').removeClass('selected');
+	$('.deallist-inlineblk input').attr('checked',false);
+	$('.deallist-inlineblk').removeClass('selected');
 }
 
+function select_all_franchises()
+{
+	$('.list-inlineblk input').attr('checked',true);
+	$('.list-inlineblk').addClass('selected');
+}
 
-$(function(){
-	//prepare_daterange("d_start","d_end");
-	$('#d_start').datepicker({minDate:0});
-	$('#d_end').datepicker();
-	$("#m_applyfrm").datepicker();
-	$('#franchise_filter').hide();
-	$('#fran_list').hide();
-	$('.breadcrumb_wrap').hide();
-});
- 
-
-$('.list-inlineblk').live('click',function(e){
-	e.preventDefault();
-	
-	fr_chk_ele = $('input[type="checkbox"]',this);
-	if(fr_chk_ele.attr('checked'))
-	{
-		fr_chk_ele.attr('checked',false);
-		$(this).removeClass('selected');
-	}else
-	{
-		fr_chk_ele.attr('checked',true);
-		$(this).addClass('selected');
-	}
-});
+function unselect_all_franchises()
+{
+	$('.list-inlineblk input').attr('checked',false);
+	$('.list-inlineblk').removeClass('selected');
+}
 
 
 $('#pnh_bulkschdisc_frm').submit(function(){
 	var error_inp = new Array();
 	
-	if(!$('select[name="menu"]',this).val())
+	if(!$('#choose_menu',this).val())
 	{
 		error_inp.push("Please Choose menu ");
-		
 	}
-	if(!$('select[name="cat"]',this).val())
+	if(!$('select[name="category[]"]',this).val())
 	{
 		error_inp.push("Please Choose Category ");
 		
 	}
-	if(!$('select[name="brand"]',this).val())
+	if(!$('select[name="brand[]"]',this).val())
 	{
 		error_inp.push("Please Choose Brand ");
 		
@@ -235,14 +682,6 @@ $('#pnh_bulkschdisc_frm').submit(function(){
 	{
 		error_inp.push("Please check to expire previous schemes");
 	}
-	
-	if(!$('input[name="fids[]"]:checked',this).length)
-	{
-		error_inp.push("Please Choose atleast one franchise");
-	}
-
-	
-
 	
 	var sch_disc = $('input[name="discount"]',this).val();
 		$('input[name="discount"]',this).val($.trim(sch_disc));
@@ -279,6 +718,37 @@ $('#pnh_bulkschdisc_frm').submit(function(){
 
 $("#bulk_schtype").live('change',function(){
 	$('#choose_menu').val("0").trigger('click');
+	
+	$('.disc_text').html($('option:selected',this).attr('col_text'));
+	$('.extra_col').html($('option:selected',this).attr('col_extra'));
+	$('.col_head').html($('option:selected',this).attr('col_title'));
+	
+	if($("#bulk_schtype").val() == 3 )
+	{
+		$('#msch_applyfrm').show();
+	 	$('.ext_input').show();
+	 	$('.mscheme_type').show();
+	 	$('.sel_deal_btn').hide();
+	 	$('.col_head').hide();
+	 	$('.deals_td').hide();
+	}else if($("#bulk_schtype").val() == 2 )
+	{
+		$('#msch_applyfrm').hide();
+	 	$('.ext_input').show();
+	 	$('.mscheme_type').hide();
+	 	$('.sel_deal_btn').hide();
+	 	$('.col_head').hide();
+	 	$('.deals_td').hide();
+	}
+	else
+	{
+		$('#msch_applyfrm').hide();
+		$('.ext_input').hide();
+		$('.mscheme_type').hide();
+		$('.sel_deal_btn').show();
+		$('.col_head').show();
+		$('.deals_td').show();
+	}
 });
 
 $('#choose_menu').change(function(){
@@ -288,255 +758,72 @@ $('#choose_menu').change(function(){
 	var sel_terrid=$('#chose_terry').val();
 	var sel_sch_type=$("#bulk_schtype").val();
 	var sel_menuid=$(this).val();
-	
-		if($(this).val())
+		if($(this).val()*1)
 		{
-			$('#select_cat').html('<option value="">Loading...</option>').trigger("lizst:updated");
+			$('.select_cat').html('<option value="">Loading...</option>').trigger("lizst:updated");
 			$.getJSON(site_url+'/admin/jx_load_allcatsbymenu/'+$(this).val(),'',function(resp){
-			var cat_html='';
-			if(resp.status =='error')
+				var cat_html='';
+					if(resp.status =='error')
+					{
+						alert(resp.msg);
+					}
+					else
+					{
+						cat_html = '<option value=""></option>';
+						//cat_html+='<option value="0">All</option>';
+						$.each(resp.cat_list,function(i,b){
+							cat_html+='<option value="'+b.catid+'">'+b.name+'</option>';
+						});
+					}
+				$('#brand_group tr:gt(0)').remove();
+				//$('#brand_group tr:eq(0)').css('visibility','visible');		
+				$('.select_cat').html(cat_html).trigger("liszt:updated");
+				$('.select_cat').trigger('change');
+				$('.choose_menuid').val(sel_menuid);
+				$('.choose_sch_type').val(sel_sch_type);
+				//$('.sel_fran_btn').addClass('choose_menuid').addClass('choose_sch_type');
+			});
+		}else
+		{
+			$('#brand_group tr:gt(0)').remove();
+			$('#brand_group tr:eq(0)').css('visibility','hidden');
+		}
+});
+
+$('.select_cat').live('change',function(){
+	var trele = $(this).parents('tr:first');
+	$(".select_brand",trele).html("<option value=''>Loading...</option>").trigger("lizst:updated");	
+
+	if($(this).val())
+	{
+		$.getJSON(site_url+'/admin/jx_load_allbrandsbycat/'+$(this).val(),'',function(resp){
+			var brand_html='';
+			if(resp.status=='error')
 			{
 				alert(resp.msg);
 			}
 			else
 			{
-				cat_html+='<option value=""></option>';
-				//cat_html+='<option value="0">All</option>';
-				$.each(resp.cat_list,function(i,b){
-				cat_html+='<option value="'+b.catid+'">'+b.name+'</option>';
-				
+				brand_html ='<option value=""></option>';
+				brand_html+='<option value="0">All</option>';
+				$.each(resp.brand_list,function(i,b){
+					brand_html+='<option value="'+b.brandid+'">'+b.name+'</option>';
 				});
 			}
-				$('#select_cat').html(cat_html).trigger("liszt:updated");
-			 	$('#select_cat').trigger('change');
-			});
-			
-		}
-});
-
-
-
-$('#select_cat').change(function(){
-	var i = document.getElementById('select_cat');
-    var p = i.options[i.selectedIndex].text;
-    $('#cat_name').html(p);
-	
-	if($(this).val())
-	{
-		$("#select_brand").html("<option value=''>Loading...</option>").trigger("lizst:updated");
-		$.getJSON(site_url+'/admin/jx_load_allbrandsbycat/'+$(this).val(),'',function(resp){
-		var brand_html='';
-		if(resp.status=='error')
-		{
-			alert(resp.msg);
-		}
-		else
-		{
-			brand_html+='<option value=""></option>';
-			//brand_html+='<option value="0">All</option>';
-			$.each(resp.brand_list,function(i,b){
-				brand_html+='<option value="'+b.brandid+'">'+b.name+'</option>';
-			});
-		}
-		$('#select_brand').html(brand_html).trigger("liszt:updated");
-	 	$('#select_brand').trigger('change');
-
+			$('.select_brand',trele).html(brand_html).trigger('liszt:updated');
 		});
+	}else
+	{
+		$('.select_brand',trele).html("").trigger('liszt:updated');
 	}
 });
+
 $('#bulk_schtype').change(function(){
-	var schtype=$(this).val();
-	//alert($(this).val());
-	if(schtype==3)
-	{
-		
-		$('#msch_type').show();
-		$('#credit_value').hide();
-		$('#sch_disc').hide();
-		$('#msch_applyfrm').show();
-		$('.super_scheme').hide();
-		$('.disc_ondeal').hide();
-	}
-	if(schtype==2)
-	{
-		$('#msch_type').hide();
-		$('#sch_disc').hide();
-		$('#credit_value').hide();
-		$('#msch_applyfrm').hide();
-		$('.super_scheme').show();
-		$('.disc_ondeal').hide();
-	}
-	else if(schtype==1)
-	{
-		$('#sch_disc').show();
-		$('#msch_type').hide();
-		$('#credit_value').hide();
-		$('#msch_applyfrm').hide();
-		$('.super_scheme').hide();
+	if($(this).val()==1)
 		$('.disc_ondeal').show();
-	}
-});
-
-$(".close_filters").toggle(function() {
-    $(".close_filters .close_btn").html("Hide");
-    $("#filter_prods").slideDown();
-
-},function() {
-    $("#filter_prods").slideUp();
-    
-    $(".close_filters .close_btn").html("Show");
-   
-});
-
-
-
-$("select[name='fil_type']").change(function(){
-	var sel_menu=$('#choose_menu').val();
-	var tid=$("select[name='fil_territory']").val();
-	var townid=$("select[name='fil_town']").val();
-	
-	if(tid && !townid)
-	{	
-		if($(this).val() == '1')
-		{
-			$('#fran_list .list-inlineblk.terr_'+tid).show();
-			
-		}else
-		if($(this).val() == 3)
-		{
-			$('#fran_list .list-inlineblk').hide();
-			$('#fran_list .list-inlineblk.terr_'+tid+'.sch_undefined').show();
-		
-		}else
-		if($(this).val() == 2)
-		{
-			$('#fran_list .list-inlineblk').hide();
-			$('#fran_list .list-inlineblk.terr_'+tid+'.sch_disc').show();
-		}
-	}else if(!tid && townid)
-	{	
-		if($(this).val() == '1')
-		{
-			$('#fran_list .list-inlineblk.twn_'+townid).show();
-			
-		}else
-		if($(this).val() == 3)
-		{
-			$('#fran_list .list-inlineblk').hide();
-			$('#fran_list .list-inlineblk.twn_'+townid+'.sch_undefined').show();
-		
-		}else
-		if($(this).val() == 2)
-		{
-			$('#fran_list .list-inlineblk').hide();
-			$('#fran_list .list-inlineblk.twn_'+townid+'.sch_disc').show();
-		}
-	}
-	else if(tid && townid)
-	{	
-		if($(this).val() == '1')
-		{
-			$('#fran_list .list-inlineblk.terr_'+tid+'.twn_'+townid).show();
-			
-		}else
-		if($(this).val() == 3)
-		{
-			$('#fran_list .list-inlineblk').hide();
-			$('#fran_list .list-inlineblk.terr_'+tid+'.twn_'+townid+'.sch_undefined').show();
-		
-		}else
-		if($(this).val() == 2)
-		{
-			$('#fran_list .list-inlineblk').hide();
-			$('#fran_list .list-inlineblk.terr_'+tid+'.twn_'+townid+'.sch_disc').show();
-		}
-	}
 	else
-	{
-		if($(this).val() == '1')
-		{
-			$('#fran_list .list-inlineblk').show();
-			
-		}else
-		if($(this).val() == 3)
-		{
-			$('#fran_list .list-inlineblk').hide();
-			$('.sch_undefined').show();
-		
-		}else
-		if($(this).val() == 2)
-		{
-			$('#fran_list .list-inlineblk').hide();
-			$('.sch_disc').show();
-		
-		}
-	}
-	
+		$('.disc_ondeal').hide();
 });
-$('.all').live('click',function(){
-	$('.type_fil_wrap b').removeClass("selected_type");
-	$('.type_fil_wrap .all').addClass("selected_type");
-	var tid=$("select[name='fil_territory']").val();
-	var townid=$("select[name='fil_town']").val();
-	if(tid && !townid)
-	{
-		$('#fran_list .list-inlineblk').hide();
-		$('#fran_list .list-inlineblk.terr_'+tid).show();
-	}else if(tid && townid)
-	{
-		$('#fran_list .list-inlineblk').hide();
-		$('#fran_list .list-inlineblk.terr_'+tid+'.twn_'+townid).show();
-	}else if(!tid && !townid)
-	{
-		$('#fran_list .list-inlineblk').hide();
-		$('#fran_list .list-inlineblk').show();
-	}
-});
-$('.sch_allot').live('click',function(){
-	
-	
-	$('.type_fil_wrap b').removeClass("selected_type");
-	$('.type_fil_wrap .sch_allot').addClass("selected_type");
-	var tid=$("select[name='fil_territory']").val();
-	var townid=$("select[name='fil_town']").val();
-	if(tid && !townid)
-	{
-		
-		$('#fran_list .list-inlineblk').hide();
-		$('#fran_list .list-inlineblk.terr_'+tid+'.sch_disc').show();
-	}else if(tid && townid)
-	{
-		$('#fran_list .list-inlineblk').hide();
-		$('#fran_list .list-inlineblk.terr_'+tid+'.twn_'+townid+'.sch_disc').show();
-	}else if(!tid && !townid)
-	{
-		$('#fran_list .list-inlineblk').hide();
-		$('.sch_disc').show();
-	}
-});
-$('.sch_not_allot').live('click',function(){
-	$('.type_fil_wrap b').removeClass("selected_type");
-	$('.type_fil_wrap .sch_not_allot').addClass("selected_type");
-	
-	var tid=$("select[name='fil_territory']").val();
-	var townid=$("select[name='fil_town']").val();
-	if(tid && !townid)
-	{
-		$('#fran_list .list-inlineblk').hide();
-		$('#fran_list .list-inlineblk.terr_'+tid+'.sch_undefined').show();
-	}else if(tid && townid)
-	{
-		$('#fran_list .list-inlineblk').hide();
-		$('#fran_list .list-inlineblk.terr_'+tid+'.twn_'+townid+'.sch_undefined').show();
-	}else if(!tid && !townid)
-	{
-		$('#fran_list .list-inlineblk').hide();
-		$('.sch_undefined').show();
-	}
-});
-
-
-
 
 $("select[name='fil_territory']").live('change',function(){
 	var sel_menuid= $('#choose_menu').val();
@@ -547,13 +834,12 @@ $("select[name='fil_territory']").live('change',function(){
 	$("select[name='fil_town']").html('<option value="">Loading...</option>');
 	if($(this).val() == '')
 	{
-		$('#fran_list .list-inlineblk').show();
-		$("select[name='fil_town']").html('<option value="">Choose</option>');
+		$('.list-inlineblk').show();
+		$("select[name='fil_town']").html('<option value=""> All</option>');
 	}else
 	{
-		$('#fran_list .list-inlineblk').hide();
-		$('#fran_list .list-inlineblk.terr_'+tid).show();
-		
+		$('.list-inlineblk').hide();
+		$('.list-inlineblk.terr_'+tid).show();
 		
 		//get the towns by territory
 		$.post(site_url+'/admin/get_franchisebymenu_id/'+sel_menuid+'/'+tid ,function(resp){
@@ -564,7 +850,7 @@ $("select[name='fil_territory']").live('change',function(){
 			}
 			else
 			{
-				terr_linkedtwn_html +='<option value="">Choose</option>';
+				terr_linkedtwn_html +='<option value=""> All</option>';
 				
 				$.each(resp.menu_fran_list,function(i,itm){
 					if(!$('select[name="fil_town"] option#town_'+itm.town_id).length){
@@ -592,167 +878,24 @@ $("select[name='fil_town']").live('change',function(){
 		$("select[name='fil_territory']").trigger('change');
 	}else
 	{
-		$('#fran_list .list-inlineblk').hide();
-		$('#fran_list .list-inlineblk.terr_'+tid+'.twn_'+twn).show();
+		$('.list-inlineblk').hide();
+		$('.list-inlineblk.terr_'+tid+'.twn_'+twn).show();
 	}
 });
 
 
-$('.disc_ondeal').live('click',function(){
-
-	if ($('input[name="disc_ondeal"]:checked').length == 0) 
+$('.remove_row').live('click',function(){
+	
+	var trele = $(this).parents('tr:first');
+	if(confirm("Do you want to delete"))
 	{
-		$('.show_deal').hide();
+		$(this).parents('tr:first').fadeOut().remove();
 	}else
 	{
-		var sel_menu=$('#choose_menu').val()*1;
-		var sel_brand=$('#select_brand').val()*1;
-		var sel_cat=$('#select_cat').val()*1;
-			
-			if(!$('select[name="menu"]').val())
-			{
-				alert("Please Choose Menu");
-				return false;
-			}
-			
-			if(!$('select[name="cat"]').val() || $('select[name="cat"]').val()==0)
-			{
-				alert("Please Choose Category");
-				return false;
-			}
-			if(!$('select[name="brand"]').val() || $('select[name="brand"]').val()==0)
-			{
-				alert("Please Choose Brand");
-				return false;
-			}
-		
-		$('#sourceble_filter').show();
-		$('.show_deal').show();
-		$('#deal_list').html('<h3 align="center"><b>Loading Deal List,Please wait...</b></h3>');
-		$.getJSON(site_url+'/admin/jx_to_getdeals_bybrandcatmenu/'+sel_menu+'/'+sel_brand+'/'+sel_cat ,function(resp){
-			if(resp.status=='errorr')
-			{
-				$('#deal_list').html(resp.message);
-			}
-			else
-			{
-				var menudeallist_html='';
-				$.each(resp.deal_list,function(i,itm){
-				
-					menudeallist_html+='<div class="list-inlineblk"><input type="checkbox" name="dealids[]" value="'+itm.id+'":checked > <span class="'+(itm.is_sourceable=="0"?'error_txt':'')+'">'+itm.name+'<br /> [DP Price : <b>'+itm.price+'</b>]</span></div>';
-					$('#deal_list').html(menudeallist_html);
-				});
-			}
-	
-			$('#deal_list').html(menudeallist_html);
-		});
+		return false;
 	}
-	
 });
 
-$("#select_brand").change(function(){
-	$("select[name='fil_territory']").trigger('change');
-	$("select[name='fil_town']").trigger('change');
-	
-	var i = document.getElementById('select_brand');
-    var p = i.options[i.selectedIndex].text;
-    var sel_sch_type=$("#bulk_schtype").val();
-    var sel_menuid=$('#choose_menu').val()*1;
-    var sel_brand =$(this).val()*1;
-	var sel_cat=$('#select_cat').val()*1;
-    $('#brand_name').html(p);
-	$('.breadcrumb_wrap').show();
-	
-	$('#fran_list').html('<h3 align="center"><b>Loading Franchise List,Please wait...</b></h3>');
-		$.getJSON(site_url+'/admin/get_franchisebymenu_id/'+sel_menuid+'/0'+'/0/'+sel_sch_type,function(resp){
-			if(resp.status=='error')
-			{
-				$('#fran_list').html(resp.message);
-				
-			}
-			else
-			{
-				var menufranchiselist_html='';
-				$.each(resp.menu_fran_list,function(i,itm){
-						
-					if($.inArray(itm.fid,resp.has_nosch)!=-1)
-					{ var no_schfid=itm.fid;}
-
-					menufranchiselist_html+='<div class="list-inlineblk fid_'+itm.fid+' terr_'+itm.territory_id+' twn_'+itm.town_id+' sch_'+no_schfid+' "  ><input type="checkbox" class="terr_'+itm.territory_id+'" name="fids[]" value="'+itm.fid+'":checked > <span class="'+(itm.is_suspended!="0"?'error_txt':'')+'">'+itm.franchise_name+'</span></div>';
-					
-					$('#fran_list').html(menufranchiselist_html);
-					if(!$('select[name="fil_territory"] option#territory_'+itm.territory_id).length){
-						if(itm.territory_id!=undefined){
-							$('select[name="fil_territory"]').append('<option id="territory_'+itm.territory_id+'" value="'+itm.territory_id+'">'+itm.territory_name+'</option>');
-						}
-					}
-
-					if(!$('select[name="fil_town"] option#town_'+itm.town_id).length){
-						if(itm.territory_id!=undefined){
-							$('select[name="fil_town"]').append('<option id="town_'+itm.town_id+'" value="'+itm.town_id+'">'+itm.town_name+'</option>');
-						}
-					}
-				});
-
-				
-			}
-		$('#fran_list').html(menufranchiselist_html);
-		$.getJSON(site_url+'/admin/jx_check_has_scheme/'+sel_menuid+'/'+sel_cat+'/'+sel_brand+'/'+sel_sch_type,function(resp){
-			if(resp.status=='success')
-			{
-				if(resp.has_sch_disc.length != 0)
-				{
-					$.each(resp.has_sch_disc,function(i,itm){
-						$('#fran_list .list-inlineblk.fid_'+itm.franchise_id).addClass('sch_disc');
-						$('#fran_list .list-inlineblk.fid_'+itm.franchise_id).show();
-					});
-						
-				}else
-				{
-					$('#fran_list .list-inlineblk').removeClass('sch_disc');
-				}
-			}
-			$('#franchise_filter').show();
-			$('#fran_list').show();
-		});
-	});
-	
-	
-	
-});
 </script>
-<style>
-#msch_type,#credit_value,#msch_applyfrm,.super_scheme,.leftcont
-{display: none;}
-.sch_disc
-{background-color:#AAFFAA;}
-.nombrsch
-{background-color:#FFAAAA;}
-.nosupersch
-{background-color:#DCEBF9;}
-.type_fil_wrap b
-{
-	  background: none repeat scroll 0 0 #FDFDFD;
-    float: left;
-    margin: 0 2px;
-    padding: 4px 19px;
-    cursor:pointer;
-}
-.selected_type
-{
-	 background: none repeat scroll 0 0 #FF0000 !important;
-	 color:#fff !important;
-}
-.breadcrumb_wrap
-{
-	padding:4px;
-}
-.breadcrumb_wrap b
-{
-	color: #777777;
-    font-size: 9px;
-    padding: 0;
-    
-}
-</style>
+
 <?php

@@ -441,7 +441,7 @@
 	<table class="datagrid" width='100%'>
     <thead><th>Correction Id</th><th>Description</th><th>Credit (Rs)</th><th>Debit (Rs)</th><th>Corrected On</th><th>Un-Reconciled Status</th><th>Actions</th></thead>
 	<tbody>
-	<?php foreach($account_stat as $ac_st) {
+	<?php	foreach($account_stat as $ac_st) {
 			$credit_amount = $ac_st['credit_amt'];
 			$credit_note_id = $ac_st["acc_correc_id"];
 			$unreconciled_value = $ac_st["unreconciled_value"];

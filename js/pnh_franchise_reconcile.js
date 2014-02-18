@@ -82,7 +82,9 @@ if(error_msgs.length)
             else if(document_type == 'dr') {
                 load_unconciled_debit_notes(invs_id);
             }
-            
+            $(".amt_unreconcile,.amt_adjusted",row).val(0);
+            $(".amt_adjusted",row).trigger("change");
+            row.removeClass().addClass("invoice_row"); //$(".invoice_row",row)
         }
         
         function load_unconciled_invoices(invs_sel) {
@@ -109,7 +111,7 @@ if(error_msgs.length)
             $.post(site_url+"/admin/jx_get_unreconciled_debit_notes_list/"+franchise_id,{},function(resp) {
                     if(resp.fran_debit_notes.length) {
                         $.each(resp.fran_debit_notes,function(i,invoice) {
-                            invs += "<option value='"+invoice.debit_note_id+"' inv_amount='"+invoice.inv_amount+"'>Dr. "+invoice.debit_note_id+" (Rs."+invoice.amount+") </option>\n";
+                            invs += "<option value='"+invoice.debit_note_id+"' inv_amount='"+invoice.inv_amount+"'>Dr. "+invoice.debit_note_id+" (Rs."+invoice.inv_amount+") </option>\n";
                         });
                     }
                     else 
@@ -270,7 +272,7 @@ if(error_msgs.length)
                                     <tr><td>Receipt Amount</td><th>Rs. "+format_number(resp.receipt_det.receipt_amount)+"</th></tr>\n\
                                     <tr><td>Un reconciled Amount</td><th>Rs. "+format_number(resp.receipt_det.unreconciled_value)+" </th></tr>\n\
                                     <tr><td>Created On</td><th>"+resp.receipt_det.created_date+"</th></tr></table>";
-                recon_list += "<br><table width='100%' class='datagrid'><tr><th>#</th><th>Invoice No</th><th>Debitnote Id</th><th>Invoice (Rs.)</th><th>Reconciled (Rs.)</th><th>Unreconciled (Rs.)</th><th>Created By</th><th>Created On</th></tr>";
+                recon_list += "<br><table width='100%' class='datagrid'><tr><th>#</th><th>Invoice No</th><th>Debitnote Id</th><th>Document Amount (Rs.)</th><th>Reconciled (Rs.)</th><th>Unreconciled (Rs.)</th><th>Created By</th><th>Created On</th></tr>";
                 $.each(resp.reconcile_list,function(i,recon) {
                     recon_list += "<tr><td>"+(++i)+"</td><td>"+recon.invoice_no+"</td><td>"+((!recon.debit_note_id)?'--':recon.debit_note_id)+"</td><td>"+recon.inv_amount+"</td><td>"+recon.reconcile_amount+"</td><td>"+((!recon.unreconciled)?'Nill':recon.unreconciled)+"</td><td>"+recon.username+"</td><td>"+recon.created_date+"</td>";
                 });
@@ -332,8 +334,11 @@ if(error_msgs.length)
                 //$("#dl_submit_reconcile_form").clearForm();
                 $(".dg_amt_unreconcile",dlg).val(0);
                 $(".dg_amt_adjusted,.dg_l_total_adjusted_val,.dg_ttl_unreconciled_after",dlg).val(0);
-                $(".dg_sel_invoices",dlg).val("").trigger("liszt:updated");
-                $(".dg_invoice_row",dlg).removeClass().addClass("dg_invoice_row");
+                $(".document_type",dlg).each(function() {
+                    this.selectedIndex = 0;
+                });
+                $(".dg_sel_invoices",dlg).val("");//.trigger("liszt:updated");
+                $(".dg_invoice_row",dlg).removeClass().addClass("dg_invoice_row dg_credit_row");
                 dg_icount = 1;
                 $(this).dialog("close");
             }
@@ -349,7 +354,8 @@ if(error_msgs.length)
             load_unconciled_invoices(invs_id);
     }
     
-    function dg_add_invoice_row(elt,row_name,rowparent,dlgname) {
+    function dg_add_invoice_row(elt,row_name,rowparent,dlgname) 
+    {
             var dlg = $("#"+dlgname);
             dg_icount = dg_icount + 1;
             var rowname = row_name+"_"+dg_icount;
@@ -569,10 +575,16 @@ if(error_msgs.length)
             }
             ,"Close":function() {
                 var dlg = $("#dlg_credit_note_block");
-                
+                //alert("CLOSING...");
                 //$("#dl_submit_reconcile_form").clearForm();
                 $(".dg_amt_unreconcile,.dg_amt_adjusted,.dg_l_total_adjusted_val,.dg_ttl_unreconciled_after",dlg).val(0);
-                $(".dg_sel_invoices",dlg).val("").trigger("liszt:updated");
+                
+                $(".document_type",dlg).each(function() {
+                    this.selectedIndex = 0;
+                });
+                //$(".document_type",dlg).trigger("liszt:updated");
+                
+                $(".dg_sel_invoices",dlg).val("");//.trigger("liszt:updated");
                 $(".dg_credit_row",dlg).removeClass().addClass("dg_invoice_row");
                 dg_icount = 1;
                 $(this).dialog("close");
@@ -593,6 +605,7 @@ if(error_msgs.length)
             
             var invs_id = $("#"+sel_invoices,dlg); //, $("#"+row)
             var document_type = $(elt).find(":selected").val(); 
+            var rowelt = $("#"+row_name,dlg);
             
             if(document_type == 'inv') {
                 load_unconciled_invoices(invs_id);
@@ -601,6 +614,11 @@ if(error_msgs.length)
                 load_unconciled_debit_notes(invs_id);
             }
             
+            //$("#dl_submit_reconcile_form").clearForm();
+            $(".dg_amt_unreconcile,.dg_amt_adjusted",rowelt).val(0); //,.dg_l_total_adjusted_val,.dg_ttl_unreconciled_after
+            
+            $(".dg_amt_adjusted",rowelt).trigger("change");
+            rowelt.removeClass().addClass("dg_invoice_row dg_credit_row");
     }
 
     function dg_validate_selected_invoice_val(dlg) {
@@ -624,9 +642,9 @@ if(error_msgs.length)
                 //credit_note_id,franchise_id,`type`,amount,`desc`,created_on,is_correction,unreconciled_value,unreconciled_status
                 recon_list += "<h3>View reconciled list for Credit Note #"+credit_note_id+"</h3>\n\
                                 <table class='datagrid1' cellpadding='4' cellspacing='1'>\n\
-                                    <tr><td>Receipt #</td><th>"+resp.credit_note_det.credit_note_id+"</th></tr>\n\
-                                    <tr><td>Receipt Amount</td><th>Rs. "+format_number(resp.credit_note_det.amount)+"</th></tr>\n\
-                                    <tr><td>Un reconciled Amount</td><th>Rs. "+format_number(resp.credit_note_det.unreconciled_value)+" </th></tr>\n\
+                                    <tr><td>Credit Note </td><th> #"+resp.credit_note_det.credit_note_id+"</th></tr>\n\
+                                    <tr><td>Credit Amount</td><th>Rs. "+format_number(resp.credit_note_det.credit_amt)+"</th></tr>\n\
+                                    <tr><td>Un-reconciled Amount</td><th>Rs. "+format_number(resp.credit_note_det.unreconciled_value)+" </th></tr>\n\
                                     <tr><td>Created On</td><th>"+resp.credit_note_det.created_date+"</th></tr></table>";
                 recon_list += "<br><table width='100%' class='datagrid'><tr><th>#</th><th>Invoice No</th><th>Debitnote Id</th><th>Invoice (Rs.)</th><th>Reconciled (Rs.)</th><th>Unreconciled (Rs.)</th><th>Created By</th><th>Created On</th></tr>";
                 $.each(resp.reconcile_list,function(i,recon) {

@@ -135,7 +135,7 @@ Pending Orders
 </div>
 
 <div class="dash_bar_red">
-<a href="<?=site_url("/admin/partial_shipment")?>"></a>
+<a href="<?=site_url("admin/partial_shipment")?>"></a>
 Partial Shipment Orders 
 
 </div>

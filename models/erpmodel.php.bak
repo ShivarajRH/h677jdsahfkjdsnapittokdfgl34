@@ -4583,7 +4583,7 @@ order by p.product_name asc
 	{
 		$trans=array();
 		$itemids=array();
-		$raw_trans=$this->db->query("select o.*,t.franchise_id from king_transactions t join king_orders o on o.transid=t.transid and o.status not in (2,3) where t.batch_enabled=1 and t.init between ? and ? order by t.priority desc, t.init asc",array($s,$e))->result_array();
+		$raw_trans=$this->db->query("select o.*,t.franchise_id from king_transactions t join king_orders o on o.transid=t.transid and o.status=0 where t.batch_enabled=1 and t.init between ? and ? order by t.priority desc, t.init asc",array($s,$e))->result_array();
 		foreach($raw_trans as $t)
 		{
 			$transid=$t['transid'];
