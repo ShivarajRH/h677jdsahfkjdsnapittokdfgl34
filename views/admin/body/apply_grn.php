@@ -922,11 +922,14 @@ $(function(){
 	
 	$('.page_title').html("Stock Intake");
 	$('.selected_po_list').hide();
+
+	/*
 	$(document).keydown(function(e){
 		if(e.which==27)
 			$("#add_barcode_dialog,#add_imei_dialog").hide();
 		return true;
 	});
+	*/
 
 	$("#srch_barcode").keyup(function(e){
 		if(e.which==13)
@@ -1392,11 +1395,11 @@ $('#rqty_imei_blk_dlg form').submit(function(){
 				return false;
 			}else
 			{		
-				dlgEle.dialog('close');
+				
 					
 				var chk_prodid = $('#abd_pid').data('prodid');
 					$('.pbcodecls'+chk_prodid,ref_trele).val($('#abd_barcode').val());
-					$("#add_barcode_dialog").hide();
+					//$("#add_barcode_dialog").hide();
 					
 					$('.view_barcode'+chk_prodid,ref_trele).html($('#abd_barcode').val());
 					if($('#abd_barcode').val())
@@ -1419,7 +1422,9 @@ $('#rqty_imei_blk_dlg form').submit(function(){
 				                    return false;
 				                }
 				            });	
-					},300)
+					},300);
+
+					dlgEle.dialog('close');
 			 }
 		return false;
 	});

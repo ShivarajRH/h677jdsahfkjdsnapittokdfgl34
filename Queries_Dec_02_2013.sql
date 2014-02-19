@@ -2902,7 +2902,7 @@ select r.receipt_id,r.franchise_id,r.receipt_amount,r.remarks,r.unreconciled_val
 	join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
 	join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
 	join king_admin a on a.id=rcon.created_by
-	where r.franchise_id = '59' and r.receipt_id = '5364'
+	where r.franchise_id = '59' and r.receipt_id = '5387'
 	group by rcon.invoice_no,rcon.debit_note_id;
 
 
@@ -2921,3 +2921,41 @@ select fcs.acc_correc_id as credit_note_id,fcs.action_type,fcs.credit_amt,fcs.re
 ) as g where g.unreconciled_amount > 0
 
 select * from pnh_franchise_account_summary fcs where fcs.franchise_id = '59' and fcs.action_type = '5' and credit_amt !='0' and acc_correc_id !=0;
+
+#====================================================================
+-- BEST RECONCILE LOG VIEW
+select rlog.*,rcon.debit_note_id,rcon.invoice_no from pnh_t_receipt_reconcilation_log rlog
+join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+where rlog.receipt_id='5387';
+#====================================================================
+
+select r.receipt_id,r.franchise_id,r.receipt_amount,r.remarks,r.unreconciled_value,unreconciled_status
+	,rlog.credit_note_id,rlog.is_invoice_cancelled,rlog.is_reversed
+	,rcon.invoice_no,rcon.debit_note_id,rcon.inv_amount,(rlog.reconcile_amount) as reconcile_amount,rcon.unreconciled,rcon.modified_on,rcon.modified_by
+	,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date
+	,a.username
+	from pnh_t_receipt_info r 
+	join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
+	join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+	join king_admin a on a.id=rcon.created_by
+	where r.franchise_id = '43' and r.receipt_id = '5387'
+	group by rcon.invoice_no,rcon.debit_note_id;
+
+
+-- #==================================
+## LOG for RECEIPTS RECONCILATION
+select r.receipt_id,rlog.credit_note_id,r.franchise_id,rcon.debit_note_id,rcon.invoice_no,rcon.inv_amount,(rlog.reconcile_amount) as reconcile_amount,rcon.unreconciled,r.receipt_amount,r.remarks,r.unreconciled_value,unreconciled_status
+                                ,rlog.is_invoice_cancelled,rlog.is_reversed
+                                ,rcon.modified_on,rcon.modified_by
+                                ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date
+                                ,a.username
+                                from pnh_t_receipt_info r 
+                                join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
+                                join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+                                join king_admin a on a.id=rcon.created_by
+                                where r.franchise_id = '43' and r.receipt_id = '5387';
+
+
+select * from king_deals dl
+#join m_product_deal_link pdl on
+where tmp_pnh_dealid='1739268';

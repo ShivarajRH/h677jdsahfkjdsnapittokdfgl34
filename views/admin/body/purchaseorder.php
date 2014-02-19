@@ -27,7 +27,7 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 </div>
 <div class="block">
 <div class="block-heading">
-<span class="vendor_det" style="float: left;margin-left: 13px;">Vendor Details</span><span class="show_vdet" style="float: right;margin-right: 13px;cursor: pointer;">Show</span>
+<span class="vendor_det" style="float: left;margin-left: 13px;">Vendor Details <b>-</b></span><span class="show_vdet" style="float: right;margin-right: 13px;cursor: pointer;">Show</span>
 </div> 
 
 <div class="v_disp_container">
@@ -70,29 +70,34 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 
 				
 <div class="showaftvendor">
-	<div style="padding:5px;">
-		<div style="float:right">
-			<span id="load_brands"></span>
-			<input type="button" value="Show & load" id="sl_show" class="button button-rounded button-flat-primary button-small">
-			<span type="button" class="button button-rounded button-action button-small"  id="load_unavail" style="cursor: pointer;">Load Unavailable Products</span>
+	<div class="clear" style="margin-top:5px;padding:3px 0px;overflow: hidden;">
+		<div class="fl_left">
+			<h3 style="margin:0px;margin-top:10px;">Purchase Product List</h3>
 		</div>
-		
-			<input type="text" name="s" class="prd_blk inp" placeholder="Search &amp; Add" value="" >
+		<div class="fl_right">
+			<div style="margin-right:5px;display: inline-block;">
+				<b>Load by Brand</b>
+				<span id="load_brands" style="position: relative;top:2px;"></span>
+				<input type="button" value="Subimt" id="sl_show" class="button button-rounded button-tiny">
+			</div>
+			<div style="margin-left:5px;display: inline-block;">
+				<span class="button button-rounded button-action button-tiny"  id="load_unavail" style="cursor: pointer;">Load Unavailable Products</span>
+			</div>
+		</div>
 	</div>
-<div class="clear"></div>
-	<h4>Purchase Products</h4>
+	<div class="clear"></div>
 	<table class="datagrid nofooter" id="pprods" width="100%" cellpadding="8">
 		<thead>
 			<tr>
 				<th width="10px">S.No</th>
 				<th >Product</th>
-				<th width="40px">MRP</th>
-				<th width="40px">DP Price</th>
-				<th width="40px">Margin</th>
-				<th width="135px" > Qty & price Details</th>
-				<th width="70px">Unit price </th>
-				<th width="40px">Sub total</th>
-				<th name="tcol1" id="tcol1" class="bold" style="text-align: center;display:none;" >Offer</th>
+				<th width="150px" style="text-align: right">MRP</th>
+				<th width="150px" style="text-align: right">DP Price</th>
+				<th width="150px" style="text-align: right">Margin</th>
+				<th width="150px" style="text-align: right"> Qty & price Details</th>
+				<th width="100px" style="text-align: right">Unit price </th>
+				<th width="100px" style="text-align: right">Sub total</th>
+				<th width="100px" name="tcol1" id="tcol1" class="bold" style="text-align: center;display:none;" >Offer</th>
 				<th width="10px" style="text-align: center">&nbsp;</th> 
 			</tr>
 		</thead>
@@ -104,20 +109,23 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 			</tr>
 		</tfoot>
 	</table>
+	<div class="clear" style="margin:5px 0px;">
+		<input type="text" name="s" class="prd_blk" placeholder="Search &amp; Add products to purchase" value="" >
+	</div>
 </div>
 
 
 
 <div class="show_after_vendorsel">
-<div style="float:left;">
-<table class="datagrid nofooter">
-<b>Enter Expected Delivery Details</b>
-<tr><td align="center">Date<span class="red_star">*</span></td><td align="center">:</td><td align="center"><input type="text"  name="e_dod"  class="datetimepick" value="" readonly="readonly"></td><td align="center">Remarks<span class="red_star">*</span></td><td align="center">:</td><td style="text-align:right;align:center;"><textarea style="width:350px" name="remarks"  value=""></textarea></td></tr>
-</table>
-</div>
-<div style="float:right;margin-top:40px;margin-right:44px;">
-<span class="button button-rounded button-action button-small" onclick="submit_frm=1;$('#purchaseordefrm').trigger('submit');" style="float:right;" >Create PO</span>
-</div>
+	<div style="float:left;">
+		<h4>Enter Expected Delivery Details</h4>
+		<table class="datagrid nofooter">
+			<tr><td align="center">Date<span class="red_star">*</span></td><td align="center">:</td><td align="center"><input type="text"  name="e_dod"  class="datetimepick" value="" readonly="readonly"></td><td align="center">Remarks<span class="red_star">*</span></td><td align="center">:</td><td style="text-align:right;align:center;"><textarea style="width:350px" name="remarks"  value=""></textarea></td></tr>
+		</table>
+	</div>
+	<div style="float:right;margin-top:40px;margin-right:44px;">
+		<span class="button button-rounded button-action button-small" onclick="submit_frm=1;$('#purchaseordefrm').trigger('submit');" style="float:right;" >Create PO</span>
+	</div>
 </div>
 
 </form>
@@ -125,111 +133,92 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 
  
 <div style="display:none">
-<table id="sl_prod_template">
-<tbody>
-<tr class="brand_%brandid% cat_%catid%" brandid="%brandid%"><td><input type="checkbox" class="sl_sel_prod" value="%pid%"><input type="hidden" class="pid" value="%pid%"></td><td class="psrcstat"><span class="src_stat">%prod_source_stat%</span> <a href=javascript:void(0)" prod_id="%pid%" onclick="upd_prdsourceablestat(this)" nsrc="%prod_source_stat_val%" >Change</a> </td><td>%pid%</td><td class="name" style="width: 400px;text-align: left;"><a  target="_blank" href="<?php echo site_url('admin/product/%pid%')?>">%product%</a></td><td>Rs <span class="mrp">%mrp%</span></td><td class="margin" style="display: none;" >%margin%</td><td>%stock%</td><td ><input type="text" class="i_po_qty" style="width: 40px;" value="%i_po_qty_val%"></td><td class="orders">%orders%</td></tr>
-</tbody>
-</table>
-
-<div>
-<table id="p_clone_template" width="100%">
-<tr class="barcode--barcode-- barcodereset rec_type brand_%brandid%  cat_%catid%" brandid="%brandid%" catid="%catid%">
-<td>%sno%</td>
-
-<td width="200px">
-<div>
-<input type="hidden" class="product" name="product[]" value="%product_id%">
-<a target="_blank"   href="<?php echo site_url('admin/product/');?>/%product_id%" >product_name</a>&nbsp;<b>(%product_brand%)</b>
-</div>
-<div>
-<b>PNH Product ID:%product_id%</b>
-</div>
-<div><span style="background-color: #FAFAFA;padding:3px;width:20px;font-weight: bold;color: blue;">Current Stock : %curr_stck%</span></div>
-</td>
-<td><input type="text" class="mrp calc_pp inp readonly" size="8" name="mrp[]" value=mrpvalue readonly="readonly"></td>
-<td>
-	<div style="visibility: %dp_price_inp% "><input type="text" title="Change/Update DP Price on change" class="calc_pp has_dp_price dp_price" size="8" name="dp_price[]" value="%dp_price%"></div>
-</td>
-
-<td class="mrgn_blk" style="width:150px;font-size: 10px;" >
-<div style="margin-bottom: 2px">
-<span>Ven.Margin :
-<input type="text" class="margin inp calc_pp readonly" size="8" name="margin[]" value="%margin%"  readonly="readonly"></span>
-</div>
-
-<div>
-	<span>Sch.Margin : <input type="text" class="inp calc_pp sdiscount" size=4 name="sch_discount[]" value="0" style="width:50px;border:1px solid #000000;"><input type="radio" value="1" checked class="calc_pp stype_%product_id%" name="sch_type[] %product_id%">% <input type="radio" value="2" class="calc_pp stype_%product_id%" name="sch_type[] %product_id%">Rs</span>
-		
-</div>
-<div class="marg_prc_preview" style="display:none!important;">
-	<span>Tot.Margin : <input type="text" name="marg_prc %product_id%" value="" readonly="readonly" class="inp marg_prc_%product_id% readonly">%</span>
-	
-</div>
-</td>
-
-<td class="qty_price_blk" style="width:150px;font-size: 10px;" >
-<div style="margin-bottom: 2px">
-<span>Open PO qty : </span>
-<b id="is_po_raised_%product_id%" style="font-size: 12px;margin-left: 4px"></b>	
-</div>
-
-<div>
-	<span>Required qty : </span>
-	<span><input type="text" class="inp calc_pp qty" id="prod_qty_%product_id%"  size=4 name="qty[]" value="%require_qty%" style="border:1px solid #000000;width:72px;"></span>
-</div>
-
-
-</td>
-
-
-<td>
-<div>
+	<table id="sl_prod_template">
+		<tbody><tr class="brand_%brandid% cat_%catid%" brandid="%brandid%"><td><input type="checkbox" class="sl_sel_prod" value="%pid%"><input type="hidden" class="pid" value="%pid%"></td><td class="psrcstat"><span class="src_stat">%prod_source_stat%</span> <a href=javascript:void(0)" prod_id="%pid%" onclick="upd_prdsourceablestat(this)" nsrc="%prod_source_stat_val%" >Change</a> </td><td>%pid%</td><td class="name" style="width: 400px;text-align: left;"><a  target="_blank" href="<?php echo site_url('admin/product/%pid%')?>">%product%</a></td><td>Rs <span class="mrp">%mrp%</span></td><td class="margin" style="display: none;" >%margin%</td><td>%stock%</td><td ><input type="text" class="i_po_qty" style="width: 40px;" value="%i_po_qty_val%"></td><td class="orders">%orders%</td></tr></tbody>
+	</table>
 	<div>
-		<input type="text" class="inp pprice readonly" readonly="readonly"  name="price[]" value="%pprice%" >
-		
-		</div>
-		
-	</div>
-</td>
-<td>
-	<div>
-		<input type="text" class="inp tpprice readonly"
-			readonly="readonly" name="qtyprice[]" value="">
-	</div>
-</td>
-
-<td name="tcol1" id="tcol1" class="bold" style="height:104px;display:none">
-	<div>
-		<span>
-		Foc : <input type="checkbox" class="inp" style="top:10px"  name="%foc%" value="1">
-		</span>
-	</div>
-
-	<div>
-		<span>
-		Has Offer : <input type="checkbox" class="inp" style="" name="%offer%" value="1">
-		</span>
-	</div>
-</td>
-
-<td align="center"><a href="javascript:void(0)" onclick='remove_prod_selection(this)'><img style="width: 12px;" src="<?php echo base_url().'images/remove.png'?>"></a></td>
-
-</tr>
-</table>
-</div>
-
-<div id="orderd_productdet" title="Order Details" >
-		<form id="orderd_productdet_frm" method="post" data-validate="parsley" action="<?php echo site_url('admin/to_load_orderdprd_details')?>" >
-			<input type="hidden" name="po_productid" id="po_productid">
-			<table class="datagrid smallheader" width="100%" id="orderd_podet">
-				<thead><th align="left">Parter name</th><th align="left">Total Orders</th><th align="left">Last Orderd On</th></thead>
-				<tbody>
+		<table id="p_clone_template" width="100%">
+			<tr class="barcode--barcode-- barcodereset rec_type brand_%brandid%  cat_%catid%" brandid="%brandid%" catid="%catid%">
+				<td>%sno%</td>
+				<td >
+					<div>
+						<input type="hidden" class="product" name="product[]" value="%product_id%">
+						<a target="_blank"   href="<?php echo site_url('admin/product/');?>/%product_id%" >product_name</a>&nbsp;<b>(%product_brand%)</b>
+					</div>
+					<div><b>PNH Product ID:%product_id%</b></div>
+					<div><span style="background-color: #FAFAFA;padding:3px;width:20px;font-weight: bold;color: blue;">Current Stock : %curr_stck%</span></div>
+				</td>
+				<td style="text-align: right"><input type="text" class="mrp calc_pp inp readonly" size="8" name="mrp[]" value=mrpvalue readonly="readonly"></td>
+				<td style="text-align: right">
+					<div style="visibility: %dp_price_inp% "><input type="text" title="Change/Update DP Price on change" class="calc_pp has_dp_price dp_price" size="8" name="dp_price[]" value="%dp_price%"></div>
+				</td>
+				<td class="mrgn_blk" style="width:95px;font-size: 10px;text-align: right;" >
+					<div style="margin-bottom: 2px">
+						<span>Ven.Margin :<input type="text" class="margin inp calc_pp readonly" size="8" style="width: 50px" name="margin[]" value="%margin%"  readonly="readonly"></span>
+					</div>
+					<div>
+						<span>Sch.Margin : <input type="text" class="inp calc_pp sdiscount" style="width: 50px" size=4 name="sch_discount[]" value="0" style="width:50px;border:1px solid #000000;"></span>
+						<span style="display: block;text-align: right;"><input type="radio" value="1" checked class="calc_pp stype_%product_id%" name="sch_type[] %product_id%">% <input type="radio" value="2" class="calc_pp stype_%product_id%" name="sch_type[] %product_id%">Rs</span>
+					</div>
+					<div class="marg_prc_preview" style="display:none!important;">
+						<span>Tot.Margin (%) : <input type="text" name="marg_prc %product_id%" style="width: 50px" value="" readonly="readonly" class="inp marg_prc_%product_id% readonly"></span>
+					</div>
+				</td>
 				
-				</tbody>
-			</table>
-		</form>
-</div>
-<div id="purchase_productdet" title="Purchase Pattern Details">
+				<td class="qty_price_blk" style="width:100px;font-size: 10px;text-align: right;" >
+					<div style="margin-bottom: 2px">
+						<span>Open PO qty : </span>
+						<b id="is_po_raised_%product_id%" style="font-size: 12px;margin-left: 4px"></b>	
+					</div>
+					<div>
+						<span>Required qty : </span>
+						<span><input type="text" class="inp calc_pp qty" id="prod_qty_%product_id%"  size=4 name="qty[]" value="%require_qty%" style="border:1px solid #000000;width:30px;"></span>
+					</div>
+				</td>
+				
+				
+				<td style="text-align: right;">
+					<div>
+						<input type="text" class="inp pprice readonly" readonly="readonly"  name="price[]" value="%pprice%" >
+					</div>
+				</td>
+				<td style="text-align: right;">
+					<div>
+						<input type="text" class="inp tpprice readonly"
+							readonly="readonly" name="qtyprice[]" value="">
+					</div>
+				</td>
+				<td name="tcol1" id="tcol1" class="bold" style="height:104px;display:none">
+					<div>
+						<span>
+						Foc : <input type="checkbox" class="inp" style="top:10px"  name="%foc%" value="1">
+						</span>
+					</div>
+				
+					<div>
+						<span>
+						Has Offer : <input type="checkbox" class="inp" style="" name="%offer%" value="1">
+						</span>
+					</div>
+				</td>
+				<td align="center" style="width:20px;"><a href="javascript:void(0)" onclick='remove_prod_selection(this)'><img style="width: 12px;" src="<?php echo base_url().'images/remove.png'?>"></a></td>
+			
+			</tr>
+		</table>
+	</div>
+
+	<div id="orderd_productdet" title="Order Details" >
+			<form id="orderd_productdet_frm" method="post" data-validate="parsley" action="<?php echo site_url('admin/to_load_orderdprd_details')?>" >
+				<input type="hidden" name="po_productid" id="po_productid">
+				<table class="datagrid smallheader" width="100%" id="orderd_podet">
+					<thead><th align="left">Parter name</th><th align="left">Total Orders</th><th align="left">Last Orderd On</th></thead>
+					<tbody>
+					
+					</tbody>
+				</table>
+			</form>
+	</div>
+	<div id="purchase_productdet" title="Purchase Pattern Details">
 		<form id="purchase_productdet_frm" method="post" data-validate="parsley" action="<?php// echo site_url('admin/to_load_purchaseprod_details')?>" >
 		<input type="hidden" name="purchase_pid" id="purchase_pid">
 			<table class="datagrid smallheader" width="100%" id="last7_pdet">
@@ -281,7 +270,7 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 </div>
 
 
-<div id="sl_products" title="Choose and add to current order">
+<div id="sl_products" title="Choose and Add Products to Purchase List">
 	<span style="float: left">
 			<b>Show</b> :
 			<select name="stk_prod_disp">
@@ -1040,7 +1029,10 @@ function showvendor(vid)
 	$.post("<?=site_url("admin/jx_show_vendor_details")?>",{v:vid},function(resp){
 		if(resp.status=='success')
 		{
-			$('#contact_det div').html("<span><b><a href='"+site_url+'/admin/vendor/'+resp.vcontact.vendor_id+"' target='_blank'>"+resp.vcontact.vendor_name+'</a></b></span><span>'+resp.vcontact.contact_name+'</span><span>'+resp.vcontact.mobile_no_1+' , '+resp.vcontact.mobile_no_2+' , '+resp.vcontact.telephone_no+'</span><span>'+resp.vcontact.address_line1+'</span> <span>'+resp.vcontact.address_line2+'</span> <span>'+resp.vcontact.city_name);
+			//$('#contact_det div').html("<span><b><a href='"+site_url+'/admin/vendor/'+resp.vcontact.vendor_id+"' target='_blank'>"+resp.vcontact.vendor_name+'</a></b></span><span>'+resp.vcontact.contact_name+'</span><span>'+resp.vcontact.mobile_no_1+' , '+resp.vcontact.mobile_no_2+' , '+resp.vcontact.telephone_no+'</span><span>'+resp.vcontact.address_line1+'</span> <span>'+resp.vcontact.address_line2+'</span> <span>'+resp.vcontact.city_name);
+			
+			$('.vendor_det b').html(" - <a class='ven_name' href='"+site_url+'/admin/vendor/'+resp.vcontact.vendor_id+"' target='_blank'>"+resp.vcontact.vendor_name+"</a>");
+			$('#contact_det div').html('<span>'+resp.vcontact.contact_name+'</span><span>'+resp.vcontact.mobile_no_1+' , '+resp.vcontact.mobile_no_2+' , '+resp.vcontact.telephone_no+'</span><span>'+resp.vcontact.address_line1+'</span> <span>'+resp.vcontact.address_line2+'</span> <span>'+resp.vcontact.city_name+'</span>');
 			
 			var b_html='';
 			$.each(resp.vbrands,function(i,b){

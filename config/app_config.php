@@ -66,3 +66,9 @@ $config['order_by'][0]='Storeking';
 $config['order_by'][1]='Snapittoday';
 $config['order_by'][2]='Partner';
 
+$config['pnh_logistick']=array();
+$config['pnh_logistick'][1]='Driver';
+$config['pnh_logistick'][2]='Fright-cordinator';
+$config['pnh_logistick'][3]='Bus transport';
+$config['pnh_logistick'][4]='Courier';
+

@@ -1,75 +1,59 @@
 <style>.contenttable .leftcont{display:none;}.security_details td{padding:5px 10px !important;} .security_details .datagrid td{padding:2px !important;}</style>
 <div class="container" style="padding:5px;">
-<div style="position:absolute;top:0px;right:60px;"><a href="javascript:void(0)" style="background:#ffaa00;border:1px solid #aaa;border-top:0px;text-decoration:none;display:block;padding:0px 5px 1px 5px;border-radius:0px 0px 5px 5px;color:#555;" onclick='$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"})'>show menu</a></div>
-<div style="clear: both;overflow: hidden;">
-	<h2 style="margin:5px 0px;float: left;">PNH Offline Order <span id="fran_name_disp" style="font-size: 80%"></span></h2>
+	<div style="position:absolute;top:0px;right:60px;"><a href="javascript:void(0)" style="background:#ffaa00;border:1px solid #aaa;border-top:0px;text-decoration:none;display:block;padding:0px 5px 1px 5px;border-radius:0px 0px 5px 5px;color:#555;" onclick='$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"})'>show menu</a></div>
+	<div style="clear: both;overflow: hidden;">
+		<h2 style="margin:5px 0px;float: left;">PNH Offline Order <span id="fran_name_disp" style="font-size: 80%"></span></h2>
         <div class="offn_courier_detail"></div>
-</div>
-<div id="fran_select_cont">
-	<select class="chzn-select" data-placeholder="Choose Franchise "  name="sel_fid" style="width:250px;" ></select>
-	&nbsp;&nbsp; Or &nbsp;&nbsp;Enter Franchise ID : 
-	<input maxlength="8" type="text" class="inp" id="fid_inp" size=20>
-	<input type="button" value="Select" onclick='load_franchisebyid()'> &nbsp; &nbsp; &nbsp;Or &nbsp; &nbsp; &nbsp; Enter Franchise Login Mobile : <input type="text" class="inp" id="fmobile_inp" size=20><input maxlength="10" type="button" value="Select" onclick='load_franchisebymobile()'>
-</div>
-<div id="franchise_det">
-</div>
-<?php /*?>
-<div id="frans_list" style="margin-top:20px;height:400px;overflow:auto;float:left;">
-<table class="datagrid">
-<thead><tr><th>Franchise Name</th><th>FID</th><th>Town</th><th>City</th><th>Territory</th><th>Login Mobile1</th><th>Login Mobile2</th></tr></thead>
-<tbody>
-<?php foreach($this->db->query("select f.franchise_id,f.pnh_franchise_id,f.login_mobile1,f.login_mobile2,f.franchise_name,f.city,t.town_name,tr.territory_name from pnh_m_franchise_info f join pnh_towns t on t.id=f.town_id join pnh_m_territory_info tr on tr.id=f.territory_id order by f.franchise_name asc")->result_array() as $f){?>
-<tr onclick='$("#fid_inp").val("<?=$f['pnh_franchise_id']?>");load_franchisebyid();' style="cursor:pointer;">
-<td><?=$f['franchise_name']?></td><td><a target="_blank" loc="<?=$f['town_name'].','.$f['territory_name'];?>" href="<?=site_url("admin/pnh_franchise/{$f['franchise_id']}")?>"><?=$f['pnh_franchise_id']?></a></td><td><?=$f['town_name']?></td><td><?=$f['city']?></td><td><?=$f['territory_name']?></td><td><?=$f['login_mobile1']?></td><td><?=$f['login_mobile2']?></td>
-</tr>
-<?php }?>
-</tbody>
-</table>
-</div>
-<?php */?>
-
+	</div>
+	<div id="fran_select_cont">
+		<select class="chzn-select" data-placeholder="Choose Franchise "  name="sel_fid" style="width:250px;" ></select>
+		&nbsp;&nbsp; Or &nbsp;&nbsp;Enter Franchise ID : 
+		<input maxlength="8" type="text" class="inp" id="fid_inp" size=20>
+		<input type="button" value="Select" onclick='load_franchisebyid()'> &nbsp; &nbsp; &nbsp;Or &nbsp; &nbsp; &nbsp; Enter Franchise Login Mobile : <input type="text" class="inp" id="fmobile_inp" size=20><input maxlength="10" type="button" value="Select" onclick='load_franchisebymobile()'>
+	</div>
+<div id="franchise_det"></div>
 <div class="clear"></div>
 
 <div id="showafter">
-<div id="show_scheme_details" title="Scheme Details">
-<fieldset>
-<legend><b>Active Scheme Discounts</b></legend>
-<table class="datagrid  noprint" id="active_scheme_discount">
-<thead><th>Menu</th><th>Brand</th><th>Category</th><th>Discount(%)</th><th>Valid From</th><th>Valid To</th></thead>
-<tbody></tbody>
-</table>
-</fieldset>
-<br><br><br>
-<fieldset>
-<legend><b>Active Super Scheme</b></legend>
-<table class="datagrid  noprint" id="active_super_scheme">
-<thead><th>Menu</th><th>Brand</th><th>Category</th><th>Target Sales</th><th>Credit(%)</th><th>Valid From</th><th>Valid To</th></thead>
-<tbody></tbody>
-</table>
-</fieldset>
-<br><br><br>
-<fieldset>
-<legend><b>Active IMEI Scheme</b></legend>
-<table class="datagrid  noprint" id="active_imei_scheme">
-<thead><th>Menu</th><th>Brand</th><th>Category</th><th>Scheme Type</th><th>Credit value</th><th>Valid From</th><th>Applied From</th><th>Valid To</th></thead>
-<tbody></tbody>
-</table>
-</fieldset>
-<br><br><br>
-<fieldset>
-<legend><b>Alloted Menu</b></legend>
-<table class="datagrid  noprint" id="menu">
-<tbody></tbody>
-</table>
-</fieldset>
-</div>
+	<div id="show_scheme_details" title="Scheme Details">
+		<fieldset>
+			<legend><b>Active Scheme Discounts</b></legend>
+			<table class="datagrid  noprint" id="active_scheme_discount">
+				<thead><th>Menu</th><th>Brand</th><th>Category</th><th>Discount(%)</th><th>Valid From</th><th>Valid To</th></thead>
+				<tbody></tbody>
+			</table>
+		</fieldset>
+		<br><br><br>
+		<fieldset>
+			<legend><b>Active Super Scheme</b></legend>
+			<table class="datagrid  noprint" id="active_super_scheme">
+				<thead><th>Menu</th><th>Brand</th><th>Category</th><th>Target Sales</th><th>Credit(%)</th><th>Valid From</th><th>Valid To</th></thead>
+				<tbody></tbody>
+			</table>
+		</fieldset>
+	<br><br><br>
+		<fieldset>
+			<legend><b>Active IMEI Scheme</b></legend>
+			<table class="datagrid  noprint" id="active_imei_scheme">
+				<thead><th>Menu</th><th>Brand</th><th>Category</th><th>Scheme Type</th><th>Credit value</th><th>Valid From</th><th>Applied From</th><th>Valid To</th></thead>
+				<tbody></tbody>
+			</table>
+		</fieldset>
+	<br><br><br>
+		<fieldset>
+			<legend><b>Alloted Menu</b></legend>
+			<table class="datagrid  noprint" id="menu">
+			<tbody></tbody>
+		</table>
+	</fieldset>
+	</div>
 
-<b style="float: right;margin-right:398px;margin-top:-44px;margin-bottom:25px;font-size: 11px;background-color:<?php echo $fr_status_color?>;color:#fff;padding:2px 3px;border-radius:3px;"><?php echo $fran_status_arr[$fran_status];?></b>
-<a href="javascript:void(0)" onclick="load_scheme_details()" style="float: right;margin-top: -39px;margin-right:156px;" class="button">Scheme &amp; Menu Details</a>
-<a href="<?php echo site_url('/admin/pnh_deals')?>" target="_blank" style="float:left;margin-top: -38px;margin-left:1171px;" class="button">GoTo Deals</a>
-<div class="fixed_bottom" id="srch_deals_cont">Search Deal : <div id="srch_results"></div><input type="text" class="inp" style="width:320px;" id="p_srch" autocomplete="off" ></div>
-<div class="fixed_bottom" style="left:480px;">PNH PRODUCT ID : <input type="text" class="inp" maxlength="8" size=30 id="p_pid" autocomplete="off" ><input type="button" value="Add" class="add_product"></div>
-<div class="fixed_bottom" style="left:935px;">Barcode : <input type="text" class="inp" size=20 id="p_barcode" autocomplete="off" ><input type="button" value="Add" class="add_b_product"></div>
+	<b style="float: right;margin-right:398px;margin-top:-44px;margin-bottom:25px;font-size: 11px;background-color:<?php echo $fr_status_color?>;color:#fff;padding:2px 3px;border-radius:3px;"><?php echo $fran_status_arr[$fran_status];?></b>
+	<a href="javascript:void(0)" onclick="load_scheme_details()" style="float: right;margin-top: -39px;margin-right:156px;" class="button">Scheme &amp; Menu Details</a>
+	<a href="<?php echo site_url('/admin/pnh_deals')?>" target="_blank" style="float:left;margin-top: -38px;margin-left:1171px;" class="button">GoTo Deals</a>
+	<div class="fixed_bottom" id="srch_deals_cont">Search Deal : <div id="srch_results"></div><input type="text" class="inp" style="width:320px;" id="p_srch" autocomplete="off" ></div>
+	<div class="fixed_bottom" style="left:480px;">PNH PRODUCT ID : <input type="text" class="inp" maxlength="8" size=30 id="p_pid" autocomplete="off" ><input type="button" value="Add" class="add_product"></div>
+	<div class="fixed_bottom" style="left:935px;">Barcode : <input type="text" class="inp" size=20 id="p_barcode" autocomplete="off" ><input type="button" value="Add" class="add_b_product"></div>
 
 <div style="padding:5px;">
 
@@ -78,15 +62,13 @@
 <input type="hidden" id="redeem_p" name="redeem_points" value="0" style="display:none;">
 <input type="hidden"  name="creditdays" value="" style="display:none;">
 <div id="prod_suggest_list">
-<fieldset>
-<legend><b>Product Data</b></legend>
-<table class="datagrid smallheader noprint" id="prevorderd_prod">
-<thead><th>Product name</th><th>Total Orderd</th><th>Total Shipped</th></thead>
-<tbody>
-
-</tbody>
-</table>
-</fieldset>
+	<fieldset>
+		<legend><b>Product Data</b></legend>
+		<table class="datagrid smallheader noprint" id="prevorderd_prod">
+			<thead><th>Product name</th><th>Total Orderd</th><th>Total Shipped</th></thead>
+			<tbody></tbody>
+		</table>
+	</fieldset>
 
 <br><br>
 <fieldset>
@@ -1192,20 +1174,14 @@ $(function(){
 			alert("Please verify whether stock for the footwear is available?");
 			return false;
 		}
-			
-	if(invalid_qty)
-		{
-			alert("Invalid Quantity entered");
-			return false;
-		}
 		
 		if(confirm("Total order value : Rs "+total+"\nAre you sure want to place the order?"))
 		{
 			
 			$("#order_form").hide();
 			attr=$(".attr").serialize();
-			
-			$.post("<?=site_url("admin/pnh_jx_checkstock_order")?>",{attr:attr,pids:ppids.join(","),qty:qty.join(","),fid:$('#i_fid').val(),mid:$("input[name='mid']",$(this)).val(),local_distributor_mrgn:distribtor_mrgn.join(","),credit_days:$('.credit_days').val()}, function(data){
+			distribtor_mrgn = 0;
+			$.post(site_url+"/admin/pnh_jx_checkstock_order",{attr:attr,pids:ppids.join(","),qty:qty.join(","),fid:$('#i_fid').val(),mid:$("input[name='mid']",$(this)).val(),credit_days:$('.credit_days').val()}, function(data){
 				obj=$.parseJSON(data);
 				if(obj.e==0)
 				{

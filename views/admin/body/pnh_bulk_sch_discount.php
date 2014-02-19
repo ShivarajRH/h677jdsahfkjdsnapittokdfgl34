@@ -555,7 +555,7 @@ $("#deals_det_dlg" ).dialog({
 	    			ids.push($(this).attr('dealid'));
 	    		});
 	    		
-	    		$('.sel_dealids',trele).val(ids);
+	    		$('.sel_dealids',trele).val(dealids);
 	    		$('.deals_selected',trele).html("<b>"+dealids.length+"</b> selected");
 	    		$('.sel_deal_btn',trele).addClass('deallist_selected');
 	    	$(this).dialog('close');

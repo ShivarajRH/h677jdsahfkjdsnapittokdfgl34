@@ -333,13 +333,14 @@ are defined individually in color classes */
 .button-tiny_wrap 
 {
     font-size: 11px;
-	padding: 5px;
-	width: 18px;
-	line-height: 18px;
-	height: 18px;
+    height: 16.4px;
+    line-height: 16.4px;
+    margin-left: 7px;
+    padding: 0 9.92px;
 }
 #grn
 {
+	
 	padding:5px;
 }
 .grn_po

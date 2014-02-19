@@ -65,8 +65,8 @@
 	$min_assets['css'][] = '../css/tipped.css';
 	$min_assets['css'][] = '../css/admin.css';
 	$min_assets['css'][] = '../css/buttons.css';
-	$min_assets['css'][] = '../css/erp.css';
 	$min_assets['css'][] = '../css/jquery-ui-timepicker-addon.css';// R
+	$min_assets['css'][] = '../css/erp.css';
 	
 
 return array(

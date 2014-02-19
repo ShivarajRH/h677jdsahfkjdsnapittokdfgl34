@@ -9,8 +9,8 @@
 			<input type="text" name="srch_deals" class="deal_prd_blk inp" placeholder="Search by Deal Name" >
 		</div>
 		<div class="legends_outer_wrap">
-			<span class="legends_color_notsrc_wrap">&nbsp;</span> - Not Published &nbsp; &nbsp; &nbsp;
-			<span class="legends_color_src_wrap">&nbsp;</span> - Published &nbsp; &nbsp; &nbsp;
+			<span class="legends_color_notsrc_wrap">&nbsp;</span> - Out Of Stock &nbsp; &nbsp; &nbsp;
+			<span class="legends_color_src_wrap">&nbsp;</span> - In Stock &nbsp; &nbsp; &nbsp;
 		</div>
 		<div id="cus_jq_alpha_sort_wrap" >
 		</div>
@@ -451,20 +451,29 @@ function deallist_bycat(brandid,catid,type)
 				
 				d_lst+='</th></tr></thead>';
 			 	$.each(resp.deals_lst,function(i,d){
-					if(d.publish == 1)
+					if(d.allow_order.length)
 					{
-						var enable='checked="checked"';
+						dstock = 'In Stock';
 						var background='background:none repeat scroll 0 0 rgba(170, 255, 170, 0.8) !important'/*#40FC36*/;
 					}else
 					{
-						var enable='';
+						dstock = 'Out of Stock';
 						var background='background:none repeat scroll 0 0 #FFAAAA !important';
+					}
+					if(d.publish==1)
+					{
+						var enable='checked="checked"';
+						
+					}else
+					{
+						var enable='';
+						
 					}
 						d_lst+='<tr style="'+background+'" class="sk_deal_filter_wrap deals_'+d.catid+'" publish="'+d.publish+'" mrp="'+d.orgprice+'" name="'+d.name+'" brand="'+d.brand+'" category="'+d.category+'" ref_id="'+d.itemid+'">';
 				 			//d_lst+='<img src="'+images_url+'/items/small/'+d.pic+'.jpg'+'">';
 		 					d_lst+='<td><span>'+d.pnh_id+'</span></td>';
-		 					d_lst+='<td><span class="title"><a target="_blank" href="'+site_url+'/admin/pnh_deal/'+d.itemid+'">'+d.name+'</a></td>';
-							d_lst+='<td><a href="javascript:void(0)" ref_id="'+d.itemid+'" class="tgl_stock_combo">View Stock</a><div class="stock_det_'+d.itemid+'"></div></td>';
+		 					d_lst+='<td><span class="title"><a target="_blank" href="'+site_url+'/admin/pnh_deal/'+d.itemid+'">'+d.name+'</a><div class="stock_det_'+d.itemid+'"></div></td>';
+							d_lst+='<td><a href="javascript:void(0)" ref_id="'+d.itemid+'" class="tgl_stock_combo">'+(dstock)+'</a></td>';
 		 					d_lst+='<td><span><a target="_blank" href="'+site_url+'/admin/viewbrand/'+d.brandid+'">'+d.brand+'</a></span></td>';
 		 					d_lst+='<td><span><a target="_blank" href="'+site_url+'/admin/viewcat/'+d.catid+'">'+d.category+'</a></span></td>';
 		 					d_lst+='<td><span class="mrp">'+d.orgprice+'</span></td>';

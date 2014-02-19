@@ -26,8 +26,8 @@ $(function(){
 //	$(".datagrid thead").html("<tr>"+$("#temp_dg tr:first").html()+"</tr>");
 //	$("#temp_dg tr:first").remove();
 //	$(".datagrid tbody").html($("#temp_dg").html());
-	//$(".datagrid").append("<tfoot></tfoot>");
-	//$(".datagrid:not(.nofooter) tfoot").html("<tr><td colspan='100'><a href='javascript:void(0)' class='dg_print'>print</a></td></tr>");
+	$(".datagrid").append("<tfoot></tfoot>");
+	$(".datagrid:not(.nofooter) tfoot").html("<tr><td colspan='100'><a href='javascript:void(0)' class='dg_print'>print</a></td></tr>");
 	if(typeof submenu == "undefined")
 	{
 		$("#content .leftcont").html("<ul>"+$(".menu").html()+"<ul>");
@@ -39,13 +39,13 @@ $(function(){
 		$("#content .leftcont ul li span").remove();
 	}
 	$(".datagrid tbody tr").live("mouseover",function(){
-		$("td",$(this)).addClass("highlight_row");
+		$("td",$(this)).css("background","#FFFFE0");
 		if($("td a.link",$(this)).length!=0)
 			$("td",$(this)).css("cursor","pointer");
 		if($("td .qe_trig",$(this)).length!=0 || $("td .qe_all_trig",$(this).parent()).length!=0)
 			$("td",$(this)).css("cursor","url('../images/edit_cursor.gif') 1 24, -moz-grab");
 	}).live("mouseout",function(){
-		$("td",$(this)).removeClass("highlight_row");
+		$("td",$(this)).css("background","transparent");
 	});
 	$(".datagrid .dg_print").click(function(){
 		var html="";

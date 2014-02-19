@@ -1774,4 +1774,66 @@ order by action_date ";
 		
 	}
 
+	/**
+	 * function to send po product list to vendor 
+	 */
+	function jx_notifypobymail()
+	{
+		
+		$this->erpm->auth(PURCHASE_ORDER_ROLE);
+		
+		$po_id = $this->input->post('poid');
+		$subj = $this->input->post('notify_vendorbymail_subject');
+		$message = $this->input->post('notify_vendorbymail_message');
+
+		$ven_id = $this->db->query("select vendor_id from t_po_info where po_id=?",$po_id)->row()->vendor_id;
+		
+		$mail_to = "";
+		$mail_cc = array();
+		$mail_cc[] = 'sourcing@storeking.in';
+		$vendor_email_res = $this->db->query("select email_id_1,email_id_2 from m_vendor_contacts_info where vendor_id = ? and (email_id_1 != '' or email_id_2 != '') limit 1",$ven_id);
+		foreach($vendor_email_res->result_array() as $row)
+		{
+			$mail_to = $row['email_id_1']?$row['email_id_1']:$row['email_id_2'];
+			$mail_cc[] = $row['email_id_1']?$row['email_id_1']:$row['email_id_2'];
+			$mail_cc[] = $row['email_id_2']?$row['email_id_2']:'';
+		}
+		
+		$mail_cc = array_filter(array_unique($mail_cc));
+		
+		// prepare po product datasheet 
+		$sql_poprods="select a.product_id,product_name,order_qty,a.mrp
+							from t_po_product_link a
+							join m_product_info b on a.product_id=b.product_id 
+							where po_id = ? 
+							and a.is_active = 1 ";
+		$res_pprods = $this->db->query($sql_poprods,$po_id);
+		$pprods = array();
+		$pprods[] = array();
+		$pprods[] = array("Storeking Purchase Order No : ",$po_id);
+		if($res_pprods->num_rows())
+		{
+		 	$pprods[] = array("Slno","Product Refno","Product Name","MRP","Order Qty");
+			foreach($res_pprods->result_array() as $i=>$p)
+			{
+				$pprods[] = array($i+1,$p['product_id'],$p['product_name'],$p['mrp'],$p['order_qty']);
+			}
+		}
+		
+		$attachment_name = "resources/po_files/Storeking_Purchase_order_".$po_id.'.csv';
+		$f=fopen($attachment_name,"w");
+		foreach($pprods as $o)
+			fputcsv($f, $o);
+		fclose($f);
+		
+		$message = nl2br($message);
+		if($mail_to)
+		{
+			$this->erpm->_notifybymail($mail_to,$subj,$message,$fromname="Storeking Sourcing",$from='support@snapittoday.com',$mail_cc,$attachment_name);
+			$this->db->query("update t_po_info set notify_vendor=1,notify_vendor_on = now() where po_id = ? ",$po_id);
+		}
+		
+		
+		
+	}
 }

@@ -356,11 +356,8 @@ class Admin extends Erp {
 			//			$this->session->unset_userdata ( "username" );
 			//			$this->session->unset_userdata ( "usertype" );
 			$this->session->unset_userdata("admin_user");
-			$data ['page'] = "admin_signin";
-			$data ['signout'] = true;
-			$data ['smallheader'] = 'smallheader';
-			$this->load->view ( 'admin', $data );
 		}
+		redirect('admin','refresh');
 	}
 
 	protected function auth($super=false)

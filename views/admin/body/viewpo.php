@@ -25,58 +25,69 @@ $po_status_arr[3]="Cancelled";?>
 <legend><b>PO Details</b></legend>
 <table>
 <tr>
-<td width="45%">
-<div width="50%">
-<table cellspacing="5" width="100%">
-<tbody>
-<tr><td><b>Supplier</b></td><td>|</td><td><a target="_blank" href="<?php echo site_url("/admin/vendor/{$po['vendor_id']}")?>"><?=$po['vendor_name'] ?></a></td></tr>
-<tr><td><b>Purchase Order</b></td><td>|</td><td><?=$po['po_id'] ?></td></tr>
-<tr><td><b>Created Date</b></td><td>|</td><td><?=format_date($po['created_on'] )?></td></tr>
-<?php if($po['date_of_delivery'] && $po['remarks']){?>
-<tr><td><b>Scheduled Date</b></td><td>|</td><td><?=format_date($po['date_of_delivery'] )?></td></tr>
-<tr><td><b>Remarks</b></td><td>|</td><td><?=$po['remarks'] ?></td></tr>
-<?php }?>
-<tr><td><b>Created By</b></td><td>|</td><td><?=$po['created_byname'] ?></td></tr>
-<?php if(!$po['date_of_delivery'] || !$po['remarks']){?>
-<tr><td><input onclick='update_po_det(<?php echo $po['po_id'] ?>)' class="update_link button-rounded button button-flat-caution button-small" value="Update Remarks" style="cursor: pointer;"></td></tr>
-<?php }?>
-</div>
-</tbody>
-</table>
-</div></td>
-<td width="45%">
-<div width="50%" style="float:right;margin-left:117px;">
-<table cellspacing="5" width="100%">
-<tbody>
-<tr><td><b>Po value</b></td><td>|</td><td>Rs <?=format_price($ttl_po_val['total_value'])?></td></tr>
-<tr><td><b>Status</b></td><td>|</td>
-<td>
-<?if($po['po_status']==0){?>
-<span style="color: orange"><b><?php echo $po_status_arr[$po['po_status']]?></b></span>
-
-<?php }elseif($po['po_status']==3){?>
-<span style="color: red"><b><?php echo $po_status_arr[$po['po_status']] ?></b></span>
-<?php }else{?>
-<span><b><?php echo $po_status_arr[$po['po_status']] ?></b></span>
-<?php }?>
-</td></tr>
-<tr>
-	<td>Notify By Mail</td>
-	<td><?php echo $po['notify_vendor']?'Notified':'<a href="javascript:void(0)" id="notify_vendorbymail" class="butto button-tiny button-action">Notify</a>'?></td>
+	<td width="45%">
+		<div width="50%">
+			<table cellspacing="5" width="100%">
+				<tbody>
+					<tr><td><b>Supplier</b></td><td>|</td><td><a target="_blank" href="<?php echo site_url("/admin/vendor/{$po['vendor_id']}")?>"><?=$po['vendor_name'] ?></a></td></tr>
+					<tr><td><b>Purchase Order</b></td><td>|</td><td><?=$po['po_id'] ?></td></tr>
+					<tr><td><b>Created Date</b></td><td>|</td><td><?=format_date($po['created_on'] )?></td></tr>
+					<?php if($po['date_of_delivery'] && $po['remarks']){?>
+					<tr><td><b>Scheduled Date</b></td><td>|</td><td><?=format_date($po['date_of_delivery'] )?></td></tr>
+					<tr><td><b>Remarks</b></td><td>|</td><td><?=$po['remarks'] ?></td></tr>
+					<?php }?>
+					<tr><td><b>Created By</b></td><td>|</td><td><?=$po['created_byname'] ?></td></tr>
+					<?php if(!$po['date_of_delivery'] || !$po['remarks']){?>
+					<tr><td><input onclick='update_po_det(<?php echo $po['po_id'] ?>)' class="update_link button-rounded button button-flat-caution button-small" value="Update Remarks" style="cursor: pointer;"></td></tr>
+					<?php }?>
+				</tbody>
+			</table>
+		</div>
+	</td>
+	<td width="45%">
+		<div width="50%" style="float:right;margin-left:117px;">
+			<table cellspacing="5" width="100%">
+			<tbody>
+			<tr><td><b>Po value</b></td><td>|</td><td>Rs <?=format_price($ttl_po_val['total_value'])?></td></tr>
+			<tr><td><b>Status</b></td><td>|</td>
+			<td>
+			<?if($po['po_status']==0){?>
+			<span style="color: orange"><b><?php echo $po_status_arr[$po['po_status']]?></b></span>
+			
+			<?php }elseif($po['po_status']==3){?>
+			<span style="color: red"><b><?php echo $po_status_arr[$po['po_status']] ?></b></span>
+			<?php }else{?>
+			<span><b><?php echo $po_status_arr[$po['po_status']] ?></b></span>
+			<?php }?>
+			</td></tr>
+			
+			<tr>
+				<td>Notify By Mail</td>
+				<td>|</td>
+				<td>
+					<?php 
+						$vendor_email_res = $this->db->query("select concat(email_id_1,',',email_id_2) from m_vendor_contacts_info where vendor_id = ? and (email_id_1 != '' or email_id_2 != '') limit 1",$po['vendor_id']);
+						if($vendor_email_res->num_rows())
+						{
+							echo $po['notify_vendor']?'Notified':'<a href="javascript:void(0)" id="notify_vendorbymail" class="button button-tiny button-action">Notify</a>';
+						}else
+						{
+							echo "<b>Vendor Email not found</b>";
+						}
+					?>
+				</td>
+			</tr>
+			<?php if($po['modified_on']!=null){?>
+			<tr><td><b>Updated on</b></td><td>|</td><td><?=format_date($po['modified_on']) ?></td></tr>
+			<tr><td><b>Status Remarks</b></td><td>|</td><td><?=$po['status_remarks']?></td></tr>
+			<tr><td><b>Updated by</b></td><td>|</td><td><?=$po['modified_byname'] ?></td></tr>
+			<?php }?>
+			</tbody>
+			</table>
+		</div>
+	</td>
 </tr>
-<?php if($po['modified_on']!=null){?>
-<tr><td><b>Updated on</b></td><td>|</td><td><?=format_date($po['modified_on']) ?></td></tr>
-<tr><td><b>Status Remarks</b></td><td>|</td><td><?=$po['status_remarks']?></td></tr>
-<tr><td><b>Updated by</b></td><td>|</td><td><?=$po['modified_byname'] ?></td></tr>
-<?php }?>
-</tbody>
 </table>
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
 </fieldset>
 
 <div class="tab_view ">
@@ -88,18 +99,19 @@ $po_status_arr[3]="Cancelled";?>
 <div id="po_list">
 <table class="datagrid nofooter" width="100%">
 <thead>
-<th>Slno</th>
-<th>Product Name</th>
-<th>Order Qty</th>
-<th style="text-align:center">Received Qty</th>
-<th>MRP</th>
-<th>DP Price</th>
-<th>Margin</th>
-<th>Scheme Discount</th>
-<th style="text-align:right;">Unit Price</th>
-<th style="text-align:right;">Sub Total</th>
-<th></th>
-
+	<tr>
+	<th>Slno</th>
+	<th>Product Name</th>
+	<th>Order Qty</th>
+	<th style="text-align:center">Received Qty</th>
+	<th>MRP</th>
+	<th>DP Price</th>
+	<th>Margin</th>
+	<th>Scheme Discount</th>
+	<th style="text-align:right;">Unit Price</th>
+	<th style="text-align:right;">Sub Total</th>
+	<th></th>
+</tr>
 </thead>
 <tbody>
 <?php $sno=1; foreach($items as $i){
@@ -209,12 +221,13 @@ PFA of Purchase Order : #'.$po['po_id'].'
 
 
 
-Thanks
+Regards
 '.$user['email'];
 ?>
 <div style="display: none">
 	<div id="notify_vendorbymail_dlg" title="Send Email Notification to Vendor">
 		<form action="<?php echo site_url('admin/jx_notifypobymail')?>" method="post">
+			<input type="hidden" name="poid" value="<?=$po['po_id'] ?>">
 			<table style="border-collapse: collapse;background: #f1f1f1;" width="100%" cellpadding="5" cellspacing="0">
 				<tr>
 					<td width="100"><b>PO no</b><br><span id="notify_vendorbymail_poid"><?=$po['po_id'] ?></span></td>
@@ -223,10 +236,10 @@ Thanks
 					<td><b>Vendor</b><br><span id="notify_vendorbymail_venname"><?=$po['vendor_name'] ?></span></td>
 				</tr>
 				<tr>
-					<td><b>Subject</b><br><input type="text" value="Storeking Purchase Order:<?=$po['po_id'] ?>"  id="notify_vendorbymail_subject" style="width: 99%"></td>
+					<td><b>Subject</b><br><input type="text" name="notify_vendorbymail_subject" value="Storeking Purchase Order:<?=$po['po_id'] ?>"  id="notify_vendorbymail_subject" style="width: 99%"></td>
 				</tr>
 				<tr>
-					<td valign="top"><b>Message</b><br><textarea id="notify_vendorbymail_message" style="width: 99%;height:150px;"><?php echo $email_tmpl;?></textarea></td>
+					<td valign="top"><b>Message</b><br><textarea name="notify_vendorbymail_message" id="notify_vendorbymail_message" style="width: 99%;height:150px;"><?php echo $email_tmpl;?></textarea></td>
 				</tr>
 			</table>
 		</form>
@@ -259,7 +272,10 @@ $('#notify_vendorbymail_dlg').dialog({
 		 	$(this).dialog('close');
 		},
 		'Submit':function(){
-			 
+			$(this).dialog('close');
+			 $.post($('form',this).attr('action'),$('form',this).serialize(),function(resp){
+				// location.href=location.href; 
+			 },'json');
 		},
 	}
 });

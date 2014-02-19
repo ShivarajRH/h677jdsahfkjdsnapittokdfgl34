@@ -204,9 +204,7 @@ function makecomma($input)
  */
 function formatInIndianStyle($num){
     $num = $num*1;
-
     $pos = strpos((string)$num, ".");
-    
     if ($pos === false) 
         $decimalpart="";
     else { 
@@ -218,9 +216,8 @@ function formatInIndianStyle($num){
                 $numexceptlastdigits = substr($num, 0, -3 );
                 $formatted = makecomma($numexceptlastdigits);
                 $stringtoreturn = $formatted.",".$last3digits;
-            if($decimalpart)
-                    $stringtoreturn .= ".".$decimalpart;
-            
+            	if($decimalpart)
+					$stringtoreturn .= ".".$decimalpart;
     }
     elseif(strlen($num)<=3){
                 $stringtoreturn = $decimalpart?$num.".".$decimalpart:$num ;
@@ -230,6 +227,7 @@ function formatInIndianStyle($num){
     }
 
     if(substr($stringtoreturn,0,2)=="-,"){$stringtoreturn = "-".substr($stringtoreturn,2 );}
+
     return $stringtoreturn;
 }
 

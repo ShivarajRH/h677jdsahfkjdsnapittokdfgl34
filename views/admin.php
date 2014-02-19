@@ -240,10 +240,10 @@ table{font-size:inherit;}
 	.ui-widget{font-family: arial}
 
 	.datagrid {border-collapse: collapse;border:none !important}
-	.datagrid th{border:none !important;font-size: 12px;padding:7px 5px;text-align: left;}
+	.datagrid th{border:none !important;font-size: 12px;padding:5px 5px;text-align: left;}
 	.datagrid td{border-right:none;border-left:none;border-bottom:1px dotted #ccc;font-size: 12px;line-height: 18px;
 	font-size: 12px;
-	padding: 8px 5px !important;}
+	padding: 6px 5px !important;}
 	.datagrid td a{text-transform: capitalize}
 
 </style>

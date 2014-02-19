@@ -284,7 +284,7 @@ input[type="submit"] {
 }
 h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;}
 
-.readonly{width:54px;font-size:13px;background-color:#fafafa !important;color:#444 !important;}
+.readonly{width:54px;font-size:13px;background-color:#E6E6E6 !important;color:grey!important;}
 
 .pprice{background-color: yellow!important;font-weight: bold;}
 .vendor{width: 200px}
