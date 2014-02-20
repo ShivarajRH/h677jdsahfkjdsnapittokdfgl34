@@ -2097,9 +2097,21 @@ $(function(){
                         </table>
                 </form>
             </div>
-            <a href="javascript:void(0)" class="deal_stock" data-action='hover'>Plugin Test</a>
+            <a href="javascript:void(0)" class="deal_stock" dealid="6435634196">Plugin Test</a> <br><br><br><br>
+            <a href="javascript:void(0)" class="deal_stock" dealid="5597821635">Plugin Test</a> <br><br><br><br>
+            <a href="javascript:void(0)" class="deal_stock" dealid="1293747961">Plugin Test</a> <br><br><br><br>
+            <a href="javascript:void(0)" class="deal_stock" dealid="9523347885">Plugin Test</a> <br><br><br><br>
+            <a href="javascript:void(0)" class="deal_stock" dealid="1573434433">Plugin Test</a> <br><br><br><br>
+            <a href="javascript:void(0)" class="deal_stock" dealid="874960266216">Plugin Test</a> <br><br><br><br>
 </div>
+<!--<script type="text/javascript" src="<?=base_url();?>/js/jquery-erp-dynamics.js"></script>-->
 <script>
+//$( function() {
+//    $(".tgl_stock_combo1,.tgl_stock_combo2,.tgl_stock_combo3,.tgl_stock_combo4,").get_dealstock({
+//        height:300,width:365
+//        //,get_fn_deal_stock:function() {print("hjghjgghj"); }
+//    });
+//});
 
  var twnlnk_franchise_html='';
 

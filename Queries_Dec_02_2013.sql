@@ -2959,3 +2959,9 @@ select r.receipt_id,rlog.credit_note_id,r.franchise_id,rcon.debit_note_id,rcon.i
 select * from king_deals dl
 #join m_product_deal_link pdl on
 where tmp_pnh_dealid='1739268';
+
+-- #==================================
+# Feb_19_2014
+
+# Feb_20_2014
+alter table `snapittoday_db_jan_2014`.`pnh_franchise_account_stat` drop column `unreconciled_status`, drop column `unreconciled_value`;

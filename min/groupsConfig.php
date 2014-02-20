@@ -37,6 +37,7 @@
 	$min_assets['js'][] = '../js/jquery.fix_header_onscroll.js';//BY S
 	$min_assets['js'][] = '../js/header_scripts.js'; //BY S
 	$min_assets['js'][] = '../js/erp.js';
+	$min_assets['js'][] = '../js/jquery-erp-dynamics.js'; // Shiv First plugin
 	
 	
 	//JQplot Plugins for analytics view

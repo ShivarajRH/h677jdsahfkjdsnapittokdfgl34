@@ -17,7 +17,7 @@
 		
 		
 </div>
-
+<a href="javascript:void(0)" class="deal_stock" dealid="1293747961">Plugin Test</a> <br><br><br><br>
 <SCRIPT>
 function endisable_sel(act,brandid,catid)
 {
@@ -111,7 +111,7 @@ $(function(){
 	
 	 $(".jq_alpha_sort_alphalist_char a:eq(0)").trigger('click');
    	$('.jq_alpha_sort_alphalist_itemlist').slimScroll({
-	    height: '100px',
+	    height: '100px'
 	});
 	$('.jq_alpha_sort_alphalist_vend_head').html('<div class="alphabet_header_wrap"><span><a id="cat_lab" class="cat_lst_tab">Category List</a></span><span><a id="brand_lab" style="margin-right:0px !important" class="brand_lst_tab">Brand List</a></span> <input type="text" name="search_name" class="search_blk inp" placeholder="Search by Name" ><img style="margin-top: 7px;" src="<?php echo base_url().'images/search_icon.png'?>"></div>');
 	deallist_bycat(0,0,2);
@@ -243,7 +243,7 @@ function published_deals(v)
 }
 
 
-$('.tgl_stock_combo').live('click',function(){
+/*$('.tgl_stock_combo').live('click',function(){
 	var trele=$(this).parents('tr:first');
 	var ref_id  = $(this).attr('ref_id');
 	
@@ -272,7 +272,7 @@ $('.tgl_stock_combo').live('click',function(){
 		},'json');
 		//$('.stock_det',ele.parent().parent()).html("Loading...").show(); 
 	
-});
+});*/
 
 $('input[name="check_status"]').live("click",function(){
 	if(confirm("Are you sure want to change published status"))
@@ -473,7 +473,7 @@ function deallist_bycat(brandid,catid,type)
 				 			//d_lst+='<img src="'+images_url+'/items/small/'+d.pic+'.jpg'+'">';
 		 					d_lst+='<td><span>'+d.pnh_id+'</span></td>';
 		 					d_lst+='<td><span class="title"><a target="_blank" href="'+site_url+'/admin/pnh_deal/'+d.itemid+'">'+d.name+'</a><div class="stock_det_'+d.itemid+'"></div></td>';
-							d_lst+='<td><a href="javascript:void(0)" ref_id="'+d.itemid+'" class="tgl_stock_combo">'+(dstock)+'</a></td>';
+							d_lst+='<td><a href="javascript:void(0)" dealid="'+d.itemid+'" class="tgl_stock_combo">'+(dstock)+'</a></td>';
 		 					d_lst+='<td><span><a target="_blank" href="'+site_url+'/admin/viewbrand/'+d.brandid+'">'+d.brand+'</a></span></td>';
 		 					d_lst+='<td><span><a target="_blank" href="'+site_url+'/admin/viewcat/'+d.catid+'">'+d.category+'</a></span></td>';
 		 					d_lst+='<td><span class="mrp">'+d.orgprice+'</span></td>';
@@ -490,11 +490,16 @@ function deallist_bycat(brandid,catid,type)
 		 					}
 		 					d_lst+='</td>';
 	 					d_lst+='</tr>';
+                                                
+                                                // Call the plugin
+                                                //$(".deal_stock").get_dealstock();
+                                                
 				});
 				
 				d_lst+='</table>';
 				d_lst+='</div>';
 				
+                                
 				//polist_byvendor(vids[0]);
 				$('.jq_alpha_sort_overview_content').html(d_lst);
 			
@@ -523,6 +528,14 @@ function deallist_bycat(brandid,catid,type)
 	
 }
 
+
+$(".sk_deal_filter_wrap .tgl_stock_combo").live("hover",function() {
+    print( "\n"+ $(this).attr("dealid") );
+    $(this).get_dealstock({
+        height:300,width:365
+        //,get_fn_deal_stock:function() { print("hjghjgghj"); }
+    });
+});
 
 function cat_bychar(ch)
 {

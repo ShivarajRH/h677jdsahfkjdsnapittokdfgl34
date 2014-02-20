@@ -12708,7 +12708,7 @@ order by action_date";
     }
 
     /**
-     * Function to reconciled receipts table when reverse/cancel the receipt at any level (pending, processed, realized)
+     * Function to Reverse the reconciled receipts ( at pending, processed, realized)
      * @param type $receipt_id int
      * @param type $user array
      * @return string string
@@ -12731,7 +12731,7 @@ order by action_date";
                 $reconcile_id = $reconlog['reconcile_id'];
                 $reconcile_amount = $reconlog['reconcile_amount'];
                 //1. update unreconcile amount & modified by & date or reverse reconcile
-                $this->db->query("update `pnh_t_receipt_reconcilation set `unreconciled` = `unreconciled` + '".$reconcile_amount."',`modified_on`  = now(),`modified_by` = ? where id = ? ",array($user['userid'],$reconcile_id) );
+                $this->db->query("update `pnh_t_receipt_reconcilation` set `unreconciled` = `unreconciled` + '".$reconcile_amount."',`modified_on`  = now(),`modified_by` = ? where id = ? ",array($user['userid'],$reconcile_id) );
             }
             #2. update receipt table with unreconciled_amount and unreconcile status
             $this->db->query("update `pnh_t_receipt_info` set `unreconciled_value` = `receipt_amount`,`unreconciled_status` = 'pending' where receipt_id = ? ",$receipt_id);
@@ -12767,7 +12767,7 @@ order by action_date";
                 $reconcile_amount = $reconlog['reconcile_amount'];
                 
                 //1. update unreconcile amount & modified by,date and is_invoice_cancelled = 1
-                $this->db->query("update `pnh_t_receipt_reconcilation set `unreconciled` = `unreconciled` + '".$reconcile_amount."',`modified_on`  = now(),`modified_by` = ?,is_invoice_cancelled = 1 where invoice_no = ? and id = ? ",array($userid,$invoice_no,$reconcile_id) );
+                $this->db->query("update `pnh_t_receipt_reconcilation` set `unreconciled` = `unreconciled` + '".$reconcile_amount."',`modified_on`  = now(),`modified_by` = ?,is_invoice_cancelled = 1 where invoice_no = ? and id = ? ",array($userid,$invoice_no,$reconcile_id) );
                 
                 // update reconcile log table : is_invoice_cancelled = 1
                 $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_invoice_cancelled` = 1 where `reconcile_id` = ? ",$reconcile_id);

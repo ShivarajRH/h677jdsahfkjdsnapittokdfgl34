@@ -11380,7 +11380,7 @@ group by g.product_id order by product_name");
 	/**
 	 * fucntion to get deal item stock details by item_id 
 	 */
-	function pnh_jx_dealstock_det($itemid='',$is_pnh=0)
+	/*function pnh_jx_dealstock_det($itemid='',$is_pnh=0)
 	{
 		if($this->input->post('refid'))
 		{
@@ -11405,7 +11405,7 @@ group by g.product_id order by product_name");
 		}
 		echo json_encode($output);	
 		 
-	}
+	}*/
 	
 	function pnh_sales_report()
 	{
@@ -27446,8 +27446,12 @@ die; */
      * Function to return JSON deal stock details
      * @param type $itemid int
      */
-    function jx_pnh_deal_stock_det($itemid)
+    function jx_pnh_deal_stock_det($itemid,$is_pnh=1)
     {
+        $this->auth(true);
+        
+        if(!$itemid) $this->print_error("Item id doesnot exists!");
+        
         $arr_stk = array();
         $deal_pstk = $this->erpm->do_stock_check(array($itemid),array(1),true);
         
@@ -27470,5 +27474,48 @@ die; */
                 $arr_stk['status'] = 'success';
         }
         echo json_encode($arr_stk);
+    }
+    
+    /**
+     * Function to return JSON deal stock details
+     * @param type $itemid int
+     */
+    function jx_pnh_deal_stock_status($itemid,$is_pnh=1)
+    {
+        $this->auth(true);
+        if(!$itemid) $this->print_error("Item id doesnot exists!");
+        
+        
+        $deal_stock = $this->erpm->do_stock_check(array($itemid));
+        $arr_stk = array();
+        if(empty($deal_stock)) {
+            $background='background:none repeat scroll 0 0 #FFAAAA !important';
+            $arr_stk['status'] = 'success';
+            $arr_stk['message'] = '<span style=\''.$background.'\'>Out of Stock</span>';
+        }
+        else {
+                $background='background:none repeat scroll 0 0 rgba(170, 255, 170, 0.8) !important';
+                $arr_stk['status'] = 'success';
+                $arr_stk['message'] = '<span style="\''.$background.'\'">In Stock</span>';
+        }
+        echo json_encode($arr_stk);
+    }
+    
+    /**
+     * Function to display json error output and stop the execution
+     * @param type $msg String / Array
+     * @param type $rtype string
+     * @example if(!$itemid) $this->print_error("Item id doesnot exists!");
+     * @example if(!$itemid) $this->print_error(array("status"=>"fail","message"=>"Item id doesnot exists!" ));
+     */
+    function print_error($msg,$rtype='json') {
+        if(is_array($msg)) {
+            $rdata = $msg;
+        }
+        else {
+            $rdata = array("status"=>"fail","message"=>$msg);
+        }
+        echo json_encode($rdata);
+        die();
     }
 }
