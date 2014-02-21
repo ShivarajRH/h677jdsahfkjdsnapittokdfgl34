@@ -2822,7 +2822,7 @@ class Erp extends Stream
 		if($type==1)
 		{
 			$data['products']=$this->db->query("select p.product_id,p.product_name,sum(s.available_qty) as stock,sum(s.available_qty*s.mrp) as stock_value,p.mrp from m_product_info p join t_stock_info s on s.product_id=p.product_id where $cond group by p.product_id having sum(s.available_qty)!=0 ")->result_array();
-			$data['pagetitle']="Stock Product List for Brand: ".(($brandid!='all')?$this->db->query("select name from king_brands where id=?",$brandid)->row()->name:'All').' Category: '.(($catid != 'all')?$this->db->query("select name from king_Categories where id=?",$catid)->row()->name:'All');
+			$data['pagetitle']="Stock Product List for Brand: ".(($brandid!='all')?$this->db->query("select name from king_brands where id=?",$brandid)->row()->name:'All').' Category: '.(($catid != 'all')?$this->db->query("select name from king_categories where id=?",$catid)->row()->name:'All');
 		}
 		
 		$data['type'] = $type;
