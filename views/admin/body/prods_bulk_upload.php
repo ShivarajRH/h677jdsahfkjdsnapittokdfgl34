@@ -9,7 +9,7 @@ Upload file : <input type="file" name="prods"><input type="submit" value="Upload
 
 <h4 style="margin:0px;">Template</h4>
 <table class="datagrid noprint">
-<?php $template=array("Product Name","SKU Code","Short Description","Brand (ID)","Size","Unit of measurement","MRP","VAT %","Purchase Cost","Barcode","Is offer (0 or 1)","Is Sourceable (0 or 1)","Is serial Required","Group ID","Attribute data");?>
+<?php $template=array("Product Name","SKU Code","Short Description","Category (ID)","Brand (ID)","Size","Unit of measurement","MRP","VAT %","Purchase Cost","Barcode","Is offer (0 or 1)","Is Sourceable (0 or 1)","Is serial Required","Group ID","Attribute data");?>
 <thead>
 <tr>
 <?php foreach($template as $t){?><th><?=$t?></th><?php }?>

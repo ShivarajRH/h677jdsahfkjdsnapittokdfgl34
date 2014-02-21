@@ -1836,4 +1836,84 @@ order by action_date ";
 		
 		
 	}
+
+	function product_statsbymenu($menuid = 100)
+	{
+		$sql = "select a.brand_id,f.name as brand,a.product_id,a.product_name,0 as stock,0 as s15d,0 as s30d,0 as s60d  
+					from m_product_info a 
+					join m_product_deal_link b on a.product_id = b.product_id and b.is_active = 1
+					join king_brands f on f.id = a.brand_id  
+					join king_dealitems c on c.id = b.itemid
+					join king_deals d on d.dealid = c.dealid 
+					where d.menuid = ?
+					group by product_id
+					order by brand,product_name
+				";
+		$res = $this->db->query($sql,$menuid);
+		if($res->num_rows())
+		{
+			$pmaster = array();
+			
+			foreach($res->result_array() as $row)
+			{
+				if(isset($pmaster[$row['product_id']]))
+				 	continue;
+				
+				if(!count($pmaster))
+					$pmaster[] = array_keys($row);
+				
+				$pmaster[$row['product_id']] = $row;
+				
+				// check current product stock
+				$pmaster[$row['product_id']]['stock'] = ($this->db->query("select sum(available_qty) as t from t_stock_info where product_id = ? ",$row['product_id'])->row()->t)*1;
+				
+				// last 30 days sales
+				$pmaster[$row['product_id']]['s15d'] = $this->db->query("select ifnull(sum(c.qty*a.quantity),0) as qty
+						from king_orders a
+						join king_transactions b on a.transid = b.transid
+						join m_product_deal_link c on c.itemid = a.itemid
+						where c.product_id = ? and date(from_unixtime(b.init)) >= date_add(curdate(),INTERVAL -15 day);
+						",$row['product_id'])->row()->qty;
+				
+				// last 30 days sales
+				$pmaster[$row['product_id']]['s30d'] = $this->db->query("select ifnull(sum(c.qty*a.quantity),0) as qty
+																				from king_orders a 
+																				join king_transactions b on a.transid = b.transid
+																				join m_product_deal_link c on c.itemid = a.itemid 
+																				where c.product_id = ? and date(from_unixtime(b.init)) >= date_add(curdate(),INTERVAL -30 day); 
+														",$row['product_id'])->row()->qty;
+				
+				// last 60 days sales
+				$pmaster[$row['product_id']]['s60d'] = $this->db->query("select ifnull(sum(c.qty*a.quantity),0) as qty
+						from king_orders a
+						join king_transactions b on a.transid = b.transid
+						join m_product_deal_link c on c.itemid = a.itemid
+						where c.product_id = ? and date(from_unixtime(b.init)) >= date_add(curdate(),INTERVAL -60 day);
+						",$row['product_id'])->row()->qty;
+				
+				
+			}
+		}
+		
+		ob_start();
+		$f=fopen("php://output","w");
+		foreach($pmaster as $p)
+			fputcsv($f,$p);
+		fclose($f);
+		$csv=ob_get_clean();
+		ob_clean();
+		header('Content-Description: File Transfer');
+		header('Content-Type: text/csv');
+		header('Content-Disposition: attachment; filename='.("Product_Stock_n_Sales_Stat_".date("d_m_y_H\h:i\m").".csv"));
+		header('Content-Transfer-Encoding: binary');
+		header('Expires: 0');
+		header('Cache-Control: must-revalidate');
+		header('Pragma: public');
+		header('Content-Length: ' . strlen($csv));
+		ob_clean();
+		flush();
+		echo $csv;
+		exit;
+		
+	}
 }

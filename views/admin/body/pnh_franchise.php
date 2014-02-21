@@ -1793,6 +1793,9 @@ $(function(){
 								<li><a class="cancelled" href="javascript:void(0)" onclick="load_franchise_orders('cancelled')">Cancelled</a></li>
 								<li><a class="part_ship" href="javascript:void(0)" onclick="load_franchise_orders('part_ship')">Partially Shipped</a></li>
 								<li><a class="batch_closed" href="javascript:void(0)" onclick="load_franchise_orders('batch_closed')">Disabled from Batch</a></li>
+								<li><a class="product_enquired" href="javascript:void(0)" onclick="load_franchise_orders('product_enquired')">Product Enquired</a></li>
+								<li><a class="fran_prodpricequote" href="javascript:void(0)" onclick="load_franchise_orders('fran_prodpricequote')">Franchise Price Quote</a></li>
+								
 							</ol>
 						</div>
 					</div>
@@ -1996,7 +1999,8 @@ $(function(){
 			
 		</div>
 	</div>		
-        
+        <!--============================================<< Re-concilation Dialog box Start >>===================================-->
+
         <div id="dlg_unreconcile_view_list" style="display:none;">
         </div>
         
@@ -2097,21 +2101,12 @@ $(function(){
                         </table>
                 </form>
             </div>
-            <a href="javascript:void(0)" class="deal_stock" dealid="6435634196">Plugin Test</a> <br><br><br><br>
-            <a href="javascript:void(0)" class="deal_stock" dealid="5597821635">Plugin Test</a> <br><br><br><br>
-            <a href="javascript:void(0)" class="deal_stock" dealid="1293747961">Plugin Test</a> <br><br><br><br>
-            <a href="javascript:void(0)" class="deal_stock" dealid="9523347885">Plugin Test</a> <br><br><br><br>
-            <a href="javascript:void(0)" class="deal_stock" dealid="1573434433">Plugin Test</a> <br><br><br><br>
-            <a href="javascript:void(0)" class="deal_stock" dealid="874960266216">Plugin Test</a> <br><br><br><br>
+        <!--============================================<< Re-concilation Dialog box End >>===================================-->
+        
 </div>
-<!--<script type="text/javascript" src="<?=base_url();?>/js/jquery-erp-dynamics.js"></script>-->
+
+<!--============================================<< Javascript Code Start >>===================================-->
 <script>
-//$( function() {
-//    $(".tgl_stock_combo1,.tgl_stock_combo2,.tgl_stock_combo3,.tgl_stock_combo4,").get_dealstock({
-//        height:300,width:365
-//        //,get_fn_deal_stock:function() {print("hjghjgghj"); }
-//    });
-//});
 
  var twnlnk_franchise_html='';
 

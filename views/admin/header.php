@@ -140,7 +140,8 @@
 		</div>
 	</div>
 	<div style="float:right;margin-top:20px;margin-right:20px;">
-		<a href="<?=site_url("admin/pnh_offline_order")?>"><img src="<?=IMAGES_URL?>storeking_icon_orders.png" style="cursor:pointer;"></a>
+		
+		<a href="<?=site_url("admin/stk_offline_order")?>"><img src="<?=IMAGES_URL?>storeking_icon_orders.png" style="cursor:pointer;"></a>
 	</div>
 	<div style="float:right;margin-top:20px;margin-right:0px;">
 <!--            place_order.png /phone.png-->

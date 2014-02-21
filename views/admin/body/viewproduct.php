@@ -13,6 +13,7 @@
 				<thead>
 				<tr>
 					<th>SKU Code</th>
+					<th>Category</th>
 					<th>Brand</th>
 					<th>MRP</th>
 					<th>VAT</th>
@@ -26,6 +27,7 @@
 				<tbody>
 				<tr>
 				<td><?=$p['sku_code']?$p['sku_code']:"-na-"?></td>
+				<td><a href="<?=site_url("admin/viewcat/".$p['product_cat_id'])?>"><?=$this->db->query("select name from king_categories where id = ? ",$p['product_cat_id'])->row()->name;?></a></td>
 				<td><a href="<?=site_url("admin/viewbrand/".$p['brand_id'])?>"><?=$p['brand']?></a></td>
 				<td><?=$p['mrp']?></td>
 				<td><?=$p['vat']?>%</td>

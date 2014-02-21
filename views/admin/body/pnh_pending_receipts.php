@@ -523,9 +523,10 @@ $('#realize').dialog({
 });
 function can_rec(rid)
 {
-	reason=prompt("Reason For Cancel");
+	var reason=prompt("Reason For Cancel");
 	if(!reason || reason.length==0)
-		return;
+		return false;
+            
 	$(".a_rid").val(rid);
 	$(".a_type").val("can");
 	$(".a_reason").val(reason);

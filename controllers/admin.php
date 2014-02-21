@@ -72,8 +72,6 @@ class Admin extends Erp {
 			}
 
 		}
-			 
- 
 		
 	}
 
@@ -88,43 +86,76 @@ class Admin extends Erp {
 	 * On unsuccessful login redirects to login page
 	 *
 	 */
-	function index() {
-		$data=array();
-		$user=$this->session->userdata("admin_user");
-		if ($user!=false) {
-			$brandid = $user["brandid"];
-			//echo $barandid;
-			$usertype=$user["usertype"];
-			//echo $usertype;exit;
-				
-			redirect("admin/dashboard");
-				
-			if($usertype==1)
-			{
-				$this->dashboard();
-				return;
-			}
-			else {
-				$categories = $this->adminmodel->getcategoryforusertype ( $brandid );
-				$data ['adm_categories'] = $categories;
-				$data ['adminheader'] = TRUE;
-				$data ['page'] = "addhotels";
-			}
-				
-		} else {
-			$this->load->library ( "form_validation" );
-			$data ['smallheader'] = 'smallheader';
-			$data ['page'] = 'adminlogin';
-			$data ['smallheader'] = true;
-		}
+	function index() 
+	{
+		if($this->erpm->auth(false,true))
+			redirect('admin/dashboard','refresh');
+		else
+			redirect('admin/login','refresh');
+	}
+	
+	/** function to load login page
+	 * 
+	 */
+	function login()
+	{
+		if($this->erpm->auth(false,true)) 
+			redirect('admin/dashboard','refresh');
+		
+		$this->load->library ( "form_validation" );
+		$data ['smallheader'] = 'smallheader';
+		$data ['page'] = 'adminlogin';
+		$data ['smallheader'] = true;
 		$this->load->view ( 'admin', $data );
+	}
+	
+	// login details validation used for form validation.  
+	function _validate_adminlogin($str)
+	{
+		$un = $this->input->post('explo_email');
+		$pwd = $this->input->post('explo_password');
+		
+		$user_det_res = $this->db->query("select * from king_admin where username = ? and password = md5(?) ",array($un,$pwd));
+		if($user_det_res->num_rows())
+		{
+			$userdetails = $user_det_res->row();
+			$sessionData = array ("userid"=>$userdetails->id,'username' => $userdetails->name, 'login_flag' => true, 'usertype' => $usertype, 'brandid' => $brandid ,'access'=>$userdetails->access);
+			$this->session->set_userdata ( array("admin_user" => $sessionData) );
+			return true;
+		}else
+		{
+			$this->form_validation->set_message('_validate_adminlogin','Invalid username and password');
+			return false;
+		}
+	}
+	
+	/**
+	 * function to validate the user and redirect him to respective forms.
+	 *
+	 */
+	function processLogin() {
+		//$data['smallheader']=true;
+		$user = $this->input->post ( "explo_email" );
+		$pass = $this->input->post ( "explo_password" );
+		//print_r($user);exit;
+		$this->load->library ( "form_validation" );
+		$this->form_validation->set_rules ( "explo_email", "User name", "required|min_length[4]|max_length[20]|alpha_numeric|trim" );
+		$this->form_validation->set_rules ( "explo_password", "Password", "required|min_length[4]|max_length[15]|callback__validate_adminlogin" );
+		if ($this->form_validation->run () == FALSE) 
+		{
+			$this->login();
+		}else 
+		{
+			$this->session->set_flashdata('notify_msg',"Logged In Successfully");
+			redirect('admin/dashboard','refresh');
+		}
 	}
 
 	/**
 	 * function to validate the user and redirect him to respective forms.
 	 *
 	 */
-	function processLogin() {
+	function processLogin_old() {
 		//$data['smallheader']=true;
 		$user = $this->input->post ( "explo_email" );
 		$pass = $this->input->post ( "explo_password" );

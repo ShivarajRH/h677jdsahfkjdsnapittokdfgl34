@@ -1946,7 +1946,7 @@ class Erp extends Stream
             $data['limit']=$limit;
             
             
-//            print_r($data);die();
+//          print_r($data);die();
             $this->load->view("admin/body/jx_orderstatus_summary",$data);
 
         }
@@ -4344,6 +4344,10 @@ group by g.product_id order by product_name");
 	function pnh_reverse_receipt($rid)
 	{
 		$user=$this->auth(FINANCE_ROLE);
+
+        // reverse reconcilation
+        $recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user);
+                
 		$r=$this->db->query("select * from pnh_t_receipt_info where receipt_id=?",$rid)->row_array();
 		$this->db->query("update pnh_t_receipt_info set status=3,modified_on=?,modified_by=? where receipt_id=? limit 1",array(time(),$user['userid'],$rid));
 		
@@ -4416,7 +4420,9 @@ group by g.product_id order by product_name");
 	{
 		$user=$this->auth(PRODUCT_MANAGER_ROLE);
 		$data['product']=$this->db->query("select ifnull(sum(s.available_qty),0) as stock,p.*,b.name as brand from m_product_info p left outer join t_stock_info s on s.product_id=p.product_id join king_brands b on b.id=p.brand_id where p.product_id=?",$pid)->row_array();
-
+		
+		if(empty($data['product']['product_id']))
+			show_error("Invalid product in access");
 		$data['prdct_lst'] = $this->db->query("select *,concat(product_name,'-',product_id) as product_name from m_product_info where is_serial_required=? and brand_id = ? and product_id != ? order by product_name ",array($p['is_serial_required'],$p['brand_id'],$p['product_id']));
 		
 		$data['page']="viewproduct";
@@ -4650,7 +4656,7 @@ group by g.product_id order by product_name");
 	{
 		$user=$this->auth(PRODUCT_MANAGER_ROLE);
 		if($_POST){
-			foreach(array('pname','sku_code',"pdesc","psize","puom","pmrp","pvat","pcost","pbarcode","pisoffer","pissrc","pbrand","prackbin","pmoq","prorder","prqty","premarks","pissno") as $i)
+			foreach(array('pname','sku_code',"pdesc","psize","puom","pmrp","pvat","pcost","pbarcode","pisoffer","pissrc","pcat","pbrand","prackbin","pmoq","prorder","prqty","premarks","pissno","is_active") as $i)
 				$inp[]=$this->input->post($i);
 			$inp[]=$pid;
 			
@@ -4660,7 +4666,7 @@ group by g.product_id order by product_name");
 			
 			$this->_update_product_mrp($prod);
 			
-			$this->db->query("update m_product_info set product_name=?,sku_code=?,short_desc=?,size=?,uom=?,mrp=?,vat=?,purchase_cost=?,barcode=?,is_offer=?,is_sourceable=?,brand_id=?,default_rackbin_id=?,moq=?,reorder_level=?,reorder_qty=?,remarks=?,modified_on=now(),is_serial_required=? where product_id=? limit 1",$inp);
+			$this->db->query("update m_product_info set product_name=?,sku_code=?,short_desc=?,size=?,uom=?,mrp=?,vat=?,purchase_cost=?,barcode=?,is_offer=?,is_sourceable=?,product_cat_id=?,brand_id=?,default_rackbin_id=?,moq=?,reorder_level=?,reorder_qty=?,remarks=?,modified_on=now(),is_serial_required=?,is_active=? where product_id=? limit 1",$inp);
 			$t_inp=array("product_id"=>$pid,"is_sourceable"=>$this->input->post("pissrc"),"created_on"=>time(),"created_by"=>$user['userid']);
 			$this->db->insert("products_src_changelog",$t_inp);
 			
@@ -4677,12 +4683,12 @@ group by g.product_id order by product_name");
 		if($_POST)
 		{
 			$inp=array("P".rand(10000,99999));
-			foreach(array('pname','sku_code',"pdesc","psize","puom","pmrp","pvat","pcost","pbarcode","pisoffer","pissrc","pbrand","prackbin","pmoq","prorder","prqty","premarks","pissno") as $i)
+			foreach(array('pname','sku_code',"pdesc","psize","puom","pmrp","pvat","pcost","pbarcode","pisoffer","pissrc","pcat","pbrand","prackbin","pmoq","prorder","prqty","premarks","pissno","is_active") as $i)
 				$inp[]= $$i = $this->input->post($i);
 				
 			$inp[] = $user['userid'];	
-			$this->db->query("insert into m_product_info(product_code,product_name,sku_code,short_desc,size,uom,mrp,vat,purchase_cost,barcode,is_offer,is_sourceable,brand_id,default_rackbin_id,moq,reorder_level,reorder_qty,remarks,is_serial_required,created_on,created_by)
-																					values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?)",$inp);
+			$this->db->query("insert into m_product_info(product_code,product_name,sku_code,short_desc,size,uom,mrp,vat,purchase_cost,barcode,is_offer,is_sourceable,product_cat_id,brand_id,default_rackbin_id,moq,reorder_level,reorder_qty,remarks,is_serial_required,is_active,created_on,created_by)
+																					values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?)",$inp);
 			$pid=$this->db->insert_id();
 			$rackbin=1;$location=10;
 			$raw_rackbin=$this->db->query("select l.location_id as default_location_id,l.id as default_rack_bin_id from m_rack_bin_brand_link b join m_rack_bin_info l on l.id=b.rack_bin_id where b.brandid=?",$this->input->post("pbrand"))->row_array();
@@ -4692,8 +4698,6 @@ group by g.product_id order by product_name");
 				$location=$raw_rackbin['default_location_id'];
 			}
 			$this->db->query("insert into t_stock_info(product_id,location_id,rack_bin_id,mrp,available_qty,product_barcode) values(?,?,?,?,0,?)",array($pid,$location,$rackbin,$pmrp,$pbarcode));
-			
-			
 			
 			redirect("admin/products");
 		}
@@ -4839,7 +4843,16 @@ group by g.product_id order by product_name");
 	{
 		$user=$this->auth();
 		$data['page']="dashboard";
+		$data['load_dashboard']=0;
 		$this->load->view("admin",$data);
+	}
+	
+	function jx_load_dashboard()
+	{
+		$user=$this->auth();
+		$data['page']="dashboard";
+		$data['load_dashboard']=1;
+		$this->load->view("admin/body/dashboard",$data);
 	}
 	
 	function export_data()
@@ -8084,7 +8097,8 @@ group by g.product_id order by product_name");
 		$user = $this->auth(FINANCE_ROLE);
 		if(!$rid)
 			show_error("Input Missing");
-		else {
+		else 
+		{
             $recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user);
             $this->erpm->do_pnh_cancel_receipt($rid);
         }
@@ -20076,7 +20090,10 @@ order by action_date";
 					}
 					$this->erpm->flash_msg("Account statement corrected");
 				}
-			
+
+			// reverse reconcilation
+			$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($receipt_id,$user);
+
 			$d+=$this->db->affected_rows();
 			if($d)
 			{
@@ -27183,12 +27200,20 @@ die; */
      */
     function jx_get_unreconciled_invoice_list($fid) {
         $user = $this->erpm->auth(FINANCE_ROLE);
-        $rdata['fran_invoices']=$this->db->query("select * from (select distinct i.invoice_no,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2), min(rcon.unreconciled) ) as inv_amount
+        $arr_rslt = $this->db->query("select * from (select distinct i.invoice_no,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2), min(rcon.unreconciled) ) as inv_amount
                                                         from king_invoice i
                                                         join king_transactions tr on tr.transid=i.transid
-                                                        left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
-                                                        where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id= ? #and i.invoice_no is null 
-                                                        group by i.invoice_no,i.transid order by i.invoice_no asc) as g where g.inv_amount > 0 ",$fid)->result_array();
+                                                        left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no
+                                                        where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id= ? 
+                                                        group by i.invoice_no,i.transid order by i.invoice_no asc) as g where g.inv_amount > 0 ",$fid);
+        if($arr_rslt->num_rows()==0) {
+            $rdata['status'] = 'fail';
+            $rdata['message'] = 'No invoices found for this franchise.';
+        }
+        else {
+            $rdata['status'] = 'success';
+            $rdata['fran_invoices']= $arr_rslt->result_array();
+        }
         echo json_encode($rdata);
     }
     
@@ -27199,12 +27224,48 @@ die; */
     function jx_get_unreconciled_debit_notes_list($fid) {
         $user = $this->erpm->auth(FINANCE_ROLE);
         //select * from  pnh_franchise_account_summary where action_type='5' and debit_amt != 0 and franchise_id = '59'
-        $rdata['fran_debit_notes']=$this->db->query("select * from (select fcs.acc_correc_id as debit_note_id,fcs.debit_amt as amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.debit_amt, 2), (rcon.unreconciled) ) as inv_amount
+        $arr_rslt =$this->db->query("select * from (select fcs.acc_correc_id as debit_note_id,fcs.debit_amt as amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.debit_amt, 2), (rcon.unreconciled) ) as inv_amount
                         from pnh_franchise_account_summary fcs
                         left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.acc_correc_id
                         where fcs.action_type='5' and debit_amt != 0 and fcs.franchise_id = ?
                         order by fcs.created_on desc
-                    ) as g where g.inv_amount > 0",$fid)->result_array();
+                    ) as g where g.inv_amount > 0",$fid);
+        if($arr_rslt->num_rows()==0) {
+            $rdata['status'] = 'fail';
+            $rdata['message'] = 'No debit notes found for this franchise.';
+        }
+        else {
+            $rdata['status'] = 'success';
+            $rdata['fran_debit_notes']= $arr_rslt->result_array();
+        }
+        echo json_encode($rdata);
+    }
+    
+    /**
+     * Check franchise have any unreconciled invoices or debit notes?
+     * @param type $fid int
+     * @return boolean
+     */
+    function jx_chk_reconcile_fran_status($fid) {
+        $user = $this->erpm->auth(FINANCE_ROLE);
+        $num_invs =$this->db->query("select distinct i.invoice_no,rcon.unreconciled as unreconciled from king_invoice i
+                                        join king_transactions tr on tr.transid=i.transid
+                                        left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no
+                                        where i.invoice_status=1 and tr.is_pnh=1 and rcon.unreconciled is null and tr.franchise_id= ? ",$fid)->num_rows();
+        
+        $num_debits =$this->db->query("select fcs.acc_correc_id as debit_note_id,fcs.debit_amt as amount,rcon.unreconciled as unreconciled
+                                        from pnh_franchise_account_summary fcs
+                                        left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.acc_correc_id
+                                        where fcs.action_type='5' and debit_amt != 0 and fcs.franchise_id = ? ",$fid)->num_rows();
+        if( $num_invs == 0 and $num_debits == 0 ) {
+            $rdata['status'] = 'fail';
+            $rdata['message'] = 'No Invoice or Debit notes found for this franchise.';
+        }
+        else {
+            $rdata['status'] = 'success';
+            $rdata['num_invs']= $num_invs;
+            $rdata['num_debits']= $num_debits;
+        }
         echo json_encode($rdata);
     }
     
@@ -27416,11 +27477,11 @@ die; */
         $sql = "select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.invoice_no,rcon.debit_note_id
                     ,rcon.inv_amount,rcon.unreconciled
                     ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date,a.username
-                from pnh_franchise_account_stat fcs
-                join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id and rlog.is_reversed = 0
+                from pnh_franchise_account_summary fcs
+                join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id and rlog.is_reversed = 0
                 join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
                 join king_admin a on a.id=rcon.created_by
-                where fcs.franchise_id = ? and fcs.id = ?
+                where fcs.franchise_id = ? and fcs.acc_correc_id = ?
                 group by rcon.invoice_no,rcon.debit_note_id";
 
             $reconcile_set = $this->db->query($sql,array($franchise_id,$credit_note_id));

@@ -1995,10 +1995,10 @@ class Pnh extends Controller{
 				if($prod['is_combo']=="1")
 					$items[$i]['discount']=$items[$i]['price']/100*$margin['combo_margin'];
 				else
-					$items[$i]['discount']=$items[$i]['price']/100*$voucher_margin;
+					$items[$i]['discount']=$items[$i]['mrp']/100*$voucher_margin;
 				//$items[$i]['discount']=$voucher_margin;
 				$total+=$items[$i]['price']*$items[$i]['qty'];
-				$d_total+=($items[$i]['price']-$items[$i]['discount'])*$items[$i]['qty'];
+				$d_total+=($items[$i]['mrp']-$items[$i]['discount'])*$items[$i]['qty'];
 				$c_total+=($items[$i]['price'])*$items[$i]['qty'];
 				$itemids[]=$prod['id'];
 				$itemnames[]=$prod['name'];

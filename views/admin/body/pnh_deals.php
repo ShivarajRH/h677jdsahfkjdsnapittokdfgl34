@@ -17,8 +17,8 @@
 		
 		
 </div>
-<a href="javascript:void(0)" class="deal_stock" dealid="1293747961">Plugin Test</a> <br><br><br><br>
-<SCRIPT>
+
+<script>
 function endisable_sel(act,brandid,catid)
 {
 	//alert(brandid);
@@ -473,7 +473,7 @@ function deallist_bycat(brandid,catid,type)
 				 			//d_lst+='<img src="'+images_url+'/items/small/'+d.pic+'.jpg'+'">';
 		 					d_lst+='<td><span>'+d.pnh_id+'</span></td>';
 		 					d_lst+='<td><span class="title"><a target="_blank" href="'+site_url+'/admin/pnh_deal/'+d.itemid+'">'+d.name+'</a><div class="stock_det_'+d.itemid+'"></div></td>';
-							d_lst+='<td><a href="javascript:void(0)" dealid="'+d.itemid+'" class="tgl_stock_combo">'+(dstock)+'</a></td>';
+							d_lst+='<td><a href="javascript:void(0)" dealid="'+d.itemid+'" class="tgl_stock_combo deal_stock "></a></td>';//'+(dstock)+'
 		 					d_lst+='<td><span><a target="_blank" href="'+site_url+'/admin/viewbrand/'+d.brandid+'">'+d.brand+'</a></span></td>';
 		 					d_lst+='<td><span><a target="_blank" href="'+site_url+'/admin/viewcat/'+d.catid+'">'+d.category+'</a></span></td>';
 		 					d_lst+='<td><span class="mrp">'+d.orgprice+'</span></td>';
@@ -490,19 +490,17 @@ function deallist_bycat(brandid,catid,type)
 		 					}
 		 					d_lst+='</td>';
 	 					d_lst+='</tr>';
-                                                
-                                                // Call the plugin
-                                                //$(".deal_stock").get_dealstock();
-                                                
 				});
 				
 				d_lst+='</table>';
 				d_lst+='</div>';
 				
-                                
 				//polist_byvendor(vids[0]);
 				$('.jq_alpha_sort_overview_content').html(d_lst);
-			
+
+                // Call the plugin
+                $(".jq_alpha_sort_overview_content .deal_stock").dealstock();
+                        
 				$("#sel_cat").chosen();
 				if(resp.type == 1)
 				{
@@ -528,14 +526,6 @@ function deallist_bycat(brandid,catid,type)
 	
 }
 
-
-$(".sk_deal_filter_wrap .tgl_stock_combo").live("hover",function() {
-    print( "\n"+ $(this).attr("dealid") );
-    $(this).get_dealstock({
-        height:300,width:365
-        //,get_fn_deal_stock:function() { print("hjghjgghj"); }
-    });
-});
 
 function cat_bychar(ch)
 {

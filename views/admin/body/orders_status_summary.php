@@ -1,107 +1,84 @@
 
 <div class="container">
-    <div class="">
-        <form>
-            <table width="100%">
-                <tr>
-                    <td width="45%">
-                    <select id="sel_territory" name="sel_territory" >
-                        <option value="00">All Territory</option>
-                        <?php foreach($pnh_terr as $terr):?>
-                                <option value="<?php echo $terr['id'];?>"><?php echo $terr['territory_name'];?></option>
-                        <?php endforeach;  ?>
-                    </select>
-                    <select id="sel_town" name="sel_town">
-                        <option value="00">All Towns</option>
-                        <?php foreach($pnh_towns as $town): ?>
-                                <option value="<?php echo $town['id'];?>"><?php echo $town['town_name'];?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <select id="sel_franchise" name="sel_franchise">
-                        <option value="00">All Franchise</option>
-                    </select>
-                    </td>
-                    <td align="right">
-                        <div class="sel_status"></div>
-                    </td>
-                </tr>
-            </table>
-        </form>
-        
+    <div style="clear: both;overflow: hidden">
+    	<div class="fl_left">
+    		<h2 style="margin:0px;">Order Status Summary</h2>
+    	</div>
+    	<div class="fl_right" >
+	        <form>
+	            <select id="sel_territory" name="sel_territory" >
+	            	<option value="00">All Territory</option>
+	                <?php foreach($pnh_terr as $terr):?>
+	                	<option value="<?php echo $terr['id'];?>"><?php echo $terr['territory_name'];?></option>
+					<?php endforeach;  ?>
+				</select>
+	            <select id="sel_town" name="sel_town">
+	            	<option value="00">All Towns</option>
+	                	<?php foreach($pnh_towns as $town): ?>
+	                    	<option value="<?php echo $town['id'];?>"><?php echo $town['town_name'];?></option>
+						<?php endforeach; ?>
+				</select>
+	            <select id="sel_franchise" name="sel_franchise">
+	            	<option value="00">All Franchise</option>
+				</select>
+	        </form>
+        </div>
+        <div class="clear">&nbsp;</div>
+        <div class="sel_status"></div>
     </div>
+    
+    
     <hr>
     <div id="franchise_order_list_wrapper" style="clear: both; z-index: 9 !important;">
         <div id="franchise_ord_list" style="clear: both;overflow: hidden">
-                <table width="100%" >
-                        <tr>
-                                <td width="45%">
-                                        <div class="tab_list" style="clear: both;overflow: hidden">
-                                                    <ol>
-                                                            <li><a class="load_type selected" id="all" href="javascript:void(0)">All</a><div class="all_pop"></div></li>
-                                                            <li><a class="load_type" id="shipped" href="javascript:void(0)">Shipped</a><div class="shipped_pop"></div></li>
-                                                            <li><a class="load_type" id="unshipped" href="javascript:void(0)">UnShipped</a><div class="unshipped_pop"></div></li>
-                                                            <li><a class="load_type" id="cancelled" href="javascript:void(0)">Cancelled</a><div class="cancelled_pop"></div></li>
-                                                            <li><a class="load_type" id="removed" href="javascript:void(0)">Batch Disabled</a><div class="removed_pop"></div></li>
-                                                    </ol>
-                                            </div>
-                            </td>
-                            <td align="right">
-                                <div class="c2"></div>
-                                    <div >
-                                            <form id="ord_list_frm" method="post">
-                                                    <input type="hidden" value="all" name="type" name="type">
-                                                    <b>Show Orders </b> :
-                                                    From :<input type="text" style="width: 90px;" id="date_from"
-                                                            name="date_from" value="<?php echo date('Y-m-d',time()-60*60*24)?>" />
-                                                    To :<input type="text" style="width: 90px;" id="date_to"
-                                                            name="date_to" value="<?php echo date('Y-m-d',time())?>" /> 
-                                                    <input type="submit" value="Submit">
-                                            </form>
-                                    </div>
-                            </td>
-                    </tr>
-                    <tr>
-                        <td><div class="ttl_orders_status_listed"></div></td>
-                        <td align="right"></td>
-                    </tr>
-                    <tr>
-                        <td><select id="sel_menu" name="sel_menu" colspan="2">
-                                <option value="00">Select Menu</option>
-                                 <?php foreach($pnh_menu as $menu): ?>
-                                        <option value="<?php echo $town['id'];?>"><?php echo $menu['name'];?></option>
-                                <?php endforeach; ?>
-                            </select> &nbsp;
-                            <select id="sel_brands" name="sel_brands">
-                                <option value="00">Select Brands</option>
-                                 <?php foreach($pnh_brands as $brand): ?>
-                                        <option value="<?php echo $brand['id'];?>"><?php echo $brand['name'];?></option>
-                                <?php endforeach; ?>
-                                
-                            </select>
-                            
-                            <div class="show_totalamount dash_bar"></div> 
-                        </td>
-                        <td align="right" valign="middle">
-                                
-                            
-<!--                            <div class="top_orders_status_pagination"></div>-->
-                            
-                        </td>
-                    </tr>
-
-            </table>
+        
+        		<div style="clear:both">
+	        		<div class="fl_right" style="margin-top: 2px">
+	                	<form id="ord_list_frm" method="post">
+	                    	<input type="hidden" value="all" name="type" name="type">
+	                        <b>Show Orders </b> :
+	                        From :<input type="text" style="width: 90px;" id="date_from" name="date_from" value="<?php echo date('Y-m-d',time()-60*60*24)?>" />
+	                        To :<input type="text" style="width: 90px;" id="date_to" name="date_to" value="<?php echo date('Y-m-d',time())?>" /> 
+	                        <input type="submit" value="Submit">
+	                    </form>
+					</div>
+	                <div class="tab_list fl_left" >
+	                	<ol>
+	                    	<li><a class="load_type selected" id="all" href="javascript:void(0)">All</a><div class="all_pop"></div></li>
+	                        <li><a class="load_type" id="shipped" href="javascript:void(0)">Shipped</a><div class="shipped_pop"></div></li>
+	                        <li><a class="load_type" id="unshipped" href="javascript:void(0)">UnShipped</a><div class="unshipped_pop"></div></li>
+	                        <li><a class="load_type" id="cancelled" href="javascript:void(0)">Cancelled</a><div class="cancelled_pop"></div></li>
+	                        <li><a class="load_type" id="removed" href="javascript:void(0)">Batch Disabled</a><div class="removed_pop"></div></li>
+						</ol>
+					</div>
+				</div>
+				<div style="clear:both">
+					<div class="" style="float: left">
+						<select id="sel_menu" name="sel_menu" >
+							<option value="00">Select Menu</option>
+	                        	<?php foreach($pnh_menu as $menu): ?>
+	                            	<option value="<?php echo $town['id'];?>"><?php echo $menu['name'];?></option>
+								<?php endforeach; ?>
+						</select>
+	                    <select id="sel_brands" name="sel_brands">
+	                    	<option value="00">Select Brands</option>
+	                        <?php foreach($pnh_brands as $brand): ?>
+	                        	<option value="<?php echo $brand['id'];?>"><?php echo $brand['name'];?></option>
+							<?php endforeach; ?>
+						</select>
+					</div>         
+					                   
+				</div>
+				
         </div>
+        <div class="orders_status_summary_div">&nbsp;</div>
     </div>
-    <div class="orders_status_summary_div">&nbsp;</div>
-    
 </div>
 
 
 <div id="inv_transitlogdet_dlg" title="Shipment Transit Log">
 	<h3 style="margin:3px 0px;"></h3>
-	<div id="inv_transitlogdet_tbl">
-		
-	</div>
+	<div id="inv_transitlogdet_tbl"></div>
 </div>
 
 <script>
@@ -314,7 +291,7 @@ function date_range()
 <style type="text/css">
 
 .leftcont {        display: none;    }
-select {    margin: 10px 0 15px 5px; float: left; }
+
 .loading {
     text-align: center;
     margin: 5% 0 0 40%;
@@ -331,14 +308,13 @@ select {    margin: 10px 0 15px 5px; float: left; }
 }
 .dash_bar_right span {
     display: block;
-    font-size: 16px;
+    font-size: 14px;
 }
 .dash_bar {
     background-color: #F1F0FF;
     color: #443266; font-size: 18px;float: right;
 }
         #franchise_order_list_wrapper .tab_list{
-                clear:both;
                 display: block;
 
         }
@@ -430,5 +406,18 @@ $('#inv_transitlogdet_dlg').dialog({width:'900',height:'auto',autoOpen:false,mod
                 }
 });
 </script>
-
+ <style>
+	 	.subdatagrid th{padding:3px !important;text-align: left;}
+.span_count_wrap {
+background: none repeat scroll 0 0 #87318C;
+font-size: 11px;
+color: #FFF;
+margin: 2px;
+padding: 0px;
+width: 180px;
+text-align: center;
+display: block;
+}
+.show_totalamount{background: #ffffd0;padding:5px;}
+	 </style>
     <?php

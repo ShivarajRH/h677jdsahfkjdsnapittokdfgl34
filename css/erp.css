@@ -1165,3 +1165,19 @@ fieldset legend{
 .ui-dialog .ui-dialog-content{background: #FCFCFC;padding: .5em;}
 .ui-dialog .ui-dialog-buttonpane {background: #F7F7F7}
 td.highlight_row{background: #FFFFE0 !important;}
+.cart-btn-cont .btn-cart .cart-icon {
+background-image: url('../images/new-vd-sprite-9d5d1e46.png');
+background-repeat: no-repeat;
+background-position: 11px -86px;
+display: inline-block;
+width: 19px;
+height: 21px;
+zoom: 1;
+vertical-align: middle;
+
+}
+
+.cart_prodremove
+{
+background-image: url("../images/remove-roll-gray.png");
+}

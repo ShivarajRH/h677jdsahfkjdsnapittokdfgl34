@@ -460,18 +460,3 @@ function format_number(num,decimal) { //decimal is optional
     var final_num = ( num.toString().indexOf(".") !== -1) ? num.toFixed(deci) : num;
     return parseFloat(final_num);
 }
-
-/*( function ($) {
-    "use strict";
-    $.fn.get_dealstock = function(el,options) {
-        this.css( "background-color", "green" );
-        return this;
-    };
-    $.ltrim = function( str ) {
-        return str.replace( /^\s+/, "" );
-    };
-    $.rtrim = function( str ) {
-        return str.replace( /\s+$/, "" );
-    };
-});
-$(".deal_stock").get_dealstock();*/

@@ -2964,4 +2964,133 @@ where tmp_pnh_dealid='1739268';
 # Feb_19_2014
 
 # Feb_20_2014
-alter table `snapittoday_db_jan_2014`.`pnh_franchise_account_stat` drop column `unreconciled_status`, drop column `unreconciled_value`;
+
+-- <!--============================================<< OTHERS QUERIES >>===================================
+//Coupon 
+
+CREATE TABLE `pnh_m_coupons` (
+  `id` bigint(11) NOT NULL AUTO_INCREMENT,
+  `coupon_slno` bigint(12) NOT NULL,
+  `coupon_code` bigint(14) NOT NULL,
+  `value` double NOT NULL,
+  `franchise_id` bigint(11) DEFAULT NULL,
+  `member_id` bigint(8) DEFAULT NULL,
+  `status` tinyint(11) DEFAULT '0' COMMENT '0:pending,1:assigned to franchse,2:alloted to member',
+  `assigned_by` tinyint(11) DEFAULT NULL,
+  `assigned_on` bigint(20) DEFAULT NULL,
+  `alloted_on` bigint(20) DEFAULT NULL,
+  `alloted_by` tinyint(11) DEFAULT NULL,
+  PRIMARY KEY (`id`,`coupon_slno`,`coupon_code`)
+) ;
+
+ALTER TABLE `pnh_member_info` ADD COLUMN `voucher_balance` DOUBLE DEFAULT 0 NULL AFTER `points`; 
+
+ALTER TABLE `pnh_member_info` ADD COLUMN `voucher_bal_validity` DATETIME NULL AFTER `dummy`;
+//voucher_details
+ALTER TABLE `pnh_t_voucher_details` CHANGE `assigned_by` `alloted_on` TINYINT(11) NULL, CHANGE `assigned_on` `alloted_by` DATETIME NULL, CHANGE `alloted_on` `activated_on` DATETIME NULL, CHANGE `alloted_by` `activated_by` TINYINT(11) NULL; 
+ALTER TABLE `pnh_t_voucher_details` CHANGE `activated_by` `redeemed_on` TINYINT(11) NULL; 
+ALTER TABLE `pnh_t_voucher_details` CHANGE `status` `status` TINYINT(11) DEFAULT 0 NULL COMMENT '0:pending,1:alloted to franchse,3:activated to franchise,3:coupon redeemed by customer/member', CHANGE `alloted_on` `alloted_on` DATETIME NULL, CHANGE `alloted_by` `alloted_by` INT NULL, ADD COLUMN `activated_by` INT NULL AFTER `activated_on`, CHANGE `redeemed_on` `redeemed_on` DATETIME NULL;
+ALTER TABLE `pnh_t_voucher_details` CHANGE `value` `customer_value` DOUBLE DEFAULT 0 NOT NULL, ADD COLUMN `franchise_value` DOUBLE DEFAULT 0 NOT NULL AFTER `customer_value`;
+
+
+//25/july voucher
+
+ ALTER TABLE `pnh_t_voucher_details` DROP COLUMN `mobile_no`, ADD COLUMN `redeemed_on` DATETIME NULL AFTER `activated_on`, CHANGE `activation_mobileno` `redeem_activation_mobileno` VARCHAR(255) CHARSET latin1 COLLATE latin1_swedish_ci NULL; 
+ 
+ ALTER TABLE `pnh_t_voucher_details` CHANGE `status` `status` TINYINT(11) DEFAULT 0 NULL COMMENT '0:assigned to franchise,1:Allloted to franchise,2:Activated,3:partailly Redeemed,4:Fully Reddemed,5:Cancelled,';
+ 
+ ALTER TABLE `pnh_order_margin_track` ADD COLUMN `voucher_margin` DECIMAL(10,2) DEFAULT 0.00 NULL AFTER `bal_discount`; 
+
+ALTER TABLE `pnh_voucher_activity_log` CHANGE `order_ids` `order_ids` VARCHAR(255) DEFAULT '0' NULL;    
+
+
+//member scheme
+
+
+CREATE TABLE `imei_m_scheme` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `franchise_id` bigint(11) DEFAULT NULL,
+  `menuid` bigint(11) DEFAULT NULL,
+  `categoryid` bigint(20) DEFAULT NULL,
+  `brandid` bigint(20) DEFAULT NULL,
+  `scheme_type` tinyint(11) DEFAULT NULL,
+  `credit_value` double(10,2) DEFAULT NULL,
+  `scheme_from` bigint(20) DEFAULT NULL,
+  `scheme_to` bigint(20) DEFAULT NULL,
+  `sch_apply_from` bigint(20) DEFAULT NULL,
+  `created_on` bigint(20) DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `modified_on` bigint(20) DEFAULT NULL,
+  `modified_by` tinyint(11) DEFAULT NULL,
+  `is_active` tinyint(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
+ALTER TABLE `king_orders` ADD COLUMN `imei_reimbursement_value_perunit` DOUBLE(10,2) DEFAULT 0 NULL AFTER `super_scheme_processed`, ADD COLUMN `imei_scheme_id` BIGINT(20) DEFAULT 0 NULL AFTER `imei_reimbursement_value_perunit`;
+
+ALTER TABLE `pnh_franchise_account_stat` CHANGE `imei_refid` `imei_refid` BIGINT(20) DEFAULT 0 NULL; 
+ 
+ //knock mmeber scheme 
+#added index for transactions table 
+alter table `king_transactions` add index `init` (`init`);
+
+/**STOREKING CART DB CHANGES**/
+//franchise price quote 
+
+CREATE TABLE `pnh_franchise_price_quote` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `franchise_id` bigint(20) DEFAULT NULL,
+  `pid` bigint(20) DEFAULT NULL,
+  `mrp` double DEFAULT NULL,
+  `offrprice` double DEFAULT NULL,
+  `lprice` double DEFAULT NULL,
+  `quote` double DEFAULT NULL,
+  `created_on` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ;
+
+//franchise product price enquery log table
+
+CREATE TABLE `pnh_franchise_pprice_enqrylog` (
+  `id` bigint(30) NOT NULL AUTO_INCREMENT,
+  `franchise_id` bigint(30) DEFAULT NULL,
+  `pid` bigint(30) DEFAULT NULL,
+  `created_on` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
+-- <!--============================================<< OTHERS QUERIES >>===================================
+
+alter table `pnh_franchise_account_stat` drop column `unreconciled_status`, drop column `unreconciled_value`;
+
+
+-- new
+select distinct i.invoice_no,rcon.unreconciled as unreconciled
+		from king_invoice i
+		join king_transactions tr on tr.transid=i.transid
+		left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no
+		where i.invoice_status=1 and tr.is_pnh=1 and rcon.unreconciled is null and tr.franchise_id= '415'
+
+-- new
+select fcs.acc_correc_id as debit_note_id,fcs.debit_amt as amount,rcon.unreconciled as unreconciled
+			from pnh_franchise_account_summary fcs
+			left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.acc_correc_id
+			where fcs.action_type='5' and debit_amt != 0 and fcs.franchise_id = '415'
+
+#====================================================================
+
+-- <!--============================================<< BEST RECONCILE LOG VIEW >>===================================
+select rlog.*,rcon.debit_note_id,rcon.invoice_no from pnh_t_receipt_reconcilation_log rlog
+join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+where rlog.receipt_id='5396';
+#====================================================================
+
+-- <!--============================================<< RESET RECONCILE TABLE >>===================================-->
+truncate table `pnh_t_receipt_reconcilation`;
+truncate table `pnh_t_receipt_reconcilation_log`;
+update pnh_t_receipt_info set unreconciled_value = receipt_amount,unreconciled_status = 'pending' where receipt_amount !=0;
+update pnh_franchise_account_summary set unreconciled_value = credit_amt,unreconciled_status = 'pending' where credit_amt !=0;
+
+#==========================================================
+
+

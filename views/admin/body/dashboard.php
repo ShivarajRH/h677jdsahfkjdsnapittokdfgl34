@@ -3,6 +3,12 @@
 display:none;
 }
 </style>
+
+<?php 
+	if($load_dashboard)
+	{
+?>
+
 <div class="container">
 <h2>Dashboard</h2>
 <table width="100%">
@@ -322,3 +328,17 @@ else echo 'Commmon';
 </table>
 </div>
 <?php
+}else
+{
+?>
+	<div id="main_dashholder">
+		<h3 align="center">Loading Dashboard, Please wait... <br> <img src="<?php echo base_url().'/images/loading_bar.gif';?>" ></h3>
+	</div>
+	<script type="text/javascript">
+		$.get(site_url+'/admin/jx_load_dashboard','',function(resp){
+			$('#main_dashholder').html(resp);
+		});
+	</script>
+<?php 	
+}
+	

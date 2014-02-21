@@ -544,7 +544,75 @@ alter table pnh_franchise_account_summary add column ref_credit_note_id bigint(1
 alter table pnh_franchise_account_summary change ref_credit_note_id credit_note_id bigint(11) default 0 ;
 
 
-//knock mmeber scheme 
+
+
+//Coupon 
+
+CREATE TABLE `pnh_m_coupons` (
+  `id` bigint(11) NOT NULL AUTO_INCREMENT,
+  `coupon_slno` bigint(12) NOT NULL,
+  `coupon_code` bigint(14) NOT NULL,
+  `value` double NOT NULL,
+  `franchise_id` bigint(11) DEFAULT NULL,
+  `member_id` bigint(8) DEFAULT NULL,
+  `status` tinyint(11) DEFAULT '0' COMMENT '0:pending,1:assigned to franchse,2:alloted to member',
+  `assigned_by` tinyint(11) DEFAULT NULL,
+  `assigned_on` bigint(20) DEFAULT NULL,
+  `alloted_on` bigint(20) DEFAULT NULL,
+  `alloted_by` tinyint(11) DEFAULT NULL,
+  PRIMARY KEY (`id`,`coupon_slno`,`coupon_code`)
+) ;
+
+ALTER TABLE `snapitto_dblive`.`pnh_member_info` ADD COLUMN `voucher_balance` DOUBLE DEFAULT 0 NULL AFTER `points`; 
+
+ALTER TABLE `snapitto_dblive`.`pnh_member_info` ADD COLUMN `voucher_bal_validity` DATETIME NULL AFTER `dummy`;
+//voucher_details
+ALTER TABLE `snapitto_dblive`.`pnh_t_voucher_details` CHANGE `assigned_by` `alloted_on` TINYINT(11) NULL, CHANGE `assigned_on` `alloted_by` DATETIME NULL, CHANGE `alloted_on` `activated_on` DATETIME NULL, CHANGE `alloted_by` `activated_by` TINYINT(11) NULL; 
+ALTER TABLE `snapitto_dblive`.`pnh_t_voucher_details` CHANGE `activated_by` `redeemed_on` TINYINT(11) NULL; 
+ALTER TABLE `snapitto_dblive`.`pnh_t_voucher_details` CHANGE `status` `status` TINYINT(11) DEFAULT 0 NULL COMMENT '0:pending,1:alloted to franchse,3:activated to franchise,3:coupon redeemed by customer/member', CHANGE `alloted_on` `alloted_on` DATETIME NULL, CHANGE `alloted_by` `alloted_by` INT NULL, ADD COLUMN `activated_by` INT NULL AFTER `activated_on`, CHANGE `redeemed_on` `redeemed_on` DATETIME NULL;
+ALTER TABLE `snapitto_dblive`.`pnh_t_voucher_details` CHANGE `value` `customer_value` DOUBLE DEFAULT 0 NOT NULL, ADD COLUMN `franchise_value` DOUBLE DEFAULT 0 NOT NULL AFTER `customer_value`;
+
+
+//25/july voucher
+
+ ALTER TABLE `snapitto_dblive`.`pnh_t_voucher_details` DROP COLUMN `mobile_no`, ADD COLUMN `redeemed_on` DATETIME NULL AFTER `activated_on`, CHANGE `activation_mobileno` `redeem_activation_mobileno` VARCHAR(255) CHARSET latin1 COLLATE latin1_swedish_ci NULL; 
+ 
+ ALTER TABLE `snapitto_dblive`.`pnh_t_voucher_details` CHANGE `status` `status` TINYINT(11) DEFAULT 0 NULL COMMENT '0:assigned to franchise,1:Allloted to franchise,2:Activated,3:partailly Redeemed,4:Fully Reddemed,5:Cancelled,';
+ 
+ ALTER TABLE `snapitto_dblive`.`pnh_order_margin_track` ADD COLUMN `voucher_margin` DECIMAL(10,2) DEFAULT 0.00 NULL AFTER `bal_discount`; 
+
+ALTER TABLE `snapitto_dblive`.`pnh_voucher_activity_log` CHANGE `order_ids` `order_ids` VARCHAR(255) DEFAULT '0' NULL;    
+
+
+//member scheme
+
+
+Create Table
+
+CREATE TABLE `imei_m_scheme` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `franchise_id` bigint(11) DEFAULT NULL,
+  `menuid` bigint(11) DEFAULT NULL,
+  `categoryid` bigint(20) DEFAULT NULL,
+  `brandid` bigint(20) DEFAULT NULL,
+  `scheme_type` tinyint(11) DEFAULT NULL,
+  `credit_value` double(10,2) DEFAULT NULL,
+  `scheme_from` bigint(20) DEFAULT NULL,
+  `scheme_to` bigint(20) DEFAULT NULL,
+  `sch_apply_from` bigint(20) DEFAULT NULL,
+  `created_on` bigint(20) DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `modified_on` bigint(20) DEFAULT NULL,
+  `modified_by` tinyint(11) DEFAULT NULL,
+  `is_active` tinyint(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
+ALTER TABLE `snapitto_dblive`.`king_orders` ADD COLUMN `imei_reimbursement_value_perunit` DOUBLE(10,2) DEFAULT 0 NULL AFTER `super_scheme_processed`, ADD COLUMN `imei_scheme_id` BIGINT(20) DEFAULT 0 NULL AFTER `imei_reimbursement_value_perunit`;
+
+ALTER TABLE `snapitto_dblive`.`pnh_franchise_account_stat` CHANGE `imei_refid` `imei_refid` BIGINT(20) DEFAULT 0 NULL; 
+ 
+ //knock mmeber scheme 
  CREATE TABLE `snapitto_dblive`.`pnh_membersch_deals`( `id` INT(11) NOT NULL AUTO_INCREMENT, `menuid` INT(11), `itemid` BIGINT(20), `valid_from` BIGINT(11), `valid_to` BIGINT(11), `created_by` INT(11) DEFAULT 0, `created_on` BIGINT DEFAULT 20, PRIMARY KEY (`id`) ); 
  ALTER TABLE `snapitto_dblive`.`pnh_membersch_deals` ADD COLUMN `is_active` TINYINT(11) NULL AFTER `itemid`; 
 //PREPAID VOUCHER--START
@@ -1104,10 +1172,36 @@ alter table `pnh_t_receipt_reconcilation_log` add column `remarks` varchar (100)
 #Feb_08_2014
 alter table `pnh_franchise_account_stat` add column `unreconciled_value` double   NULL  after `is_correction`, add column `unreconciled_status` varchar (11) DEFAULT 'pending' NULL  after `unreconciled_value`;
 
+#added index for transactions table 
+alter table `king_transactions` add index `init` (`init`);
+
+/**STOREKING CART DB CHANGES**/
+//franchise price quote 
+
+CREATE TABLE `pnh_franchise_price_quote` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `franchise_id` bigint(20) DEFAULT NULL,
+  `pid` bigint(20) DEFAULT NULL,
+  `mrp` double DEFAULT NULL,
+  `offrprice` double DEFAULT NULL,
+  `lprice` double DEFAULT NULL,
+  `quote` double DEFAULT NULL,
+  `created_on` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ;
+
+//franchise product price enquery log table
+
+CREATE TABLE `pnh_franchise_pprice_enqrylog` (
+  `id` bigint(30) NOT NULL AUTO_INCREMENT,
+  `franchise_id` bigint(30) DEFAULT NULL,
+  `pid` bigint(30) DEFAULT NULL,
+  `created_on` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
 # Feb_20_2014
 alter table `pnh_franchise_account_stat` drop column `unreconciled_status`, drop column `unreconciled_value`;
 alter table `pnh_franchise_account_summary` add column `unreconciled_value` double  DEFAULT '0' NULL  after `created_by`, add column `unreconciled_status` varchar (50) DEFAULT 'pending' NULL  after `unreconciled_value`;
 update pnh_t_receipt_info set unreconciled_value = receipt_amount,unreconciled_status = 'pending' where receipt_amount !=0;
 update pnh_franchise_account_summary set unreconciled_value = credit_amt,unreconciled_status = 'pending' where credit_amt !=0;
-
-

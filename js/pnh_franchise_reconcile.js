@@ -41,34 +41,46 @@ if(error_msgs.length)
             if( $(".error_status").html() != '' && receipt_amount != '') {
                 return false;
             }
-            
-            var reconciled_total= parseFloat( $("abbr",".reconciled_total").html() );
-            if(receipt_amount != '' && reconciled_total == receipt_amount) {
-                alert("All Amount Adjusted.");
-                return false;
-            }
-            
-            var html='';
-            
-            if(icount == 0)
-                html +="<tr><th>#</th><th>Type</th><th>Document No</th><th>Un-reconciled (Rs.)</th><th>Adjusted (Rs.)</th><th>&nbsp;</th></tr>";
-            
-            icount = icount+1;
-            html += "<tr class='invoice_row' id='reconcile_row_"+icount+"'>\n\
-                            <td>"+icount+"</td>\n\
-                            <td><select id='document_type' name='document_type[]' onchange=\"recon_change_document_type(this,'selected_invoices_"+icount+"','reconcile_row_"+icount+"');\"><option value='inv' selected>Invoice</option><option value='dr'>Debit Note</option></select></td>\n\
-                            <td>\n\
-                                <select size='2' name='sel_invoice[]' id='selected_invoices_"+icount+"' class='sel_invoices' onchange='fn_inv_selected(this,"+icount+");'>\n\
-                                </select>\n\
-                            </td>\n\
-                            <td><input type='text' class='inp amt_unreconcile money' name='amt_unreconcile[]' id='amt_unreconcile_"+icount+"' size=6></td>\n\
-                            <td><input type='text' class='inp amt_adjusted money' name='amt_adjusted[]' id='amt_adjusted_"+icount+"' size=6 value=''></td>\n\
-                            <td><span class='button button-tiny_wrap cursor button-caution' onclick='remove_row("+icount+");'>-</span></td>\n\
-                        </tr>";
+            // check is this franchise have any unreconciled invoices or debit notes?
+            $.get(site_url+"/admin/jx_chk_reconcile_fran_status/"+franchise_id,{},function(resp) {
+                if(resp.status != 'success') {
+                    alert("Franchise not having any invoices or debit entries.");
+                    return false;
+                }
+                else {
+                    
+                     // check is all amount adjusted
+                    var reconciled_total= parseFloat( $("abbr",".reconciled_total").html() );
+                    if(receipt_amount != '' && reconciled_total == receipt_amount) {
+                        alert("All Amount Adjusted.");
+                        return false;
+                    }
 
-                $("#reconcile_row").append(html);
-                var invs_id = $("#selected_invoices_"+icount);
-                load_unconciled_invoices(invs_id);
+                    var html='';
+
+                    if(icount == 0)
+                        html +="<tr><th>#</th><th>Type</th><th>Document No</th><th>Un-reconciled (Rs.)</th><th>Adjusted (Rs.)</th><th>&nbsp;</th></tr>";
+
+                    icount = icount+1;
+                    html += "<tr class='invoice_row' id='reconcile_row_"+icount+"'>\n\
+                                    <td>"+icount+"</td>\n\
+                                    <td><select id='document_type' name='document_type[]' onchange=\"recon_change_document_type(this,'selected_invoices_"+icount+"','reconcile_row_"+icount+"');\"><option value='inv' selected>Invoice</option><option value='dr'>Debit Note</option></select></td>\n\
+                                    <td>\n\
+                                        <select size='2' name='sel_invoice[]' id='selected_invoices_"+icount+"' class='sel_invoices' onchange='fn_inv_selected(this,"+icount+");'>\n\
+                                        </select>\n\
+                                    </td>\n\
+                                    <td><input type='text' class='inp amt_unreconcile money' name='amt_unreconcile[]' id='amt_unreconcile_"+icount+"' size=6></td>\n\
+                                    <td><input type='text' class='inp amt_adjusted money' name='amt_adjusted[]' id='amt_adjusted_"+icount+"' size=6 value=''></td>\n\
+                                    <td><span class='button button-tiny_wrap cursor button-caution' onclick='remove_row("+icount+");'>-</span></td>\n\
+                                </tr>";
+
+                        $("#reconcile_row").append(html);
+
+                        var invs_id = $("#selected_invoices_"+icount);
+                        load_unconciled_invoices(invs_id);
+                }
+            },'json');
+                
         });
         
         function recon_change_document_type(elt,sel_invoices,row_name) {
@@ -91,13 +103,15 @@ if(error_msgs.length)
             //on click
             var invs = "<option value='00'>Choose</option>\n";
             $.post(site_url+"/admin/jx_get_unreconciled_invoice_list/"+franchise_id,{},function(resp) {
-                    if(resp.fran_invoices.length) {
+                    if(resp.status == 'success') {
                         $.each(resp.fran_invoices,function(i,invoice) {
                             invs += "<option value='"+invoice.invoice_no+"' inv_amount='"+invoice.inv_amount+"'>"+invoice.invoice_no+" (Rs."+invoice.inv_amount+") </option>\n";
                         });
                     }
-                    else 
-                        alert(resp);
+                    else {
+                        alert(resp.message);
+                    }
+                    
                     invs_sel.html(invs);
                     var arr_class=[];
                     arr_class = invs_sel.attr('class').split(" ");
@@ -115,13 +129,15 @@ if(error_msgs.length)
             //on click
             var invs = "<option value='00'>Choose</option>\n";
             $.post(site_url+"/admin/jx_get_unreconciled_debit_notes_list/"+franchise_id,{},function(resp) {
-                    if(resp.fran_debit_notes.length) {
+                    if(resp.status == 'success') {
                         $.each(resp.fran_debit_notes,function(i,invoice) {
                             invs += "<option value='"+invoice.debit_note_id+"' inv_amount='"+invoice.inv_amount+"'>Dr. "+invoice.debit_note_id+" (Rs."+invoice.inv_amount+") </option>\n";
                         });
                     }
-                    else 
-                        alert(resp);
+                    else {
+                        alert(resp.message);
+                    }
+                    
                     invs_sel.html(invs);
 					var arr_class=[];
                     arr_class = invs_sel.attr('class').split(" ");
