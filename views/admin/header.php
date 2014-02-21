@@ -25,7 +25,7 @@
 	$menu['admin']=array("adminusers"=>"Admin Access","roles"=>"User Roles");
 */	
 
-	$subs=array("prod"=>"Products","stock"=>"Warehousing","front"=>"Front-end","selling"=>"Sales","shipment"=>"Shipment","crm"=>"Customer Relationship","accounting"=>"Accounting & Admin","marketing"=>"Marketing","pnh"=>"Pay Near Home","streams"=>"Streams");
+	$subs=array("prod"=>"Products","stock"=>"Warehousing","front"=>"Front-end","selling"=>"Sales","shipment"=>"Shipment","crm"=>"Customer Relationship","accounting"=>"Accounting & Admin","marketing"=>"Marketing","pnh"=>"StoreKing","streams"=>"Streams");
 	
 	$menu["prod"]=array("products"=>"Products","products_group"=>"Products Group","categories"=>"Categories","brands"=>"Brands","prods_bulk_upload"=>"Product bulk upload","products_group_bulk_upload"=>"Products group bulk upload","export_data"=>"Export Data","prod_mrp_update"=>"MRP Update","product_price_changelog"=>"Price Changelog","product_src_changelog"=>"Product Sourceable ChangeLog","list_deals_nsrc_prod"=>"Deals - Products not sourceable");
 	$menu['stock']=array("storage_locs"=>"Storage Locations","rackbins"=>"Rack & Bins","vendors"=>"Vendors","purchaseorders"=>"View POs","purchaseorder"=>"Create PO","apply_grn"=>"Stock Intake","stock_intake_list"=>"Stock Intakes Summary","stock_unavail_report"=>"Stock Unavailability Report","warehouse_summary"=>"Warehouse Summary","unavail_product_ageing_report"=>"Ageing Report");

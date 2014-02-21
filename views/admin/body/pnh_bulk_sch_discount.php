@@ -38,10 +38,11 @@
 				<td>
 					<select name="menu" data-placeholder="Choose" id="choose_menu" style="min-width: 180px;">
 						<option value=""></option>
-					<?php foreach($this->db->query("select id,name from pnh_menu where status = 1 order by name asc")->result_array() as $menu){?>
-					<option value="<?php echo $menu['id']?>"><?php echo $menu['name']?></option>
+					<?php foreach($this->db->query("select * from pnh_menu where status = 1 order by name asc")->result_array() as $menu){?>
+					<option marg="<?php echo $menu['default_margin']?>" value="<?php echo $menu['id']?>"><?php echo $menu['name']?></option>
 					<?php }?>
 					</select>
+					<div id="menu_marg"></div>
 				</td>
 			</tr>
 			<tr>
@@ -240,9 +241,9 @@ $('#pnh_bulkschdisc_frm').submit(function(){
 		if(isNaN(sch_disc))
 		{
 			error_inp.push("Invalid Discount Entered");
-		}else if(sch_disc > 10)
+		}else if(sch_disc > 20)
 		{
-			error_inp.push("Maximum 10% discount is allowed");
+			error_inp.push("Maximum 20% discount is allowed");
 		}
 	var is_valid_daterange = 1;	
 		if(!$('#d_start',this).val().length)
@@ -273,6 +274,17 @@ $('#choose_menu').change(function(){
 	var sel_terrid=$('#chose_terry').val();
 	var sel_sch_type=$("#bulk_schtype").val();
 	var sel_menuid=$(this).val();
+		
+		if($('select[name="bulk_schtype"]').val() == 1)
+		{
+			if($('option:selected',this).attr('marg') == "")
+				$('#menu_marg').hide();
+			else
+				$('#menu_marg').html('Default Menu Scheme Margin : '+$('option:selected',this).attr('marg')+'%').show();
+		}else
+		{
+			$('#menu_marg').hide();
+		}
 		$('#franchise_filter').hide();
 		$('#fran_list').html('<h3 align="center"><b>Loading Franchise List,Please wait...</b></h3>');
 		$.getJSON(site_url+'/admin/get_franchisebymenu_id/'+sel_menuid+'/0'+'/0/'+sel_sch_type,function(resp){

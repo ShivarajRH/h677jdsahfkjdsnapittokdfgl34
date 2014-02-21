@@ -8883,6 +8883,11 @@ group by g.product_id ");
 		
 		if($deals)
 		{
+			foreach($deals as $i=>$deal)
+			{
+				$deals[$i]['allow_order'] = $this->erpm->do_stock_check(array($deal['itemid']));
+			}
+			
 			$output['status'] = 'success';
 			$output['deals_lst'] = $deals;
 			$output['type'] = $type;

@@ -1351,7 +1351,7 @@ class Erpmodel extends Model
 											)) as g ",array($inv,$inv))->row()->t; 
 											
 					$p_ttl_inv_ords = $p_ttl_inv_ords*1;					
-					 
+					$p_ttl_inv_ords = 1;
 					for($k1=0;$k1<$p_ttl_inv_ords;$k1++) 
 						$this->db->query("insert into shipment_batch_process_invoice_link(batch_id,p_invoice_no,courier_id,awb) values(?,?,?,?)",array($batch_id,$inv,$cid,$awb));
 					
@@ -7556,6 +7556,7 @@ order by p.product_name asc
 		
 		if($this->db->affected_rows()>0)
 		{
+			/*
 			//get the latest modified records
 			$menu_det=$this->db->query("select * from pnh_franchise_menu_link  where fid=? and status=0 order by modified_on desc",$fid)->result_array();
 			
@@ -7566,6 +7567,7 @@ order by p.product_name asc
 			//disable super scheme
 			$this->db->query("update pnh_super_scheme set valid_to=?,is_active=0 where menu_id=?",array(time()-20,$menu['menuid']));
 			}
+			*/
 		}
 		
 		//check if it is have prepaid menu
@@ -7724,7 +7726,7 @@ order by p.product_name asc
 				';
 				
 		$to = 'sourcing@storeking.in';
-		$cc = array('accounts@storeking.in','shariff@storeking.in','gova@storeking.in','nagaraj@storeking.in');
+		$cc = array('accounts@storeking.in','shariff@storeking.in','gova@storeking.in','nagaraj@storeking.in','sowmya@storeking.in','logistics@storeking.in');
 		$this->_notifybymail($to,$subject,$msg,"Support",'support@snapittoday.com',$cc);				
 		redirect("admin/pnh_franchises");
 	}
