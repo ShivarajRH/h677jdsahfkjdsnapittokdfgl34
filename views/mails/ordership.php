@@ -53,7 +53,7 @@ Refer your friends to Snapittoday.com and you get a coupon code for your next sh
 Warm Regards,
 Team Snapittoday.com<br>
 <br>
-<i>(For any assistance please contact us at <?=CS_EMAIL?> or call us at <?=CS_TELEPHONE?> Monday - Saturdays, 10am - 7pm IST)</i> 
+<i>(For any assistance please contact us at <?=CS_EMAIL?>)</i> 
  
 </div>
 </div>

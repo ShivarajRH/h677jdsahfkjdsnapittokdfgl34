@@ -135,10 +135,10 @@ $(function(){
 	<div style="margin-top: 10px;float:left">
 		
 	</div>	
-	
+	<?/*
 	<div class="dash_bar_right" style="background: tomato">
 		Pending Payment : <span>Rs <?=format_price($shipped_tilldate-($paid_tilldate+$acc_adjustments_val+$credit_note_amt),2)?></span>
-	</div>
+	</div>*/?>
 	
 	<div class="dash_bar_right">
 		UnCleared Payments : <span>Rs <?=format_price($uncleared_payment,2)?></span>
@@ -1185,10 +1185,10 @@ $(function(){
 				<div class="dash_bar_right">
 					Adjustments : <span>Rs <?=format_price($acc_adjustments_val,2)?></span>
 				</div>
-				
+				<?php /*
 				<div class="dash_bar_right">
 					Paid till Date : <span>Rs <?=format_price($paid_tilldate,2)?></span>
-				</div>
+				</div>*/?>
 			
 				<div class="dash_bar_right">
 					Credit Notes Raised : <span>Rs <?=format_price($credit_note_amt,2)?></span>
