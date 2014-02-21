@@ -61,10 +61,6 @@ $config['return_process_cond'][1] = 'Out for Service';
 $config['return_process_cond'][2] = 'Move to Warehouse Stock';
 $config['return_process_cond'][3] = 'Ready to ship';
 
-$config['order_by']=array();
-$config['order_by'][0]='Storeking';
-$config['order_by'][1]='Snapittoday';
-$config['order_by'][2]='Partner';
 
 $config['pnh_logistick']=array();
 $config['pnh_logistick'][1]='Driver';

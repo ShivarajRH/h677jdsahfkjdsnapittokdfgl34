@@ -261,7 +261,7 @@ class Pnh extends Controller{
 		
 		//$name=ucfirst($deal['print_name']);
 		//if(!trim($name))
-		$name=ucfirst($deal['name']);
+			$name=ucfirst($deal['name']);
 		  
 		$cost=round($deal['price']-$discount,2);
 		//echo "{$name}\n Mrp : Rs {$deal['mrp']}, Landing Cost : Rs {$cost}";
@@ -476,16 +476,7 @@ class Pnh extends Controller{
 			$billno=$nbill['bill_no']+1;
 		$inp=array("bill_no"=>$billno,"franchise_id"=>$franid,"transid"=>$transid,"user_id"=>$userid,"status"=>1);
 		$this->db->insert("pnh_cash_bill",$inp);
-
-        //do packing process
-        $ttl_num_orders=count($items);
-        $batch_remarks="PNH Order placed through SMS by $from";
-        $updated_by=$userid;
-
-        // Process to batch this transaction
-        $this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
-                
-		$this->erpm->do_trans_changelog($transid,$batch_remarks);
+		$this->erpm->do_trans_changelog($transid,"PNH Order placed through SMS by $from");
 		
 	}
 
@@ -1964,17 +1955,9 @@ class Pnh extends Controller{
 			if(empty($fid))
 				$this->pdie("Not Authorized");
 				
-			 
-			$fran=$this->db->query("select * from pnh_m_franchise_info where franchise_id in(?)",$fid)->row_array();
-
-			 
 			$total=0;$d_total=0;$c_total=0;
 			$itemids=array();
 			$itemnames=array();
-
-
-			$voucher_code_used = array();
-			 
 
 			foreach($items as $i=>$item)
 			{
@@ -1994,10 +1977,10 @@ class Pnh extends Controller{
 				if($prod['is_combo']=="1")
 					$items[$i]['discount']=$items[$i]['price']/100*$margin['combo_margin'];
 				else
-					$items[$i]['discount']=$items[$i]['price']/100*$voucher_margin;
+					$items[$i]['discount']=$items[$i]['mrp']/100*$voucher_margin;
 				//$items[$i]['discount']=$voucher_margin;
 				$total+=$items[$i]['price']*$items[$i]['qty'];
-				$d_total+=($items[$i]['price']-$items[$i]['discount'])*$items[$i]['qty'];
+				$d_total+=($items[$i]['mrp']-$items[$i]['discount'])*$items[$i]['qty'];
 				$c_total+=($items[$i]['price'])*$items[$i]['qty'];
 				$itemids[]=$prod['id'];
 				$itemnames[]=$prod['name'];
@@ -2005,105 +1988,66 @@ class Pnh extends Controller{
 				$items[$i]['tax']=$prod['tax'];
 			}
 			$avail=$this->erpm->do_stock_check($itemids);
-			$nonredeemed_value=0;
-			$non_redeemed_vdetails=$this->db->query("select b.book_id,d.franchise_id,a.voucher_serial_no,a.customer_value,a.status as voucher_status
-					from pnh_t_voucher_details a
-					join pnh_t_book_voucher_link b on b.voucher_slno_id = a.id
-					join pnh_t_book_allotment d on d.book_id=b.book_id
-					where voucher_code not in (?) and member_id=?  and is_activated=1 and a.status=3
-					group by voucher_serial_no",array($voucher_code,$is_strkng_membr['pnh_member_id']));
-			 
-			if($non_redeemed_vdetails)
-			{
-				foreach($non_redeemed_vdetails->result_array() as $non_redeemed_vdet)
-				{
-					$non_redeemed_vmenu=$this->db->query("select id,name from  pnh_menu where id in (select menu_ids from pnh_t_book_details a join pnh_m_book_template b on b.book_template_id=a.book_template_id where a.book_id=? and menu_ids=?)",array($non_redeemed_vdet['book_id'],$m['id']));
-					if($non_redeemed_vmenu->num_rows())
-					{
-						$nonredeemed_value+=$non_redeemed_vdet['customer_value'];
-					}
-				}
-			}
-			if(!$nonredeemed_value)
-				$nonredeemed_value=0;
-			 
+			foreach($itemids as $i=>$itemid)
+				if(!in_array($itemid,$avail))
+				$this->pdie("{$itemnames[$i]} is out of stock");
+
 			$part_redeemed_vouch_amt=$this->db->query("select sum(customer_value) as amt from pnh_t_voucher_details where status=5 and customer_value!=0 and member_id=?",$is_strkng_membr['pnh_member_id'])->row()->amt;
-			 
-			$voucher_fifo=0;      //flag to redeem if available voucher balance>0
-			$non_redeemed_voucher_consideration=0;
+			
+			$voucher_fifo=0;//flag to redeem if available voucher balance>0
 			$part_redeemed_voucher_codes = array();
-			 
-			$ts_vouchervalue=$voucher_value; //given secret code voucher value
-			if($voucher_value<$c_total && $nonredeemed_value!=0)
+			if($voucher_value<$c_total || $vcode==0 )
 			{
-				$voucher_value=$voucher_value+$nonredeemed_value;
-				$non_redeemed_voucher_consideration=1;
-
-				$vcodetest=$ts_vouchervalue-$c_total;
-				if($vcodetest<0)
-						
-					$required_amt=$vcodetest*-1;
-
-				$sql=$this->db->query("select b.book_id,d.franchise_id,a.voucher_serial_no,a.customer_value,a.status as voucher_status
-						from pnh_t_voucher_details a
-						join pnh_t_book_voucher_link b on b.voucher_slno_id = a.id
-						join pnh_t_book_allotment d on d.book_id=b.book_id
-						where voucher_code not in (?) and member_id=?  and is_activated=1 and a.status in (3,5)
-						group by voucher_serial_no",array($voucher_code,$is_strkng_membr['pnh_member_id']));
-				 
-				if($sql)
-				{
-					$cc=array();
-					$cc['code']=array();
-					$cc['value']=array();
-					$value=0;
-					foreach($sql->result_array() as $s)
-					{
-						$s_vmenu=$this->db->query("select id,name from  pnh_menu where id in (select menu_ids from pnh_t_book_details a join pnh_m_book_template b on b.book_template_id=a.book_template_id where a.book_id=? and menu_ids=?)",array($non_redeemed_vdet['book_id'],$m['id']));
-						if($s_vmenu->num_rows())
-						{
-							if($value>=$required_amt)
-								break;
-							$value+=$s['customer_value'];
-							array_push($cc['code'],$s['voucher_serial_no']);
-							array_push($cc['value'],$s['customer_value']);
-						}
-					}
-
-				}
-
-			}
-			if($ts_vouchervalue<$c_total)
-			{
-
-				$non_redeemed_voucher_consideration=1;
-				$req_voucher_val = $c_total-$ts_vouchervalue; //200
+				
+				$req_voucher_val = $c_total-$voucher_value; //200
 
 
 				//check if pending vouchers can be used for redeem for current order
 				$part_redeemed_vouch_amt=$this->db->query("select sum(customer_value) as amt from pnh_t_voucher_details where status=5 and customer_value!=0 and member_id=?",$is_strkng_membr['pnh_member_id'])->row()->amt;
-				 
 				$vbal='';
 				if(($part_redeemed_vouch_amt+$voucher_value) < $c_total)
-				{
+				{	
 					if($part_redeemed_vouch_amt!=0)
-					{
 						$vbal="+ bal(".$part_redeemed_vouch_amt.")";
+					$this->pdie("Insufficient credit! Total value of purchase is Rs $c_total and voucher value is Rs $voucher_value $vbal ");
+				}
+					
+
+
+				$part_redeemed_vouch_res=$this->db->query("select customer_value,voucher_code,voucher_margin from pnh_t_voucher_details where status=5 and customer_value!=0 and member_id=?",$is_strkng_membr['pnh_member_id']);
+				if($part_redeemed_vouch_res->num_rows())
+				{
+					foreach($part_redeemed_vouch_res->result_array() as $pr_vouch)
+					{
+						if(!isset($part_redeemed_voucher_codes[$pr_vouch['voucher_code']]))
+							$part_redeemed_voucher_codes[$pr_vouch['voucher_code']] = 0;
+
+						$diff_val = $req_voucher_val-$pr_vouch['customer_value'];
+						if($diff_val > 0)
+						{
+							$req_voucher_val = $diff_val;
+							$part_redeemed_voucher_codes[$pr_vouch['voucher_code']] = $pr_vouch['customer_value'];
+						}else
+						{
+							$part_redeemed_voucher_codes[$pr_vouch['voucher_code']] = $req_voucher_val;
+							$req_voucher_val = 0;
+						}
+
+						if($req_voucher_val <= 0)
+							break;
 					}
-					$this->pdie("Insufficient credit! Total value of purchase is Rs $c_total and voucher value is Rs $ts_vouchervalue and overall activated voucher value is $voucher_value $vbal");
+					
 				}
 			}
 
-			 
 			$userid=$is_strkng_membr['user_id'];
-			$transid=strtoupper("PNH".random_string("alpha",3).$this->erpm->p_genid(5));
-			$this->db->query("insert into king_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,voucher_payment) values(?,?,?,?,?,?,?,?,1)",array($transid,$c_total,$d_total,3,time(),time(),1,$fran['franchise_id']));
-			 
-			 
+			$transid=strtoupper("PNH".random_string("alpha",3).$this->p_genid(5));
+			$this->db->query("insert into king_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,voucher_payment) values(?,?,?,?,?,?,?,?,1)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran['franchise_id']));
+
 			foreach($items as $item)
 			{
 
-				$inp=array("id"=>$this->erpm->p_genid(10),"transid"=>$transid,"userid"=>$userid,"itemid"=>$item['itemid'],"brandid"=>"");
+				$inp=array("id"=>$this->p_genid(10),"transid"=>$transid,"userid"=>$userid,"itemid"=>$item['itemid'],"brandid"=>"");
 				$inp["brandid"]=$this->db->query("select d.brandid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.id=?",$item['itemid'])->row()->brandid;
 				$inp["bill_person"]=$inp['ship_person']=$fran['franchise_name'];
 				$inp["bill_address"]=$inp['ship_address']=$fran['address'];
@@ -2121,134 +2065,85 @@ class Pnh extends Controller{
 				$inp['i_discount']=$item['mrp']-$item['price'];
 				$inp['i_coup_discount']=$item['discount'];
 				$inp['i_tax']=$item['tax'];
-				if($item['itemid']!=null)
-				{
-					$this->db->insert("king_orders",$inp);
+				$this->db->insert("king_orders",$inp);
+				$last_order_ids=$this->db->insert_id();
+				$last_trans_id=$this->db->query("select transid from king_orders where sno=? limit 1",$last_order_ids)->row()->transid;
+				$order_ids=$this->db->query("select group_concat(id) as order_ids from king_orders where transid=?",$last_trans_id)->row()->order_ids;
 
-					$last_order_ids=$this->db->insert_id();
-					$last_trans_id=$this->db->query("select transid from king_orders where sno=? limit 1",$last_order_ids)->row()->transid;
-					$order_ids=$this->db->query("select group_concat(id) as order_ids from king_orders where transid=?",$last_trans_id)->row()->order_ids;
-
-					$m_inp=array("transid"=>$transid,"itemid"=>$item['itemid'],"mrp"=>$item['mrp'],"price"=>$item['mrp'],"base_margin"=>0,"sch_margin"=>0,"bal_discount"=>0,"qty"=>$item['qty'],"final_price"=>$item['price']-$item['discount'],"voucher_margin"=>$voucher_margin);
-					$this->db->insert("pnh_order_margin_track",$m_inp);
-				}
+				$m_inp=array("transid"=>$transid,"itemid"=>$item['itemid'],"mrp"=>$item['mrp'],"price"=>$item['mrp'],"base_margin"=>0,"sch_margin"=>0,"bal_discount"=>0,"qty"=>$item['qty'],"final_price"=>$item['price']-$item['discount'],"voucher_margin"=>$item['discount']);
+				$this->db->insert("pnh_order_margin_track",$m_inp);
 			}
 			$this->erpm->pnh_fran_account_stat($fran['franchise_id'],1, $d_total,"Order $transid - Total Amount: Rs $total","order",$transid);
 			$points=$this->db->query("select points from pnh_loyalty_points where amount<? order by amount desc limit 1",$total)->row_array();
 			if(!empty($points))
 				$points=$points['points'];
 			else $points=0;
-
+			if(count($part_redeemed_voucher_codes))
+			{
+				foreach($part_redeemed_voucher_codes as $pr_vouch_code=>$pr_vouch_val)
+				{
+					$voucher_codes[] = $pr_vouch_code;
+					$voucher_code_used[$pr_vouch_code] = $pr_vouch_val;
+				}
+			}
+			
 			$ttl_voucher_amt_req = $c_total;
 			$is_partially_redeemed=0;
-
-			if($voucher_codes)
+			if($vcode==1)
 			{
-				$voucher_code_used['gven_secretcode']=array();
-				$voucher_code_used['othr_secretcode']=array();
 				
 				foreach($voucher_codes as $v_code)
 				{
-						
+
 					if(!$ttl_voucher_amt_req)
 						continue ;
-						
+
 					if($is_partially_redeemed)
 						break;
-
-					$is_alloted=$this->db->query("select * from pnh_t_voucher_details where franchise_id=? and voucher_code=? and is_alloted=1 and is_activated=1 and status=3 ",array($fran['franchise_id'],$v_code))->row_array();
 						
-					$cus_value = $is_alloted['customer_value'];
-					$new_cus_value=($is_alloted['customer_value']-$ttl_voucher_amt_req);
-					
+					$is_alloted=$this->db->query("select * from pnh_t_voucher_details where franchise_id=? and voucher_code=? and is_alloted=1 and is_activated=1 and (status=3 or status=5)",array($fran['franchise_id'],$v_code))->row_array();
+					$pen_vouch_amt = $voucher_code_used[$v_code]-$ttl_voucher_amt_req;
+					if($pen_vouch_amt<=0)
+						$pen_vouch_amt = 0;
+
+					$ttl_voucher_amt_req=$ttl_voucher_amt_req-$voucher_code_used[$v_code];
+
+					$cus_value=$pen_vouch_amt;
+					$fran_value=$pen_vouch_amt-($pen_vouch_amt*$is_alloted['voucher_margin']/100);
+
+
+					//get available voucher value from db
+					$db_voucher_value = $this->db->query("select customer_value from pnh_t_voucher_details where voucher_code = ? ",$v_code)->row()->customer_value;
 					$is_fully_redeemed = 0;
-					if($new_cus_value<=0)
+					//if($db_voucher_value == $voucher_code_used[$v_code])
+					if($cus_value<=0)
 					{
 						$is_fully_redeemed = 1;
-						$new_cus_value = 0;
 					}
 					else
-					{
 						$is_partially_redeemed = 1;
-					}
 						
-					$fran_value=$new_cus_value-($new_cus_value*$is_alloted['voucher_margin']/100);
+						
+					$this->db->query("update pnh_t_voucher_details set customer_value=?,franchise_value=?,status=?,redeemed_on=now() where voucher_code=?",array($cus_value,$fran_value,($is_fully_redeemed?4:5),$v_code));
 
-					$this->db->query("update pnh_t_voucher_details set customer_value=?,franchise_value=?,status=?,redeemed_on=now() where voucher_code=?",array($new_cus_value,$fran_value,($is_fully_redeemed?4:5),$v_code));
-					$this->db->query("insert into pnh_voucher_activity_log(voucher_slno,franchise_id,member_id,transid,debit,credit,order_ids,status)values(?,?,?,?,?,?,?,?)",array($is_alloted['voucher_serial_no'],$fran['franchise_id'],$is_strkng_membr['pnh_member_id'],$transid,$cus_value-$new_cus_value,0,$order_ids,1));
-					array_push($voucher_code_used['gven_secretcode'],$is_alloted['voucher_serial_no']);
-					
-					$ttl_voucher_amt_req = $ttl_voucher_amt_req-($cus_value-$new_cus_value);
-				}
+					$this->db->query("insert into pnh_voucher_activity_log(voucher_slno,franchise_id,member_id,transid,debit,credit,order_ids,status)values(?,?,?,?,?,?,?,?)",array($is_alloted['voucher_serial_no'],$fran['franchise_id'],$is_strkng_membr['pnh_member_id'],$transid,($voucher_code_used[$v_code]-$pen_vouch_amt),0,$order_ids,1));
 
-
-				//exit;
-
-				if($is_fully_redeemed && $non_redeemed_voucher_consideration==1)
-				{
-					$required_secretcode=$cc['code'];
-					if($required_secretcode)
-					{
-						foreach($required_secretcode as $required_vcode)
-						{
-								
-							$vsres=$this->db->query("select * from pnh_t_voucher_details where voucher_serial_no=?",$required_vcode);
-
-							if($vsres)
-							{
-								foreach($vsres->result_array() as $v)
-								{
-									if($is_partially_redeemed)
-										break;
-
-									$v_slno=$v['voucher_serial_no'];
-									$v_margin=$v['voucher_margin'];
-									$v_cusvalue=$required_amt-$v['customer_value'];//500-300
-									//108-300 = -192
-									$is_fully_redeemed=0;
-									$is_partially_redeemed=0;
-
-									$used_vouchval = 0;
-
-									if($v_cusvalue < 0)
-									{
-										$v_cusvalue=$required_amt;
-										$is_partially_redeemed = 1;
-									}
-									else
-									{
-										$is_fully_redeemed = 1;
-										$v_cusvalue = $v['customer_value'];
-									}
-									$fran_value=($v['customer_value']-$v_cusvalue)-(($v['customer_value']-$v_cusvalue)*$v['voucher_margin']/100);
-
-									$this->db->query("update pnh_t_voucher_details set customer_value=?,franchise_value=?,status=?,redeemed_on=now() where voucher_serial_no=?",array(($v['customer_value']-$v_cusvalue),$fran_value,($is_fully_redeemed?4:5),$v_slno));
-
-									$this->db->query("insert into pnh_voucher_activity_log(voucher_slno,franchise_id,member_id,transid,debit,credit,order_ids,status)values(?,?,?,?,?,?,?,?)",array($v_slno,$fran['franchise_id'],$is_strkng_membr['pnh_member_id'],$transid,$v_cusvalue,0,$order_ids,1));
-									$required_amt=$required_amt-$v_cusvalue;
-									array_push($voucher_code_used['othr_secretcode'],$v['voucher_serial_no']);
-								}
-							}
-								
-						}
-
-					}
 				}
 			}
-			else
+			else 
 			{
-
+				
 				$usebal_v=array();
 				$usebal_v['pre_redeemed']=array();
 				$bal_details=$this->db->query("select * from pnh_t_voucher_details where status=5 and customer_value!=0 and member_id=?",$is_strkng_membr['pnh_member_id'])->result_array();
 				$v_prebal=0;
 				foreach($bal_details as $bal_det)
 				{
-						
+					
 					$fran_value=$c_total-($c_total*$bal_det['voucher_margin']/100);
 					$v_prebal+=$bal_det['customer_value'];
 					if($v_prebal>=$c_total)
-					{
+					{	
 						array_push($usebal_v['pre_redeemed'],$bal_det['voucher_serial_no']);
 						break;
 					}else
@@ -2256,27 +2151,27 @@ class Pnh extends Controller{
 				}
 				if($usebal_v['pre_redeemed'])
 				{
-						
+					
 					foreach ($usebal_v as $u_voucher)
 					{
-
-						$v_histry=$this->db->query("select * from pnh_t_voucher_details where voucher_serial_no=?",$u_voucher)->row_array();
-						$v_slno=$v_histry['voucher_serial_no'];
-						$v_margin=$v_histry['voucher_margin'];
-						$v_cusvalue=$v_histry['customer_value']-$c_total;
-						$fran_value=$c_total-($c_total*$v_histry['voucher_margin']/100);
-						$is_fully_redeemed=0;
-						$is_partially_redeemed=0;
-						if($v_cusvalue<=0)
-							$is_fully_redeemed = 1;
-						else
-							$is_partially_redeemed = 1;
-
-						$this->db->query("update pnh_t_voucher_details set customer_value=?,franchise_value=?,status=?,redeemed_on=now() where voucher_serial_no=?",array($v_cusvalue,$fran_value,($is_fully_redeemed?4:5),$v_slno));
-						$this->db->query("insert into pnh_voucher_activity_log(voucher_slno,franchise_id,member_id,transid,debit,credit,order_ids,status)values(?,?,?,?,?,?,?,?)",array($v_slno,$fran['franchise_id'],$is_strkng_membr['pnh_member_id'],$transid,$c_total,0,$order_ids,1));
+						
+					$v_histry=$this->db->query("select * from pnh_t_voucher_details where voucher_serial_no=?",$u_voucher)->row_array();	
+					$v_slno=$v_histry['voucher_serial_no'];
+					$v_margin=$v_histry['voucher_margin'];
+					$v_cusvalue=$v_histry['customer_value']-$c_total;
+					$fran_value=$c_total-($c_total*$v_histry['voucher_margin']/100);
+					$is_fully_redeemed=0;
+					$is_partially_redeemed=0;
+					if($v_cusvalue<=0)
+						$is_fully_redeemed = 1;
+					else
+						$is_partially_redeemed = 1;
+					
+					$this->db->query("update pnh_t_voucher_details set customer_value=?,franchise_value=?,status=?,redeemed_on=now() where voucher_serial_no=?",array($v_cusvalue,$fran_value,($is_fully_redeemed?4:5),$v_slno));
+					$this->db->query("insert into pnh_voucher_activity_log(voucher_slno,franchise_id,member_id,transid,debit,credit,order_ids,status)values(?,?,?,?,?,?,?,?)",array($v_slno,$fran['franchise_id'],$is_strkng_membr['pnh_member_id'],$transid,$c_total,0,$order_ids,1));
 					}
 				}
-
+				
 			}
 			$franid=$fran['franchise_id'];
 			$billno=10001;
@@ -2290,13 +2185,20 @@ class Pnh extends Controller{
 				$v_bal=$part_redeemed_vouch_amt;
 			else
 				$v_bal=0;
-			 
-			$given_vslnos=implode(',',$voucher_code_used['gven_secretcode']);
-			$othr_vslnos=implode(',',$voucher_code_used['othr_secretcode']);
-			$v_balamt=$this->db->query("SELECT SUM(customer_value) AS voucher_bal FROM pnh_t_voucher_details WHERE STATUS in(3,5) AND member_id=?",$is_strkng_membr['pnh_member_id'])->row()->voucher_bal;
-			$this->erpm->pnh_sendsms($from,"your balance after purchase is Rs $v_balamt,redeemed vouchers for rs $c_total are $given_vslnos,$othr_vslnos .Happy Shopping",$from,0,1);
-			//echo "your balance after purchase is Rs $v_balamt,redeemed vouchers for rs $c_total are $given_vslnos,$othr_vslnos.Happy Shopping";
 			
+			if($vcode==1)
+			{
+				$this->erpm->pnh_sendsms($from,"your balance after purchase is Rs $cus_value,previous redeemed balance $v_bal .Happy Shopping",$from,0,0,1);
+				//$this->pdie("your balance after purchase is Rs $cus_value,previous redeemed balance $v_bal .Happy Shopping");
+				$this->erpm->pnh_sendsms($from,"your balance after purchase is Rs $cus_value,previous redeemed balance $v_bal .Happy Shopping",$from,0,1);
+				echo "your balance after purchase is Rs $cus_value,previous redeemed balance $v_bal .Happy Shopping";
+			}
+			else 
+			{
+			//$this->pdie("your balance after purchase is Rs $v_cusvalue.Happy Shopping");
+			$this->erpm->pnh_sendsms($from,"your balance after purchase is Rs $v_cusvalue.Happy Shopping",$from,0,1);
+			echo "your balance after purchase is Rs $v_cusvalue.Happy Shopping";
+			}
 		}
 		
 		function cancel_prepaidorder($from,$msg,$membr)

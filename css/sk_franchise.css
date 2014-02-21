@@ -194,7 +194,7 @@ h4
 .datagrid1 td{border-right:none;border-left:none;border-bottom:none;font-size: 12px;padding:2px;color: #444;text-transform: capitalize}
 .datagrid1 td a{text-transform: capitalize}
 .datagrid1 td b{font-weight: bold;font-size: 11px;}
-.module_cont{padding:2px;}
+.module_cont{padding;2px;}
 .module_cont .module_cont_title{margin:5px 0px;}
 .module_cont .module_cont_block{clear:both;}
 .module_cont .module_cont_block .module_cont_block_grid_total{margin:3px 0px;}
@@ -303,28 +303,4 @@ h4
 	float: left;
     margin: 10px 0;
     width: 57%;
-}
-.datagrid1 th { float: left; padding: 2px 5px 2px 2px }
-.button-tiny_wrap {
-    font-size: 11px;
-    height: 16.4px;
-    line-height: 16.4px;
-    margin-left: 7px;
-    padding: 0 9.92px;
-}
-.sel_invoices,.dg_sel_invoices { 
-    width:207px; 
-}
-.reconciled_total abbr {
-    font-weight: bold;
-}
-.reconciled_total {
-    padding:0 0 0 20px;
-}
-.error_status,.dg_error_status { font-size: 12px; color:#B44F4F; }
-
-.datagrid tfoot td { text-align:inherit;}
-.money { text-align: right; }
-.center {
-    text-align: center;
 }

@@ -23,20 +23,18 @@
 	$min_assets['js'][] = '../js/parsley.js';
 	$min_assets['js'][] = '../js/jquery.jqEasyCharCounter.min.js';
 	$min_assets['js'][] = '../js/jquery.mtz.monthpicker.js';
+	$min_assets['js'][] = '../js/erp.js';
 	$min_assets['js'][] = '../js/jquery.tablesorter.js';
 	$min_assets['js'][] = '../js/gen_validatorv4.js';//BY S
 	$min_assets['js'][] = '../js/jquery.print-objects.js';//BY S
 	$min_assets['js'][] = '../js/jquery.timeago.js';//BY S
-	$min_assets['js'][] = '../js/tipped.js'; //BY S
+	
+	
 	$min_assets['js'][] = '../js/jquery-ui-timepicker-addon.js'; //R
-	$min_assets['js'][] = '../js/jquery.printElement.js'; //BY S
-
 	$min_assets['js'][] = '../js/jquery.bpopup.js';//BY S
 	$min_assets['js'][] = '../js/jquery-sticky.js';//BY S
-	$min_assets['js'][] = '../js/jquery.slimscroll.min.js';//BY Sur
 	$min_assets['js'][] = '../js/jquery.fix_header_onscroll.js';//BY S
-	$min_assets['js'][] = '../js/header_scripts.js'; //BY S
-	$min_assets['js'][] = '../js/erp.js';
+	$min_assets['js'][] = '../js/jquery.slimscroll.min.js';//BY S
 	
 	
 	//JQplot Plugins for analytics view
@@ -56,17 +54,15 @@
 	$min_assets['plot_css'][] = '../css/plot.css';//BY Sur
 	
         
-	//$min_assets['css'][] = '../css/jquery-ui-lib/jquery-ui-1.10.2.custom.min.css';
-	//$min_assets['css'][] = '../css/jquery-ui/redmond/jquery-ui-1.10.2.custom.min.css';
-	$min_assets['css'][] = '../css/jquery-ui/sk-grey/jquery-ui-1.10.4.custom.min.css';
-
+	$min_assets['css'][] = '../css/jquery-ui-lib/jquery-ui-1.10.2.custom.min.css';
 	$min_assets['css'][] = '../css/chosen.css';
 	$min_assets['css'][] = '../css/jquery.qtip.min.css';
-	$min_assets['css'][] = '../css/tipped.css';
 	$min_assets['css'][] = '../css/admin.css';
 	$min_assets['css'][] = '../css/buttons.css';
-	$min_assets['css'][] = '../css/jquery-ui-timepicker-addon.css';// R
 	$min_assets['css'][] = '../css/erp.css';
+	
+	
+	$min_assets['css'][] = '../css/jquery-ui-timepicker-addon.css';// R
 	
 
 return array(
@@ -80,4 +76,26 @@ return array(
 	'jqplot_js' =>$min_assets['plot_js'],
 	'erp_css' =>$min_assets['css'],
 	'jqplot_css' =>$min_assets['plot_css']	
+
+    // 'js' => array('//js/file1.js', '//js/file2.js'),
+    // 'css' => array('//css/file1.css', '//css/file2.css'),
+
+    // custom source example
+    /*'js2' => array(
+        dirname(__FILE__) . '/../min_unit_tests/_test_files/js/before.js',
+        // do NOT process this file
+        new Minify_Source(array(
+            'filepath' => dirname(__FILE__) . '/../min_unit_tests/_test_files/js/before.js',
+            'minifier' => create_function('$a', 'return $a;')
+        ))
+    ),//*/
+
+    /*'js3' => array(
+        dirname(__FILE__) . '/../min_unit_tests/_test_files/js/before.js',
+        // do NOT process this file
+        new Minify_Source(array(
+            'filepath' => dirname(__FILE__) . '/../min_unit_tests/_test_files/js/before.js',
+            'minifier' => array('Minify_Packer', 'minify')
+        ))
+    ),//*/
 );

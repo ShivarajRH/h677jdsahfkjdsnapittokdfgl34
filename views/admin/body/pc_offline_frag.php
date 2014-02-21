@@ -56,9 +56,11 @@ foreach($super_scheme_sales->result_array() as $super_sch){
 		$has_super_scheme = $this->db->query("select count(*) as t from pnh_super_scheme a   where a.menu_id = ? and a.brand_id = 0 and cat_id = ? and a.is_active = 1 and a.franchise_id=? ",array($item['menuid'],$item['catid'],$fid))->row()->t;
 	if(empty($has_super_scheme))
 		$has_super_scheme = $this->db->query("select count(*) as t from pnh_super_scheme a   where a.menu_id = ? and a.brand_id = 0 and cat_id = 0 and a.is_active = 1 and a.franchise_id=? ",array($item['menuid'],$fid))->row()->t;
-	$has_scheme = 0;
+	
 	if($has_super_scheme)
+	{
 		$has_scheme=$this->db->query("select count(*) as t from pnh_superscheme_deals where menuid=? and is_active=0 and itemid=? and ? between valid_from and valid_to ",array($item['menuid'],$item['itemid'],time()))->row()->t;
+	}
 		
 ?>
 <tr>
@@ -102,7 +104,7 @@ foreach($super_scheme_sales->result_array() as $super_sch){
 </tr>
 <?php }else{?>
 <tr>
-<td colspan="100%"><input type="checkbox" class="price_c_com" id="pricechange" value="yes"><label for="pricechange"> Price change communicated to franchise</label></td>
+<td colspan="100%"><input type="checkbox" class="price_c_com" value="yes"> Price change communicated to franchise</td>
 </tr>
 <?php }?>
 </tbody>
@@ -128,7 +130,7 @@ foreach($super_scheme_sales->result_array() as $super_sch){
 			<b><?=$mpoints?></b> Available 
 			<br />
 			<?php if($mpoints>=150){?>
-					<span id=""><input type="checkbox" id="redeem_cont" name="redeem" value="1"></span>Redeem <input class="redeem_points" type="text" class="inp" size=4 name="redeem_points" value="150" disabled="disabled"> (max. 150)
+					<span id=""><input type="checkbox" id="redeem_cont" name="redeem" value="1"></span>Redeem <input class="redeem_points" type="text" class="inp" size=4 name="redeem_points" value="150"> (max. 150)
 				<?php }else echo 'Minimum of 150 points required to redeem';?>
 			</div>	
 		</td>

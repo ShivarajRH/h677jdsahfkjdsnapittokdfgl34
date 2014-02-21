@@ -75,21 +75,22 @@ class Stream extends Analytics
      */
     function streams() 
     {
-		$data['user']=$user=$this->erpm->auth();
+    	$data['user']=$user=$this->erpm->auth();
 
-            $ou_cond='';
-			if(!$this->erpm->auth(true,true)) 
-				$ou_cond=' and su.user_id='.$user['userid'];
+		$oh_cond='';
+        if(!$this->erpm->auth(true,true)) 
+            $oh_cond=' and su.user_id='.$user['userid'];
 
-                $data['streams']=$this->db->query("select s.*,su.* from m_streams s 
-												join m_stream_users su on su.stream_id = s.id
-                                                where status=1 ".$ou_cond." group by s.id order by s.title asc")->result_array();
+	        $data['streams']=$this->db->query("select s.*,su.* from m_streams s 
+                                            join m_stream_users su on su.stream_id = s.id
+                                                where status=1 ".$oh_cond." group by s.id order by s.title asc")->result_array();
 
                 $data['users']=$this->db->query("select * from king_admin order by name asc")->result_array();
-                $data['pg']=0;
                 $data['page']="streams";
                 $this->load->view("admin",$data);
-    }
+	    
+	}
+        
 	/**
      * Function to add stream
      */
@@ -109,7 +110,7 @@ class Stream extends Analytics
 	 * Function to get user stream notifications
 	 * @param type $userid
 	 */
-	function jx_get_stream_notifications($userid,$update='') {
+		function jx_get_stream_notifications($userid,$update='') {
             $user=$this->erpm->auth();
 	    if($update == 1) {
 	        $this->db->query("update m_stream_post_assigned_users set viewed=1 where assigned_userid=?",$userid);
@@ -188,8 +189,10 @@ class Stream extends Analytics
 	    echo $outdata;
 	}
 	
-	function jx_get_streampostdetails($streamid,$pg=0,$limit=5) 
+	function jx_get_streampostdetails($streamid) 
 	{
+		
+		
 		$user=$this->erpm->auth();
                 $date_cond='';
                 if(isset($_POST['date_from'])) {
@@ -200,37 +203,20 @@ class Stream extends Analytics
                     $dt_st = strtotime(date('Y-m-d 00:00:00',  time()-60*60*24*30));
                     $dt_end=  strtotime(date('Y-m-d 23:59:59',  time()));
                 }
-                
-                if( $this->input->post('date_to') != '') {
-                    $dt_end= strtotime($this->input->post('date_to'));
-                }
-                else {
-                    $dt_end= strtotime(date('Y-m-d 24:59:59',  time() ) );
-                }
-                $cond.="and (sp.posted_on between $dt_st and $dt_end )";
-                
-                if($this->input->post('search_text') != '') {
-                        $search_text = $this->input->post('search_text');
-                        $cond.=' and (sp.description like "%'.$search_text.'%" or spr.description like "%'.$search_text.'%")';
-                }
-               
-                $output['date_output']="Posts from ".date("M/d/Y",$dt_st)." to ".date("M/d/Y",$dt_end);
-         
 
-				$sql="select sp.*,ka.id as userid,ka.username,ka.name,ka.email from m_stream_posts sp
+                $date_cond="and (sp.posted_on between $dt_st and $dt_end )";
+
+                $output['date_output']="Posts from ".date("M/d/Y",$dt_st)." to ".date("M/d/Y",$dt_end);
+            
+	    
+                $arr_streams_rslt=$this->db->query("select sp.*,ka.id as userid,ka.username,ka.name,ka.email from m_stream_posts sp
 	                                    join king_admin ka on ka.id=sp.posted_by
-                                            left join m_stream_post_reply spr on spr.post_id=sp.id
-	                                    where sp.stream_id=? and sp.status=1 $cond
-	                                    group by sp.id order by sp.posted_on desc";
-            
-	    $total_items= $output['total_items']=$this->db->query($sql,array($streamid))->num_rows();
-            
-            
-            $sql .=" limit $pg,$limit ";
-            
-            $arr_streams_rslt=$this->db->query($sql,array($streamid));
-            $arr_streams=$arr_streams_rslt->result_array();
-            
+	                                    where sp.stream_id=? and sp.status=1 $date_cond
+	                                    order by sp.posted_on desc",$streamid);
+	                                    
+	                            // echo $this->db->last_query();       
+	    $arr_streams=$arr_streams_rslt->result_array();
+	    $total_items= $output['total_items']=$arr_streams_rslt->num_rows();
 	    if($total_items>0) {
 	        $output['items']="<table border='0' width='100%'>
 	                        <thead><tr><th></th></tr></thead>
@@ -287,35 +273,15 @@ class Stream extends Analytics
 	                                    </td>
 	                                </tr>';
 	        }
-			$output['items'].='</tbody>
-	            </table>';           
-//                  PAGINATION
-                    $date_from=date("Y-m-d",$st_ts);
-                    $date_to=date("Y-m-d",$en_ts);
-                    
-                    $this->load->library('pagination');
-                   
-                    $config['base_url'] = site_url("admin/jx_get_streampostdetails/".$streamid); //site_url("admin/orders/$status/$s/$e/$orders_by/$limit");
-                    $config['total_rows'] = $total_items;
-                    $config['per_page'] = $limit;
-                    $config['uri_segment'] = 4; 
-                    $config['num_links'] = 5;
-                    
-                    $this->config->set_item('enable_query_strings',false); 
-                    $this->pagination->initialize($config); 
-                    $posts_pagination = $this->pagination->create_links();
-                    $this->config->set_item('enable_query_strings',TRUE);
-//                  PAGINATION ENDS
-                    
-                    $output['pagination'].='<div class="stream_posts_pagination">'.$posts_pagination."</div>";
-                    if($output['items']=='') { $output['status']='<div class="no_more_posts" align="center"><strong>No more posts to display.</strong></div>'; }
+	        $output['items'].='</tbody>
+	            </table>';
 	    } 
-            else { $output['items'].=''; $output['status']='<div class="no_more_posts" align="center"><strong>No results found.</strong></div>'; } 
-            
-            echo json_encode($output);
+            else { $output['items']='<h4 align="center">No Stream posts found</h4>'; }
+                
+                echo json_encode($output);
         }
-	 
-	function jx_get_assignto_list($streamid) 
+	  
+	function jx_get_streamdetails($streamid) 
 	{
             $user=$this->erpm->auth();
             $output='';
@@ -330,14 +296,11 @@ class Stream extends Analytics
         }
         else {
             $output.="<option value='".$assigneduser['user_id']."'>".$assigneduser['name']."</option>";
-               }
             }
+        }
         echo $output;
     }
-
-    /**
-     * Store the stream post
-     */
+	
     function jx_stream_post() 
     {
         $user=$this->erpm->auth();
@@ -752,6 +715,226 @@ class Stream extends Analytics
 		}
 	
 		redirect('admin/pnh_franchise_activate_imei','refresh');
+	}
+
+	 function __auto_pnh_acc_stat_c()
+	{
+		$user=$this->auth(FINANCE_ROLE);
+		
+		$arr = array();		
+		$arr[]=array(59,18280);
+		$arr[]=array(108,18280);
+		$arr[]=array(151,18280);
+		$arr[]=array(254,10280);
+		$arr[]=array(156,18280);
+		$arr[]=array(116,18280);
+		$arr[]=array(206,18280);
+		$arr[]=array(185,18280);
+		$arr[]=array(92,18280);
+		$arr[]=array(43,18280);
+		$arr[]=array(188,18280);
+		$arr[]=array(213,18280);
+		$arr[]=array(295,18280);
+		$arr[]=array(218,18280);
+		$arr[]=array(296,18280);
+		$arr[]=array(83,18280);
+		$arr[]=array(68,18280);
+		$arr[]=array(224,18280);
+		$arr[]=array(305,10280);
+		$arr[]=array(174,18280);
+		$arr[]=array(290,17950);
+		$arr[]=array(62,18280);
+		$arr[]=array(168,18280);
+		$arr[]=array(67,18280);
+		$arr[]=array(287,18280);
+		$arr[]=array(253,18280);
+		$arr[]=array(234,10280);
+		$arr[]=array(199,10280);
+		$arr[]=array(165,18280);
+		$arr[]=array(263,18280);
+		$arr[]=array(248,18280);
+		$arr[]=array(214,18280);
+		$arr[]=array(255,18280);
+		$arr[]=array(195,10280);
+		$arr[]=array(235,18280);
+		$arr[]=array(282,18280);
+		$arr[]=array(101,18280);
+		$arr[]=array(245,18280);
+		$arr[]=array(164,18280);
+		$arr[]=array(180,18280);
+		$arr[]=array(9,10280);
+		$arr[]=array(45,18280);
+		$arr[]=array(179,18280);
+		$arr[]=array(178,18280);
+		$arr[]=array(294,18280);
+		$arr[]=array(100,18280);
+		$arr[]=array(210,10280);
+		$arr[]=array(205,18280);
+		$arr[]=array(319,10280);
+		$arr[]=array(227,18280);
+		$arr[]=array(293,18280);
+		$arr[]=array(103,8780);
+		$arr[]=array(240,10280);
+		$arr[]=array(187,18280);
+		$arr[]=array(57,18280);
+		$arr[]=array(238,10280);
+		$arr[]=array(197,18280);
+		$arr[]=array(311,10610);
+		$arr[]=array(125,10280);
+		$arr[]=array(182,18280);
+		$arr[]=array(85,18280);
+		$arr[]=array(247,18280);
+		$arr[]=array(257,18280);
+		$arr[]=array(37,18280);
+		$arr[]=array(26,17950);
+		$arr[]=array(28,18280);
+		$arr[]=array(279,18280);
+		$arr[]=array(231,18280);
+		$arr[]=array(261,18280);
+		$arr[]=array(226,18280);
+		$arr[]=array(320,10280);
+		$arr[]=array(291,18280);
+		$arr[]=array(130,18280);
+		$arr[]=array(340,18280);
+		$arr[]=array(131,10280);
+		$arr[]=array(139,17950);
+		$arr[]=array(239,10280);
+		$arr[]=array(121,18280);
+		$arr[]=array(109,18280);
+		$arr[]=array(111,18280);
+		$arr[]=array(36,18280);
+		$arr[]=array(208,18280);
+		$arr[]=array(270,18280);
+		$arr[]=array(18,18280);
+		$arr[]=array(81,18280);
+		$arr[]=array(273,18280);
+		$arr[]=array(34,18280);
+		$arr[]=array(150,18280);
+		$arr[]=array(143,18280);
+		$arr[]=array(251,18280);
+		$arr[]=array(190,18280);
+		$arr[]=array(220,10280);
+		$arr[]=array(212,18280);
+		$arr[]=array(241,18280);
+		$arr[]=array(6,18280);
+		$arr[]=array(146,18280);
+		$arr[]=array(283,18280);
+		$arr[]=array(211,18280);
+		$arr[]=array(275,18280);
+		$arr[]=array(33,18280);
+		$arr[]=array(145,18280);
+		$arr[]=array(166,18280);
+		$arr[]=array(260,18280);
+		$arr[]=array(95,18280);
+		$arr[]=array(30,18280);
+		$arr[]=array(242,10280);
+		$arr[]=array(297,18280);
+		$arr[]=array(243,18280);
+		$arr[]=array(56,18280);
+		$arr[]=array(135,18280);
+		$arr[]=array(223,18280);
+		$arr[]=array(222,18280);
+		$arr[]=array(281,18280);
+		$arr[]=array(170,18280);
+		$arr[]=array(313,8000);
+		$arr[]=array(304,10280);
+		$arr[]=array(152,18280);
+		$arr[]=array(25,9950);
+		$arr[]=array(186,18280);
+		$arr[]=array(303,9950);
+		$arr[]=array(183,10280);
+		$arr[]=array(298,18280);
+		$arr[]=array(276,18280);
+		$arr[]=array(286,18280);
+		$arr[]=array(154,18280);
+		$arr[]=array(274,18280);
+		$arr[]=array(278,18280);
+		$arr[]=array(202,18280);
+		$arr[]=array(246,18280);
+		$arr[]=array(5,18280);
+		$arr[]=array(47,18280);
+		$arr[]=array(47,18280);
+		$arr[]=array(244,18280);
+		$arr[]=array(82,18280);
+		$arr[]=array(221,18280);
+		$arr[]=array(159,18280);
+		$arr[]=array(160,18280);
+		$arr[]=array(160,18280);
+		$arr[]=array(69,18280);
+		$arr[]=array(44,18280);
+		$arr[]=array(204,18280);
+		$arr[]=array(169,18280);
+		$arr[]=array(136,18280);
+		$arr[]=array(184,18280);
+		$arr[]=array(265,18280);
+		$arr[]=array(233,18280);
+		$arr[]=array(20,18280);
+		$arr[]=array(71,18280);
+		$arr[]=array(289,18280);
+		$arr[]=array(80,18280);
+		$arr[]=array(203,18280);
+		$arr[]=array(306,10280);
+		$arr[]=array(79,18280);
+		$arr[]=array(194,18280);
+		$arr[]=array(201,10280);
+		$arr[]=array(258,10280);
+		$arr[]=array(256,18280);
+		$arr[]=array(118,18280);
+		$arr[]=array(192,38000);
+		$arr[]=array(269,10280);
+		$arr[]=array(10,18280);
+		$arr[]=array(31,18280);
+		$arr[]=array(19,18280);
+		$arr[]=array(129,18280);
+		$arr[]=array(331,10280);
+		$arr[]=array(16,18280);
+		$arr[]=array(191,18280);
+		$arr[]=array(284,18280);
+		$arr[]=array(107,18280);
+		$arr[]=array(277,18280);
+		$arr[]=array(117,18280);
+		$arr[]=array(35,18280);
+		$arr[]=array(209,18280);
+		$arr[]=array(264,10280);
+		$arr[]=array(54,18280);
+		$arr[]=array(259,18280);
+		$arr[]=array(119,18280);
+		$arr[]=array(141,18280);
+		$arr[]=array(280,18280);
+		$arr[]=array(215,18280);
+		$arr[]=array(63,18280);
+		$arr[]=array(330,10280);
+
+		
+		
+		$fr_list_det = $arr;
+		 
+		for($f=0;$f<count($fr_list_det);$f++)
+		{
+			$fr_det = $fr_list_det[$f];
+			$fid = $fr_det[0];
+			
+			$amount = $fr_det[1];
+			$type = 0;
+			$desc = 'Non recoverable goods sent to franchisee(storeking spikes, monitor & optical mouse)';
+			$sms = 0;
+			$receipt_id = 0;
+			
+			if($this->db->query("select count(*) as t from pnh_franchise_account_summary where franchise_id = ? and remarks = ? ",array($fid,$desc))->row()->t)
+				continue ;
+			
+			$mob=$this->db->query("select login_mobile1 as m from pnh_m_franchise_info where franchise_id=?",$fid)->row()->m;
+			
+			$acc_stat_id = $this->erpm->pnh_fran_account_stat($fid,$type,$amount,$desc,"correction",$fid);
+			$trans_type = 5;
+			if($receipt_id)
+				$trans_type = 3;
+			
+			$arr = array($fid,$receipt_id,$trans_type,$acc_stat_id,$type?$amount:0,!$type?$amount:0,$desc,1,date('Y-m-d H:i:s'),$user['userid']);
+			$this->db->query("insert into pnh_franchise_account_summary (franchise_id,receipt_id,action_type,acc_correc_id,debit_amt,credit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?,?,?)",$arr);
+			echo anchor_popup('admin/pnh_franchise/'.$fid,$fid).'<br>';
+		}
+		
 	}
 	
 	/**
@@ -1186,4 +1369,5 @@ class Stream extends Analytics
 		}								
 										
 	}
+    
 }

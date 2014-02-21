@@ -156,13 +156,13 @@
     
     function save_assign_user(stream_id,userid) {
         var stream_data="stream_id="+stream_id+"&userid="+userid;
-        $.post(site_url+"/admin/jx_save_assign_user",stream_data,function(rdata) {//print(rdata);
+        $.post(site_url+"admin/jx_save_assign_user",stream_data,function(rdata) {//print(rdata);
             $("#users_list_"+userid+" .waiting").html('');
         });
     }
     function remove_assign_user(stream_id,userid) {
         var stream_data="stream_id="+stream_id+"&userid="+userid;
-        $.post(site_url+"/admin/jx_remove_assign_user",stream_data,function(rdata) { //print(rdata);
+        $.post(site_url+"admin/jx_remove_assign_user",stream_data,function(rdata) { //print(rdata);
             $("#users_list_"+userid+" .waiting").html('');
         });
     }

@@ -2,6 +2,7 @@
 	.show_totalamount{max-width: 100% !important}
 </style>
 <?php
+	
 //          join pnh_m_territory_info f on f.id = d.territory_id
 //          join pnh_m_franchise_info d on d.franchise_id = c.franchise_id
 //          join pnh_towns e on e.id = d.town_id 

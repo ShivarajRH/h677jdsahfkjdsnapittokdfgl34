@@ -102,24 +102,22 @@
 <table class="datagrid" style="width: 100%">
 <thead>
 <tr>
-<th>Reference</th>
-<th>Order Date</th>
-<th>Supplier</th>
-<th>Expected Date</th>
-<th>PO Value</th>
+<th>ID</th>
+<th>Created On</th>
+<th>Vendor</th>
+<th>Value</th>
 <th>Purchase Status</th>
 <th>Stock Status</th>
 <th></th>
-
+<th>Remarks</th>
 </tr>
 </thead>
 <tbody>
 <?php foreach($pos as $p){?>
-<tr class="<?php echo $p['po_status']==3?'warn':''?>" >
+<tr>
 <td>PO<?=$p['po_id']?></td>
 <td><?=date("d/m/y g:ia ",strtotime($p['created_on']))?></td>
-<td><a target="_blank" href="<?php echo site_url("admin/vendor/{$p['vendor_id']}")?>"><?=$p['vendor_name']?></a><br><?=$p['city']?></td>
-<td><?php echo format_date($p['date_of_delivery'])?></td>
+<td><a href=""><?=$p['vendor_name']?></a><br><?=$p['city']?></td>
 <td>Rs <?=number_format($p['total_value'])?></td>
 <td><?php switch($p['po_status']){
 	case 1:
@@ -139,10 +137,9 @@
 <a class="link" href="<?=site_url("admin/viewpo/{$p['po_id']}")?>">view</a>
 <?php if($p['po_status']!=2 && $p['po_status']!=3){?>
 &nbsp;&nbsp;&nbsp;<a href="<?=site_url("admin/apply_grn/{$p['po_id']}")?>">Stock Intake</a>
-<?php }?>&nbsp;<a onclick="print_po(<?=$p['po_id']?>)" >Print po</a>
-
+<?php }?>
 </td>
-
+<td><?=$p['remarks']?></td>
 </tr>
 <?php } if(empty($pos)){?><tr><td colspan="100%">no POs to show</td></tr><?php }?>
 <?php if($pagination){ ?>
@@ -181,18 +178,6 @@ function rl_pgbyfilters()
 $(function(){
 	$("#ds_range,#de_range").datepicker();
 	 $('.datagrid').jq_fix_header_onscroll();	
-	
 }); 
-
-function print_po(poid)
-{
-	var print_url = site_url+'/admin/print_po/'+poid;
-		window.open(print_url);
-}
-$('.leftcont').hide();
 </script>
-<style>
-.warn td{background: #FDD2D2 !important;}
-
-</style>
 <?php
