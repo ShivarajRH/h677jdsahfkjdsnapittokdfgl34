@@ -104,7 +104,7 @@ $item=$itemdetails;
 										<tr><td>Mobile :</td><td> <input type="text" name="mobile" class="alrt_m_input" style="width:auto;" value="Enter mobile"></td></tr>
 										<tr><td>Email :</td><td><input type="text" name="email" class="alrt_e_input" style="width:auto;" value="Enter email"></td></tr>
 										<tr><td></td><td><input type="image" src="<?=base_url()?>images/submit.png"></td></tr>
-										</table>
+										</table
 									</form>
 								</div>
 							</div>

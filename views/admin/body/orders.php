@@ -49,7 +49,7 @@ if($this->uri->segment(3)=="1")
 	.pagination a{background: #FFF;display: inline-block;color: #000;padding:3px;}
 </style>
 <div class="container">
-<div>
+<div style="float: right">
 <div style="float: right">
 	
 	<?php if(!$partial_list){?>
@@ -79,23 +79,25 @@ if($this->uri->segment(3)=="1")
 	
 </div>
 
-<?php /*?>
+<?php /*
 <div class="dash_bar">
 <span><?=$this->db->query("select count(distinct(transid)) as l from king_orders where status=3")->row()->l?></span>
 Shipped Orders
 </div>
-*/ ?>
+*
 
 <div class="dash_bar">
 <a href="<?=site_url("admin/orders")?>"></a>
 <span><?=$this->db->query("select count(distinct(id)) as l from king_orders where time>?",mktime(0,0,0,date("n"),1))->row()->l?></span>
 Orders this month
 </div>
-
+*/
+?>
 <?php 
-	
+		
 	if($this->erpm->auth(FINANCE_ROLE,true))
 	{
+		/*
 ?>
 <div class="dash_bar">
 <span><?=$this->db->query("select count(distinct(id)) as l from king_orders where time between ? and ?",array(mktime(0,0,0,date("n")-1,1),mktime(0,0,0,date("n"),date("t"))))->row()->l?></span>
@@ -112,7 +114,7 @@ Orders prev month
  prev month
 </div>
 
-<?php } ?>
+<?php */} ?>
 
 
 <script>
@@ -126,6 +128,7 @@ Orders prev month
 	});
 </script>
 
+<?php /*
 <div class="dash_bar_red" >
 <a href="<?=site_url("admin/orders/1")?>"></a>
 <span style="font-size: 138%"><?php $pending=$this->db->query("select count(distinct(a.id)) as l from king_orders a join king_transactions b on a.transid = b.transid where a.status=0")->row()->l;?><?=$pending?></span>
@@ -142,6 +145,7 @@ Partial Shipment Orders
 <a href="<?=site_url("admin/disabled_but_possible_shipment")?>"></a>
 Disabled but possible
 </div>
+<?php */?>
 
 <div class="clear"></div>
  
@@ -152,7 +156,8 @@ Disabled but possible
 
 
 
-<div style="overflow: hidden;clear: both;">
+<div style="overflow: hidden;clear: both;clear: left;
+margin-top: 12px;">
 	<h2 ><?=!isset($pagetitle)?"Recent 50 ":""?>Orders <?=isset($pagetitle)?$pagetitle:""?></h2>
 </div>
 

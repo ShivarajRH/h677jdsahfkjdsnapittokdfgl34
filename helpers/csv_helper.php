@@ -9,6 +9,7 @@ if (! defined ( 'BASEPATH' ))
  * CSV Helpers
  * Inspiration from PHP Cookbook by David Sklar and Adam Trachtenberg
  * 
+ * @author		Jérôme Jaglale
  * @link		http://maestric.com/en/doc/php/codeigniter_csv
  */
 
