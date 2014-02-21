@@ -2808,14 +2808,27 @@ class Erp extends Stream
 		$this->load->view("admin",$data);
 	}
 	
-	function warehouse_summary($type=0,$id=0)
+	function warehouse_summary($type=0,$brandid=0,$catid=0,$menuid=0)
 	{
 		$user=$this->auth(PRODUCT_MANAGER_ROLE|DEAL_MANAGER_ROLE);
+		
+		if($catid==0)
+			$cond='p.brand_id='.$brandid.'';
+		else if($brandid=='all')
+			$cond='p.product_cat_id='.$catid.'';
+		else
+			$cond='p.brand_id='.$brandid.' and p.product_cat_id='.$catid.'';
+		
 		if($type==1)
 		{
-			$data['products']=$this->db->query("select p.product_id,p.product_name,sum(s.available_qty) as stock,sum(s.available_qty*s.mrp) as stock_value,p.mrp from m_product_info p join t_stock_info s on s.product_id=p.product_id where p.brand_id=$id group by p.product_id having sum(s.available_qty)!=0 ")->result_array();
-			$data['pagetitle']="Products in Stock for brand: ".$this->db->query("select name from king_brands where id=?",$id)->row()->name;
+			$data['products']=$this->db->query("select p.product_id,p.product_name,sum(s.available_qty) as stock,sum(s.available_qty*s.mrp) as stock_value,p.mrp from m_product_info p join t_stock_info s on s.product_id=p.product_id where $cond group by p.product_id having sum(s.available_qty)!=0 ")->result_array();
+			$data['pagetitle']="Stock Product List for Brand: ".(($brandid!='all')?$this->db->query("select name from king_brands where id=?",$brandid)->row()->name:'All').' Category: '.(($catid != 'all')?$this->db->query("select name from king_Categories where id=?",$catid)->row()->name:'All');
 		}
+		
+		$data['type'] = $type;
+		$data['brandid'] = $brandid;
+		$data['catid'] = $catid;
+		$data['menuid'] = $menuid;
 		$data['page']="warehouse_summary";
 		$this->load->view("admin",$data);
 	}
@@ -25043,4 +25056,30 @@ die; */
 		}	
 		echo json_encode($output);	
 	}
+	/**
+	 * function to print warehouse summary
+	 * @param unknown_type $brandid
+	 */
+	function print_brands_summary($brandid=0,$catid=0,$menuid=0)
+	{
+		$user=$this->auth(PURCHASE_ORDER_ROLE);
+		if($catid==0)
+			$cond='p.brand_id='.$brandid.'';
+		else if($brandid=='all')
+			$cond='p.product_cat_id='.$catid.'';
+		else
+			$cond='p.brand_id='.$brandid.' and p.product_cat_id='.$catid.'';
+		
+		//brand name in po
+		$po_brand_name=$this->db->query("SELECT name as brand_name from king_brands where id=?",$brandid)->row()->brand_name;
+		
+		$data['products']=$this->db->query("select p.product_id,p.product_name,sum(s.available_qty) as stock,sum(s.available_qty*s.mrp) as stock_value,p.mrp from m_product_info p join t_stock_info s on s.product_id=p.product_id where $cond group by p.product_id having sum(s.available_qty)!=0 ")->result_array();
+		$data['page']='print_brands_summary';
+		$data['po_brand_name']=$po_brand_name;
+		$data['brandid']=$brandid;
+		$data['catid']=$catid;
+		$this->load->view('admin/body/print_brands_summary',$data);
+		
+	}
+
 }
