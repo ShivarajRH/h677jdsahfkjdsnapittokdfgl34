@@ -4635,7 +4635,16 @@ group by g.product_id ");
 	{
 		$user=$this->auth();
 		$data['page']="dashboard";
+		$data['load_dashboard']=0;
 		$this->load->view("admin",$data);
+	}
+	
+	function jx_load_dashboard()
+	{
+		$user=$this->auth();
+		$data['page']="dashboard";
+		$data['load_dashboard']=1;
+		$this->load->view("admin/body/dashboard",$data);
 	}
 	
 	function export_data()
