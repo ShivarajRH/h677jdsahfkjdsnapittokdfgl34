@@ -2674,26 +2674,14 @@ courier disable ends
                             if($inv_nos_res->num_rows())
                                     foreach($inv_nos_res->result_array() as $inv_det)
                                             $this->db->query("update king_invoice set ref_dispatch_id = ?,split_inv_grpno=? where invoice_no = ? ",array($new_dispatch_id,$new_dispatch_id,$inv_det['invoice_no']));
-
-                            if($this->db->query("select count(1) as l from shipment_batch_process_invoice_link where batch_id=?",$bid)->row()->l<=$this->db->query("select count(1) as l from shipment_batch_process_invoice_link where invoice_no!=0 and batch_id=$bid")->row()->l)
-                                    $this->db->query("update shipment_batch_process set status=2 where batch_id=? limit 1",$bid);
-                            else
-                                    $this->db->query("update shipment_batch_process set status=1 where batch_id=? limit 1",$bid);
-
                             
                             $this->session->set_flashdata("erp_pop_info","Invoice status Updated");
 
-                    }else
-                    {
-
-                            if($this->db->query("select count(1) as l from shipment_batch_process_invoice_link where batch_id=?",$bid)->row()->l<=$this->db->query("select count(1) as l from shipment_batch_process_invoice_link where packed=1 and batch_id=$bid")->row()->l+$this->db->query("select count(1) as l from shipment_batch_process_invoice_link bi join proforma_invoices i on i.p_invoice_no=bi.p_invoice_no where bi.batch_id=$bid and bi.packed=0 and i.invoice_status=0")->row()->l)
-                                    $this->db->query("update shipment_batch_process set status=2 where batch_id=? limit 1",$bid);
-                            else
-                                    $this->db->query("update shipment_batch_process set status=1 where batch_id=? limit 1",$bid);
-
-                            $this->session->set_flashdata("erp_pop_info","Packed status updated");
-                    }
-                }
+        }else
+        {
+			$this->session->set_flashdata("erp_pop_info","Packed status updated");
+		}
+	}
                  
 		
 		if($new_dispatch_id)
@@ -12365,7 +12353,7 @@ order by action_date";
 		}
 	}
 	
-	function cat_alpha_list($ch,$fid)
+	function cat_alpha_list($ch,$fid=0)
 	{
 		$has_fid=0; //STORE KING OFFLINE ORDER MODIFICATION
 		if($fid!=''||$fid!=0) //STORE KING OFFLINE ORDER MODIFICATION

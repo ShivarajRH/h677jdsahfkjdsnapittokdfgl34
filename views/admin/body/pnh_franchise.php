@@ -526,6 +526,7 @@ $(function(){
 					
 				$ttl_purchased = 0;	
 				$ttl_inactiv_msch = 0;
+				$ttl_activated_msch = 0;
 				foreach($ttl_imei_status_res->result_array() as $ttl_imei_det)
 				{
 					if($ttl_imei_det['is_imei_activated'])

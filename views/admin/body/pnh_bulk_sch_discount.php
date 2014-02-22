@@ -259,8 +259,8 @@ $('#choose_menu,#bulk_schtype,.select_cat,.select_brand,.disc_type').chosen();
 function sel_fran_btn(ele)
 {
 	var trele=$(ele).parents('tr:first');
-	var catid=$('.select_cat',trele).val()*1;
-	var brandid=$('.select_brand',trele).val()*1;
+	var catid=$('.select_cat',trele).val();
+	var brandid=$('.select_brand',trele).val();
 	var fids=$('.sel_fids',trele).val();
 	
 	if($('.sel_fran_btn',trele).hasClass('franlist_selected'))

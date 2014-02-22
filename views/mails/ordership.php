@@ -35,7 +35,7 @@ Here’s what’s new at SnapItToday.com!<br><br><br>
 </tr>
 <tr>
 <td valign="center">
-Did you know you get <?=REORDER_DISCOUNT?>% off each time you re-order a previous purchase?<br><br>
+Did you know you get <?=REORDER_DISCOUNT?>% off on MRP each time you re-order with in <?=REORDER_VALID_DAYS?>Days of previous purchase ?<br><br>
 Log into your <a href="<?=site_url("profile")?>">account</a> and click on re-order. Its that simple.
 </td>
 <td valign="center">
@@ -53,7 +53,7 @@ Refer your friends to Snapittoday.com and you get a coupon code for your next sh
 Warm Regards,
 Team Snapittoday.com<br>
 <br>
-<i>(For any assistance please contact us at <?=CS_EMAIL?> or call us at <?=CS_TELEPHONE?> Monday - Saturdays, 10am - 7pm IST)</i> 
+<i>(For any assistance please contact us at <?=CS_EMAIL?>)</i> 
  
 </div>
 </div>

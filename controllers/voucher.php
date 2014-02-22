@@ -1836,7 +1836,6 @@ order by action_date ";
 		
 		
 	}
-
 	function product_statsbymenu($menuid = 100)
 	{
 		$sql = "select a.brand_id,f.name as brand,a.product_id,a.product_name,0 as stock,0 as s15d,0 as s30d,0 as s60d  
