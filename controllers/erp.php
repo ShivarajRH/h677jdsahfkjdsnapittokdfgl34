@@ -8575,185 +8575,269 @@ group by g.product_id ");
 	
 	function pnh_bulk_sch_discount()
 	{
+		error_reporting(E_ALL);
 		$user=$this->auth(SPECIAL_MARGIN_UPDATE);
+	
 		if($_POST)
 		{
-			foreach(array("discount","start","end","reason","menu","brand","cat","fids","bulk_schtype","target_value","credit_prc","credit_value","mscheme_type","mscheme_val","msch_applyfrm","expire_prevsch","disc_ondeal","dealids") as $i)
+			foreach(array("disc_val","start","end","reason","menu","brand","category","fran_ids","disc_type","mscheme_type","scheme_val","msch_applyfrm","bulk_schtype","fran_ids","deal_ids") as $i)
 				$$i=$this->input->post($i);
 			
-			if(empty($fids))
+			if(empty($fran_ids))
 				show_error("No Franchises selected");
-			 
+			
 			$start=strtotime($start);
 			$end=strtotime($end." 23:59:59");
-			
-			
 			$msch_applyfrm=strtotime($msch_applyfrm." 00:00:00");
-			
-			foreach($fids as $fid)
-			{
-				if($bulk_schtype==1)//if scheme discount
-				{
-					
-					
-					if($brand==0 &&  !$disc_ondeal)
-					{
-						$fran_sch=$this->db->query('select * from pnh_sch_discount_brands where franchise_id=? and menuid like ?  and catid like ? and is_sch_enabled=1 and dealid=0',array($fid,'%'.$menu.'%','%'.$cat.'%'))->result_array();
-						foreach($fran_sch as $fransch)
-						{
-							$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0 where franchise_id=? and menuid=? and catid=? and dealid=0",array($fid,$menu,$cat));
-							$this->db->query("update pnh_franchise_menu_link set sch_discount=?,sch_discount_start=?,sch_discount_end=?,is_sch_enabled=0 where fid=? and menuid=?",array($discount,$start,$end,$fid,$menu));
-						}
-					}
-					else if(!$disc_ondeal)
-					 
-					 {
-						$fran_sch=$this->db->query('select * from pnh_sch_discount_brands where franchise_id=? and menuid like ? and brandid like ? and catid like ? and is_sch_enabled=1 and dealid=0',array($fid,'%'.$menu.'%','%'.$brand.'%','%'.$cat.'%'))->result_array();
-						
-							foreach($fran_sch as $fransch)
-							{
-								if($fransch['valid_from']<time() && $fransch['valid_to']>time() && $fransch['is_sch_enabled']==1)
-								{
-									$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0 where franchise_id=? and menuid=? and brandid=? and catid=? and dealid=0",array($fid,$menu,$brand,$cat));
-									$this->db->query("update pnh_franchise_menu_link set sch_discount=?,sch_discount_start=?,sch_discount_end=?,is_sch_enabled=0 where fid=? and menuid=?",array($discount,$start,$end,$fid,$menu));
-								}
-									
-							}
-						
-					 }
-					 
-					 if($disc_ondeal)
-					 {
-					 	foreach($dealids as $dealid)
-					 	{
-					 		$fran_sch=$this->db->query('select * from pnh_sch_discount_brands where franchise_id=? and menuid like ? and brandid like ? and catid like ? and is_sch_enabled=1 and dealid=?',array($fid,'%'.$menu.'%','%'.$brand.'%','%'.$cat.'%',$dealid))->row_array();
-					 		if($fran_sch['valid_from']<time() && $fran_sch['valid_to']>time() && $fran_sch['is_sch_enabled']==1)
-								{
-									$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0 where franchise_id=? and menuid=? and brandid=? and catid=? and dealid=?",array($fid,$menu,$brand,$cat,$dealid));
-									//$this->db->query("update pnh_sch_discount_track set is_sch_enabled=0 where franchise_id=? and sch_menu=? and brandid=? and catid=? and dealid=?",array($fid,$menu,$brand,$cat,$dealid));
-								}
-					 		$inp=array("franchise_id"=>$fid,"sch_menu"=>$menu,"catid"=>$cat,"brandid"=>$brand,"sch_discount"=>$discount,"sch_discount_start"=>$start,"sch_discount_end"=>$end,'reason'=>$reason,"created_by"=>$user['userid'],"created_on"=>time(),"sch_type"=>1,"dealid"=>$dealid);
-					 		$this->db->insert("pnh_sch_discount_track",$inp);
-					 		$inp=array("franchise_id"=>$fid,"menuid"=>$menu,"discount"=>$discount,"valid_from"=>$start,"valid_to"=>$end,"brandid"=>$brand,"created_on"=>time(),"created_by"=>$user['userid'],"catid"=>$cat,"is_sch_enabled"=>1,"sch_type"=>1,"dealid"=>$dealid);
-					 		$this->db->insert("pnh_sch_discount_brands",$inp);
-					 	}
-					 }else 
-					 {
-						$inp=array("franchise_id"=>$fid,"sch_menu"=>$menu,"catid"=>$cat,"brandid"=>$brand,"sch_discount"=>$discount,"sch_discount_start"=>$start,"sch_discount_end"=>$end,'reason'=>$reason,"created_by"=>$user['userid'],"created_on"=>time(),"sch_type"=>1);
-						$this->db->insert("pnh_sch_discount_track",$inp);
-						$inp=array("franchise_id"=>$fid,"menuid"=>$menu,"discount"=>$discount,"valid_from"=>$start,"valid_to"=>$end,"brandid"=>$brand,"created_on"=>time(),"created_by"=>$user['userid'],"catid"=>$cat,"is_sch_enabled"=>1,"sch_type"=>1);
-						$this->db->insert("pnh_sch_discount_brands",$inp);
-					 }
-				
-				}
-				
-				
-				if($bulk_schtype==2)
-				{
-					if($brand==0)
-					{
-						$fran_sch=$this->db->query('select * from pnh_super_scheme where franchise_id=? and menuid like ?  and catid like ? and is_sch_enabled=1 ',array($fid,'%'.$menu.'%','%'.$cat.'%'))->result_array();
-						foreach($fran_sch as $fransch)
-						{
-							$this->db->query("update pnh_super_scheme set is_active=0,modified_by=?,modified_on=? where franchise_id=? and menu_id=?  and cat_id=? ",array($user['userid'],time(),$fid,$menu,$cat));
-						}
-					}
-					else
-					{
-						$super_scheme=$this->db->query("select * from pnh_super_scheme where  franchise_id =? and menu_id like ? and brand_id like ? and cat_id like ? and is_active=1 ",array($fid,'%'.$menu.'%','%'.$brand.'%','%'.$cat.'%'))->result_array();
-						foreach($super_scheme as $supersch)
-						{
-							if($supersch['valid_from']<=time()  && $supersch['is_active']==1)
-							{
-								$this->db->query("update pnh_super_scheme set is_active=0,modified_by=?,modified_on=? where franchise_id=? and menu_id=? and brand_id=? and cat_id=? ",array($user['userid'],time(),$fid,$menu,$brand,$cat));
-							}
-						}
-						
-						$d=date('Y-m-d',strtotime('-1 second',strtotime('+1 month',strtotime(date('m').'/01/'.date('Y')))));
-						$super_schstart=time();
-						$super_schend= strtotime($d);
-						$inp=array("franchise_id"=>$fid,"menu_id"=>$menu,"cat_id"=>$cat,"brand_id"=>$brand,"target_value"=>$target_value,"credit_prc"=>$credit_prc,"valid_from"=>$super_schstart,"valid_to"=>$super_schend,"created_by"=>$user['userid'],"created_on"=>time(),"is_active"=>1);
-						$this->db->insert("pnh_super_scheme",$inp);
-					}
-				}
-				
-				
-				
-				if($bulk_schtype==3)
-				{
-					
-					if($brand==0)
-					{
-						$mem_fransch=$this->db->query('select * from imei_m_scheme where franchise_id=? and menuid like ?  and categoryid like ? and is_active=1 ',array($fid,'%'.$menu.'%','%'.$cat.'%'))->result_array();
-						foreach($mem_fransch as $mfransch)
-						{
-							$this->db->query("update imei_m_scheme set is_active=0, modified_by=?,modified_on=? where franchise_id=? and menuid=? and categoryid=?",array($user['userid'],time(),$fid,$menu,$cat));
-						}
-					}
-					
-					if(1)
-					{
-						$mem_fransch=$this->db->query('select * from imei_m_scheme where franchise_id=? and menuid like ? and brandid like ? and categoryid like ? and is_active=1 ',array($fid,'%'.$menu.'%','%'.$brand.'%','%'.$cat.'%'))->result_array();
-						foreach($mem_fransch as $mfransch)
-						{
-							if($mfransch['scheme_from']<time() && $mfransch['scheme_to']>time() && $mfransch['is_active']==1)
-							{
-								$this->db->query("update imei_m_scheme set is_active=0, modified_by=?,modified_on=? where franchise_id=? and menuid=? and brandid=? and categoryid=?",array($user['userid'],time(),$fid,$menu,$brand,$cat));
-							}
-						}
-							
-						$inp=array("scheme_type"=>$mscheme_type,"franchise_id"=>$fid,"menuid"=>$menu,"categoryid"=>$cat,"brandid"=>$brand,"credit_value"=>$mscheme_val,"scheme_from"=>$start,"scheme_to"=>$end,"sch_apply_from"=>$msch_applyfrm,"created_by"=>$user['userid'],"created_on"=>time(),"is_active"=>1);
-						$this->db->insert("imei_m_scheme",$inp);
-						
-						$sch_id = $this->db->insert_id();
-						
-						if($msch_applyfrm)
-						{
-							//apply imei scheme from apply from for franchise.
-							$cond = '';
-							if($menu)
-								$cond .= ' and c.menuid = '.$menu;
-							if($cat)
-								$cond .= ' and c.catid = '.$cat;
-							if($brand)
-								$cond .= ' and c.brandid = '.$brand;
-		
-							$orders = $this->db->query("select a.id,(i_orgprice-(i_discount+i_coup_discount)) as amt   
-														from king_orders a
-														join king_dealitems b on a.itemid = b.id 
-														join king_deals c on c.dealid = b.dealid 
-														join king_transactions d on d.transid = a.transid 
-														where d.franchise_id = ? $cond and d.init >= ? 
-															  and imei_scheme_id = 0 and a.status != 3 ",array($fid,$msch_applyfrm));
-															    
-															
-							if($orders->num_rows())
-							{
-								foreach($orders->result_array() as $order)
-								{
-									if($mscheme_type == 1)
-										$imei_sch_amt = ($order['amt']*$mscheme_val/100);
-									else 
-										$imei_sch_amt = $mscheme_val;
-											
-									$this->db->query('update king_orders set imei_scheme_id = ?,imei_reimbursement_value_perunit=? where id = ? ',array($sch_id,$imei_sch_amt,$order['id']));
-								}
-							}
-						}
-						
-						
-						
-					}
 	
+			foreach($category as $c=>$cat)
+			{
+				$fids=$fran_ids[$c];
+				$fid_arr=explode(",",$fids);
+	
+				$dealids=$deal_ids[$c];
+				$dealid_arr=explode(",",$dealids);
+	
+				foreach($fid_arr as $fid)
+				{
+					foreach($dealid_arr as $dealid_det)
+					{
+						$sch_disc = $disc_val[$c]; // 3
+						$sch_disc_type = $disc_type[$c]; // 0
+						$sup_sch_credit_val = $scheme_val[$c];
+						$msch_type = $mscheme_type[$c];
+	
+						if($dealid_det == '')
+						{
+							$dealid = 0;
+						}
+						else
+						{
+							list($dealid,$deal_disc_type,$deal_disc) = explode(':',$dealid_det);
+	
+							if($deal_disc!=0)
+							{
+								$sch_disc = $deal_disc;
+								$sch_disc_type = $deal_disc_type;
+							}
+						}
+						$bid = $brand[$c];
+						$cid = $category[$c];
+	
+						// discount type is scheme discount
+						if($bulk_schtype == 1)
+						{
+	
+							// check if discount is already  available
+							$sql_chk = 'select * from pnh_sch_discount_brands
+							where franchise_id=?
+							and menuid = ?
+							and catid = ?
+							and is_sch_enabled=1
+							';
+	
+							$process_add_sch_status = 0;
+							$fran_sch_list_res=$this->db->query($sql_chk,array($fid,$menu,$cid));
+							if($fran_sch_list_res->num_rows())
+							{
+								foreach($fran_sch_list_res->result_array() as $fran_sch_det)
+								{
+									if($bid == 0)
+									{
+										$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0,modified_on=now(),modified_by=? where franchise_id = ? ",array($user['userid'],$fid));
+										$process_add_sch_status =1;
+									}
+									if($bid != 0)
+									{
+										if($bid == $fran_sch_det['brandid'])
+										{
+											if($dealid == 0)
+											{
+	
+												$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0,modified_on=now(),modified_by=? where franchise_id = ? and catid=? and brandid =?",array($user['userid'],$fid,$cid,$bid));
+												$process_add_sch_status =1;
+											}
+											else if($dealid != 0)
+											{
+												if($dealid == $fran_sch_det['dealid'])
+												{
+													$this->db->query("update pnh_sch_discount_brands set is_sch_enabled=0,modified_on=now(),modified_by=? where franchise_id = ? and catid=? and brandid=? and dealid=?",array($user['userid'],$fid,$cid,$bid,$dealid));
+													$process_add_sch_status =1;
+												}
+											}
+											else
+											{
+												$process_add_sch_status =1;
+											}
+										}
+										else
+										{
+											$process_add_sch_status =1;
+										}
+									}
+								}
+							}else
+							{
+								$process_add_sch_status =1;
+							}
+	
+							if($process_add_sch_status)
+							{
+								$inp=array("franchise_id"=>$fid,"sch_menu"=>$menu,"catid"=>$cid,"brandid"=>$bid,"sch_discount"=>$sch_disc,'dealid'=>$dealid,"sch_discount_start"=>$start,"sch_discount_end"=>$end,'reason'=>$reason,"created_by"=>$user['userid'],"created_on"=>time(),"sch_type"=>$sch_disc_type);
+								$this->db->insert("pnh_sch_discount_track",$inp);
+	
+								$inp=array("franchise_id"=>$fid,"menuid"=>$menu,"discount"=>$sch_disc,"valid_from"=>$start,"valid_to"=>$end,'dealid'=>$dealid,"brandid"=>$bid,"created_on"=>time(),"created_by"=>$user['userid'],"catid"=>$cid,"is_sch_enabled"=>1,"sch_type"=>$sch_disc_type);
+								$this->db->insert("pnh_sch_discount_brands",$inp);
+							}
+						}
+	
+						// discount type is Super Scheme discount
+						if($bulk_schtype == 2)
+						{
+	
+							// check if discount is already  available
+							$sql_chk = 'select *
+							from pnh_super_scheme
+							where franchise_id=?
+							and menu_id =?
+							and cat_id =? and
+							is_active=1
+							';
+	
+							$process_add_sch_status = 0;
+							$fran_sch_list_res=$this->db->query($sql_chk,array($fid,$menu,$cid));
+							if($fran_sch_list_res->num_rows())
+							{
+								foreach($fran_sch_list_res->result_array() as $fran_sch_det)
+								{
+									if($bid == 0)
+									{
+										$this->db->query("update pnh_super_scheme set is_active=0,modified_on=now(),modified_by=? where franchise_id = ? ",array($user['userid'],$fid));
+										$process_add_sch_status =1;
+									}
+									if($bid != 0)
+									{
+										if($bid == $fran_sch_det['brand_id'])
+										{
+											$this->db->query("update pnh_super_scheme set is_active=0,modified_on=now(),modified_by=? where franchise_id = ? and cat_id=? and brand_id =?",array($user['userid'],$fid,$cid,$bid));
+											$process_add_sch_status =1;
+										}
+										else
+										{
+											$process_add_sch_status =1;
+										}
+									}
+								}
+							}
+							else
+							{
+								$process_add_sch_status = 1;
+							}
+	
+							if($process_add_sch_status)
+							{
+								$d=date('Y-m-d',strtotime('-1 second',strtotime('+1 month',strtotime(date('m').'/01/'.date('Y')))));
+								$super_schstart=time();
+								$super_schend= strtotime($d);
+								$inp=array("franchise_id"=>$fid,"menu_id"=>$menu,"cat_id"=>$cid,"brand_id"=>$bid,"target_value"=>$sch_disc,"credit_prc"=>$sup_sch_credit_val,"valid_from"=>$super_schstart,"valid_to"=>$super_schend,"created_by"=>$user['userid'],"created_on"=>time(),"is_active"=>1);
+								$this->db->insert("pnh_super_scheme",$inp);
+							}
+						}
+	
+						// discount type is IMEI Scheme discount
+						if($bulk_schtype == 3)
+						{
+	
+							// check if discount is already  available
+							$sql_chk = 'select *
+							from imei_m_scheme
+							where franchise_id=?
+							and menuid =?
+							and categoryid =? and
+							is_active=1
+							';
+	
+							$process_add_sch_status = 0;
+							$fran_sch_list_res=$this->db->query($sql_chk,array($fid,$menu,$cid));
+							if($fran_sch_list_res->num_rows())
+							{
+	
+								foreach($fran_sch_list_res->result_array() as $fran_sch_det)
+								{
+									if($bid == 0)
+									{
+										$this->db->query("update imei_m_scheme set is_active=0,modified_on=now(),modified_by=? where franchise_id = ? ",array($user['userid'],$fid));
+										$process_add_sch_status =1;
+									}
+									if($bid != 0)
+									{
+										if($bid == $fran_sch_det['brandid'])
+										{
+											$this->db->query("update imei_m_scheme set is_active=0,modified_on=now(),modified_by=? where franchise_id = ? and categoryid=? and brandid =?",array($user['userid'],$fid,$cid,$bid));
+											$process_add_sch_status =1;
+										}
+										else
+										{
+											$process_add_sch_status =1;
+										}
+									}
+								}
+							}
+							else
+							{
+	
+								$process_add_sch_status =1;
+							}
+	
+							if($process_add_sch_status)
+							{
+								$inp=array("scheme_type"=>$sch_disc_type,"franchise_id"=>$fid,"menuid"=>$menu,"categoryid"=>$cid,"brandid"=>$bid,"credit_value"=>$sch_disc,"scheme_from"=>$start,"scheme_to"=>$end,"sch_apply_from"=>$msch_applyfrm,"created_by"=>$user['userid'],"created_on"=>time(),"is_active"=>1);
+								$this->db->insert("imei_m_scheme",$inp);
+							}
+	
+							$sch_id = $this->db->insert_id();
+	
+							if($msch_applyfrm)
+							{
+								//apply imei scheme from apply from for franchise.
+								$cond = '';
+								if($menu)
+									$cond .= ' and c.menuid = '.$menu;
+								else if($cid)
+									$cond .= ' and c.catid = '.$cid;
+								else if($bid)
+									$cond .= ' and c.brandid = '.$bid;
+	
+								$orders = $this->db->query("select a.id,(i_orgprice-(i_discount+i_coup_discount)) as amt
+										from king_orders a
+										join king_dealitems b on a.itemid = b.id
+										join king_deals c on c.dealid = b.dealid
+										join king_transactions d on d.transid = a.transid
+										where d.franchise_id = ? $cond and d.init >= ?
+										and imei_scheme_id = 0 and a.status != 3 ",array($fid,$msch_applyfrm));
+	
+										$credit_val=$sup_sch_credit_val;
+										if($orders->num_rows())
+										{
+											foreach($orders->result_array() as $order)
+											{
+												if($msch_type == 1)
+													$imei_sch_amt = ($order['amt']*$credit_val/100);
+												else
+													$imei_sch_amt = $credit_val;
+	
+												$this->db->query('update king_orders set imei_scheme_id = ?,imei_reimbursement_value_perunit=? where id = ? ',array($sch_id,$imei_sch_amt,$order['id']));
+											}
+										}
+							}
+						}
+					}
 				}
-					
 			}
-
-			
-				
 			$this->erpm->flash_msg("Scheme added");
 			redirect("admin/pnh_bulk_sch_discount");
 		}
+		
 		$data['page']="pnh_bulk_sch_discount";
 		$this->load->view("admin",$data);
 	}
@@ -24710,9 +24794,9 @@ die; */
 		$is_sorceble_deal=array();
 		$is_sorceble_deal['sourceable']=array();
 		$is_sorceble_deal['nonsourceable']=array();
-	
+		
 		$output=array();
-		$deal_list=$this->db->query("SELECT DISTINCT i.id,i.dealid,i.name,f.is_sourceable FROM king_dealitems i
+		$deal_list=$this->db->query("SELECT DISTINCT i.id,i.dealid,i.name,i.price,f.is_sourceable FROM king_dealitems i
 								 		JOIN king_deals d ON d.dealid=i.dealid
 										JOIN king_brands b ON b.id=d.brandid
 										JOIN king_categories c ON c.id=d.catid
