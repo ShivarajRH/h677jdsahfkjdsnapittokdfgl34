@@ -189,8 +189,8 @@
     
     function load_streamdata(streamid) { 
         set_field_date(streamid);
-        //$(".total_unreply_block").css({"display":"block"});
-        $.post(site_url+"/admin/jx_get_assignto_list/"+streamid,{},function(rdata) {
+        $(".total_unreply_block").css({"display":"block"});
+        $.post(site_url+"/admin/jx_get_streamdetails/"+streamid,{},function(rdata) {
         	rdata  = '<option value="0">All</option>'+rdata;
             $("#assigned_to_"+streamid).html(rdata);
             $("#assigned_to_"+streamid).chosen();

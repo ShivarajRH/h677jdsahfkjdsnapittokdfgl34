@@ -5464,7 +5464,8 @@ group by g.product_id order by product_name");
 			
 			if($fran['current_balance']<$d_total && !$is_prepaid_franchise)
 			{
-				$e=1;$un="Insufficient balance! Balance in your account Rs {$fran['current_balance']}\nTotal order amount : Rs $d_total";
+				$required_credit=$d_total-$fran['current_balance'];
+				$e=1;$un="Balance in your account Rs {$fran['current_balance']}\n\nTotal order amount : Rs $d_total\n\n Required Credit : Rs.$required_credit";
 			}
 			$pc_data['deals']=$this->erpm->pnh_getdealpricechanges($fran['app_version'],$iids);
 			$pc_data['total']=$total;
@@ -6170,8 +6171,14 @@ group by g.product_id order by product_name");
 			$fid=$_POST['fid'];
 			$pid=$_POST['pid'];
 		}
+		$cartdeal=$this->input->post('cartdeal');
+		if($cartdeal==1)
+			$publish_cond="and 1";
+		else 
+			$publish_cond="and publish=1";
 		
-		$prod=$this->db->query("select d.menuid,b.name as brand,c.name as cat,i.id,i.is_combo,i.pnh_id as pid,i.live,i.orgprice as mrp,i.price,i.name,i.pic from king_dealitems i join king_deals d on d.dealid=i.dealid and d.publish=1 left join king_brands b on b.id = d.brandid join king_categories c on c.id = d.catid where pnh_id=? and is_pnh=1",$pid)->row_array();
+		$prod=$this->db->query("select d.menuid,b.name as brand,c.name as cat,i.id,i.is_combo,i.pnh_id as pid,i.live,i.orgprice as mrp,i.price,i.name,i.pic,d.publish from king_dealitems i join king_deals d on d.dealid=i.dealid $publish_cond left join king_brands b on b.id = d.brandid join king_categories c on c.id = d.catid where pnh_id=? and is_pnh=1",$pid)->row_array();
+		
 		if(!empty($prod))
 		{
 			
@@ -6261,6 +6268,9 @@ group by g.product_id order by product_name");
 				// get pid ordered total for today.
 				$prod['max_ord_qty'] = $this->erpm->get_maxordqty_pid($fid,$pid);
 				
+				$prod['allow_order'] = $this->erpm->do_stock_check(array($prod['id']));
+				
+				$prod['is_publish']=$prod['publish'];
 				unset($prod['is_combo']);
 			}else
 			{
@@ -8865,6 +8875,8 @@ group by g.product_id order by product_name");
 								$sch_disc_type = $deal_disc_type;
 							}
 						}
+	
+	
 						$bid = $brand[$c];
 						$cid = $category[$c];
 	
@@ -9005,6 +9017,7 @@ group by g.product_id order by product_name");
 							$fran_sch_list_res=$this->db->query($sql_chk,array($fid,$menu,$cid));
 							if($fran_sch_list_res->num_rows())
 							{
+	
 								foreach($fran_sch_list_res->result_array() as $fran_sch_det)
 								{
 									if($bid == 0)
@@ -18913,15 +18926,21 @@ order by action_date";
 		 * @param unknown_type $catid
 		 */
 
-		function loadbrand_bycat($catid='')
+		function loadbrand_bycat($catid='',$fid='')
 		{
 			$catid =(!is_numeric($catid))?9999999999:$catid;
+			if($fid!=0 || $fid='')
+			{
+				$join_cond="JOIN `pnh_franchise_menu_link`m ON m.menuid=a.menuid AND  m.status=1";
+				$cond="and m.fid=$fid";
+			}
 			$output=array();
 			$brand_list=$this->db->query("SELECT a.catid,a.brandid,b.name AS brand_name,c.name AS category_name
 											FROM king_deals a
 											JOIN king_brands b ON b.id=a.brandid
 											JOIN king_categories c ON c.id=a.catid
-											WHERE c.id=?
+											$join_cond
+											WHERE c.id=? $cond
 											GROUP BY b.id order by brand_name",$catid);
 			if($brand_list->num_rows())
 			{
@@ -27575,7 +27594,7 @@ die; */
     		if(!$pid_det)
     		{
     			$output['status']='error';
-    			$output['message']='The product is DISABLED \nor\nNo product available for given id';
+    			$output['message']="The product is DISABLED \n or\n No product available for given id";
     		}else
     		{
     			// check if pid can be ordered

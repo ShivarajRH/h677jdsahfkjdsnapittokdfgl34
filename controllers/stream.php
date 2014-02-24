@@ -324,16 +324,16 @@ class Stream extends Analytics
                                     where stream_id=?
                                     group by su.user_id order by ka.name",$streamid)->result_array();
 //            $output.="<option value='00'>All</option>";
-		    foreach($arr_userids as $assigneduser) {
-		        if($user['userid'] == $assigneduser['user_id']) {
-		            $output.="";
-                }
-                else {
-                    $output.="<option value='".$assigneduser['user_id']."'>".$assigneduser['name']."</option>";
-                       }
-                    }
-                echo $output;
-        }
+			foreach($arr_userids as $assigneduser) {
+				if($user['userid'] == $assigneduser['user_id']) {
+				    $output.="";
+				}
+				else {
+				    $output.="<option value='".$assigneduser['user_id']."'>".$assigneduser['name']."</option>";
+				}
+			}
+			echo $output;
+	}
 
     /**
      * Store the stream post

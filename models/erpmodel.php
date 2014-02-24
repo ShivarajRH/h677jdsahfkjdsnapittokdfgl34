@@ -79,10 +79,10 @@ class Erpmodel extends Model
 			$this->db->query("insert into m_stream_post_reply(description,post_id,replied_by,replied_on,status) values(?,?,?,?,?)",array($this->prep($description),$post_id,$replied_by,$replied_on,$status));
 			$reply_id = $this->db->insert_id();
 			foreach($assigned_to as $assignuserid) 
-                        {
+            {
 				
 				$arr_assiuser=$this->db->query("select name,email from king_admin where id=?",$assignuserid)->row_array();
-                                $arr_adminuser=$this->db->query("select name,email from king_admin where id=?",$replied_by)->row_array();
+                $arr_adminuser=$this->db->query("select name,email from king_admin where id=?",$replied_by)->row_array();
 				$message = '<h3>Hi '.($arr_assiuser['name']).' </h3>
 								<p>
 									Reply Posted under <b>'.$stream_title.'</b> Stream, posted by <b>'.(($assignuserid==$replied_by)?'You':$arr_adminuser['name']).'</b>
@@ -95,10 +95,11 @@ class Erpmodel extends Model
 								<b>Storeking</b> ';
                                 
                                 $message .= '<br><br><br>
-                                                <div style="padding:10px;">
-                                                    <h3> #'.$post_id.'.   '.nl2br($this->prep($post_det->description)).'</h3>
-                                                </div>';
-                                $post_reply_det = $this->db->query("select * from m_stream_post_reply where post_id=? and id != ? order by replied_on desc limit 100",array($post_id,$reply_id))->result_array();
+                                            <div style="padding:10px;">
+                                                <h3> #'.$post_id.'.   '.nl2br($this->prep($post_det->description)).'</h3>
+                                            </div>';
+
+								$post_reply_det = $this->db->query("select * from m_stream_post_reply where post_id=? and id != ? order by replied_on desc limit 100",array($post_id,$reply_id))->result_array();
                                 foreach($post_reply_det as $reply_det) {
 
                                         $arr_replieduser=$this->db->query("select name,email from king_admin where id=?",$reply_det['replied_by'])->row_array();
@@ -7285,18 +7286,23 @@ order by p.product_name asc
 			$cond=" where i.is_pnh=1 and d.catid='".$catid."' and d.brandid='".$brandid."' group by i.id order by i.name asc ";
 		else if( $dealid!=0)
 			$cond=" where (i.dealid='".$dealid."' or i.pnh_id = '".$dealid."') group by i.id order by i.name asc ";
+		
+		$join_cond = '';
+		if($fid!=0)
+		{
+			$join_cond ="	JOIN `pnh_franchise_menu_link` m ON m.menuid=d.menuid AND  m.status=1 and m.fid=".$fid;
+		}
+		
 		$sql = "select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,i.is_combo,d.publish,d.brandid,d.catid,i.orgprice,
 					i.price,i.name,i.pic,i.pnh_id,i.id as itemid,
-					b.name as brand,c.name as category,is_sourceable 
+					b.name as brand,c.name as category 
 				from king_deals d 
 				join king_dealitems i on i.dealid=d.dealid 
 				join king_brands b on b.id=d.brandid 
-				JOIN m_product_deal_link l ON l.itemid=i.id
-				JOIN m_product_info p ON p.product_id=l.product_id
 				join king_categories c on c.id=d.catid 
 				left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp()
+				$join_cond 
 				$cond
-				 
 				";
 	 
 		return $this->db->query($sql)->result_array();
@@ -7339,7 +7345,9 @@ order by p.product_name asc
 		else if($type==1)
 			$ret=$this->db->query("select * from (select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,i.id,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp()  $join_cond  where i.is_pnh=1 $cond group by i.id ) as dd group by dd.id  limit 30")->result_array();
 		else if($type==2)
-			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,o.quantity as qty,ifnull(sum(o.quantity),0) as sold,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category,is_sourceable from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join king_orders o on o.itemid=i.id left outer join king_transactions t on t.transid=o.transid and t.is_pnh=1 left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() JOIN m_product_deal_link l ON l.itemid=i.id JOIN m_product_info p ON p.product_id=l.product_id $join_cond  where i.is_pnh=1 $cond group by i.id order by count(o.id) desc limit 30")->result_array();
+			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,o.quantity as qty,ifnull(sum(o.quantity),0) as sold,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join king_orders o on o.itemid=i.id left outer join king_transactions t on t.transid=o.transid and t.is_pnh=1 left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() $join_cond where i.is_pnh=1 $cond group by i.id order by count(o.id) desc limit 30")->result_array();;
+		
+		//echo $this->db->last_query();
 		return $ret;
 	}
 	
@@ -8258,6 +8266,7 @@ order by p.product_name asc
 	
 	function do_pnh_offline_order()
 	{
+		$user=$this->auth(DEAL_MANAGER_ROLE|CALLCENTER_ROLE);
 		$fran_status_arr=array();
 		$fran_status_arr[0]="Live";
 		$fran_status_arr[1]="Permanent Suspension";
@@ -12353,7 +12362,7 @@ order by action_date";
 		}
 	}
 	
-	function cat_alpha_list($ch,$fid=0)
+	function cat_alpha_list($ch,$fid)
 	{
 		$has_fid=0; //STORE KING OFFLINE ORDER MODIFICATION
 		if($fid!=''||$fid!=0) //STORE KING OFFLINE ORDER MODIFICATION
@@ -12373,14 +12382,19 @@ order by action_date";
 		}
 		if($ch == '20')
 		{
+			
 			if($has_fid==0)
 			{
+				
 				return $this->db->query("select c.id,c.name from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid join king_orders o on o.itemid=i.id join king_transactions t on t.transid=o.transid and t.is_pnh=1 where i.is_pnh=1 group by c.name order by c.name  limit 20");
 			}
 			else
 			{
-				return $this->db->query("SELECT m.menuid,m.fid,c.id,c.name FROM `pnh_franchise_menu_link`m JOIN `king_deals`d ON d.menuid=m.menuid  JOIN king_dealitems i ON i.dealid=d.dealid  JOIN king_categories c ON c.id=d.catid   JOIN king_orders o ON o.itemid=i.id  JOIN king_transactions t ON t.transid=o.transid AND t.is_pnh=1  WHERE m.status=1 AND fid=? AND i.is_pnh=1  GROUP BY d.catid  ORDER BY c.name ASC LIMIT 20",$fid);
+				
+				return  $this->db->query("SELECT m.menuid,m.fid,c.id,c.name FROM `pnh_franchise_menu_link`m JOIN `king_deals`d ON d.menuid=m.menuid  JOIN king_dealitems i ON i.dealid=d.dealid  JOIN king_categories c ON c.id=d.catid   JOIN king_orders o ON o.itemid=i.id  JOIN king_transactions t ON t.transid=o.transid AND t.is_pnh=1  WHERE m.status=1 AND fid=? AND i.is_pnh=1  GROUP BY d.catid  ORDER BY c.name ASC LIMIT 20",$fid);
+			//	echo $this->db->last_query();die;
 			}
+			
 		}
 		else
 		{

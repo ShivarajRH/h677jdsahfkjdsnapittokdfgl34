@@ -126,7 +126,7 @@
 				<td>
 					<select name="bulk_schtype" id="bulk_schtype" style="width:150px;">
 						<option col_text="Discount" col_title="Deals" col_extra="" value="1">Scheme Discount</option>
-						<option col_text="Credit Cash" col_title="" col_extra="Credit Value"  value="3">IMEI Scheme</option>
+						<option col_text="Credit Cash" col_title="" col_extra=""  value="3">IMEI Scheme</option>
 						<option col_text="Target Value" col_title="" col_extra="Credit Prec." value="2">Super Scheme</option>
 					</select>
 				</td>
@@ -726,8 +726,8 @@ $("#bulk_schtype").live('change',function(){
 	if($("#bulk_schtype").val() == 3 )
 	{
 		$('#msch_applyfrm').show();
-	 	$('.ext_input').show();
-	 	$('.mscheme_type').show();
+	 	$('.ext_input').hide();
+	 	$('.mscheme_type').hide();
 	 	$('.sel_deal_btn').hide();
 	 	$('.col_head').hide();
 	 	$('.deals_td').hide();
