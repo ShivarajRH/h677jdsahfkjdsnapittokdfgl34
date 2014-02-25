@@ -16,10 +16,11 @@ Registered
 Suspended
 </div> */ ?>
 
+<?php if($this->erpm->auth(true,true)){ ?>
 <div class="dash_bar">
 <span><?=count($frans)-$suspended_frans_ttl?></span>
 Active
-</div>
+</div> <?php } ?>
 
 <div class="dash_bar_right">
 Generate Print by Territory : <select id="sel_p_terry">

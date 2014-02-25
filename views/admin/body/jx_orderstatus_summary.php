@@ -183,8 +183,20 @@
                     <tbody>';
                 
                     $str_total_invoice.=format_price($total_inv_amount).' , MRP Value : '.format_price($total_amount);
+                    
+                    if(!$this->erpm->auth(true,true))
+                    	$str_total_invoice = '';
+                    
                     $resonse.='<script>$(".ttl_orders_status_listed,.c2,.all_pop, .shipped_pop, .unshipped_pop, .cancelled_pop, .removed_pop, .show_totalamount").css({"display":"block"});</script>';
-                    $resonse.='<script>$(".show_totalamount").html("'.$str_total_invoice.' ");</script>';
+
+					if($str_total_invoice == '')
+					{
+						$resonse.='<script>$(".show_totalamount").html("").hide();</script>';
+					}else
+					{
+						$resonse.='<script>$(".show_totalamount").html("'.$str_total_invoice.'");</script>';
+					}
+
                     
                         $k = 0;$slno=1; $total_amount=0;
 						$total_inv_amount=0;
