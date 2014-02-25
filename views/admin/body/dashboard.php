@@ -145,7 +145,7 @@ Total Members : <span><?=$this->db->query("select count(1) as l from pnh_franchi
 <a href="<?=site_url("admin/pnh_addfranchise")?>">Add Franchise</a>
 
 <table class="datagrid" width="100%" style="margin-top:10px;">
-<thead><tr><th>Franchise Name</th><th>FID</th><th>Assigned to</th><th>City</th><th>Territory</th><th>Current Balance</th><th>Assigned to</th><th>Class</th><th>Margin</th><th></th></tr></thead>
+<thead><tr><th>Franchise Name</th><th>FID</th><th>Assigned to</th><th>City</th><th>Territory</th><th>Assigned to</th><th>Class</th><th>Margin</th><th></th></tr></thead>
 <tbody>
 <?php foreach($this->erpm->pnh_getfranchises() as $f){?>
 <tr>
@@ -154,7 +154,6 @@ Total Members : <span><?=$this->db->query("select count(1) as l from pnh_franchi
 <td><?=$f['owners']?></td>
 <td><?=$f['city']?></td>
 <td><?=$f['territory_name']?></td>
-<td>Rs <?=$f['current_balance']?></td>
 <td><?=$f['assigned_to']?></td>
 <td><?=$f['class_name']?></td>
 <td><?=$f['margin']?></td>
