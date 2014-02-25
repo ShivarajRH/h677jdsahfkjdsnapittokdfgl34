@@ -3093,4 +3093,49 @@ update pnh_franchise_account_summary set unreconciled_value = credit_amt,unrecon
 
 #==========================================================
 
+# Feb_24_2014
+select * from m_stream_post_reply 
+#where post_id=? and id != ? 
+order by replied_on desc limit 50;
 
+CREATE TABLE `pnh_api_franchise_cart_info` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) DEFAULT NULL,
+  `franchise_id` bigint(20) DEFAULT NULL,
+  `pid` bigint(20) DEFAULT NULL,
+  `qty` varchar(275) DEFAULT NULL,
+  `attributes` text,
+  `member_id` bigint(20) DEFAULT NULL,
+  `status` int(1) DEFAULT '1' COMMENT '1:item in cart,0:item removed from cart',
+  `added_on` datetime DEFAULT NULL,
+  `updated_on` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
+-- new ================================================
+select * from king_dealitems where id='9758875986';
+
+#m_product_group_deal_link
+select * from m_product_group_deal_link where itemid = '9758875986'
+
+#products_group_orders
+select * from products_group_orders where 
+
+-- old
+select #l.product_id,p.product_name,l.qty,p.is_sourceable as src 
+* from m_product_deal_link l 
+join m_product_info p on p.product_id=l.product_id where l.itemid='7658178949'
+
+-- new GET GROUP DEAL LINK
+select p.product_id,p.product_name,gpl.qty,p.is_sourceable as src from m_product_group_deal_link gpl
+join products_group_pids g on g.group_id = gpl.group_id
+join m_product_info p on p.product_id = g.product_id
+where itemid = '9758875986';
+
+#tmp_itemid
+# product_group_pids
+select * from m_product_info
+select * from products_group_pids
+select * from m_product_group_deal_link
+
+# Feb_25_2014

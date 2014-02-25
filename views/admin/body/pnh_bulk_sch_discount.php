@@ -1,4 +1,5 @@
 <style>
+	#franchise_det{overflow: auto;height: 408px;}
 	.list-inlineblk{
 			background: none repeat scroll 0 0 #F7F7F7;
 		    cursor: pointer;
@@ -219,7 +220,7 @@
 			</tr>
 			<tr>
 				<td></td>
-				<td><input type="submit" value="Add Scheme discount"></td>
+				<td><input type="submit" class="button button-action button-rounded" value="Add Scheme discount"></td>
 			</tr>
 		</table>
 	</form>
@@ -245,10 +246,6 @@
 </div>
 
 <div id="deals_det_dlg" title="Available Deals List">
-	<div class="fl_right" id="select_filter">
-		<a onclick="unselect_all_franchises()"><span>Unselect All</span></a>
-		<a onclick="select_all_franchises()"><span>Select All</span></a>
-	</div>
 	<div class="deals_list" title="Deals List"></div>
 </div>
 
@@ -533,8 +530,8 @@ $("#deals_det_dlg" ).dialog({
 			}
 			else
 			{
-				$('.deallist-inlineblk ').removeClass('selected');
-				$('.deallist-inlineblk :visible input[name="fids[]"]').attr('checked',false);
+				$('.deallist-inlineblk:visible').removeClass('selected');
+				$('.deallist-inlineblk:visible input[name="fids[]"]').attr('checked',false);
 				
 				for(var i=0;i<dealids_arr.length;i++)
 				{
@@ -638,82 +635,115 @@ $('.unsel_all_wrap').live('click',function(){
 
 function select_all_deals()
 {
-	$('.deallist-inlineblk input').attr('checked',true);
-	$('.deallist-inlineblk').addClass('selected');
+	$('.deallist-inlineblk:visible input').attr('checked',true);
+	$('.deallist-inlineblk:visible').addClass('selected');
 }
 
 function unselect_all_deals()
 {
-	$('.deallist-inlineblk input').attr('checked',false);
-	$('.deallist-inlineblk').removeClass('selected');
+	$('.deallist-inlineblk:visible input').attr('checked',false);
+	$('.deallist-inlineblk:visible').removeClass('selected');
 }
 
 function select_all_franchises()
 {
-	$('.list-inlineblk input').attr('checked',true);
-	$('.list-inlineblk').addClass('selected');
+	$('.list-inlineblk:visible input').attr('checked',true);
+	$('.list-inlineblk:visible').addClass('selected');
 }
 
 function unselect_all_franchises()
 {
-	$('.list-inlineblk input').attr('checked',false);
-	$('.list-inlineblk').removeClass('selected');
+	$('.list-inlineblk:visible input').attr('checked',false);
+	$('.list-inlineblk:visible').removeClass('selected');
 }
 
 
 $('#pnh_bulkschdisc_frm').submit(function(){
+	
 	var error_inp = new Array();
+	var cat_req = 0;
+	var brand_req = 0;
+	var discount_err = 0;
+	var max_discount_err = 0;
+	var is_valid_daterange = 1;
+	var s_discount_err = 0;
+	var fids_err = 0;
 	
-	if(!$('#choose_menu',this).val())
-	{
-		error_inp.push("Please Choose menu ");
-	}
-	if(!$('select[name="category[]"]',this).val())
-	{
-		error_inp.push("Please Choose Category ");
+		if($('#choose_menu').val() == "0")
+			error_inp.push("Please Choose menu ");
 		
-	}
-	if(!$('select[name="brand[]"]',this).val())
-	{
-		error_inp.push("Please Choose Brand ");
+		$('select[name="category[]"]',this).each(function(){
+			if(!$(this).val())
+				cat_req = 1;
+		});
 		
-	}
-	if(!$('input[name="expire_prevsch"]:checked',this).length)
-	{
-		error_inp.push("Please check to expire previous schemes");
-	}
+		if(cat_req)
+			error_inp.push("Please Choose Category ");
+		
+		$('select[name="brand[]"]',this).each(function(){
+			if(!$(this).val())
+				brand_req = 1;
+		});
 	
-	var sch_disc = $('input[name="discount"]',this).val();
-		$('input[name="discount"]',this).val($.trim(sch_disc));
-		sch_disc = $.trim(sch_disc)*1;
-		if(isNaN(sch_disc))
-		{
-			error_inp.push("Invalid Discount Entered");
-		}else if(sch_disc > 10)
-		{
+		if(brand_req)
+			error_inp.push("Please Choose Brand ");
+		
+		$('input[name="disc_val[]"]',this).each(function(){
+			sch_disc = $(this).val()*1;
+			if(isNaN(sch_disc))
+				discount_err = 1;
+			else if((sch_disc > 10) && ($('#bulk_schtype',this).val() == 1))
+				max_discount_err = 1;
+		});
+	
+		if(discount_err && ($('#bulk_schtype',this).val() == 1))
+			error_inp.push("Invalid Discounts Entered");
+		else
+			if(discount_err && ($('#bulk_schtype',this).val() == 2))
+				error_inp.push("Invalid Target Value Entered");
+		
+		if(max_discount_err)
 			error_inp.push("Maximum 10% discount is allowed");
-		}
-	var is_valid_daterange = 1;	
+	
+		$('input[name="scheme_val[]"]:visible',this).each(function(){
+			trg_val = $(this).val()*1;
+			if(isNaN(trg_val))
+				s_discount_err = 1;
+			else if(!trg_val)
+				s_discount_err = 1;
+		});
+
+		if(s_discount_err)
+			error_inp.push("Invalid Credit Precentage Entered");
+
+		$('input[name="fran_ids[]"]',this).each(function(){
+			fval = $(this).val();
+			if(fval == "")
+				fids_err = 1;
+		});
+		
+		if(fids_err)
+			error_inp.push("Please Choose atleast one franchise..");
+		
 		if(!$('#d_start',this).val().length)
 			is_valid_daterange = 0;
 		if(!$('#d_end',this).val().length)
 			is_valid_daterange = 0;
-			
+				
 		if(!is_valid_daterange)
-		{
 			error_inp.push("Scheme Validity is required");
-		}
 		
-	if(error_inp.length)
-	{
-		alert(error_inp.join("\n"));
-		return false;
-	}		
-	
-	if(!confirm("Are you sure want to give this scheme discount"))
-	{
-		return false; 
-	}
+		if(!$('input[name="expire_prevsch"]:checked',this).length)
+			error_inp.push("Please check to expire previous schemes");
+			
+		if(error_inp.length)
+		{
+			alert(error_inp.join("\n"));
+			return false;
+		}		
+		
+		if(!confirm("Are you sure want to give this scheme discount"))
+			return false; 
 });
 
 $("#bulk_schtype").live('change',function(){

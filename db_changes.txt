@@ -1205,3 +1205,17 @@ alter table `pnh_franchise_account_stat` drop column `unreconciled_status`, drop
 alter table `pnh_franchise_account_summary` add column `unreconciled_value` double  DEFAULT '0' NULL  after `created_by`, add column `unreconciled_status` varchar (50) DEFAULT 'pending' NULL  after `unreconciled_value`;
 update pnh_t_receipt_info set unreconciled_value = receipt_amount,unreconciled_status = 'pending' where receipt_amount !=0;
 update pnh_franchise_account_summary set unreconciled_value = credit_amt,unreconciled_status = 'pending' where credit_amt !=0;
+
+CREATE TABLE `pnh_api_franchise_cart_info` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) DEFAULT NULL,
+  `franchise_id` bigint(20) DEFAULT NULL,
+  `pid` bigint(20) DEFAULT NULL,
+  `qty` varchar(275) DEFAULT NULL,
+  `attributes` text,
+  `member_id` bigint(20) DEFAULT NULL,
+  `status` int(1) DEFAULT '1' COMMENT '1:item in cart,0:item removed from cart',
+  `added_on` datetime DEFAULT NULL,
+  `updated_on` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);

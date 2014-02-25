@@ -78,34 +78,35 @@ class Erpmodel extends Model
 			
 			$this->db->query("insert into m_stream_post_reply(description,post_id,replied_by,replied_on,status) values(?,?,?,?,?)",array($this->prep($description),$post_id,$replied_by,$replied_on,$status));
 			$reply_id = $this->db->insert_id();
-			foreach($assigned_to as $assignuserid) 
-            {
+			foreach($assigned_to as $assignuserid)
+			{
 				
 				$arr_assiuser=$this->db->query("select name,email from king_admin where id=?",$assignuserid)->row_array();
-                $arr_adminuser=$this->db->query("select name,email from king_admin where id=?",$replied_by)->row_array();
+                                $arr_adminuser=$this->db->query("select name,email from king_admin where id=?",$replied_by)->row_array();
 				$message = '<h3>Hi '.($arr_assiuser['name']).' </h3>
-								<p>
-									Reply Posted under <b>'.$stream_title.'</b> Stream, posted by <b>'.(($assignuserid==$replied_by)?'You':$arr_adminuser['name']).'</b>
-								</p>	
-								<blockquote style="background:#f7f7f7;padding:10px;">
-								'.(nl2br($this->prep($description))).'
-								</blockquote>
-								<br>
-								<br>
-								<b>Storeking</b> ';
+                                            <p>
+                                                    Reply Posted under <b>'.$stream_title.'</b> Stream, posted by <b>'.(($assignuserid==$replied_by)?'You':$arr_adminuser['name']).'</b>
+                                            </p>	
+                                            <blockquote style="background:#f7f7f7;padding:10px;">
+                                            '.(nl2br($this->prep($description))).' <span style="font-size:9px;float:right; margin-right:5px;"><b>'. format_datetime_ts($replied_on).'</b></span>
+                                            </blockquote>
+                                            <br>
+                                            <br>
+                                            <b>Storeking</b>';
                                 
                                 $message .= '<br><br><br>
-                                            <div style="padding:10px;">
+                                            <div style="padding:10px 10px 10px 20px;">
                                                 <h3> #'.$post_id.'.   '.nl2br($this->prep($post_det->description)).'</h3>
                                             </div>';
 
-								$post_reply_det = $this->db->query("select * from m_stream_post_reply where post_id=? and id != ? order by replied_on desc limit 100",array($post_id,$reply_id))->result_array();
-                                foreach($post_reply_det as $reply_det) {
+                                $post_reply_det = $this->db->query("select * from m_stream_post_reply where post_id=? and id != ? order by replied_on desc limit 50",array($post_id,$reply_id))->result_array();
+                                foreach($post_reply_det as $reply_det) 
+                                {
 
                                         $arr_replieduser=$this->db->query("select name,email from king_admin where id=?",$reply_det['replied_by'])->row_array();
 
                                         $message .= '<blockquote style="background:#f8f8f8; padding:10px 10px 10px 20px;">'.nl2br($this->prep($reply_det['description'])).' 
-                                                        <span style="margin-right:5px;">'.($reply_det['replied_on']).'</span><span style="font-size:9px;float:right;">By '.$arr_replieduser['name'].'</span>
+                                                        <span style="font-size:9px;float:right; margin-right:5px;"><b>'.  format_datetime_ts($reply_det['replied_on']).'</b> By <b>'.$arr_replieduser['name'].'</b></span>
                                                     </blockquote>';
                                 }
 				            
@@ -6900,7 +6901,13 @@ order by p.product_name asc
 		foreach($items as $item)
 		{
 			$d=array();
-			foreach($this->db->query("select l.product_id,p.product_name,l.qty,p.is_sourceable as src from m_product_deal_link l join m_product_info p on p.product_id=l.product_id where l.itemid=?",$item)->result_array() as $p)
+                        $product_info = $this->db->query("select l.product_id,p.product_name,l.qty,p.is_sourceable as src from m_product_deal_link l join m_product_info p on p.product_id=l.product_id where l.itemid=?",$item);
+                        if($product_info->num_rows()== 0 ) {
+                            // group deal link
+                            $product_info = $this->db->query("select p.product_id,p.product_name,gpl.qty,p.is_sourceable as src from m_product_group_deal_link gpl
+                                                                join products_group_pids g on g.group_id = gpl.group_id join m_product_info p on p.product_id = g.product_id where itemid = ? ",$item);
+                        }
+			foreach($product_info->result_array() as $p)
 			{
 				$d[]=array("pid"=>$p['product_id'],"product_name"=>$p['product_name'],"qty"=>$p['qty'],"status"=>$p['src'],"stk"=>0);
 				$pids[]=$p['product_id'];
@@ -6965,7 +6972,7 @@ order by p.product_name asc
 				$p_stock_det[$iid]=array();
 			}
 		}
-	 
+
 		if($return_stock)
 			return $payload;
 		else

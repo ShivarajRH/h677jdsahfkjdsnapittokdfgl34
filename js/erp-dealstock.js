@@ -4,7 +4,6 @@
 ( function ($) {
     //<!--============================================<< DEAL STOCK PLUGIN SETTINGS START >>===================================-->
     "use strict";
-    var cname = '';
     // class and function definition
     $.dealstock = function(el,options) {
         var base = this;
@@ -25,7 +24,8 @@
         var POSITION = base.options.position;
         var REFRESH = base.options.refresh;
         var INTERVAL = base.options.intervals;
-                
+        var EVENT = base.options.eventname;
+        
         var ITEMID = base.$el.attr("dealid");
         var IS_PNH = 1; //base.$el.attr("is_pnh");
         //function debug(e) { console.log(e); }
@@ -58,16 +58,16 @@
         
         base.drawbox = function(e) {
             //debug(e);
-            
+                // plug in as opened
                 $.getJSON(site_url+'/admin/jx_pnh_deal_stock_det/'+ITEMID+"/"+IS_PNH,{},function(resp){ // height:'+HEIGHT+'; top:'+TOP+'px;  left:'+LEFT+'px;
-                        var HTML_DATA = '<div style="width:'+WIDTH+'; background:'+BGCOLOR+'; position: '+POSITION+'; " class="'+CLASSNAME+'">';
+                        var HTML_DATA = '<div style="float:left;width:100%"><div style="width:'+WIDTH+'; background:'+BGCOLOR+'; position: '+POSITION+'; " class="'+CLASSNAME+'">\n\
+                                            <span dealid="'+ITEMID+'" class="stock_det_close">X</span>';
                         if(resp.status == 'fail')
                         {
-                                HTML_DATA += "Error: "+resp.message;
+                                HTML_DATA += '<div class="error_msg">Error: '+resp.message+'</div>';
                         }
                         else
                         {
-                                    HTML_DATA += '<span dealid="'+ITEMID+'" class="stock_det_close">X</span><div style="float:left;width:100%">';
                                     HTML_DATA += '<table width="100%" border=1 class="datagrid" cellpadding=3 cellspacing=0>';
                                     HTML_DATA += '<thead><tr><th>Product Name</th><th>Stock</th></tr></thead><tbody>';
                                     $.each(resp.prod_stk_det,function(a,b){
@@ -86,12 +86,13 @@
                             my:"left top"
                             ,at:"right bottom"
                             ,of: base.$el
+                            ,offset: "-20 -30"
                         });
 
                         base.active = 1;
                         
                         $("span.stock_det_close",base.itemrow).click(function(e) {
-                                base.clearbox(e);
+                                base.$el.trigger(EVENT);
                        });
                 });
                 base.options.get_fn_deal_stock.call(this);
@@ -118,32 +119,69 @@
         ,get_fn_deal_stock: function() {}
         ,refresh: false
         ,intervals: 10000
+        ,eventname:"click" // eg. hover,click
     };
     
-    // calling function
+    // Calling function
     $.fn.dealstock = function(options) {
         
         return this.each(function() {
             var st = new $.dealstock(this,options);
-            
-            $(this).toggle(function(e) {
-                if(st.active!==1) {
-                    //Close all other
-                    $("."+st.options.classname).remove();
-                    st.drawbox(e);
-                }
-                else {
-                    st.active = 0;
-                    print("ALREADY opened");
-                    st.clearbox(e);
-                }
-            },function(e) {
-                st.active = 0;
-                st.clearbox(e);
-            });
-            
             var CLASSNAME = st.options.classname; 
-            $("body").append('<style>.'+CLASSNAME+' .stock_det_close { float:right; color:red; cursor:pointer; } </style>');
+            var EVENT =  st.options.eventname;
+            
+            if(EVENT == 'click')
+            {
+                print(EVENT);
+                    // on Click on in stock text Open / Close plugin box
+                    $(this).toggle(function(e) {
+
+                            //Close all other
+                            $("."+CLASSNAME).remove();
+                            st.drawbox(e);
+
+                    },function(e) {
+                            if(st.active === 1) 
+                            {
+                                    //st.active = 0;
+                                    st.clearbox(e);
+                            }
+                    });
+            }
+            else if(EVENT == 'hover')
+            {
+                
+                    print(EVENT);
+                    // on Click on in stock text Open / Close plugin box
+                    $(this).bind("mouseenter",function(e) {
+
+                            //Close all other
+                            $("."+CLASSNAME).remove();
+                            st.drawbox(e);
+
+                    });
+                    $(this).parent().bind("mouseleave",function(e) {
+                            if(st.active === 1) {
+                                    //st.active = 0;
+                                    st.clearbox(e);
+                            }
+                            
+                    });
+                    
+            }
+            
+            // on Escape key press close plugin box
+            $(document).keyup(function(e) {
+                if( e.keyCode == 27 ) {
+                    if(st.active === 1) {
+                        //st.active = 0;
+                        var base = st.$el;
+                        base.trigger(st.options.eventname);
+                    }
+                }
+           });
+
+            //$("body").append('<style>.'+CLASSNAME+' .stock_det_close { float:right; color:red; cursor:pointer; } .error_msg { background-color:#5F5968; color:#ffffff; padding:10px 10px;float:left;width:100%; } </style>');
             
         });
         

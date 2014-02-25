@@ -1181,3 +1181,13 @@ vertical-align: middle;
 {
 background-image: url("../images/remove-roll-gray.png");
 }
+.stock_det_close { 
+    float: right;
+    color: red;
+    cursor: pointer;
+    background-color: #CCC4C4;
+    padding: 0 13px;
+    font-weight: bold;
+    margin-top: -4%;
+} 
+.error_msg { background-color: #CCC4C4; color:#ffffff; padding:10px 10px;float:left; }

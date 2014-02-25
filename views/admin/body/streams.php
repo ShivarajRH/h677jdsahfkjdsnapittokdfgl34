@@ -15,12 +15,11 @@
 				<input type="text" name="gbl_srch" size="30" value=""><input type="submit" value="Search">
 			</form>
 		</div>
-	    <h2>Streams</h2>
     </div>
+	<h2>Streams</h2>
     
     <script type="text/javascript">
-    	$('#srch_stream').submit(function(){
-    	});
+    	$('#srch_stream').submit(function(){ });
     </script>
     
     <br>

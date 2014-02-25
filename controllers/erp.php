@@ -8875,8 +8875,6 @@ group by g.product_id order by product_name");
 								$sch_disc_type = $deal_disc_type;
 							}
 						}
-	
-	
 						$bid = $brand[$c];
 						$cid = $category[$c];
 	
@@ -9041,6 +9039,7 @@ group by g.product_id order by product_name");
 							}
 							else
 							{
+	
 								$process_add_sch_status =1;
 							}
 	
@@ -9092,6 +9091,7 @@ group by g.product_id order by product_name");
 			$this->erpm->flash_msg("Scheme added");
 			redirect("admin/pnh_bulk_sch_discount");
 		}
+		
 		$data['page']="pnh_bulk_sch_discount";
 		$this->load->view("admin",$data);
 	}
@@ -27974,4 +27974,97 @@ die; */
         echo json_encode($rdata);
         die();
     }
+	
+	
+	/*
+	 * author Suresh 
+	 * Function to load warehouse summary of product stock
+	 * @param unknown type $catid,$brandid
+	 */
+	 
+	function jx_warehouse_product_stock_det()
+	{
+		$user=$this->auth(PRODUCT_MANAGER_ROLE|DEAL_MANAGER_ROLE);
+		$brandid=$this->input->post('brandid');
+		$catid=$this->input->post('catid');
+		$i=0;
+		if($catid==0)
+			$cond='p.brand_id='.$brandid.'';
+		else if($brandid==0)
+			$cond='p.product_cat_id='.$catid.'';
+		else
+			$cond='p.brand_id='.$brandid.' and p.product_cat_id='.$catid.'';
+		
+		$products_res=$this->db->query("select p.product_id,p.product_cat_id,p.brand_id,p.product_name,p.is_sourceable,sum(s.available_qty) as stock,sum(s.available_qty*s.mrp) as stock_value,p.mrp from m_product_info p join t_stock_info s on s.product_id=p.product_id where $cond group by p.product_id having sum(s.available_qty)!=0 ");
+		$data['pagetitle']="Stock Product List for Brand: ".(($brandid!='all')?$this->db->query("select name from king_brands where id=?",$brandid)->row()->name:'All').' Category: '.(($catid != 'all')?$this->db->query("select name from king_Categories where id=?",$catid)->row()->name:'All');
+		
+		if($products_res->num_rows())
+		{
+			$prod_details=array();
+			$ttl_qty=0;
+			$ttl_mrp_value=0;
+			$ttl_avg_purchase=0;
+			$output['status']='success';
+			foreach($products_res->result_array() as $p)
+			{
+				$i++;
+				$p['mrp']=format_price($p['mrp'],2);
+				$p['stock_value']=format_price($p['stock_value'],2);
+				$avg=round($this->db->query("select avg(purchase_price) as a from t_grn_product_link where product_id=?",$p['product_id'])->row()->a,2);
+				$p['avg']=format_price($avg);
+				$p['avg_ttl_purchase']=format_price($p['stock']*$avg,2);
+				
+				$prod_details[]=$p;
+				$output['prod_details'] = $prod_details;
+				$ttl_qty +=$p['stock'];
+				$ttl_mrp_value +=$p['stock_value'];
+				$ttl_avg_purchase +=$p['stock']*$avg;
+			}
+			
+			$output['ttl_qty'] = $ttl_qty;
+			$output['ttl_mrp_value'] = format_price($ttl_mrp_value,2);
+			$output['ttl_avg_purchase'] = format_price($ttl_avg_purchase,2);
+			$output['type'] = $type;
+			$output['ttl_prd'] = $i;
+			$output['brandid'] = $brandid;
+			$output['catid'] = $catid;
+			$output['menuid'] = $menuid;
+		}else
+		{
+			$output['status'] = 'error';
+			$output['error'] = 'Stock not found';
+		}	
+		echo json_encode($output);
+	}
+	
+	
+	 /**
+	 * get the Stock list for product
+	 * @param unknown type $productid
+	 */
+	function jx_prod_stk_det()
+	{
+		$this->erpm->auth();
+		$prodid=$this->input->post('pid');
+		
+		$output=array();
+		$p_mrpstk_arr_res=$this->db->query("select mrp,sum(available_qty) as qty from t_stock_info where product_id = ? and available_qty > 0 group by mrp order by mrp asc ",$prodid);
+		
+		if($p_mrpstk_arr_res->num_rows())
+		{
+			$stk_list=array();
+			foreach ($p_mrpstk_arr_res->result_array() as $s) {
+				$s['mrp']=format_price($s['mrp'],0);
+				$stk_list[]=$s;
+			}
+			
+			$output['stock_list']=$stk_list;
+			$output['status']='success';
+		}else{
+			$output['status']='error';
+			$output['message']="No Stock found";
+		}
+		
+		echo json_encode($output);
+	}
 }
