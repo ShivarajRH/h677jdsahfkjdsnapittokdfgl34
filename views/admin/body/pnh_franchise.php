@@ -529,6 +529,7 @@ $(function(){
 					
 				$ttl_purchased = 0;	
 				$ttl_inactiv_msch = 0;
+				$ttl_activated_msch = 0;
 				foreach($ttl_imei_status_res->result_array() as $ttl_imei_det)
 				{
 					if($ttl_imei_det['is_imei_activated'])
@@ -886,8 +887,8 @@ $(function(){
 													</tr>
 												</thead>
 												<tbody>
-													<?php foreach($this->db->query("select s.*,a.name as admin,b.name as brand,c.name as category,s.menuid,i.name AS menu,d.name AS deal from pnh_sch_discount_brands s left outer join king_brands b on b.id=s.brandid left outer join king_categories c on c.id=s.catid join king_admin a on a.id=s.created_by JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id JOIN pnh_menu i ON i.id=s.menuid LEFT JOIN king_dealitems d ON d.id=s.dealid where s.franchise_id=? and ? between s.valid_from and s.valid_to and sch_type=1 GROUP BY s.id order by id desc ",array($fran['franchise_id'],time()))->result_array() as $s){
-														
+													<?php foreach($this->db->query("select s.*,a.name as admin,b.name as brand,c.name as category,s.menuid,i.name AS menu,d.name AS deal from pnh_sch_discount_brands s left outer join king_brands b on b.id=s.brandid left outer join king_categories c on c.id=s.catid join king_admin a on a.id=s.created_by JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id JOIN pnh_menu i ON i.id=s.menuid LEFT JOIN king_dealitems d ON d.id=s.dealid where s.franchise_id=? and ? between s.valid_from and s.valid_to GROUP BY s.id order by id desc ",array($fran['franchise_id'],time()))->result_array() as $s){
+													
 														if(!$s['is_sch_enabled'])
 																continue;
 													?>
