@@ -8375,7 +8375,7 @@ order by p.product_name asc
 			if($redeem)
 				$redeem_value += $item_pnt_value = $item_pnt*$prod['loyality_pntvalue']; 
 		
-			@$this->db->query("update pnh_api_franchise_cart_info set status=0 ,updated_on=now() where franchise_id=? and pid=? ",array($fran['franchise_id'],$item['pid']));
+			@$this->db->query("update pnh_api_franchise_cart_info set status=0 ,updated_on=now() where franchise_id=? and pid=? and member_id=?",array($fran['franchise_id'],$item['pid'],$mid));
 			//	echo $this->db->last_query();exit;
 		}
 		$avail=$this->erpm->do_stock_check($itemids);

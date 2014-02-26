@@ -27585,8 +27585,8 @@ die; */
 
     	$pid=$this->input->post('pid');
     	$fid=$this->input->post('fid');
-    
-    	$pid_incart_res=$this->db->query("select * from pnh_api_franchise_cart_info where franchise_id=? and pid=? and status=1",array($fid,$pid));
+    	$mid=$this->input->post('mid');
+    	$pid_incart_res=$this->db->query("select * from pnh_api_franchise_cart_info where franchise_id=? and pid=? and status=1 and member_id=?",array($fid,$pid,$mid));
 
     	if($pid_incart_res->num_rows()==0)
     	{
@@ -27600,7 +27600,7 @@ die; */
     			// check if pid can be ordered
     			if($pid_det['live'])
     			{
-    				$this->db->query("insert pnh_api_franchise_cart_info (franchise_id,pid,qty,member_id,status,added_on)values(?,?,1,0,1,now())",array($fid,$pid));
+    				$this->db->query("insert pnh_api_franchise_cart_info (franchise_id,pid,qty,member_id,status,added_on)values(?,?,1,?,1,now())",array($fid,$pid,$mid));
     				$output['status']='success';
     			}else
     			{
@@ -27616,7 +27616,7 @@ die; */
     		$output['message']='Product Already added to cart';
     	}*/
 
-    	$output['ttl_cart_item']=$this->db->query("select count(*) as ttl_cart_itm from pnh_api_franchise_cart_info where franchise_id=? and status=1",$fid)->row()->ttl_cart_itm;
+    	$output['ttl_cart_item']=$this->db->query("select count(*) as ttl_cart_itm from pnh_api_franchise_cart_info where franchise_id=? and status=1 and member_id=?",array($fid,$mid))->row()->ttl_cart_itm;
 
     	echo json_encode($output);
     }
@@ -27628,9 +27628,10 @@ die; */
     {
     	$pid=$this->input->post('pid');
     	$fid=$this->input->post('fid');
-
-    	$this->db->query("update pnh_api_franchise_cart_info set status=0 where franchise_id=? and pid=?",array($fid,$pid) );
-    	$cart_item_count=$this->db->query("select count(*) as ttl_cart_itm from pnh_api_franchise_cart_info where franchise_id=? and status=1",$fid)->row()->ttl_cart_itm;
+    	$mid=$this->input->post('mid');
+    	
+    	$this->db->query("update pnh_api_franchise_cart_info set status=0 where franchise_id=? and pid=? and member_id=?",array($fid,$pid,$mid) );
+    	$cart_item_count=$this->db->query("select count(*) as ttl_cart_itm from pnh_api_franchise_cart_info where franchise_id=? and status=1 and member_id=?",array($fid,$mid))->row()->ttl_cart_itm;
 
     	if($this->db->affected_rows()!=0)
     	{
@@ -27652,8 +27653,10 @@ die; */
     	$pid=$this->input->post('pid');
     	$fid=$this->input->post('fid');
     	$qty=$this->input->post('cart_qty');
+    	$mid=$this->input->post('mid');
+    	
     	$output=array();
-    	$this->db->query("update pnh_api_franchise_cart_info set qty=?, updated_on=now() where franchise_id=? and pid=? and status=1",array($qty,$fid,$pid));
+    	$this->db->query("update pnh_api_franchise_cart_info set qty=?, updated_on=now() where franchise_id=? and pid=? and status=1 and member_id=?",array($qty,$fid,$pid,$mid));
     	if($this->db->affected_rows()!=0)
     	{
     		$output['status']='success';
@@ -27672,9 +27675,11 @@ die; */
     function jx_view_cart()
     {
     	$fid=$this->input->post('fid');
+    	$mid=$this->input->post('mid');
+    	
     	$output=array();
-    	$cart_det_res=$this->db->query("select * from pnh_api_franchise_cart_info where franchise_id=? and status=1",$fid)->result_array();
-    	$cart_item_count=$this->db->query("select count(*) as ttl_cart_itm from pnh_api_franchise_cart_info where franchise_id=? and status=1",$fid)->row()->ttl_cart_itm;
+    	$cart_det_res=$this->db->query("select * from pnh_api_franchise_cart_info where franchise_id=? and status=1 and member_id=?",array($fid,$mid))->result_array();
+    	$cart_item_count=$this->db->query("select count(*) as ttl_cart_itm from pnh_api_franchise_cart_info where franchise_id=? and status=1 and member_id=?",array($fid,$mid))->row()->ttl_cart_itm;
     	if($cart_det_res)
     	{
     			
@@ -27699,11 +27704,13 @@ die; */
     function jx_getsaved_item_incart()
     {
     	$fid=$this->input->post('fid');
+    	$mid=$this->input->post('mid');
+    	
     	$output=array();
     	$saved_cart_res=$this->db->query("SELECT i.pnh_id,i.name,i.price,i.orgprice,i.store_price,i.pic FROM `pnh_api_franchise_cart_info` c
 							    			JOIN king_dealitems i ON i.pnh_id=c.pid
 							    			JOIN king_deals d ON d.dealid=i.dealid
-							    			WHERE franchise_id=? AND STATUS=1",$fid);
+							    			WHERE franchise_id=? AND STATUS=1 and member_id=?",array($fid,$mid));
     	if($saved_cart_res->num_rows())
     	{
     		$output['status']='success';
@@ -27896,6 +27903,30 @@ die; */
     	echo json_encode($output);
     }
 	
+    
+    function jx_load_franchise_qvkview()
+    {
+    	$fid=$this->input->post('fid');
+    	//echo $fid;exit;
+    	$fran_details=$this->db->query("SELECT franchise_name,franchise_id,login_mobile1,login_mobile2,t.town_name,tr.territory_name FROM pnh_m_franchise_info f JOIN pnh_m_territory_info tr ON f.territory_id=tr.id JOIN pnh_towns t ON t.id=f.town_id WHERE franchise_id=?",$fid)->row_array();
+    	$flinked_menu=$this->db->query("SELECT GROUP_CONCAT(m.name) AS menu FROM pnh_franchise_menu_link l JOIN `pnh_menu` m ON m.id=l.menuid WHERE fid=? AND l.status=1",$fid)->row()->menu;
+		$fcontact=$this->db->query("SELECT contact_mobile1,contact_mobile2 FROM `pnh_m_franchise_contacts_info` WHERE franchise_id=?",$fid)->row_array();
+		if(!empty($fran_details))
+		{
+			$f_name=$fran_details['franchise_name'];
+			$f_id=$fran_details['franchise_id'];
+			$f_terri_name=$fran_details['territory_name'];
+			$f_twn_name=$fran_details['town_name'];
+			$f_contact1=$fran_details['login_mobile1'];
+			$f_contact2=$fran_details['login_mobile2'];
+			$menu=$flinked_menu?$flinked_menu:'Not Alloted.';
+	    	$msg="<div id='mem_fran_det' width='50%'>";
+			$msg.="<div class='stk_mem_detwrap'><b style='width:15%;'>Name : </b><a style='font-size:14px;color:blue;' href='".site_url("admin/pnh_franchise/$f_id")."' target='_blank'>$f_name</a></div> <div class='stk_mem_detwrap'> <b style='width:15%;'>Territory : </b><a>$f_terri_name</a></b> </div><div class='stk_mem_detwrap'><b style='width:15%;'>Town : </b><a>$f_twn_name</a></div><div class='stk_mem_detwrap'><b style='width:15%;'>Contact : </b><a>$f_contact1<img src='".IMAGES_URL."phone.png' class='phone_small' onclick='makeacall(\"0{$f_contact1}\")'> &nbsp; $f_contact2<img src='".IMAGES_URL."phone.png' class='phone_small' onclick='makeacall(\"0{$f_contact2}\")'></a></div><fieldset><b>Menu  </b><div><a  style='font-size:11px;display:inline-block;margin:4px 3px 2px 2px;width='50%';text-decoration: none;'>{$menu}</a></div></fieldset></div>";
+	      	$msg.="<div class='clear'></div></div>";
+	    	die($msg);
+		}
+    	
+    }
 	/**
      * Function to return deal stock details
      * @param type $itemid int
@@ -27914,9 +27945,12 @@ die; */
             $arr_stk['message'] = 'Deal does not exists!';
         }
         else {
+                $background_out='none repeat scroll 0 0 #FFAAAA !important';//background:
+                $background_in ='none repeat scroll 0 0 rgba(170, 255, 170, 0.8) !important';//'background:
+                
                 $arr_stk['itemid'] = $itemid;
                 $arr_stk['total_products'] = count($deal_pstk[$itemid]);
-
+                $ttl_stk = 0;
                 foreach($deal_pstk[$itemid] as $pstk) {
                     $id = $pstk['pid'];
                     $arr_stk['prod_stk_det'][$id]['product_id'] = $pstk['pid'];
@@ -27924,8 +27958,20 @@ die; */
                     $arr_stk['prod_stk_det'][$id]['qty'] = $pstk['qty'];
                     $arr_stk['prod_stk_det'][$id]['sourcible'] = $pstk['status'];
                     $arr_stk['prod_stk_det'][$id]['stk'] = $pstk['stk'];
+                    $ttl_stk += $pstk['stk'];
                 }
                 $arr_stk['status'] = 'success';
+                
+                // out of stock =  ttl_stk == 0
+                if($ttl_stk == 0 ) {
+                    $arr_stk['deal_status'] = 'Out of Stock';
+                    $arr_stk['background'] = $background_out;
+                }
+                else {// in stock = ttl_stk != 0
+                    $arr_stk['deal_status'] = 'In Stock';
+                    $arr_stk['background'] = $background_in;
+                }
+                
         }
         echo json_encode($arr_stk);
     }
@@ -27934,46 +27980,53 @@ die; */
      * Function to return JSON deal stock details
      * @param type $itemid int
      */
-    function jx_pnh_deal_stock_status($itemid,$is_pnh=1)
+    function jx_pnh_deal_stock_status($itemid=0,$is_pnh=1)
     {
         $this->auth(true);
-        if(!$itemid) $this->print_error("Item id doesnot exists!");
-        
-        
-        $deal_stock = $this->erpm->do_stock_check(array($itemid));
-        $arr_stk = array();
-        if(empty($deal_stock)) {
-            $background='none repeat scroll 0 0 #FFAAAA !important';//background:
+        $background_out='none repeat scroll 0 0 #FFAAAA !important';//background:
+        $background_in ='none repeat scroll 0 0 rgba(170, 255, 170, 0.8) !important';//'background:
+            
+        if( isset($_POST["itemids"] ) )  {
+            $arr_itemids = explode(',', trim($_POST["itemids"],"'") );
+            
+            $arr_stk = array();
+            foreach($arr_itemids as $itemid) {
+                
+                $deal_stock = $this->erpm->do_stock_check(array($itemid));
+                if(empty($deal_stock)) {
+                    
+                        $arr_stk[$itemid]['message'] = 'Out of Stock';
+                        $arr_stk[$itemid]['background'] = $background_out;
+                }
+                else {
+                        
+                        $arr_stk[$itemid]['message'] = 'In Stock';
+                        $arr_stk[$itemid]['background'] = $background_in;
+                }
+                $arr_stk[$itemid]['status'] = 'success';
+            }
+            
+        }
+        elseif($itemid != 0) {
+            $deal_stock = $this->erpm->do_stock_check(array($itemid));
+            $arr_stk = array();
+            if(empty($deal_stock)) {
+                    $arr_stk['message'] = 'Out of Stock';
+                    $arr_stk['background'] = $background_out;
+            }
+            else {
+                    $arr_stk['message'] = 'In Stock';
+                    $arr_stk['background'] = $background_in;
+            }
             $arr_stk['status'] = 'success';
-            $arr_stk['message'] = 'Out of Stock';
-            $arr_stk['background'] = $background;
         }
-        else {
-                $background='none repeat scroll 0 0 rgba(170, 255, 170, 0.8) !important';//'background:
-                $arr_stk['status'] = 'success';
-                $arr_stk['message'] = 'In Stock';
-                $arr_stk['background'] = $background;
-        }
+        else 
+            $this->print_error("Item id doesnot exists!");
+        
+        
         echo json_encode($arr_stk);
     }
     
-    /**
-     * Function to display json error output and stop the execution
-     * @param type $msg String / Array
-     * @param type $rtype string
-     * @example if(!$itemid) $this->print_error("Item id doesnot exists!");
-     * @example if(!$itemid) $this->print_error(array("status"=>"fail","message"=>"Item id doesnot exists!" ));
-     */
-    function print_error($msg,$rtype='json') {
-        if(is_array($msg)) {
-            $rdata = $msg;
-        }
-        else {
-            $rdata = array("status"=>"fail","message"=>$msg);
-        }
-        echo json_encode($rdata);
-        die();
-    }
 	
 	
 	/*

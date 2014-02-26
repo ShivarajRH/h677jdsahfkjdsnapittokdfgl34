@@ -468,12 +468,12 @@ function deallist_bycat(brandid,catid,type)
 					{
 						var enable='';
 						
-					} //
-						d_lst+='<tr style="'+background+'" class="sk_deal_filter_wrap deals_'+d.catid+'" publish="'+d.publish+'" mrp="'+d.orgprice+'" name="'+d.name+'" brand="'+d.brand+'" category="'+d.category+'" ref_id="'+d.itemid+'">';
+					} // style="'+background+'"
+						d_lst+='<tr class="sk_deal_filter_wrap deals_'+d.catid+'" publish="'+d.publish+'" mrp="'+d.orgprice+'" name="'+d.name+'" brand="'+d.brand+'" category="'+d.category+'" ref_id="'+d.itemid+'">';
 				 			//d_lst+='<img src="'+images_url+'/items/small/'+d.pic+'.jpg'+'">';
 		 					d_lst+='<td><span>'+d.pnh_id+'</span></td>';
 		 					d_lst+='<td><span class="title"><a target="_blank" href="'+site_url+'/admin/pnh_deal/'+d.itemid+'">'+d.name+'</a><div class="stock_det_'+d.itemid+'"></div></td>';
-							d_lst+='<td><a href="javascript:void(0)" dealid="'+d.itemid+'" class="tgl_stock_combo deal_stock ">'+(dstock)+'</a></td>';//
+							d_lst+='<td><a href="javascript:void(0)" dealid="'+d.itemid+'" class="tgl_stock_combo deal_stock "></a></td>';//'+(dstock)+'
 		 					d_lst+='<td><span><a target="_blank" href="'+site_url+'/admin/viewbrand/'+d.brandid+'">'+d.brand+'</a></span></td>';
 		 					d_lst+='<td><span><a target="_blank" href="'+site_url+'/admin/viewcat/'+d.catid+'">'+d.category+'</a></span></td>';
 		 					d_lst+='<td><span class="mrp">'+d.orgprice+'</span></td>';
@@ -498,8 +498,11 @@ function deallist_bycat(brandid,catid,type)
 				//polist_byvendor(vids[0]);
 				$('.jq_alpha_sort_overview_content').html(d_lst);
 
-                // Call the plugin
-                $(".jq_alpha_sort_overview_content .deal_stock").dealstock();
+				// Call the plugin
+				$(".jq_alpha_sort_overview_content .deal_stock").dealstock({
+				    loadstatus:true
+				    ,autorefresh:true
+				});
                         
 				$("#sel_cat").chosen();
 				if(resp.type == 1)

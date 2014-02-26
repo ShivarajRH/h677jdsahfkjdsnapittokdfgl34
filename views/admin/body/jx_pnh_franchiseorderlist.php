@@ -131,7 +131,8 @@
 				</tbody>
 			</table>
 		<?php } }?>
-		<?php if($type!='product_enquired' && $type!='fran_prodpricequote'){
+		<?php if($type!='product_enquired' && $type!='fran_prodpricequote')
+	{
 		$res = $this->db->query($sql,array($fid));
 	
 		$order_stat=array("Confirmed","Invoiced","Shipped","Cancelled");
@@ -348,7 +349,7 @@
 	</tbody>
 	</table>
 	 <?php }?>
-	 
+<?php }?>	 
 	 <script>
 	 	$('#ttl_orders_listed b').html(<?php echo $k;?>);
 	 	<?php if($is_part_ship) { ?>
@@ -372,5 +373,5 @@
 	margin: 7px 0;
 	padding: 5px 7px;
 	text-align: center;
-}
+
 	 </style>
