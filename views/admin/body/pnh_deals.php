@@ -242,38 +242,6 @@ function published_deals(v)
 	}
 }
 
-
-/*$('.tgl_stock_combo').live('click',function(){
-	var trele=$(this).parents('tr:first');
-	var ref_id  = $(this).attr('ref_id');
-	
-	$.post(site_url+'/admin/pnh_jx_dealstock_det',{refid:ref_id,is_pnh:1},function(resp){
-			if(resp.status == 'error')
-			{
-				$('.stock_det_'+ref_id).html("No Details found");
-			}
-			else
-			{
-				
-				var qcktiphtml = '<span style="float:right;color:red;cursor:pointer" refid="'+ref_id+'" class="stock_det_close">X</span> <div style="float:left;width:100%">';
-					qcktiphtml += '<table width="100%" border=1 class="datagrid" cellpadding=3 cellspacing=0>';
-					qcktiphtml += '<thead><tr><th>Product Name</th><th>Stock</th></tr></thead><tbody>';
-					$.each(resp.itm_stk_det,function(a,b){
-						qcktiphtml+='<tr>';
-						qcktiphtml+='	<td width="80%" style="font-size:10px">'+b.product_name+'</td>';
-						qcktiphtml+='	<td width="20%" style="font-size:10px">'+b.stk+'</td>';
-						qcktiphtml+='</tr>';
-					});
-					qcktiphtml += '</tbody></table></div>';
-					$('.stock_det_'+ref_id).html(qcktiphtml);
-					$('.stock_det_'+ref_id).show();
-			}
-			
-		},'json');
-		//$('.stock_det',ele.parent().parent()).html("Loading...").show(); 
-	
-});*/
-
 $('input[name="check_status"]').live("click",function(){
 	if(confirm("Are you sure want to change published status"))
 	{
@@ -451,15 +419,7 @@ function deallist_bycat(brandid,catid,type)
 				
 				d_lst+='</th></tr></thead>';
 			 	$.each(resp.deals_lst,function(i,d){
-					if(d.allow_order.length)
-					{
-						dstock = 'In Stock';
-						var background='background:none repeat scroll 0 0 rgba(170, 255, 170, 0.8) !important'/*#40FC36*/;
-					}else
-					{
-						dstock = 'Out of Stock';
-						var background='background:none repeat scroll 0 0 #FFAAAA !important';
-					}
+					
 					if(d.publish==1)
 					{
 						var enable='checked="checked"';
@@ -473,7 +433,7 @@ function deallist_bycat(brandid,catid,type)
 				 			//d_lst+='<img src="'+images_url+'/items/small/'+d.pic+'.jpg'+'">';
 		 					d_lst+='<td><span>'+d.pnh_id+'</span></td>';
 		 					d_lst+='<td><span class="title"><a target="_blank" href="'+site_url+'/admin/pnh_deal/'+d.itemid+'">'+d.name+'</a><div class="stock_det_'+d.itemid+'"></div></td>';
-							d_lst+='<td><a href="javascript:void(0)" dealid="'+d.itemid+'" class="tgl_stock_combo deal_stock "></a></td>';//'+(dstock)+'
+							d_lst+='<td><a href="javascript:void(0)" dealid="'+d.itemid+'" class="tgl_stock_combo deal_stock "></a></td>';
 		 					d_lst+='<td><span><a target="_blank" href="'+site_url+'/admin/viewbrand/'+d.brandid+'">'+d.brand+'</a></span></td>';
 		 					d_lst+='<td><span><a target="_blank" href="'+site_url+'/admin/viewcat/'+d.catid+'">'+d.category+'</a></span></td>';
 		 					d_lst+='<td><span class="mrp">'+d.orgprice+'</span></td>';
@@ -499,10 +459,7 @@ function deallist_bycat(brandid,catid,type)
 				$('.jq_alpha_sort_overview_content').html(d_lst);
 
 				// Call the plugin
-				$(".jq_alpha_sort_overview_content .deal_stock").dealstock({
-				    loadstatus:true
-				    ,autorefresh:true
-				});
+				$(".jq_alpha_sort_overview_content .deal_stock").dealstock();
                         
 				$("#sel_cat").chosen();
 				if(resp.type == 1)

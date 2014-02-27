@@ -12,28 +12,16 @@
 }
 .stk_dlg
 {
+	cursor:pointer;
 	padding:0px !important;
 	width:42px !important;
 	background: none repeat scroll 0 0 #fdfdfd;
 }
-.stk_wrap
-{
-	background: none repeat scroll 0 0 #F1F1F1;
-    font-size: 12px;
-}
-.stk_wrap table
-{
-	width:100%;
-}
-.stk_wrap table thead th
-{
-	background: none repeat scroll 0 0 #CCCCCC;
-	padding:4px;
-}
-.stk_wrap table tbody td
-{
-	 background: none repeat scroll 0 0 #FDFDFD;
-	 padding:4px;
+
+.stk_wrap {
+    float: left;
+    width: 48%;
+    margin-right: 2%;
 }
 </style>
 
@@ -52,6 +40,25 @@
 
 <div id="prod_stk_det_dlg" title="Stock Details">
 	<div class="stock_det_wrap">
+	</div>
+	<div class="fl_left" style="width:100%">
+		<h4>Recent Transations</h4>
+		<table id="ven_po_log" class="datagrid" width="100%">
+			<thead>
+				<tr>
+					<th>Slno</th>
+					<th>Vendor Name</th>
+					<th>MRP</th>
+					<th>GRN ID</th>
+					<th>Date of Intake</th>
+					<th>Purchase Price</th>
+				</tr>
+			</thead>
+		
+			<tbody>
+			</tbody>
+		</table>
+		<div id="ven_log_pagination"></div>
 	</div>
 </div>
 
@@ -319,7 +326,7 @@ function product_list_bycat(brandid,catid)
 					
 					d_lst+='<tr style="'+background+'" class="prod_filter_wrap" name='+p.product_name+' bid='+p.brand_id+' cid='+p.product_cat_id+' qty='+p.stock+' mrp='+p.stock_value+' avg_pur='+p.avg_ttl_purchase+'>';
 			 			d_lst+='<td><span style="font-weight:bold;font-size:12px;color:green">'+p.product_id+'</span></td>';
-	 					d_lst+='<td><span class="title"><a class="product_name" target="_blank">'+p.product_name+'</a></td>';
+	 					d_lst+='<td><span class="title"><a class="product_name" href="'+site_url+'/admin/product/'+p.product_id+'" target="_blank">'+p.product_name+'</a></td>';
 						d_lst+='<td style="text-align:right"><span class="prod_det_font_wrap">'+p.mrp+'</span></td>';
 						d_lst+='<td style="text-align:right"><button class="button-tiny button-flat stk_dlg" pid='+p.product_id+' pname='+p.product_name+'><span class="prod_det_font_wrap">'+p.stock+'</span></button></td>';
 	 					d_lst+='<td style="text-align:right"><span class="prod_det_font_wrap"  style="font-size:12px;color:#000">'+p.stock_value+'</span></td>';
@@ -420,8 +427,8 @@ $('.stk_dlg').live('click',function(){
 $("#prod_stk_det_dlg" ).dialog({
 		modal:true,
 		autoOpen:false,
-		width:'400',
-		height:'250',
+		width:'850',
+		height:'550',
 		autoResize:true,
 		open:function(){
 			var pid=$(this).data('pid');
@@ -437,14 +444,24 @@ $("#prod_stk_det_dlg" ).dialog({
 						var stk_lst='';
 						stk_lst+='<h4>'+pname+'</h4>';
 						stk_lst+='<div class="stk_wrap" >';
-						stk_lst+='<table><thead><tr><th style="text-align:left">MRP</th><th style="text-align:left">Quantity</th></tr></thead><tbody>';
+						stk_lst+='<table class="datagrid" width="100%"><thead><tr><th>Barcode</th><th>Rackbin</th><th>MRP</th><th>Quantity</th>';
+						stk_lst+='</tr></thead><tbody>';
 						$.each(resp.stock_list,function(i,s){
-							stk_lst+= '<tr><td><b>Rs '+s.mrp+'</b></td>  <td>'+s.qty+'</td></tr>';
+							stk_lst+= '<tr><td><b>'+s.pbarcode+'</b></td><td><b>'+s.rbname+'</b></td><td><b>Rs '+s.mrp+'</b></td><td>'+s.s+'</td></tr>';
 						});
-						stk_lst+=  '</tbody></table>';
-						$('.stock_det_wrap').html(stk_lst);
+						stk_lst+=  '</tbody></table></div>';
+						
+						
+						stk_lst+='<div class="stk_wrap" >';
+						stk_lst+='<table class="datagrid" width="100%"><thead><tr><th>Total Purchased</th><th>Total Sold</th><th>In Stock</th>';
+						stk_lst+='</tr></thead><tbody>';
+						stk_lst+= '<tr><td><b>'+resp.ttl_purchased+'</b></td>  <td>'+resp.stk_sold+'</td><td>'+resp.in_stk+'</td></tr>';
+						stk_lst+=  '</tbody></table></div>';
+					$('.stock_det_wrap').html(stk_lst);
 					}
 				},'json');
+			
+			load_ven_log(pid,0);
 	},
 	buttons: {
 	    "Close": function() {
@@ -452,6 +469,30 @@ $("#prod_stk_det_dlg" ).dialog({
 	   }
 	} 
 });
+
+function load_ven_log(product_id,pg)
+	{
+		$('#ven_po_log tbody').html('<tr><td colspan="6"><div align="center"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
+		$.post(site_url+'/admin/jx_ven_log/'+product_id+'/'+pg+'/10','',function(resp){
+			$('#ven_po_log tbody').html(resp.log_data);
+			if(resp.ttl*1 > resp.limit*1)
+				$('#ven_log_pagination').html(resp.pagi_links).show();
+			else
+				$('#ven_log_pagination').html("").hide();
+		},'json');
+	}
+	
+	
+$('#stock_log_pagination .log_pagination a').live('click',function(e){
+		e.preventDefault();
+		var url_prts = $(this).attr('href').split('/');
+			pg = url_prts[url_prts.length-1];
+			pg = pg*1;
+			
+		load_ven_log('<?php echo $p['product_id'];?>',pg);
+	});
+	
+
 
 function print_warehouse_summary(brandid,catid)
 {

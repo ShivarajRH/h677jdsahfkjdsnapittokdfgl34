@@ -9244,11 +9244,6 @@ group by g.product_id order by product_name");
 		
 		if($deals)
 		{
-			foreach($deals as $i=>$deal)
-			{
-				$deals[$i]['allow_order'] = $this->erpm->do_stock_check(array($deal['itemid']));
-			}
-			
 			$output['status'] = 'success';
 			$output['deals_lst'] = $deals;
 			$output['type'] = $type;
@@ -9553,7 +9548,7 @@ group by g.product_id order by product_name");
 		}
 		else
 		{
-			$mem['first_name']=($mem['first_name']==""&&$mem['last_name']=="")?"No Name":$mem['first_name'];
+			$mem['first_name']=($mem['first_name']=="" && $mem['last_name']=="")?"No Name":$mem['first_name'];
 			$msg="<div id='mem_fran_det'>";
 			$order=$this->db->query("select count(1) as n,sum(amount) as t from king_transactions where transid in (select transid from king_orders where userid=?)",$mem['user_id'])->row_array();
 			if($more==1)
@@ -27927,7 +27922,8 @@ die; */
 		}
     	
     }
-	/**
+    
+    /**
      * Function to return deal stock details
      * @param type $itemid int
      */
@@ -27942,12 +27938,10 @@ die; */
         
         if(empty($deal_pstk[$itemid])) {
             $arr_stk['status'] = 'fail';
-            $arr_stk['message'] = 'Deal does not exists!';
+            $arr_stk['message'] = 'Out of stock or Deal Doesnot exits';
         }
         else {
-                $background_out='none repeat scroll 0 0 #FFAAAA !important';//background:
-                $background_in ='none repeat scroll 0 0 rgba(170, 255, 170, 0.8) !important';//'background:
-                
+                $arr_stk['status'] = 'success';
                 $arr_stk['itemid'] = $itemid;
                 $arr_stk['total_products'] = count($deal_pstk[$itemid]);
                 $ttl_stk = 0;
@@ -27960,31 +27954,27 @@ die; */
                     $arr_stk['prod_stk_det'][$id]['stk'] = $pstk['stk'];
                     $ttl_stk += $pstk['stk'];
                 }
-                $arr_stk['status'] = 'success';
                 
                 // out of stock =  ttl_stk == 0
                 if($ttl_stk == 0 ) {
                     $arr_stk['deal_status'] = 'Out of Stock';
-                    $arr_stk['background'] = $background_out;
+                    
                 }
                 else {// in stock = ttl_stk != 0
                     $arr_stk['deal_status'] = 'In Stock';
-                    $arr_stk['background'] = $background_in;
                 }
                 
         }
         echo json_encode($arr_stk);
     }
-	
-	/**
+
+    /**
      * Function to return JSON deal stock details
      * @param type $itemid int
      */
     function jx_pnh_deal_stock_status($itemid=0,$is_pnh=1)
     {
         $this->auth(true);
-        $background_out='none repeat scroll 0 0 #FFAAAA !important';//background:
-        $background_in ='none repeat scroll 0 0 rgba(170, 255, 170, 0.8) !important';//'background:
             
         if( isset($_POST["itemids"] ) )  {
             $arr_itemids = explode(',', trim($_POST["itemids"],"'") );
@@ -27992,33 +27982,46 @@ die; */
             $arr_stk = array();
             foreach($arr_itemids as $itemid) {
                 
-                $deal_stock = $this->erpm->do_stock_check(array($itemid));
-                if(empty($deal_stock)) {
-                    
-                        $arr_stk[$itemid]['message'] = 'Out of Stock';
-                        $arr_stk[$itemid]['background'] = $background_out;
-                }
-                else {
-                        
-                        $arr_stk[$itemid]['message'] = 'In Stock';
-                        $arr_stk[$itemid]['background'] = $background_in;
-                }
-                $arr_stk[$itemid]['status'] = 'success';
+                $deal_stock = $this->erpm->do_stock_check(array($itemid),array(1),true);
+                
+                        $arr_stk[$itemid]['status'] = 'success';
+                        $ttl_stk = 0;
+                        foreach($deal_stock[$itemid] as $pstk) {
+                            //$id = $pstk['pid'];
+                            //$arr_stk['prod_stk_det'][$id]['product_name'] = $pstk['product_name'];
+                            $ttl_stk += $pstk['stk'];
+                        }
+                        // out of stock =  ttl_stk == 0
+                        if($ttl_stk == 0 ) {
+                            $arr_stk[$itemid]['deal_status'] = 'Out of Stock';
+                                        }
+                        else {// in stock = ttl_stk != 0
+                            $arr_stk[$itemid]['deal_status'] = 'In Stock';
+                        }
+                
+                
             }
             
         }
         elseif($itemid != 0) {
-            $deal_stock = $this->erpm->do_stock_check(array($itemid));
+            $deal_stock = $this->erpm->do_stock_check(array($itemid),array(1),true);
             $arr_stk = array();
-            if(empty($deal_stock)) {
-                    $arr_stk['message'] = 'Out of Stock';
-                    $arr_stk['background'] = $background_out;
-            }
-            else {
-                    $arr_stk['message'] = 'In Stock';
-                    $arr_stk['background'] = $background_in;
-            }
-            $arr_stk['status'] = 'success';
+            
+                        $arr_stk[$itemid]['status'] = 'success';
+                        $ttl_stk = 0;
+                        foreach($deal_stock[$itemid] as $pstk) {
+                            //$id = $pstk['pid'];
+                            //$arr_stk['prod_stk_det'][$id]['product_name'] = $pstk['product_name'];
+                            $ttl_stk += $pstk['stk'];
+                        }
+                        // out of stock =  ttl_stk == 0
+                        if($ttl_stk == 0 ) {
+                            $arr_stk[$itemid]['deal_status'] = 'Out of Stock';
+                        }
+                        else {// in stock = ttl_stk != 0
+                            $arr_stk[$itemid]['deal_status'] = 'In Stock';
+                        }
+            
         }
         else 
             $this->print_error("Item id doesnot exists!");

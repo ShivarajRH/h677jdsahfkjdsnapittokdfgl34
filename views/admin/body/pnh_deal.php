@@ -239,11 +239,17 @@ ul.tabs li.active
 	</h3>
 	<span class="stock_wrap" style="width:15%;">
 		<div>
-		<?php $d=$deal; $stock=$this->erpm->do_stock_check(array($d['id'])); if(empty($stock)){?>
-		<h5 style="color:red;margin:10px;font-size: 14px">OUT OF STOCK</h5>
-		<?php }else{?>
-		<h5 style="color:green;margin:10px;font-size: 14px">IN-STOCK</h5>
-		<?php }?>
+		<?php $d=$deal; ?>
+
+		<h5 dealid="<?=$d['id'];?>" class="dealstock"></h5>
+
+		<script>
+                    $(".dealstock").dealstock({
+                        popup:false
+                        ,change:"text" //text,row
+                    });
+                </script>
+
 		</div>
 	</span>
 </div>
