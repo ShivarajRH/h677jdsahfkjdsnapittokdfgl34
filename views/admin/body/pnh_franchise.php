@@ -135,19 +135,21 @@ $(function(){
 	<div style="margin-top: 10px;float:left">
 		
 	</div>	
-	<?/*
+<?php if($this->erpm->auth(FINANCE_ROLE,true) || $this->erpm->auth(CALLCENTER_ROLE,true)){ ?>
 	<div class="dash_bar_right" style="background: tomato">
 		Pending Payment : <span>Rs <?=format_price($shipped_tilldate-($paid_tilldate+$acc_adjustments_val+$credit_note_amt),2)?></span>
-	</div>*/?>
+	</div>
+<?php } ?>
 	
 	<div class="dash_bar_right">
 		UnCleared Payments : <span>Rs <?=format_price($uncleared_payment,2)?></span>
 	</div>
-
+	
+<?php if($this->erpm->auth(FINANCE_ROLE,true) || $this->erpm->auth(CALLCENTER_ROLE,true)){ ?>
 	<div class="dash_bar_right">
 		Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 	</div>
-	
+	<?php } ?>
 </div>
 
 
@@ -527,6 +529,7 @@ $(function(){
 					
 				$ttl_purchased = 0;	
 				$ttl_inactiv_msch = 0;
+				$ttl_activated_msch = 0;
 				foreach($ttl_imei_status_res->result_array() as $ttl_imei_det)
 				{
 					if($ttl_imei_det['is_imei_activated'])
@@ -884,8 +887,8 @@ $(function(){
 													</tr>
 												</thead>
 												<tbody>
-													<?php foreach($this->db->query("select s.*,a.name as admin,b.name as brand,c.name as category,s.menuid,i.name AS menu,d.name AS deal from pnh_sch_discount_brands s left outer join king_brands b on b.id=s.brandid left outer join king_categories c on c.id=s.catid join king_admin a on a.id=s.created_by JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id JOIN pnh_menu i ON i.id=s.menuid LEFT JOIN king_dealitems d ON d.id=s.dealid where s.franchise_id=? and ? between s.valid_from and s.valid_to and sch_type=1 GROUP BY s.id order by id desc ",array($fran['franchise_id'],time()))->result_array() as $s){
-														
+													<?php foreach($this->db->query("select s.*,a.name as admin,b.name as brand,c.name as category,s.menuid,i.name AS menu,d.name AS deal from pnh_sch_discount_brands s left outer join king_brands b on b.id=s.brandid left outer join king_categories c on c.id=s.catid join king_admin a on a.id=s.created_by JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id JOIN pnh_menu i ON i.id=s.menuid LEFT JOIN king_dealitems d ON d.id=s.dealid where s.franchise_id=? and ? between s.valid_from and s.valid_to GROUP BY s.id order by id desc ",array($fran['franchise_id'],time()))->result_array() as $s){
+													
 														if(!$s['is_sch_enabled'])
 																continue;
 													?>
@@ -1197,7 +1200,7 @@ $(function(){
 				<div class="dash_bar_right">
 					Bounced/Cancelled : <span>Rs <?=format_price($cancelled_tilldate,2)?></span>
 				</div>
-				
+				<?php if($this->erpm->auth(true,true)){?>
 				<div class="dash_bar_right">
 					Unshipped : <span>Rs <?=format_price($not_shipped_amount,2)?></span>
 				</div>
@@ -1209,10 +1212,11 @@ $(function(){
 				<div class="dash_bar_right">
 					Ordered : <span>Rs <?=format_price($ordered_tilldate,2)?></span>
 				</div>
+				<?php } ?>
 			</div>
 
 			<?php if(1){?>
-				<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 500px;font-size: 12px;">
+				<div style="float: left; margin-top: 33px; margin-left: 20px; background: #f9f9f9; padding: 5px; width: 500px;font-size: 12px;clear:left;">
 					<h4 style="background: #C97033; color: #fff; padding: 10px; margin: -5px -5px 5px -5px;">Make a Topup/Security Deposit</h4>
 					<form method="post" id="top_form" action="<?=site_url("admin/pnh_topup/{$fran['franchise_id']}")?>">
 						<table cellpadding=3 width="100%">
@@ -1735,12 +1739,14 @@ $(function(){
 				<div id="orders">
 
 					<div>
+						<?php if($this->erpm->auth(true,true)){?>
 						<div class="dash_bar_right">
 							Total Order value : <span>Rs <?=format_price($this->db->query("select sum(amount) as l from king_transactions where franchise_id=?",$f['franchise_id'])->row()->l,0)?></span>
 						</div>
 						<div class="dash_bar_right">
 							Total Orders : <span><?=$this->db->query("select count(1) as l from king_transactions where franchise_id=?",$f['franchise_id'])->row()->l?></span>
 						</div>
+						<?php } ?>
 						
 						<!--<div class="dash_bar">
 							Orders last month : <span><?=$this->db->query("select count(1) as l from king_transactions where franchise_id=? and init between ".mktime(0,0,0,date("m")-1,01,date('Y'))." and ".(mktime(0,0,0,date("m"),01,date('Y'))-1),$f['franchise_id'])->row()->l?>
@@ -3413,10 +3419,18 @@ $("#pnh_membersch").dialog({
 				}
 				else
 				{
+					<?php if($this->erpm->auth(true,true)){?>
 					// reformat data ;
 					$('#ttl_order_amt').html("Total Ordered : "+resp.ttl_summary);
 					$('#paymrent_order_amt').html("Total Paid : "+resp.ttl_payment);
 					$('#shipped_order_amt').html("Total Shipped : "+resp.ttl_shipped);
+					<?php }else{
+					?>
+					$('#ttl_order_amt').html('').hide();
+					$('#paymrent_order_amt').html('').hide();
+					$('#shipped_order_amt').html('').hide();
+					<?php } ?>
+					
 					 var types = ['Order Placed','shipped', 'Cheque Date','Cash in Bank'];
 					$('#payment_stat .payment_stat_view').empty();
 					var summary=resp.summary;
