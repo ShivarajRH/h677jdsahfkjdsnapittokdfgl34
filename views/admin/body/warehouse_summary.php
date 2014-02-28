@@ -42,15 +42,16 @@
 	<div class="stock_det_wrap">
 	</div>
 	<div class="fl_left" style="width:100%">
-		<h4>Recent Transations</h4>
+		<h4>Purchase Log</h4>
 		<table id="ven_po_log" class="datagrid" width="100%">
 			<thead>
 				<tr>
 					<th>Slno</th>
-					<th>Vendor Name</th>
-					<th>MRP</th>
-					<th>GRN ID</th>
 					<th>Date of Intake</th>
+					<th>GRN ID</th>
+					<th>Vendor Name</th>
+					<th>Quantity</th>
+					<th>MRP</th>
 					<th>Purchase Price</th>
 				</tr>
 			</thead>
@@ -139,6 +140,7 @@ $(function(){
 	$('.jq_alpha_sort_alphalist_vend_head').html('<div class="alphabet_header_wrap"><span><a id="cat_lab" class="cat_lst_tab">Category List</a></span><span><a id="brand_lab" style="margin-right:0px !important" class="brand_lst_tab">Brand List</a></span> <input type="text" name="search_name" class="search_blk inp" placeholder="Search by Name" ><img style="margin-top: 7px;" src="<?php echo base_url().'images/search_icon.png'?>"></div>');
 	product_list_bycat(0,0,2);
 	$('.brand_lst_tab').addClass('selected_alpha_list');
+	$('.jq_alpha_sort_overview_content').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
 });
 
 $('.Brands_bychar_list_content_listdata').live("click",function(){
@@ -174,6 +176,10 @@ $('.Brands_bychar_list_content_listdata').live("click",function(){
   	 			$(this).hide();	
   	 		}
   	 	});
+  	 	if(!$('.prod_filter_wrap'))
+  	 	{
+  	 		$('.sk_deal_container').html('<div class="page_alert_wrap">No Products Found</div>');
+  	 	}
   	 	$('.qty').text(ttl_qty);
  		$('.ttl_mrp').text(ttl_mrp);
  		$('.avg_pur').text(ttl_avg_pur); 
@@ -301,7 +307,7 @@ function product_list_bycat(brandid,catid)
 		$('.sk_deal_container').css('opacity','1');
 		if(resp.status == 'error')
 			{
-				$('.sk_deal_container').html('<div class="page_alert_wrap">No Deals Found</div>');
+				$('.sk_deal_container').html('<div class="page_alert_wrap">No Products Found</div>');
 				return false;
 		    }
 			else
@@ -309,6 +315,8 @@ function product_list_bycat(brandid,catid)
 				var d_lst = '';
 				d_lst+='<div class="sk_deal_filter_blk_wrap">';
 				d_lst+='<div class="fl_right"><a class="button button-tiny button-rounded" href="javascript:void(0)" onclick="print_warehouse_summary('+brandid+','+catid+')" >Print summary</a></div>';
+				d_lst+='<div class="fl_right"><span style="font-size:12px;padding:8px 8px;float:right">Total Avg Purchase : <b>'+resp.ttl_avg_purchase;
+				d_lst+='</b></span><span style="font-size:12px;padding:8px 11px;float:right">Total MRP Value : <b>'+resp.ttl_mrp_value+'</b></span></div>';
 				d_lst+='<span class="total_wrap">Total Products : '+resp.ttl_prd+'</span></div>';
 				
 				d_lst+='<div class="sk_deal_container">';
@@ -363,6 +371,7 @@ function cat_bychar(ch)
 					});
 					//polist_byvendor(vids[0]);
 				$('.jq_alpha_sort_alphalist_itemlist').html(b_list);
+				$(".jq_alpha_sort_alphalist_itemlist_divwrap a:eq(0)").trigger('click');
 			}
     	},'json');
     	
@@ -382,6 +391,7 @@ function cat_bychar(ch)
 		 			b_list += '<div class="jq_alpha_sort_alphalist_itemlist_divwrap" name="'+b.name+'"><a  href="javascript:void(0)"  brandid="'+b.id+'">'+b.name+'</a></div>';
 				});
 				$('.jq_alpha_sort_alphalist_itemlist').html(b_list);
+				$(".jq_alpha_sort_alphalist_itemlist_divwrap a:eq(0)").trigger('click');
 			}
     	},'json');
 	}else
@@ -399,9 +409,11 @@ function cat_bychar(ch)
 		 			b_list += '<div class="jq_alpha_sort_alphalist_itemlist_divwrap" name="'+b.name+'"><a  href="javascript:void(0)" catid="'+b.id+'">'+b.name+'</a></div>';
 				});
 				$('.jq_alpha_sort_alphalist_itemlist').html(b_list);
+				$(".jq_alpha_sort_alphalist_itemlist_divwrap a:eq(0)").trigger('click');
 			}
     	},'json');
-	}		
+	}	
+		
 }   
 
 
@@ -442,8 +454,9 @@ $("#prod_stk_det_dlg" ).dialog({
 					else
 					{
 						var stk_lst='';
-						stk_lst+='<h4>'+pname+'</h4>';
+						stk_lst+='<h3><a href="'+site_url+'/admin/product/'+pid+'" target="_blank">'+pname+'</h3>';
 						stk_lst+='<div class="stk_wrap" >';
+						stk_lst+='<h4 style="margin:0px">Total Stock : '+resp.in_stk+' </h4>';
 						stk_lst+='<table class="datagrid" width="100%"><thead><tr><th>Barcode</th><th>Rackbin</th><th>MRP</th><th>Quantity</th>';
 						stk_lst+='</tr></thead><tbody>';
 						$.each(resp.stock_list,function(i,s){
@@ -453,6 +466,7 @@ $("#prod_stk_det_dlg" ).dialog({
 						
 						
 						stk_lst+='<div class="stk_wrap" >';
+						stk_lst+='<h4 style="margin:0px">Purchase Log </h4>';
 						stk_lst+='<table class="datagrid" width="100%"><thead><tr><th>Total Purchased</th><th>Total Sold</th><th>In Stock</th>';
 						stk_lst+='</tr></thead><tbody>';
 						stk_lst+= '<tr><td><b>'+resp.ttl_purchased+'</b></td>  <td>'+resp.stk_sold+'</td><td>'+resp.in_stk+'</td></tr>';
@@ -473,7 +487,7 @@ $("#prod_stk_det_dlg" ).dialog({
 function load_ven_log(product_id,pg)
 	{
 		$('#ven_po_log tbody').html('<tr><td colspan="6"><div align="center"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
-		$.post(site_url+'/admin/jx_ven_log/'+product_id+'/'+pg+'/10','',function(resp){
+		$.post(site_url+'/admin/jx_prod_purchase_log_det/'+product_id+'/'+pg+'/5','',function(resp){
 			$('#ven_po_log tbody').html(resp.log_data);
 			if(resp.ttl*1 > resp.limit*1)
 				$('#ven_log_pagination').html(resp.pagi_links).show();
@@ -483,13 +497,13 @@ function load_ven_log(product_id,pg)
 	}
 	
 	
-$('#stock_log_pagination .log_pagination a').live('click',function(e){
+$('#ven_log_pagination .log_pagination a').live('click',function(e){
 		e.preventDefault();
 		var url_prts = $(this).attr('href').split('/');
+		var pid=$('.log_pagination').attr('prodid');
 			pg = url_prts[url_prts.length-1];
 			pg = pg*1;
-			
-		load_ven_log('<?php echo $p['product_id'];?>',pg);
+		load_ven_log(pid,pg);
 	});
 	
 

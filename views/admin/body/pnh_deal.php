@@ -243,13 +243,6 @@ ul.tabs li.active
 
 		<h5 dealid="<?=$d['id'];?>" class="dealstock"></h5>
 
-		<script>
-                    $(".dealstock").dealstock({
-                        popup:false
-                        ,change:"text" //text,row
-                    });
-                </script>
-
 		</div>
 	</span>
 </div>
@@ -1080,6 +1073,11 @@ $('#recent_orders_list .pagination a').live('click',function(e){
 });
 
 load_recent_orders(site_url+'/admin/jx_getordersbydeal/'+itemid);
+
+$(".dealstock").dealstock({
+    popup:false
+    ,change:"text" //text,row
+});
 
 </script>
 

@@ -4417,8 +4417,18 @@ group by g.product_id order by product_name");
 	function product($pid=false)
 	{
 		$user=$this->auth(PRODUCT_MANAGER_ROLE);
-		$data['product']=$this->db->query("select ifnull(sum(s.available_qty),0) as stock,p.*,b.name as brand from m_product_info p left outer join t_stock_info s on s.product_id=p.product_id join king_brands b on b.id=p.brand_id where p.product_id=?",$pid)->row_array();
+		$instk=0;
+		$data['product']=$this->db->query("select ifnull(sum(s.available_qty),0) as stock,p.*,b.name as brand,b.id as bid,c.id as cid,c.name as category from m_product_info p left outer join t_stock_info s on s.product_id=p.product_id join king_brands b on b.id=p.brand_id join king_categories c on c.id=p.product_cat_id where p.product_id=?",$pid)->row_array();
 		
+		$data['ttl_purchased']=$this->db->query('select sum(received_qty) as pqty from t_grn_product_link where product_id=?',$prodid)->row()->pqty;
+		$data['ttl_stk_sold']=$this->db->query('select g.itemid,g.qty,o.quantity,sum(g.qty*i.invoice_qty) as sqty from
+													(
+													select itemid,product_id,qty from m_product_deal_link a where product_id = ?
+													union
+													select itemid,product_id,qty from m_product_group_deal_link a join products_group_pids b on a.group_id = b.group_id where product_id = ? group by itemid
+													) as g
+													join king_orders o on o.itemid = g.itemid
+													join king_invoice i on i.order_id = o.id and i.invoice_status = 1',array($prodid,$prodid))->row()->sqty;
 		if(empty($data['product']['product_id']))
 			show_error("Invalid product in access");
 		$data['prdct_lst'] = $this->db->query("select *,concat(product_name,'-',product_id) as product_name from m_product_info where is_serial_required=? and brand_id = ? and product_id != ? order by product_name ",array($p['is_serial_required'],$p['brand_id'],$p['product_id']));
@@ -4430,19 +4440,20 @@ group by g.product_id order by product_name");
 	/*
 	 * Ajax pagination fun to get stock log
 	 */ 
-	
-	
-	function jx_stocklog($pid='',$pg=0,$limit=20)
+	function jx_stocklog($pid='',$start='',$end='',$pg=0,$limit=25)
 	{
-		
 		$this->erpm->auth();
-		
 		if(!$pid)
 			exit;
+		if($start!='' && $end!='')
+			$cond=' and date(created_on) between "'.$start.'" and "'.$end.'" ';
+		else if($start=='' && $end=='')	
+			$cond=' ';
+			
 		$tbl_data_html = '';
 		
-		$total_rows=$this->db->query("select count(*) as t from t_stock_update_log where product_id=? ",$pid)->row()->t;
-		$sql="select u.name as username,l.*,pi.p_invoice_no,ci.invoice_no as c_invoice_no,i.invoice_no from t_stock_update_log l left outer join king_invoice i on i.id=l.invoice_id left outer join t_client_invoice_info ci on ci.invoice_id=l.corp_invoice_id left outer join proforma_invoices pi on pi.id=l.p_invoice_id left outer join king_admin u on u.id=l.created_by where l.product_id=? order by l.id desc limit $pg,$limit";
+		$total_rows=$this->db->query("select count(*) as t from t_stock_update_log where product_id=? $cond",$pid)->row()->t;
+		$sql="select u.name as username,l.*,pi.p_invoice_no,ci.invoice_no as c_invoice_no,i.invoice_no from t_stock_update_log l left outer join king_invoice i on i.id=l.invoice_id left outer join t_client_invoice_info ci on ci.invoice_id=l.corp_invoice_id left outer join proforma_invoices pi on pi.id=l.p_invoice_id left outer join king_admin u on u.id=l.created_by where l.product_id=? $cond order by l.id desc limit $pg,$limit";
 		$log_res = $this->db->query($sql,$pid);
 		if($log_res->num_rows())
 		{
@@ -4467,16 +4478,22 @@ group by g.product_id order by product_name");
 						$ref_link = '<a href="'.site_url("admin/pnh_product_returnbyid/{$l['return_prod_id']}").'">RI'.$l['return_prod_id'].'</a>';
 					}
 
-				$tbl_data_html .= '<tr>
-						<td>'.($i+$pg+1).'</td>
-						<td>'.($l['update_type']?"In":"Out").'</td>
-						<td>'.$ref_link.'</td>
-						<td>'.$l['qty'].'</td>
-						<td>'.$l['current_stock'].'</td>
-						<td>'.$l['username'].'</td>
-						<td>'.format_datetime($l['created_on']).'</td>
-						<td>'.$l['msg'].'</td>
-					</tr>';
+				$tbl_data_html .= '<tr>';
+					$tbl_data_html .= '<td width="3px">'.($i+$pg+1).'</td>';
+					$tbl_data_html .= '<td>'.$ref_link.'</td>';
+					$tbl_data_html .= '<td>'.($l['update_type']?"In":"Out").'</td>';
+					
+					if($l['update_type']=='0')
+						$tbl_data_html .= '<td>'.($l['current_stock']+$l['qty']).'</td>';
+					else if($l['update_type']==1)
+						$tbl_data_html .= '<td>'.($l['current_stock']-$l['qty']).'</td>';
+					
+					$tbl_data_html .= '<td>'.$l['qty'].'</td>';
+					$tbl_data_html .= '<td>'.$l['current_stock'].'</td>';
+					$tbl_data_html .= '<td>'.$l['username'].'</td>';
+					$tbl_data_html .= '<td>'.format_datetime($l['created_on']).'</td>';
+					$tbl_data_html .= '<td>'.$l['msg'].'</td>';
+				$tbl_data_html .= '</tr>';
 					
 				 
 			}
@@ -4486,10 +4503,10 @@ group by g.product_id order by product_name");
 		}
 		
 		$this->load->library('pagination');
-		$config['base_url'] = site_url('admin/jx_stocklog/'.$pid);
+		$config['base_url'] = site_url('admin/jx_stocklog/'.$pid.'/'.$start.'/'.$end);
 		$config['total_rows'] = $total_rows;
 		$config['per_page'] = $limit;
-		$config['uri_segment'] = 4;
+		$config['uri_segment'] =6;
 		
 		$this->config->set_item('enable_query_strings',false);
 		$this->pagination->initialize($config);
@@ -4506,17 +4523,33 @@ group by g.product_id order by product_name");
 	 * 
 	 */ 
 	 
-	function jx_stockimeilist($pid='',$pg=0,$limit=20)
+	function jx_stockimeilist($type='',$pid='',$start='',$end='',$pg=0,$limit=25)
 	{
-		
 		$this->erpm->auth();
-		
 		if(!$pid)
 			exit;
+		if($start!='' && $end!='')
+		{
+			if($type=='processed')
+				$cond=' and status=1 and date(from_unixtime(created_on)) between "'.$start.'" and "'.$end.'" ';
+			else if($type=='available')
+				$cond=' and status=0 and date(from_unixtime(created_on)) between "'.$start.'" and "'.$end.'" ';
+			else
+				$cond=' ';
+		}else if($start=='' && $end=='')
+		{
+			if($type=='processed')
+				$cond=' and status=1';
+			else if($type=='available')
+				$cond=' and status=0';
+			else
+				$cond=' ';
+		}
+		
 		$tbl_data_html = '';
 		
-		$total_rows=$this->db->query("select count(*) as t from t_imei_no where product_id=? order by status asc  ",$pid)->row()->t;
-		$sql="select * from t_imei_no where product_id=? order by status asc limit $pg,$limit";
+		$total_rows=$this->db->query("select count(*) as t from t_imei_no where product_id=? $cond order by created_on desc  ",$pid)->row()->t;
+		$sql="select * from t_imei_no where product_id=? $cond order by created_on desc limit $pg,$limit";
 		$imei_res = $this->db->query($sql,$pid);
 		if($imei_res->num_rows())
 		{
@@ -4524,13 +4557,13 @@ group by g.product_id order by product_name");
 			{
 				$imei['trans_id'] = $this->db->query('select transid from king_orders where id = ? ',$imei['order_id'])->row()->transid;
 				$grn = 	'<a href="'.site_url('admin/viewgrn/'.$imei['grn_id']).'">'.$imei['grn_id'].'</a>' ;
-				$tbl_data_html .= '<tr>
-					<td>'.($i+$pg+1).'</td>
-					<td>'.($imei['imei_no']).'</td>
-					<td>'.$grn.'</td>
-					<td>'.($imei['status']?anchor('admin/trans/'.$imei['trans_id'],$imei['order_id']):'In-Stock').'</td>
-					<td>'.format_datetime_ts($imei['created_on']).'</td>
-				</tr>';
+				$tbl_data_html .= '<tr>';
+					$tbl_data_html .= '<td>'.($i+$pg+1).'</td>';
+					$tbl_data_html .= '<td>'.($imei['imei_no']).'</td>';
+					$tbl_data_html .= '<td>'.$grn.'</td>';
+					$tbl_data_html .= '<td>'.($imei['status']?anchor('admin/trans/'.$imei['trans_id'],$imei['order_id']):'In-Stock').'</td>';
+					$tbl_data_html .= '<td>'.format_datetime_ts($imei['created_on']).'</td>';
+				$tbl_data_html .= '</tr>';
 			}
 		}else
 		{
@@ -4538,10 +4571,10 @@ group by g.product_id order by product_name");
 		}
 		
 		$this->load->library('pagination');
-		$config['base_url'] = site_url('admin/jx_stockimeilist/'.$pid);
+		$config['base_url'] = site_url('admin/jx_stockimeilist/'.$type.'/'.$pid.'/'.$start.'/'.$end);
 		$config['total_rows'] = $total_rows;
 		$config['per_page'] = $limit;
-		$config['uri_segment'] = 4;
+		$config['uri_segment'] =7;
 		
 		$this->config->set_item('enable_query_strings',false);
 		$this->pagination->initialize($config);
@@ -4552,6 +4585,7 @@ group by g.product_id order by product_name");
 		
 		echo json_encode(array('imei_data'=>$tbl_data_html,'imei_pagi_links'=>$pagi_links,'imei_ttl'=>$total_rows,'limit'=>$limit));
 	}
+
 	/**
 	 * function to update mrp 
 	 * @param unknown_type $prods 
@@ -9548,7 +9582,7 @@ group by g.product_id order by product_name");
 		}
 		else
 		{
-			$mem['first_name']=($mem['first_name']=="" && $mem['last_name']=="")?"No Name":$mem['first_name'];
+			$mem['first_name']=($mem['first_name']==""&&$mem['last_name']=="")?"No Name":$mem['first_name'];
 			$msg="<div id='mem_fran_det'>";
 			$order=$this->db->query("select count(1) as n,sum(amount) as t from king_transactions where transid in (select transid from king_orders where userid=?)",$mem['user_id'])->row_array();
 			if($more==1)
@@ -21195,7 +21229,7 @@ order by action_date";
 		/**
 		 * function to load franchises list in ajax  
 		*/
-		function jx_getfranchiseslist($type=0,$alpha=0,$terr_id=0,$town_id=0,$pg=0)
+		function jx_getfranchiseslist($type=0,$alpha=0,$terr_id=0,$town_id=0,$sel_menuid=0,$pg=0)
 		{
 			$this->erpm->auth();
 			$user=$this->erpm->getadminuser();
@@ -21206,6 +21240,7 @@ order by action_date";
 				$alpha = $this->input->post('alpha');
 				$terr_id = $this->input->post('terr_id');
 				$town_id = $this->input->post('town_id');
+				$sel_menuid = $this->input->post('menuid');
 				$pg = $this->input->post('pg');
 			}
 			
@@ -21218,14 +21253,15 @@ order by action_date";
 			
 			$sql="select f.created_on,f.is_suspended,group_concat(a.name) as owners,tw.town_name as town,f.is_lc_store,f.franchise_id,c.class_name,c.margin,c.combo_margin,f.pnh_franchise_id,f.franchise_name,
 							f.locality,f.city,f.current_balance,f.login_mobile1,f.login_mobile2,
-							f.email_id,u.name as assigned_to,t.territory_name 
+							f.email_id,u.name as assigned_to,t.territory_name
 						from pnh_m_franchise_info f 
 						left outer join king_admin u on u.id=f.assigned_to 
 						join pnh_m_territory_info t on t.id=f.territory_id 
 						join pnh_towns tw on tw.id=f.town_id 
-						join pnh_m_class_info c on c.id=f.class_id 	
+						join pnh_m_class_info c on c.id=f.class_id
 						left outer join pnh_franchise_owners ow on ow.franchise_id=f.franchise_id 
 						left outer join king_admin a on a.id=ow.admin
+						join pnh_franchise_menu_link fl on fl.fid = f.franchise_id 
 						where 1 
 					";
 					
@@ -21262,12 +21298,18 @@ order by action_date";
 				if($town_id)
 					$sql .= ' and f.town_id = '.$town_id;	
 									
+				if($sel_menuid)
+				{
+				    $sql .= ' and fl.menuid = '.$sel_menuid.' ';
+				  
+				}	
+
 				$sql .= " group by f.franchise_id "; 
 				if($type == 1)
 					$sql .= " order by f.created_on desc limit 20 ";	
 				else
 					$sql .= " order by f.franchise_name asc limit $pg,50";	
-				  
+				
 				$data['frans']= $this->db->query($sql)->result_array();
 				
 				if($type == 1)
@@ -21284,7 +21326,14 @@ order by action_date";
 						$data['town_list'] = $this->db->query("select distinct f.town_id,town_name from pnh_m_franchise_info f join pnh_towns b on f.town_id = b.id where 1 $fil_cond order by town_name  ")->result_array();
 					else
 						$data['town_list'] = array();
+
+					$data['menu_list'] = $this->db->query("select id as menuid,name as menuname from pnh_menu order by name")->result_array();
 					
+					//if($sel_menuid) 
+					//{
+					    //$fil_cond .= ' and fl.menuid = '.$sel_menuid.' ';
+					//}
+                                        
 					$data['total_frans'] = $this->db->query("select distinct f.franchise_id from pnh_m_franchise_info f where 1 $fil_cond group by f.franchise_id ")->num_rows();
 					
 				}
@@ -21294,10 +21343,10 @@ order by action_date";
 				{
 					$this->load->library('pagination');
 				
-					$config['base_url'] = site_url("admin/jx_getfranchiseslist/$type/$alpha/$terr_id/$town_id");
+					$config['base_url'] = site_url("admin/jx_getfranchiseslist/$type/$alpha/$terr_id/$town_id/$sel_menuid");
 					$config['total_rows'] = $data['total_frans'];
 					$config['per_page'] = 50;
-					$config['uri_segment'] = 7; 
+					$config['uri_segment'] = 8; 
 					$config['num_links'] = 10;
 					
 					$this->config->set_item('enable_query_strings',false);
@@ -21307,7 +21356,8 @@ order by action_date";
 					$this->config->set_item('enable_query_strings',true);
 				}
 				$data['sel_terr_id'] = $terr_id;
-				$data['sel_town_id'] = $town_id; 
+				$data['sel_town_id'] = $town_id;
+				$data['sel_menuid'] = $sel_menuid;
 				$data['type'] = $type;
 				$data['alpha'] = $alpha;
 				$data['pg'] = $pg;
@@ -27472,7 +27522,7 @@ die; */
 		$user=$this->auth(PURCHASE_ORDER_ROLE);
 		if($catid==0)
 			$cond='p.brand_id='.$brandid.'';
-		else if($brandid=='all')
+		else if($brandid==0)
 			$cond='p.product_cat_id='.$catid.'';
 		else
 			$cond='p.brand_id='.$brandid.' and p.product_cat_id='.$catid.'';
@@ -27799,7 +27849,12 @@ die; */
     		$output['status']='success';
     		$output['midentry_type']=$mid_entrytype;
     	}
-    	else
+    	else if(!$mid)
+    	{
+    		$output['status']='error';
+    		$output['msg']='Enter Member ID';
+    	}
+    	else 
     	{
     		$output['status']='error';
     		$output['msg']='Invalid Member ID';
@@ -27882,7 +27937,7 @@ die; */
     	$offprice=$this->input->post('offprice');
     	$quote_price=$this->input->post('quote');
     	$output=array();
-    	if($quote_price)
+    	if(is_numeric($quote_price))
     	{
 	    	$this->db->query("insert into pnh_franchise_price_quote(franchise_id,pid,mrp,offrprice,lprice,quote,created_on)values(?,?,?,?,?,?,now())",array($quote_fid,$quote_pid,$pmrp,$offprice,$lprice,$quote_price));
 	    	$id=$this->db->insert_id();
@@ -27890,11 +27945,20 @@ die; */
 	    	{
 	    		$output['status']='success';
 	    	}
-	    	else
-	    	{
-	    		$output['status']='error';
-	    	}
+	    	
     	}
+    	else if(!is_numeric($quote_price))
+    	
+    	{
+    		$output['status']='error';
+    		$output['msg']='Invalid Price entered.';
+    	}
+    	else
+    	{
+    		$output['status']='error';
+    		$output['msg']='Please Enter Franchise request Price';
+    	}	
+    	
     	echo json_encode($output);
     }
 	
@@ -27912,18 +27976,17 @@ die; */
 			$f_id=$fran_details['franchise_id'];
 			$f_terri_name=$fran_details['territory_name'];
 			$f_twn_name=$fran_details['town_name'];
-			$f_contact1=$fran_details['login_mobile1'];
-			$f_contact2=$fran_details['login_mobile2'];
+			$f_contact1=$fran_details['login_mobile1']?$fran_details['login_mobile1']."<img src='".IMAGES_URL."phone.png' class='phone_small' onclick='makeacall(\"0{$fran_details['login_mobile1']}\")'>":'' ;
+			$f_contact2=$fran_details['login_mobile2']?$fran_details['login_mobile2']."<img src='".IMAGES_URL."phone.png' class='phone_small' onclick='makeacall(\"0{$fran_details['login_mobile2']}\")'>":'' ;
 			$menu=$flinked_menu?$flinked_menu:'Not Alloted.';
 	    	$msg="<div id='mem_fran_det' width='50%'>";
-			$msg.="<div class='stk_mem_detwrap'><b style='width:15%;'>Name : </b><a style='font-size:14px;color:blue;' href='".site_url("admin/pnh_franchise/$f_id")."' target='_blank'>$f_name</a></div> <div class='stk_mem_detwrap'> <b style='width:15%;'>Territory : </b><a>$f_terri_name</a></b> </div><div class='stk_mem_detwrap'><b style='width:15%;'>Town : </b><a>$f_twn_name</a></div><div class='stk_mem_detwrap'><b style='width:15%;'>Contact : </b><a>$f_contact1<img src='".IMAGES_URL."phone.png' class='phone_small' onclick='makeacall(\"0{$f_contact1}\")'> &nbsp; $f_contact2<img src='".IMAGES_URL."phone.png' class='phone_small' onclick='makeacall(\"0{$f_contact2}\")'></a></div><fieldset><b>Menu  </b><div><a  style='font-size:11px;display:inline-block;margin:4px 3px 2px 2px;width='50%';text-decoration: none;'>{$menu}</a></div></fieldset></div>";
+			$msg.="<div class='stk_mem_detwrap'><b style='width:15%;'>Name : </b><a style='font-size:14px;color:blue;' href='".site_url("admin/pnh_franchise/$f_id")."' target='_blank'>$f_name</a></div> <div class='stk_mem_detwrap'> <b style='width:15%;'>Territory : </b><a>$f_terri_name</a></b> </div><div class='stk_mem_detwrap'><b style='width:15%;'>Town : </b><a>$f_twn_name</a></div><div class='stk_mem_detwrap'><b style='width:15%;'>Contact : </b><a>$f_contact1 &nbsp; $f_contact2</a></div><fieldset><b>Menu  </b><div><a  style='font-size:11px;display:inline-block;margin:4px 3px 2px 2px;width='50%';text-decoration: none;'>{$menu}</a></div></fieldset></div>";
 	      	$msg.="<div class='clear'></div></div>";
 	    	die($msg);
 		}
     	
     }
-    
-    /**
+	/**
      * Function to return deal stock details
      * @param type $itemid int
      */
@@ -27969,7 +28032,7 @@ die; */
     }
 
     /**
-     * Function to return JSON deal stock details
+     * Function to return deal stock details
      * @param type $itemid int
      */
     function jx_pnh_deal_stock_status($itemid=0,$is_pnh=1)
@@ -28051,7 +28114,7 @@ die; */
 		else
 			$cond='p.brand_id='.$brandid.' and p.product_cat_id='.$catid.'';
 		
-		$products_res=$this->db->query("select p.product_id,p.product_cat_id,p.brand_id,p.product_name,p.is_sourceable,sum(s.available_qty) as stock,sum(s.available_qty*s.mrp) as stock_value,p.mrp from m_product_info p join t_stock_info s on s.product_id=p.product_id where $cond group by p.product_id having sum(s.available_qty)!=0 ");
+		$products_res=$this->db->query("select p.product_id,p.product_cat_id,p.brand_id,p.product_name,p.is_sourceable,sum(s.available_qty) as stock,round(sum(s.available_qty*s.mrp),2) as stock_value,p.mrp from m_product_info p join t_stock_info s on s.product_id=p.product_id where $cond group by p.product_id having sum(s.available_qty)!=0 ");
 		$data['pagetitle']="Stock Product List for Brand: ".(($brandid!='all')?$this->db->query("select name from king_brands where id=?",$brandid)->row()->name:'All').' Category: '.(($catid != 'all')?$this->db->query("select name from king_Categories where id=?",$catid)->row()->name:'All');
 		
 		if($products_res->num_rows())
@@ -28064,11 +28127,11 @@ die; */
 			foreach($products_res->result_array() as $p)
 			{
 				$i++;
-				$p['mrp']=format_price($p['mrp'],2);
-				$p['stock_value']=format_price($p['stock_value'],2);
+				$p['mrp']=$p['mrp'];
+				$p['stock_value']=$p['stock_value'];
 				$avg=round($this->db->query("select avg(purchase_price) as a from t_grn_product_link where product_id=?",$p['product_id'])->row()->a,2);
-				$p['avg']=format_price($avg);
-				$p['avg_ttl_purchase']=format_price($p['stock']*$avg,2);
+				$p['avg']=$avg;
+				$p['avg_ttl_purchase']=$p['stock']*$avg;
 				
 				$prod_details[]=$p;
 				$output['prod_details'] = $prod_details;
@@ -28114,6 +28177,117 @@ die; */
 				$stk_list[]=$s;
 			}
 			
+			$output['stock_list']=$stk_list;
+			$output['status']='success';
+		}else{
+			$output['status']='error';
+			$output['message']="No Stock found";
+		}
+		
+		echo json_encode($output);
+	}
+	
+
+	/*
+	 * get recent purchase log for product
+	 * unknown type $pid
+	 * author suresh
+	 */ 
+	function jx_prod_purchase_log_det($pid='',$pg=0,$limit=10)
+	{
+		$this->erpm->auth();
+		if(!$pid)
+			exit;
+		$tbl_data_html = '';
+		
+		$total_rows=$this->db->query("select count(*) as t from t_grn_product_link where product_id=? ",$pid)->row()->t;
+		$sql="select date_format(ga.created_on,'%d-%b-%Y') as pur_date,f.vendor_name,f.vendor_id,sum(received_qty) as s,g.grn_id,g.mrp,g.purchase_price
+				from t_grn_product_link g 
+				join t_grn_info ga on ga.grn_id=g.grn_id
+				join m_vendor_info f on f.vendor_id=ga.vendor_id
+				where g.product_id=?
+				group by g.id
+				order by g.id desc limit $pg,$limit";
+		$log_res = $this->db->query($sql,$pid);
+		if($log_res->num_rows())
+		{
+			foreach($log_res->result_array() as $v )
+			{
+				$tbl_data_html .= '<tr>';
+					$tbl_data_html .= '<td>'.(++$pg).'</td>';
+					$tbl_data_html .= '<td>'.$v['pur_date'].'</td>';
+					$tbl_data_html .= '<td>'.$v['grn_id'].'</td>';
+					$tbl_data_html .= '<td>'.$v['vendor_name'].'</td>';
+					$tbl_data_html .= '<td>'.$v['s'].'</td>';
+					$tbl_data_html .= '<td>'.$v['mrp'].'</td>';
+					$tbl_data_html .= '<td>'.$v['purchase_price'].'</td>';
+				$tbl_data_html .= '</tr>';
+					
+				 
+			}
+		}else
+		{
+			$tbl_data_html .= '<tr><td colspan="6"><div align="center"> No data found</div></td></tr>';
+		}
+		
+		$this->load->library('pagination');
+		$config['base_url'] = site_url('admin/jx_ven_log/'.$pid);
+		$config['total_rows'] = $total_rows;
+		$config['per_page'] = $limit;
+		$config['uri_segment'] = 4;
+		
+		$this->config->set_item('enable_query_strings',false);
+		$this->pagination->initialize($config);
+		$pagi_links = $this->pagination->create_links();
+		$this->config->set_item('enable_query_strings',true);
+		
+		$pagi_links = '<div class="log_pagination" prodid="'.$pid.'">'.$pagi_links.'</div>';
+		
+		echo json_encode(array('log_data'=>$tbl_data_html,'pagi_links'=>$pagi_links,'ttl'=>$total_rows,'limit'=>$limit));
+	}
+	
+	/**
+	 * get the Stock list for product
+	 * @param unknown type $productid
+	 */
+	function jx_prod_stk_det()
+	{
+		$this->erpm->auth();
+		$prodid=$this->input->post('pid');
+		
+		$output=array();
+		$p_mrpstk_arr_res=$this->db->query("select sum(available_qty) as s,mrp,
+												a.location_id,a.rack_bin_id,
+												concat(rack_name,bin_name) as rbname,
+												ifnull(product_barcode,'') as pbarcode,
+												a.stock_id     
+											from t_stock_info  a 
+											join m_storage_location_info b on b.location_id = a.location_id 
+											join m_rack_bin_info c on c.id = a.rack_bin_id  
+											where product_id=? 
+											group by mrp,pbarcode,a.location_id,a.rack_bin_id 
+											having sum(available_qty)>0 
+											order by s desc ",$prodid);
+		
+		if($p_mrpstk_arr_res->num_rows())
+		{
+			$stk_list=array();
+			$in_stk=0;
+			foreach ($p_mrpstk_arr_res->result_array() as $s) {
+				$s['mrp']=format_price($s['mrp'],0);
+				$in_stk+=$s['s'];
+				$stk_list[]=$s;
+			}
+			$output['ttl_purchased']=$this->db->query('select sum(received_qty) as pqty from t_grn_product_link where product_id=?',$prodid)->row()->pqty;
+			$output['stk_sold']=$this->db->query('select g.itemid,g.qty,o.quantity,sum(g.qty*i.invoice_qty) as sqty from
+													(
+													select itemid,product_id,qty from m_product_deal_link a where product_id = ?
+													union
+													select itemid,product_id,qty from m_product_group_deal_link a join products_group_pids b on a.group_id = b.group_id where product_id = ? group by itemid
+													) as g
+													join king_orders o on o.itemid = g.itemid
+													join king_invoice i on i.order_id = o.id and i.invoice_status = 1',array($prodid,$prodid))->row()->sqty;
+			$output['in_stk']=$in_stk;										
 			$output['stock_list']=$stk_list;
 			$output['status']='success';
 		}else{

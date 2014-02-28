@@ -3139,3 +3139,56 @@ select * from products_group_pids
 select * from m_product_group_deal_link
 
 # Feb_25_2014
+
+# Feb_26_2014
+select id as menuid,name as menuname from pnh_menu order by `name`;
+
+select fid,fml.menuid,`name` as menuname from pnh_franchise_menu_link fml
+join pnh_menu m on m.id = fml.menuid
+ where fml.fid='414'
+order by name asc
+
+select * from pnh_m_franchise_info
+
+select * from pnh_franchise_menu_link;
+
+-- update
+select * from (
+select ifnull(group_concat(distinct fl.menuid),0) as grp_menuids,f.created_on,f.is_suspended,group_concat(a.name) as owners,tw.town_name as town,f.is_lc_store,f.franchise_id,c.class_name,c.margin,c.combo_margin,f.pnh_franchise_id,f.franchise_name,
+							f.locality,f.city,f.current_balance,f.login_mobile1,f.login_mobile2,
+							f.email_id,u.name as assigned_to,t.territory_name 
+						from pnh_m_franchise_info f 
+						left outer join king_admin u on u.id=f.assigned_to 
+						join pnh_m_territory_info t on t.id=f.territory_id 
+						join pnh_towns tw on tw.id=f.town_id 
+						join pnh_m_class_info c on c.id=f.class_id
+						left outer join pnh_franchise_owners ow on ow.franchise_id=f.franchise_id 
+						left outer join king_admin a on a.id=ow.admin
+                                                left join pnh_franchise_menu_link fl on fl.fid = f.franchise_id
+						where 1 group by f.franchise_id
+) as g where (106) IN (g.grp_menuids);
+
+#=>360 / 1061 ms
+select * from pnh_menu where id='112';
+
+select fcs.franchise_id,fcs.action_type,fcs.acc_correc_id,fcs.debit_amt,fcs.is_returned,fcs.credit_amt,fcs.remarks,fcs.status,fcs.created_on,fcs.created_by
+		,fcs.unreconciled_value,fcs.unreconciled_status,  sum(rlog.reconcile_amount) as reconcile_amount
+from pnh_franchise_account_summary fcs 
+left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id and rlog.is_reversed !=1
+where fcs.action_type in (5,6) and fcs.acc_correc_id != 0 and fcs.franchise_id='59' group by fcs.acc_correc_id,fcs.franchise_id
+
+-- update
+
+select * from ( select f.created_on,f.is_suspended,group_concat(a.name) as owners,tw.town_name as town,f.is_lc_store,f.franchise_id,c.class_name,c.margin,c.combo_margin,f.pnh_franchise_id,f.franchise_name,
+							f.locality,f.city,f.current_balance,f.login_mobile1,f.login_mobile2,
+							f.email_id,u.name as assigned_to,t.territory_name,ifnull(group_concat(distinct fl.menuid),0) as grp_menuids
+						from pnh_m_franchise_info f 
+						left outer join king_admin u on u.id=f.assigned_to 
+						join pnh_m_territory_info t on t.id=f.territory_id 
+						join pnh_towns tw on tw.id=f.town_id 
+						join pnh_m_class_info c on c.id=f.class_id
+						left outer join pnh_franchise_owners ow on ow.franchise_id=f.franchise_id 
+						left outer join king_admin a on a.id=ow.admin
+						left join pnh_franchise_menu_link fl on fl.fid = f.franchise_id
+						where 1 
+					   and f.is_suspended != 0 group by f.franchise_id  order by f.franchise_name asc limit 0,50 ) as g  where FIND_IN_SET(g.grp_menuids) 

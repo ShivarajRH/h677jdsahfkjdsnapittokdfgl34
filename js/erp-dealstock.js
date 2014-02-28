@@ -1,5 +1,6 @@
 /**
- * @description: Plugin to show tip box on mouse over the element
+ * @Description: Plugin to show deal stock status
+ * @support:shivaraj@storeking.in
  */
 ( function ($) {
     //<!--============================================<< DEAL STOCK PLUGIN SETTINGS START >>===================================-->
@@ -123,7 +124,8 @@
             var POPUP = st.options.popup;
             
             // ========================================< AUTO REFRESH THE DEAL STATUS START >==========================================================
-            if(myVar === 0) {
+            if(myVar === 0)
+            {
                 myVar = 1;
                 var LOADSTATUS = st.options.loadstatus;
                 var AUTOREFRESH = st.options.autorefresh;
@@ -145,7 +147,8 @@
             // ========================================< AUTO REFRESH THE DEAL STATUS END >==========================================================
             
             // ========================================< DRAW OR CLOSE POPUP WITH DEAL ITEMS START >==========================================================
-            if(POPUP === true) {
+            if(POPUP === true)
+            {
                     if(EVENT == 'click')
                     {
                             // on Click on in stock text Open / Close plugin box
@@ -204,7 +207,8 @@
     /** send all dealids
     *   and put status to element
     */
-    function fn_dealstatus(elt) {
+    function fn_dealstatus(elt)
+    {
         var ELTCLASS = elt.attr("class");  ELTCLASS = ELTCLASS == undefined ? '' : ELTCLASS;
             
         var CHANGE = elt.options.change;
@@ -230,7 +234,7 @@
                         $.each(resp,function(itemid,itemdata) {
                             
                             if(dealid == itemid) {
-                                    //print("dealid = "+ dealid +" "+" itemid = "+ itemid);
+
                                     var HTML_DATA = '';
 
                                     if(itemdata.status == 'fail')

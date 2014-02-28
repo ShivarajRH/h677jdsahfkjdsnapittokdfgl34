@@ -23,6 +23,16 @@
 				<?php if($type != 1){ ?>
 					<div class="fil_options" >
 						<span class="fil_option">
+							<b>Menu</b> :  
+							<select class="inp" name="fil_menu" style="width: 150px;">
+								<option value="">All</option>
+								<?php 
+									foreach($menu_list as $menu) 
+										echo '<option value="'.$menu['menuid'].'" '.(($sel_menuid==$menu['menuid'])?'selected':'').' >'.$menu['menuname'].'</option>';
+								?>
+							</select>
+						</span>
+						<span class="fil_option">
 							<b>Territory</b> :  
 							<select class="inp" name="fil_terr" style="width: 150px;">
 								<option value="">All</option>
