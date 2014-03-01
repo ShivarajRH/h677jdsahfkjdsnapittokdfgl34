@@ -5,6 +5,7 @@
 		
 		function pnh_state_analytics($sid=false)
 		{
+			$this->erpm->auth(PAF_ROLE);
 			$data['territory']=$this->db->query("select * from pnh_m_territory_info where state_id = '".$sid."' order by territory_name asc")->result_array();
 			$data['page']="pnh_state_analytics";
 			$this->load->view("admin",$data);

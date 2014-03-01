@@ -52,6 +52,7 @@
 			<div style="float: right">
 				<a href="<?=site_url("admin/editvendor/{$v['vendor_id']}")?>" class="button button-rounded button-tiny" >Edit</a>&nbsp;&nbsp;<a href="<?php echo site_url("admin/purchaseorder/{$v['vendor_id']}")?>" target="_blank" class="button button-rounded button-action button-tiny" >Create PO</a>
 			</div>
+			<?php /*?>
 			<div class="dash_bar_right" >
 				<span><?=$this->db->query("select count(1) as l from t_po_info where vendor_id=?",$v['vendor_id'])->row()->l?></span>
 				POs raised
@@ -61,6 +62,7 @@
 				<span>Rs <?=number_format($this->db->query("select sum(total_value) as l from t_po_info where vendor_id=?",$v['vendor_id'])->row()->l)?></span>
 				Total PO value
 			</div>
+			<?php */?>
 		</div>
 	</div>
 	<div class="page_content">
@@ -73,7 +75,120 @@
 <li><a href="#v_contacts">Contacts</a></li>
 <li><a href="#v_brands">Brands Margin Details</a></li>
 <li><a href="#v_pos">POs Raised</a></li>
+
+<?php if($this->erpm->auth(STOCK_INTAKE_ROLE,true)){?>
+<li><a href="#prod_grn_list">Purchase Products List</a></li>
+<?php } ?>
 </ul>
+
+<?php if($this->erpm->auth(STOCK_INTAKE_ROLE,true)){?>
+<div id="prod_grn_list" style="overflow: hidden;">
+	<div class="opt_bar" style="padding:5px;float: right;" align="right">
+		Brand : 
+		<select name="sel_brand_id">
+			<option value="">Choose</option>
+			<option value="0">All</option>
+			<?php 
+				foreach($this->db->query("select distinct b.id,b.name from m_vendor_brand_link a join king_brands b on a.brand_id = b.id where vendor_id = ? order by b.name ",$v['vendor_id'])->result_array() as $vb)
+				{
+					echo '<option value="'.($vb['id']).'">'.($vb['name']).'</option>';
+				}
+			?>
+		</select>
+		<input type="button" onclick="fil_vb_products()" value="View Products">
+	</div>
+	<div style="padding:5px;">
+		<?php 
+			$cond = '';
+			if($this->uri->segment(4) == '')
+			{
+				
+			}else
+			{
+				if($this->uri->segment(4))
+					$cond = ' and c.brand_id = "'.($this->uri->segment(4)).'"';
+				else
+					$cond = ' and 1 ';
+			}
+				
+
+			if($cond != '')
+			{
+				$vb_plist_res  = $this->db->query("select a.grn_id,date(b.created_on) as grn_date,a.product_id,d.name as brand,d.id as brandid,c.product_name,a.received_qty,a.mrp,a.dp_price,a.purchase_price,a.tax_percent,margin,scheme_discount_value,scheme_discunt_type
+														from t_grn_product_link a 
+														join t_grn_info b on a.grn_id = b.grn_id 
+														join m_product_info c on c.product_id = a.product_id 
+														join king_brands d on d.id = c.brand_id 
+														where b.vendor_id = ? and a.received_qty > 0 $cond 
+													group by a.product_id
+													order by grn_id desc,product_name",$v['vendor_id']);
+			
+			 
+			
+			if($vb_plist_res->num_rows())
+			{
+		?>
+		<div>
+			<b>Total Listed</b> : <?php echo $vb_plist_res->num_rows()?>
+		</div>
+		<table class="datagrid" width="100%">
+			<thead>
+				<tr>
+					<th>Slno</th>
+					<th>GRNID</th>
+					<th>GRN Date</th>
+					<th>Brand</th>
+					<th>Product</th>
+					<th>MRP</th>
+					<th>DP</th>
+					<th>Purchase Price</th>
+					<th>Purchased Qty</th>
+					<?php /*?>
+					<th>Margin</th>
+					<?php /*/?>
+					<th>Tax</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php 
+					foreach($vb_plist_res->result_array() as $i=>$vb_pdet)
+					{
+				?>
+						<tr>
+							<td><?php echo $i+1;?></td>
+							<td><a target="_blank" href="<?php echo site_url('admin/viewgrn/'.$vb_pdet['grn_id'])?>"><?php echo $vb_pdet['grn_id']?></a></td>
+							<td><?php echo format_date($vb_pdet['grn_date'])?></td>
+							<td><a target="_blank" href="<?php echo site_url('admin/viewbrand/'.$vb_pdet['brandid'])?>"><?php echo $vb_pdet['brand']?></a></td>
+							<td><a target="_blank" href="<?php echo site_url('admin/product/'.$vb_pdet['product_id'])?>"><?php echo $vb_pdet['product_name']?></a></td>
+							<td><?php echo ($vb_pdet['mrp'])?></td>
+							<td><?php echo ($vb_pdet['dp_price'])?></td>
+							<td><?php echo ($vb_pdet['purchase_price'])?></td>
+							<td><?php echo ($vb_pdet['received_qty'])?></td>
+							<?php /*?>
+							<td><?php echo ($vb_pdet['margin'])?></td>
+							<?php /*/?>
+							<td><?php echo ($vb_pdet['tax_percent'])?></td>
+						</tr>
+				<?php 		
+					}
+				?>
+			</tbody>
+		</table>
+		<?php }
+			}
+		?>
+	</div>
+</div>
+
+<script>
+	var ven_id = <?php echo $v['vendor_id']?>;
+	function fil_vb_products()
+	{
+		location.href = site_url+'/admin/vendor/'+ven_id+'/'+$('select[name="sel_brand_id"]').val()+'#prod_grn_list';
+	}
+</script>
+
+<?php } ?>
 
 <div id="v_details">
 <table class="datagrid " width="400">
@@ -171,7 +286,11 @@
 		<h3>Linked Brands and Category Details</h3> 
 <table class="datagrid nofooter" width="100%">
 <thead>
-<tr><th>Sl no</th><th>Linked Brands</th><th>Linked Categorys </th><th>Total PO value</th></tr>
+<tr><th>Sl no</th><th>Linked Brands</th><th>Linked Categorys </th>
+<?php /*?>
+<th>Total PO value</th>
+<?php /*/?>
+</tr>
 </thead>
 <tbody>
 <?php $i=1; foreach($brands as $b){ $bid=$b['id']; $vid=$b['vendor_id']?>
@@ -186,7 +305,9 @@
 			<div class="vbc_link"></div>
 		</div>
 	</td>
+	<?php /*?>
 	<td>Rs <?=number_format($this->db->query("select sum(p.purchase_price*p.order_qty) as s from t_po_info po join t_po_product_link p on p.po_id=po.po_id join m_product_info d on d.product_id=p.product_id and d.brand_id=? where po.vendor_id=?",array($b['id'],$v['vendor_id']))->row()->s)?>
+	<?php /*/?>
 </tr>
 <?php $i++; }?>
 </tbody>

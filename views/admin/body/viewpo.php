@@ -178,7 +178,7 @@ $po_status_arr[3]="Cancelled";?>
 <td><?=$r_po['modifiedby'] ?></td>
 <td><?=format_datetime($r_po['modified_on'])?></td>
 </tr>
-<?php }} else{ echo "<tr><td><div align='center'><b>No Data Found</b></div></td></tr>";}?>
+<?php }} else{ echo "<tr><td colspan='12'><div align='center'><b>No Data Found</b></div></td></tr>";}?>
 
 </tbody>
 
@@ -210,7 +210,7 @@ $po_status_arr[3]="Cancelled";?>
 <form method="post" action="<?php echo site_url('admin/updatedeliverydate/'.$po['po_id'])?>" id="delivery_det_frm"  data-validate="parsley" >
 <table cellpadding="5">
 <tr><td valign="top">Expected Delivery Date</td><td><input type="text" name="po_deliverydate" id="po_deliverydate" value="" data-required="true" readonly="readonly"></td></tr>
-<tr><td valign="top">Remarks</td><td><textarea name="po_remarks" value="" data-required="true" style="width:263px;height:80px;"></textarea></td></tr>
+<tr><td valign="top">Remarks</td><td><textarea name="po_remarks" value="" data-required="true" style="width:303px;height:140px;"></textarea></td></tr>
 </table>
 </form>
 </div>
@@ -274,7 +274,7 @@ $('#notify_vendorbymail_dlg').dialog({
 		'Submit':function(){
 			$(this).dialog('close');
 			 $.post($('form',this).attr('action'),$('form',this).serialize(),function(resp){
-				// location.href=location.href; 
+				location.href=location.href; 
 			 },'json');
 		},
 	}
@@ -286,7 +286,7 @@ $('#update_po_delivery_det').dialog({
 	autoOpen:false,
 	autoResize:true,
 	width:'484',
-	height:'238',
+	height:'320',
 	open:function(){
 		
 	},

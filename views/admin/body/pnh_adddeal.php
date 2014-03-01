@@ -20,6 +20,7 @@ $d=$deal;
 <tr><td>Gender Attribute : </td><td><input type="text" name="gender_attr" class="inp" size=15 value="<?=$d?$d['gender_attr']:""?>"></td></tr>
 <tr><td>Tax : </td><td><input type="text" class="inp" name="tax" size=2 value="<?=$d?($d['tax']/100):""?>"> %</td></tr>
 <tr><td>Is Combo : </td><td><input type="checkbox" name="is_combo" value="1" <?=$d&&$d['is_combo']?"checked":""?>></td></tr>
+<tr><td>Is Grouped?</td><td><input type="checkbox" name="is_group" id="is_group" value="1" /></td></tr>
 <tr><td>Max Allowed Qty <br> (for franchise per day) : </td><td><input type="text" name="max_allowed_qty" class="inp" size=4 value="<?=$d?$d['max_allowed_qty']:""?>"></td></tr>
 <tr><td>Image : </td><td><input type="file" name="pic" class="inp">
 <?php if($d){?>To replace, upload a image<?php }?>

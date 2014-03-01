@@ -289,7 +289,7 @@ class Erpmodel extends Model
 	
 	function searchvendorproducts($vid,$q,$limit)
 	{
-		$sql="select p.*,sum(s.available_qty) as stock from m_product_info p left outer join t_stock_info s on s.product_id=p.product_id where (p.product_name like ? or p.barcode = ? ) and (p.product_id in (select product_id from m_vendor_product_link where vendor_id=?) or p.brand_id in (select brand_id from m_vendor_brand_link where vendor_id=? AND is_active=1)) group by p.product_id order by p.product_name asc limit 0,?";
+		$sql="select p.*,sum(s.available_qty) as stock from m_product_info p left outer join t_stock_info s on s.product_id=p.product_id where (p.product_name like ? or p.barcode = ? ) and (p.product_id in (select product_id from m_vendor_product_link where vendor_id=?) or p.brand_id in (select brand_id from m_vendor_brand_link where vendor_id=? AND is_active=1)) and p.is_active = 1  group by p.product_id order by p.product_name asc limit 0,?";
 		$ret=$this->db->query($sql,array("%$q%",$q,$vid,$vid,$limit))->result_array();
 		foreach($ret as $i=>$r)
 		{
@@ -4087,20 +4087,30 @@ courier disable ends
 	
 	function do_updatecat($cat)
 	{
-		$name=$_POST['cat_name'];
-		$type=$_POST['main'];
-		$this->db->query("update king_categories set type=?,name=? where id=?",array($type,$name,$cat));
+		$name=$this->input->post('cat_name');
+		$type=$this->input->post('main');
+                $attributes = $this->input->post('attributes');
+                
+                $attributes = array_filter(array_unique($attributes));
+                $grp_attr_ids = implode(",",$attributes);
+                
+		$this->db->query("update king_categories set type=?,name=?,attribute_ids=? where id=?",array($type,$name,$grp_attr_ids,$cat));
 		$this->session->set_flashdata("erp_pop_info","Category updated");
 		redirect("admin/viewcat/$cat");
 	}
 	
 	function do_addnewcat()
 	{
-		$name=$_POST['cat_name'];
-		$type=$_POST['main'];
+		$name=$this->input->post('cat_name');
+		$type=$this->input->post('main');
+                $attributes = $this->input->post('attributes');
+                
+                $attributes = array_filter(array_unique($attributes));
+                $grp_attr_ids = implode(",",$attributes);
+                
 		$url=preg_replace('/[^a-zA-Z0-9_\-]/','',$name);
 		$url=str_replace(" ","-",$url);
-		$this->db->query("insert into king_categories(name,type,url) values(?,?,?)",array($name,$type,$url));
+		$this->db->query("insert into king_categories(name,type,url,attribute_ids) values(?,?,?,?)",array($name,$type,$url,$grp_attr_ids));
 		$id=$this->db->insert_id();
 		$this->session->set_flashdata("erp_pop_info","new category added");
 		redirect("admin/viewcat/$id");
@@ -5712,16 +5722,16 @@ order by p.product_name asc
 			exit;
 		}
 		
-		$this->db->query("insert into t_grn_info(vendor_id,remarks,created_on) values(?,?,now())",array($vid,$_POST['remarks']));
+		$this->db->query("insert into t_grn_info(vendor_id,remarks,created_by,created_on) values(?,?,?,now())",array($vid,$_POST['remarks'],$user['userid']));
 			$grn=$this->db->insert_id();
 		
 		foreach($pos as $poid=>$po)
 		{
 			foreach($po as $p)
 			{
-				$inp=array($grn,$poid,$p['product'],$p['oqty'],$p['rqty'],$p['mrp'],$p['dp_price'],$p['price'],$p['tax'],$p['location'],$p['rackbin'],$p['margin'],$p['foc'],$p['offer'],$p['scheme_discount_value']);
-				$this->db->query("insert into t_grn_product_link(grn_id,po_id,product_id,invoice_qty,received_qty,mrp,dp_price,purchase_price,tax_percent,location_id,rack_bin_id,margin,is_foc,has_offer,scheme_discount_value,created_on)
-						values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now())",$inp);
+				$inp=array($grn,$poid,$p['product'],$p['oqty'],$p['rqty'],$p['mrp'],$p['dp_price'],$p['price'],$p['tax'],$p['location'],$p['rackbin'],$p['margin'],$p['foc'],$p['offer'],$p['scheme_discount_value'],$user['userid']);
+				$this->db->query("insert into t_grn_product_link(grn_id,po_id,product_id,invoice_qty,received_qty,mrp,dp_price,purchase_price,tax_percent,location_id,rack_bin_id,margin,is_foc,has_offer,scheme_discount_value,created_on,created_by)
+						values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?)",$inp);
 
 				$this->db->query("update t_po_product_link set received_qty=received_qty+? where po_id=? and product_id=?",array($p['rqty'],$poid,$p['product']));
 				if($p['rqty']!=0)
@@ -5878,7 +5888,7 @@ order by p.product_name asc
 		$invs=array();
 		foreach($_POST['invno'] as $i=>$no)
 		{
-			$this->db->query("insert into t_grn_invoice_link(grn_id,purchase_inv_no,purchase_inv_date,purchase_inv_value,created_on) values(?,?,?,?,now())",array($grn,$no,$_POST['invdate'][$i],$_POST['invamount'][$i]));
+			$this->db->query("insert into t_grn_invoice_link(grn_id,purchase_inv_no,purchase_inv_date,purchase_inv_value,created_on,created_by) values(?,?,?,?,now(),?)",array($grn,$no,$_POST['invdate'][$i],$_POST['invamount'][$i],$user['userid']));
 			$invs[]=$this->db->insert_id();
 		}
 		if(!empty($_FILES))
@@ -6428,7 +6438,7 @@ order by p.product_name asc
 			$inp=array($po,$p,$pt['qty'][$i],$pt['mrp'][$i],$pt['dp_price'][$i],$pt['margin'][$i],$disc,$pt['sch_type'][$i],$pt['price'][$i],$pt["foc$i"],$pt["offer$i"],$pt['note'][$i],$user['userid']);
 	
 			$this->db->query("insert into t_po_product_link(po_id,product_id,order_qty,mrp,dp_price,margin,scheme_discount_value,scheme_discount_type,purchase_price,is_foc,has_offer,special_note,created_on,created_by)
-					values(?,?,?,?,?,?,?,?,?,?,?,?,?,now())",$inp);
+					values(?,?,?,?,?,?,?,?,?,?,?,?,now(),?)",$inp);
 	
 			// update dp price 
 			$this->_update_dp_byproductid($p,$pt['dp_price'][$i]);
@@ -7150,6 +7160,7 @@ order by p.product_name asc
 			
 		
 		$is_combo = $this->input->post('is_combo')*1;
+		$is_group = $this->input->post('is_group'); //
 
 		$this->db->query("update king_dealitems set max_allowed_qty=?,billon_orderprice=?,print_name=?,name=?,orgprice=?,price=?,store_price=?,nyp_price=?,gender_attr=?,tax=?,shipsin=?,modified=?,modified_on=?,modified_by=?,is_combo = ? where id=?",array($max_allowed_qty,$billon_orderprice,$print_name,$name,$mrp,$offer_price,$store_offer_price,$nyp_offer_price,$gender_attr,$tax*100,$shipsin,time(),date('Y-m-d H:i:s'),$user_det['userid'],$is_combo,$itemid));
 		$this->db->query("update king_deals set description=?,keywords=?,menuid=?,keywords=?,catid=?,brandid=?,tagline=? where dealid=?",array($description,$keywords,$menu,$keywords,$category,$brand,$tagline,$dealid));
@@ -8273,7 +8284,7 @@ order by p.product_name asc
 	
 	function do_pnh_offline_order()
 	{
-		$user=$this->auth(DEAL_MANAGER_ROLE|CALLCENTER_ROLE);
+		$user=$this->auth(CALLCENTER_ROLE);
 		$fran_status_arr=array();
 		$fran_status_arr[0]="Live";
 		$fran_status_arr[1]="Permanent Suspension";

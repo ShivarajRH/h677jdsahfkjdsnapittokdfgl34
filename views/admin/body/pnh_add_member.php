@@ -1,5 +1,5 @@
 <div class="container">
-<h2>PNH Add Member</h2>
+<h2>Add Member</h2>
 
 <form method="post" id="pnh_addm_form" autocomplete="off">
 

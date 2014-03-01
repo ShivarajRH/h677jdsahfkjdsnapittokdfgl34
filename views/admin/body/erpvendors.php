@@ -30,9 +30,11 @@
 					<th width="300">Name</th>
 					<th>Contact Details</th>
 					<th>Brands Supported</th>
+					<?php /*?>
 					<th>Total POs raised</th>
 					<th>Total PO value</th>
 					<th>Active</th>
+					<?php /*/?>
 					<th width="250">Actions</th>
 				</tr>
 			</thead>
@@ -45,9 +47,12 @@
 						<td width="400">
 							<span class="v_brand_list"><?php foreach($this->erpm->getbrandsforvendor($v['vendor_id']) as $i=>$b){?><?=$i>0?"  ":""?><a href="<?=site_url("admin/viewbrand/{$b['id']}")?>"><?=$b['name']?></a><?php }?></span>
 						</td>
+						<?php /*?>
 						<td><?=$v['pos']?></td>
 						<td><?=format_price($v['total_value'],0)?></td>
 						<td><?=$v['is_active']?"YES":"NO"?></td>
+						<?php /*/?>
+						
 						<td >
 							<a class="dbllink  button button-rounded button-tiny " href="<?=site_url("admin/vendor/{$v['vendor_id']}")?>">view</a>&nbsp;
 							<a class="dbllink  button button-rounded button-tiny  " href="<?=site_url("admin/editvendor/{$v['vendor_id']}")?>">edit</a>&nbsp;

@@ -41,4 +41,12 @@ if(!function_exists('print_error')) {
         die();
     }
 }
+/**
+ * Same as print_error() helper function
+ */
+if(!function_exists('print_msg')) {
+    function print_msg($msg,$rtype='json') {
+        print_error($msg,$rtype); // redirect to print_error();
+    }
+}
 ?>

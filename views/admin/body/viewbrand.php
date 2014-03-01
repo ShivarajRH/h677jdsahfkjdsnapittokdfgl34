@@ -160,8 +160,9 @@ h4
 	    	
 	    	<!------------- Allot Rack Blk Start ------------->
 	    	<div id="add_loc" class="tabcontent">
-	    		
-	    		<div class="products">
+	    		<div class="products_wrap">
+	    			<h3>Choose Products to Allot RackBin</h3>
+	    			<div class="products"></div>
 	    		</div>
 	    		<div class="success_wrap">
 	    		</div>
@@ -358,7 +359,7 @@ $('.allot_rack').live('click',function(){
 		{
 			prod_html="";
 			$.each(resp.products,function(i,p){
-				prod_html+='<div class="prod_select_wrap_'+p.product_id+' " prodid="'+p.product_id+'" style="margin:5px 0px;padding:4px"><input type="checkbox" class="prod_check" prodid="'+p.product_id+'">'+p.product_name+'</div>';
+				prod_html+='<div class="prod_select_wrap_'+p.product_id+' " prodid="'+p.product_id+'" style="margin:5px 0px;padding:4px"><input type="checkbox" class="prod_check" prodid="'+p.product_id+'"><a target="_blank" href="'+site_url+'/admin/product/'+p.product_id+'">'+p.product_name+'</a></div>';
 			});
 		}
 		$('.products').html(prod_html);
@@ -928,4 +929,7 @@ function town_franch_sales(town_id,town_name)
 
 
 </script>
+<style>
+.br_max_height_wrap table{width: 100%;}
+</style>
 <?php

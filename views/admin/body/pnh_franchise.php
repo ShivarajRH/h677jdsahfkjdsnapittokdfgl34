@@ -134,21 +134,26 @@ $(function(){
 	<div style="margin-top: 10px;float:left">
 		
 	</div>	
-	
+
+<?php /*/?>	
+<?php if($this->erpm->auth(FINANCE_ROLE,true) || $this->erpm->auth(CALLCENTER_ROLE,true)){ ?>
 	<div class="dash_bar_right" style="background: tomato">
 		Pending Payment : <span>Rs <?=format_price($shipped_tilldate-($paid_tilldate+$acc_adjustments_val+$credit_note_amt),2)?></span>
 	</div>
+<?php } ?>
 	
 	<div class="dash_bar_right">
 		UnCleared Payments : <span>Rs <?=format_price($uncleared_payment,2)?></span>
 	</div>
 
+<?php /*?>	
+<?php if($this->erpm->auth(FINANCE_ROLE,true) || $this->erpm->auth(CALLCENTER_ROLE,true)){ ?>
 	<div class="dash_bar_right">
 		Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
 	</div>
-	
+	<?php } ?>
 </div>
-
+<?php /*/?>
 
 
 <div class="page_topbar_right"></div>
@@ -172,7 +177,9 @@ $(function(){
 				<?php if($is_membrsch_applicable){?>
 					<li><a href="#shipped_imeimobslno" onclick="load_allshipped_imei(0)">IMEINO Activations</a></li>
 				<?php }?>
+			<?php /*?>	
 			<li><a href="#status_log">Status Log</a></li>
+			<?php /*/?>
 			<li><a href="#analytics" class="analytics">Analytics</a></li>
 			<li><a href="#ship_log" class="ship_log">Shipped &amp; Delivered Log</a></li>
 			<!--<li><a href="<?=site_url("admin/pnh_addfranchise/$fid")?>">SMS Log</a></li>-->
@@ -210,6 +217,7 @@ $(function(){
 		</div>
 		<!-- Invoice Credit Notes START -->
 		
+		<?php /*?>
 		<!-- franchise status log START -->
 		<div id="status_log">
 			<div class="tab_view">
@@ -308,6 +316,7 @@ $(function(){
 			</div>
 		</div>
 		<!-- franchise status log END -->
+		<?php */?>
 		
 		<!-- Analytics graph section start ---->
 		<div id="analytics">
@@ -1184,10 +1193,10 @@ $(function(){
 				<div class="dash_bar_right">
 					Adjustments : <span>Rs <?=format_price($acc_adjustments_val,2)?></span>
 				</div>
-				
+				<?php /*
 				<div class="dash_bar_right">
 					Paid till Date : <span>Rs <?=format_price($paid_tilldate,2)?></span>
-				</div>
+				</div>*/?>
 			
 				<div class="dash_bar_right">
 					Credit Notes Raised : <span>Rs <?=format_price($credit_note_amt,2)?></span>
@@ -1196,7 +1205,8 @@ $(function(){
 				<div class="dash_bar_right">
 					Bounced/Cancelled : <span>Rs <?=format_price($cancelled_tilldate,2)?></span>
 				</div>
-				
+				<?php /*
+				<?php if($this->erpm->auth(true,true)){?>
 				<div class="dash_bar_right">
 					Unshipped : <span>Rs <?=format_price($not_shipped_amount,2)?></span>
 				</div>
@@ -1208,6 +1218,8 @@ $(function(){
 				<div class="dash_bar_right">
 					Ordered : <span>Rs <?=format_price($ordered_tilldate,2)?></span>
 				</div>
+				<?php } ?>
+				<?php /*/?>
 			</div>
                         <div class="clear"></div>
 			<?php if(1){?>
@@ -1754,12 +1766,16 @@ $(function(){
 				<div id="orders">
 
 					<div>
+						<?php /*?>
+						<?php if($this->erpm->auth(true,true)){?>
 						<div class="dash_bar_right">
 							Total Order value : <span>Rs <?=format_price($this->db->query("select sum(amount) as l from king_transactions where franchise_id=?",$f['franchise_id'])->row()->l,0)?></span>
 						</div>
 						<div class="dash_bar_right">
 							Total Orders : <span><?=$this->db->query("select count(1) as l from king_transactions where franchise_id=?",$f['franchise_id'])->row()->l?></span>
 						</div>
+						<?php } ?>
+						<?php /*/?>
 						
 						<!--<div class="dash_bar">
 							Orders last month : <span><?=$this->db->query("select count(1) as l from king_transactions where franchise_id=? and init between ".mktime(0,0,0,date("m")-1,01,date('Y'))." and ".(mktime(0,0,0,date("m"),01,date('Y'))-1),$f['franchise_id'])->row()->l?>
@@ -3547,10 +3563,22 @@ $("#pnh_membersch").dialog({
 				}
 				else
 				{
+					<?php if($this->erpm->auth(true,true)){?>
 					// reformat data ;
 					$('#ttl_order_amt').html("Total Ordered : "+resp.ttl_summary);
 					$('#paymrent_order_amt').html("Total Paid : "+resp.ttl_payment);
 					$('#shipped_order_amt').html("Total Shipped : "+resp.ttl_shipped);
+					<?php }else{
+					?>
+					$('#ttl_order_amt').html('').hide();
+					$('#paymrent_order_amt').html('').hide();
+					$('#shipped_order_amt').html('').hide();
+					<?php } ?>
+
+					$('#ttl_order_amt').html('').hide();
+					$('#paymrent_order_amt').html('').hide();
+					$('#shipped_order_amt').html('').hide();
+					
 					 var types = ['Order Placed','shipped', 'Cheque Date','Cash in Bank'];
 					$('#payment_stat .payment_stat_view').empty();
 					var summary=resp.summary;

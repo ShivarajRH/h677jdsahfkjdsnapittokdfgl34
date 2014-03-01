@@ -119,7 +119,18 @@ class Admin extends Erp {
 		if($user_det_res->num_rows())
 		{
 			$userdetails = $user_det_res->row();
-			$sessionData = array ("userid"=>$userdetails->id,'username' => $userdetails->name, 'login_flag' => true, 'usertype' => $usertype, 'brandid' => $brandid ,'access'=>$userdetails->access);
+			
+			if($userdetails->block_ip_addr)
+			{
+				$all_ip_addrs = explode(',',$this->db->query("select value from m_config_params where name = 'ALLOWED_IP_ADDR'")->row()->value);
+				if(!in_array($_SERVER['REMOTE_ADDR'],$all_ip_addrs))
+				{
+					$this->form_validation->set_message('_validate_adminlogin','Your Access denied');
+					return false;
+				}
+			}
+			
+			$sessionData = array ("userid"=>$userdetails->id,'username' => $userdetails->name, 'login_flag' => true, 'usertype' => $usertype, 'brandid' => $brandid ,'access'=>$userdetails->access,'block_ip_addr'=>1);
 			$this->session->set_userdata ( array("admin_user" => $sessionData) );
 			return true;
 		}else
@@ -149,6 +160,52 @@ class Admin extends Erp {
 			$this->session->set_flashdata('notify_msg',"Logged In Successfully");
 			redirect('admin/dashboard','refresh');
 		}
+	}
+	
+	
+	
+	/**
+	 * function to update new password and send email.
+	 */
+	function jx_reset_adminpwd()
+	{
+		error_reporting(0);
+		$this->load->helper('email');
+		$output = array();
+		if($this->erpm->auth(false,true))
+		{
+			$output['status'] = 'error';
+			$output['message'] = 'You are already loggedin';
+		}else
+		{
+			$email = $this->input->post('fgt_pwd_email');
+			if(!valid_email($email))
+			{
+				$output['status'] = 'error';
+				$output['message'] = 'Invalid Email address entered';
+			}else
+			{
+				// check if email is registered in system.
+				$res = $this->db->query("select * from king_admin where email = ? ",$email);
+				if($res->num_rows())
+				{
+					$username = $res->row()->username;
+					$password=randomChars(6);
+	
+					$this->db->query("update king_admin set password=md5(?) where id=? limit 1",array($password,$res->row()->id));
+					$this->vkm->email($email,"Your Storeking ERP account password updated","Hi $name,<br><br>Your ERP account password has been changed<br><br>Username : $username<br>Password : $password<br><br>ERP Team Storeking");
+					$this->session->set_flashdata("erp_pop_info","Please check your mail($email) for recovering your account password.");
+	
+					$output['status'] = 'success';
+				}else
+				{
+					$output['status'] = 'error';
+					$output['message'] = 'Invalid Email address entered';
+				}
+			}
+		}
+	
+		echo json_encode($output);
 	}
 
 	/**

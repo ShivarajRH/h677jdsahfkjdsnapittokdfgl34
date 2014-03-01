@@ -3191,4 +3191,63 @@ select * from ( select f.created_on,f.is_suspended,group_concat(a.name) as owner
 						left outer join king_admin a on a.id=ow.admin
 						left join pnh_franchise_menu_link fl on fl.fid = f.franchise_id
 						where 1 
-					   and f.is_suspended != 0 group by f.franchise_id  order by f.franchise_name asc limit 0,50 ) as g  where FIND_IN_SET(g.grp_menuids) 
+					   and f.is_suspended != 0 group by f.franchise_id  order by f.franchise_name asc limit 0,50 ) as g  where FIND_IN_SET(g.grp_menuids);
+
+# Feb_28_2014
+
+select distinct f.franchise_id from pnh_m_franchise_info f
+join pnh_franchise_menu_link fl on fl.fid = f.franchise_id
+ where 1=1 and fl.menuid='106' group by f.franchise_id 
+
+
+desc king_dealitems
+
+#==========================================================================
+create table `m_attributes` (  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT , `attr_name` varchar (150) , PRIMARY KEY ( `id`))
+insert into `m_attributes`(`id`,`attr_name`) values ( '1','size');
+insert into `m_attributes`(`id`,`attr_name`) values ( '2','color');
+create table `m_product_attributes` (  `id` bigint NOT NULL AUTO_INCREMENT , `pid` bigint , `attr_id` int (150) , `attr_value` varchar (150) , PRIMARY KEY ( `id`));
+alter table `king_categories` add column `attribute_ids` varchar (125)  NULL  after `prior`;
+#==========================================================================
+
+select * from king_categories
+
+select id as attr_id,attr_name from m_attributes order by attr_name asc
+
+select c.*,m.name as main from king_categories c left outer join king_categories m on m.id=c.type where c.id='1037'
+
+-- new 
+select * from m_attributes where FIND_IN_SET(id,'1,2');
+
+select * from king_categories where attribute_ids !=''
+
+select id,UCASE(SUBSTRING(attr_name, 1, -1)) from m_attributes where FIND_IN_SET(id,'1,2' );
+
+insert into m_product_attributes(pid,attr_id,attr_value) values( ("123495486958",1,"41") , ("123495486958",2,"maroon") )
+
+=========================================< UCFIRST()  >=====================================
+DROP FUNCTION IF EXISTS UC_DELIMETER;
+DELIMITER //
+CREATE FUNCTION UC_DELIMETER(oldName VARCHAR(255), delim VARCHAR(1), trimSpaces BOOL) RETURNS VARCHAR(255)
+BEGIN
+  SET @oldString := oldName;
+  SET @newString := "";
+ 
+  tokenLoop: LOOP
+    IF trimSpaces THEN SET @oldString := TRIM(BOTH " " FROM @oldString); END IF;
+ 
+    SET @splitPoint := LOCATE(delim, @oldString);
+ 
+    IF @splitPoint = 0 THEN
+      SET @newString := CONCAT(@newString, UC_FIRST(@oldString));
+      LEAVE tokenLoop;
+    END IF;
+ 
+    SET @newString := CONCAT(@newString, UC_FIRST(SUBSTRING(@oldString, 1, @splitPoint)));
+    SET @oldString := SUBSTRING(@oldString, @splitPoint+1);
+  END LOOP tokenLoop;
+ 
+  RETURN @newString;
+END//
+DELIMITER ;
+=========================================<  >=====================================

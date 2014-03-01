@@ -1,5 +1,10 @@
 <?php
 	
+	$po_stats_flags = array(); 
+	$po_stats_flags[''] = 'All';
+	$po_stats_flags['0'] = 'Open';
+	$po_stats_flags['1'] = 'Partial';
+	$po_stats_flags['2'] = 'Close';
 	
 	$cond = '';
 	$cond1 = '';
@@ -64,17 +69,19 @@
 	<div class="page_topbar" align="left">
 		 
 			
-			<div class="stat_block color_red"><b>Open</b> <span><?=$this->db->query("select count(1) as l from t_po_info where po_status=0 $cond ")->row()->l?></span> 
+			<div class="stat_block color_red"><b>Open</b> <span><?=$this->db->query("select count(1) as l from t_po_info where po_status=0 $cond ")->row()->l?></span>
+			<?php /*?> 
 			<div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1 and po_status = 0  ")->row()->l,0)?>)</div>
+			<?php /*/?>
 			</div>
 			<div class="stat_block color_orange"><b>Partial</b><span><?=$this->db->query("select count(1) as l from t_po_info where po_status=1 $cond ")->row()->l?></span> 
-			<div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1  and po_status = 1 ")->row()->l,0)?>)</div>
+			<?php /*?><div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1  and po_status = 1 ")->row()->l,0)?>)</div><?php /*/?>
 			</div>
 			<div class="stat_block color_green"><b>Closed</b> <span><?=$this->db->query("select count(1) as l from t_po_info where po_status=2 $cond ")->row()->l?></span> 
-			<div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1 and po_status = 2 ")->row()->l,0)?>)</div>
+			<?php /*?><div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1 and po_status = 2 ")->row()->l,0)?>)</div><?php /*/?>
 			</div>
 			<div class="stat_block color_blue"><b>Total</b> <span><?=$this->db->query("select count(1) as l from t_po_info where 1 $cond ")->row()->l?>
-				<div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1 ")->row()->l,0)?>)</div>
+				<?php /*?><div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1 ")->row()->l,0)?>)</div><?php /*/?>
 			</span> </div>
 			
 		 
@@ -86,7 +93,7 @@
 		<div class="fl_left">
 			<b style="vertical-align: baseline;display: inline-block;font-size:16px;padding:10px 0px;padding-top:14px">
 				<?php if(count($pos)) { ?>
-				Showing <?php echo ($pg+1).'-'.($pg+count($pos)).'/'.$total_po ?> POs
+				Showing <?php echo ($pg+1).'-'.($pg+count($pos)).'/'.$total_po ?> <?php echo (($status!="")?$po_stats_flags[$status]:'');?> POs
 				<?php }else{
 				?>
 				No POs Found

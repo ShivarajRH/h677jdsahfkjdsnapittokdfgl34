@@ -3,27 +3,34 @@
 <link type="text/css" rel="stylesheet" href="<?php echo base_url();?>css/po_product.css" />
 <link type="text/css" rel="stylesheet" href="<?php echo base_url();?>css/purchaseorder.css" />
 <div class="container">
- 
 <div id="loading_bar">
 Loading...
 </div>
-<h2>Purchase Order:Vendorwise</h2>
-<form method="post" id="purchaseordefrm"  autocomplete="off">
+<h2 class="page_title" style="margin:5px 0px">Create Purchase Order - Vendorwise</h2>
+<form method="post" id="purchaseordefrm" >
 <input type="hidden" id="vendoridhidden" name="vendor">
 <div style="float: right;margin-top:-35px;">
-<b>Select Vendor :</b> <select id="vendorsel" width="150px" name="vendorsel" >
-
-<?php if($vid==0){?>
-<option value="0">select</option>
-<?php foreach($vendors as $v){ ?>
-<option value="<?=$v['vendor_id']?>"><?=$v['vendor_name']?></option>
-<?php } }else{?>
-$selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
-<?php echo '<option value="'.$vid.'" '.$selected.' >'.$vname.'</option>';	?>				
-													
-<?php }?>
-
-</select><input type="button" value="Choose vendor" id="choosevendor" disabled="false">
+	<b>Vendor :</b>
+	<select id="vendorsel" name="vendorsel" >
+<?php 
+		if($vid==0)
+		{
+?>
+		<option value="0">select</option>
+	<?php 
+			foreach($vendors as $v)
+			{ ?>	
+				<option value="<?=$v['vendor_id']?>"><?=$v['vendor_name']?></option>
+<?php 
+			}
+		}else
+		{
+			$selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
+			echo '<option value="'.$vid.'" '.$selected.' >'.$vname.'</option>';	
+		}
+?>
+</select>
+<input type="button" value="Choose vendor" id="choosevendor" >
 </div>
 <div class="block">
 <div class="block-heading">
@@ -55,7 +62,7 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 	</td>
 </tr>
 
-<tr>
+<tr style="display: none;">
 	<td class="span_title_wrap">Latest PO</td>
 	<td id="latest_po">
 		<div></div>
@@ -116,16 +123,20 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 
 
 
-<div class="show_after_vendorsel">
-	<div style="float:left;">
-		<h4>Enter Expected Delivery Details</h4>
+<div class="show_after_vendorsel " style="width:auto;float: right;">
+	 	<h4 style="background: #f1f1f1;padding:5px;margin:0px;">PO Delivery Details</h4>
 		<table class="datagrid nofooter">
-			<tr><td align="center">Date<span class="red_star">*</span></td><td align="center">:</td><td align="center"><input type="text"  name="e_dod"  class="datetimepick" value="" readonly="readonly"></td><td align="center">Remarks<span class="red_star">*</span></td><td align="center">:</td><td style="text-align:right;align:center;"><textarea style="width:350px" name="remarks"  value=""></textarea></td></tr>
+			<tr>
+				<td align="right">Date of Delivery<span class="red_star">*</span></td>
+				<td align="left"><input type="text"  name="e_dod"  class="datetimepick" style="width: 80px;" value="" readonly="readonly"></td>
+			</tr>
+			<tr>	
+				<td align="center">Remarks<span class="red_star">*</span></td>
+				<td style="text-align:right;align:center;"><textarea style="width:350px;height: 100px;" name="remarks"  value=""></textarea></td>
+			</tr>
 		</table>
-	</div>
-	<div style="float:right;margin-top:40px;margin-right:44px;">
-		<span class="button button-rounded button-action button-small" onclick="submit_frm=1;$('#purchaseordefrm').trigger('submit');" style="float:right;" >Create PO</span>
-	</div>
+		<br>
+	 	<a href="javascript:void(0)" class="button button-rounded button-action button-small" onclick="submit_frm=1;$('#purchaseordefrm').trigger('submit');" style="float:right;" >Create PO</a>
 </div>
 
 </form>
@@ -146,6 +157,7 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 						<a target="_blank"   href="<?php echo site_url('admin/product/');?>/%product_id%" >product_name</a>&nbsp;<b>(%product_brand%)</b>
 					</div>
 					<div><b>PNH Product ID:%product_id%</b></div>
+					<br>
 					<div><span style="background-color: #FAFAFA;padding:3px;width:20px;font-weight: bold;color: blue;">Current Stock : %curr_stck%</span></div>
 				</td>
 				<td style="text-align: right"><input type="text" class="mrp calc_pp inp readonly" size="8" name="mrp[]" value=mrpvalue readonly="readonly"></td>
@@ -321,6 +333,8 @@ $selected = set_select('vendorsel',$v['vendor_id'],($vid==$v['vendor_id']));
 #sl_products td {text-align: center;}
 
 .psrcstat a{font-size: 10px;color: blue;}
+.ui-autocomplete{background: #fafafa;}
+#pprods .datagrid td{background: #ffffa0 !important;}
 </style>
 
 <div id="addvenbrandfrm_dlg" title="Add Brand">
@@ -439,7 +453,11 @@ buttons:{
 			{
 				$("#dlg_openpolist").dialog('close');
            		$("#dlg_openpolist").dialog('open');
-          		$("#is_po_raised_"+pid).html('<a href="javascript:void(0)" onclick="load_openpolist('+pid+')" ><b>'+resp.ttl_open_qty+'</b></a>');
+
+           		if(resp.ttl_open_qty)
+          			$("#is_po_raised_"+pid).html('<a href="javascript:void(0)" onclick="load_openpolist('+pid+')" ><b>'+resp.ttl_open_qty+'</b></a>');
+           		else
+           			$("#is_po_raised_"+pid).html('<b>0</b>');
    			 
 			} 
 	                   
@@ -690,7 +708,10 @@ function addproduct(id,name,mrp,margin,orders,qty,require)
 				});
 				
 		}
-		$("#is_po_raised_"+o.product_id).html('<a href="javascript:void(0)" onclick="load_openpolist('+o.product_id+')" ><b>'+ttl_openpo+'</b></a>');
+		if(ttl_openpo)
+			$("#is_po_raised_"+o.product_id).html('<a href="javascript:void(0)" onclick="load_openpolist('+o.product_id+')" ><b>'+ttl_openpo+'</b></a>');
+		else
+			$("#is_po_raised_"+o.product_id).html('<b>0</b>');
 			
 		added_po.push(id);
 
@@ -1036,7 +1057,7 @@ function showvendor(vid)
 			
 			var b_html='';
 			$.each(resp.vbrands,function(i,b){
-				b_html +='<span>'+b.brand+'</span>';
+				b_html +='<span><a target="_blank" href="'+site_url+'/admin/viewbrand/'+b.id+'">'+b.brand+'</a></span>';
 			});
 			$('#brand_det div').html(b_html);
 
@@ -1052,8 +1073,17 @@ function showvendor(vid)
 				resp.complete_po.ttl_val=0;
 			if(resp.recent_po_det == undefined)
 				resp.recent_po_det='no data found';
-				$('#po_det div').html('<span class="span_count_wrap"><b>Total('+''+resp.ttl_po.ttl+')</b> : Rs. '+resp.ttl_po.ttl_val+'</span><span class="span_count_wrap"><b>Open('+''+resp.ttl_open_po.ttl+')</b> : Rs. '+resp.ttl_open_po.ttl_val+'</span><span class="span_count_wrap"><b>Partial('+''+resp.partial_po.ttl+')</b> : Rs. '+resp.partial_po.ttl_val+'</span><span class="span_count_wrap"><b>Complete('+''+resp.complete_po.ttl+')</b> : Rs. '+resp.complete_po.ttl_val+'</span><span class="span_count_wrap"><b>Cancelled('+''+resp.cancelled_po.ttl+')</b> : Rs. '+resp.cancelled_po.ttl_val+'</span>');
-				$('#latest_po div').html('<span class="span_count_wrap"><b>Total Value </b> : Rs. '+resp.recent_po_det.total_value+'</span><span class="span_count_wrap"><b>Created on</b> : '+resp.recent_po_det.created_on+'</span>');
+			if(resp.ttl_open_po.ttl == null)
+				resp.ttl_open_po.ttl = 0;
+			if(resp.ttl_open_po.ttl_val == null)
+				resp.ttl_open_po.ttl_val = 0;
+			
+			$('#po_det div').html('<span class="span_count_wrap"><b>Open('+''+resp.ttl_open_po.ttl+')</b> : Rs. '+resp.ttl_open_po.ttl_val+'</span><span class="span_count_wrap"><b>Partial('+''+resp.partial_po.ttl+')</b> : Rs. '+resp.partial_po.ttl_val+'</span><span class="span_count_wrap"><b>Complete('+''+resp.complete_po.ttl+')</b> : Rs. '+resp.complete_po.ttl_val+'</span><span class="span_count_wrap"><b>Cancelled('+''+resp.cancelled_po.ttl+')</b> : Rs. '+resp.cancelled_po.ttl_val+'</span>');
+				<?php /*//$('#po_det div').html('<span class="span_count_wrap"><b>Total('+''+resp.ttl_po.ttl+')</b> : Rs. '+resp.ttl_po.ttl_val+'</span><span class="span_count_wrap"><b>Open('+''+resp.ttl_open_po.ttl+')</b> : Rs. '+resp.ttl_open_po.ttl_val+'</span><span class="span_count_wrap"><b>Partial('+''+resp.partial_po.ttl+')</b> : Rs. '+resp.partial_po.ttl_val+'</span><span class="span_count_wrap"><b>Complete('+''+resp.complete_po.ttl+')</b> : Rs. '+resp.complete_po.ttl_val+'</span><span class="span_count_wrap"><b>Cancelled('+''+resp.cancelled_po.ttl+')</b> : Rs. '+resp.cancelled_po.ttl_val+'</span>');
+						$('#latest_po div').html('<span class="span_count_wrap"><b>Total Value </b> : Rs. '+resp.recent_po_det.total_value+'</span><span class="span_count_wrap"><b>Created on</b> : '+resp.recent_po_det.created_on+'</span>');
+				*/?>
+				
+				
 		}
 	},'json');
 }
@@ -1494,7 +1524,10 @@ function remove_prodfrmpo(ele)
 			 	$("#dlg_openpolist").dialog('close');
            		$("#dlg_openpolist").dialog('open');
 
-           		$("#is_po_raised_"+pid).html('<a href="javascript:void(0)" onclick="load_openpolist('+pid+')" ><b>'+resp.ttl_open_qty+'</b></a>');
+           		if(resp.ttl_open_qty)
+           			$("#is_po_raised_"+pid).html('<a href="javascript:void(0)" onclick="load_openpolist('+pid+')" ><b>'+resp.ttl_open_qty+'</b></a>');
+           		else
+           			$("#is_po_raised_"+pid).html('<b>0</b>');
            		
 			}	
 		

@@ -62,7 +62,9 @@
 		<div id="ven_log_pagination"></div>
 	</div>
 </div>
-
+<style>
+.stock_det_wrap h4{margin:5px 0px;font-size: 16px;margin-bottom: 15px;}
+</style>
 <script>
 /** jQuery  Custom Alpha sort pluin 
  * @author Suresh 
@@ -355,8 +357,11 @@ function product_list_bycat(brandid,catid)
 
 function cat_bychar(ch)
 {
+	$('.jq_alpha_sort_alphalist_itemlist').html('<div align="center" style="padding:20px 0px;"><img src="'+base_url+'/images/loading.gif'+'"></div>');
+	
 	if($('#cat_lab').val() == 1)
 	{
+		$('.jq_alpha_sort_alphalist_itemlist').html('<div align="center"><img src="'+base_url+'/images/loading_bar.gif'+'"></div>');
 		$.post(site_url+'/admin/cat_list_bycharacter',{ch:ch},function(resp){
     	if(resp.status == 'error')
 			{
@@ -445,16 +450,20 @@ $("#prod_stk_det_dlg" ).dialog({
 		open:function(){
 			var pid=$(this).data('pid');
 			var pname=$(this).data('pname');
+
+			$('.stock_det_wrap').html('<div align="center" style="padding:20px 0px;"><img src="'+base_url+'/images/loading_bar.gif'+'"></div>');
+			
 			$.post(site_url+'/admin/jx_prod_stk_det',{pid:pid,pname:pname},function(resp){
 				if(resp.status == 'error')
 					{
+					$('.stock_det_wrap').html('');
 						alert("Stock not found");
 						return false;
 				    }
 					else
 					{
 						var stk_lst='';
-						stk_lst+='<h3><a href="'+site_url+'/admin/product/'+pid+'" target="_blank">'+pname+'</h3>';
+						stk_lst+='<h4><a href="'+site_url+'/admin/product/'+pid+'" target="_blank">'+pname+'</h4>';
 						stk_lst+='<div class="stk_wrap" >';
 						stk_lst+='<h4 style="margin:0px">Total Stock : '+resp.in_stk+' </h4>';
 						stk_lst+='<table class="datagrid" width="100%"><thead><tr><th>Barcode</th><th>Rackbin</th><th>MRP</th><th>Quantity</th>';
@@ -486,9 +495,13 @@ $("#prod_stk_det_dlg" ).dialog({
 
 function load_ven_log(product_id,pg)
 	{
-		$('#ven_po_log tbody').html('<tr><td colspan="6"><div align="center"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
+		$('#ven_po_log').hide();
+		$('#ven_log_pagination').html("").hide();
 		$.post(site_url+'/admin/jx_prod_purchase_log_det/'+product_id+'/'+pg+'/5','',function(resp){
-			$('#ven_po_log tbody').html(resp.log_data);
+
+			$('#ven_po_log').show();
+			
+			$('#ven_po_log tbody').html(resp.log_data).show();
 			if(resp.ttl*1 > resp.limit*1)
 				$('#ven_log_pagination').html(resp.pagi_links).show();
 			else

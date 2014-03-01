@@ -16,10 +16,15 @@
 	</div>
 	<div id="mid_det" title="Member Details"><div id="mem_fran"></div></div>
 	<div id="authentiacte_blk" title="Franchisee Authentacation" ><div id="franchise_det"></div></div>
+	<div id="franchise_quickview"  title="Franchisee Info"><div id="fran_qvkview"></div></div>
+		
+			
+		
+	
 </div>
 
 <script>
-
+$("#franchise_quickview").hide();
 $(".fran_det").chosen();
 $("#sel_fid").chosen();
 
@@ -174,6 +179,38 @@ $( "#authentiacte_blk" ).dialog({
 	
 });
 
+$("#sel_fid").change(function(){
+	
+	if($(this).val()>0)
+	{
+		$("#franchise_quickview").data('fid',$(this).val()).dialog('open');
+			}
+	else
+		$("#franchise_quickview").hide();
+});
+
+$("#franchise_quickview").dialog({
+	autoOpen:false,
+	model:true,
+	width:'400',
+	height:'300',
+	open:function(){
+			dlg=$(this);
+			$("#fran_qvkview").html("");
+			$.post(site_url+'/admin/jx_load_franchise_qvkview',{fid:dlg.data('fid')},function(data){
+			$("#fran_qvkview").html(data).show();
+		});
+	},
+
+		buttons:{
+		'Proceed':function(){
+				$(this).dialog('close');
+
+			},
+
+			}
+	
+});
 
 </script>
 
@@ -227,4 +264,13 @@ margin: 20px 0px;
 float: right;
 }
 .error_inp{border:1px solid #cd0000 !important;}
+.span_count_wrap {
+   /* background: none repeat scroll 0 0 #EAEAEA;*/
+    float: left;
+    font-size: 11px;
+    margin: 10px;
+    padding: 5px;
+    text-align: center;
+ 
+    }
 </style>

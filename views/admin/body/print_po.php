@@ -78,9 +78,12 @@
 				<div align="right"  class="fl_right">
 					Total Purchase Order Value : <b> Rs <?=format_price($ttl_order_price,2) ?></b>
 				</div>
-				<div align="left" class="fl_left">
+				<div align="left" class="fl_left" style="width: 300px;">
 					<b>PO Remarks:</b>
 					<p><?=$po_det['remarks'] ?></p>
+				</div>
+				<div align="left" class="fl_left">
+					Please note : Tax already included in price.  
 				</div>
 			</div>
 		</div>

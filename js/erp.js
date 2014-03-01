@@ -469,3 +469,34 @@ function format_number(num,decimal) { //decimal is optional
         return str.replace( /\s+$/, "" );
     };
 //============================================<< JQUERY TRIM FUNCTION START >>===================================
+  
+$(function(){
+	$('#fgt_pwd_dlg').dialog({
+			width:'auto',
+			height:'auto',
+			autoOpen:false,
+			modal:true,
+			open:function(){
+				$('input[name="fgt_pwd_email"]',this).val('');
+			},
+			buttons:{
+				'Submit':function(){
+					$.post(site_url+'/admin/jx_reset_adminpwd',$('form',this).serialize(),function(resp){
+						if(resp.status == 'success')
+						{
+							location.href=location.href;
+						}else
+						{
+							alert(resp.message);
+						}
+					},'json');
+				}
+			}
+	});
+	
+	$('#fgt_pwd_lnk').click(function(e){
+		e.preventDefault();
+		$('#fgt_pwd_dlg').dialog('open');
+	});
+
+});

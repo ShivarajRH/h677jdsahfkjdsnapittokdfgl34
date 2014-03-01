@@ -1774,81 +1774,28 @@ order by action_date ";
 		
 	}
 
-	/**
-	 * function to send po product list to vendor 
-	 */
-	function jx_notifypobymail()
-	{
-		
-		$this->erpm->auth(PURCHASE_ORDER_ROLE);
-		
-		$po_id = $this->input->post('poid');
-		$subj = $this->input->post('notify_vendorbymail_subject');
-		$message = $this->input->post('notify_vendorbymail_message');
-
-		$ven_id = $this->db->query("select vendor_id from t_po_info where po_id=?",$po_id)->row()->vendor_id;
-		
-		$mail_to = "";
-		$mail_cc = array();
-		$mail_cc[] = 'sourcing@storeking.in';
-		$vendor_email_res = $this->db->query("select email_id_1,email_id_2 from m_vendor_contacts_info where vendor_id = ? and (email_id_1 != '' or email_id_2 != '') limit 1",$ven_id);
-		foreach($vendor_email_res->result_array() as $row)
-		{
-			$mail_to = $row['email_id_1']?$row['email_id_1']:$row['email_id_2'];
-			$mail_cc[] = $row['email_id_1']?$row['email_id_1']:$row['email_id_2'];
-			$mail_cc[] = $row['email_id_2']?$row['email_id_2']:'';
-		}
-		
-		$mail_cc = array_filter(array_unique($mail_cc));
-		
-		// prepare po product datasheet 
-		$sql_poprods="select a.product_id,product_name,order_qty,a.mrp
-							from t_po_product_link a
-							join m_product_info b on a.product_id=b.product_id 
-							where po_id = ? 
-							and a.is_active = 1 ";
-		$res_pprods = $this->db->query($sql_poprods,$po_id);
-		$pprods = array();
-		$pprods[] = array();
-		$pprods[] = array("Storeking Purchase Order No : ",$po_id);
-		if($res_pprods->num_rows())
-		{
-		 	$pprods[] = array("Slno","Product Refno","Product Name","MRP","Order Qty");
-			foreach($res_pprods->result_array() as $i=>$p)
-			{
-				$pprods[] = array($i+1,$p['product_id'],$p['product_name'],$p['mrp'],$p['order_qty']);
-			}
-		}
-		
-		$attachment_name = "resources/po_files/Storeking_Purchase_order_".$po_id.'.csv';
-		$f=fopen($attachment_name,"w");
-		foreach($pprods as $o)
-			fputcsv($f, $o);
-		fclose($f);
-		
-		$message = nl2br($message);
-		if($mail_to)
-		{
-			$this->erpm->_notifybymail($mail_to,$subj,$message,$fromname="Storeking Sourcing",$from='support@snapittoday.com',$mail_cc,$attachment_name);
-			$this->db->query("update t_po_info set notify_vendor=1,notify_vendor_on = now() where po_id = ? ",$po_id);
-		}
-		
-		
-		
-	}
+	
 	function product_statsbymenu($menuid = 100)
 	{
-		$sql = "select a.brand_id,f.name as brand,a.product_id,a.product_name,0 as stock,0 as s15d,0 as s30d,0 as s60d  
+	
+		 
+		ini_set('max_execution_time','6000');
+		ini_set('memory_limit','512M');
+		
+		
+		$sql = "select e.id as menuid,e.name as menu,a.brand_id,f.name as brand,a.product_id,a.product_name,a.mrp,a.is_sourceable,'' as last_purchasedon,0 as stock,0 as stock_mrp_summ,0 as s15d,0 as s30d,0 as s60d  
 					from m_product_info a 
 					join m_product_deal_link b on a.product_id = b.product_id and b.is_active = 1
 					join king_brands f on f.id = a.brand_id  
 					join king_dealitems c on c.id = b.itemid
-					join king_deals d on d.dealid = c.dealid 
-					where d.menuid = ?
+					join king_deals d on d.dealid = c.dealid
+					join pnh_menu e on e.id = d.menuid  
+					where d.menuid in ($menuid)
 					group by product_id
-					order by brand,product_name
+					order by menu,brand,product_name
 				";
-		$res = $this->db->query($sql,$menuid);
+		
+		$res = $this->db->query($sql);
 		if($res->num_rows())
 		{
 			$pmaster = array();
@@ -1865,6 +1812,18 @@ order by action_date ";
 				
 				// check current product stock
 				$pmaster[$row['product_id']]['stock'] = ($this->db->query("select sum(available_qty) as t from t_stock_info where product_id = ? ",$row['product_id'])->row()->t)*1;
+				
+				$pmaster[$row['product_id']]['last_purchasedon'] = @($this->db->query("select date(created_on) as grn from t_grn_product_link where product_id = ? order by id desc limit 1;",$row['product_id'])->row()->grn);
+				
+				$pmaster[$row['product_id']]['stock_mrp_summ'] = @($this->db->query("select product_id,group_concat(s) as stock_summ from (
+																							select product_id,concat(mrp,':',sum(available_qty)) as s
+																								from t_stock_info 
+																								where product_id = ?
+																								group by product_id,mrp 
+																								having sum(available_qty) > 0 ) as g 
+																							group by product_id",$row['product_id'])->row()->stock_summ);
+				
+			 
 				
 				// last 30 days sales
 				$pmaster[$row['product_id']]['s15d'] = $this->db->query("select ifnull(sum(c.qty*a.quantity),0) as qty
@@ -1892,7 +1851,7 @@ order by action_date ";
 				
 				
 			}
-		}
+		} 
 		
 		ob_start();
 		$f=fopen("php://output","w");
@@ -1900,6 +1859,7 @@ order by action_date ";
 			fputcsv($f,$p);
 		fclose($f);
 		$csv=ob_get_clean();
+		
 		ob_clean();
 		header('Content-Description: File Transfer');
 		header('Content-Type: text/csv');
@@ -1915,4 +1875,123 @@ order by action_date ";
 		exit;
 		
 	}
+	
+	
+	function updatefrmenu()
+	{
+		$user = $this->erpm->auth();
+		$menu_selected=array();
+		$menu_selected = array(133,128,129,102,101,100,104);
+		
+		$fid_list_res = $this->db->query("select distinct fid from pnh_franchise_menu_link where menuid = 100 and status = 1 order by fid");
+		foreach($fid_list_res->result_array() as $frow)
+		{
+			$fid  = $frow['fid'];
+			$this->db->query("update pnh_franchise_menu_link set status = 2,is_sch_enabled=0,modified_on=now() where status = 1 and fid = ? ",$fid);
+			//get the latest modified record
+		
+			//	$this->db->query("update pnh_m_franchise_info")
+			foreach($menu_selected as $m)
+			{
+				// check for no change
+				$fm_stat_res = $this->db->query("select id,status from pnh_franchise_menu_link where fid = ? and menuid = ? order by id desc limit 1 ",array($fid,$m));
+				if($fm_stat_res->num_rows())
+				{
+					$fm_stat = $fm_stat_res->row_array();
+					// check for status
+					if($fm_stat['status'] == 2)
+					{
+						$this->db->query("update pnh_franchise_menu_link set status = 1,modified_on=now(),is_sch_enabled=1 where status = 2 and id = ? ",$fm_stat['id']);
+						continue ;
+					}
+				}
+		
+				$ins_data=array();
+				$ins_data['fid']=$fid;
+				$ins_data['menuid']=$m;
+				$ins_data['created_by']=$user['userid'];
+				$ins_data['created_on']=date("Y-m-d H:i:s");
+				$ins_data['status']=1;
+				$this->db->insert("pnh_franchise_menu_link",$ins_data);
+			}
+			
+			$this->db->query("update pnh_franchise_menu_link set status = 0,modified_on=?,modified_by=? where status = 2 and fid = ? ",array(time(),$user['userid'],$fid));
+			
+		}
+	}
+	
+	
+	function bulk_notifymember_point_alert()
+	{
+		ini_set('max_execution_time','6000');
+		ini_set('memory_limit','512M');
+		
+		// fetch registered members who are ordered atleast once.
+		
+		$sql = "select * from (
+						(
+							select a.pnh_member_id,franchise_id,concat(first_name) as mem_name,mobile,a.user_id
+								from pnh_member_info a 
+								join king_orders b on a.user_id = b.userid 
+								where length(trim(mobile)) = 10 
+							group by a.user_id
+						)
+						union
+						(
+							select pnh_member_id,franchise_id,concat(first_name) as mem_name,mobile,user_id
+							from t_imei_no a 
+							join pnh_member_info b on a.activated_mob_no = b.mobile  
+							where length(trim(activated_mob_no)) = 10
+						) 
+					) as g 
+					group by pnh_member_id,mobile,user_id
+					 
+				";
+		$res = $this->db->query($sql);
+		if($res->num_rows())
+		{
+			foreach($res->result_array() as $row)
+			{
+				// check for available loyalty points and added extra 50 points and send final avaialalble points as notification.
+				// check member available points.
+				$pnts = @($this->db->query("select points_after from pnh_member_points_track where user_id = ? order by id desc limit 1;",$row['user_id'])->row()->points_after);
+				
+				// ADD 50 Points to list. 
+				$newpnts = $pnts*1+50;
+				
+				if($newpnts > 150)
+					$newpnts = 150;
+				
+				// insert new points summary to log.
+				$data = array();
+				$data[] = $row['user_id'];
+				$data[] = '';
+				$data[] = 50;
+				$data[] = $newpnts;
+				$this->db->query("insert into pnh_member_points_track(user_id,transid,points,points_after,created_on) values (?,?,?,?,unix_timestamp())",$data);
+				
+				$name = trim($row['mem_name']);
+				$name = (strlen($name) > 0)?$name:'Storeking Member';
+				$mob = $row['mobile'];
+				
+				// send notification to member mobileno.
+				$sms = "Dear $name,
+Your $newpnts StoreKing points is nearing expiry,
+Please use your points for your next purchase in one of the StoreKing retailer in your town.";
+				
+				
+				//echo $row['pnh_member_id'].',"'.$row['mem_name'].'",'.$newpnts."\r\n";
+				
+				$this->erpm->pnh_sendsms($mob,$sms,$row['franchise_id'],0,'NOTIFY_MEMBER');
+				
+				
+			} 
+		}
+	}
+	
+	
+	
+	
+	 
+	
 }

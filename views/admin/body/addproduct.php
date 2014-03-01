@@ -17,12 +17,13 @@
 <tr><td>Is Sourceable :</td><td><input type="checkbox" name="pissrc" value="1" <?=$p?($p['is_sourceable']?"checked":""):""?> ></td></tr>
 <tr><td>Is Serial No.required :</td><td><input type="checkbox" name="pissno" value="1" <?=$p?($p['is_serial_required']?"checked":""):""?>></td></tr>
 <tr><td>Category :</td><td>
-<select name="pcat" data-required="true">
+<select name="pcat" id="pcat" data-required="true">
 <option value="">Choose</option>
 <?php foreach($this->db->query("select id,name from king_categories order by name asc")->result_array() as $c){?>
 <option value="<?=$c['id']?>" <?=$p?($p['product_cat_id']==$c['id']?"selected":""):""?>><?=$c['name']?></option>
 <?php }?>
 </select>
+        <div class="attr_list_block"></div>
 </td></tr>
 <tr><td>Brand :</td><td>
 <select name="pbrand" data-required="true">
@@ -50,4 +51,41 @@
 </form>
 
 </div>
+<script>
+    $("#pcat").live("change",function() {
+        var cat_id = $(this).find(":selected").val();
+        
+        if(cat_id != '') 
+        {
+            $.post(site_url+"/admin/jx_get_cat_attributes/"+cat_id,function(resp) {
+                var atrr_list = '';
+                
+                if(resp.status == 'success') {
+                    atrr_list += '<h5>Set attribute values:</h5><table class="datagrid">\n\
+                                <tr>\n\
+                                    <th>Attribute Name</th><th></th>\n\
+                                <tr>';
+                    $.each(resp.attr_list,function(i,attr) {
+                        
+                        atrr_list +='<tr>\n\
+                                    <td>'+attr.attr_name+'</td><td><input type="hidden" name="attr[attr_id][]" value="'+attr.id+'"/> <input type="text" name="attr[attr_value][]" value=""/></td>\n\
+                                <tr>';
+                    });
+                    atrr_list +='</table>';
+                }
+                else {
+                    //alert(resp.message);
+                    atrr_list += '';
+                }
+                $(".attr_list_block").html(atrr_list);
+                
+            },'json');
+        }
+        else
+        {
+            $(".attr_list_block").html("");
+        }
+        
+    }).trigger("change");
+</script>
 <?php

@@ -13,6 +13,7 @@ display:none;
 <h2>Dashboard</h2>
 <table width="100%">
 <tr>
+<?php /*?>
 <td valign="top" width="25%" style="background:#efefef;padding:5px;">
 <?php 
 if($this->erpm->auth(PNH_EXECUTIVE_ROLE,true) && !$this->erpm->auth(true,true)){
@@ -126,8 +127,8 @@ echo $iv->format("%m months %d days %i minutes");
 
 </td>
 
-
-<td valign="top" class="nobmargin" width="75%" style="background:#fafafa;padding-left:10px;">
+<?php /*/?>
+<td valign="top" class="nobmargin"  style="background:#fafafa;padding:0px 10px;">
 
 <?php if($this->erpm->auth(PNH_EXECUTIVE_ROLE,true) && !$this->erpm->auth(true,true)){ ?>
 
@@ -145,7 +146,7 @@ Total Members : <span><?=$this->db->query("select count(1) as l from pnh_franchi
 <a href="<?=site_url("admin/pnh_addfranchise")?>">Add Franchise</a>
 
 <table class="datagrid" width="100%" style="margin-top:10px;">
-<thead><tr><th>Franchise Name</th><th>FID</th><th>Assigned to</th><th>City</th><th>Territory</th><th>Current Balance</th><th>Assigned to</th><th>Class</th><th>Margin</th><th></th></tr></thead>
+<thead><tr><th>Franchise Name</th><th>FID</th><th>Assigned to</th><th>City</th><th>Territory</th><th>Assigned to</th><th>Class</th><th>Margin</th><th></th></tr></thead>
 <tbody>
 <?php foreach($this->erpm->pnh_getfranchises() as $f){?>
 <tr>
@@ -154,7 +155,6 @@ Total Members : <span><?=$this->db->query("select count(1) as l from pnh_franchi
 <td><?=$f['owners']?></td>
 <td><?=$f['city']?></td>
 <td><?=$f['territory_name']?></td>
-<td>Rs <?=$f['current_balance']?></td>
 <td><?=$f['assigned_to']?></td>
 <td><?=$f['class_name']?></td>
 <td><?=$f['margin']?></td>
@@ -262,7 +262,7 @@ $prioritys=array("Low","Medium","High","Urgent");
 $tickets=$this->erpm->gettickets("all");
 ?>
 <h4>Recent Support Tickets</h4>
-<table class="datagrid grey noprint">
+<table class="datagrid grey noprint" width="100%">
 <thead>
 <tr>
 <th>Ticket No</th>

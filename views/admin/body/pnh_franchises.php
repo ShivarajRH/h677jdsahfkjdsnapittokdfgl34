@@ -15,11 +15,13 @@ Registered
 <span><?=$suspended_frans_ttl?></span>
 Suspended
 </div> */ ?>
-
+<? /*
+<?php if($this->erpm->auth(true,true)){ ?>
 <div class="dash_bar">
 <span><?=count($frans)-$suspended_frans_ttl?></span>
 Active
-</div>
+</div> <?php } ?>
+*/ ?>
 
 <div class="dash_bar_right">
 Generate Print by Territory : <select id="sel_p_terry">
@@ -41,7 +43,9 @@ Generate Print by Territory : <select id="sel_p_terry">
 		<li><a id="link_franlist_latest20" href="#franlist_latest20" onclick="load_franchisesbysel(1,0,0,0,0,0)">New Franchises</a></li>
 		<li><a id="link_franlist_regthismonth" href="#franlist_regthismonth" onclick="load_franchisesbysel(2,0,0,0,0,0)">Registered This Month</a></li>
 		<li><a href="#franlist_all" onclick="load_franchisesbysel(5,0,0,0,0,0)">All Franchises</a></li>
+		<?php /*?>
 		<li><a href="#franlist_suspended" onclick="load_franchisesbysel(4,0,0,0,0,0)">Suspended Franchises</a></li>
+		<?php /*/?>
 	</ul>
 	
 	<div id="franlist_latest20">
@@ -50,9 +54,11 @@ Generate Print by Territory : <select id="sel_p_terry">
 	<div id="franlist_regthismonth">
 		<div class="franlist_holder"></div>
 	</div>
+	<?php /*?>
 	<div id="franlist_suspended">
 		<div class="franlist_holder"></div>
 	</div>
+	<?php /*/?>
 	<div id="franlist_all">
 		<div class="franlist_holder"></div>
 	</div>
