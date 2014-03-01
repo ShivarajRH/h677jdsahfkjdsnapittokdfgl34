@@ -6,13 +6,14 @@
 Upload file : <input type="file" name="deals"><input type="submit" value="Upload">
 <div style="color:#888;margin:10px 20px;"><ul><li>Only CSV format supported</li><li>First row as head neglected always</li>
 <li>Link Products : <b>Comma separated product_id:qty as key:value pair</b></li>
+<li>Print Name : <span class="hightlight">If print name is empty, deal name will be considered as print name </span></li>
 </ul></div>
 </form>
 
 <h4 style="margin:0px;">Template</h4>
-<div style="max-width:100%;overflow:auto">
+<div style="max-width:900px;overflow:auto">
 <table class="datagrid noprint">
-<?php $template=array("Deal Name","Print Name","Tagline","Category (ID)","Brand (ID)","MRP","Offer Price","Store Price","NYP Price","Gender Attribute","Max Allowed Qty","Image ID","Tax","Description","Products","Products Group","keywords","Menu (ID)","Ships In","Publish"); ?>
+<?php $template=array("Deal Name","Print Name","Tagline","Max allowd qty","Category (ID)","Brand (ID)","MRP","Offer Price","Store Price","NYP Price","Gender Attribute","Image ID","Tax","Description","Products","Products Group","keywords","Menu (ID)","Ships In","Publish"); ?>
 <thead>
 <tr>
 <?php foreach($template as $t){?><th><?=$t?></th><?php }?>
@@ -40,7 +41,9 @@ Upload file : <input type="file" name="deals"><input type="submit" value="Upload
 
 
 </div>
-
+<style type="text/css">
+        .hightlight { font-weight:bold; color: #A55319; }
+</style>
 <script>
 $(function(){
 	$("#bk_form").submit(function(){

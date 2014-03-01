@@ -24,9 +24,7 @@
 	width: 100%;
 }
 
-#ui-datepicker-div {
-	top: 602px !important;
-}
+
 
 .src {
 	background: #afa;
@@ -187,7 +185,7 @@ input[type="submit"] {
 }
 .prd_blk
 {
-	width:265px;
+	width:350px;
 }
 input[type="submit"] {
 	background-color: #a5cc52;
@@ -197,11 +195,12 @@ input[type="submit"] {
 	position: relative;
 }
 .po_filters {
-	background-color: #eaeaea;
+	background-color: #EAEAEA;
 	cursor: pointer;
-	float: right;
-	width: 100%;
-	 padding: 2px 7px -2px 0px;
+	padding: 5px;
+	overflow: hidden;
+	display: block;
+	clear: both;
 }
 
 .close_filters {
@@ -250,9 +249,15 @@ input[type="submit"] {
 }
 .qty_price_blk span
 {
-	float: left;
 	width: 86px;
 	text-align: right;
+	font-size: 11px;
+	font-weight: bold;	
+}
+.mrgn_blk span
+{
+	width: 205px;
+	text-align: left;
 	font-size: 11px;
 	font-weight: bold;	
 }
@@ -279,15 +284,11 @@ input[type="submit"] {
 }
 h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;}
 
-.readonly
-{width:54px;font-size:13px;background-color:#E6E6E6 !important;color:grey!important;}
+.readonly{width:54px;font-size:13px;background-color:#fafafa !important;color:#444 !important;}
 
 .pprice{background-color: yellow!important;font-weight: bold;}
-.vendor
-{width: 150px}
-
-.partner
-{width: 100px;}
+.vendor{width: 200px}
+.partner{width: 100px;}
 
 .loadbutton {
     font: 15px Calibri, Arial, sans-serif;
@@ -369,3 +370,28 @@ does not support multiple backgrounds
     border: 1px solid #F6F6F6 !important;
     background-color: #DEDEDE;
 }
+.error_inp{border:1px solid #cd0000 !important;}
+.prd_blk {
+    border-radius: 4px !important;
+    display:inline-block;
+    font-size: 14px;
+    height: 18px;
+    margin-right: -1px;
+    margin-top: 0;
+    padding:5px; 
+}
+
+.search_img_wrap
+{
+  	background: none repeat scroll 0 0 #FFF;
+	border: 1px solid #CCC;
+	display: inline-block;
+	position: absolute;
+	margin-top: 0px;
+	border-radius:0px 4px 4px 0px !important;
+}
+.srch_box {width: 400px;}
+
+.module_type1{padding:3px;}
+.module_type1 .module_type1_title{font-size: 14px;font-weight: bold;}
+.module_type1 .module_type1_content{font-size: 12px;}

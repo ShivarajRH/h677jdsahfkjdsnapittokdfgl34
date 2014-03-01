@@ -2,13 +2,19 @@
 	.show_totalamount{max-width: 100% !important}
 </style>
 <?php
-	
 //          join pnh_m_territory_info f on f.id = d.territory_id
 //          join pnh_m_franchise_info d on d.franchise_id = c.franchise_id
 //          join pnh_towns e on e.id = d.town_id 
 
     $fil_menulist = array();
     $fil_brandlist = array();
+    
+    $order_status_arr=array();
+    $order_status_arr[0]='Pending';
+    $order_status_arr[1]='Unshipped';
+    $order_status_arr[2]='Shipped';
+    $order_status_arr[3]='Cancelled';
+    $order_status_arr[4]='Returned';
     
     $cond = '';
    if($menuid!=0) {
@@ -26,6 +32,10 @@
     if($franchiseid!=0) {
         $cond .= ' and d.franchise_id='.$franchiseid;
     }
+    
+    
+    
+    
 //    echo $cond; die();
         $sql_all = "select distinct c.batch_enabled,d.franchise_id,deal.brandid,deal.menuid,m.name as menu_name,br.name as brand_name,c.transid,sum(o.i_coup_discount) as com,c.amount,o.transid,o.status,o.time,o.actiontime,pu.user_id as userid,pu.pnh_member_id 
                     from king_orders o 
@@ -110,48 +120,112 @@
                                 group by tr.transid
                                 order by tr.init desc";
         
+        $ord_ttl_cond = '';
 		if($type == 'all') {
 			$sql=$sql_all;
-			$str_total_invoice="Total ordered items value ";
+			$str_total_invoice="Total Ordered items value ";
+			$ord_ttl_cond = " and t.init between $st_ts and $en_ts   ";
 		}elseif($type == 'shipped') {
-                    	$sql=$sql_shipped;
+            $sql=$sql_shipped;
 			$order_cond = " and a.status = 2 and sd.shipped = 1 and sd.shipped_on between from_unixtime($st_ts) and from_unixtime($en_ts) ";
-                        $str_total_invoice="Total shipped invoice value ";
-			 
+            $ord_ttl_cond = " and a.status = 2 and sd.shipped_on between from_unixtime($st_ts) and from_unixtime($en_ts) ";
+            $str_total_invoice="Total Shipped invoice value ";
 		}elseif($type == 'unshipped') {
-                    	$sql=$sql_unshipped;
-                        $order_cond = " and a.status in (null,0,1) and (sd.shipped = 0 or sd.shipped is null ) and t.init between $st_ts and $en_ts   ";	
-                        $str_total_invoice="Total unshipped value ";
-                        
+            $sql=$sql_unshipped;
+            $order_cond = " and a.status in (null,0,1) and (sd.shipped = 0 or sd.shipped is null ) and t.init between $st_ts and $en_ts   ";	
+            $ord_ttl_cond = " and a.status in (null,0,1) and (sd.shipped = 0 or sd.shipped is null ) and t.init between $st_ts and $en_ts   ";
+            $str_total_invoice="Total Unshipped value ";
 		}elseif($type == 'cancelled') {
-                    	$sql=$sql_cancelled;
+			$sql=$sql_cancelled;
 			$order_cond = " and a.status = 3 and a.actiontime between $st_ts and $en_ts  ";
-                        $str_total_invoice="Total cancelled items value ";
+            $ord_ttl_cond = "and a.status = 3 and a.actiontime between $st_ts and $en_ts  ";
+            $str_total_invoice="Total Cancelled items value ";
+		}elseif($type == 'removed') {
+         	$sql=$sql_removed;
+            $order_cond = " and a.actiontime between $st_ts and $en_ts  ";
+            $ord_ttl_cond = " and a.actiontime between $st_ts and $en_ts  ";
+            $str_total_invoice="Disabled from batch value ";
 		}
-                elseif($type == 'removed') {
-                    	$sql=$sql_removed;
-                        $order_cond = " a.actiontime between $st_ts and $en_ts  ";
-                        $str_total_invoice="Disabled from batch value ";
-                }
 
                 $total_results=$total_results_all=$total_results_shipped=$total_results_unshipped=$total_results_cancelled='';
 
-                $rslt = $this->db->query($sql);
-                $total_results=$rslt->num_rows();
-                //$rslt=$this->db->query($sql)->result_array();
+                $sql_ttl_q = "select transid,status,ord_amt,batch_status,ifnull(amt1,amt2) as amt from (
+								SELECT a.transid,a.status,t.batch_enabled as batch_status,SUM((i_orgprice)*a.quantity) as ord_amt,
+									SUM((mrp-(discount+credit_note_amt))*i.invoice_qty) AS amt1,
+									SUM((i_orgprice-(i_coup_discount+i_discount))*a.quantity) AS amt2
+									FROM king_orders a 
+									join king_transactions t on t.transid = a.transid 
+									join pnh_m_franchise_info d on d.franchise_id = t.franchise_id 
+									join king_dealitems c on c.id = a.itemid 
+									join king_deals deal on deal.dealid = c.dealid 
+									LEFT JOIN king_invoice i ON i.order_id = a.id and i.invoice_status = 1 
+									left join shipment_batch_process_invoice_link sd on sd.invoice_no = i.invoice_no 
+									where 1 $cond $ord_ttl_cond 
+								group by a.transid,a.status ) as g
+                			";
+
                 
+                $order_ttls_res = $this->db->query($sql_ttl_q);
+                
+                $total_orders_bystatus = array();
+                $total_orders_bystatus['all'] = array('total'=>array(0,0),'trans'=>array());
+                $total_orders_bystatus['shipped'] = array('total'=>array(0,0),'trans'=>array());
+                $total_orders_bystatus['unshipped'] = array('total'=>array(0,0),'trans'=>array());
+                $total_orders_bystatus['cancelled'] = array('total'=>array(0,0),'trans'=>array());
+                $total_orders_bystatus['removed'] = array('total'=>array(0,0),'trans'=>array());
+                
+                foreach($order_ttls_res->result_array() as $ord_ttl_s)
+                {
+                	$total_orders_bystatus['all']['total'][0] += $ord_ttl_s['ord_amt'];
+                	$total_orders_bystatus['all']['total'][1] += $ord_ttl_s['amt'];
+                	$total_orders_bystatus['all']['trans'][] = $ord_ttl_s['transid'];
+                	
+                	$to_type = '';
+                	if($type != 'removed')
+                	{
+                		if(($ord_ttl_s['status'] == 0 || $ord_ttl_s['status'] == 1) && ($type == 'unshipped' || $type == 'all'))
+                			$to_type = 'unshipped';
+                		else if($ord_ttl_s['status'] == 2 && ($type == 'shipped' || $type == 'all'))
+                			$to_type = 'shipped';
+                		else if($ord_ttl_s['status'] == 3  && ($type == 'cancelled' || $type == 'all'))
+                			$to_type = 'cancelled';
+                	}else
+                	{
+                		if($ord_ttl_s['batch_status'] == 0 && ($type == 'removed' || $type == 'all'))
+                			$to_type = 'removed';
+                	}
+                	
+                	if($to_type)
+                	{
+                		$total_orders_bystatus[$to_type]['total'][0] += $ord_ttl_s['ord_amt'];
+                		$total_orders_bystatus[$to_type]['total'][1] += $ord_ttl_s['amt'];
+                		$total_orders_bystatus[$to_type]['trans'][] = $ord_ttl_s['transid'];
+                	}
+                	
+                }  
+                
+                $total_results = count(array_unique($total_orders_bystatus[$type]['trans']));
+                $total_amount = $total_orders_bystatus[$type]['total'][0];
+                $total_inv_amount = $total_orders_bystatus[$type]['total'][1];
+                
+               // print_r($total_orders_bystatus);
+                
+                //$rslt = $this->db->query($sql);
+                //$total_results=$rslt->num_rows();
+                //$rslt=$this->db->query($sql)->result_array();
+                /*
                 foreach ($rslt->result_array() as $amt) {
                     //$total_amount+=$amt['amount'];
                     $total_amount += $this->db->query("select sum((i_orgprice)*quantity) as t from king_orders where transid = ?  ",$amt['transid'])->row()->t;
 					$total_inv_amount += $this->db->query("select sum((i_orgprice-(i_discount+i_coup_discount))*quantity) as t from king_orders where transid = ?  ",$amt['transid'])->row()->t;
-                }
+                }*/
                 
 		$sql .=" limit $pg,$limit ";
                 
 //                echo '<pre>'.$sql."<br>".$total_results_shipped."<br>".$total_results_unshipped."<br>".$total_results_cancelled."<br>".$total_amount."<br>"; die("TESTING");
                 
 		$res = $this->db->query($sql); //,array($fid)
-		$order_stat=array("Confirmed","Invoiced","Shipped","Cancelled");
+		$order_stat=array("Confirmed","Invoiced","Shipped","Cancelled","Returned");
                 
 		$resonse='';
 		if(!$total_results) {
@@ -176,7 +250,7 @@
                     $this->config->set_item('enable_query_strings',TRUE);
 //                  PAGINATION ENDS
                     
-                $resonse.='<div class="orders_status_pagination pagi_top"> '.$orders_pagination.' </div>';
+                $resonse.='<table width="100%"><tr><td width="30%" align="left" style="vertical-align:bottom !important;"><div class="ttl_orders_status_listed"></div></td><td width="40%" align="center"><div class="show_totalamount"></div></td><td <td width="30%" align="right"><div class="orders_status_pagination"> '.$orders_pagination.' </div></td></tr></table>';
                 $resonse.='
                     <table class="datagrid datagridsort" width="100%">
                     <thead><tr><th>Slno</th><th>Time</th><th>Order</th><th>Amount</th><th>Commission</th><th>Deal/Product details</th><th>Status</th><th>Last action</th></tr></thead>
@@ -245,13 +319,27 @@
                                     <span>'.$order['ship_phone'].'</span>
                             </td>';
                                 if($o['batch_enabled']==1) {
-                                    $batch_enabled='<div class="clear" style="margin-top:20px;"><span style="background-color:#8C489F;color: #F1F0FF;">Batch: Enabled</span></div>';
+                                    $batch_enabled='<div class="clear" style="margin-top:20px;">Batch Enabled: <b>Yes</b></div>';
                                 }
                                 else {
-                                    $batch_enabled='<div class="clear" style="margin-top:20px;"><span style="color: #8C489F;">Batch: Disabled</span></div>';
+                                    $batch_enabled='<div class="clear" style="margin-top:20px;">Batch Enabled: <b>No</b></div>';
                                 }
+                                
+                                $sql_trans_ttls = 'SELECT STATUS,IFNULL(amt1,amt2) AS amt,totals
+                                FROM ( SELECT b.status,SUM((mrp-(discount+credit_note_amt))*a.invoice_qty) AS amt1,SUM(i_orgprice-(i_coup_discount+i_discount)*b.quantity) AS amt2,
+                                COUNT(b.id) AS totals
+                                FROM king_orders b
+                                LEFT JOIN king_invoice a ON a.order_id = b.id
+                                WHERE b.transid = ? GROUP BY b.status ) AS g';
+                                
+                                $trans_order_status_amt = $this->db->query($sql_trans_ttls,$o['transid']);
+                                
+                                $ostatus = '';
+                                foreach($trans_order_status_amt->result_array() as $to_row)
+                                	$ostatus .= '<div><span class="span_count_wrap">'.$order_status_arr[$to_row['STATUS']].'(<b>'.($to_row['totals']).'</b>) : <b>Rs. <span style="">'.(format_price($to_row['amt'])).'</span></b></span></div>';
+                                
                             $resonse.='
-                            <td>'.round($o['amount'],2).' '.$batch_enabled.' </td>
+                            <td>'.round($o['amount'],2).' '.$batch_enabled.' <br> '.$ostatus .' </td>
                             <td>'.round($o['com'],2).'</td>
                             <td style="padding:0px;">
                                     <table class="subdatagrid" cellpadding="4" cellspacing="0">
@@ -358,7 +446,7 @@
 
                     $resonse.='</tbody> </table>';
 
-                $resonse .= '<div id="orders_status_pagination" class="orders_status_pagination">'.$orders_pagination.'</div>';
+                $resonse .= '<div id="orders_status_pagination" class="orders_status_pagination log_pagination">'.$orders_pagination.'</div>';
                 
                 $total_results_all=$this->db->query($sql_all)->num_rows();
                 $total_results_shipped=$this->db->query($sql_shipped)->num_rows();

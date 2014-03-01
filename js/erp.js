@@ -26,8 +26,8 @@ $(function(){
 //	$(".datagrid thead").html("<tr>"+$("#temp_dg tr:first").html()+"</tr>");
 //	$("#temp_dg tr:first").remove();
 //	$(".datagrid tbody").html($("#temp_dg").html());
-	$(".datagrid:not(.nofooter)").append("<tfoot></tfoot>");
-	$(".datagrid tfoot").html("<tr><td colspan='100'><a href='javascript:void(0)' class='dg_print'>print</a></td></tr>");
+	//$(".datagrid").append("<tfoot></tfoot>");
+	//$(".datagrid:not(.nofooter) tfoot").html("<tr><td colspan='100'><a href='javascript:void(0)' class='dg_print'>print</a></td></tr>");
 	if(typeof submenu == "undefined")
 	{
 		$("#content .leftcont").html("<ul>"+$(".menu").html()+"<ul>");
@@ -39,13 +39,13 @@ $(function(){
 		$("#content .leftcont ul li span").remove();
 	}
 	$(".datagrid tbody tr").live("mouseover",function(){
-		$("td",$(this)).css("background","#FFFFE0");
+		$("td",$(this)).addClass("highlight_row");
 		if($("td a.link",$(this)).length!=0)
 			$("td",$(this)).css("cursor","pointer");
 		if($("td .qe_trig",$(this)).length!=0 || $("td .qe_all_trig",$(this).parent()).length!=0)
 			$("td",$(this)).css("cursor","url('../images/edit_cursor.gif') 1 24, -moz-grab");
 	}).live("mouseout",function(){
-		$("td",$(this)).css("background","transparent");
+		$("td",$(this)).removeClass("highlight_row");
 	});
 	$(".datagrid .dg_print").click(function(){
 		var html="";
@@ -138,7 +138,11 @@ $(function(){
 		}
 	});
 	$(".ajax_loadresult a").live("click",function(){
-		$(this).addClass("selected");
+		 if(!$(this).hasClass('selected'))
+			 $(this).addClass("selected");
+		else
+			 $(this).removeClass("selected");
+
 	});
 	$("ul.menu ul li").hover(function(){
 		if($(".submenuright",$(this)).length==0)
@@ -399,15 +403,101 @@ function prepare_daterange(a,b){
 	    });
 }
 
+/**
+ * Function to convert unix time to date and time
+ */
 function get_unixtimetodatetime(utime)
 {
 	var date = new Date(utime * 1000);
 	var y=date.getFullYear();
     var m=date.getMonth()+1;
     var d=date.getDate();
-    var h=date.getHours();
+    var h=(date.getHours() > 9)?date.getHours()-12:date.getHours();
     var mi=date.getMinutes();
     var s=date.getSeconds();
     var datetime=d+'/'+m+'/'+y+' '+h+':'+mi+':'+s;
     return datetime;
 }
+
+/** This prototype function allows you to reset all form input types
+ * $("#formname").clearForm();
+ */
+$.fn.clearForm = function() {
+  return this.each(function() {
+    var type = this.type, tag = this.tagName.toLowerCase();
+    if (tag == 'form')
+      return $(':input',this).clearForm();
+    if (type == 'text' || type == 'password' || tag == 'textarea')
+      this.value = '';
+    else if (type == 'checkbox' || type == 'radio')
+      this.checked = false;
+    else if (tag == 'select')
+      this.selectedIndex = 0;//this.selectedIndex = -1;
+  });
+};
+
+/** This prototype function allows you to remove even array from array 
+   var arr = [1,2,[1,1], 'abc']; 
+   arr.remove([1,1]);console.log(arr) //[1, 2, 'abc']
+   arr.remove(1); console.log(arr) //[2, [1,1], 'abc']
+   arr.remove('abc'); console.log(arr) //[1, 2, [1,1]]*/
+Array.prototype.remove = function(x) { 
+    for(i in this){
+        if(this[i].toString() == x.toString()){
+            this.splice(i,1)
+        }
+    }
+}
+
+/**
+ * This function allows you to remove decimal point to 2 digits, also preserver integer numbers
+ * 5.386823 => 5.39
+ */
+function format_number(num,decimal) { //decimal is optional
+    var deci = (decimal === undefined || decimal === null ) ? 2 : decimal;
+    num = parseFloat(num);
+    
+    var final_num = ( num.toString().indexOf(".") !== -1) ? num.toFixed(deci) : num;
+    return parseFloat(final_num);
+}
+
+
+//============================================<< JQUERY TRIM FUNCTION START >>===================================
+    $.ltrim = function( str ) {
+        return str.replace( /^\s+/, "" );
+    };
+    $.rtrim = function( str ) {
+        return str.replace( /\s+$/, "" );
+    };
+//============================================<< JQUERY TRIM FUNCTION START >>===================================
+  
+$(function(){
+	$('#fgt_pwd_dlg').dialog({
+			width:'auto',
+			height:'auto',
+			autoOpen:false,
+			modal:true,
+			open:function(){
+				$('input[name="fgt_pwd_email"]',this).val('');
+			},
+			buttons:{
+				'Submit':function(){
+					$.post(site_url+'/admin/jx_reset_adminpwd',$('form',this).serialize(),function(resp){
+						if(resp.status == 'success')
+						{
+							location.href=location.href;
+						}else
+						{
+							alert(resp.message);
+						}
+					},'json');
+				}
+			}
+	});
+	
+	$('#fgt_pwd_lnk').click(function(e){
+		e.preventDefault();
+		$('#fgt_pwd_dlg').dialog('open');
+	});
+
+});

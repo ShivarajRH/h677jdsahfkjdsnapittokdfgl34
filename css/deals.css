@@ -8,16 +8,17 @@
 }
 .filters_wrap
 {
-   float: right;
-   margin-bottom:4px;
-   width:24%;
+    float: right;
+    margin-bottom: 4px;
+    margin-right: 7%;
+    width: 26%;
 }
 .legends_outer_wrap
 {
 	float: right;
     height: 18px;
-    padding-top: 5px;
-    width: 19%;
+    padding-top: 10px;
+    width: 25%;
 }
 .legends_outer_wrap span.legends_color_notsrc_wrap
 {
@@ -93,7 +94,7 @@
     height: 18px;
     margin-right: -1px;
     margin-top: 0;
-    width: 265px;
+    width: 304px;
 }
 .search_blk
 {
@@ -102,7 +103,7 @@
     margin: 7px -22px 4px 15px;
     width: 175px;
 }
-.ui-widget-content 
+/*.ui-widget-content 
 {
 	 background: none repeat scroll 0 0 #F9F9F9;
     border: medium none !important;
@@ -118,7 +119,7 @@
 	border-bottom: 1px solid #ccc;
 	border-left:1px solid #ccc;
 	border-right:1px solid #ccc;
-}
+}*/
 .sk_deal_blk_wrap
 {
 	float: left;
@@ -270,7 +271,7 @@
 	background: none repeat scroll 0 0 #F1F1F1;	
 }
 
-.Brands_bychar_list_head .close_btn
+.Brands_bychar_list_head .close_btn_dlpg
 {
 	 float: right;
     margin: 8px;
@@ -321,7 +322,7 @@
 	font-weight: bold;
 	text-align: center;
 }
-.close_btn
+.close_btn_dlpg
 {
 	float:right;
 }

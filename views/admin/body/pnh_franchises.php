@@ -15,12 +15,13 @@ Registered
 <span><?=$suspended_frans_ttl?></span>
 Suspended
 </div> */ ?>
-
+<? /*
 <?php if($this->erpm->auth(true,true)){ ?>
 <div class="dash_bar">
 <span><?=count($frans)-$suspended_frans_ttl?></span>
 Active
 </div> <?php } ?>
+*/ ?>
 
 <div class="dash_bar_right">
 Generate Print by Territory : <select id="sel_p_terry">
@@ -39,10 +40,12 @@ Generate Print by Territory : <select id="sel_p_terry">
 <div id="tab_showfranby">
 	<ul>
 		
-		<li><a id="link_franlist_latest20" href="#franlist_latest20" onclick="load_franchisesbysel(1,0,0,0,0)">New Franchises</a></li>
-		<li><a id="link_franlist_regthismonth" href="#franlist_regthismonth" onclick="load_franchisesbysel(2,0,0,0,0)">Registered This Month</a></li>
-		<li><a href="#franlist_all" onclick="load_franchisesbysel(5,0,0,0,0)">All Franchises</a></li>
-		<li><a href="#franlist_suspended" onclick="load_franchisesbysel(4,0,0,0,0)">Suspended Franchises</a></li>
+		<li><a id="link_franlist_latest20" href="#franlist_latest20" onclick="load_franchisesbysel(1,0,0,0,0,0)">New Franchises</a></li>
+		<li><a id="link_franlist_regthismonth" href="#franlist_regthismonth" onclick="load_franchisesbysel(2,0,0,0,0,0)">Registered This Month</a></li>
+		<li><a href="#franlist_all" onclick="load_franchisesbysel(5,0,0,0,0,0)">All Franchises</a></li>
+		<?php /*?>
+		<li><a href="#franlist_suspended" onclick="load_franchisesbysel(4,0,0,0,0,0)">Suspended Franchises</a></li>
+		<?php /*/?>
 	</ul>
 	
 	<div id="franlist_latest20">
@@ -51,9 +54,11 @@ Generate Print by Territory : <select id="sel_p_terry">
 	<div id="franlist_regthismonth">
 		<div class="franlist_holder"></div>
 	</div>
+	<?php /*?>
 	<div id="franlist_suspended">
 		<div class="franlist_holder"></div>
 	</div>
+	<?php /*/?>
 	<div id="franlist_all">
 		<div class="franlist_holder"></div>
 	</div>
@@ -105,7 +110,7 @@ $('.datagridsort').tablesorter({sortList:[[0,0]]});
 
 var disp_config_params = {};
 
-function load_franchisesbysel(type,alpha,terr_id,town_id,pg)
+function load_franchisesbysel(type,alpha,terr_id,town_id,menuid,pg)
 {
 	var tab_ele = '';
 	if(type == 1)
@@ -126,7 +131,7 @@ function load_franchisesbysel(type,alpha,terr_id,town_id,pg)
 	else
 		tab_ele.html('<div align="center" style="padding:10px;"><img src="'+base_url+'/images/loading.gif'+'"></div>');
 	
-	disp_config_params = {'type':type,'alpha':alpha,'terr_id':terr_id,'town_id':town_id,'pg':pg}
+	disp_config_params = {'type':type,'alpha':alpha,'terr_id':terr_id,'town_id':town_id,'menuid':menuid,'pg':pg}
 	
 	$.post(site_url+'/admin/jx_getfranchiseslist',disp_config_params,function(resp){
 		tab_ele.html(resp);
@@ -138,13 +143,13 @@ $('#tab_showfranby').tabs();
 
 function reload_frlist()
 {
-	load_franchisesbysel(disp_config_params.type,disp_config_params.alpha,disp_config_params.terr_id,disp_config_params.town_id,disp_config_params.pg);
+	load_franchisesbysel(disp_config_params.type,disp_config_params.alpha,disp_config_params.terr_id,disp_config_params.town_id,disp_config_params.menuid,disp_config_params.pg);
 }
 
 $(function(){
 	$('#link_franlist_latest20').trigger('click');
 	
-	$('select[name="fil_terr"]').live('change',function(){
+        $('select[name="fil_terr"]').live('change',function(){
 		disp_config_params.terr_id = $(this).val();
 		disp_config_params.town_id = 0;
 		reload_frlist();
@@ -152,6 +157,13 @@ $(function(){
 	
 	$('select[name="fil_town"]').live('change',function(){
 		disp_config_params.town_id = $(this).val();
+		reload_frlist();
+	});
+	
+	$('select[name="fil_menu"]').live('change',function(){
+		disp_config_params.terr_id = 0;
+		disp_config_params.town_id = 0;
+		disp_config_params.menuid = $(this).val();
 		reload_frlist();
 	});
 	
