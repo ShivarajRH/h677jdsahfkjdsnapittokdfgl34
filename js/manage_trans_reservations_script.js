@@ -1,6 +1,9 @@
 //var GM_TIMING_END_CHUNK1=(new Date).getTime();
 /**** CREATE BATCH PROCESS **/
 
+ //By default load lists
+loadTransactionList(0);
+var pg=0;
 
 //ONCHANGE TERRITORY IN BATCH GROUP CREATION
 $("#sel_terr_id").live("change",function() {
@@ -28,11 +31,15 @@ function process_pinvoices_by_fran(elt,franchise_id) {
 function show_orders_list(franid,from,to,batch_type) {
         //alert(franid+","+from+","+to+","+batch_type);return false;
         if($(".orders_info_block_"+franid).is(":visible")) {
-            $(".orders_info_block_"+franid).toggle("slow").html("");
+            $(".orders_info_block_"+franid+" table tbody").html("");
+            $(".orders_info_block_"+franid).hide();//.toggle("slow");
         }
         else {
-            $.post(site_url+"admin/jx_get_franchise_orders/"+franid+"/"+from+"/"+to+"/"+batch_type, {}, function(rdata){
-                $(".orders_info_block_"+franid).html(rdata).toggle("slow");
+            $(".orders_info_block_"+franid).show();//.toggle("slow");
+            $(".orders_info_block_"+franid+" table tbody").html("<div class='loading'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Loading...</div>");
+            
+            $.post(site_url+"/admin/jx_get_franchise_orders/"+franid+"/"+from+"/"+to+"/"+batch_type, {}, function(rdata){
+                $(".orders_info_block_"+franid+" table tbody").html(rdata);
             }).fail(fail);
         }
         return true;
@@ -40,167 +47,110 @@ function show_orders_list(franid,from,to,batch_type) {
 
 $("#dlg_create_group_batch_block").dialog({
         autoOpen: false,
-        height: 650,
-        width:750,
+        height: 350,
+        width:400,
         modal: false,
-        buttons: {
-            "Create Batch":function() {
+        buttons: [
+            {
+                text:"Create Batch"
+                ,click:function() {
                     //$("form",this).submit();
                     var sel_batch_menu = $("#sel_batch_menu").find(":selected").val();
 //                            var assigned_menuids = $("#assigned_menuids").val();
                     var batch_size = $("#batch_size").val();
                     var assigned_uid = $("#assigned_uid").find(":selected").val();
                     var territory_id = $("#dlg_sel_territory").find(":selected").val();
-                    var townid = 0;//$("#dlg_sel_town").find(":selected").val();
+                    var townid = $("#dlg_sel_town").val();//.find(":selected")
+                    var franchise_id = $("#dlg_sel_franchise").val();//.find(":selected")
 
-                    if(sel_batch_menu == '00') { show_output("ERROR : Please Select Menu"); return false; }
-                    if(assigned_uid == '00') { 
-                        if(!confirm("Warning :\n Are you sure you do not want to assign user for this batch?")) {
+                    //if(sel_batch_menu == '00') { show_output("ERROR : Please Select Menu"); return false; }
+                    if(assigned_uid == '00') {
+                        /*if(!confirm("Warning :\n Are you sure you do not want to assign user for this batch?")) {
                             show_output("Warning :\n Batch will not assign to any user.");
                             return false;
-                        }
-                        assigned_uid = '0';
+                        }assigned_uid = '0';*/
+                        show_output("Assign to user field is required!"); return false;
                     }
+                    if(batch_size==0) { show_output("Batch size should be greater than 0.");return false; }
+                    if(sel_batch_menu == '00') {sel_batch_menu=0;  }
                     if(territory_id == '00') {territory_id=0;  }
-                    if(townid == '00') {townid=0;  }
+                    //if(townid == '00') {townid=0;  }
 //                            ,assigned_menuids:assigned_menuids
-                    var postData = {sel_batch_menu:sel_batch_menu,batch_size:batch_size,assigned_uid:assigned_uid,territory_id:territory_id,townid:townid};
-                    console.log(postData);
-                    $.post(site_url+"admin/create_batch_by_group_config",postData,function(rdata) {
-                            show_output(rdata);
+                    var postData = {sel_batch_menu:sel_batch_menu,batch_size:batch_size,assigned_uid:assigned_uid,territory_id:territory_id,townid:townid,franchise_id:franchise_id};
+                    //print(postData);
+                    $.post(site_url+"/admin/create_batch_by_group_config",postData,function(resp) {
+                            print(resp);
+                            if(resp.status == 'success') {
+                                loadTransactionList(0);
+                                $("#dlg_create_group_batch_block").dialog( "close" );
+                                alert(resp.response);
+                                
+                            }
+                            else {
+                                show_output(resp.response);
+                                loadTransactionList(0);
+                            }
                             //$("#sel_batch_menu").val($("#sel_batch_menu option:nth-child(0)").val());
-
-                    }).fail(fail);
-            },
-            Cancel: function() { 
-              $(this).dialog( "close" );
+                    },'json').fail(fail);
+                }
+                ,"class" : "button button-tiny button-rounded button-action !important"
             }
-        },
-        close: function() {
+            ,
+            {
+                text:"Close"
+                ,click: function() { 
+                    $(this).dialog( "close" );
+                }
+                ,"class":"button button-rounded button-tiny button-caution !important"
+            }
+        ]
+        /*,close: function() {
             $(this).dialog("close");
-        },
-        position: ['center', 'center'],
+        }*/
+        ,position: ['center', 'center'],
         title: "Create Group Batch"
 });
 
 
-$("#btn_cteate_group_batch").live("click",function(){
-   
-   $("#dlg_create_group_batch_block").html('');
-   $.post(site_url+"admin/manage_reservation_create_batch_form",{},function(hmtldata) {
-        $("#dlg_create_group_batch_block").html(hmtldata).dialog("open");
-   }).fail(fail);
-   
+/*$(".btn_cteate_group_batch").live("click",function(){
+   var territory_id = $(this).attr("territory_id");
+   var townid= $(this).attr("town_id");
+   var franchise_id= $(this).attr("franchise_id");
+});*/
+function fn_cteate_group_batch(territory_id,townid,franchise_id) {
+        batch_show_group(territory_id,townid,franchise_id);
+}
+
+function batch_show_group(territory_id,townid,franchise_id) {
+    
+    var postData={};
+    postData = {territory_id : territory_id,townid:townid,franchise_id:franchise_id};
+    
+    $("#dlg_create_group_batch_block").html('');
+    $.post(site_url+"/admin/manage_reservation_create_batch_form",postData,function(hmtldata) {
+         $("#dlg_create_group_batch_block").html(hmtldata).dialog("open");
+    }).fail(fail);
     return false;
-});
+}
 
 function show_output(rdata) {
-    $(".create_batch_msg_block").slideDown().html(rdata);//.delay("6500").slideUp("slow");
+    $(".create_batch_msg_block").slideDown().html(rdata);//.delay("8500").slideUp("slow");
 }
-function fail(rdata) {
-    console.log(rdata);
-}
-/*
-$("#dlg_sel_town").live("change",function() { 
-    var townid=$(this).find(":selected").val();
-    var terrid=$("#dlg_sel_territory").find(":selected").val();
-    $.post(site_url+"admin/jx_suggest_fran/"+terrid+"/"+townid,function(resp) {
-            if(resp.status=='success') {
-                 var obj = jQuery.parseJSON(resp.franchise);
-                $("#dlg_sel_franchise").html(objToOptions_franchise(obj));
-            }
-            else {
-                $("#dlg_sel_franchise").val($("#dlg_sel_franchise option:nth-child(0)").val());
-            }
-        },'json').done(done).fail(fail);
-
-    return false;
-});*/
-
- var arr_batch_size=[];
- 
-//ONCHANGE Territory
-$("#dlg_sel_territory").live("change",function() {
-    var terrid=$(this).find(":selected").val();
-//        if(terrid=='00') {          $(".sel_status").html("Please select territory."); return false;        }
-    /*$.post(site_url+"admin/jx_suggest_townbyterrid/"+terrid,function(resp) {
-        if(resp.status=='success') {
-             //print(resp.towns);
-            var obj = jQuery.parseJSON(resp.towns);
-            $("#dlg_sel_town").html(objToOptions_terr(obj));
-        }
-        else {
-            $("#dlg_sel_town").val($("#dlg_sel_town option:nth-child(0)").val());
-            $("#dlg_sel_franchise").val($("#dlg_sel_franchise option:nth-child(0)").val());
-                        //$(".sel_status").html(resp.message);
-        }
-    },'json').done(done).fail(fail);*/
-    if(terrid != 00) {
-            $.post(site_url+"admin/jx_terr_batch_group_status/"+terrid,function(resp) {
-                if(resp.status=='success') {
-//                    $(".terr_batch_group_status").html("<div>There are <b>"+resp.total_orders+"</b> orders from <b>"+resp.total_categories+"</b> menu.</div>");
-                    $(".terr_batch_group_status").html("<table class='datagrid'><th>Menu</th><th>Orders</th>"+resp.detail_category_msg+"</table>");
-                            
-                    $("#sel_batch_menu").html(objToOptions_menus(resp.arr_menus));
-                    
-                   arr_batch_size=[];
-                    $.each(resp.arr_menus,function(ii,row){
-                             arr_batch_size.push({ototal:row.ocount,menuid:row.menuid});
-                    });
-                    
-                }
-                else {
-                    $(".terr_batch_group_status").html(resp.response);
-                    $("#sel_batch_menu").html('<option value="00">No menu found</option>\n');
-                    $("#batch_size").val("");
-                }
-            },"json").done(done).fail(fail);
-    }
-    return false;
-});
-
-//ONCHANGE sel_batch_menu
-$("#sel_batch_menu").live("change",function() {
-    var sel_batch_menu=$(this).find(":selected").val();
-//        if(sel_batch_menu=='00') {          $(".sel_status").html("Please select territory."); return false;        }
-    if(sel_batch_menu!='00') {
-        $.each(arr_batch_size,function(i,val) {
-            if(sel_batch_menu == val.menuid) {
-                // print(sel_batch_menu+"="+val.menuid);
-                $("#batch_size").val(val.ototal);
-                return false;
-            }
-            else {
-                $("#batch_size").val("");
-            }
-        });
-    }
-        /*$.post(site_url+"admin/jx_suggest_menus_groupid/"+sel_batch_menu,function(resp) { 
-            if(resp.status == "success") {
-                 //var obj = jQuery.parseJSON(resp.towns);
-                $("#assigned_menuids").val(resp.assigned_menuid);
-                $("#batch_size").val(resp.batch_size);
-                //$("#assigned_uid").val(resp.assigned_uid);
-                //var getlist = getlist(resp.assigned_uid);
-                var parse_assigned_uid = jQuery.parseJSON(resp.group_assigned_uid);
-                    $("#assigned_uid").html(objToOptions_users(parse_assigned_uid));
-            } else {//$("#dlg_sel_town").val($("#dlg_sel_town option:nth-child(0)").val());
-                //$("#dlg_sel_franchise").val($("#dlg_sel_franchise option:nth-child(0)").val());
-            }
-        },'json').done(done).fail(fail);*/
-    return false;
-});
-/*** END BATCH PROCESS  **/
-
 //****PICKLIST 1 *****/
 $("#show_picklist_block").dialog({
     autoOpen: false,
-    open:function() {      //$("form",this).submit();  
-    },
     height: 650,
     width:950,
     position: ['center', 'center'],
     modal: true
+    ,buttons: {
+        Print:function() {
+            print_preview();
+        }
+        ,Close:function() {
+            $(this).dialog("close");
+        }
+    }
 });
 //CHECK OR UNCHECK TRANS FOR PICKLIST
 function chkall_fran_orders(franid) {
@@ -212,11 +162,20 @@ function chkall_fran_orders(franid) {
             checkBoxes.removeAttr("checked", checkBoxes.attr("checked"));
         }
 }
-function process_picklist_by_fran(elt,franchise_id) {    //$("#picklist_by_fran_form_"+franchise_id).submit();
-    var p_invoice_ids_str = $("#picklist_by_fran_all_"+franchise_id).val();
-    var postData = {pick_list_trans:p_invoice_ids_str};
-    $.post(site_url+"admin/p_invoice_for_picklist",postData,function(resp) {
-            $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Pick List');
+
+function picklist_product_wise(elt,batch_id,franchise_id) {    //$("#picklist_by_fran_form_"+franchise_id).submit();
+    //var p_invoice_ids_str = $("#picklist_by_fran_all_"+franchise_id).val();var postData = {pick_list_trans:p_invoice_ids_str};
+    if(franchise_id== undefined) { franchise_id =''; }
+    $.post(site_url+"/admin/picklist_product_wise/"+batch_id+"/"+franchise_id,{},function(resp) {
+            $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Productwise pick slip for #'+batch_id);
+    });
+}
+
+function picklist_fran_wise(elt,batch_id,franchise_id) {    //$("#picklist_by_fran_form_"+franchise_id).submit();
+    //var p_invoice_ids_str = $("#picklist_by_fran_all_"+franchise_id).val();var postData = {pick_list_trans:p_invoice_ids_str};
+    if(franchise_id== undefined) { franchise_id =''; }
+    $.post(site_url+"/admin/picklist_fran_wise/"+batch_id+"/"+franchise_id,{},function(resp) {
+            $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Franchisewise pick slip for #'+batch_id);
     });
 }
 $("#pick_all").live("change",function() {
@@ -246,7 +205,7 @@ $("#btn_generate_pick_list").live("click",function(){
 //               $("#show_picklist_block input[name='pick_list_trans']").val(p_invoice_ids_str);$("#show_picklist_block").dialog("open").dialog('option', 'title', 'Pick List for '+p_invoice_ids.length+" proforma invoice/s");
 
                 var postData = {pick_list_trans:p_invoice_ids_str};
-                $.post(site_url+"admin/p_invoice_for_picklist",postData,function(resp) {
+                $.post(site_url+"/admin/picklist_product_wise",postData,function(resp) {
                         $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Pick List for '+p_invoice_ids.length+" proforma invoice/s");
                 });
                 return false;
@@ -268,7 +227,7 @@ $("#btn_generate_pick_list").live("click",function(){
                 var p_invoice_ids_str = p_invoice_ids.join(",");
                 
                 var postData = {pick_list_trans:p_invoice_ids_str};
-                $.post(site_url+"admin/p_invoice_for_picklist",postData,function(resp) {
+                $.post(site_url+"/admin/picklist_product_wise",postData,function(resp) {
                         $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Pick List for '+p_invoice_ids.length+" proforma invoice/s");
                 });
                 //$("#show_picklist_block input[name='pick_list_trans']").val(p_invoice_ids_str);$("#show_picklist_block").dialog("open").dialog('option', 'title', 'Pick List for '+p_invoice_ids.length+" proforma invoice/s");
@@ -293,7 +252,8 @@ function reallot_stock_for_all_transaction(userid,pg) {
     var updated_by = userid;
     var rdata='';
     $('#trans_list_replace_block').html("<div class='loading'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Loading...</div>");
-    $.post(site_url+"admin/jx_reserve_avail_stock_all_transaction/"+updated_by,"",function(resp) {
+    
+    $.post(site_url+"/admin/jx_reserve_avail_stock_all_transaction/"+updated_by,"",function(resp) {
             if(resp.status == 'fail') {
                         rdata = resp.response+"";
             }
@@ -301,26 +261,25 @@ function reallot_stock_for_all_transaction(userid,pg) {
                 rdata += "<div class='dash_bar'>Alloted : "+resp.alloted+"</div><div class='dash_bar_red'>No Stock : "+resp.nostock+"</div>";
                 if(resp.alloted!=0) {
                     
-                    rdata += "<div><div class='clear'></div><h3>Following transactions alloted:</h3> <table class='subdatagrid'><tr><th>Transactions</th><th>Products</th></tr>";
+                    rdata += "<div><div class='clear'></div><h3>Following transactions alloted:</h3> <table class='datagrid'><tr><th>Transactions</th><th>Products</th></tr>";
                     $.each(resp.alloted_msg,function(transid,row){
                         
-                        rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
+                        rdata += "<tr><td><a href='"+site_url+"admin/trans/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
-                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
+                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_name+"</a>"+"("+val.stock+"), ";
                         });
                         rdata += "</td></tr>";
                     });
                     rdata += "</table></div>";
                     
-                    
                 }
                 else if(resp.nostock!=0){
-                    rdata += "<div><div class='clear'></div><h3>Following transactions have no stock:</h3> <table class='subdatagrid'><tr><th>Transactions</th><th>Products</th></tr>";
+                    rdata += "<div><div class='clear'></div><h3>Following transactions have no stock:</h3> <table class='datagrid'><tr><th>Transactions</th><th>Products</th></tr>";
                     $.each(resp.nostock_msg,function(transid,row){
                         
-                        rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
+                        rdata += "<tr><td><a href='"+site_url+"admin/trans/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
-                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
+                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_name+"</a>"+"("+val.stock+"), ";
                         });
                         rdata += "</td></tr>";
                     });
@@ -335,7 +294,7 @@ function reallot_stock_for_all_transaction(userid,pg) {
 }
  
 function reserve_stock_for_trans(userid,transid,pg) {
-    if(!confirm("Are you sure you want to process \nthis transaction for batch?")) {
+    if(!confirm("Are you sure you want to re-allot this transaction?")) {
         return false;
         //var batch_remarks=prompt("Enter remarks?");
     }
@@ -343,45 +302,42 @@ function reserve_stock_for_trans(userid,transid,pg) {
     var batch_remarks='';
     var updated_by = userid;
     var rdata='';
-    $.post('reserve_stock_for_trans/'+transid+'/'+ttl_num_orders+'/'+batch_remarks+'/'+updated_by+'',"",function(resp) {
-        
+    $.post(site_url+'/admin/reserve_stock_for_trans/'+transid+'/'+ttl_num_orders+'/'+batch_remarks+'/'+updated_by+'',"",function(resp) {
             if(resp.status == 'fail') {
                     rdata = resp.response+"";
             }
-            else {
-                rdata += "<div class='dash_bar'>Alloted : "+resp.alloted+"</div><div class='dash_bar_red'>No Stock : "+resp.nostock+"</div>";
-                if(resp.alloted!=0) {
+            else {  //alert(resp.alloted);
+                //rdata += "<div class='dash_bar'><b>"+resp.alloted+"</b> transaction alloted</div>";
+                rdata += "Total "+resp.alloted+" transactions alloted.";
+                /*if(resp.alloted>0) {
                     
                     rdata += "<div><div class='clear'></div><h3>Following transactions alloted:</h3> <table class='subdatagrid'><tr><th>Transactions</th><th>Products</th></tr>";
                     $.each(resp.alloted_msg,function(transid,row){
-                        
-                        rdata += "<tr><td><a href='"+site_url+"admin/trans/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
+                        rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
-                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
+                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_name+"</a>"+"("+val.stock+"), ";
                         });
                         rdata += "</td></tr>";
                     });
                     rdata += "</table></div>";
-                    
-                    
-                }
-                else if(resp.nostock!=0){
+                }*/
+                /*else if(resp.nostock!=0){
                     rdata += "<div><div class='clear'></div><h3>Following transactions have no stock:</h3> <table class='subdatagrid'><tr><th>Transactions</th><th>Products</th></tr>";
                     $.each(resp.nostock_msg,function(transid,row){
                         
-                        rdata += "<tr><td><a href='"+site_url+"admin/trans/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
+                        rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
-                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
+                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_name+"</a>"+"("+val.stock+"), ";
                         });
                         rdata += "</td></tr>";
                     });
                     rdata += "</table></div>";
-                }
+                }*/
 //                $.each(resp.result,function(i,val_arr){$.each(val_arr,function(i,row){rdata += row;});});
             }
-            
             loadTransactionList(pg);
-            $(".reservation_action_status").html(rdata).dialog("open").dialog('option', 'title', 'Re-allot Transaction Reservation report');
+            alert(rdata);
+            //$(".reservation_action_status").html(rdata).dialog("open").dialog('option', 'title', 'Re-allot Transaction Reservation report');
 
     },"json");
     return false;
@@ -405,12 +361,12 @@ function reallot_frans_all_trans(elt,userid,franchise_id,pg) {
             else {
                 rdata += "<div class='dash_bar'>Alloted : "+resp.alloted+"</div><div class='dash_bar_red'>No Stock : "+resp.nostock+"</div>";
                 if(resp.alloted != 0) {   
-                    rdata += "<div><div class='clear'></div><h3>Following transactions alloted:</h3> <table class='subdatagrid'><tr><th>Transactions</th><th>Products</th></tr>";
+                    rdata += "<div><div class='clear'></div><h3>Following transactions alloted:</h3> <table class='datagrid'><tr><th>Transactions</th><th>Products</th></tr>";
                     $.each(resp.alloted_msg,function(transid,row){
                         
-                        rdata += "<tr><td><a href='"+site_url+"admin/trans/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
+                        rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
-                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
+                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_name+"</a>"+"("+val.stock+"), ";
                         });
                         rdata += "</td></tr>";
                     });
@@ -419,12 +375,12 @@ function reallot_frans_all_trans(elt,userid,franchise_id,pg) {
                     
                 }
                 else if(resp.nostock!=0){
-                    rdata += "<div><div class='clear'></div><h3>Following transactions have no stock:</h3> <table class='subdatagrid'><tr><th>Transactions</th><th>Products</th></tr>";
+                    rdata += "<div><div class='clear'></div><h3>Following transactions have no stock:</h3> <table class='datagrid'><tr><th>Transactions</th><th>Products</th></tr>";
                     $.each(resp.nostock_msg,function(transid,row){
                         
-                        rdata += "<tr><td><a href='"+site_url+"admin/trans/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
+                        rdata += "<tr><td><a href='"+site_url+"admin/product/"+transid+"' target='_blank'>"+transid+"</a></td><td>";
                         $.each(row,function(i,val) {
-                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_id+"</a>"+"("+val.stock+"), ";
+                                rdata += "<a href='"+site_url+"admin/product/"+val.product_id+"' target='_blank'>"+val.product_name+"</a>"+"("+val.stock+"), ";
                         });
                         rdata += "</td></tr>";
                     });
@@ -444,18 +400,23 @@ function cancel_proforma_invoice(p_invoice_no,userid,pg) {
         return false;
     }
     var rdata='';
-    $.post(site_url+"admin/cancel_reserved_proforma_invoice/"+p_invoice_no+"/"+userid,{},function(resp) {
+    $.post(site_url+"/admin/cancel_reserved_proforma_invoice/"+p_invoice_no+"/"+userid,{},function(resp) {
             if(resp.status == 'success') {
-                rdata = "Proforma invoice has cancelled. <br>Proforma Invoice Number: "+resp.p_invoice_no+" <br> Transid: "+resp.transid;
-                //rdata=("Unable to cancel the proforma.");
+                /*rdata = "<div>\n\
+                            <h4>Proforma invoice has been cancelled</h4>\n\
+                            <p>Proforma Invoice#: <a href='"+site_url+"/admin/proforma_invoice/"+resp.p_invoice_no+"' target='_blank'>" +resp.p_invoice_no+ "</a> \n\
+                            and Transid# <a href='"+site_url+"/admin/trans/"+resp.transid+"' target='_blank'>"+resp.transid+"</a></p>\n\
+                        </div>";*/
+                        rdata = "Transaction de-alloted successfully.";
             }
             else {
                 rdata = resp.response;
             }
-            rdata="<div class='block_info'>"+rdata+"</div>";
-            $(".reservation_action_status").html(rdata).dialog("open").dialog('option', 'title', 'Cancel proforma invoice report');
+            //rdata="<div class='block_info'>"+rdata+"</div>";
+            alert(rdata);
+            //$(".reservation_action_status").html(rdata).dialog("open").dialog('option', 'title', 'Cancel proforma invoice report');
             loadTransactionList(pg);
-    });
+    },'json');
     return false;
 }
 // Auto center the dialog boxes
@@ -521,7 +482,7 @@ $("#sel_batch_group_type").live("change",function() {
 $("#sel_menu").live("change",function() {
         var menuid=$(this).find(":selected").val();
 
-        $.post(site_url+"admin/jx_get_brandsbymenuid/"+menuid,{},function(resp) {
+        $.post(site_url+"/admin/jx_get_brandsbymenuid/"+menuid,{},function(resp) {
                 if(resp.status=='success') {
                      var obj = jQuery.parseJSON(resp.brands);
                     $("#sel_brands").html(objToOptions_brands(obj));
@@ -543,6 +504,11 @@ $("#sel_brands").live("change",function() {
     loadTransactionList(0);
     return false;
 });
+
+$("#sel_alloted_status").live("change",function() {
+    loadTransactionList(0);
+    return false;
+});
 $("#sel_franchise").live("change",function() {
             /*var franchiseid=($("#sel_franchise").val()=='00')? 00 :$("#sel_franchise").val();
             if(franchiseid==00) {
@@ -559,7 +525,7 @@ $("#sel_franchise").live("change",function() {
 $("#sel_town").live("change",function() { 
     var townid=$(this).find(":selected").val();
     var terrid=$("#sel_territory").find(":selected").val();
-    $.post(site_url+"admin/jx_suggest_fran/"+terrid+"/"+townid,function(resp) {
+    $.post(site_url+"/admin/jx_suggest_fran/"+terrid+"/"+townid,function(resp) {
             if(resp.status=='success') {
                  var obj = jQuery.parseJSON(resp.franchise);
                 $("#sel_franchise").html(objToOptions_franchise(obj));
@@ -580,7 +546,7 @@ $("#sel_territory").live("change",function() {
 //        if(terrid=='00') {          $(".sel_status").html("Please select territory."); return false;        }
    // $("table").data("sdata", {terrid:terrid});
 
-    $.post(site_url+"admin/jx_suggest_townbyterrid/"+terrid,function(resp) {
+    $.post(site_url+"/admin/jx_suggest_townbyterrid/"+terrid,function(resp) {
         if(resp.status=='success') {
              //print(resp.towns);
              var obj = jQuery.parseJSON(resp.towns);
@@ -621,7 +587,7 @@ function objToOptions_terr(obj) {
     });
     return(output);
 }
-function objToOptions_franchise(obj) {
+/*function objToOptions_franchise(obj) {
     var output='';
         output += "<option value='00' selected>All Franchise</option>\n";
     $.each(obj,function(key,elt){
@@ -630,7 +596,7 @@ function objToOptions_franchise(obj) {
         }
     });
     return(output);
-}
+}*/
 function objToOptions_users(obj) {
     var output='';
         output += "<option value='00' selected>Assigned to</option>\n";
@@ -653,14 +619,14 @@ function objToOptions_menus(obj) {
     return(output);
 }
 
- //By default load lists
-loadTransactionList(0);
-var pg=0;
     
 function loadTransactionList(pg) {
+    
     $(".pagination_top").html("");
     $(".ttl_trans_listed").html("");
-    $(".re_allot_all_block").css({"padding":"0"});
+    
+    $(".re_allot_all_block").css({"padding":0}).html("");
+    
 
     var batch_type = $('.tab_list .selected').attr('id');
 //        var batch_type= ($("#batch_type").val() == "00")?0: $("#batch_type").val();
@@ -685,11 +651,25 @@ function loadTransactionList(pg) {
     var batch_group_type=($("#sel_batch_group_type").val()=='00')? 0:$("#sel_batch_group_type").val();
 
     var sel_latest=($("#sel_old_new").find(":selected").val()==0) ? 0 : $("#sel_old_new").find(":selected").val();
-
-    $('#trans_list_replace_block').html("<div class='loading'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Loading...</div>"); 
-    $.post(site_url+'admin/jx_manage_trans_reservations_list/'+batch_type+'/'+date_from+'/'+date_to+'/'+terrid+'/'+townid+'/'+franchiseid+'/'+menuid+'/'+brandid+"/"+showbyfrangrp+"/"+batch_group_type+'/'+sel_latest+"/"+limit+"/"+pg+"",{},function(rdata) {
+    
+    var sel_alloted_status = ($("#sel_alloted_status").find(":selected").val()==0) ? 0 : $("#sel_alloted_status").find(":selected").val();
+    var chk_latest_batches = ( $("#latest_batches").is(":checked")? 1 : 0);
+    
+    $('#trans_list_replace_block').html("<div class='loading'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Loading...</div>");
+    $.post(site_url+'admin/jx_manage_trans_reservations_list/'+batch_type+'/'+date_from+'/'+date_to+'/'+terrid+'/'+townid+'/'+franchiseid+'/'+menuid+'/'+brandid+"/"+showbyfrangrp+"/"+batch_group_type+'/'+sel_latest+"/"+sel_alloted_status+"/"+chk_latest_batches+"/"+limit+"/"+pg+"",{},function(rdata) {
         $("#trans_list_replace_block").html(rdata);
     });
+    
+}
+function show_all_orders() {
+        $.each($(".view_all_link"),function() {
+            $(this).click();
+        });
+        return false;
+}
+   
+function fail(rdata) {
+    console.log(rdata);
 }
 
 function done(data) { }
@@ -697,25 +677,39 @@ function fail(xhr,status) { $('#trans_list_replace_block').print("Error: "+xhr.r
 function success(resp) {
         $('#trans_list_replace_block').html(resp);
 }
- $(document).ready(function() {
-        //FIRST RUN
-        $( "#date_from").datepicker({
-             changeMonth: true,
-             dateFormat:'yy-mm-dd',
-             numberOfMonths: 1,
-             maxDate:0,// minDate: new Date(reg_date),
-               onClose: function( selectedDate ) {
-                 $( "#date_to" ).datepicker( "option", "minDate", selectedDate ); //selectedDate
-             }
-           });
-        $( "#date_to" ).datepicker({
-            changeMonth: true,
-             dateFormat:'yy-mm-dd',// numberOfMonths: 1,
-             maxDate:0,
-             onClose: function( selectedDate ) {
-               $( "#date_from" ).datepicker( "option", "maxDate", selectedDate );
-             }
-        });
+$(document).ready(function() {
+    //FIRST RUN
+    $( "#date_from").datepicker({
+         changeMonth: true,
+         dateFormat:'yy-mm-dd',
+         numberOfMonths: 1,
+         maxDate:0,// minDate: new Date(reg_date),
+           onClose: function( selectedDate ) {
+             $( "#date_to" ).datepicker( "option", "minDate", selectedDate ); //selectedDate
+         }
+       });
+    $( "#date_to" ).datepicker({
+        changeMonth: true,
+         dateFormat:'yy-mm-dd',// numberOfMonths: 1,
+         maxDate:0,
+         onClose: function( selectedDate ) {
+           $( "#date_from" ).datepicker( "option", "maxDate", selectedDate );
+         }
     });
-/*function batch_enable_disable(transid,flag,pg) {    var d_msg=(flag==1)?"enable":"disable";    if(confirm("Are you sure you want to "+d_msg+" for batch?")) { $.post(site_url+"admin/jx_batch_enable_disable/"+transid+"/"+flag,{},function(rdata) { loadTransactionList(pg);  }).done(done).fail(fail); } }
+});
+/*function batch_enable_disable(transid,flag,pg) {    var d_msg=(flag==1)?"enable":"disable";    if(confirm("Are you sure you want to "+d_msg+" for batch?")) { $.post(site_url+"/admin/jx_batch_enable_disable/"+transid+"/"+flag,{},function(rdata) { loadTransactionList(pg);  }).done(done).fail(fail); } }
 function f1(){var data = '21/12/2013';var pat= /[0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4}/;if (data.match(re));}*/
+$("#latest_batches").live("change",function() {
+    loadTransactionList(0);
+    return false;
+});
+
+function btn_fn_reset_filters() 
+{
+    $("#head_filter_form").clearForm();
+    $("#form_filters").clearForm();
+    $("#trans_date_form").clearForm();
+    $("#form_filters_2").clearForm();
+    loadTransactionList(0);
+    return false;
+}

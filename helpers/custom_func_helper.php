@@ -22,5 +22,23 @@ if(!function_exists('format_price')){
 		return $n;
 	}
 }
-	
+/**
+* Function to display json error output and stop the execution
+* @param type $msg String / Array
+* @param type $rtype string
+* @example if(!$itemid) $this->print_error("Item id doesnot exists!");
+* @example if(!$itemid) $this->print_error(array("status"=>"fail","message"=>"Item id doesnot exists!" ));
+*/
+if(!function_exists('print_error')) {
+    function print_error($msg,$rtype='json') {
+        if(is_array($msg)) {
+            $rdata = $msg;
+        }
+        else {
+            $rdata = array("status"=>"fail","message"=>$msg);
+        }
+        echo json_encode($rdata);
+        die();
+    }
+}
 ?>

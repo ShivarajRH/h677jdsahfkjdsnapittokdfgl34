@@ -1834,17 +1834,25 @@ order by action_date ";
 
 	function product_statsbymenu($menuid = 100)
 	{
-		$sql = "select a.brand_id,f.name as brand,a.product_id,a.product_name,0 as stock,0 as s15d,0 as s30d,0 as s60d  
+	
+		 
+		ini_set('max_execution_time','6000');
+		ini_set('memory_limit','512M');
+		
+		
+		$sql = "select e.id as menuid,e.name as menu,a.brand_id,f.name as brand,a.product_id,a.product_name,a.mrp,a.is_sourceable,'' as last_purchasedon,0 as stock,0 as stock_mrp_summ,0 as s15d,0 as s30d,0 as s60d  
 					from m_product_info a 
 					join m_product_deal_link b on a.product_id = b.product_id and b.is_active = 1
 					join king_brands f on f.id = a.brand_id  
 					join king_dealitems c on c.id = b.itemid
-					join king_deals d on d.dealid = c.dealid 
-					where d.menuid = ?
+					join king_deals d on d.dealid = c.dealid
+					join pnh_menu e on e.id = d.menuid  
+					where d.menuid in ($menuid)
 					group by product_id
-					order by brand,product_name
+					order by menu,brand,product_name
 				";
-		$res = $this->db->query($sql,$menuid);
+		
+		$res = $this->db->query($sql);
 		if($res->num_rows())
 		{
 			$pmaster = array();
@@ -1861,6 +1869,18 @@ order by action_date ";
 				
 				// check current product stock
 				$pmaster[$row['product_id']]['stock'] = ($this->db->query("select sum(available_qty) as t from t_stock_info where product_id = ? ",$row['product_id'])->row()->t)*1;
+				
+				$pmaster[$row['product_id']]['last_purchasedon'] = @($this->db->query("select date(created_on) as grn from t_grn_product_link where product_id = ? order by id desc limit 1;",$row['product_id'])->row()->grn);
+				
+				$pmaster[$row['product_id']]['stock_mrp_summ'] = @($this->db->query("select product_id,group_concat(s) as stock_summ from (
+																							select product_id,concat(mrp,':',sum(available_qty)) as s
+																								from t_stock_info 
+																								where product_id = ?
+																								group by product_id,mrp 
+																								having sum(available_qty) > 0 ) as g 
+																							group by product_id",$row['product_id'])->row()->stock_summ);
+				
+			 
 				
 				// last 30 days sales
 				$pmaster[$row['product_id']]['s15d'] = $this->db->query("select ifnull(sum(c.qty*a.quantity),0) as qty
@@ -1888,7 +1908,7 @@ order by action_date ";
 				
 				
 			}
-		}
+		} 
 		
 		ob_start();
 		$f=fopen("php://output","w");
@@ -1896,6 +1916,7 @@ order by action_date ";
 			fputcsv($f,$p);
 		fclose($f);
 		$csv=ob_get_clean();
+		
 		ob_clean();
 		header('Content-Description: File Transfer');
 		header('Content-Type: text/csv');
@@ -1911,8 +1932,8 @@ order by action_date ";
 		exit;
 		
 	}
-
-
+	
+	
 	function updatefrmenu()
 	{
 		$user = $this->erpm->auth();
@@ -1956,4 +1977,72 @@ order by action_date ";
 		}
 	}
 
+	
+	function bulk_notifymember_point_alert()
+	{
+		ini_set('max_execution_time','6000');
+		ini_set('memory_limit','512M');
+		
+		// fetch registered members who are ordered atleast once.
+		
+		$sql = "select * from (
+						(
+							select a.pnh_member_id,franchise_id,concat(first_name) as mem_name,mobile,a.user_id
+								from pnh_member_info a 
+								join king_orders b on a.user_id = b.userid 
+								where length(trim(mobile)) = 10 
+							group by a.user_id
+						)
+						union
+						(
+							select pnh_member_id,franchise_id,concat(first_name) as mem_name,mobile,user_id
+							from t_imei_no a 
+							join pnh_member_info b on a.activated_mob_no = b.mobile  
+							where length(trim(activated_mob_no)) = 10
+						) 
+					) as g 
+					group by pnh_member_id,mobile,user_id
+					 
+				";
+		$res = $this->db->query($sql);
+		if($res->num_rows())
+		{
+			foreach($res->result_array() as $row)
+			{
+				// check for available loyalty points and added extra 50 points and send final avaialalble points as notification.
+				// check member available points.
+				$pnts = @($this->db->query("select points_after from pnh_member_points_track where user_id = ? order by id desc limit 1;",$row['user_id'])->row()->points_after);
+				
+				// ADD 50 Points to list. 
+				$newpnts = $pnts*1+50;
+				
+				if($newpnts > 150)
+					$newpnts = 150;
+				
+				// insert new points summary to log.
+				$data = array();
+				$data[] = $row['user_id'];
+				$data[] = '';
+				$data[] = 50;
+				$data[] = $newpnts;
+				$this->db->query("insert into pnh_member_points_track(user_id,transid,points,points_after,created_on) values (?,?,?,?,unix_timestamp())",$data);
+				
+				$name = trim($row['mem_name']);
+				$name = (strlen($name) > 0)?$name:'Storeking Member';
+				$mob = $row['mobile'];
+				
+				// send notification to member mobileno.
+				$sms = "Dear $name,
+Your $newpnts StoreKing points is nearing expiry,
+Please use your points for your next purchase in one of the StoreKing retailer in your town.";
+				
+				
+				//echo $row['pnh_member_id'].',"'.$row['mem_name'].'",'.$newpnts."\r\n";
+				
+				$this->erpm->pnh_sendsms($mob,$sms,$row['franchise_id'],0,'NOTIFY_MEMBER');
+				
+				
+			} 
+		}
+	}
 }

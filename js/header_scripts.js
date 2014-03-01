@@ -158,7 +158,7 @@ $(function(){
                         return false;
                 }
                 $(".loading",$(this)).show();
-                $.post(site_url+"admin/makeacall",$(this).serialize(),function(data){
+                $.post(site_url+"/admin/makeacall",$(this).serialize(),function(data){
                         $("#phone_booth .loading").hide();
                         if(data=="0")
                                 show_popup("Error in initiating call");

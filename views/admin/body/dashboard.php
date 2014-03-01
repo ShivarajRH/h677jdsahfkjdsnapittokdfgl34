@@ -13,6 +13,7 @@ display:none;
 <h2>Dashboard</h2>
 <table width="100%">
 <tr>
+<?php /*?>
 <td valign="top" width="25%" style="background:#efefef;padding:5px;">
 <?php 
 if($this->erpm->auth(PNH_EXECUTIVE_ROLE,true) && !$this->erpm->auth(true,true)){
@@ -126,8 +127,8 @@ echo $iv->format("%m months %d days %i minutes");
 
 </td>
 
-
-<td valign="top" class="nobmargin" width="75%" style="background:#fafafa;padding-left:10px;">
+<?php /*/?>
+<td valign="top" class="nobmargin"  style="background:#fafafa;padding:0px 10px;">
 
 <?php if($this->erpm->auth(PNH_EXECUTIVE_ROLE,true) && !$this->erpm->auth(true,true)){ ?>
 
@@ -261,7 +262,7 @@ $prioritys=array("Low","Medium","High","Urgent");
 $tickets=$this->erpm->gettickets("all");
 ?>
 <h4>Recent Support Tickets</h4>
-<table class="datagrid grey noprint">
+<table class="datagrid grey noprint" width="100%">
 <thead>
 <tr>
 <th>Ticket No</th>

@@ -14,8 +14,13 @@
 		</style>
 	</head>
 	<body onload="window.print()">
-	 
-		<h1 style="text-align: center;">Warehouse Location Summary for <?=$po_brand_name?></h1>
+	 	<?php if($po_brand_name){ ?>
+			<h1 style="text-align: center;">Warehouse Location Summary for Brand <?=$po_brand_name?></h1>
+		<?php }
+			else { 
+		?>
+			<h1 style="text-align: center;">Warehouse Location Summary for Category <?=$po_cat_name?></h1>
+		<?php } ?>	
 		<div align="right" class="hideinprint">
 			<input type="button" value="Print" onClick="window.print()" >
 			<input type="button" value="Close" onClick="window.close()" >
