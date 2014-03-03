@@ -4812,6 +4812,8 @@ group by g.product_id order by product_name");
 			show_404();
 		$data['cat']=$this->db->query("select c.*,m.name as main from king_categories c left outer join king_categories m on m.id=c.type where c.id=?",$cat)->row_array();
 		$data['deals']=$this->db->query("select i.*,c.name as category,c.id as catid from king_categories c join king_deals d on d.catid=c.id join king_dealitems i on i.dealid=d.dealid where c.id=? or c.type=?",array($cat,$cat))->result_array();
+		$data['products']=$this->erpm->getproductsforcategory($cat);
+		$data['vendors']=$this->erpm->getvendorsforcategory($cat);
 		$data['page']="viewcat";
 		$this->load->view("admin",$data);
 	}
@@ -16341,7 +16343,7 @@ order by action_date";
 		
 		function pnh_exsms_log($territory_id=0,$pg=0)
 		{
-			$this->erpm->auth();
+			$this->erpm->auth(SMS_LOG);
 			$data['page']='pnh_exsms_log';
 			$data['pg']=$pg;
 			$this->load->view("admin",$data);
@@ -17308,7 +17310,32 @@ order by action_date";
 					}
 				}
 			}
+			else if($type=='mem_deliverynotify')
+			{
+				$sql="SELECT s.*,m.first_name,m.franchise_id,f.franchise_name,m.user_id 
+							FROM pnh_sms_log_sent s
+							JOIN pnh_member_info m ON m.mobile=s.to
+							JOIN pnh_m_franchise_info f ON f.franchise_id=m.franchise_id
+							WHERE `type` ='NOTIFY_DELIVERY' 
+							order by sent_on desc 
+					";
 			
+				$tbl_total_rows=$this->db->query($sql)->num_rows();
+			
+				$sql.=" limit $pg, $limit  ";
+			
+				$log_sms_details_res=$this->db->query($sql,$emp_id);
+			
+				$tbl_head = array('slno'=>'Slno','franchise_name'=>'Franchise Name','member_name'=>'Member Name','msg'=>'Message','loggged_on'=>'LoggedOn');
+			
+				if($log_sms_details_res->num_rows())
+				{
+					foreach($log_sms_details_res->result_array() as $i=>$log_det)
+					{
+						$tbl_data[] = array('slno'=>$i+1,'franchise_name'=>$log_det['franchise_name'],'member_name'=>anchor('admin/pnh_viewmember/'.$log_det['user_id'],ucwords($log_det['first_name'])),'msg'=>$log_det['msg'],'loggged_on'=>format_datetime_ts($log_det['sent_on']));
+					}
+				}
+			}
 			else if($type=='fran_voucherredeeming')
 			{
 				$sql="SELECT s.*,m.first_name,m.franchise_id,f.franchise_name,m.user_id FROM pnh_sms_log_sent s
@@ -22307,11 +22334,11 @@ die; */
 		
 		if($invoices_list)
 		{
-			foreach($invoices_list as $i=>$incoice)
+			foreach($invoices_list as $i=>$invoiceno)
 			{
 				$param=array();
 				$param['sent_log_id']=$send_log_id;
-				$param['invoice_no']=$incoice;
+				$param['invoice_no']=$invoiceno;
 				$param['status']=3;
 				
 				if(!$received_on[$i] && $received_on[$i]=='')
@@ -22323,11 +22350,16 @@ die; */
 				$param['logged_on']=cur_datetime();
 				$param['logged_by']=$user['userid'];
 				
-				$already=$this->db->query("select count(*) as ttl from pnh_invoice_transit_log where invoice_no=? and status=3",array($incoice))->row()->ttl;
+				$already=$this->db->query("select count(*) as ttl from pnh_invoice_transit_log where invoice_no=? and status=3",array($invoiceno))->row()->ttl;
 				if(!$already)
 				{
 					$this->db->insert('pnh_invoice_transit_log',$param);
-					$this->session->set_flashdata("erp_pop_info","Selected invoices status to be updated");
+					
+					$this->db->query("update shipment_batch_process_invoice_link set is_delivered = 1,delivered_on=now(),delivered_by = ? where invoice_no = ? and is_delivered = 0;",array($user['userid'],$invoiceno));
+					
+					$this->erpm->notify_shipment_delivery_sms($invoiceno,1,1,0);
+					
+					$this->session->set_flashdata("erp_pop_info","Selected invoices status are marked as delivered");
 				}else{
 					$this->session->set_flashdata("erp_pop_info","Selected invoices status already updated");
 				}
@@ -22361,7 +22393,7 @@ die; */
 				if(is_null($inv_trans_det['received_on']))
 					$inv_trans_det['received_on_f'] = '';
 				else
-					$inv_trans_det['received_on_f'] = date('Y-m-d',$inv_trans_det['received_on']);
+					$inv_trans_det['received_on_f'] = date('Y-m-d',strtotime($inv_trans_det['received_on']));
 				$already=1;
 			}
 				
@@ -25660,9 +25692,9 @@ die; */
 
 	function jx_getopenpolistbypid($pid=0)
 	{
-		$this->erpm->auth();	
+		$this->erpm->auth();
 		$output = array();
-		$output['product_name'] = $this->db->query("select product_name from m_product_info where product_id = ? ",$pid)->row()->product_name;	
+		$output['product_name'] = $this->db->query("select product_name from m_product_info where product_id = ? ",$pid)->row()->product_name;
 		$sql = "select sum(b.order_qty-b.received_qty) as qty
 					from t_po_info a
 					join t_po_product_link b on a.po_id = b.po_id
@@ -27420,48 +27452,50 @@ die; */
     }
 
     /**
-     * Ajax function to add deal to cart
-     */
-    function jx_add_deal_tocart()
-    {
+	 * Ajax function to add deal to cart
+	 */
+	function jx_add_deal_tocart()
+	{
 
-    	$pid=$this->input->post('pid');
-    	$fid=$this->input->post('fid');
-    	$mid=$this->input->post('mid');
-    	$pid_incart_res=$this->db->query("select * from pnh_api_franchise_cart_info where franchise_id=? and pid=? and status=1 and member_id=?",array($fid,$pid,$mid));
+		$pid=$this->input->post('pid');
+		$fid=$this->input->post('fid');
+		$mid=$this->input->post('mid');
+		$pid_incart_res=$this->db->query("select * from pnh_api_franchise_cart_info where franchise_id=? and pid=? and status=1 and member_id=?",array($fid,$pid,$mid));
 
-    	if($pid_incart_res->num_rows()==0)
-    	{
-    		$pid_det = $this->pnh_jx_loadpnhprod($fid,$pid,1);
-    		if(!$pid_det)
-    		{
-    			$output['status']='error';
-    			$output['message']="The product is DISABLED \n or\n No product available for given id";
-    		}else
-    		{
-    			// check if pid can be ordered
-    			if($pid_det['live'])
-    			{
-    				$this->db->query("insert pnh_api_franchise_cart_info (franchise_id,pid,qty,member_id,status,added_on)values(?,?,1,?,1,now())",array($fid,$pid,$mid));
-    				$output['status']='success';
-    			}else
-    			{
-    				$output['status']='error';
-    				$output['message']='Item is out of stock or not sourceable';
-    			}
-    		}
-    			
-    	}
-    /*	else
-    	{
-    		$output['status']='error';
-    		$output['message']='Product Already added to cart';
-    	}*/
+		$menuid=$this->db->query("SELECT d.menuid FROM king_dealitems i JOIN king_deals d ON d.dealid=i.dealid LEFT JOIN king_brands b ON b.id = d.brandid JOIN king_categories c ON c.id = d.catid WHERE pnh_id=?",$pid)->row()->menuid;
+			
+		if($pid_incart_res->num_rows()==0)
+		{
+			$pid_det = $this->pnh_jx_loadpnhprod($fid,$pid,1);
+			if($menuid!=112 && $mid==0)
+			{
 
-    	$output['ttl_cart_item']=$this->db->query("select count(*) as ttl_cart_itm from pnh_api_franchise_cart_info where franchise_id=? and status=1 and member_id=?",array($fid,$mid))->row()->ttl_cart_itm;
+				$output['mid_status']='error';
+				$output['message']='Instant Registration is required because Other than Electronic items are there in the Cart';
+			}
+			else if(!$pid_det)
+			{
+				$output['status']='error';
+				$output['message']="The product is DISABLED \n or\n No product available for given id";
+			}else
+			{
+				// check if pid can be ordered
+				if($pid_det['live'])
+				{
+					$this->db->query("insert pnh_api_franchise_cart_info (franchise_id,pid,qty,member_id,status,added_on)values(?,?,1,?,1,now())",array($fid,$pid,$mid));
+					$output['status']='success';
+				}else
+				{
+					$output['status']='error';
+					$output['message']='Item is out of stock or not sourceable';
+				}
+			}
+		}
 
-    	echo json_encode($output);
-    }
+		$output['ttl_cart_item']=$this->db->query("select count(*) as ttl_cart_itm from pnh_api_franchise_cart_info where franchise_id=? and status=1 and member_id=?",array($fid,$mid))->row()->ttl_cart_itm;
+		echo json_encode($output);
+	}
+
 
     /**
      * Ajax function to Update deal to cart

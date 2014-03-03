@@ -4,6 +4,8 @@
 <link type="text/css" rel="stylesheet" href="<?=base_url()?>/css/stk_offline_order.css">
 <link rel='stylesheet' type='text/css' href="<?php echo base_url().'css/fullcalendar.css'?>">
 <script type='text/javascript' src="<?php echo base_url().'js/fullcalendar.min.js'?>"></script>
+<link rel='stylesheet' type='text/css' href="<?php echo base_url().'css/sk_franchise.css'?>">
+
 
 <?php 
 $has_fid=0;
@@ -314,7 +316,12 @@ $fran_status_arr[3]="Temporary Suspension";
 		<div id="ordered_log_dlg" >
 			<div id="order_log_dlg_wrap"></div>
 		</div>
-	
+		<div id="inv_transitlogdet_dlg" title="Shipment Transit Log">
+			<h3 style="margin:3px 0px;"></h3>
+			<div id="inv_transitlogdet_tbl">
+				
+			</div>
+		</div>	
 		<!-- Ship Log block end-->
 	</div>
 	 <div id="reg_mem_dlg" title="Instant Member Registration" style="display:none;">
@@ -389,7 +396,7 @@ $fran_status_arr[3]="Temporary Suspension";
 		</form>
 	</div>
 	<div id="franlogin_div" title="StoreKing Offline Order">
-		<div class="stk_ordr_inpwrap"><b>State : </b><select class="fran_det chzn-select" data-placeholder="Choose State" name="sel_state" id="sel_state" style="width: 250px;">
+		<div class="stk_ordr_inpwrap"><b>State : <span class="red_star">*</span></b><select class="fran_det chzn-select" data-placeholder="Choose State" name="sel_state" id="sel_state" style="width: 250px;">
 														<option value="">Select State</option>
 														<?php $states=$this->db->query("select state_id,state_name from pnh_m_states group by state_id order by state_name asc ")->result_array();
 																if($states){foreach($states as $state){?>
@@ -397,9 +404,9 @@ $fran_status_arr[3]="Temporary Suspension";
 														<?php }}?></select>
 		</div>
 		<div  class="stk_ordr_inpwrap"><b>Territory : </b><select class="fran_det chzn-select" data-placeholder="Choose Territory" name="sel_terr" id="sel_terr" style="width: 250px;"></select></div>
-		<div class="stk_ordr_inpwrap"><b>Franchise : </b> <select class=" chzn-select" data-placeholder="Choose Franchise "  name="fid" id="fid" style="width:250px;" ></select></div>
-		<div class="stk_ordr_inpwrap"><b>Order For : </b><select name="mid_entrytype" class="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
-		<div class="stk_ordr_inpwrap mid_blk"><b>Member Id : </b><input style="font-size:120%" maxlength="8"  type="text" class="membrid" name="mid" size=18 ></div>
+		<div class="stk_ordr_inpwrap"><b>Franchise : <span class="red_star">*</span></b> <select class=" chzn-select" data-placeholder="Choose Franchise "  name="fid" id="fid" style="width:250px;" ></select></div>
+		<div class="stk_ordr_inpwrap"><b>Order For : <span class="red_star">*</span></b><select name="mid_entrytype" class="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
+		<div class="stk_ordr_inpwrap mid_blk"><b>Member Id : <span class="red_star">*</span></b><input style="font-size:120%" maxlength="9"  type="text" class="membrid" name="mid" size=18 ></div>
 		<div class="signin" style="display:none;float:right;"><input type="button" value="Proceed" onclick='load_franchisebyid()' class="button button-rounded button-action"></div>
 	</div>
 
@@ -411,7 +418,7 @@ $fran_status_arr[3]="Temporary Suspension";
 		<div width="100%">
 			<form id="change_mem_frm" method="post" action="<?php echo site_url('admin/jx_check_forvalid_mid')?>">
 				<div class="stk_ordr_inpwrap"><b>Order For : </b><select name="mid_entrytype" class="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
-				<div class="stk_ordr_inpwrap mid_blk"><b>Member Id : </b><input style="font-size:120%" maxlength="8"  type="text" class="chngd_membrid" name="mid" size=18 ></div>
+				<div class="stk_ordr_inpwrap mid_blk" style="display:block;"><b>Member Id <span class="red_star">*</span> : </b><input style="font-size:120%" maxlength="8"  type="text" class="chngd_membrid" name="mid" size=18 ></div>
 			</form>
 		</div>
 	</div>
@@ -456,10 +463,26 @@ $fran_status_arr[3]="Temporary Suspension";
 			</table>
 		</form>
 	</div>
+	<div id="franchise_quickview"  title="Franchisee Info"><div id="fran_qvkview"></div></div>
+	
+	
 </div>
 
 <SCRIPT>
+$("#franchise_quickview").hide();
 
+function tooltip_popup(){
+
+ 	Tipped.create('.tip_popup',{
+ 	 skin: 'black',
+ 	  hook: 'topleft',
+ 	  hideOn: false,
+ 	  closeButton: true,
+ 	 	opacity: .5,
+ 	 	hideAfter: 200,
+	 });
+
+}
 function quikview_product(pid)
 {
 	$("#quick_viewdiv").data('qvk_pid',pid).dialog('open');
@@ -468,11 +491,14 @@ $("#quick_viewdiv").dialog({
 	autoOpen:false,
 	height:'auto',
 	width:'auto',
-	open:function(){
+	open:function(event, ui){
+		$(event.target).dialog('widget')
+        .css({ position: 'fixed' })
+        .position({ my: 'center', at: 'center', of: window });
 		$("#qvk_prod_temp tbody").html("");
         $('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 		$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').addClass('add_to_cartbtn');
-		
+		$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({"float":"right","background":"tomato","color":"white"});
 		$('.ui-dialog-buttonpane').find('button:contains("Price Query")').css({"float":"left"});
 	
 		var dlg=$(this);
@@ -492,9 +518,15 @@ $("#quick_viewdiv").dialog({
 			template=template.replace(/%qvk_margin_amt%/g,Math.ceil(p.price-p.lcost));
 			$("#qvk_prod_temp tbody").html(template);
 			if(! p.allow_order.length || p.is_publish==0)
+			{
 				$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').css({'display':'none'});
+				$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({'display':'block'});
+			}
 			else
+			{
 				$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').css({'display':'block'});
+				$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({'display':'none'});
+			}
 			
 		});
 	
@@ -507,10 +539,12 @@ $("#quick_viewdiv").dialog({
 				$(this).dialog('close');
 			},
 		
-		
-		'Price Query':function(){
-			pricenotmatch_product(p.pid);
-		}, 
+			'Product Disabled':function(){
+			},
+
+			'Price Query':function(){
+				pricenotmatch_product(p.pid);
+			}, 
 	}
 	
 });
@@ -801,7 +835,9 @@ function filter_deallist(tag,by)
 				if(search_text.match(tag,'ig'))
 					row_stat = 1;
 				else 
+				{
 					row_stat = 0;
+				}
 			}
 			
 			// check if search data is entered 
@@ -809,7 +845,9 @@ function filter_deallist(tag,by)
 			{
 				tag = srch_inp;
 				if(!search_text.match(tag,'ig'))
+				{
 					row_stat = 0;
+				}
 			}
 
 			if(row_stat == 1)
@@ -830,38 +868,6 @@ function filter_deallist(tag,by)
 $('input[name="srch_deals"]').live('keyup',function(){
 	filter_deallist($(this).val(),'search');
 });
-
-/*$('.tgl_stock_combo').live('click',function(){
-	var trele=$(this).parents('tr:first');
-	var ref_id  = $(this).attr('ref_id');
-	
-	$.post(site_url+'/admin/pnh_jx_dealstock_det',{refid:ref_id,is_pnh:1},function(resp){
-			if(resp.status == 'error')
-			{
-				$('.stock_det_'+ref_id).html("No Details found");
-			}
-			else
-			{
-				
-				var qcktiphtml = '<span style="float:right;color:red;cursor:pointer" refid="'+ref_id+'" class="stock_det_close">X</span> <div style="float:left;width:100%">';
-					qcktiphtml += '<table width="100%" border=1 class="datagrid" cellpadding=3 cellspacing=0>';
-					qcktiphtml += '<thead><tr><th>Product Name</th><th>Stock</th></tr></thead><tbody>';
-					$.each(resp.itm_stk_det,function(a,b){
-						qcktiphtml+='<tr>';
-						qcktiphtml+='	<td width="80%" style="font-size:10px">'+b.product_name+'</td>';
-						qcktiphtml+='	<td width="20%" style="font-size:10px">'+b.stk+'</td>';
-						qcktiphtml+='</tr>';
-					});
-					qcktiphtml += '</tbody></table></div>';
-					$('.stock_det_'+ref_id).html(qcktiphtml);
-					$('.stock_det_'+ref_id).show();
-			}
-			
-		},'json');
-		
-	
-});*/
-
 
 $('input[name="search_name"]').live('keyup',function(){
 	var chr=$('input[name="search_name"]').val();
@@ -918,7 +924,7 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 				brand_linkedcat_html+='';
 				$.each(resp.brand_list,function(i,b){
 					brand_linkedcat_html+='<a class="Brands_bychar_list_content_listdata" cid="'+b.catid+'" bid="'+b.brandid+'">'+b.brand_name+'</a>';
-					$('.Brands_bychar_list_head').html('<h4>List of Brand for '+b.category_name+'</h4><span class="close_btn">Hide</span>');
+					$('.Brands_bychar_list_head').html('<h4>List of Brand for '+b.category_name+'</h4><span class="close_btn_dlpg">Hide</span>');
 				});
 			}
 			$('.Brands_bychar_list_content').html(brand_linkedcat_html);
@@ -937,7 +943,7 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 				cat_linkedcat_html+='';
 				$.each(resp.cat_list,function(i,b){
 					cat_linkedcat_html+='<a class="Brands_bychar_list_content_listdata" cid="'+b.catid+'" bid="'+b.brandid+'">'+b.category_name+'</a>';
-					$('.Brands_bychar_list_head').html('<h4>List of Categories for '+b.brand_name+'</h4><span class="close_btn">Hide</span>');
+					$('.Brands_bychar_list_head').html('<h4>List of Categories for '+b.brand_name+'</h4><span class="close_btn_dlpg">Hide</span>');
 				});
 			}
 			$('.Brands_bychar_list_content').html(cat_linkedcat_html);
@@ -1103,7 +1109,6 @@ $(".Brands_bychar_list_head span").live("click",function() {
 	var $this = $(this);
     $('.Brands_bychar_list_content').slideToggle(200, function () {
         $this.text($(this).is(':visible') ? 'Hide' : 'Show');
-        
     });
     $(".Brands_bychar_list_head").show();
 });
@@ -1114,14 +1119,16 @@ function filter_deals_bymrp()
 	to=$("#f_to").val();
 	if(from == to)
 	{
-		alert("Filter prices are not valid numbers");
+		alert("Please enter DP Price Range");
 		return;
 	}
 	if(!is_numeric(from) || !is_numeric(to))
 	{		
+		
 		alert("Filter prices are not valid numbers");
 		return;	
 	}
+	
 	
 	var valid_dp=[];
 	$(".sk_deal_filter_wrap").each(function(){
@@ -1288,7 +1295,16 @@ $("#show_scheme_details").dialog({
 
 function add_product(pid)
 {
+	
+	
 	$.post("<?=site_url("admin/jx_add_deal_tocart")?>",{pid:pid,fid:pre_selected_fid,mid:<?php echo $mid;?>},function(resp){
+
+		if(resp.mid_status =='error')
+		{
+			if(confirm(resp.message))
+				 mem_reg(pre_selected_fid);
+			 return false;
+		}
 		if(resp.status=='success')
 		{
 			$("span.prod_"+pid).html('<a href="javascript:void(0)" onclick="remove_prod_frmcart('+pid+')" class="button button-rounded button-tiny remove_cart_btn" title="Remove From Cart" align="center">REMOVE</a>');
@@ -1391,24 +1407,15 @@ var ppids=[];
 								{
 									template=template.replace(/%super_sch%/g,"Super Scheme : <span style='font-size:11px;color:#000;'>No</span> ");
 								}
-
+							
 								template=template.replace(/%mrp%/g,p.mrp);
 
 								html_cnt += template;
+							
 								
-								jQuery(document).ready(function() {
-								 	Tipped.create('.tip_popup',{
-								 	 skin: 'black',
-								 	  hook: 'topleft',
-								 	  hideOn: false,
-								 	  closeButton: true,
-								 	 	opacity: .5,
-								 	 	hideAfter: 200,
-									 });
-								});
 						});
 						$("#cart_prod_temp tbody").html(html_cnt);
-						
+						tooltip_popup();
 						change_total_subtotal();
 						$('.cart-footer div').show();
 						$(".confirm_bloc").show();
@@ -1558,6 +1565,9 @@ $("#order_form").submit(function(){
 		qty.push($(this).val());
 	});
 	
+	if(ppids.length==0)
+	{alert("There are no products in the Cart");return false;}
+	
 		var menu_qty=qty;
 		var menuid=menuids;
 	//	var mid = $("input[name='mid']",$(this)).val();
@@ -1591,30 +1601,44 @@ $("#order_form").submit(function(){
 				 return false;
 			}
 		 }
+
+		
 		var credit_days=$(".credit_days").val();
 		/*
-		if(credit_days==0)
+		if(credit_days==0 || isNaN(credit_days))
 		{
-			alert("Please enter Credit Days");
+			alert("Please enter Valid Days");
+			return false;
+		}
+		
+		if(credit_days>5)
+		{
+			alert(" Days can't be greater than 5 Days");
+			return false;
+		}
+		if(credit_days<0)
+		{
+			alert(" Days can't be less than 1 Day");
 			return false;
 		}
 		*/
-		if(credit_days>5)
-		{
-			alert("Credit Days can't be greater than 5 Days");
-			return false;
-		}
-		$("input[name='creditdays']").val($('.credit_days').val());		
-		$("input[name='frannote']").val(fran_note);
-		/*
-		$("#fran_note_edit_div").show();
-
-		 
-		if(fran_note.length<50)
-		{
-			franchise_note(pre_selected_fid);
-			return false;
-		}*/
+		
+		$("input[name='creditdays']").val($('.credit_days').val());	
+		<?php 
+			if($pending_payment)
+			{
+		?>	
+				$("input[name='frannote']").val(fran_note);
+				$("#fran_note_edit_div").show();
+				if(fran_note.length<50)
+				{
+					franchise_note(pre_selected_fid);
+					return false;
+				}
+		<?php 
+			}
+		?>
+		
 	
 
 		if(stk_confirm_prods != stk_confirm_prods_checked && stk_confirm_prods > 0)
@@ -1661,36 +1685,37 @@ $('#reg_mem_dlg').dialog({
 			height:'auto',
 			open:function(){
 				$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
-				$('.ui-dialog-buttonpane').find('button:contains("Register")').css({"float":"right"});
-				$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"float":"right"});
+				$('.ui-dialog-buttonpane').find('button:contains("Register")').css({"float":"right","background":"#4AA02C","color":"white"});
+				$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"float":"right","background":"tomato","color":"white"});
 				var dlg=$(this);
 				var fid=pre_selected_fid;
 					$('#reg_mem_frm input[name="franchise_id"]',this).val(fid);
 				},
 				buttons:{
+					'Cancel':function(){
+						$(this).dialog('close');
+					},
 					'Register':function(){
 						$(this)
 						var error_list = new Array();
 						// register member 
 						var mem_regname = $.trim($('input[name="memreg_name"]').val());
-						var mem_mobno = $.trim($('input[name="memreg_mobno"]').val());
-                        	if(mem_regname.length == 0)
-                                error_list.push("Please Enter Member name.");
+						var mem_mobno = parseInt($.trim($('input[name="memreg_mobno"]').val()));
+					
+                    		if(mem_regname.length == 0)
+                             	error_list.push("Please Enter Member name.");
 
-							if(mem_mobno.length == 0)
+							if(mem_mobno.length == 0 || mem_mobno =='')
                                 error_list.push("Please Enter Mobile Number.");
-	                        else
-	                        {
-	                                mem_mobno = mem_mobno*1	;
-	                                if(isNaN(mem_mobno))
-	                                        error_list.push("Please Enter valid Mobile number.");	
-	                        }	
 
-                        if(error_list.length)
-                        {
-                                alert(error_list.join("\r\n"));
-                        }else
-                        {
+							if(isNaN(mem_mobno))
+                                error_list.push("Please Enter valid Mobile number.");	
+							
+							if(error_list.length)
+	                        {
+	                                alert(error_list.join("\r\n"));
+	                        }else
+	                        {
                                 $.post(site_url+'/admin/jx_reg_newmem',$('#reg_mem_frm').serialize(),function(resp){
                                         if(resp.status == 'success')
                                         {
@@ -1711,9 +1736,7 @@ $('#reg_mem_dlg').dialog({
                                 },'json');
                         }
 					},
-					'Cancel':function(){
-						$(this).dialog('close');
-					}
+					
 				}
 });
 
@@ -2085,6 +2108,9 @@ $("#mid_det").dialog({
 	autoOpen:false,
 	open:function()
 	{
+		$('.ui-dialog-buttonpane').find('button:contains("Proceed")').css({"background":"#4AA02C","color":"white"});
+		$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"background":"tomato","color":"white"});
+		
 		dlg=$(this);
 		$("#mem_det").html("");
 		$.post("<?=site_url("admin/jx_pnh_getmid")?>",{mid:dlg.data('mid'),more:1},function(data){
@@ -2158,11 +2184,14 @@ $("#change_member_blk").dialog({
 	autoOpen:false,
 	open:function(){
 		$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
-		$('.ui-dialog-buttonpane').find('button:contains("Submit")').css({"float":"right"});
-		$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"float":"right"});
+		$('.ui-dialog-buttonpane').find('button:contains("Submit")').css({"float":"right","background":"#4AA02C","color":"white"});
+		$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"float":"right","background":"tomato","color":"white"});
 		
 	},
 	buttons:{
+		'Cancel':function(){
+			   $('#change_member_blk').dialog('close');
+		},
 		'Submit':function(){
 			var change_mbrid_form=$("#change_mem_frm");
 			
@@ -2196,9 +2225,7 @@ $("#change_member_blk").dialog({
 			
 				
 		},
-		'Cancel':function(){
-			   $('#change_member_blk').dialog('close');
-		},
+		
 	}
 });
 
@@ -2265,13 +2292,15 @@ $("#product_priceqoute").dialog({
 	width:'549',
 	height:'auto',
 	autoOpen:false,
-	open:function(){
-		var dlg=$(this);
+	open:function(event, ui){
 		
+		$(event.target).dialog('widget')
+        .css({ position: 'fixed' })
+        .position({ my: 'center', at: 'center', of: window });
 		$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 		$('.ui-dialog-buttonpane').find('button:contains("Price Enquiry")').addClass('price_enquiry_btn');
 		$('.ui-dialog-buttonpane').find('button:contains("Price Not Matching")').css({"float":"right"});
-			
+		var dlg=$(this);	
 		if($('#qvkview_template tbody tr').length)
 		{
 			$('#prod_pricequote').show();
@@ -2302,9 +2331,15 @@ $("#product_priceqoute").dialog({
 					{
 						$('#product_priceqoute').dialog('close');
 					}
+					else
+					{
+						alert(resp.msg);
+						return false;
+					}
 				},'json');
 			}
 			return false;
+			
 		},
 
 		'Price Enquiry':function(){
@@ -2508,6 +2543,45 @@ $("#ship_log_dlg" ).dialog({
   },'json');
 }
 });
+
+function get_invoicetransit_log(ele,invno)
+{
+	$('#inv_transitlogdet_dlg').data({'invno':invno,}).dialog('open');
+}
+
+var refcont = null;
+$('#inv_transitlogdet_dlg').dialog({width:'900',height:'auto',autoOpen:false,modal:true,
+											open:function(){
+
+												
+												//,'width':refcont.width()
+												//$('div[aria-describedby="inv_transitlogdet_dlg"]').css({'top':(refcont.offset().top+15+refcont.height())+'px','left':refcont.offset().left});
+												
+												$('#inv_transitlogdet_tbl').html('loading...');
+												$.post(site_url+'/admin/jx_invoicetransit_det','invno='+$(this).data('invno'),function(resp){
+													if(resp.status == 'error')
+													{
+														alert(resp.error);
+													}else
+													{
+														var inv_transitlog_html = '<table class="datagrid" width="100%"><thead><th width="30%">Msg</th><th width="10%">Status</th><th width="10%">Handle By</th><th width="10%">Logged On</th><th width="15%">SMS</th></thead><tbody>';
+														$.each(resp.transit_log,function(i,log){
+															inv_transitlog_html += '<tr><td>'+log[5]+'</td><td>'+log[1]+'</td><td>'+log[2]+'('+log[4]+')</td><td>'+log[3]+'</td><td>'+log[6]+'</td></tr>';
+														});
+														inv_transitlog_html += '</tbody></table>';
+														$('#inv_transitlogdet_tbl').html(inv_transitlog_html);
+
+														$('#inv_transitlogdet_dlg h3').html('Invoice no :<span style="color:blue;font-size:12px">'+resp.invoice_no+'</span>  Franchise name: <span style="color:orange;font-size:12px">'+resp.Franchise_name +'</span> Town : <span style="color:gray;font-size:12px">'+resp.town_name+'</span>'+' ManifestoNo :'+resp.manifesto_id);
+
+
+														
+														
+													}
+												},'json');
+											}
+									});
+
+
 $("#delivery_log_dlg" ).dialog({
 	modal:true,
 	autoOpen:false,
@@ -2563,6 +2637,41 @@ $("#delivery_log_dlg" ).dialog({
 	}
   },'json');
 }
+});
+
+$("#fid").change(function(){
+	
+	if($(this).val()>0)
+	{
+		$("#franchise_quickview").data('fid',$(this).val()).dialog('open');
+			}
+	else
+		$("#franchise_quickview").hide();
+});
+
+$("#franchise_quickview").dialog({
+	autoOpen:false,
+	model:true,
+	width:'448',
+	height:'auto',
+	open:function(){
+		 	$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
+			$('.ui-dialog-buttonpane').find('button:contains("Proceed")').css({"background":"#4AA02C","color":"white","float":"right"});
+			dlg=$(this);
+			$("#fran_qvkview").html("");
+			$.post(site_url+'/admin/jx_load_franchise_qvkview',{fid:dlg.data('fid')},function(data){
+			$("#fran_qvkview").html(data).show();
+		});
+	},
+
+		buttons:{
+		'Proceed':function(){
+				$(this).dialog('close');
+
+			},
+
+			}
+	
 });
 </script>
 <?php

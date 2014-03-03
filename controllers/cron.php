@@ -1336,4 +1336,26 @@ class Cron extends Controller{
 		$this->cron_log(22);
 				
 	}
+
+	/**
+	 * function to update Purchase order status flag by delivery date 
+	 * 
+	 * @desc executed via cron every day at 5:00 AM 
+	 * @author Suresh
+	 */
+	function update_postatus_bydeliverydate()
+	{
+		// fetch pending and partial open po list and date of delivery is expired   
+		$sql = "select * from t_po_info where date_of_delivery < curdate() and date_of_delivery is not null and po_status in (0,1) ";
+		$res = $this->db->query($sql);
+		if($res->num_rows())
+		{
+			foreach($res->result_array() as $po)
+			{
+				// update all open pos to cancelled status and partial po to closed status 
+				$this->db->query("update t_po_info set po_status=?,status_remarks=?,modified_on=now(),modified_by=? where po_id=? limit 1",array((($po['po_status']==1)?2:3),'By System',0,$po['po_id']));
+			}
+		}
+	}
+
 }

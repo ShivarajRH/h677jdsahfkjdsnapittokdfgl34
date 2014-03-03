@@ -94,7 +94,7 @@ Prepaid Voucher used : <?=$c?>
 	<input type="submit" class="button button-tiny button-flat-caution button-rounded " value="<?=$tran['batch_enabled']?"Dis":"En"?>able for Batch">
 </form>
 </div>
-<?php if($tran['batch_enabled']){?>
+<?php if($tran['batch_enabled']){ ?>
 <div style="float:right;padding-right:20px;" id="process_fulltrans">
 <form method="post" onsubmit='return confirm("Are you sure want to process this transaction for batch?")' action="<?=site_url("admin/add_batch_process")?>">
 <input type="hidden" name="num_orders" value="1">
