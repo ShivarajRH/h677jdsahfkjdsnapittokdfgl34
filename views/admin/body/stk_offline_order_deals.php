@@ -982,21 +982,12 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 				d_lst+='</th></tr></thead>';
 				var tmp_tbl_list = '';
 			 	$.each(resp.deals_lst,function(i,d){
-			 		if(d.allow_order.length)
-					{
-						dstock = 'In Stock';
-						var background='background:none repeat scroll 0 0 rgba(170, 255, 170, 0.8) !important'/*#40FC36*/;
-					}else
-					{
-						dstock = 'Out of Stock';
-						var background='background:none repeat scroll 0 0 #FFAAAA !important';
-					}
-				
+			 		
 						var tbl_list = '';
-							tbl_list+='<tr style="'+background+'" class="sk_deal_filter_wrap pnhid_'+d.pnh_id+' deals_'+d.catid+'"  mrp="'+d.orgprice+'" pnh_id="'+d.pnh_id+'" name="'+d.name+'" ref_id="'+d.itemid+'" brand="'+d.brand+'" category="'+d.category+'" dp="'+d.price+'" publish="'+d.publish+'" >';
+							tbl_list+='<tr style="" class="sk_deal_filter_wrap pnhid_'+d.pnh_id+' deals_'+d.catid+'"  mrp="'+d.orgprice+'" pnh_id="'+d.pnh_id+'" name="'+d.name+'" ref_id="'+d.itemid+'" brand="'+d.brand+'" category="'+d.category+'" dp="'+d.price+'" publish="'+d.publish+'" >';
 							tbl_list+='		<td><span>'+d.pnh_id+'</span></td>';
 							tbl_list+='		<td><span class="deal_title"><a target="_blank" href="'+site_url+'/admin/pnh_deal/'+d.itemid+'">'+d.name+'</a><div class="stock_det_'+d.itemid+'"></div></td>';
-							tbl_list+='		<td><a href="javascript:void(0)" ref_id="'+d.itemid+'" dealid="'+d.itemid+'" class="tgl_stock_combo deal_stock">'+(dstock)+'</a></td>';
+							tbl_list+='		<td><a href="javascript:void(0)" ref_id="'+d.itemid+'" dealid="'+d.itemid+'" class="tgl_stock_combo deal_stock"></a></td>';
 							tbl_list+='		<td><span><a target="_blank" href="'+site_url+'/admin/viewbrand/'+d.brandid+'">'+d.brand+'</a></span></td>';
 							tbl_list+='		<td><span><a target="_blank" href="'+site_url+'/admin/viewcat/'+d.catid+'">'+d.category+'</a></span></td>';
 							tbl_list+='		<td><span class="mrp">'+d.orgprice+'</span></td>';
@@ -1018,8 +1009,8 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 				else
 					$('.jq_alpha_sort_overview_content').html(d_lst);
 
-				   // Call the plugin
-                $(".jq_alpha_sort_overview_content .deal_stock").dealstock();
+				// Call the plugin
+				$(".jq_alpha_sort_overview_content .deal_stock").dealstock();
 			
 				$("#sel_cat").chosen();
 				if(resp.type == 1)
