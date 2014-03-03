@@ -102,7 +102,7 @@
 				<td>
 					<div>
 						&nbsp;<b>From</b> :<input size="8" id="grn_frm" type="text" name="grn_frm" value="<?php echo $this->uri->segment(5)?$this->uri->segment(5):date('Y-m-01')?>"> &nbsp;
-						<b>To</b> :<input size="8" id="grn_to" type="text" name="grn_to" value="<?php echo $this->uri->segment(5)?$this->uri->segment(5):date('Y-m-d')?>"> &nbsp;
+						<b>To</b> :<input size="8" id="grn_to" type="text" name="grn_to" value="<?php echo $this->uri->segment(6)?$this->uri->segment(6):date('Y-m-d')?>"> &nbsp;
 					</div>
 				<td>
 				<td>

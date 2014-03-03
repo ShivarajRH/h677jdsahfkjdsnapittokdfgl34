@@ -692,6 +692,21 @@ function print_imei_inputs(tot_rqty,prodid) {
     return imei_out;
 }
 
+$('#add_barcode_dialog').dialog({
+	modal:true,
+	autoOpen:false,
+	width:350,
+	height:150,
+	autoResize:true,
+	open:function(){
+		dlg = $(this);
+	},
+	close:function()
+	{
+		$(this).dialog('close');
+	}
+});
+
 $('.prod_mrp').live('change',function(){
 	
 	var trele = $(this).parents('tr:first');
@@ -768,14 +783,15 @@ $('.inv_inp_amount').live("change",function(){
 
 
 $('.bcode_upd').live('click',function(e){
+	e.preventDefault();
 	var trEle = $(this).parents('tr:first');
 	var pid = $(this).attr('pid');
 	var prodid = $(this).attr('prodid');
 	var pname = $('span.name',trEle).text();
 	
-		$("#add_imei_dialog").hide();
+		//$("#add_imei_dialog").dialog('close');
 		$("#add_barcode_dialog").data('ref_tr',trEle).dialog('open');
-		$(".prod_title").html("Product : <a target='_blank' href='"+site_url+'/admin/product/'+pid+"'>"+pname+'</a>');
+		$(".prod_title").html("Product : <a target='_blank' href='"+site_url+'/admin/product/'+prodid+"'>"+pname+'</a>');
 		$("#abd_barcode").focus().val("");
 		$("#abd_pid").val(pid);
 		$("#abd_pid").data('prodid',prodid);
@@ -820,7 +836,6 @@ $(".inv_inp_blk").live("change",function(){
 });
 
 $(".datagrid .rqty").live("change",function(){
-		
 		trele=$(this).parents('tr:first');
 		var tot_rqty = $(this).val();
     	tot_rqty = isNaN(tot_rqty)?0:tot_rqty;
@@ -1385,12 +1400,10 @@ $('#rqty_imei_blk_dlg form').submit(function(){
 			
 			if(isNaN(inp_barcode))
 			{
-				$('.error_inp',dlgEle).html("Please enter valid Barcode");
+				$('.error_inp',dlgEle).html("<div style='color:red !important;'>Please enter valid Barcode</div>");
 				return false;
 			}else
 			{		
-				
-					
 				var chk_prodid = $('#abd_pid').data('prodid');
 					$('.pbcodecls'+chk_prodid,ref_trele).val($('#abd_barcode').val());
 					//$("#add_barcode_dialog").hide();
@@ -1422,17 +1435,6 @@ $('#rqty_imei_blk_dlg form').submit(function(){
 			 }
 		return false;
 	});
-	
-	$('#add_barcode_dialog').dialog({
-		modal:true,
-		autoOpen:false,
-		width:350,
-		height:150,
-		autoResize:true,
-		open:function(){
-		dlg = $(this);
-	}
-});
 
 $('#rqty_imei_blk_dlg').dialog({
 		modal:true,
@@ -1625,10 +1627,7 @@ $(function(){
    $('#grn_color_legends').hide();
    $('.cancel_stock').hide();
    $('.pb_blk').hide();
-   
-   
-   
-   
+ 
 $('#grn tr').unbind('focus').live('focus', function () {
     if (!$('.edit_mode').length) {
     	$(this).addClass('edit_mode');
@@ -1667,8 +1666,7 @@ $(".datagrid tr .rqty,.datagrid tr .iqty,.datagrid tr .vat_prc,.datagrid tr .bco
             });
      }
 });
-
-});
+});  
 
 </script>
 

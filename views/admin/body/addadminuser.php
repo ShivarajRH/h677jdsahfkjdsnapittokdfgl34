@@ -19,12 +19,18 @@
 </td>
 </tr>
 <?php if($u){
-	$account_blocked = $this->db->query("select account_blocked from king_admin where id= ?  ",$u['id'])->row()->account_blocked;
+	$user_det_row = $this->db->query("select block_ip_addr,account_blocked from king_admin where id= ?  ",$u['id'])->row_array();
 ?>
 <tr>
 	<td>Cancel/Block Account</td>
 	<td>
-		<input type="checkbox" value="1" name="account_blocked" <?php echo $account_blocked?'checked':'' ?> />
+		<input type="checkbox" value="1" name="account_blocked" <?php echo $user_det_row['account_blocked']?'checked':'' ?> />
+	</td>
+</tr>
+<tr>
+	<td>Block IP Address</td>
+	<td>
+		<input type="checkbox" value="1" name="block_ip_addr" <?php echo $user_det_row['block_ip_addr']?'checked':'' ?> />
 	</td>
 </tr>
 <?php }?>

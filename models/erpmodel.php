@@ -309,10 +309,11 @@ class Erpmodel extends Model
 	
 	function do_updateadminuser($uid)
 	{
-		foreach(array("roles","name","email","account_blocked") as $i)
+		foreach(array("roles","name","email","account_blocked","block_ip_addr") as $i)
 			$$i=$this->input->post($i);
 			
 		$account_blocked = $account_blocked*1;
+		$block_ip_addr = $block_ip_addr*1;
 			
 		$access=$roles[0];
 		foreach($roles as $i=>$r)
@@ -321,14 +322,14 @@ class Erpmodel extends Model
 			if($i!=0)
 				$access=($access|$r);
 		}
-		$this->db->query("update king_admin set access=?,name=?,email=?,account_blocked=? where id=? limit 1",array($access,$name,$email,$account_blocked,$uid));
+		$this->db->query("update king_admin set access=?,name=?,email=?,account_blocked=?,block_ip_addr=? where id=? limit 1",array($access,$name,$email,$account_blocked,$block_ip_addr,$uid));
 		$this->session->set_flashdata("erp_pop_info","Admin access updated");
 		redirect("admin/adminusers");
 	}
 	
 	function do_addadminuser()
 	{
-		foreach(array("roles","name","username","email") as $i)
+		foreach(array("roles","name","username","email","block_ip_addr") as $i)
 			$$i=$this->input->post($i);
 		$access=0;
 		if(!empty($roles))
@@ -341,8 +342,11 @@ class Erpmodel extends Model
 				$access=((double)$access|$r);
 		}
 		$password=randomChars(6);
-		$this->db->query("insert into king_admin(user_id,username,name,email,access,password) values(?,?,?,?,?,?)",array(md5($username),$username,$name,$email,$access,md5($password)));
-		$this->vkm->email($email,"Your Snapittoday ERP account","Hi $name,<br><br>Your account to access snapitoday ERP is created successfully.<br>Username : $username<br>Password : $password<br><br>ERP Team Snapittoday");
+		
+		$block_ip_addr = $block_ip_addr*1;
+		
+		$this->db->query("insert into king_admin(user_id,username,name,email,access,password,block_ip_addr) values(?,?,?,?,?,?,?)",array(md5($username),$username,$name,$email,$access,md5($password),$block_ip_addr));
+		$this->vkm->email($email,"Your Storeking ERP account","Hi $name,<br><br>Your account to access storeking ERP is created successfully.<br>Username : $username<br>Password : $password<br><br>ERP Team Storeking");
 		$this->session->set_flashdata("erp_pop_info","New Admin user created");
 		redirect("admin/adminusers");
 	}
@@ -2668,11 +2672,12 @@ courier disable ends
 	function do_generate_kfile($invs)
 	{
 		
-		$sql="select    ifnull(c.courier_name,'') as courier, ifnull(il.shipped_on,'') as shipdate,ifnull(il.awb,'') as awb_no,
+		$sql="select    date(from_unixtime(i.createdon)) as inv_date,ifnull(c.courier_name,'') as courier, ifnull(il.shipped_on,'') as shipdate,ifnull(il.awb,'') as awb_no,
 						t.amount as tran_amount,i.invoice_no,t.mode,
-						(o.i_price-o.i_coup_discount)*o.quantity as amount,di.name,o.transid,
+						(i.mrp-i.discount)*i.invoice_qty as amount,
+						(o.i_price-o.i_coup_discount)*o.quantity as amount12,di.name,o.transid,
 						o.ship_person,concat(o.ship_address,o.ship_landmark) as ship_address,
-						o.ship_city,o.ship_state,o.ship_pincode,o.ship_phone,o.quantity,
+						o.ship_city,o.ship_state,o.ship_pincode,o.ship_phone,i.invoice_qty as quantity,
 						t.partner_id,
 						ifnull(p.name,'') as partner_name,
 						t.partner_reference_no
@@ -2683,7 +2688,9 @@ courier disable ends
 					left join shipment_batch_process_invoice_link il on il.invoice_no = i.invoice_no 
 					left join m_courier_info c on c.courier_id = il.courier_id
 					left join partner_info p on p.id = t.partner_id   
-					where i.invoice_no in ('".implode("','",$invs)."')";
+					where i.invoice_no in ('".implode("','",$invs)."')
+					and t.is_pnh = 0 
+		";
 		$ret=array();
 		foreach($this->db->query($sql)->result_array() as $r)
 		{
@@ -2694,21 +2701,25 @@ courier disable ends
 		$data=$ret;
 		ob_start();
 		$f=fopen("php://output","w");
-		fputcsv($f, array("Invoice No","AWB No","Courier/Medium","Ship Date","Notify Customer","Transaction Reference","Ship Person","Shipping Address","Shipping City","Shipping Pincode","Shipping State","Contact Number","Amount","Mode","Quantity","Product Name","Weight","PartnerName","PartnerRefno","UserNotes"));
+		fputcsv($f, array("Invoice Date","Invoice No","Amount","AWB No","Courier/Medium","Ship Date","Notify Customer","Transaction Reference","Ship Person","Shipping Address","Shipping City","Shipping Pincode","Shipping State","Contact Number","Mode","Quantity","Product Name","Weight","PartnerName","PartnerRefno","UserNotes"));
 		foreach($data as $inv=>$orders)
 		{
 			$transid=$orders[0]['transid'];
-			$csv=array($inv,$orders[0]['awb_no'],($orders[0]['courier']?$orders[0]['courier']:''),(($orders[0]['shipdate']!="")?date('Y-m-d',strtotime($orders[0]['shipdate'])):''),"",$orders[0]['transid'],$orders[0]['ship_person'],$orders[0]['ship_address'],$orders[0]['ship_city'],$orders[0]['ship_pincode'],$orders[0]['ship_state'],$orders[0]['ship_phone']);
+			
 			$amount=0;$prods=array();
 			foreach($orders as $o)
 			{
 				$prods[]=$o['name'].":{$o['quantity']}";
 				$amount+=$o['amount'];
 			}
+			
+			
+			$csv=array($orders[0]['inv_date'],$inv,$amount,$orders[0]['awb_no'],($orders[0]['courier']?$orders[0]['courier']:''),(($orders[0]['shipdate']!="")?date('Y-m-d',strtotime($orders[0]['shipdate'])):''),"",$orders[0]['transid'],$orders[0]['ship_person'],$orders[0]['ship_address'],$orders[0]['ship_city'],$orders[0]['ship_pincode'],$orders[0]['ship_state'],$orders[0]['ship_phone']);
+			
 			$n=count($orders);
 			if($n==$this->db->query("select count(1) as l from king_orders where transid=?",$transid)->row()->l)
 				$amount=$orders[0]['tran_amount'];
-			$csv[]=$amount;
+			
 			if($orders[0]['mode']==1)
 				$csv[]="COD";
 			else
@@ -3257,7 +3268,10 @@ courier disable ends
 		$count=0;
 		while(($data=fgetcsv($f))!==false)
 		{
-			$invoice_no=$data[0];
+			if(count(array_keys($data)) != 21)
+				show_error("Invalid File format Submitted");
+			
+			$invoice_no=$data[1];
 			if(empty($invoice_no))
 				continue;
 			
@@ -3265,14 +3279,14 @@ courier disable ends
 			if($this->db->query("select count(*) as t from king_invoice a join king_transactions b on a.transid = b.transid where a.invoice_no = ? and is_pnh = 1",$invoice_no)->row()->t)
 				continue ;
 			
-			$awb=$data[1];
-			$courierid=$data[2];
+			$awb=$data[3];
+			$courierid=$data[4];
 			$c=$this->db->query("select courier_name as name from m_courier_info where courier_id=?",$courierid)->row_array();
 			$courier="Others";
 			if(!empty($c))
 				$courier=$c['name'];
-			$date=$data[3];
-			$notify=$data[4];
+			$date=$data[5];
+			$notify=$data[6];
 			if($this->db->query("select courier_id from shipment_batch_process_invoice_link where invoice_no=?",$invoice_no)->row()->courier_id!=0)
 			{
 				$b=$this->db->query("select o.medium,o.shipid from king_invoice inv join king_orders o on o.id=inv.order_id where inv.invoice_no=?",$invoice_no)->row_array();
@@ -12254,6 +12268,48 @@ order by action_date";
     	
     	return $this->db->query($sql,$fid)->result_array();
     }
+    
+    /**
+     * function to send delivery notification to franchise and customer
+     * @param unknown_type $inv
+     */
+    function notify_shipment_delivery_sms($inv,$notify_fr=0,$notify_mem=0,$emp_id=0)
+    {
+    	// get invoice franchise and member details if set
+    
+    	$sql = "select a.transid,a.invoice_no,sum((a.mrp-(a.discount-a.credit_note_amt))*a.invoice_qty) as fr_inv_amount,sum((a.mrp-(a.discount-b.i_coup_discount))*a.invoice_qty) as mem_inv_amount,count(b.itemid) as ttl_items,
+				    	pnh_member_id,d.first_name,d.last_name,d.mobile,e.franchise_id,franchise_name,login_mobile1,login_mobile2
+				    	from king_invoice a
+				    	join king_orders b on a.order_id = b.id
+				    	join king_transactions c on c.transid = b.transid
+				    	join pnh_member_info d on d.user_id = b.userid
+				    	join pnh_m_franchise_info e on e.franchise_id = c.franchise_id
+				    where a.invoice_no = ?
+				    group by a.invoice_no
+    			";
+    	$res = $this->db->query($sql,$inv);
+    	if($res->num_rows())
+    	{
+    		$inv_det = $res->row_array();
+    
+    		if($notify_fr)
+    		{
+    			// prepare franchise shipment delivery notification sms
+    			$fr_sms = 'Dear '.ucwords($inv_det['franchise_name']).', Your '.$inv_det['ttl_items'].' products of order '.$inv_det['transid'].'-'.$inv_det['pnh_member_id'].' of value Rs '.$inv_det['fr_inv_amount'].' are delivered today, Thanks for Shopping with StoreKing.';
+    			if(strlen($inv_det['login_mobile1']) == 10)
+    				$this->erpm->pnh_sendsms($inv_det['login_mobile1'],$fr_sms,$inv_det['franchise_id'],$emp_id,11);
+    		}
+    
+    		// prepare customer shipment delivery notification sms
+    		if(strlen($inv_det['mobile']) == 10 && ($notify_mem==1))
+    		{
+    			$cus_sms = 'Dear '.$inv_det['first_name'].', Your '.$inv_det['ttl_items'].' products of order '.$inv_det['transid'].' are delivered today to '.ucwords($inv_det['franchise_name']).', Please collect at your convenient time, Happy Shopping with StoreKing.';
+    			$this->erpm->pnh_sendsms($inv_det['mobile'],$cus_sms,$inv_det['franchise_id'],0,'NOTIFY_DELIVERY');
+    		}
+    
+    	}
+    }
+    
 }
 
 

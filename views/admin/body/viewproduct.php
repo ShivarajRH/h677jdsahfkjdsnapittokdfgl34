@@ -65,6 +65,16 @@
     padding: 2px 0;
     width:66%;
 }
+.prd_det_span .prd_d
+{
+	color: #000000;
+    float: right;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 2px 0;
+    width:66%;
+    text-align: left;
+}
 .prd_outer_bottom_wrap1
 {
 	 background: none repeat scroll 0 0 #FFFFDF;
@@ -176,7 +186,7 @@
 {
 	font-size:11px;width:60px;
 }
-.p_imei_filter_submit, .a_imei_filter_submit, .stocklog_filter_submit
+.p_imei_filter_submit, .a_imei_filter_submit, .stocklog_filter_submit , .sales_det_submit
 {
 	font-size: 11px !important;
 	height: 19.4px !important;
@@ -245,6 +255,36 @@
 	float:right;
 	color:#FFFFFF !important;
 }
+.vendor_prd_wrap
+{
+	 float: left;
+    font-size: 12px;
+    max-height: 238px;
+    overflow: auto;
+    width: 100%;
+}
+#stat_frm_to
+{
+	font-size: 11px;
+}
+#stat_frm_to input
+{
+	font-size: 11px;
+}
+
+.stat_head
+{
+	margin-bottom:10px;
+}
+.total_stat_view
+{
+	height:150px;
+	margin-top:10px;
+}
+.processed_stock_imei_ttl
+{
+	font-weight:bold;
+}
 </style>
 <?php 
 	$only_superadmin = $this->erpm->auth(true,true);
@@ -268,7 +308,12 @@
 				<span class="notifications red">Not Sourceble</span>
 			<?php } ?>
 		</div>
-		<h2 class="prd_title_wrap"><?=$p['product_name']?></h2>
+		<h2 class="prd_title_wrap">
+			<?=$p['product_name']?>
+			<a href="<?=site_url("admin/editproduct/{$p['product_id']}")?>" target="_blank">
+				<img src="<?php echo base_url().'images/pencil.png'?>">
+			</a>
+		</h2>
 		<div class="fl_right" style="width: 50%">
 		</div>	
 	</div>
@@ -278,9 +323,9 @@
 			<div class="prd_det">
 				<span class="prd_det_span"><b>Brand : </b><a href="<?=site_url("admin/viewbrand/{$p['bid']}")?>" target="_blank"><?=$p['brand']?></a></span>
 				<span class="prd_det_span"><b>Category : </b><a href="<?=site_url("admin/viewcat/{$p['cid']}")?>" target="_blank"><?=$p['category']?></a></span>
-				<span class="prd_det_span"><b>Size : </b><a><?=$p['size']?></a></span>
-				<span class="prd_det_span"><b>MRP(Rs.) : </b><a><?=$p['mrp']?></a></span>
-				<span class="prd_det_span"><b>VAT(%) : </b><a><?=$p['vat']?></a></span>
+				<span class="prd_det_span"><b>Size : </b><b class="prd_d"><?=$p['size']?></b></span>
+				<span class="prd_det_span"><b>MRP(Rs.) : </b><b class="prd_d"><?=$p['mrp']?></b></span>
+				<span class="prd_det_span"><b>VAT(%) : </b><b class="prd_d"><?=$p['vat']?></b></span>
 			</div>
 			
 			<div class="prd_inner_wrap3">	
@@ -288,7 +333,7 @@
 					<div class="ttl_wrap1">Product Stock Summary</div>
 					<button class="button button-action button-tiny fl_right btn_correction">Correction</button>
 					<span class="ttl_stk_wrap">Total Stock : <?=$p['stock']?></span>
-					<div style="font-size: 12px;">
+					<div class="vendor_prd_wrap" style="max-height: 140px !important;">
 						<table class="datagrid fl_left" width="100%">
 							<thead>
 								<th><b>Barcode</b></th>
@@ -333,8 +378,19 @@
 				</div>
 			</div>
 			
-			<div class="prd_inner_wrap2">	
-				
+			<div class="prd_inner_wrap2">
+				<div id="total_stat">
+	    			<span class="stat_head ttl_wrap1"></span>
+	    			<form id="stat_frm_to" method="post">
+				        <div style="text-align: right">
+				        	From : <input type="text" style="width: 90px;" id="date_from" value="<?php echo date('Y-m-d',time()-90*60*60*24)?>" />
+				            To : <input type="text" style="width: 90px;" id="date_to" value="<?php echo date('Y-m-d',time())?>" /> 
+				            <button class="button button-rounded button-action button-tiny sales_det_submit">Go</button>
+				        </div>
+				    </form>	
+	    			<div class="total_stat_view">
+	    			</div>
+	    		</div>
 			</div>
 		</div>
 		
@@ -342,48 +398,50 @@
 			<div class="prd_inner_wrap1">
 				<div class="prd_inner_sub_wrap2" style="width:100%">
 					<div class="ttl_wrap1">Linked Deals</div>
-					<table class="datagrid fl_left" width="100%">
-						<thead>
-							<tr><th>Sno</th><th>Deal</th><th>Qty</th><th>Type</th></tr>
-						</thead>
-						<tbody>
-							<?php
-								$list_deals_res = $this->db->query("select i.is_pnh,i.id,i.name,l.qty,i.price 
-																	from m_product_deal_link l 
-																	join king_dealitems i on i.id=l.itemid 
-																	where l.product_id=?",$p['product_id']); 
-								$i=1;
-							?>
-							
-							<?php  
-								if($list_deals_res->num_rows())
-								{
-									foreach($list_deals_res->result_array() as $d){
-							?>
-								<tr>
-									<td><?=$i++?></td>
-									<td><a href="<?=site_url("admin/deal/{$d['id']}")?>"><?=$d['name']?></a></td>
-									<td><?=$d['qty']?></td>
-									<!--<td><?=$d['price']?></td>-->
-									<td><?=$d['is_pnh']?"PNH":"SNP"?></td>
-								</tr>
-							<?php } }else { ?>
-								<tr>
-									<td>
-										No Linked Deals Found
-									</td>
-								</tr>
-							<?php } ?>
-						</tbody>
-					</table>
+					<div class="vendor_prd_wrap">
+						<table class="datagrid fl_left" width="100%">
+							<thead>
+								<tr><th>Sno</th><th>Deal</th><th>Qty</th><th>Type</th></tr>
+							</thead>
+							<tbody>
+								<?php
+									$list_deals_res = $this->db->query("select i.is_pnh,i.id,i.name,l.qty,i.price 
+																		from m_product_deal_link l 
+																		join king_dealitems i on i.id=l.itemid 
+																		where l.product_id=?",$p['product_id']); 
+									$i=1;
+								?>
+								
+								<?php  
+									if($list_deals_res->num_rows())
+									{
+										foreach($list_deals_res->result_array() as $d){
+								?>
+									<tr>
+										<td><?=$i++?></td>
+										<td><a href="<?=site_url("admin/deal/{$d['id']}")?>" target="_blank"><?=$d['name']?></a></td>
+										<td><?=$d['qty']?></td>
+										<!--<td><?=$d['price']?></td>-->
+										<td><?=$d['is_pnh']?"PNH":"SNP"?></td>
+									</tr>
+								<?php } }else { ?>
+									<tr>
+										<td>
+											No Linked Deals Found
+										</td>
+									</tr>
+								<?php } ?>
+							</tbody>
+						</table>
+					</div>
 				</div>
 			</div>
 			
 			<div class="prd_inner_wrap3">	
 				<div class="prd_inner_sub_wrap1">
 					<div class="ttl_wrap1">Sourceble Vendors</div>
-					<div style="font-size: 12px;">
-						<table class="datagrid no_linehgt fl_left" width="100%">
+					<div class="vendor_prd_wrap">
+						<table class="datagrid fl_left" width="100%">
 							<thead>
 								<tr><th>Sno</th><th>Vendor Name</th></tr>
 							</thead>
@@ -406,7 +464,7 @@
 								?>
 									<tr>
 										<td><?=$j++?></td>
-										<td><a href="<?=site_url("admin/vendor/{$v['vendor_id']}")?>"><?=$v['vendor_name']?></a></td>
+										<td><a href="<?=site_url("admin/vendor/{$v['vendor_id']}")?>" target="_blank"><?=$v['vendor_name']?></a></td>
 									</tr>
 								<?php } }else { ?>
 									<tr>
@@ -496,7 +554,7 @@
 										<td>Rs <?=$pc['new_mrp']?></td>
 										<td>
 										<?php if($pc['reference_grn']==0) echo "MANUAL";else{?>
-										<a href="<?=site_url("admin/viewgrn/{$pc['reference_grn']}")?>"><?=$pc['reference_grn']?></a>
+										<a href="<?=site_url("admin/viewgrn/{$pc['reference_grn']}")?>" target="_blank"><?=$pc['reference_grn']?></a>
 										<?php }?>
 										</td>
 										<td><?=date("g:ia d/m/y",$pc['created_on'])?></td>
@@ -520,6 +578,10 @@
 					</div>
 				</div>
 			</div>
+			<?php
+				if($p['is_serial_required'])
+				{
+			?>
 			<div class="prd_inner_wrap3" style="margin-right: 0%;width:49%">
 				<div class="ttl_wrap1">Serial Numbers Log</div>	
 				<div id="prod_imei_tab" class="prd_inner_sub_wrap1" style="width:98%">
@@ -565,6 +627,9 @@
 					</div>
 				</div>
 			</div>
+			<?php
+				}
+			?>
 		</div>
 	</div>
 </div>
@@ -766,7 +831,7 @@
 			</tr>
 			
 			<tr>
-				<td class="label_wrap" colspan="2" align="right">
+				<td class="label_wrap" colspan="2" style="text-align:center">
 					<button type="submit" class="button button-action">Update</button>
 				</td>
 			</tr>
@@ -801,21 +866,19 @@ $('.btn_correction').live('click',function(){
 		height:450,
 		autoResize:true,
 		open:function(){
-		$('.ui-dialog-buttonpane').find('button:contains("Update")').addClass('placeorder_btn');
+		//$('.ui-dialog-buttonpane').find('button:contains("Update")').addClass('placeorder_btn');
 		dlg = $(this);
-	},
-	buttons:{
-	'Update':function(){
-		$(this).dialog('close');
-		}
 	}
 });
+$("#date_from").datepicker();
+$("#date_to").datepicker();
 $("#processed_from_date").datepicker();
-$("#processed_to_date").datepicker({maxDate:0});
+$("#processed_to_date").datepicker();
 $("#avl_from_date").datepicker();
-$("#avl_to_date").datepicker({maxDate:0});
-$("#from_date").datepicker();
-$("#to_date").datepicker({maxDate:0});
+$("#avl_to_date").datepicker();
+$('#from_date').datepicker();
+$("#to_date").datepicker();
+
 </script>
 <script type="text/javascript">
 		function reset_producttransfer()
@@ -1245,6 +1308,76 @@ $("#to_date").datepicker({maxDate:0});
 			load_available_imeino(<?php echo $p['product_id'];?>,a_st_date,a_en_date,0);
 			load_processed_imeino(<?php echo $p['product_id'];?>,p_st_date,p_en_date,0);
 		<?php } ?>
+		
+		total_sales();
 	});
 	
+	$("#stat_frm_to").bind("submit",function(e){
+		e.preventDefault();
+		total_sales();
+	});
+	
+	function total_sales()
+	{
+		var prodid ="<?php echo $p['product_id'];?>";
+		var start_date= $('#date_from').val();
+		var end_date= $('#date_to').val();
+		$('.stat_head').html("<h4 style='margin:0px !important'>Total Sales</h4>");
+		$('#total_stat .total_stat_view').html('<div align="center" style="margin-top:10px"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>' );
+		$.getJSON(site_url+'/admin/jx_product_sales/'+prodid+'/'+start_date+'/'+end_date,'',function(resp){
+			if(resp.summary == 0)
+			{
+				$('#total_stat .total_stat_view').html("<div class='br_alert_wrap' style='padding:40px 0px'>No Sales statisticks found between "+start_date+" and "+end_date+"</div>" );	
+			}
+			else
+			{
+				// reformat data ;
+				if(resp.date_diff <= 31)
+			  	{
+			  		var interval = 1000000;
+			    }
+				else
+				{
+					var interval = 2500000;
+				}
+				$('#total_stat .total_stat_view').empty();
+				plot2 = $.jqplot('total_stat .total_stat_view', [resp.summary], {
+			       	
+			       	 seriesDefaults: {
+				        showMarker:true,
+				        pointLabels: { show:true }
+				      },
+				       axesDefaults: {
+				        tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
+				        tickOptions: {
+				          fontFamily: 'tahoma',
+				          fontSize: '11px',
+				          angle: -30
+				      	}
+				      },
+					  axes:{
+				        xaxis:{
+				          renderer: $.jqplot.CategoryAxisRenderer,
+				          	label:'Date',
+					          labelOptions:{
+					            fontFamily:'Arial',
+					            fontSize: '14px'
+					          },
+					          labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+				        },
+				        yaxis:{
+					          min : 0,
+							  tickInterval : interval,
+							  label:'Total Sales in Rs',
+					          labelOptions:{
+					            fontFamily:'Arial',
+					            fontSize: '14px'
+					          },
+					          labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+					        }
+				      }
+				});
+			}
+		});
+	}
 </script>

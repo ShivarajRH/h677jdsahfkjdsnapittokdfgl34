@@ -12,6 +12,10 @@
 				<b>End Date</b> :
 				<div><input type="text" id="to_date" name="to" value="<?php echo date('Y-m-d')?>" /></div>
 			</td>
+			<td>
+				&nbsp;
+				<div><input type="submit" value="Generate" style="float:right" /></div>
+			</td>
 		</tr>
 	</table>
 </form>
@@ -36,9 +40,6 @@ if(!empty($o)){?>
 </div>
 <script>
 prepare_daterange('from_date','to_date');
-$(function(){
-	$('.dg_print').after('<input type="submit" value="Generate" style="float:right" />').remove();	
-});
-
+ 
 </script>
 <?php

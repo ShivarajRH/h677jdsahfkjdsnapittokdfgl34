@@ -266,13 +266,18 @@
 
 <div id="sys_mem" style="padding:0px !important;">
 <div class="tab_view tab_view_inner">
-<ul>
-<li><a href="#fran_voucherredeeming"  onclick="load_smslog_data(this,'fran_voucherredeeming',0)">Voucher Redeemtion</a></li>
-</ul>
-<div id="fran_voucherredeeming">
-<h4>Voucher Redeemtion Log</h4>
-<div class="tab_content"></div>
-</div>
+	<ul>
+		<li><a href="#fran_voucherredeeming"  onclick="load_smslog_data(this,'fran_voucherredeeming',0)">Voucher Redeemtion</a></li>
+		<li><a href="#mem_deliverynotify"  onclick="load_smslog_data(this,'mem_deliverynotify',0)">Delivery Notification</a></li>
+	</ul>
+	<div id="fran_voucherredeeming">
+		<h4>Voucher Redeemtion Log</h4>
+		<div class="tab_content"></div>
+	</div>
+	<div id="mem_deliverynotify">
+		<h4>Delivery Notification Log</h4>
+		<div class="tab_content"></div>
+	</div>
 </div>
 </div>
 </div>
