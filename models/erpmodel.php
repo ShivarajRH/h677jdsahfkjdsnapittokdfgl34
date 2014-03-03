@@ -12190,7 +12190,7 @@ order by action_date";
      * @param type $user array
      * @return string string
      */
-    function pnh_reverse_reconcile_receipt($receipt_id,$user) {
+    function pnh_reverse_reconcile_receipt($receipt_id,$user,$remarks="Receipt Cancelled") {
         /*
          On cancell receipt:
             => Get receipt id, reconcile id, reconciled_amount
@@ -12214,7 +12214,7 @@ order by action_date";
             $this->db->query("update `pnh_t_receipt_info` set `unreconciled_value` = `receipt_amount`,`unreconciled_status` = 'pending' where receipt_id = ? ",$receipt_id);
             
             #3. update is reversed=1 where given receipt id for reconcile log table
-            $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_reversed` = 1 where receipt_id = ? ",$receipt_id);
+            $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_reversed` = 1,`remarks` = ? where receipt_id = ? ",array($receipt_id,$remarks));
             
             $recon_output = 'Successfully reverced the reconcilation.';
         }
@@ -12227,7 +12227,7 @@ order by action_date";
      * @param type $user array
      * @return string string
      */
-    function pnh_reverse_reconcile_invoice($invoice_no,$user) {
+    function pnh_reverse_reconcile_invoice($invoice_no,$user,$remarks="Invoice Cancelled") {
         
         $recon_log_set = $this->db->query("select rlog.receipt_id,rcon.id as reconcile_id,rcon.invoice_no,rcon.inv_amount,rlog.reconcile_amount from pnh_t_receipt_reconcilation rcon 
                                             join pnh_t_receipt_reconcilation_log rlog on rlog.reconcile_id = rcon.id
@@ -12247,10 +12247,10 @@ order by action_date";
                 $this->db->query("update `pnh_t_receipt_reconcilation` set `unreconciled` = `unreconciled` + '".$reconcile_amount."',`modified_on`  = now(),`modified_by` = ?,is_invoice_cancelled = 1 where invoice_no = ? and id = ? ",array($userid,$invoice_no,$reconcile_id) );
                 
                 // update reconcile log table : is_invoice_cancelled = 1
-                $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_invoice_cancelled` = 1 where `reconcile_id` = ? ",$reconcile_id);
+                $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_invoice_cancelled` = 1,`remarks` = ? where `reconcile_id` = ? ",array($reconcile_id,$remarks));
                 
                 // update receipt info table : add the unreconciled value with reconcile amount and its reconcile status
-                $this->db->query("update `pnh_t_receipt_info` set `unreconciled_value` = `unreconciled_value` + '".$reconcile_amount."', unreconciled_status = if(unreconciled_value = receipt_amount,'pending', if(unreconciled_value = 0, 'done', 'partial') ) where receipt_id = ? ",$receipt_id);
+                $this->db->query("update `pnh_t_receipt_info` set `unreconciled_value` = `unreconciled_value` + '".$reconcile_amount."',unreconciled_status = if(unreconciled_value = receipt_amount,'pending', if(unreconciled_value = 0, 'done', 'partial') ) where receipt_id = ? ",$receipt_id);
                 
             }
             
@@ -12269,6 +12269,31 @@ order by action_date";
     	return $this->db->query($sql,$fid)->result_array();
     }
     
+	/**
+     * Get franchise experience information based on created_time
+     * @param type $f_created_on
+     * @return type array
+     */
+    function fran_experience_info($f_created_on) {
+        $fr_reg_diff = ceil((time()-$f_created_on)/(24*60*60));
+	 
+        if($fr_reg_diff <= 30)
+        {
+                $fr_reg_level_color = '#cd0000';
+                $fr_reg_level = 'Newbie';
+        }
+        else if($fr_reg_diff > 30 && $fr_reg_diff <= 60)
+        {
+                $fr_reg_level_color = 'orange';
+                $fr_reg_level = 'Mid Level';
+        }else if($fr_reg_diff > 60)
+        {
+                $fr_reg_level_color = 'green';
+                $fr_reg_level = 'Experienced';
+        }
+        return array("f_level"=>$fr_reg_level,"f_color"=>$fr_reg_level_color);
+    }
+
     /**
      * function to send delivery notification to franchise and customer
      * @param unknown_type $inv

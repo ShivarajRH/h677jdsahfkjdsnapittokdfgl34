@@ -2381,7 +2381,7 @@ class Erp extends Stream
 			$oids[]=$i['order_id'];
 		$orders=$this->db->query("select quantity as qty,itemid,id from king_orders where id in ('".implode("','",$oids)."')")->result_array();
 		
-		
+		$recon_status = $this->erpm->pnh_reverse_reconcile_invoice($invno,$user,"Invoice Cancelled");
 		
 		$batch_id = $this->db->query("select batch_id from shipment_batch_process_invoice_link where invoice_no=?",$invno)->row()->batch_id;
 		$pinvno = $this->db->query("select a.p_invoice_no  
@@ -4310,8 +4310,8 @@ group by g.product_id order by product_name");
 	{
 		$user=$this->auth(FINANCE_ROLE);
 
-        // reverse reconcilation
-        $recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user);
+		// reverse reconcilation
+		$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user,'Receipt Reversed');
                 
 		$r=$this->db->query("select * from pnh_t_receipt_info where receipt_id=?",$rid)->row_array();
 		$this->db->query("update pnh_t_receipt_info set status=3,modified_on=?,modified_by=? where receipt_id=? limit 1",array(time(),$user['userid'],$rid));
@@ -8120,9 +8120,9 @@ group by g.product_id order by product_name");
 		if(!$rid)
 			show_error("Input Missing");
 		else {
-            $recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user);
-            $this->erpm->do_pnh_cancel_receipt($rid);
-        }
+			$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user,'Receipt Cancelled');
+			$this->erpm->do_pnh_cancel_receipt($rid);
+		}
 	}
 	
 	function pnh_disenable_sch($fid,$en)
@@ -9248,11 +9248,6 @@ group by g.product_id order by product_name");
 		
 		if($deals)
 		{
-			foreach($deals as $i=>$deal)
-			{
-				$deals[$i]['allow_order'] = $this->erpm->do_stock_check(array($deal['itemid']));
-			}
-			
 			$output['status'] = 'success';
 			$output['deals_lst'] = $deals;
 			$output['type'] = $type;
@@ -19899,7 +19894,7 @@ order by action_date";
 				}
 
 			// reverse reconcilation
-			$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($receipt_id,$user);
+			$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($receipt_id,$user,'Processed Receipt Cancelled');
 
 			$d+=$this->db->affected_rows();
 			if($d)

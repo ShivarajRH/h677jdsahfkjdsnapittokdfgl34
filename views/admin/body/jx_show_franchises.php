@@ -82,30 +82,14 @@
 				$fr_payment_det = $this->erpm->get_franchise_account_stat_byid($f['franchise_id']);
 				$last_ordered_on = @$this->db->query("select from_unixtime(a.init) as last_ordered_on from king_transactions a where a.franchise_id = ? order by last_ordered_on desc limit 1",$f['franchise_id'])->row()->last_ordered_on;
 				
-				$fr_reg_diff = ceil((time()-$f['created_on'])/(24*60*60));
-	 
-				if($fr_reg_diff <= 30)
-				{
-					$fr_reg_level_color = '#cd0000';
-					$fr_reg_level = 'Newbie';
-				}
-				else if($fr_reg_diff > 30 && $fr_reg_diff <= 60)
-				{
-					$fr_reg_level_color = 'orange';
-					$fr_reg_level = 'Mid Level';
-				}else if($fr_reg_diff > 60)
-				{
-					$fr_reg_level_color = 'green';
-					$fr_reg_level = 'Experienced';
-				}
-				
+				$fran_exp = $this->erpm->fran_experience_info($f['created_on']);
 			?>
 			<tr class="<?php echo $f['is_suspended']?'row_warn':''?>" >
 			<td>
 			<?=++$i+($pg)?></td>
 			<td><?=$f['pnh_franchise_id']?></td>
 			<td>
-				<span style="font-size: 11px;color: <?php echo $fr_reg_level_color;?>"><b><?php echo $fr_reg_level;?></b></span>
+				<span style="font-size: 11px;color: <?php echo $fran_exp['f_color'];?>"><b><?php echo $fran_exp['f_level'];?></b></span>
 			</td>
 			
 			<td>
