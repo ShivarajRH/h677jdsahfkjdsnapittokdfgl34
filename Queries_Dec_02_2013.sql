@@ -3202,14 +3202,6 @@ join pnh_franchise_menu_link fl on fl.fid = f.franchise_id
 
 desc king_dealitems
 
-#==========================================================================
-create table `m_attributes` (  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT , `attr_name` varchar (150) , PRIMARY KEY ( `id`))
-insert into `m_attributes`(`id`,`attr_name`) values ( '1','size');
-insert into `m_attributes`(`id`,`attr_name`) values ( '2','color');
-create table `m_product_attributes` (  `id` bigint NOT NULL AUTO_INCREMENT , `pid` bigint , `attr_id` int (150) , `attr_value` varchar (150) , PRIMARY KEY ( `id`));
-alter table `king_categories` add column `attribute_ids` varchar (125)  NULL  after `prior`;
-#==========================================================================
-
 select * from king_categories
 
 select id as attr_id,attr_name from m_attributes order by attr_name asc
@@ -3251,3 +3243,29 @@ BEGIN
 END//
 DELIMITER ;
 =========================================<  >=====================================
+
+# Mar_01_2014
+
+#	Mar_01_2014: Dealstock plugin module updates - 5 and Attributes Module ( Group Deal, Product Attributes, Category Attributes
+#==========================================================================
+# Mar_01_2014
+create table `m_attributes` (  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT , `attr_name` varchar (150) , PRIMARY KEY ( `id`))
+insert into `m_attributes`(`id`,`attr_name`) values ( '1','Size');
+insert into `m_attributes`(`id`,`attr_name`) values ( '2','Color');
+create table `m_product_attributes` (  `id` bigint NOT NULL AUTO_INCREMENT , `pid` bigint , `attr_id` int (150) , `attr_value` varchar (150) , PRIMARY KEY ( `id`));
+alter table `king_categories` add column `attribute_ids` varchar (125)  NULL  after `prior`;
+alter table `king_dealitems` add column `is_group` tinyint (1)  NULL  after `tmp_pnh_dealid`;
+#==========================================================================
+
+select * from m_product_info
+
+select * 
+from m_product_info 
+where product_id='156140';
+-- new
+select * from m_product_attributes where pid='156140';
+
+select d.*,i.*,d.description,d.keywords,d.tagline from king_dealitems i join king_deals d on d.dealid=i.dealid where i.id='637675139343';
+
+select * from king_dealitems;
+

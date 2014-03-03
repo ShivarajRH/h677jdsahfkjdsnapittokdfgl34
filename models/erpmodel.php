@@ -7127,7 +7127,7 @@ order by p.product_name asc
 		$prices_det=$this->db->query("select orgprice,price from king_dealitems where id=? and is_pnh=1",$itemid)->row_array();
 		
 		$msg_flag=0;
-		foreach(array("gender_attr","print_name","billon_orderprice","max_allowed_qty","menu","keywords","tagline","name","mrp","offer_price","store_offer_price","nyp_offer_price","brand","category","description","pid","qty","tax","shipsin","p_price") as $q)
+		foreach(array("gender_attr","print_name","billon_orderprice","max_allowed_qty","menu","keywords","tagline","name","mrp","offer_price","store_offer_price","nyp_offer_price","brand","category","description","pid","qty","tax","shipsin","p_price","is_group") as $q)
 			$$q=$this->input->post($q);
 		$imgname = randomChars ( 15 );
 		if (isset ( $_FILES ['pic'] ) && $_FILES ['pic'] ['error'] == 0)
@@ -7160,9 +7160,8 @@ order by p.product_name asc
 			
 		
 		$is_combo = $this->input->post('is_combo')*1;
-		$is_group = $this->input->post('is_group'); //
 
-		$this->db->query("update king_dealitems set max_allowed_qty=?,billon_orderprice=?,print_name=?,name=?,orgprice=?,price=?,store_price=?,nyp_price=?,gender_attr=?,tax=?,shipsin=?,modified=?,modified_on=?,modified_by=?,is_combo = ? where id=?",array($max_allowed_qty,$billon_orderprice,$print_name,$name,$mrp,$offer_price,$store_offer_price,$nyp_offer_price,$gender_attr,$tax*100,$shipsin,time(),date('Y-m-d H:i:s'),$user_det['userid'],$is_combo,$itemid));
+		$this->db->query("update king_dealitems set max_allowed_qty=?,billon_orderprice=?,print_name=?,name=?,orgprice=?,price=?,store_price=?,nyp_price=?,gender_attr=?,tax=?,shipsin=?,modified=?,modified_on=?,modified_by=?,is_combo = ?,is_group=? where id=?",array($max_allowed_qty,$billon_orderprice,$print_name,$name,$mrp,$offer_price,$store_offer_price,$nyp_offer_price,$gender_attr,$tax*100,$shipsin,time(),date('Y-m-d H:i:s'),$user_det['userid'],$is_combo,$is_group,$itemid));
 		$this->db->query("update king_deals set description=?,keywords=?,menuid=?,keywords=?,catid=?,brandid=?,tagline=? where dealid=?",array($description,$keywords,$menu,$keywords,$category,$brand,$tagline,$dealid));
 		
 		
@@ -7245,7 +7244,7 @@ order by p.product_name asc
 	{
 		$user=$this->erpm->getadminuser();
 		
-		foreach(array("gender_attr","billon_orderprice","max_allowed_qty","print_name","menu","keywords","tagline","name","mrp","offer_price","store_offer_price","nyp_offer_price","brand","category","description","pid","qty","tax","shipsin","pid_g","qty_g") as $q)
+		foreach(array("gender_attr","billon_orderprice","max_allowed_qty","print_name","menu","keywords","tagline","name","mrp","offer_price","store_offer_price","nyp_offer_price","brand","category","description","pid","qty","tax","shipsin","pid_g","qty_g","is_group") as $q)
 			$$q=$this->input->post($q);
 		$imgname = randomChars ( 15 );
 		if (isset ( $_FILES ['pic'] ) && $_FILES ['pic'] ['error'] == 0)
@@ -7280,8 +7279,8 @@ order by p.product_name asc
 		
 		$inp=array($dealid,$menu,$keywords,$category,$brand,$imgname,$tagline,$description,1);
 		$this->db->query("insert into king_deals(dealid,menuid,keywords,catid,brandid,pic,tagline,description,publish) values(?,?,?,?,?,?,?,?,?)",$inp);
-		$inp=array($itemid,$dealid,$print_name,$max_allowed_qty,$name,$imgname,$mrp,$offer_price,$store_offer_price,$nyp_offer_price,$billon_orderprice,$gender_attr,1,$pnh_id,$tax*100,$shipsin,1,time(),date("Y-m-d H:i:s"),$user['userid']);
-		$this->db->query("insert into king_dealitems(id,dealid,print_name,max_allowed_qty,name,pic,orgprice,price,store_price,nyp_price,billon_orderprice,gender_attr,is_pnh,pnh_id,tax,shipsin,live,created,created_on,created_by) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",$inp);
+		$inp=array($itemid,$dealid,$print_name,$max_allowed_qty,$name,$imgname,$mrp,$offer_price,$store_offer_price,$nyp_offer_price,$billon_orderprice,$gender_attr,1,$pnh_id,$tax*100,$shipsin,1,time(),date("Y-m-d H:i:s"),$user['userid'],$is_group);
+		$this->db->query("insert into king_dealitems(id,dealid,print_name,max_allowed_qty,name,pic,orgprice,price,store_price,nyp_price,billon_orderprice,gender_attr,is_pnh,pnh_id,tax,shipsin,live,created,created_on,created_by,is_group) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",$inp);
 		if(!empty($pid))
 		foreach($pid as $i=>$p)
 			$this->db->query("insert into m_product_deal_link(product_id,itemid,qty,created_on,created_by) values(?,?,?,?,?)",array($p,$itemid,$qty[$i],date('Y-m-d H:i:s'),$user['userid']));

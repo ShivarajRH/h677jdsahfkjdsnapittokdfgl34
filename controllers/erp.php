@@ -4693,7 +4693,6 @@ group by g.product_id order by product_name");
 				$inp[]=$this->input->post($i);
 			$inp[]=$pid;
 			
-			
 			$prod = array();
 			$prod[] = array('product_id'=>$pid,'mrp'=>$_POST['pmrp']);
 			
@@ -4703,9 +4702,17 @@ group by g.product_id order by product_name");
 			$t_inp=array("product_id"=>$pid,"is_sourceable"=>$this->input->post("pissrc"),"created_on"=>time(),"created_by"=>$user['userid']);
 			$this->db->insert("products_src_changelog",$t_inp);
 			
+                        // Update product attributes
+                        $attr = $this->input->post("attr");
+                        if(isset($attr))
+                        {
+                            $this->update_product_attributes($attr,$pid);
+                        }
+                        
 			redirect("admin/product/$pid");
 		}
 		$data['prod']=$this->db->query("select * from m_product_info where product_id=?",$pid)->row_array();
+		$data['prod_attrs']=$this->db->query("select * from m_product_attributes where pid=?",$pid)->result_array();
 		$data['page']="addproduct";
 		$this->load->view("admin",$data);
 	}
@@ -4719,10 +4726,7 @@ group by g.product_id order by product_name");
 			$inp=array("P".rand(10000,99999));
 			foreach(array('pname','sku_code',"pdesc","psize","puom","pmrp","pvat","pcost","pbarcode","pisoffer","pissrc","pcat","pbrand","prackbin","pmoq","prorder","prqty","premarks","pissno","is_active","has_attributes","attr") as $i)
 				$inp[]= $$i = $this->input->post($i);
-				
-                        //echo '<pre>';print_r($attr_data); print_r($_POST); die("TEST");
-                        
-                        
+
 			$inp[] = $user['userid'];	
 			$this->db->query("insert into m_product_info(product_code,product_name,sku_code,short_desc,size,uom,mrp,vat,purchase_cost,barcode,is_offer,is_sourceable,product_cat_id,brand_id,default_rackbin_id,moq,reorder_level,reorder_qty,remarks,is_serial_required,is_active,created_on,created_by)
 																					values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?)",$inp);
@@ -4735,28 +4739,51 @@ group by g.product_id order by product_name");
 				$location=$raw_rackbin['default_location_id'];
 			}
 			$this->db->query("insert into t_stock_info(product_id,location_id,rack_bin_id,mrp,available_qty,product_barcode) values(?,?,?,?,0,?)",array($pid,$location,$rackbin,$pmrp,$pbarcode));
-			// Update attributes
+			
+                        // Add product attributes
                         if(isset($attr))
                         {
-                            $in_data=array();
-                            foreach($attr['attr_id'] as $i=>$val)
-                            {
-                                $attr_data[$i]["attr_id"]  = $attr['attr_id'][$i];
-                                $attr_data[$i]["attr_value"]  = $attr['attr_value'][$i];
-                                if($attr['attr_id'][$i] !='' and $attr['attr_value'][$i] != '') {
-                                    $in_data[] = ' ("'.$pid.'",'.$attr['attr_id'][$i].',"'.$attr['attr_value'][$i].'") ';
-                                }
-                            }
-                            if(!empty($in_data)) {
-                                $this->db->query("insert into m_product_attributes(pid,attr_id,attr_value) values ".implode(",",$in_data)." ");
-                            }
+                            $this->add_product_attributes($attr,$pid);
                         }
+                        
 			redirect("admin/products");
 		}
 		$data['page']="addproduct";
 		$this->load->view("admin",$data);
 	}
 	
+        function add_product_attributes($attr,$pid)
+        {
+            $in_data=array();
+            foreach($attr['attr_id'] as $i=>$val)
+            {
+                $attr_data[$i]["attr_id"]  = $attr['attr_id'][$i];
+                $attr_data[$i]["attr_value"]  = $attr['attr_value'][$i];
+                if($attr['attr_id'][$i] !='' and $attr['attr_value'][$i] != '') {
+                    $in_data[] = ' ("'.$pid.'",'.$attr['attr_id'][$i].',"'.$attr['attr_value'][$i].'") ';
+                }
+            }
+            if(!empty($in_data))
+            {
+                $this->db->query("insert into m_product_attributes(pid,attr_id,attr_value) values ".implode(",",$in_data)." ");
+            }
+        }
+        
+        function update_product_attributes($attr,$pid)
+        {
+            $in_data=array();
+            foreach($attr['attr_id'] as $i=>$val)
+            {
+                $attr_data[$i]["attr_id"]  = $attr['attr_id'][$i];
+                $attr_data[$i]["attr_value"]  = $attr['attr_value'][$i];
+                if($attr['attr_id'][$i] !='' and $attr['attr_value'][$i] != '') {
+                    $attr_id=$attr['attr_id'][$i];
+                    $attr_value=$attr['attr_value'][$i];
+                    $this->db->query("update m_product_attributes set attr_value= ? where attr_id =? and pid=? ",array($attr_value,$attr_id,$pid));
+                }
+            }
+        }
+        
 	function createblankstockrows()
 	{
 		$sql="select p.product_id,p.mrp,r.default_location_id as loc,r.default_rack_bin_id as rack from m_product_info p left outer join m_brand_location_link r on r.brand_id=p.brand_id left outer join t_stock_info s on s.product_id=p.product_id group by p.product_id having count(s.product_id)=0";

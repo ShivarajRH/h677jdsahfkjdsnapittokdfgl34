@@ -1219,3 +1219,13 @@ CREATE TABLE `pnh_api_franchise_cart_info` (
   `updated_on` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
+
+#==========================================================================
+# Mar_01_2014 - Attribute Feature - products, deal, category
+create table `m_attributes` (  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT , `attr_name` varchar (150) , PRIMARY KEY ( `id`))
+insert into `m_attributes`(`id`,`attr_name`) values ( '1','Size');
+insert into `m_attributes`(`id`,`attr_name`) values ( '2','Color');
+create table `m_product_attributes` (  `id` bigint NOT NULL AUTO_INCREMENT , `pid` bigint , `attr_id` int (150) , `attr_value` varchar (150) , PRIMARY KEY ( `id`));
+alter table `king_categories` add column `attribute_ids` varchar (125)  NULL  after `prior`;
+alter table `king_dealitems` add column `is_group` tinyint (1)  NULL  after `tmp_pnh_dealid`;
+#==========================================================================

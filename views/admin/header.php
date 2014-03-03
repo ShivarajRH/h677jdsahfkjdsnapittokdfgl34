@@ -12,7 +12,6 @@
 	if($user['access']==$pnh_exec_const_val)
 			$is_pnh_exec_only=true;
 	$sub="prod_menu";
-	
 /*
 	$subs=array("prod"=>"Products","selling"=>"Selling","stock"=>"Warehousing","control"=>"Website Control","marketing"=>"Marketing","accounting"=>"Accounting","crm"=>"Customer Relationship","admin"=>"Admin Control");
 	
