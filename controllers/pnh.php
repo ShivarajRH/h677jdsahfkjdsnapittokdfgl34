@@ -1989,7 +1989,6 @@ class Pnh extends Controller{
 					$items[$i]['price']=$prod['store_price'];
 				else
 					$items[$i]['price']=$prod['price'];
-
 				$voucher_margin=@$is_voucher_activated['voucher_margin'];
 				$items[$i]['itemid']=$prod['id'];
 				if($prod['is_combo']=="1")
@@ -2148,7 +2147,6 @@ class Pnh extends Controller{
 				$voucher_code_used['gven_secretcode']=array();
 				$voucher_code_used['othr_secretcode']=array();
 				
-
 				foreach($voucher_codes as $v_code)
 				{
 						
@@ -2236,7 +2234,6 @@ class Pnh extends Controller{
 
 					}
 				}
-
 			}
 			else
 			{

@@ -28,8 +28,6 @@
 	</div>
 	
 </div>
-
-
 <div id="inv_transitlogdet_dlg" title="Shipment Transit Log">
 	<h3 style="margin:3px 0px;"></h3>
 	<div id="inv_transitlogdet_tbl">

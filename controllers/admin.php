@@ -1,6 +1,6 @@
 <?php
-include APPPATH.'/controllers/erp.php';
 
+include APPPATH.'/controllers/erp.php';
 /**
  * Admin file
  *
@@ -2576,10 +2576,10 @@ where (b.dispatch_id = ? or c.ref_dispatch_id = ? )
 	
 	
 	function print_allinv($is_active=1,$from="",$to="",$limit='',$st='',$fid=0){
-
 		
 		$inv_type='customer';
 		
+
 //		$is_active = $is_active?1:0; 
 		$from = $from?$from:date('Y-m-d');
 		$to = $to?$to:date('Y-m-d');

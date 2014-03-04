@@ -623,6 +623,7 @@ $('.deallist-inlineblk input[name="dealids[]"]').live('click',function(e){
 		$('.deallist-inlineblk.dealid_'+fr_chk_ele+'').addClass('selected');
 });
 
+
 $('.sel_all_wrap').live('click',function(){
 	$('#select_filter a').removeClass('highlight_option');
 	$('.sel_all_wrap').addClass('highlight_option');	
@@ -631,6 +632,7 @@ $('.unsel_all_wrap').live('click',function(){
 	$('#select_filter a').removeClass('highlight_option');
 	$('.unsel_all_wrap').addClass('highlight_option');	
 });
+
 
 
 function select_all_deals()
@@ -780,6 +782,8 @@ $("#bulk_schtype").live('change',function(){
 		$('.deals_td').show();
 	}
 });
+
+
 
 $('#choose_menu').change(function(){
 	var i = document.getElementById('choose_menu');

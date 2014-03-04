@@ -10,6 +10,7 @@ $ttl_inv_list = array();
 $mem_det = array();	
 $invoice_credit_note_res = $this->db->query("select group_concat(id) as id,sum(amount) as amount from t_invoice_credit_notes a where invoice_no in (select invoice_no from king_invoice where split_inv_grpno = ? or invoice_no = ? ) ",array($invoice_no,$invoice_no));
 $credit_days=$this->db->query("select credit_days from king_transactions where transid=?",$transid)->row()->credit_days;
+
 //echo $this->db->last_query();
 
 ?>

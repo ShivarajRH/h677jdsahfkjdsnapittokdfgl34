@@ -113,7 +113,7 @@ else {
                         if($trans_created_by) 
                                 $trans_created_by = '<div class="trans_created_by"> by '.($trans_created_by).'';
 
-                        $arr_fran = $this->reservations->fran_experience_info($trans_arr['f_created_on']);
+                        $arr_fran = $this->erpm->fran_experience_info($trans_arr['f_created_on']);
                         
                        if($trans_arr['batch_enabled']!=1)
                             $batch_enabled='<div style="margin-top:20px;background-color:#504952; float:left;"><span style="color:#f8f8f8;padding:2px 3px;">Batch disabled</span></div>';

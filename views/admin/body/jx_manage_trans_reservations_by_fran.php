@@ -115,7 +115,7 @@ else
                  $ungrp_terr_status=$this->reservations->is_terri_batch_created($trans_arr['territory_id'] );
                 $generate_btn_link_2='';
                 
-                $arr_fran = $this->reservations->fran_experience_info($trans_arr['f_created_on']);
+                $arr_fran = $this->erpm->fran_experience_info($trans_arr['f_created_on']);
                 //Territory array
                 $territory_name = $trans_arr['territory_name'];
                 if(!in_array($territory_name, $temp_arr1)) {

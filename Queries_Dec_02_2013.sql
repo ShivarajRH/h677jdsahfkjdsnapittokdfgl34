@@ -3269,3 +3269,4 @@ select d.*,i.*,d.description,d.keywords,d.tagline from king_dealitems i join kin
 
 select * from king_dealitems;
 
+select * from pnh_menu where id='125'

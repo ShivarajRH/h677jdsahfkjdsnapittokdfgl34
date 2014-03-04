@@ -13,11 +13,10 @@
 <option value="<?php echo $menu['id']?>"><?php echo $menu['name']?></option>
 <?php }?>
 </select>
+
 <select name="franchise" id="franchise" style="width:250px;" data-placeholder="Choose Franchise">
 </select>
 </div>
-
-
 </div>
 <table class="datagrid" width="100%">
 <thead>

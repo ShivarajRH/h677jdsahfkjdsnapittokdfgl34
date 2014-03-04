@@ -84,47 +84,64 @@
 <?php if($this->erpm->auth(STOCK_INTAKE_ROLE,true)){?>
 <div id="prod_grn_list" style="overflow: hidden;">
 	<div class="opt_bar" style="padding:5px;float: right;" align="right">
-		Brand : 
-		<select name="sel_brand_id">
-			<option value="">Choose</option>
-			<option value="0">All</option>
-			<?php 
-				foreach($this->db->query("select distinct b.id,b.name from m_vendor_brand_link a join king_brands b on a.brand_id = b.id where vendor_id = ? order by b.name ",$v['vendor_id'])->result_array() as $vb)
-				{
-					echo '<option value="'.($vb['id']).'">'.($vb['name']).'</option>';
-				}
-			?>
-		</select>
-		<input type="button" onclick="fil_vb_products()" value="View Products">
+		<table cellpadding="0" cellspacing="0">
+			<tr>
+				<td>
+					Brand : 
+					<select name="sel_brand_id">
+						<option value="999999999" <?php echo ($this->uri->segment(4)=='999999999'?'selected':'') ?>>Choose</option>
+						<option value="0" <?php echo ($this->uri->segment(4)==0?'selected':'') ?> >All</option>
+						<?php 
+							foreach($this->db->query("select distinct b.id,b.name from m_vendor_brand_link a join king_brands b on a.brand_id = b.id where vendor_id = ? order by b.name ",$v['vendor_id'])->result_array() as $vb)
+							{
+								echo '<option value="'.($vb['id']).'" >'.($vb['name']).'</option>';
+							}
+						?>
+					</select>
+				</td>
+				<td>
+					<div>
+						&nbsp;<b>From</b> :<input size="8" id="grn_frm" type="text" name="grn_frm" value="<?php echo $this->uri->segment(5)?$this->uri->segment(5):date('Y-m-01')?>"> &nbsp;
+						<b>To</b> :<input size="8" id="grn_to" type="text" name="grn_to" value="<?php echo $this->uri->segment(5)?$this->uri->segment(5):date('Y-m-d')?>"> &nbsp;
+					</div>
+				<td>
+				<td>
+					<input type="button" onclick="fil_vb_products()" value="View Products">
+				</td>	
+			</tr>
+		</table>
 	</div>
 	<div style="padding:5px;">
 		<?php 
 			$cond = '';
 			if($this->uri->segment(4) == '')
 			{
-				
+				$grn_frm = '2012-01-01';
+				$grn_to = date('Y-m-d');
 			}else
 			{
 				if($this->uri->segment(4))
 					$cond = ' and c.brand_id = "'.($this->uri->segment(4)).'"';
 				else
 					$cond = ' and 1 ';
+				
+				$grn_frm = $this->uri->segment(5);
+				$grn_to = $this->uri->segment(6);
 			}
 				
 
 			if($cond != '')
 			{
-				$vb_plist_res  = $this->db->query("select a.grn_id,date(b.created_on) as grn_date,a.product_id,d.name as brand,d.id as brandid,c.product_name,a.received_qty,a.mrp,a.dp_price,a.purchase_price,a.tax_percent,margin,scheme_discount_value,scheme_discunt_type
+				$vb_plist_res  = $this->db->query("select a.grn_id,date(b.created_on) as grn_date,a.product_id,d.name as brand,d.id as brandid,c.product_name,a.mrp,a.dp_price,a.tax_percent,margin,scheme_discount_value,scheme_discunt_type,a.purchase_price,a.received_qty,a.purchase_price*a.received_qty as subtotal
 														from t_grn_product_link a 
 														join t_grn_info b on a.grn_id = b.grn_id 
 														join m_product_info c on c.product_id = a.product_id 
 														join king_brands d on d.id = c.brand_id 
-														where b.vendor_id = ? and a.received_qty > 0 $cond 
-													group by a.product_id
-													order by grn_id desc,product_name",$v['vendor_id']);
+														where b.vendor_id = ? and a.received_qty > 0 and date(b.created_on) between date(?) and date(?)  
+														group by a.grn_id,a.product_id 
+														order by grn_id desc",array($v['vendor_id'],$grn_frm,$grn_to));
 			
 			 
-			
 			if($vb_plist_res->num_rows())
 			{
 		?>
@@ -134,25 +151,30 @@
 		<table class="datagrid" width="100%">
 			<thead>
 				<tr>
-					<th>Slno</th>
-					<th>GRNID</th>
-					<th>GRN Date</th>
-					<th>Brand</th>
+					<th width="20" align="center">Slno</th>
+					<th width="60" align="left">GRNID</th>
+					<th width="80" align="left">GRN Date</th>
+					<th width="100" style="text-align:left">Brand</th>
 					<th>Product</th>
-					<th>MRP</th>
-					<th>DP</th>
-					<th>Purchase Price</th>
-					<th>Purchased Qty</th>
+					<th width="60" style="text-align:center">Tax</th>
+					<th width="80" style="text-align:right">MRP</th>
+					<th width="80" style="text-align:right">DP</th>
+					<th width="80" style="text-align:right">Purchase Price</th>
+					<th width="50" style="text-align:right">Purchased Qty</th>
+					<th width="80" style="text-align:right">Subtotal</th>
 					<?php /*?>
 					<th>Margin</th>
 					<?php /*/?>
-					<th>Tax</th>
+					
 				</tr>
 			</thead>
 			<tbody>
 				<?php 
+					$ttl_pqty = $ttl_pprice = 0;
 					foreach($vb_plist_res->result_array() as $i=>$vb_pdet)
 					{
+						$ttl_pqty += ($vb_pdet['received_qty']);
+						$ttl_pprice += ($vb_pdet['purchase_price']*$vb_pdet['received_qty']);
 				?>
 						<tr>
 							<td><?php echo $i+1;?></td>
@@ -160,21 +182,31 @@
 							<td><?php echo format_date($vb_pdet['grn_date'])?></td>
 							<td><a target="_blank" href="<?php echo site_url('admin/viewbrand/'.$vb_pdet['brandid'])?>"><?php echo $vb_pdet['brand']?></a></td>
 							<td><a target="_blank" href="<?php echo site_url('admin/product/'.$vb_pdet['product_id'])?>"><?php echo $vb_pdet['product_name']?></a></td>
-							<td><?php echo ($vb_pdet['mrp'])?></td>
-							<td><?php echo ($vb_pdet['dp_price'])?></td>
-							<td><?php echo ($vb_pdet['purchase_price'])?></td>
-							<td><?php echo ($vb_pdet['received_qty'])?></td>
+							<td  align="center"><?php echo ($vb_pdet['tax_percent'])?></td>
+							<td align="right"><?php echo format_price($vb_pdet['mrp'])?></td>
+							<td align="right"><?php echo format_price($vb_pdet['dp_price'])?></td>
+							<td align="right" ><?php echo format_price($vb_pdet['purchase_price'])?></td>
+							<td align="right"><?php echo ($vb_pdet['received_qty'])?></td>
 							<?php /*?>
 							<td><?php echo ($vb_pdet['margin'])?></td>
 							<?php /*/?>
-							<td><?php echo ($vb_pdet['tax_percent'])?></td>
+							<td align="right"><?php echo format_price($vb_pdet['purchase_price']*$vb_pdet['received_qty'])?></td>
 						</tr>
-				<?php 		
+				<?php
 					}
 				?>
+				<tr>
+					<td  class="subtotals_row" colspan="9">Total</td>
+					<td  class="subtotals_row" align="right" ><?php echo $ttl_pqty;?></td>
+					<td  class="subtotals_row" align="right"><?php echo format_price($ttl_pprice,2);?></td>
+				</tr>
 			</tbody>
+			
 		</table>
-		<?php }
+		<?php }else
+			{
+				echo "<div align='center' style='clear:both'><b>No Data found</b></div>";	
+			}
 			}
 		?>
 	</div>
@@ -184,11 +216,18 @@
 	var ven_id = <?php echo $v['vendor_id']?>;
 	function fil_vb_products()
 	{
-		location.href = site_url+'/admin/vendor/'+ven_id+'/'+$('select[name="sel_brand_id"]').val()+'#prod_grn_list';
+		location.href = site_url+'/admin/vendor/'+ven_id+'/'+$('select[name="sel_brand_id"]').val()+'/'+$('#grn_frm').val()+'/'+$('#grn_to').val()+'#prod_grn_list';
 	}
 </script>
 
+
+
 <?php } ?>
+
+
+<style>
+		td.subtotals_row{background: #ffffD0 !important;}
+</style>
 
 <div id="v_details">
 <table class="datagrid " width="400">
@@ -204,10 +243,7 @@
 <tr><td>Postcode :</td><td><?=$v['postcode']?></td></tr>
 <tr><td>Ledger ID :</td><td><?=$v['ledger_id']?></td></tr>
 </table>
-
-
 </div>
-
 <div id="v_financials">
 <table class="datagrid nofooter" width="400">
 <tr><td>Credit Limit :</td><td width="250"><?=$v['credit_limit_amount']?></td></tr>
@@ -382,6 +418,9 @@ function js_date_diff  (date2, date1) {
     return days;
 }
 
+
+prepare_daterange('grn_frm','grn_to');
+
 $('.fil_brand').chosen();
 $('.fil_cat').chosen();
 
@@ -402,7 +441,7 @@ $('#v_brands').click(function(){
 			else
 			{
 				brand_html+='<option value=""></option>';
-				brand_html+='<option value="0">All</option>';
+				brand_html+='<option value="0" >All</option>';
 				$.each(resp.br_list,function(i,c){
 				brand_html+='<option value="'+c.brandid+'">'+c.brand_name+'</option>';
 				});

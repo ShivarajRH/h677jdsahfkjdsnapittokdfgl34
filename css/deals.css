@@ -11,7 +11,7 @@
     float: right;
     margin-bottom: 4px;
     margin-right: 7%;
-    width: 24%;
+    width: 26%;
 }
 .legends_outer_wrap
 {
@@ -94,7 +94,7 @@
     height: 18px;
     margin-right: -1px;
     margin-top: 0;
-    width: 265px;
+    width: 304px;
 }
 .search_blk
 {
@@ -271,7 +271,7 @@
 	background: none repeat scroll 0 0 #F1F1F1;	
 }
 
-.Brands_bychar_list_head .close_btn
+.Brands_bychar_list_head .close_btn_dlpg
 {
 	 float: right;
     margin: 8px;
@@ -322,7 +322,7 @@
 	font-weight: bold;
 	text-align: center;
 }
-.close_btn
+.close_btn_dlpg
 {
 	float:right;
 }

@@ -354,7 +354,7 @@ function deallist_bycat(brandid,catid,type)
 				brand_linkedcat_html+='';
 				$.each(resp.brand_list,function(i,b){
 					brand_linkedcat_html+='<a class="Brands_bychar_list_content_listdata" cid="'+b.catid+'" bid="'+b.brandid+'">'+b.brand_name+'</a>';
-					$('.Brands_bychar_list_head').html('<span class="close_btn button button-tiny button-rounded ">Hide</span><h4>List of Brand for <i>'+b.category_name+'</i></h4>');
+					$('.Brands_bychar_list_head').html('<span class="close_btn_dlpg button button-tiny button-rounded ">Hide</span><h4>List of Brand for <i>'+b.category_name+'</i></h4>');
 				});
 			}
 			$('.Brands_bychar_list_content').html(brand_linkedcat_html);
@@ -373,7 +373,7 @@ function deallist_bycat(brandid,catid,type)
 				cat_linkedcat_html+='';
 				$.each(resp.cat_list,function(i,b){
 					cat_linkedcat_html+='<a class="Brands_bychar_list_content_listdata" cid="'+b.catid+'" bid="'+b.brandid+'">'+b.category_name+'</a>';
-					$('.Brands_bychar_list_head').html('<span class="close_btn button button-tiny button-rounded ">Hide</span><h4>List of Categories for <i>'+b.brand_name+'</i></h4>');
+					$('.Brands_bychar_list_head').html('<span class="close_btn_dlpg button button-tiny button-rounded ">Hide</span><h4>List of Categories for <i>'+b.brand_name+'</i></h4>');
 				});
 			}
 			$('.Brands_bychar_list_content').html(cat_linkedcat_html);

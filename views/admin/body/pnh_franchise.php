@@ -31,6 +31,7 @@ $(function(){
 	$f=$fran; 
 	$menus=array();
 	$menu_list=$this->db->query("select id,name from pnh_menu")->result_array();
+
 	foreach($menu_list as $menu_li)
 	{
 		$menus[$menu_li['id']]=$menu_li['name'];
@@ -1181,6 +1182,7 @@ $(function(){
 								</p>
 						</form>
 					</td>	
+
 				</tr>
 			</table>
 		</fieldset>
@@ -1848,6 +1850,7 @@ $(function(){
 						</div>  
 					</div>
 				</div>
+
 				<div id="images">
 					<table width="100%" cellpadding=10>
 						<tr>
@@ -2279,7 +2282,6 @@ $("#ship_log_dlg" ).dialog({
 		autoResize:true,
 		open:function(){
 		dlg = $(this);
-
 		var ship_date=$(this).data('ship_date');
 		var sel_date=$(this).data('sel_date');
 		var sel_mnth=$(this).data('sel_mnth');
@@ -2812,8 +2814,6 @@ $( "#sch_hist" ).dialog({
 	}
 });
 
-
-
 function load_bankdetails()
 {
 	$('#bank').dialog('open');
@@ -2930,6 +2930,7 @@ $(".receipt_pg a").live('click',function(e){
 
 $(".account_statement").click(function(){$(".pending_receipt").trigger('click');});
 //-----------receipts handle end---------
+
 function load_scheme_disc_history()
 {
 	$('#schme_disc_history').dialog('open');
@@ -2957,6 +2958,7 @@ function init_frmap() {
 $(function(){
 	$('.leftcont').hide();	
 });
+
 $('.schmenu').chosen();
 
 var sel_menuid=0;
@@ -3112,10 +3114,12 @@ $("#pnh_superschme").dialog({
 		'Cancel':function(){
 			$(this).dialog('close');
 		},
+
 		'Submit':function(){
 			var sch_form=$("#super_schform",this);
 			if(sch_form.parsley('validate'))
 			{
+
 				$.post(site_url+'/admin/jx_check_schemexist/<?php echo $f['franchise_id']?>',$("#super_schform").serialize(),function(resp){
 					if(resp.status == 'error')
 					{

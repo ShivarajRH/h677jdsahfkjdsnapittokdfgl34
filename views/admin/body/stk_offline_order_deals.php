@@ -4,6 +4,8 @@
 <link type="text/css" rel="stylesheet" href="<?=base_url()?>/css/stk_offline_order.css">
 <link rel='stylesheet' type='text/css' href="<?php echo base_url().'css/fullcalendar.css'?>">
 <script type='text/javascript' src="<?php echo base_url().'js/fullcalendar.min.js'?>"></script>
+<link rel='stylesheet' type='text/css' href="<?php echo base_url().'css/sk_franchise.css'?>">
+
 
 <?php 
 $has_fid=0;
@@ -15,11 +17,11 @@ $has_fid=1;
 $fdetails=$this->db->query("select * from pnh_m_franchise_info where franchise_id=?",$fid)->row_array();
 $franid=$fdetails['franchise_id'];
 $acc_statement = $this->erpm->get_franchise_account_stat_byid($franid);
-$pending_payment = format_price($acc_statement['pending_payment']);
+$pending_payment = format_price($acc_statement['shipped_tilldate']-($acc_statement['paid_tilldate']+$acc_statement['acc_adjustments_val']+$acc_statement['credit_note_amt']));
 $uncleared_payment = format_price($acc_statement['uncleared_payment']);
 $fran_crdet = $this->erpm->get_fran_availcreditlimit($franid);
 $current_balance = $fran_crdet[3];
-$ttl_cart_items_saved=$this->db->query("select count(*) as ttl from pnh_api_franchise_cart_info where status=1 and franchise_id=?",$franid)->row()->ttl;
+$ttl_cart_items_saved=$this->db->query("select count(*) as ttl from pnh_api_franchise_cart_info where status=1 and franchise_id=? and member_id=?",array($franid,$mid))->row()->ttl;
 if($mid!=0)
 	$mid_entrytype=0;
 else 
@@ -58,7 +60,7 @@ $fran_status_arr[3]="Temporary Suspension";
 ?>
 <div class="container">
 	<div style="position:absolute;top:0px;right:7px;"><a href="javascript:void(0)" class="ttl_menu_btn" onclick='tgl_menubar(this)'>Show Menu</a></div>
-		<h2 style="float: left;margin:0px;"><a href="<?php echo site_url("admin/pnh_franchise/$franid")?>" target="_blank"><?php echo $fdetails['franchise_name']?></a></h2>&nbsp;<a href="javascript:void(0)" style="font-size:11px;" onclick="sel_fran()">change franchise</a>
+		<h2 style="float: left;margin:0px;"><a href="<?php echo site_url("admin/pnh_franchise/$franid")?>" target="_blank"><?php echo $fdetails['franchise_name']?></a></h2>&nbsp;<a href="javascript:void(0)" style="font-size:11px;" id="change_fran">change franchise</a>
 		<span style="font-size: 11px;align:center;">
 			Status:
 			<b class="level_wrapper" style="background-color:<?php echo $fr_status_color?>;">
@@ -194,19 +196,49 @@ $fran_status_arr[3]="Temporary Suspension";
 					</table>
 				</div>
 				<div class="cart-footer">
-					<div style="float:left;margin-top: -12px;padding: 2px 0 0 6px;"><span class="red_star">*</span><span><b>Credit Days : </b></span><span><input type="text" value="0" size="4" class="credit_days" style="border: 2px solid #000000;width: 50px;"></span></div>
+					<div style="float:left;margin-top: -12px;padding: 2px 0 0 6px;display: none;"><span class="red_star"  style="display: none;">*</span><span  style="display: none;"><b>Credit Days : </b></span><span style="display: none;"><input type="text" value="0" size="4" class="credit_days" style="border: 2px solid #000000;width: 50px;"></span></div>
 					<div class="cart_estimated_ttl_wrap">Estimated Total :Rs. <span id="cart_totl"></span></div>
+					<div class="clear"></div>
+					<div  style="<?php echo $mid?'':'display:none';'background-color:none repeat scroll 0 0 #E5F2FF';'width:100%'?>"> 
+					<h4 class="module_title">Redeem loyalty points</h4> 
+					<?php $mpointsr=$this->db->query("select points,concat(first_name,' ',last_name) as m_name from pnh_member_info where pnh_member_id=?",$mid)->row_array(); $mpoints=0; if(!empty($mpointsr)) $mpoints=$mpointsr['points'];?>
+							<table class="datagrid noprint" width="100%">
+							
+							<thead>
+								<th>MemberID</th>
+								<th>Name</th>
+								<th>Points</th>
+							</thead>
+							<tbody>
+								<tr>
+									<td><?php echo $mid ?></td>
+									<td><b><?=$mpointsr['m_name']?></b></td>
+									<td>
+										<div style="padding:5px;background: #FFF">
+										<b><?=$mpoints?></b> Available 
+										<br />
+										<?php if($mpoints>=150){?>
+												<span id=""><input type="checkbox" id="redeem_cont" name="redeem" value="1"></span>Redeem <input class="redeem_points" type="text" class="inp" size=4 name="redeem_points" value="150" disabled="disabled"> (max. 150)
+											<?php }else echo 'Minimum of 150 points required to redeem';?>
+										</div>	
+									</td>
+								</tr>
+							</tbody>
+							</table>
+						</div>
 				</div>
 			</form>
 		</div>
 		<div id="analytics">
-			<div class="fran_credit_detwrap"  >
-				<span >Credit Limit : <b id="fran_credit"></b></span>
+			<?php /*?>
+			<div class="fran_credit_detwrap" >
+				<span>Credit Limit : <b id="fran_credit"></b></span>
 				<span>Available Limit : <b id="fran_balance"></b></span>
 				<span>Activated Members : <b class="total_mem"></b></span>
 				<span>Orders : <b class="total_ord"></b></span>
 				<span>Last OrderedOn : <b class="last_ord"></b></span>
 			</div>
+			<?*/?>
 			<table width="100%">
 				<tr>
 					<td width="70%">
@@ -284,7 +316,12 @@ $fran_status_arr[3]="Temporary Suspension";
 		<div id="ordered_log_dlg" >
 			<div id="order_log_dlg_wrap"></div>
 		</div>
-	
+		<div id="inv_transitlogdet_dlg" title="Shipment Transit Log">
+			<h3 style="margin:3px 0px;"></h3>
+			<div id="inv_transitlogdet_tbl">
+				
+			</div>
+		</div>	
 		<!-- Ship Log block end-->
 	</div>
 	 <div id="reg_mem_dlg" title="Instant Member Registration" style="display:none;">
@@ -333,8 +370,8 @@ $fran_status_arr[3]="Temporary Suspension";
 				<td style="text-align: center;" valign="top"  class="cart_background_wrap1">
 					<div class="p_top"><input type="text" class="qty" pmax_ord_qty="%max_oqty%" size=2 name="qty[]" value="%cart_qty%"> %max_ord_qty%</div>
 				</td>
-				<td  style="text-align:center;"  class="cart_background_wrap2" valign="top">
-					<div class="stotal p_top">%ttllcost%</div>
+				<td  style="text-align:center;"  class="cart_background_wrap2_subtotal" valign="top">
+					<div class="stotal p_top" style="font-color:white;">%ttllcost%</div>
 				</td>
 			
 				<td style="text-align: center;"  class="cart_background_wrap1" valign="top">
@@ -346,7 +383,7 @@ $fran_status_arr[3]="Temporary Suspension";
 
 	<div id="franchise_note" Title="Franchise Note for the Pending Amount">
 		<div width="100%">
-			<div style="float:left;margin: 5px;"><b>Pending Amount : </b><b style="color:#CD0000;">Rs.<?php echo $pending_payment;?></b></div>
+			<div style="float:left;margin: 5px;"><b>Pending Amount : </b><b style="color:#CD0000;font-size: 16px;">Rs.<?php echo $pending_payment;?></b></div>
 			<div style="float:right;margin: 5px;"><b>Uncleared Amount : </b><b>Rs.<?php echo $uncleared_payment;?>&nbsp;<a href="javascript:void(0)" onclick="view_uncleardrecipts(<?php echo $franid?>)" style="font-size: 11px;color: blue;">view</a></b></div>
 		</div></br>
 		<h4 style="color:#CD0000;margin:17px 0px 15px 6px;">Note : Pending Payment details is Mandatorily collected, please communicate this to franchisee and its a reponsibility of a Franchsiee support executive to recover this and only upon satisfaction place orders</h4>
@@ -359,17 +396,17 @@ $fran_status_arr[3]="Temporary Suspension";
 		</form>
 	</div>
 	<div id="franlogin_div" title="StoreKing Offline Order">
-		<div class="stk_ordr_inpwrap"><b>State : </b><select class="fran_det chzn-select" data-placeholder="Choose State" name="sel_state" id="sel_state" style="width: 250px;">
-														<option value=""></option>
+		<div class="stk_ordr_inpwrap"><b>State : <span class="red_star">*</span></b><select class="fran_det chzn-select" data-placeholder="Choose State" name="sel_state" id="sel_state" style="width: 250px;">
+														<option value="">Select State</option>
 														<?php $states=$this->db->query("select state_id,state_name from pnh_m_states group by state_id order by state_name asc ")->result_array();
 																if($states){foreach($states as $state){?>
 														<option value="<?=$state['state_id']?>"><?=$state['state_name']?></option>
 														<?php }}?></select>
 		</div>
 		<div  class="stk_ordr_inpwrap"><b>Territory : </b><select class="fran_det chzn-select" data-placeholder="Choose Territory" name="sel_terr" id="sel_terr" style="width: 250px;"></select></div>
-		<div class="stk_ordr_inpwrap"><b>Franchise : </b> <select class=" chzn-select" data-placeholder="Choose Franchise "  name="fid" id="fid" style="width:250px;" ></select></div>
-		<div class="stk_ordr_inpwrap"><b>Order For : </b><select name="mid_entrytype" class="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
-		<div class="stk_ordr_inpwrap mid_blk"><b>Member Id : </b><input style="font-size:120%" maxlength="8"  type="text" class="membrid" name="mid" size=18 ></div>
+		<div class="stk_ordr_inpwrap"><b>Franchise : <span class="red_star">*</span></b> <select class=" chzn-select" data-placeholder="Choose Franchise "  name="fid" id="fid" style="width:250px;" ></select></div>
+		<div class="stk_ordr_inpwrap"><b>Order For : <span class="red_star">*</span></b><select name="mid_entrytype" class="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
+		<div class="stk_ordr_inpwrap mid_blk"><b>Member Id : <span class="red_star">*</span></b><input style="font-size:120%" maxlength="9"  type="text" class="membrid" name="mid" size=18 ></div>
 		<div class="signin" style="display:none;float:right;"><input type="button" value="Proceed" onclick='load_franchisebyid()' class="button button-rounded button-action"></div>
 	</div>
 
@@ -381,7 +418,7 @@ $fran_status_arr[3]="Temporary Suspension";
 		<div width="100%">
 			<form id="change_mem_frm" method="post" action="<?php echo site_url('admin/jx_check_forvalid_mid')?>">
 				<div class="stk_ordr_inpwrap"><b>Order For : </b><select name="mid_entrytype" class="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
-				<div class="stk_ordr_inpwrap mid_blk"><b>Member Id : </b><input style="font-size:120%" maxlength="8"  type="text" class="chngd_membrid" name="mid" size=18 ></div>
+				<div class="stk_ordr_inpwrap mid_blk" style="display:block;"><b>Member Id <span class="red_star">*</span> : </b><input style="font-size:120%" maxlength="8"  type="text" class="chngd_membrid" name="mid" size=18 ></div>
 			</form>
 		</div>
 	</div>
@@ -426,10 +463,26 @@ $fran_status_arr[3]="Temporary Suspension";
 			</table>
 		</form>
 	</div>
+	<div id="franchise_quickview"  title="Franchisee Info"><div id="fran_qvkview"></div></div>
+	
+	
 </div>
 
 <SCRIPT>
+$("#franchise_quickview").hide();
 
+function tooltip_popup(){
+
+ 	Tipped.create('.tip_popup',{
+ 	 skin: 'black',
+ 	  hook: 'topleft',
+ 	  hideOn: false,
+ 	  closeButton: true,
+ 	 	opacity: .5,
+ 	 	hideAfter: 200,
+	 });
+
+}
 function quikview_product(pid)
 {
 	$("#quick_viewdiv").data('qvk_pid',pid).dialog('open');
@@ -438,11 +491,14 @@ $("#quick_viewdiv").dialog({
 	autoOpen:false,
 	height:'auto',
 	width:'auto',
-	open:function(){
+	open:function(event, ui){
+		$(event.target).dialog('widget')
+        .css({ position: 'fixed' })
+        .position({ my: 'center', at: 'center', of: window });
 		$("#qvk_prod_temp tbody").html("");
         $('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 		$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').addClass('add_to_cartbtn');
-		
+		$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({"float":"right","background":"tomato","color":"white"});
 		$('.ui-dialog-buttonpane').find('button:contains("Price Query")').css({"float":"left"});
 	
 		var dlg=$(this);
@@ -462,9 +518,15 @@ $("#quick_viewdiv").dialog({
 			template=template.replace(/%qvk_margin_amt%/g,Math.ceil(p.price-p.lcost));
 			$("#qvk_prod_temp tbody").html(template);
 			if(! p.allow_order.length || p.is_publish==0)
+			{
 				$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').css({'display':'none'});
+				$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({'display':'block'});
+			}
 			else
+			{
 				$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').css({'display':'block'});
+				$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({'display':'none'});
+			}
 			
 		});
 	
@@ -477,10 +539,12 @@ $("#quick_viewdiv").dialog({
 				$(this).dialog('close');
 			},
 		
-		
-		'Price Query':function(){
-			pricenotmatch_product(p.pid);
-		}, 
+			'Product Disabled':function(){
+			},
+
+			'Price Query':function(){
+				pricenotmatch_product(p.pid);
+			}, 
 	}
 	
 });
@@ -771,7 +835,9 @@ function filter_deallist(tag,by)
 				if(search_text.match(tag,'ig'))
 					row_stat = 1;
 				else 
+				{
 					row_stat = 0;
+				}
 			}
 			
 			// check if search data is entered 
@@ -779,7 +845,9 @@ function filter_deallist(tag,by)
 			{
 				tag = srch_inp;
 				if(!search_text.match(tag,'ig'))
+				{
 					row_stat = 0;
+				}
 			}
 
 			if(row_stat == 1)
@@ -800,38 +868,6 @@ function filter_deallist(tag,by)
 $('input[name="srch_deals"]').live('keyup',function(){
 	filter_deallist($(this).val(),'search');
 });
-
-/*$('.tgl_stock_combo').live('click',function(){
-	var trele=$(this).parents('tr:first');
-	var ref_id  = $(this).attr('ref_id');
-	
-	$.post(site_url+'/admin/pnh_jx_dealstock_det',{refid:ref_id,is_pnh:1},function(resp){
-			if(resp.status == 'error')
-			{
-				$('.stock_det_'+ref_id).html("No Details found");
-			}
-			else
-			{
-				
-				var qcktiphtml = '<span style="float:right;color:red;cursor:pointer" refid="'+ref_id+'" class="stock_det_close">X</span> <div style="float:left;width:100%">';
-					qcktiphtml += '<table width="100%" border=1 class="datagrid" cellpadding=3 cellspacing=0>';
-					qcktiphtml += '<thead><tr><th>Product Name</th><th>Stock</th></tr></thead><tbody>';
-					$.each(resp.itm_stk_det,function(a,b){
-						qcktiphtml+='<tr>';
-						qcktiphtml+='	<td width="80%" style="font-size:10px">'+b.product_name+'</td>';
-						qcktiphtml+='	<td width="20%" style="font-size:10px">'+b.stk+'</td>';
-						qcktiphtml+='</tr>';
-					});
-					qcktiphtml += '</tbody></table></div>';
-					$('.stock_det_'+ref_id).html(qcktiphtml);
-					$('.stock_det_'+ref_id).show();
-			}
-			
-		},'json');
-		
-	
-});*/
-
 
 $('input[name="search_name"]').live('keyup',function(){
 	var chr=$('input[name="search_name"]').val();
@@ -888,7 +924,7 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 				brand_linkedcat_html+='';
 				$.each(resp.brand_list,function(i,b){
 					brand_linkedcat_html+='<a class="Brands_bychar_list_content_listdata" cid="'+b.catid+'" bid="'+b.brandid+'">'+b.brand_name+'</a>';
-					$('.Brands_bychar_list_head').html('<h4>List of Brand for '+b.category_name+'</h4><span class="close_btn">Hide</span>');
+					$('.Brands_bychar_list_head').html('<h4>List of Brand for '+b.category_name+'</h4><span class="close_btn_dlpg">Hide</span>');
 				});
 			}
 			$('.Brands_bychar_list_content').html(brand_linkedcat_html);
@@ -907,7 +943,7 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 				cat_linkedcat_html+='';
 				$.each(resp.cat_list,function(i,b){
 					cat_linkedcat_html+='<a class="Brands_bychar_list_content_listdata" cid="'+b.catid+'" bid="'+b.brandid+'">'+b.category_name+'</a>';
-					$('.Brands_bychar_list_head').html('<h4>List of Categories for '+b.brand_name+'</h4><span class="close_btn">hide</span>');
+					$('.Brands_bychar_list_head').html('<h4>List of Categories for '+b.brand_name+'</h4><span class="close_btn_dlpg">Hide</span>');
 				});
 			}
 			$('.Brands_bychar_list_content').html(cat_linkedcat_html);
@@ -973,8 +1009,8 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 				else
 					$('.jq_alpha_sort_overview_content').html(d_lst);
 
-                                // Call the plugin
-                                $(".jq_alpha_sort_overview_content .deal_stock").dealstock();
+				// Call the plugin
+				$(".jq_alpha_sort_overview_content .deal_stock").dealstock();
 			
 				$("#sel_cat").chosen();
 				if(resp.type == 1)
@@ -1064,7 +1100,6 @@ $(".Brands_bychar_list_head span").live("click",function() {
 	var $this = $(this);
     $('.Brands_bychar_list_content').slideToggle(200, function () {
         $this.text($(this).is(':visible') ? 'Hide' : 'Show');
-        
     });
     $(".Brands_bychar_list_head").show();
 });
@@ -1075,14 +1110,16 @@ function filter_deals_bymrp()
 	to=$("#f_to").val();
 	if(from == to)
 	{
-		alert("Filter prices are not valid numbers");
+		alert("Please enter DP Price Range");
 		return;
 	}
 	if(!is_numeric(from) || !is_numeric(to))
 	{		
+		
 		alert("Filter prices are not valid numbers");
 		return;	
 	}
+	
 	
 	var valid_dp=[];
 	$(".sk_deal_filter_wrap").each(function(){
@@ -1249,7 +1286,16 @@ $("#show_scheme_details").dialog({
 
 function add_product(pid)
 {
-	$.post("<?=site_url("admin/jx_add_deal_tocart")?>",{pid:pid,fid:pre_selected_fid},function(resp){
+	
+	
+	$.post("<?=site_url("admin/jx_add_deal_tocart")?>",{pid:pid,fid:pre_selected_fid,mid:<?php echo $mid;?>},function(resp){
+
+		if(resp.mid_status =='error')
+		{
+			if(confirm(resp.message))
+				 mem_reg(pre_selected_fid);
+			 return false;
+		}
 		if(resp.status=='success')
 		{
 			$("span.prod_"+pid).html('<a href="javascript:void(0)" onclick="remove_prod_frmcart('+pid+')" class="button button-rounded button-tiny remove_cart_btn" title="Remove From Cart" align="center">REMOVE</a>');
@@ -1284,7 +1330,7 @@ var ppids=[];
 			$('.ui-dialog-buttonpane').find('button:contains("Submit")').css({"float":"right"});
 			var dlg=$(this);
 			var html_cnt='';
-					$.post("<?=site_url("admin/jx_getsaved_item_incart")?>",{fid:pre_selected_fid},function(data){
+					$.post("<?=site_url("admin/jx_getsaved_item_incart")?>",{fid:pre_selected_fid,mid:<?php echo $mid;?>},function(data){
 					if(data.status =='success')
 					{
 						$.each(data.saved_cart_itms.items,function(i,p){
@@ -1352,24 +1398,15 @@ var ppids=[];
 								{
 									template=template.replace(/%super_sch%/g,"Super Scheme : <span style='font-size:11px;color:#000;'>No</span> ");
 								}
-
+							
 								template=template.replace(/%mrp%/g,p.mrp);
 
 								html_cnt += template;
+							
 								
-								jQuery(document).ready(function() {
-								 	Tipped.create('.tip_popup',{
-								 	 skin: 'black',
-								 	  hook: 'topleft',
-								 	  hideOn: false,
-								 	  closeButton: true,
-								 	 	opacity: .5,
-								 	 	hideAfter: 200,
-									 });
-								});
 						});
 						$("#cart_prod_temp tbody").html(html_cnt);
-						
+						tooltip_popup();
 						change_total_subtotal();
 						$('.cart-footer div').show();
 						$(".confirm_bloc").show();
@@ -1441,7 +1478,7 @@ $("#cart_prod_temp .qty").live("change",function(){
 	{
 		qty_e = 1;
 	}
-	$.post(site_url+'/admin/jx_update_cartqty/',{cart_qty:qty_e,pid:sel_pid,fid:pre_selected_fid},function(resp){
+	$.post(site_url+'/admin/jx_update_cartqty/',{cart_qty:qty_e,pid:sel_pid,fid:pre_selected_fid,mid:<?php echo $mid;?>},function(resp){
 		if(resp.status=='success')
 			return true;
 	},'json');
@@ -1458,7 +1495,7 @@ function remove_psel(ele)
 
 	if(confirm("Are you sure want to remove product from cart?"))
 	{	
-		$.post("<?=site_url("admin/jx_update_tocart")?>",{pid:sel_pid,fid:pre_selected_fid},function(data){
+		$.post("<?=site_url("admin/jx_update_tocart")?>",{pid:sel_pid,fid:pre_selected_fid,mid:<?php echo $mid;?>},function(data){
 			if(data.status=='success')
 			{
 				$(ele).parents("tr:first").fadeOut().remove();
@@ -1501,7 +1538,7 @@ $("#order_form").submit(function(){
 	ppids=[];
 	qty=[];
 	menuids=[];
-
+	
 	$("#cart_prod_div .stotal").each(function(){
 		total+=parseFloat($(this).html());
 	});
@@ -1519,12 +1556,25 @@ $("#order_form").submit(function(){
 		qty.push($(this).val());
 	});
 	
+	if(ppids.length==0)
+	{alert("There are no products in the Cart");return false;}
+	
 		var menu_qty=qty;
 		var menuid=menuids;
 	//	var mid = $("input[name='mid']",$(this)).val();
 	    var mid = selected_mid;
 		var fran_note=$("#fran_note").val();
 
+		var stk_confirm_prods = $('input[name="confirm_stock"]').length;
+		
+		var stk_confirm_prods_checked = $('input[name="confirm_stock"]:checked').length;
+
+		if(stk_confirm_prods != stk_confirm_prods_checked && stk_confirm_prods > 0)
+		{
+			alert("Please verify whether stock for the footwear is available?");
+			return false;
+		}
+		
 		for (var i = 0; i < menuids.length; i++)
 		 {
 			var menu_id=menuids[i];
@@ -1542,23 +1592,49 @@ $("#order_form").submit(function(){
 				 return false;
 			}
 		 }
+
+		
 		var credit_days=$(".credit_days").val();
-		if(credit_days==0)
+		/*
+		if(credit_days==0 || isNaN(credit_days))
 		{
-			alert("Please enter Credit Days");
+			alert("Please enter Valid Days");
 			return false;
 		}
+		
 		if(credit_days>5)
 		{
-			alert("Credit Days can't be greater than 5 Days");
+			alert(" Days can't be greater than 5 Days");
 			return false;
 		}
-		$("input[name='creditdays']").val($('.credit_days').val());		
-		$("input[name='frannote']").val(fran_note);
-		$("#fran_note_edit_div").show();
-		if(fran_note.length<50)
+		if(credit_days<0)
 		{
-			franchise_note(pre_selected_fid);
+			alert(" Days can't be less than 1 Day");
+			return false;
+		}
+		*/
+		
+		$("input[name='creditdays']").val($('.credit_days').val());	
+		<?php 
+			if($pending_payment)
+			{
+		?>	
+				$("input[name='frannote']").val(fran_note);
+				$("#fran_note_edit_div").show();
+				if(fran_note.length<50)
+				{
+					franchise_note(pre_selected_fid);
+					return false;
+				}
+		<?php 
+			}
+		?>
+		
+	
+
+		if(stk_confirm_prods != stk_confirm_prods_checked && stk_confirm_prods > 0)
+		{
+			alert("Please verify whether stock for the footwear is available?");
 			return false;
 		}
 		
@@ -1600,36 +1676,37 @@ $('#reg_mem_dlg').dialog({
 			height:'auto',
 			open:function(){
 				$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
-				$('.ui-dialog-buttonpane').find('button:contains("Register")').css({"float":"right"});
-				$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"float":"right"});
+				$('.ui-dialog-buttonpane').find('button:contains("Register")').css({"float":"right","background":"#4AA02C","color":"white"});
+				$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"float":"right","background":"tomato","color":"white"});
 				var dlg=$(this);
 				var fid=pre_selected_fid;
 					$('#reg_mem_frm input[name="franchise_id"]',this).val(fid);
 				},
 				buttons:{
+					'Cancel':function(){
+						$(this).dialog('close');
+					},
 					'Register':function(){
 						$(this)
 						var error_list = new Array();
 						// register member 
 						var mem_regname = $.trim($('input[name="memreg_name"]').val());
-						var mem_mobno = $.trim($('input[name="memreg_mobno"]').val());
-                        	if(mem_regname.length == 0)
-                                error_list.push("Please Enter Member name.");
+						var mem_mobno = parseInt($.trim($('input[name="memreg_mobno"]').val()));
+					
+                    		if(mem_regname.length == 0)
+                             	error_list.push("Please Enter Member name.");
 
-							if(mem_mobno.length == 0)
+							if(mem_mobno.length == 0 || mem_mobno =='')
                                 error_list.push("Please Enter Mobile Number.");
-	                        else
-	                        {
-	                                mem_mobno = mem_mobno*1	;
-	                                if(isNaN(mem_mobno))
-	                                        error_list.push("Please Enter valid Mobile number.");	
-	                        }	
 
-                        if(error_list.length)
-                        {
-                                alert(error_list.join("\r\n"));
-                        }else
-                        {
+							if(isNaN(mem_mobno))
+                                error_list.push("Please Enter valid Mobile number.");	
+							
+							if(error_list.length)
+	                        {
+	                                alert(error_list.join("\r\n"));
+	                        }else
+	                        {
                                 $.post(site_url+'/admin/jx_reg_newmem',$('#reg_mem_frm').serialize(),function(resp){
                                         if(resp.status == 'success')
                                         {
@@ -1650,9 +1727,7 @@ $('#reg_mem_dlg').dialog({
                                 },'json');
                         }
 					},
-					'Cancel':function(){
-						$(this).dialog('close');
-					}
+					
 				}
 });
 
@@ -1691,7 +1766,7 @@ function remove_prod_frmcart(pid)
 {
 	if(confirm("Are you sure want to remove product from cart?"))
 	{
-		$.post("<?=site_url("admin/jx_update_tocart")?>",{pid:pid,fid:pre_selected_fid},function(resp){
+		$.post("<?=site_url("admin/jx_update_tocart")?>",{pid:pid,fid:pre_selected_fid,mid:<?php echo $mid;?>},function(resp){
 			if(resp.status=='success')
 			{
 				$("#item_count_in_cart_top_displayed").html(resp.ttl_cart_item);
@@ -1911,17 +1986,29 @@ $("#grid_list_frm_to").click(function(e){
     return false;
 });
 
-function sel_fran()
+/*function sel_fran()
 {
 	$("#franlogin_div").dialog('open');
-}
+}*/
+$("#change_fran").live('click',function(){
+
+	$("#franlogin_div").dialog('open');
+
+});
 $("#franlogin_div").dialog({
 	modal:true,
 	width:'447',
 	height:'337',
 	autoOpen:false,
 	open:function(){
-		},
+		$(".membrid").val(" ");
+		
+		$('#sel_state').val('').trigger('liszt:updated');
+		$('#sel_terr').val('').trigger('liszt:updated');
+		$('#fid').val('').trigger('liszt:updated');
+		$('.mid_entrytype').val('0').trigger('liszt:updated');
+		
+	},
 });
 
 $("#sel_state").change(function(){
@@ -1986,12 +2073,12 @@ $(".membrid").change(function(){
 		{$("#fid").addClass('error_inp');return;}
 	if($(".membrid").val().length!=0)
 	{
-		$("#mid_det").data('mid',$(this).val()).dialog('open');
 		$("#franlogin_div").dialog('close');
+		$("#mid_det").data('mid',$(this).val()).dialog('open');
 	}
 });
 
-$('.mid_entrytype').change(function(){
+$('.mid_entrytype').live('change',function(){
 	$('input[name="mid"]').val("");
 	if($(this).val()==0)
 	{
@@ -2012,6 +2099,9 @@ $("#mid_det").dialog({
 	autoOpen:false,
 	open:function()
 	{
+		$('.ui-dialog-buttonpane').find('button:contains("Proceed")').css({"background":"#4AA02C","color":"white"});
+		$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"background":"tomato","color":"white"});
+		
 		dlg=$(this);
 		$("#mem_det").html("");
 		$.post("<?=site_url("admin/jx_pnh_getmid")?>",{mid:dlg.data('mid'),more:1},function(data){
@@ -2020,9 +2110,9 @@ $("#mid_det").dialog({
 	},
 	buttons:{
 		'Proceed':function(){
-			$(this).dialog('close');
 			load_franchisebyid();
-			},
+			$(this).dialog('close');
+		},
 		'Cancel':function(){
 			$(this).dialog('close');
 			
@@ -2033,7 +2123,7 @@ $("#mid_det").dialog({
 
 function load_franchisebyid()
 {
-	sel_state=$("#sel_state").val();
+	/*sel_state=$("#sel_state").val();
 	sel_fran=$("#sel_fid").val();
 	sel_mtype=$(".mid_entrytype").val();
 	if(sel_state=='' || sel_state==0)
@@ -2044,7 +2134,7 @@ function load_franchisebyid()
 	{
 		if($(".mid").val().length==0)
 			return;
-	}
+	}*/
 		$("#authentiacte_blk").dialog('open');
 		
 }
@@ -2085,11 +2175,14 @@ $("#change_member_blk").dialog({
 	autoOpen:false,
 	open:function(){
 		$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
-		$('.ui-dialog-buttonpane').find('button:contains("Submit")').css({"float":"right"});
-		$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"float":"right"});
+		$('.ui-dialog-buttonpane').find('button:contains("Submit")').css({"float":"right","background":"#4AA02C","color":"white"});
+		$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"float":"right","background":"tomato","color":"white"});
 		
 	},
 	buttons:{
+		'Cancel':function(){
+			   $('#change_member_blk').dialog('close');
+		},
 		'Submit':function(){
 			var change_mbrid_form=$("#change_mem_frm");
 			
@@ -2123,9 +2216,7 @@ $("#change_member_blk").dialog({
 			
 				
 		},
-		'Cancel':function(){
-			   $('#change_member_blk').dialog('close');
-		},
+		
 	}
 });
 
@@ -2192,13 +2283,15 @@ $("#product_priceqoute").dialog({
 	width:'549',
 	height:'auto',
 	autoOpen:false,
-	open:function(){
-		var dlg=$(this);
+	open:function(event, ui){
 		
+		$(event.target).dialog('widget')
+        .css({ position: 'fixed' })
+        .position({ my: 'center', at: 'center', of: window });
 		$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 		$('.ui-dialog-buttonpane').find('button:contains("Price Enquiry")').addClass('price_enquiry_btn');
 		$('.ui-dialog-buttonpane').find('button:contains("Price Not Matching")').css({"float":"right"});
-			
+		var dlg=$(this);	
 		if($('#qvkview_template tbody tr').length)
 		{
 			$('#prod_pricequote').show();
@@ -2229,9 +2322,15 @@ $("#product_priceqoute").dialog({
 					{
 						$('#product_priceqoute').dialog('close');
 					}
+					else
+					{
+						alert(resp.msg);
+						return false;
+					}
 				},'json');
 			}
 			return false;
+			
 		},
 
 		'Price Enquiry':function(){
@@ -2435,6 +2534,45 @@ $("#ship_log_dlg" ).dialog({
   },'json');
 }
 });
+
+function get_invoicetransit_log(ele,invno)
+{
+	$('#inv_transitlogdet_dlg').data({'invno':invno,}).dialog('open');
+}
+
+var refcont = null;
+$('#inv_transitlogdet_dlg').dialog({width:'900',height:'auto',autoOpen:false,modal:true,
+											open:function(){
+
+												
+												//,'width':refcont.width()
+												//$('div[aria-describedby="inv_transitlogdet_dlg"]').css({'top':(refcont.offset().top+15+refcont.height())+'px','left':refcont.offset().left});
+												
+												$('#inv_transitlogdet_tbl').html('loading...');
+												$.post(site_url+'/admin/jx_invoicetransit_det','invno='+$(this).data('invno'),function(resp){
+													if(resp.status == 'error')
+													{
+														alert(resp.error);
+													}else
+													{
+														var inv_transitlog_html = '<table class="datagrid" width="100%"><thead><th width="30%">Msg</th><th width="10%">Status</th><th width="10%">Handle By</th><th width="10%">Logged On</th><th width="15%">SMS</th></thead><tbody>';
+														$.each(resp.transit_log,function(i,log){
+															inv_transitlog_html += '<tr><td>'+log[5]+'</td><td>'+log[1]+'</td><td>'+log[2]+'('+log[4]+')</td><td>'+log[3]+'</td><td>'+log[6]+'</td></tr>';
+														});
+														inv_transitlog_html += '</tbody></table>';
+														$('#inv_transitlogdet_tbl').html(inv_transitlog_html);
+
+														$('#inv_transitlogdet_dlg h3').html('Invoice no :<span style="color:blue;font-size:12px">'+resp.invoice_no+'</span>  Franchise name: <span style="color:orange;font-size:12px">'+resp.Franchise_name +'</span> Town : <span style="color:gray;font-size:12px">'+resp.town_name+'</span>'+' ManifestoNo :'+resp.manifesto_id);
+
+
+														
+														
+													}
+												},'json');
+											}
+									});
+
+
 $("#delivery_log_dlg" ).dialog({
 	modal:true,
 	autoOpen:false,
@@ -2491,6 +2629,40 @@ $("#delivery_log_dlg" ).dialog({
   },'json');
 }
 });
+
+$("#fid").change(function(){
+	
+	if($(this).val()>0)
+	{
+		$("#franchise_quickview").data('fid',$(this).val()).dialog('open');
+			}
+	else
+		$("#franchise_quickview").hide();
+});
+
+$("#franchise_quickview").dialog({
+	autoOpen:false,
+	model:true,
+	width:'448',
+	height:'auto',
+	open:function(){
+		 	$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
+			$('.ui-dialog-buttonpane').find('button:contains("Proceed")').css({"background":"#4AA02C","color":"white","float":"right"});
+			dlg=$(this);
+			$("#fran_qvkview").html("");
+			$.post(site_url+'/admin/jx_load_franchise_qvkview',{fid:dlg.data('fid')},function(data){
+			$("#fran_qvkview").html(data).show();
+		});
+	},
+
+		buttons:{
+		'Proceed':function(){
+				$(this).dialog('close');
+
+			},
+
+			}
+	
+});
 </script>
 <?php
-

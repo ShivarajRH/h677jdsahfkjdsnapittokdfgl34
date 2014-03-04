@@ -16,13 +16,13 @@
 <div class="page_wrap container">
 	
 	<div class="page_topbar" >
-		<h2 class="page_title fl_left">Return Details</h2>	
+		<h2 class="page_title fl_left">PNH Return Details</h2>	
 		
 		<div class="page_action_buttons fl_right" align="right">
-			<a href="<?php echo site_url('admin/add_pnh_invoice_return/'.$type) ?>">Add Return</a>
+			<a href="<?php echo site_url('admin/add_pnh_invoice_return') ?>">Add Return</a>
 			&nbsp;
 			&nbsp;
-			<a href="<?php echo site_url('admin/pnh_invoice_returns/'.$type) ?>">List All Returns</a>
+			<a href="<?php echo site_url('admin/pnh_invoice_returns') ?>">List All Returns</a>
 		</div>
 		
 		<br />
@@ -30,34 +30,10 @@
 			 <table cellpadding="10" cellspacing="0"   border=1 style="border-collapse: collapse;border-color:#ccc;text-align: center">
 				<tr>
 					<td width="100"><b>Return ID</b> <br> <?php echo $return_det['det']['return_id'] ?></td>
-					<td width="140">
-						<b>By</b> <br>
-						<?php
-							$order_from=''; 
-							if($return_det['det']['order_from']==0)
-							{
-								echo 'Storeking';
-								$order_from='<a target="_blank" href="'.site_url('admin/pnh_franchise/'.$return_det['det']['franchise_id']).'" >'.$return_det['det']['franchise_name']."</a>";
-							}
-							else if($return_det['det']['order_from']==1)
-							{
-								echo 'Snapittoday';
-								$order_from=$this->db->query("select bill_person from king_orders where transid=? group by transid",$return_det['det']['transid'])->row()->bill_person;
-							}
-							else if($return_det['det']['order_from']==2)
-							{
-								echo $this->db->query("select name from partner_info where id=?",$return_det['det']['partner_id'])->row()->name;
-								$order_from=$this->db->query("select bill_person from king_orders where transid=? group by transid",$return_det['det']['transid'])->row()->bill_person;
-							} 
-						?>
-					</td>
 					<td width="140"><b>Returned On</b> <?php echo format_datetime($return_det['det']['returned_on']) ?></td>
 					<td width="200"><b>Transaction / Ticket no</b> <br/><a target="_blank" href="<?php echo site_url('admin/trans/'.$return_det['det']['transid']);?>"><?php echo $return_det['det']['transid']; ?></a></td>
 					<td width="100"><b>InvoiceNo</b> <br/><a target="_blank" href="<?php echo site_url('admin/invoice/'.$return_det['det']['invoice_no']);?>"><?php echo $return_det['det']['invoice_no']; ?></a></td>
-					<td width="200">
-						<b>From</b> <br/>
-						<?php echo $order_from;?>
-					</td>
+					<td width="200"><b>Franchise Name</b> <br/><a target="_blank" href="<?php echo site_url('admin/pnh_franchise/'.$return_det['det']['franchise_id']);?>" ><?php echo $return_det['det']['franchise_name'];?></a></td>
 					<td width="100"><b>Handled By</b> <?php echo $return_det['det']['handled_by_name'] ?></td>
 					<td width="100">
 							<b style="font-size: 18px;top: 5px;position: relative"><?php echo $return_request_cond[$return_det['det']['status']] ?></b>
@@ -125,22 +101,17 @@
 								}
 							?>
 							
-							<?php if($prod_det['status']==2 && $prod_det['is_stocked']){ ?>
 							<div><?php echo (($prod_det['status']==2)?('<b>Moved to Stock :</b> '.($prod_det['is_stocked']?'Yes':'No')):'') ?></div>
 							<div><?php echo (($prod_det['status']==2)?('<b>Refund Processed :</b> '.($prod_det['is_refunded']?'Yes':'No')):'') ?></div>
-							<?php }?>
 						</td>
 						<td width="150" >
 							<form action="<?php echo site_url('admin/jx_upd_invretprodremark') ?>" class="remark_add_frm" method="post">
-								<input type="hidden" name="login_type" value="<?php echo $type;?>">
+								
 								<?php 
 									$allow_stat_upd = 1;
 									if($prod_det['status'] == 2)
 									{
-										if($prod_det['status']==2 && $prod_det['is_stocked'])
-											echo '<b>Moved to Stock</b>';
-										else
-											echo '<b>Ready to move the stock</b>';
+										echo '<b>Moved to Stock</b>';
 										$allow_stat_upd = 0;
 									}else if($prod_det['status'] == 3 )
 									{
@@ -177,9 +148,6 @@
 											foreach ($return_process_cond as $ic=>$cond)
 											{ 
 												if($prod_det['status'] > $ic)
-													continue;
-												
-												if($type!='sk' && $ic==1)
 													continue;
 								?>
 													<option value="<?php echo $ic; ?>"><?php echo $cond; ?></option>
@@ -276,8 +244,6 @@
 </style>
 
 <script type="text/javascript">
-	
-				
 	$('input[name="expected_on"]').datepicker({minDate:new Date()});
 	$('input[name="serv_return_handl_on"]').datepicker({minDate:new Date()});
 	
@@ -334,8 +300,7 @@
 			} 
 		}
 		
-		$.post(site_url+'/admin/jx_upd_invretprodremark/',$(this).serialize(),function(resp){
-			
+		$.post(site_url+'/admin/jx_upd_invretprodremark',$(this).serialize(),function(resp){
 			if(resp.status == 'success')
 			{
 				alert("Remark posted sucessfully");

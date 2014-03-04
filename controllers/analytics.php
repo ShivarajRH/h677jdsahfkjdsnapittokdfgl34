@@ -1255,6 +1255,55 @@
 			echo json_encode($output);
 	}
 	
-	
+	/*
+	 * Ajax function to load product sales 
+	 * 
+	 */
+	function jx_product_sales($prodid="",$s="",$e="")
+	{
+		$st = date('Y-m-d',strtotime($s));
+		$en = date('Y-m-d',strtotime($e));
+		$date_diff = date_diff_days($en,$st);
+		if($date_diff <= 31)
+		{
+			$sql ="select date_format(from_unixtime(ki.init),'%d-%b') as mn,ROUND(SUM((i_orgprice-(i_coup_discount+i_discount))*a.quantity),2) as ttl
+				from king_orders a
+				join king_transactions ki on ki.transid=a.transid
+				join king_dealitems di on di.id=a.itemid
+				join king_deals d on d.dealid=di.dealid
+				join m_product_deal_link e on e.itemid=a.itemid
+				join m_product_info f on f.product_id=e.product_id
+				where f.product_id='".$prodid."' and date_format(from_unixtime(ki.init),'%Y-%m-%d') between '".$st."' and '".$en."' and a.status !=3 and ki.is_pnh=1
+				group by date(from_unixtime(ki.init))";
+		}
 		
+		else
+		{
+			$sql ="select date_format(from_unixtime(ki.init),'%b-%Y') as mn,ROUND(SUM((i_orgprice-(i_coup_discount+i_discount))*a.quantity),2) as ttl
+				from king_orders a
+				join king_transactions ki on ki.transid=a.transid
+				join king_dealitems di on di.id=a.itemid
+				join king_deals d on d.dealid=di.dealid
+				join m_product_deal_link e on e.itemid=a.itemid
+				join m_product_info f on f.product_id=e.product_id
+				where f.product_id='".$prodid."' and date_format(from_unixtime(ki.init),'%Y-%m-%d') between '".$st."' and '".$en."' and a.status !=3 and ki.is_pnh=1
+				group by date_format(from_unixtime(ki.init),'%m-%Y')
+				order by date(from_unixtime(ki.init))";
+		}
+		 $res = $this->db->query($sql);
+		 $sales_on = array();
+		 $sales_summary = array();
+		 
+		if($res->num_rows())
+		{
+			foreach($res->result_array() as $row)
+			{
+				array_push($sales_summary,array($row['mn'],$row['ttl']*1)); 		
+			}
+		}
+		$output = array();
+		$output['date_diff'] = $date_diff;
+		$output['summary'] = $sales_summary;
+		echo json_encode($output);
+	}	
 }

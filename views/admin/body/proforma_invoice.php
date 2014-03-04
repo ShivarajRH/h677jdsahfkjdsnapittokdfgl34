@@ -67,6 +67,5 @@ order by a.sno ",array($batch['p_invoice_no'],$o['id']))->row_array();
 </tr>
 </tbody>
 </table>
-
 </div>
 <?php

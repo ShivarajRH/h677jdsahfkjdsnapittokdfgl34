@@ -332,31 +332,6 @@ class reservation_model extends Model
 //        echo '<pre>'.$this->db->last_query();die();
         return $arr_rslt;
     }
-    
-    /**
-     * Get franchise experience information based on created_time
-     * @param type $f_created_on
-     * @return type array
-     */
-    function fran_experience_info($f_created_on) {
-        $fr_reg_diff = ceil((time()-$f_created_on)/(24*60*60));
-	 
-        if($fr_reg_diff <= 30)
-        {
-                $fr_reg_level_color = '#cd0000';
-                $fr_reg_level = 'Newbie';
-        }
-        else if($fr_reg_diff > 30 && $fr_reg_diff <= 60)
-        {
-                $fr_reg_level_color = 'orange';
-                $fr_reg_level = 'Mid Level';
-        }else if($fr_reg_diff > 60)
-        {
-                $fr_reg_level_color = 'green';
-                $fr_reg_level = 'Experienced';
-        }
-        return array("f_level"=>$fr_reg_level,"f_color"=>$fr_reg_level_color);
-    }
         
     /**
      * Process the transactions to batch and generates  performa invoice for Batch enabled trans

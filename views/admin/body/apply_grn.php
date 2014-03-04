@@ -1,3 +1,4 @@
+
 <link type="text/css" rel="stylesheet" href="<?=base_url()?>/css/stock_intake.css">
 <style>
 
@@ -30,8 +31,6 @@ h2
 	width: auto;
 	height: auto;
 }
-
-
 </style>
 
 <div class="container">
@@ -447,7 +446,6 @@ function calc_rec_value()
 	$("#grn_ttl_rqty").html(r_total_qty);
 	$("#value_receiving").html("Rs "+r_total.toFixed(2));
 }
-
 var dpi=0,dpe=0;
 function cloneinvoice()
 {
@@ -653,7 +651,6 @@ function reset_tabindex(row,cb)
 }
 
 
-
 function reset_rec_f()
 {
 	v=parseInt($("#reset_rec").val());
@@ -694,7 +691,6 @@ function print_imei_inputs(tot_rqty,prodid) {
     imei_out+='</ol><!--<span class="imei_add" onclick="add_input_imei('+prodid+');" id="imei_add_'+prodid+'">&nbsp; Add </span>-->';
     return imei_out;
 }
-
 
 $('.prod_mrp').live('change',function(){
 	
@@ -966,7 +962,6 @@ $(function(){
 			
 		}
 	});
-
 	
 	$(".static_pos a").click(function(){
 			$($(this).parents("td").get(0)).show();
@@ -984,7 +979,6 @@ $(function(){
 		}
 	});
 	
-
 	$('#apply_grn_form .dp_price').live('keyup',function(){
 		var dp_price = $(this).attr('dp_price')*1;
 		var upd_dp_price_blk = $(this).parent().find('.upd_dp_price_blk');

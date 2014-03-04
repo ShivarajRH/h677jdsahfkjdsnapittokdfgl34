@@ -145,7 +145,6 @@
 		
 	</div>
  
-
 	<table id="batch_orders" class="datagrid datagridsort" width="99%">
 		<thead>
 			<tr>

@@ -713,8 +713,6 @@ $("#prods_order .qty").live("change",function(){
 	compute_ttlbillingamt();
 });
 
-
-
 function compute_ttl()
 {
 	total=0;
@@ -756,8 +754,6 @@ $('#srch_results').mouseleave(function(){
 	$('#srch_results').hide(); 
 });
 
-
-
 $('#coupon_redeem').click(function(){
 
 	total=0;
@@ -791,7 +787,6 @@ $('#coupon_redeem').click(function(){
 		return false;
 	}
 });
-
 $('.fran_id').chosen();
 $('.voucher_code').change(function(){
 	var mem_mobno=$(".member_mobno").val();

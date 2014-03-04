@@ -82,6 +82,7 @@
 					<td><input type="file" name="image" id="file"
 						value="<?php echo set_value('image')?>">
 					</td>
+
 				</tr>
 
 				<tr>
@@ -89,6 +90,7 @@
 					<td><input type="file" name="cv" id="file"
 						value="<?php echo set_value('cv')?>">
 					</td>
+
 				</tr>
 			</table>
 		</fieldset>

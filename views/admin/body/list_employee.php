@@ -51,6 +51,7 @@
 		</div>
 		<br> <br>
 		<div>
+
 			<?php if($emp_list){?>
 			<table class="datagrid datagridsort" width="100%" cellspacing="5">
 				<thead>

@@ -1379,9 +1379,6 @@ class Erp extends Stream
 			$order_by_cond = "order by product_name";
 		}
 			
-
-
-
 		$sql="SELECT a.*,IFNULL(SUM(available_qty),0) AS available FROM (
 					SELECT p.product_id,p.purchase_cost,
 					b.id AS brandid,
@@ -1406,9 +1403,6 @@ class Erp extends Stream
 					HAVING qty > available
 					$order_by_cond
 					";
-
-
-
 		$reports=$this->db->query($sql)->result_array();
 		
 		if($reports)
@@ -2387,7 +2381,7 @@ class Erp extends Stream
 			$oids[]=$i['order_id'];
 		$orders=$this->db->query("select quantity as qty,itemid,id from king_orders where id in ('".implode("','",$oids)."')")->result_array();
 		
-		
+		$recon_status = $this->erpm->pnh_reverse_reconcile_invoice($invno,$user,"Invoice Cancelled");
 		
 		$batch_id = $this->db->query("select batch_id from shipment_batch_process_invoice_link where invoice_no=?",$invno)->row()->batch_id;
 		$pinvno = $this->db->query("select a.p_invoice_no  
@@ -3651,6 +3645,7 @@ class Erp extends Stream
 						group by franchise_name,dispatch_id,invoice_no,itemid;
 						";
 			$outscan_res = $this->db->query($man_sql,array($sent_manifestoid,$terr_det['franchise_id'],$terr_det['territory_id']));
+
 		
 			$manifesto_listbypages = suggest_grp_pages($outscan_res->result_array(),4,20,'dispatch_id');
 
@@ -4120,31 +4115,14 @@ class Erp extends Stream
 		$this->load->view("admin",$data);
 	}
 
-	
-	function pack_invoice($inv_no="",$mlt=0,$fid=0)
+	function pack_invoice($inv_no="")
 	{
 		$user=$this->auth(INVOICE_PRINT_ROLE);
 		
-		//multiple transaction process
-		$data['mlt']=$mlt;
-		$inv_det=array();
-		if($mlt)
-		{
-			$pinv_det=$this->erpm->getbatchinvoices($inv_no,$fid);
-			
-			foreach($pinv_det as $p)
-			{
-				foreach($this->erpm->getinvoiceforpacking($p['p_invoice_no']) as $pdet)
-					array_push($inv_det,$pdet);
-			}
-			$data['invoice']=$inv_det;
-			$data['batch_id']=$inv_no;
-		}else{
-			if(!$this->db->query("select count(*) as ttl from proforma_invoices where p_invoice_no=?",$inv_no)->row()->ttl)
-				show_error("Proforma invoice not found");
-			$data['invoice']=$this->erpm->getinvoiceforpacking($inv_no);
-			//$data['batch_id']=$this->db->query("select batch_id from shipment_batch_process_invoice_link where p_invoice_no = ? and invoice_no is null  ",$inv_no)->row()->batch_id;
-		}
+		
+		
+		$data['batch_id']=$this->db->query("select batch_id from shipment_batch_process_invoice_link where p_invoice_no = ? and invoice_no is null  ",$inv_no)->row()->batch_id;
+		$data['invoice']=$this->erpm->getinvoiceforpacking($inv_no);
 		
 		$is_fran_suspended = @$this->db->query("select ifnull(is_suspended,0) as is_suspended from king_transactions a left join pnh_m_franchise_info b on a.franchise_id = b.franchise_id where a.transid = ? ",$data['invoice']['transid'])->row()->is_suspended;
 		if($is_fran_suspended)
@@ -4255,19 +4233,7 @@ class Erp extends Stream
 	
 			echo json_encode($output);
 	}
-	 
-	function process_batch_by_fran($bid)
-	{
-		$user=$this->auth(ORDER_BATCH_PROCESS_ROLE|OUTSCAN_ROLE|INVOICE_PRINT_ROLE);
-		$data['batch']=$this->erpm->getbatch($bid);
-		$data['invoices']=$this->erpm->getbatchinvoices($bid);
-		
-		
-		$data['bid']=$bid;
-		$data['page']="process_batch_by_fran";
-		$this->load->view("admin",$data);
-	}
-	
+
 	function stock_procure_list()
 	{
 		$user=$this->auth(INVOICE_PRINT_ROLE);
@@ -4344,8 +4310,8 @@ group by g.product_id order by product_name");
 	{
 		$user=$this->auth(FINANCE_ROLE);
 
-        // reverse reconcilation
-        $recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user);
+		// reverse reconcilation
+		$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user,'Receipt Reversed');
                 
 		$r=$this->db->query("select * from pnh_t_receipt_info where receipt_id=?",$rid)->row_array();
 		$this->db->query("update pnh_t_receipt_info set status=3,modified_on=?,modified_by=? where receipt_id=? limit 1",array(time(),$user['userid'],$rid));
@@ -4586,7 +4552,6 @@ group by g.product_id order by product_name");
 		
 		echo json_encode(array('imei_data'=>$tbl_data_html,'imei_pagi_links'=>$pagi_links,'imei_ttl'=>$total_rows,'limit'=>$limit));
 	}
-
 	/**
 	 * function to update mrp 
 	 * @param unknown_type $prods 
@@ -4693,6 +4658,7 @@ group by g.product_id order by product_name");
 				$inp[]=$this->input->post($i);
 			$inp[]=$pid;
 			
+			
 			$prod = array();
 			$prod[] = array('product_id'=>$pid,'mrp'=>$_POST['pmrp']);
 			
@@ -4722,7 +4688,6 @@ group by g.product_id order by product_name");
 		$user=$this->auth(PRODUCT_MANAGER_ROLE);
 		if($_POST)
 		{
-                        
 			$inp=array("P".rand(10000,99999));
 			foreach(array('pname','sku_code',"pdesc","psize","puom","pmrp","pvat","pcost","pbarcode","pisoffer","pissrc","pcat","pbrand","prackbin","pmoq","prorder","prqty","premarks","pissno","is_active","has_attributes","attr") as $i)
 				$inp[]= $$i = $this->input->post($i);
@@ -4740,11 +4705,11 @@ group by g.product_id order by product_name");
 			}
 			$this->db->query("insert into t_stock_info(product_id,location_id,rack_bin_id,mrp,available_qty,product_barcode) values(?,?,?,?,0,?)",array($pid,$location,$rackbin,$pmrp,$pbarcode));
 			
-                        // Add product attributes
-                        if(isset($attr))
-                        {
-                            $this->add_product_attributes($attr,$pid);
-                        }
+            // Add product attributes
+            if(isset($attr))
+            {
+                $this->add_product_attributes($attr,$pid);
+            }
                         
 			redirect("admin/products");
 		}
@@ -4752,37 +4717,37 @@ group by g.product_id order by product_name");
 		$this->load->view("admin",$data);
 	}
 	
-        function add_product_attributes($attr,$pid)
+    function add_product_attributes($attr,$pid)
+    {
+        $in_data=array();
+        foreach($attr['attr_id'] as $i=>$val)
         {
-            $in_data=array();
-            foreach($attr['attr_id'] as $i=>$val)
-            {
-                $attr_data[$i]["attr_id"]  = $attr['attr_id'][$i];
-                $attr_data[$i]["attr_value"]  = $attr['attr_value'][$i];
-                if($attr['attr_id'][$i] !='' and $attr['attr_value'][$i] != '') {
-                    $in_data[] = ' ("'.$pid.'",'.$attr['attr_id'][$i].',"'.$attr['attr_value'][$i].'") ';
-                }
-            }
-            if(!empty($in_data))
-            {
-                $this->db->query("insert into m_product_attributes(pid,attr_id,attr_value) values ".implode(",",$in_data)." ");
+            $attr_data[$i]["attr_id"]  = $attr['attr_id'][$i];
+            $attr_data[$i]["attr_value"]  = $attr['attr_value'][$i];
+            if($attr['attr_id'][$i] !='' and $attr['attr_value'][$i] != '') {
+                $in_data[] = ' ("'.$pid.'",'.$attr['attr_id'][$i].',"'.$attr['attr_value'][$i].'") ';
             }
         }
-        
-        function update_product_attributes($attr,$pid)
+        if(!empty($in_data))
         {
-            $in_data=array();
-            foreach($attr['attr_id'] as $i=>$val)
-            {
-                $attr_data[$i]["attr_id"]  = $attr['attr_id'][$i];
-                $attr_data[$i]["attr_value"]  = $attr['attr_value'][$i];
-                if($attr['attr_id'][$i] !='' and $attr['attr_value'][$i] != '') {
-                    $attr_id=$attr['attr_id'][$i];
-                    $attr_value=$attr['attr_value'][$i];
-                    $this->db->query("update m_product_attributes set attr_value= ? where attr_id =? and pid=? ",array($attr_value,$attr_id,$pid));
-                }
+            $this->db->query("insert into m_product_attributes(pid,attr_id,attr_value) values ".implode(",",$in_data)." ");
+        }
+    }
+    
+    function update_product_attributes($attr,$pid)
+    {
+        $in_data=array();
+        foreach($attr['attr_id'] as $i=>$val)
+        {
+            $attr_data[$i]["attr_id"]  = $attr['attr_id'][$i];
+            $attr_data[$i]["attr_value"]  = $attr['attr_value'][$i];
+            if($attr['attr_id'][$i] !='' and $attr['attr_value'][$i] != '') {
+                $attr_id=$attr['attr_id'][$i];
+                $attr_value=$attr['attr_value'][$i];
+                $this->db->query("update m_product_attributes set attr_value= ? where attr_id =? and pid=? ",array($attr_value,$attr_id,$pid));
             }
         }
+    }
         
 	function createblankstockrows()
 	{
@@ -4893,7 +4858,9 @@ group by g.product_id order by product_name");
 			show_404();
 		$data['cat']=$this->db->query("select c.*,m.name as main from king_categories c left outer join king_categories m on m.id=c.type where c.id=?",$cat)->row_array();
 		$data['deals']=$this->db->query("select i.*,c.name as category,c.id as catid from king_categories c join king_deals d on d.catid=c.id join king_dealitems i on i.dealid=d.dealid where c.id=? or c.type=?",array($cat,$cat))->result_array();
-                $data['page']="viewcat";
+		$data['products']=$this->erpm->getproductsforcategory($cat);
+		$data['vendors']=$this->erpm->getvendorsforcategory($cat);
+		$data['page']="viewcat";
 		$this->load->view("admin",$data);
 	}
 	
@@ -4902,7 +4869,7 @@ group by g.product_id order by product_name");
 		$user=$this->auth(PRODUCT_MANAGER_ROLE|DEAL_MANAGER_ROLE);
 		if($_POST)
 			$this->erpm->do_addnewcat();
-                $data['attr_list'] = $this->db->query("select id as attr_id,attr_name from m_attributes order by attr_name asc")->result_array();
+		$data['attr_list'] = $this->db->query("select id as attr_id,attr_name from m_attributes order by attr_name asc")->result_array();
 		$data['page']="addcategory";
 		$this->load->view("admin",$data);
 	}
@@ -4915,7 +4882,7 @@ group by g.product_id order by product_name");
 		if($_POST)
 			$this->erpm->do_updatecat($catid);
                 
-                $data['attr_list'] = $this->db->query("select id as attr_id,attr_name from m_attributes order by attr_name asc")->result_array();
+		$data['attr_list'] = $this->db->query("select id as attr_id,attr_name from m_attributes order by attr_name asc")->result_array();
 		$data['cat']=$this->db->query("select * from king_categories where id=?",$catid)->row_array();
 		$data['page']="addcategory";
 		$this->load->view("admin",$data);
@@ -6260,6 +6227,7 @@ group by g.product_id order by product_name");
 			$publish_cond="and 1";
 		else 
 			$publish_cond="and publish=1";
+
 		
 		$prod=$this->db->query("select d.menuid,b.name as brand,c.name as cat,i.id,i.is_combo,i.pnh_id as pid,i.live,i.orgprice as mrp,i.price,i.name,i.pic,d.publish from king_dealitems i join king_deals d on d.dealid=i.dealid $publish_cond left join king_brands b on b.id = d.brandid join king_categories c on c.id = d.catid where pnh_id=? and is_pnh=1",$pid)->row_array();
 		
@@ -6851,6 +6819,7 @@ group by g.product_id order by product_name");
 			return true;
 		
 	}
+
 	function jx_chkvalidimeino()
 	{
 		$fid = $this->input->post('fid');
@@ -8200,9 +8169,9 @@ group by g.product_id order by product_name");
 		if(!$rid)
 			show_error("Input Missing");
 		else {
-            $recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user);
-            $this->erpm->do_pnh_cancel_receipt($rid);
-        }
+			$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user,'Receipt Cancelled');
+			$this->erpm->do_pnh_cancel_receipt($rid);
+		}
 	}
 	
 	function pnh_disenable_sch($fid,$en)
@@ -9963,7 +9932,6 @@ group by g.product_id order by product_name");
 			die("Invalid voucher details");
 		}
 	}*/	
-
 	function pnh_order_import()
 	{
 		$user=$this->auth(FINANCE_ROLE);
@@ -12048,6 +12016,7 @@ group by g.product_id order by product_name");
 		echo json_encode($output);
 	}
 	
+
 	/**
 	 * function to dynamically update product sourceable status from ajax  
 	 */
@@ -15613,15 +15582,16 @@ order by action_date";
 			
 	}
 
-	//--------------------------------------Returns--module----------------------------------
 	/**
 	 * function to list all pnh invoice returns 
 	 *
 	 */
-	function pnh_invoice_returns($type='all',$date_from="0000-00-00",$date_to="0000-00-00",$srch=0,$franchise='0',$stat=0,$return_frm='all',$pg=0)
+	function pnh_invoice_returns($date_from="0000-00-00",$date_to="0000-00-00",$srch=0,$franchise='0',$status="all",$pg=0)
 	{
-		$this->erpm->get_return_access($type);//newly added code
-		//filters codndiotions
+		$this->erpm->auth(PNH_INVOICE_RETURNS|PNH_ADD_INVOICE_RETURN);
+		
+		
+		//filte codndiotions
 		$cond='';
 		$param=array();
 		if(($date_from && $date_to) && ($date_from!='0000-00-00' && $date_to!='0000-00-00' ))
@@ -15646,42 +15616,28 @@ order by action_date";
 			$param[]=$franchise;
 		}
 		
-		if($stat)
+		if($status != 'all')
 		{
-			$cond.=" and a.status  =? ";
-			$param[]=$stat-1;
-		}
-		
-		if($return_frm=='all')
-		{
-			if($this->erpm->get_assigned_mng_rtn_access())
-			{
-				$cond.=" and a.order_from in (".implode(',',$this->erpm->get_assigned_mng_rtn_access()).")";
-			}
-		}else{
-			if($return_frm!='')
-			{
-				$cond.=" and a.order_from =?";
-				$param[]=$return_frm;
-			}
+			$cond.=" and a.status = ? ";
+			$param[]=$status;
 		}
 		
 		$data['pnh_inv_returns_ttl'] = $this->erpm->get_pnh_invreturns_ttl($cond,$param);
 		$data['pnh_inv_returns'] = $this->erpm->get_pnh_invreturns($pg,$cond,$param);
 		
 		$data['pg'] = $pg;
+		$data['status'] = $status;
 		
 		$this->load->library('pagination');
-		$config['base_url'] = site_url('admin/pnh_invoice_returns/'.$type.'/'.$date_from.'/'.$date_to.'/'.$srch.'/'.$franchise.'/'.$stat.'/'.$return_frm);
+		$config['base_url'] = site_url('/admin/pnh_invoice_returns/'.$date_from.'/'.$date_to.'/'.$srch.'/'.$franchise.'/'.$status);
 		$config['total_rows'] = $data['pnh_inv_returns_ttl'];
 		$config['per_page'] = 10;
-		$config['uri_segment'] = 10;
+		$config['uri_segment'] = 8;
 		$this->config->set_item('enable_query_strings',false);
 		$this->pagination->initialize($config);
 		$data['pagination'] = $this->pagination->create_links();
 		$this->config->set_item('enable_query_strings',true);
 		$data['page'] = 'pnh_invoice_returns';
-		$data['type']=$type;
 		$this->load->view('admin',$data);
 	}
 	
@@ -15712,11 +15668,10 @@ order by action_date";
 	 * function to add pnh invoice return
 	 *
 	 */
-	function add_pnh_invoice_return($type='all')
+	function add_pnh_invoice_return()
 	{
-		$this->erpm->get_return_access($type);//newly added code
+		$this->erpm->auth(PNH_INVOICE_RETURNS|PNH_ADD_INVOICE_RETURN);
 		$data['page'] = 'add_pnh_invoice_return';
-		$data['type']=$type;
 		$this->load->view('admin',$data);
 	}
 	
@@ -15724,70 +15679,24 @@ order by action_date";
 	 * function to get invoice order detials  
 	 *
 	 */
-	function jx_getinvoiceorditems($type='all')
+	function jx_getinvoiceorditems()
 	{
-		$this->erpm->get_return_access($type);//newly added code
+		$this->erpm->auth(PNH_INVOICE_RETURNS|PNH_ADD_INVOICE_RETURN);
 		$output = array();
 		$invno = $this->input->post('scaninp');
-		$output['franchise_name']='';
-		$output['franchise_id']='';
-		$output['cust']='';
-		$output['order_from']='';
-		$output['inv_for']=0;
-		$order_id=0;
-		$error=0;
 		
-		if(!$invno)
-			exit;
-		
-		//check invoice from
-		$order_frm=$this->erpm->get_order_from($invno);// newly added code
-		
-		if($order_frm=='')
-			$output['status']='error';
-		else if($order_frm=='sk')
+		// check if the entered no is imeino
+		$imei_inv_res = $this->db->query('select b.invoice_no from t_imei_no a join king_invoice b on a.order_id = b.order_id and b.invoice_status = 1 where imei_no = ? ',$invno);
+		if($imei_inv_res->num_rows())
 		{
-			$fr_det = $this->db->query("select a.franchise_id,franchise_name from pnh_m_franchise_info a join king_transactions b on a.franchise_id = b.franchise_id join king_invoice c on c.transid = b.transid where c.invoice_no = ? ",$invno)->row();
-			$output['franchise_name'] = $fr_det->franchise_name;
-			$output['franchise_id'] = $fr_det->franchise_id;
-			if(!$this->erpm->auth(RETURNS_PNH,true))
-				$error=1;
+			$invno = $imei_inv_res->row()->invoice_no;
+		} 
 		
-		}else if($order_frm=='sit')
-		{
-			$cust_det=$this->db->query("select b.transid,bill_person from king_invoice a
-											join king_orders b on b.transid=a.transid
-											where a.invoice_no=? and a.invoice_status=1
-											group by a.transid",$invno)->row_array();
-			
-			$output['cust']=$cust_det['bill_person'];
-			$output['order_from']='Snapittoday';
-			$output['inv_for']=1;
-			if(!$this->erpm->auth(RETURNS_SIT,true))
-				$error=1;
-		}else if($order_frm=='part')
-		{
-			$cust_det=$this->db->query("select b.transid,bill_person,c.name from king_transactions a
-											join king_orders b on b.transid=a.transid
-											join partner_info c on c.id=a.partner_id
-											where a.partner_reference_no=? 
-											group by a.transid",$invno)->row_array();
-			
-			$output['cust']=$cust_det['bill_person'];
-			$output['order_from']=$cust_det['name'];
-			$output['inv_for']=2;
-			$order_id=$invno;
-			$invno=0;
-			if(!$this->erpm->auth(RETURNS_PART,true))
-				$error=1;
-		}
+		$fr_det = $this->db->query("select a.franchise_id,franchise_name from pnh_m_franchise_info a join king_transactions b on a.franchise_id = b.franchise_id join king_invoice c on c.transid = b.transid where c.invoice_no = ? ",$invno)->row();
 		
-		$output['invdet']='';
-		if(!$error)
-			$output['invdet'] = $this->erpm->get_invoicedet_forreturn($invno,$order_id);
-		else 
-			$output['invdet']=array('error'=>'Your not have permission for process this invoice');
-		
+		$output['franchise_name'] = $fr_det->franchise_name;
+		$output['franchise_id'] = $fr_det->franchise_id;
+		$output['invdet'] = $this->erpm->get_invoicedet_forreturn($invno);
 		$output['return_cond'] = $this->config->item('return_cond');
 		$output['return_reason'] = $this->config->item('return_reason');
 		echo json_encode($output);
@@ -15796,9 +15705,9 @@ order by action_date";
 	/**
 	 * function to check if the entered barcode is valid for the product
 	 */
-	function jx_chkvalidprodbc($type='all')
+	function jx_chkvalidprodbc()
 	{
-		$this->erpm->get_return_access($type);//newly added code
+		$this->erpm->auth(PNH_INVOICE_RETURNS|PNH_ADD_INVOICE_RETURN);
 		
 		//get product and barcode from post 
 		$prod_id = $this->input->post('pid');
@@ -15833,25 +15742,22 @@ order by action_date";
 	 */
 	function process_add_pnh_invoice_return()
 	{
-		//$this->erpm->auth(PNH_INVOICE_RETURNS|PNH_ADD_INVOICE_RETURN);
-		$inv_for=$this->input->post('inv_for');//newly added code
-		$order_from=$this->erpm->get_order_from_by_id($inv_for);//newly added code
-		$this->erpm->get_return_access($order_from);//newly added code
-				
+		$this->erpm->auth(PNH_INVOICE_RETURNS|PNH_ADD_INVOICE_RETURN);
+		
 		$prod_rcvd_pid = $this->input->post('prod_rcvd_pid');
 		$prod_rcvd_qty = $this->input->post('prod_rcvd_qty');
 		$prod_rcvd_pid_bc = $this->input->post('prod_rcvd_pid_bc');
 		$prod_rcvd_pid_imei = $this->input->post('prod_rcvd_pid_imei');
 		$prod_rcvd_cond = $this->input->post('prod_rcvd_cond');
 		$prod_rcvd_remarks = $this->input->post('prod_rcvd_remarks');
-		
+		 
 		
 		$user = $this->erpm->auth(false,true);
 		$return_by = $this->input->post('return_by');
 		
 		foreach ($prod_rcvd_pid as $invno=>$p_ord_list)
 		{
-			$this->db->query("insert into pnh_invoice_returns (invoice_no,return_by,handled_by,status,returned_on,order_from) values (?,?,?,?,now(),?) ",array($invno,$return_by,$user['userid'],0,$inv_for));
+			$this->db->query("insert into pnh_invoice_returns (invoice_no,return_by,handled_by,status,returned_on) values (?,?,?,?,now()) ",array($invno,$return_by,$user['userid'],0));
 			$return_id = $this->db->insert_id();
 		
 			foreach($p_ord_list as $oid=>$proddet_list)
@@ -16651,6 +16557,8 @@ order by action_date";
 							";
 				
 				$log_sms_details_res=$this->db->query($sql);
+
+
 			
 				$tbl_head = array('slno'=>'Slno','employee_name'=>'Employee Name','sent_from'=>'Sent From','territory_name'=>'Territory','town_name'=>'Town','msg'=>'Message','loggged_on'=>'LoggedOn');
 				
@@ -19615,6 +19523,7 @@ order by action_date";
 			}
 			echo json_encode($output);
 		}
+
 		/**
 		 * function to load all vendors by brand
 		 * @param unknown_type $brandid
@@ -19687,6 +19596,7 @@ order by action_date";
 					}
 					echo json_encode($output);
 		}
+
 		/**
 		 * function to load all menu by territories
 		 * @param unknown_type $territory_id
@@ -20201,7 +20111,7 @@ order by action_date";
 				}
 
 			// reverse reconcilation
-			$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($receipt_id,$user);
+			$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($receipt_id,$user,'Processed Receipt Cancelled');
 
 			$d+=$this->db->affected_rows();
 			if($d)
@@ -21301,7 +21211,7 @@ order by action_date";
 			$cond = $fil_cond = $join_cond = '';
 			
 			
-			$sql="select f.created_on,f.is_suspended,group_concat(a.name) as owners,tw.town_name as town,f.is_lc_store,f.franchise_id,c.class_name,c.margin,c.combo_margin,f.pnh_franchise_id,f.franchise_name,
+			$sql="select f.created_on,f.is_suspended,group_concat(distinct a.name) as owners,tw.town_name as town,f.is_lc_store,f.franchise_id,c.class_name,c.margin,c.combo_margin,f.pnh_franchise_id,f.franchise_name,
 							f.locality,f.city,f.current_balance,f.login_mobile1,f.login_mobile2,
 							f.email_id,u.name as assigned_to,t.territory_name
 						from pnh_m_franchise_info f 
@@ -21414,7 +21324,7 @@ order by action_date";
 				
 				
 				$this->load->view("admin/body/jx_show_franchises",$data);
-			}
+	}
 			
 	function jx_load_receiptdetails($type='def',$pg=0)
 	{
@@ -23472,6 +23382,7 @@ die; */
 		
 		echo json_encode($output);
 	}
+
 	/**
 	 * function for generate a employee activity log
 	 */
@@ -24649,10 +24560,10 @@ die; */
 		{
 			$output['last_7daydet']=$last_7dayspurchaseorderdet->result_array();
 			$output['status']='success';
+
 		}
 		
 		echo json_encode($output);
-
 	}
 
 	/**
@@ -24885,6 +24796,7 @@ die; */
 		}
 	}
 	
+
 	function print_franlabels()
 	{
 		$this->erpm->auth();
@@ -25422,6 +25334,7 @@ die; */
         $data['page']='towns_courier_priority';
         $this->load->view("admin",$data);
     }
+
 	//--------sit image currection-------------
 	function deal_img_currection($cat_id=0,$brand_id=0,$pg=0)
 	{
@@ -25640,6 +25553,7 @@ die; */
 		$brandid = $this->input->post('brandid');
 		$imei_nos = $this->input->post('imeino');
 		$imei_no_arr = explode(',',$imei_nos);
+
 		
 		$ttl_imei_entered = count($imei_no_arr);
 		
@@ -25671,7 +25585,6 @@ die; */
 		}
 		echo json_encode($output);
 	}
-
 
 	function polist_byvendor()
 	{
@@ -25806,7 +25719,6 @@ die; */
 		
 		echo json_encode($output);
 	}
-
 	
 	function to_download_franstat_exl_format($fid,$frm_dt,$to_dt)
 	{
@@ -25910,18 +25822,15 @@ die; */
 
 	function jx_getopenpolistbypid($pid=0)
 	{
-		$this->erpm->auth();
-	
+		$this->erpm->auth();	
 		$output = array();
-		$output['product_name'] = $this->db->query("select product_name from m_product_info where product_id = ? ",$pid)->row()->product_name;
-	
+		$output['product_name'] = $this->db->query("select product_name from m_product_info where product_id = ? ",$pid)->row()->product_name;	
 		$sql = "select sum(b.order_qty-b.received_qty) as qty
 					from t_po_info a
 					join t_po_product_link b on a.po_id = b.po_id
 					where a.po_status in (0,1) and b.product_id = ? and (b.order_qty-b.received_qty) > 0 and b.is_active=1
 				";
 		$output['ttl_open_qty'] = $this->db->query($sql,$pid)->row()->qty;
-	
 		$sql = "select c.vendor_id,c.vendor_name,b.po_id,(b.order_qty-b.received_qty) as qty,unix_timestamp(a.created_on) as po_date
 						from t_po_info a
 						join t_po_product_link b on a.po_id = b.po_id
@@ -25930,13 +25839,11 @@ die; */
 					order by po_date
 				";
 		$res = $this->db->query($sql,$pid);
-	
 		$ven_po_list = array();
 		if($res->num_rows())
 			$output['vendor_po_list'] = $res->result_array();
 		else
 			$output['vendor_po_list'] = array();
-	
 		echo json_encode($output);
 	}
 
@@ -25945,8 +25852,7 @@ die; */
 		
 		$output=array();
 		$bid=$this->input->post('brandid');
-		$vendorid=$this->input->post('vendorid');
-	
+		$vendorid=$this->input->post('vendorid');	
 		$catgories=$this->db->query("SELECT  d.catid,d.brandid,c.name AS cat_name
 										FROM `king_deals` d
 										JOIN `king_categories` c ON c.id=d.catid
@@ -25968,6 +25874,7 @@ die; */
 		echo json_encode($output);
 	}
 
+
 	/**
 	 * function to update ecategory brand vender margin of individual vendor
 	 * @param unknown_type $vendorid
@@ -25978,7 +25885,6 @@ die; */
 			$$i=$this->input->post($i);
 		if(is_array($l_catid))
 			$l_catids=implode(',',$l_catid);
-
 		$othrcat_ofbrands = $this->db->query("SELECT DISTINCT catid FROM king_deals WHERE catid NOT IN ( $l_catids ) AND brandid=$l_brand[0]")->result_array();
 		
 		$brand_margin_det=$this->db->query("select brand_margin,applicable_from,applicable_till from m_vendor_brand_link where cat_id=0 and brand_id=? and vendor_id=? and is_active=1",array($l_brand[0],$vendorid))->row_array();
@@ -26018,7 +25924,6 @@ die; */
 					}
 				}
 			}
-
 		}
 		if(!isset($_SERVER['HTTP_X_REQUESTED_WITH']))
 		{
@@ -26032,6 +25937,7 @@ die; */
 		$data['page']="vendor_margin_bulk_update";
 		$this->load->view("admin",$data);
 	}
+
 	/**
 	 * function to bulk update vendor margin
 	 */
@@ -26303,6 +26209,7 @@ die; */
 		}
 		echo json_encode($output);
 	}
+
 	/**
 	 * Ajax function to load categories linked to vendor
 	 */
@@ -26325,7 +26232,6 @@ die; */
 		//print_r($output['res_list']);exit;
 		echo json_encode($output);
 	}
-	
 	
 
 	function jx_load_vendordet_bybrand()
@@ -26357,13 +26263,13 @@ die; */
 		$user=$this->auth(PURCHASE_ORDER_ROLE);
 		//list of products in po
 		$po_product_list=$this->db->query("SELECT i.*,p.product_name  FROM t_po_product_link i  JOIN m_product_info p ON p.product_id=i.product_id  WHERE i.po_id=? and i.is_active=1",$poid)->result_array();
-	
+
 		//po created details
 		$po_det=$this->db->query("SELECT total_value,date_of_delivery,created_on,a.name,p.remarks FROM t_po_info p LEFT JOIN king_admin a ON a.id=p.created_by WHERE po_id=?",$poid)->row_array();
 
 		//supplier details
 		$vendor_details=$this->db->query("SELECT DISTINCT t.vendor_id,v.vendor_name,v.address_line1,v.address_line2,locality,city_name,postcode,c.contact_name,c.mobile_no_1,c.mobile_no_2,c.telephone_no FROM t_po_info t  JOIN m_vendor_info v ON v.vendor_id=t.vendor_id JOIN `m_vendor_contacts_info` c ON c.vendor_id=v.vendor_id WHERE t.po_id=?",$poid)->row_array();
-	
+
 		//total po value
 		//$ttl_po_value=$this->db->query("SELECT total_value FROM t_po_info WHERE po_id=?",$poid)->row()->total_value;
 		$ttl_po_value=$this->db->query("SELECT SUM(purchase_price*order_qty) AS total_value FROM t_po_product_link WHERE po_id=? AND is_active=1",$poid)->row()->total_value;
@@ -26867,6 +26773,7 @@ die; */
 		} 
 		
 	}
+
 	function fld_margin_log()
 	{
 		$data['page']='franchise_local_distributor_mrgn_log';
@@ -27062,6 +26969,7 @@ die; */
 					
 		echo json_encode($output);	
 	}
+
 
 	/*
 	 * Ajax function to load shipments details for a franchise on selected date
@@ -27589,6 +27497,7 @@ die; */
 		
 	}
 
+
     /**
      * Function to get list of reconciled invoices or dr data of given credit note id
      * @param type $credit_note_id int 
@@ -27970,57 +27879,61 @@ die; */
     	$output=array();
 		if($pid)
 		{
-    		$this->db->query("insert into pnh_franchise_pprice_enqrylog (franchise_id,pid,created_on)values(?,?,now())",array($fid,$pid));
-    		$output['status']='success';
-    	}else 
-    	{
-    		$output['status']='error';
-    		$output['msg']='Product Already Enquired';
-    	}
-    	echo json_encode($output);
-    }
-    
-    function fran_pricequote()
-    {
-    	$quote_pid=$this->input->post('pquote_pid');
-    	$quote_fid=$this->input->post('pquote_fid');
-    	$pmrp=$this->input->post('mrp');
-    	$lprice=$this->input->post('lprice');
-    	$offprice=$this->input->post('offprice');
-    	$quote_price=$this->input->post('quote');
-    	$output=array();
-    	if(is_numeric($quote_price))
-    	{
-	    	$this->db->query("insert into pnh_franchise_price_quote(franchise_id,pid,mrp,offrprice,lprice,quote,created_on)values(?,?,?,?,?,?,now())",array($quote_fid,$quote_pid,$pmrp,$offprice,$lprice,$quote_price));
-	    	$id=$this->db->insert_id();
-	    	if($id)
-	    	{
-	    		$output['status']='success';
-	    	}
-	    	
-    	}
-    	else if(!is_numeric($quote_price))
-    	
-    	{
-    		$output['status']='error';
-    		$output['msg']='Invalid Price entered.';
-    	}
-    	else
-    	{
-    		$output['status']='error';
-    		$output['msg']='Please Enter Franchise request Price';
-    	}	
-    	
-    	echo json_encode($output);
-    }
-	
-    
-    function jx_load_franchise_qvkview()
-    {
-    	$fid=$this->input->post('fid');
-    	//echo $fid;exit;
-    	$fran_details=$this->db->query("SELECT franchise_name,franchise_id,login_mobile1,login_mobile2,t.town_name,tr.territory_name FROM pnh_m_franchise_info f JOIN pnh_m_territory_info tr ON f.territory_id=tr.id JOIN pnh_towns t ON t.id=f.town_id WHERE franchise_id=?",$fid)->row_array();
-    	$flinked_menu=$this->db->query("SELECT GROUP_CONCAT(m.name) AS menu FROM pnh_franchise_menu_link l JOIN `pnh_menu` m ON m.id=l.menuid WHERE fid=? AND l.status=1",$fid)->row()->menu;
+			$this->db->query("insert into pnh_franchise_pprice_enqrylog (franchise_id,pid,created_on)values(?,?,now())",array($fid,$pid));
+			$output['status']='success';
+		}else
+		{
+			$output['status']='error';
+			$output['msg']='Product Already Enquired';
+		}
+		echo json_encode($output);
+	}
+
+	/**
+	 * function to save franchise requested price
+	 */
+	function fran_pricequote()
+	{
+		$quote_pid=$this->input->post('pquote_pid');
+		$quote_fid=$this->input->post('pquote_fid');
+		$pmrp=$this->input->post('mrp');
+		$lprice=$this->input->post('lprice');
+		$offprice=$this->input->post('offprice');
+		$quote_price=$this->input->post('quote');
+		$output=array();
+		if(is_numeric($quote_price))
+		{
+			$this->db->query("insert into pnh_franchise_price_quote(franchise_id,pid,mrp,offrprice,lprice,quote,created_on)values(?,?,?,?,?,?,now())",array($quote_fid,$quote_pid,$pmrp,$offprice,$lprice,$quote_price));
+			$id=$this->db->insert_id();
+			if($id)
+			{
+				$output['status']='success';
+			}
+
+		}
+		else if(!is_numeric($quote_price))
+
+		{
+			$output['status']='error';
+			$output['msg']='Invalid Price entered.';
+		}
+		else
+		{
+			$output['status']='error';
+			$output['msg']='Please Enter Franchise request Price';
+		}
+			
+		echo json_encode($output);
+	}
+
+	/**
+	 * function to load franchise quick view
+	 */
+	function jx_load_franchise_qvkview()
+	{
+		$fid=$this->input->post('fid');
+		$fran_details=$this->db->query("SELECT franchise_name,franchise_id,login_mobile1,login_mobile2,f.created_on,is_suspended,t.town_name,tr.territory_name FROM pnh_m_franchise_info f JOIN pnh_m_territory_info tr ON f.territory_id=tr.id JOIN pnh_towns t ON t.id=f.town_id WHERE franchise_id=?",$fid)->row_array();
+		$flinked_menu=$this->db->query("SELECT GROUP_CONCAT(m.name) AS menu FROM pnh_franchise_menu_link l JOIN `pnh_menu` m ON m.id=l.menuid WHERE fid=? AND l.status=1",$fid)->row()->menu;
 		$fcontact=$this->db->query("SELECT contact_mobile1,contact_mobile2 FROM `pnh_m_franchise_contacts_info` WHERE franchise_id=?",$fid)->row_array();
 		if(!empty($fran_details))
 		{
@@ -28030,14 +27943,45 @@ die; */
 			$f_twn_name=$fran_details['town_name'];
 			$f_contact1=$fran_details['login_mobile1']?$fran_details['login_mobile1']."<img src='".IMAGES_URL."phone.png' class='phone_small' onclick='makeacall(\"0{$fran_details['login_mobile1']}\")'>":'' ;
 			$f_contact2=$fran_details['login_mobile2']?$fran_details['login_mobile2']."<img src='".IMAGES_URL."phone.png' class='phone_small' onclick='makeacall(\"0{$fran_details['login_mobile2']}\")'>":'' ;
+			$fran_status_arr=array();
+			$fran_status_arr[0]="Live";
+			$fran_status_arr[1]="Permanent Suspension";
+			$fran_status_arr[2]="Payment Suspension";
+			$fran_status_arr[3]="Temporary Suspension";
 			$menu=$flinked_menu?$flinked_menu:'Not Alloted.';
-	    	$msg="<div id='mem_fran_det' width='50%'>";
-			$msg.="<div class='stk_mem_detwrap'><b style='width:15%;'>Name : </b><a style='font-size:14px;color:blue;' href='".site_url("admin/pnh_franchise/$f_id")."' target='_blank'>$f_name</a></div> <div class='stk_mem_detwrap'> <b style='width:15%;'>Territory : </b><a>$f_terri_name</a></b> </div><div class='stk_mem_detwrap'><b style='width:15%;'>Town : </b><a>$f_twn_name</a></div><div class='stk_mem_detwrap'><b style='width:15%;'>Contact : </b><a>$f_contact1 &nbsp; $f_contact2</a></div><fieldset><b>Menu  </b><div><a  style='font-size:11px;display:inline-block;margin:4px 3px 2px 2px;width='50%';text-decoration: none;'>{$menu}</a></div></fieldset></div>";
-	      	$msg.="<div class='clear'></div></div>";
-	    	die($msg);
+			$fran_status=$fran_details['is_suspended'];
+			$fr_reg_diff = ceil((time()-$fran_details['created_on'])/(24*60*60));
+			if($fr_reg_diff <= 30)
+			{
+				$fr_reg_level_color = '#cd0000';
+				$fr_reg_level = 'Newbie';
+			}
+			else if($fr_reg_diff > 30 && $fr_reg_diff <= 60)
+			{
+				$fr_reg_level_color = 'orange';
+				$fr_reg_level = 'Mid Level';
+			}else if($fr_reg_diff > 60)
+			{
+				$fr_reg_level_color = 'green';
+				$fr_reg_level = 'Experienced';
+			}
+			if($fran_status != 0)
+			{
+				$fr_status_color='red';
+			}
+			else
+			{
+				$fr_status_color='green';
+			}
+			$msg="<div id='mem_fran_det' width='50%'>";
+			$msg.="<div  style='text-align:right;width:100%'><b class='level_wrapper' style='background-color:$fr_status_color;'>$fran_status_arr[$fran_status]</b> | <b class='level_wrapper' style='margin-left:2px;background-color:$fr_reg_level_color;'>$fr_reg_level</b></div>
+			<div class='stk_mem_detwrap'><b style='width:15%;'>Name : </b><a style='font-size:14px;color:blue;' href='".site_url("admin/pnh_franchise/$f_id")."' target='_blank'>$f_name</a></div>
+			<div class='stk_mem_detwrap'> <b style='width:15%;'>Territory : </b><a>$f_terri_name</a></b> </div><div class='stk_mem_detwrap'><b style='width:15%;'>Town : </b><a>$f_twn_name</a></div><div class='stk_mem_detwrap'><b style='width:15%;'>Contact : </b><a>$f_contact1 &nbsp; $f_contact2</a></div><fieldset><b>Menu  </b><div><a  style='font-size:11px;display:inline-block;margin:4px 3px 2px 2px;width='50%';text-decoration: none;'>{$menu}</a></div></fieldset></div>";
+			$msg.="<div class='clear'></div></div>";
+			die($msg);
 		}
-    	
-    }
+			
+	}
 	/**
      * Function to return deal stock details
      * @param type $itemid int

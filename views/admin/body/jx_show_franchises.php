@@ -24,7 +24,7 @@
 					<div class="fil_options" >
 						<span class="fil_option">
 							<b>Menu</b> :  
-							<select class="inp" name="fil_menu" style="width: 150px;">
+							<select class="inp" name="fil_menu" style="width: 250px;">
 								<option value="">All</option>
 								<?php 
 									foreach($menu_list as $menu) 
@@ -32,26 +32,28 @@
 								?>
 							</select>
 						</span>
-						<span class="fil_option">
-							<b>Territory</b> :  
-							<select class="inp" name="fil_terr" style="width: 150px;">
-								<option value="">All</option>
-								<?php 
-									foreach($terr_list as $terr) 
-										echo '<option value="'.$terr['territory_id'].'" '.(($sel_terr_id==$terr['territory_id'])?'selected':'').' >'.$terr['territory_name'].'</option>';
-								?>
-							</select>
-						</span>
-						<span class="fil_option">
-							<b>Town</b> :
-							<select class="inp" name="fil_town" style="width: 150px;">
-								<option value="">Choose </option>
-								<?php 
-									foreach($town_list as $town) 
-										echo '<option value="'.$town['town_id'].'"  '.(($sel_town_id==$town['town_id'])?'selected':'').'  >'.$town['town_name'].'</option>';
-								?>
-							</select>
-						</span>	
+						<div>
+							<span class="fil_option">
+								<b>Territory</b> :  
+								<select class="inp" name="fil_terr" style="width: 150px;">
+									<option value="">All</option>
+									<?php 
+										foreach($terr_list as $terr) 
+											echo '<option value="'.$terr['territory_id'].'" '.(($sel_terr_id==$terr['territory_id'])?'selected':'').' >'.$terr['territory_name'].'</option>';
+									?>
+								</select>
+							</span>
+							<span class="fil_option">
+								<b>Town</b> :
+								<select class="inp" name="fil_town" style="width: 150px;">
+									<option value="">Choose </option>
+									<?php 
+										foreach($town_list as $town) 
+											echo '<option value="'.$town['town_id'].'"  '.(($sel_town_id==$town['town_id'])?'selected':'').'  >'.$town['town_name'].'</option>';
+									?>
+								</select>
+							</span>
+						</div>
 					</div>
 					<?php } ?>
 			</td>
@@ -73,13 +75,14 @@
 		{
 	?>
 		<table class="datagrid" width="100%" >
-			<thead><tr><th>Sno</th><th>FID</th><th>Franchise Level</th><th>Franchise Name</th><!--  <th>Type</th>--><th>City | Territory</th><?php /*?><th>Current Balance</th> */?><!-- <th>Assigned to</th><th>Class</th>--><?php /*?><th>Last OrderedOn</th><?php /*/?><th>RegisteredOn</th><th></th></tr></thead>
+			<thead><tr><th>Sno</th><th>FID</th><th>Franchise Level</th><th>Franchise Name</th><!--  <th>Type</th>--><th>City | Territory</th>
+				<?php /*?><th>Current Balance</th> */?><th>Assigned to</th><!--  <th>Class</th>--><?php /*?><th>Last OrderedOn</th><?php /*/?><th>RegisteredOn</th><th></th></tr></thead>
 			<tbody>
 			<?php $i=0; foreach($frans as $f){
 				$fr_payment_det = $this->erpm->get_franchise_account_stat_byid($f['franchise_id']);
 				$last_ordered_on = @$this->db->query("select from_unixtime(a.init) as last_ordered_on from king_transactions a where a.franchise_id = ? order by last_ordered_on desc limit 1",$f['franchise_id'])->row()->last_ordered_on;
 				
-				$fran_exp = $this->reservations->fran_experience_info($f['created_on']);
+				$fran_exp = $this->erpm->fran_experience_info($f['created_on']);
 			?>
 			<tr class="<?php echo $f['is_suspended']?'row_warn':''?>" >
 			<td>
@@ -98,7 +101,8 @@
 			<td>
 				Rs <?=formatInIndianStyle($fr_payment_det['shipped_tilldate']-($fr_payment_det['paid_tilldate']+$fr_payment_det['acc_adjustments_val']+$fr_payment_det['credit_note_amt']),2)?>
 			</td>
-			<td><?=$f['owners']?></td> */?>
+			<?php /*/?>
+			<td><?=$f['owners']?></td>
 			<!--  <td><?=$f['class_name']?></td>-->
 			<?php /*?>
 			<td><?=format_date($last_ordered_on)?></td>

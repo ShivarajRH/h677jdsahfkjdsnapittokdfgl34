@@ -109,7 +109,7 @@ else
             if($trans_created_by) 
                     $trans_created_by = '<div class="trans_created_by"> by '.($trans_created_by).'';
         
-            $arr_fran = $this->reservations->fran_experience_info($f['f_created_on']);
+            $arr_fran = $this->erpm->fran_experience_info($f['f_created_on']);
             
             $output .= '<tr class="'.$ord_stat_txt.'_ord">
                 <td>'.$slno.'</td>

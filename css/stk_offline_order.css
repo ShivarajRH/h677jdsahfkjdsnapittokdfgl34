@@ -317,7 +317,7 @@ margin: 20px 0px;
 float: left;
 padding: 3px 5px 0px;
 text-align: right;
-width: 21%;
+width: 25% !important;
 }
 
 .stk_mem_detwrap
@@ -377,8 +377,8 @@ margin: 20px 0px;
     color: #FFFFFF !important;
     font-size: 10px;
     font-weight: bold;
-    height: 13px;
-    line-height: 13px;
+    height: 17px;
+    line-height: 16px;
     padding: 3px 6px;
     text-shadow: none;
     width: 66px;
@@ -389,8 +389,8 @@ background: none repeat scroll 0 0 #000000 !important;
     color: #FFFFFF !important;
     font-size: 10px;
     font-weight: bold;
-    height: 13px;
-    line-height: 13px;
+    height: 17px;
+    line-height: 16px;
     padding: 3px 6px;
     text-shadow: none;
     width: 66px;

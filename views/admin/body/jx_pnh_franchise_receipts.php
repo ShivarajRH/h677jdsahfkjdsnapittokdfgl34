@@ -58,6 +58,7 @@
                                                 <?php   } ?>
                                                 </div>
                                             </td>
+
                                     </tr>
                                 <?php if($pr['modified_on']){?>
                                 <tr><td><b>Transit Status Modified By</b></td><td><b>:</b></td><td><?php echo $pr['modifiedby']?></td></tr>
@@ -623,7 +624,6 @@ else if($type=="unreconcile")
                 <div align="right" class="receipt_pg fl_right">
                         <?php echo $cr_pagination; ?>
                 </div>
-
                 <div class="receipt_totals"><b>Total Credit notes: </b><?php echo $count_credit_records;?>&nbsp;&nbsp;<b>Total value:</b> Rs <?php echo formatInIndianStyle($total_credit_amount)?></div>
             <?php
                 if($credits_log)
@@ -657,7 +657,6 @@ else if($type=="unreconcile")
                                    <?php
                                 //}
                                // else echo '--';
-
                                 if($ttl_reconcile_amount > 0) { ?>
                                         <!--<span>Rs. <?php // echo $ttl_reconcile_amount;?></span>-->
                                         &nbsp;&nbsp;<a href="javascript:void(0);" onclick="clk_view_reconciled_credit_value(this,'<?=$credit_note_id;?>','<?=$un_ac_st["franchise_id"];?>','<?=$ttl_reconcile_amount;?>')" class="button button-tiny button-primary cursor">View Reconciled</a><?php

@@ -179,6 +179,7 @@
 <tr><td><input type="button" value="Confirm" onclick='final_confirm()'></td><td><input type="button" value="Cancel" onclick='final_cancel()'></td></tr>
 </tbody>
 </table>
+
 <div class="clear"></div>
 
 </div>
@@ -1286,7 +1287,6 @@ $(function(){
 	
 	
 	$(".add_product").click(function(){
-
 		
 		pid=$("#p_pid").val();
 		if($.inArray(pid,pids)!=-1)
@@ -1634,7 +1634,6 @@ $("#show_scheme_details").dialog({
 							
 					});
 				}
-
 				if(result.menu != undefined)
 				{
 					$.each(result.menu,function(k,v){

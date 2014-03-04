@@ -461,6 +461,7 @@ function format_number(num,decimal) { //decimal is optional
     return parseFloat(final_num);
 }
 
+
 //============================================<< JQUERY TRIM FUNCTION START >>===================================
     $.ltrim = function( str ) {
         return str.replace( /^\s+/, "" );

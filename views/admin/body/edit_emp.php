@@ -418,6 +418,7 @@ $('select[name="territory[]"]').change(function(){
 
 $(".inst_type").change(function(){
 	$(".inst").hide();
+
 	$('.inst select').html('').val('').trigger("liszt:updated");
 			if($(this).val()=="3")
 		{

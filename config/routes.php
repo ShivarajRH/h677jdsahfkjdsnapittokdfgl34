@@ -52,6 +52,7 @@ $route['scaffolding_trigger'] = "oeifj8493utr8934j98t3ut89f34h89h3498t83ehfgwet8
 //$route['health']="deals/menu/Health-m2u";
 
 
+
 $route['data_api/(:any)']="data/index/$1";
 $route['data_api']="data/index";
 
@@ -59,12 +60,13 @@ $route['pnh/(:any)']="pnh/$1";
 $route['pnh']="pnh";
 
 
-$urs=array("claim_points","destroybodp","headtotoe","live","history","startinviting","jx_checkoutstat","jx_checkoutcond","weeklysavings","loadfavs","shoppingcart","favs","opsearch","brands","getverifiedbymob","editqty","yourcart","checkout_inter","getverified","inviteforbp","inviteforbp_nonc","updatecrp","dashboard","spotlight","processPayment","myorders","jx_subscribe","jx_fdback","jx_alert","jx_request","recent","loginpanel","joinhands","jxcoupon","whatru","emailsignup","emailsignin","nomobile","gomobile","profile","changepwd","changeaddr","jxforpass");
+
+$urs=array("claim_points","destroybodp","productsforwholebody","live","history","startinviting","jx_checkoutstat","jx_checkoutcond","weeklysavings","loadfavs","shoppingcart","favs","opsearch","brands","getverifiedbymob","editqty","yourcart","checkout_inter","getverified","inviteforbp","inviteforbp_nonc","updatecrp","dashboard","spotlight","processPayment","myorders","jx_subscribe","jx_fdback","jx_alert","jx_request","recent","loginpanel","joinhands","jxcoupon","whatru","emailsignup","emailsignin","nomobile","gomobile","profile","changepwd","changeaddr","jxforpass");
 foreach($urs as $u)
 	$route[$u]="deals/$u";
 	
 //jxs	
-$urs=array("thumbsupreview","invitefbfriends","subscribeaction","useraccheck","noannounce","getattention","remindme","sugst_search","checkcodpin","gb_redirect","extendbp","updatemob","clearcoupon","viewcoworkers","startbuyprocess","lookingto","isemailavail","writereview","reviews");
+$urs=array("invitefbfriends","subscribeaction","useraccheck","noannounce","getattention","remindme","sugst_search","checkcodpin","gb_redirect","extendbp","updatemob","clearcoupon","viewcoworkers","startbuyprocess","lookingto","isemailavail","writereview","reviews");
 foreach($urs as $ur)
 	$route["jx/$ur"]="deals/jx_$ur";
 
@@ -184,15 +186,16 @@ foreach(array("Hanmade-Soaps"=>"Handmade-Soaps") as $m=>$a)
 	$route["(:any)/$m"]="deals/menuncat/$1/$a";
 }
 
-foreach(array("Health","Gifts","Beauty") as $u)
-	$route[$u]="deals/special_index/$u";
-
 /* */																																																							
 $route['(:any)-p(:num)t']="deals/deal/$1-p$2t";
 $route['(:any)-m(:num)u/(:any)-c(:num)y']="deals/menuncat/$1-m$2u/$3-c$4y";
 $route['(:any)-m(:num)u']="deals/menu/$1-m$2u";
 $route['(:any)-c(:num)y']="deals/category/$1-c$2y";
 
+
+$route['admin/callcenter/trans/(:any)']="callcenter/trans/$1";
+$route['admin/callcenter/(:any)']="callcenter/trans/$1";
+$route['admin/callcenter']="callcenter";
 $route['admin']="admin";
 $route['callcenter']="callcenter";
 $route['cron']="cron";

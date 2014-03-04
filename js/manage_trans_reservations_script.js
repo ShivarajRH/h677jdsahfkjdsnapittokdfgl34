@@ -178,7 +178,6 @@ function picklist_fran_wise(elt,batch_id,franchise_id) {    //$("#picklist_by_fr
             $("#show_picklist_block").html(resp).dialog("open").dialog('option', 'title', 'Franchisewise pick slip for #'+batch_id);
     });
 }
-
 $("#pick_all").live("change",function() {
     var checkBoxes=$(".pick_list_trans_ready");
     if($(this).is(":checked")) {
@@ -246,8 +245,6 @@ $(".reservation_action_status").dialog({
     position: ['center', 'center'],
     modal: true
 });
-
-
 function reallot_stock_for_all_transaction(userid,pg) {
     if(!confirm("Are you sure you want to reserve available stock for all pending or partial transactions?")) {
         return false;
@@ -621,6 +618,7 @@ function objToOptions_menus(obj) {
 
     return(output);
 }
+
     
 function loadTransactionList(pg) {
     
@@ -640,6 +638,7 @@ function loadTransactionList(pg) {
 
     var date_from= ($("#date_from").val() == '')?0:$("#date_from").val();
     var date_to= ($("#date_to").val() == '')?0:$("#date_to").val();
+
 
     var limit= $("#limit_filter").val();
 
@@ -672,6 +671,7 @@ function show_all_orders() {
 function fail(rdata) {
     console.log(rdata);
 }
+
 function done(data) { }
 function fail(xhr,status) { $('#trans_list_replace_block').print("Error: "+xhr.responseText+" "+xhr+" | "+status);}
 function success(resp) {

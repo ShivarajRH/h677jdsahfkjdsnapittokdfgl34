@@ -335,7 +335,6 @@ function validate_recipient_det(){
 	return true; 
 }
 
-
 $(function(){
 	$(".search_right .link").click(function(){
 		if(!$(".search_right").hasClass("sub_expanded"))

@@ -1,7 +1,7 @@
 <div id="container">
 <h2 style="text-align: center">StoreKing Offline Order</h2>
 	<div class="stk_offlinecard" >
-		<div class="stk_ordr_inpwrap"><b>State : </b><select class="fran_det chzn-select" data-placeholder="Choose State" name="sel_state" id="sel_state" style="width: 250px;">
+		<div class="stk_ordr_inpwrap"><b>State : <span class="red_star">*</span></b><select class="fran_det chzn-select" data-placeholder="Choose State" name="sel_state" id="sel_state" style="width: 250px;">
 														<option value=""></option>
 														<?php $states=$this->db->query("select state_id,state_name from pnh_m_states group by state_id order by state_name asc ")->result_array();
 																if($states){foreach($states as $state){?>
@@ -9,9 +9,9 @@
 														<?php }}?></select>
 		</div>
 		<div  class="stk_ordr_inpwrap"><b>Territory : </b><select class="fran_det chzn-select" data-placeholder="Choose Territory" name="sel_terr" id="sel_terr" style="width: 250px;"></select></div>
-		<div class="stk_ordr_inpwrap"><b>Franchise : </b> <select class=" chzn-select" data-placeholder="Choose Franchise "  name="sel_fid" id="sel_fid" style="width:250px;" ></select></div>
-		<div class="stk_ordr_inpwrap"><b>Order For : </b><select name="mid_entrytype" id="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
-		<div class="stk_ordr_inpwrap mid_blk"><b>Member Id : </b><input style="font-size:120%" maxlength="8"  type="text" class="mid" name="mid" size=18 ></div>
+		<div class="stk_ordr_inpwrap"><b>Franchise : <span class="red_star">*</span></b> <select class=" chzn-select" data-placeholder="Choose Franchise "  name="sel_fid" id="sel_fid" style="width:250px;" ></select></div>
+		<div class="stk_ordr_inpwrap"><b>Order For : <span class="red_star">*</span></b><select name="mid_entrytype" id="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
+		<div class="stk_ordr_inpwrap mid_blk"><b>Member Id : <span class="red_star">*</span></b><input style="font-size:120%" maxlength="8"  type="text" class="mid" name="mid" size=18 ></div>
 		<div id="signin" style="display:none;"><input type="button" value="Proceed" onclick='load_franchisebyid()' class="button button-rounded button-action"></div>
 	</div>
 	<div id="mid_det" title="Member Details"><div id="mem_fran"></div></div>
@@ -117,6 +117,8 @@ height:'300',
 autoOpen:false,
 open:function()
 {
+	$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"background":"tomato","color":"white"});
+	
 	dlg=$(this);
 	$("#mem_fran").html("");
 	$.post("<?=site_url("admin/jx_pnh_getmid")?>",{mid:dlg.data('mid'),more:1},function(data){
@@ -192,9 +194,10 @@ $("#sel_fid").change(function(){
 $("#franchise_quickview").dialog({
 	autoOpen:false,
 	model:true,
-	width:'400',
-	height:'300',
+	width:'448',
+	height:'auto',
 	open:function(){
+			$('.ui-dialog-buttonpane').find('button:contains("Proceed")').css({"background":"#4AA02C","color":"white"});
 			dlg=$(this);
 			$("#fran_qvkview").html("");
 			$.post(site_url+'/admin/jx_load_franchise_qvkview',{fid:dlg.data('fid')},function(data){
@@ -237,7 +240,7 @@ margin: 20px 0px;
 float: left;
 padding: 3px 5px 0px;
 text-align: right;
-width: 21%;
+width: 25% !important;
 }
 .stk_mem_detwrap
 {
@@ -273,4 +276,13 @@ float: right;
     text-align: center;
  
     }
+.level_wrapper
+{
+	font-size: 10px;
+	color:#fff;
+	padding:2px 3px;
+	border-radius:3px;
+	margin-right: 7px;
+	width:auto !important;
+}
 </style>

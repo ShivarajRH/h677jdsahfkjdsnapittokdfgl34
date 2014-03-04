@@ -7,6 +7,7 @@ class Erpmodel extends Model
 	{
 		parent::__construct();
 	}
+
     /**
      * Function to save assigned user
      */
@@ -1511,7 +1512,7 @@ class Erpmodel extends Model
 				
 				$sql = "select stock_id,product_id,available_qty,location_id,rack_bin_id,mrp,if((mrp-$req_mrp),1,0) as mrp_diff 
 						from t_stock_info where mrp > 0  and product_id = ? and available_qty > 0 
-						order by product_id desc,mrp_diff,mrp desc ";				
+						order by product_id desc,mrp_diff,mrp ";				
 				
 				$stk_prod_list = $this->db->query($sql,$p['product_id']);
 				
@@ -2012,167 +2013,100 @@ courier disable ends
 	
 	function do_pack()
 	{
-             error_reporting(E_ALL);
-                ini_set('display_errors',true);
-                
-                 
-                $fs_ids=$this->input->post('fs_ids');
-				$lgn_user = $this->auth();
-				$user = $this->erpm->auth();
-                $pid_list=explode(",",$this->input->post("pids"));
-                $pbcodes_list=$this->input->post("pbc");
-                $p_invoice_list = explode(',',$this->input->post("invoice"));
-                
-                $pid_list_arr = array();
-                
-                $p_invoice_list = array();
-                
-                foreach($pid_list as $pid_det)
-                {
-                    list($p_invno,$prod_id) = explode('_',$pid_det);
-                    if(!isset($pid_list_arr[$p_invno]))
-                           $pid_list_arr[$p_invno] = array();
-                    
-                    $pid_list_arr[$p_invno][] = $prod_id;
-                    $p_invoice_list[] = $p_invno;
-                }
-                
-                $pbcodes_list_arr = array();
-                
-                foreach($pbcodes_list as $k=>$pbcode_det)
-                {
-                    list($p_invno) = explode('_',$k);
-                    
-                    if(!isset($pbcodes_list_arr[$p_invno]))
-                           $pbcodes_list_arr[$p_invno] = array();
-                    
-                    $pbcodes_list_arr[$p_invno][$k] = $pbcode_det;
-                }
-				/*
-                $imei_list_arr = array();
-                foreach($pid_list as $pid_det)
-                {
-                    list($p_invno,$prod_id) = explode('_',$pid_det);
-                    
-                     
-                    if(!isset($imei_list_arr[$p_invno]))
-                           $imei_list_arr[$p_invno] = array();
-                    
-					if(!isset($imei_list_arr[$p_invno][$order_id]))
-                           $imei_list_arr[$p_invno][$order_id] = array();
-					
-					
-                    if(!isset($imei_list_arr[$p_invno][$order_id][$prod_id]))
-                           $imei_list_arr[$p_invno][$order_id][$prod_id] = array();
-                    
-                    $imei_list_arr[$p_invno][$order_id][$prod_id] = $this->input->post("imei_{$p_invno}_{$prod_id}_{$order_id}");
-                }
-				*/
-                
-                $new_dispatch_id = 0; 
-                
-                foreach($p_invoice_list as $p_invoice)
-                {    
-                    $pids = $pid_list_arr[$p_invoice];
-                    $pbcodes = $pbcodes_list_arr[$p_invoice];
-                    
-                    //$p_imei_list = $imei_list_arr[$p_invoice];
-                    
-                    if(!$pbcodes)
-                    {
-                            show_error("Sorry No Stock Selected");
-                            die();
-                    }
-                    
-                    /*foreach($pids as $pid)
-                    {
-                            $imeis[$pid]=array();
-                            if($this->input->post("imei_$p_invoice_$pid"))
-                                    $imeis[$pid]=$this->input->post("imei_$p_invoice_$pid");
-                    }*/
-                    
-                    
-                    $batch_id = $this->db->query("select batch_id from shipment_batch_process_invoice_link where p_invoice_no = ? ",$p_invoice)->row()->batch_id;
-                    $ord_item_ids = array();
-                    $r_need_pids=$this->db->query("select l.product_id,l.itemid,o.id,o.is_ordqty_splitd from proforma_invoices i join king_orders o on o.id=i.order_id join m_product_deal_link l on l.itemid=o.itemid where i.p_invoice_no=?",$p_invoice)->result_array();
-                    $ret2=$this->db->query("select p.product_id,o.id,o.itemid,o.is_ordqty_splitd from proforma_invoices i join king_orders o on o.id=i.order_id join products_group_orders pgo on pgo.order_id=o.id join m_product_group_deal_link pl on pl.itemid=o.itemid join m_product_info p on p.product_id=pgo.product_id join king_dealitems d on d.id=o.itemid where i.p_invoice_no=?",$p_invoice)->result_array();
-                    $r_need_pids=array_merge($r_need_pids,$ret2);
+		$p_invoice=$this->input->post("invoice");
+		$pids=explode(",",$this->input->post("pids"));
+		$pbcodes=$this->input->post("pbc");
+		$fs_ids=$this->input->post('fs_ids');
+		$lgn_user = $this->auth();
+		$user = $this->erpm->auth();
+		
+		if(!$pbcodes)
+		{
+			show_error("Sorry No Stock Selected");
+			die();
+		}
+			
+		foreach($pids as $pid)
+		{
+			$imeis[$pid]=array();
+			if($this->input->post("imei$pid"))
+				$imeis[$pid]=$this->input->post("imei$pid");
+		}
+		
+		$batch_id = $this->db->query("select batch_id from shipment_batch_process_invoice_link where p_invoice_no = ? ",$p_invoice)->row()->batch_id;
+		$ord_item_ids = array();
+		$r_need_pids=$this->db->query("select l.product_id,l.itemid,o.id,o.is_ordqty_splitd from proforma_invoices i join king_orders o on o.id=i.order_id join m_product_deal_link l on l.itemid=o.itemid where i.p_invoice_no=?",$p_invoice)->result_array();
+		$ret2=$this->db->query("select p.product_id,o.id,o.itemid,o.is_ordqty_splitd from proforma_invoices i join king_orders o on o.id=i.order_id join products_group_orders pgo on pgo.order_id=o.id join m_product_group_deal_link pl on pl.itemid=o.itemid join m_product_info p on p.product_id=pgo.product_id join king_dealitems d on d.id=o.itemid where i.p_invoice_no=?",$p_invoice)->result_array();
+		$r_need_pids=array_merge($r_need_pids,$ret2);
+		$need_pids = array();
+		foreach($r_need_pids as $r)
+		{
+			
+			$oids[$r['id']]=$r['id'];
+			if(!isset($need_pids[$r['id']]))
+				$need_pids[$r['id']]=array();
+			$need_pids[$r['id']][]=$r['product_id'];
+			
+			$ord_item_ids[$r['itemid']] = $r['id'];
+			$is_order_splitted[$r['id']]=0;//$r['is_ordqty_splitd'];
+		}
+		$p_oids=array();
+		foreach($need_pids as $oid=>$p)
+		{
+			$f=true;
+			foreach($p as $pp)
+				if(!in_array($pp,$pids))
+					$f=false;
+			if($f)
+				$p_oids[]=$oid;
+		}
+		
+		$p_oids_stacked = array();
+		$p_oids_stacked[0] = array();//unsplitted orders
+		$p_oids_stacked[1] = array();//splitted orders
+		
+		
+		foreach($p_oids as $oid)
+		{
+			// check if this order is splitted
+			array_push($p_oids_stacked[$is_order_splitted[$oid]],$oid);
+		}
+		
+		$processed_ord_ids = array();
+		$order_list = array();
+		$order_list[0] = $p_oids_stacked[0];
+		foreach($p_oids_stacked[1] as $psoid)
+		{
+			array_push($order_list,array($psoid));
+		}
+		
+		
+		// check if the profoma has atleast one splited order for generating invoice group 
+		$split_inv_grpno = 0;
+		$split_inv_grplist = array();
+		$credit_note_grpno = 0;
+		if(count($p_oids_stacked[1]))
+		{
+			$split_inv_grpno = @$this->db->query("select max(split_inv_grpno) as no from king_invoice where split_inv_grpno > 0 ")->row()->no;
+			if(!$split_inv_grpno)
+				$split_inv_grpno = 900000;
+			$credit_note_grpno = @$this->db->query("select max(grp_no) as no from t_invoice_credit_notes where grp_no > 0 ")->row()->no;
+			if(!$credit_note_grpno)
+				$credit_note_grpno = 0;
+			
+			$split_inv_grpno++;
+			$credit_note_grpno++;
+			
+		}
+		
+		
 
-                    $need_pids = array();
-                    foreach($r_need_pids as $r)
-                    {
-
-                            $oids[$r['id']]=$r['id'];
-                            if(!isset($need_pids[$r['id']]))
-                                    $need_pids[$r['id']]=array();
-                            $need_pids[$r['id']][]=$r['product_id'];
-
-                            $ord_item_ids[$r['itemid']] = $r['id'];
-                            $is_order_splitted[$r['id']]=$r['is_ordqty_splitd'];
-                    }
-
-
-
-                    $p_oids=array();
-                    foreach($need_pids as $oid=>$p)
-                    {
-                            $f=true;
-                            foreach($p as $pp)
-                                    if(!in_array($pp,$pids))
-                                            $f=false;
-                            if($f)
-                                    $p_oids[]=$oid;
-                    }
-
-                    $p_oids_stacked = array();
-                    $p_oids_stacked[0] = array();//unsplitted orders
-                    $p_oids_stacked[1] = array();//splitted orders
-
-                    //print_r($pids);
-                   // exit;
-
-                    foreach($p_oids as $oid)
-                    {
-                            // check if this order is splitted
-                            array_push($p_oids_stacked[$is_order_splitted[$oid]],$oid);
-                    }
-                    
-
-                    $processed_ord_ids = array();
-                    $order_list = array();
-                    $order_list[0] = $p_oids_stacked[0];
-                    foreach($p_oids_stacked[1] as $psoid)
-                    {
-                            array_push($order_list,array($psoid));
-                    }
-
-
-                    // check if the profoma has atleast one splited order for generating invoice group 
-                    $split_inv_grpno = 0;
-                    $split_inv_grplist = array();
-                    $credit_note_grpno = 0;
-                    if(count($p_oids_stacked[1]) )
-                    {
-                            $split_inv_grpno = @$this->db->query("select max(split_inv_grpno) as no from king_invoice where split_inv_grpno > 0 ")->row()->no;
-                            if(!$split_inv_grpno)
-                                    $split_inv_grpno = 900000;
-                            $credit_note_grpno = @$this->db->query("select max(grp_no) as no from t_invoice_credit_notes where grp_no > 0 ")->row()->no;
-                            if(!$credit_note_grpno)
-                                    $credit_note_grpno = 0;
-
-                            $split_inv_grpno++;
-                            $credit_note_grpno++;
-
-                    }
-
-
-
-                    $proforma_inv_id = $this->db->query("select a.id as id from proforma_invoices a 
-                                                                                                                            join king_orders b on a.order_id = b.id 
-                                                                                                                            where a.p_invoice_no = ?  ",array($p_invoice))->row()->id;
+		$proforma_inv_id = $this->db->query("select a.id as id from proforma_invoices a 
+															join king_orders b on a.order_id = b.id 
+															where a.p_invoice_no = ?  ",array($p_invoice))->row()->id;
 														
-		//print_r($order_list);
-		 
+		
+		
 		foreach($order_list as $p_oids)
 		{
 			if(count($p_oids) == 0)
@@ -2181,28 +2115,25 @@ courier disable ends
 			foreach($p_oids as $p_oid)
 				array_push($processed_ord_ids,$p_oid);
 			
-			
-			
 			$transid = $this->db->query("select transid from king_orders where id in (".implode(',',$p_oids).") ")->row()->transid;
 		 
 			$orders=$this->db->query("select quantity as qty,itemid,id,is_ordqty_splitd from king_orders where id in ('".implode("','",$p_oids)."') and transid = ? ",$transid)->result_array();
 		 	foreach($orders as $o)
 			{
-				
 				$pls=$this->db->query("select qty,pl.product_id,p.mrp from m_product_deal_link pl join m_product_info p on p.product_id=pl.product_id where itemid=?",$o['itemid'])->result_array();
 				
 				foreach($pls as $p)
 				{
-					if(!isset($_POST['imei_'.$p_invoice.'_'.$o['id'].'_'.$p['product_id']]))
-						continue;
-					
-					$imei_arr = $_POST['imei_'.$p_invoice.'_'.$o['id'].'_'.$p['product_id']];
-					$imei = $imei_arr[0];
-					if($imei === 0 || $imei === '')
-						continue;
-					
+					$imeis[$p['product_id']] = array_unique($imeis[$p['product_id']]);
+					foreach($imeis[$p['product_id']] as $il=>$imei)
+					{
+						if($imei===0)
+							continue;
 						
-					
+						// check if imei is already alloted and dont process the imei for duplicate entry imie allotment
+						if($this->db->query('select count(*) as t from t_imei_no where imei_no = ? and order_id != 0 and status = 1 ',$imei)->row()->t)
+							continue;
+						 	
 						$this->db->query("update t_imei_no set order_id=?,is_returned=0,status=1 where imei_no=? and status = 0 limit 1",array($o['id'],$imei));
 						
 						$imei_upd_stat = $this->db->affected_rows();
@@ -2240,7 +2171,7 @@ courier disable ends
 							if($o['is_ordqty_splitd'] == 1)
 								break;
 						}						
-					
+					}
 				}
 			}
 			
@@ -2264,15 +2195,7 @@ courier disable ends
 				$pls=$this->db->query("select qty,pl.product_id,p.mrp from m_product_deal_link pl join m_product_info p on p.product_id=pl.product_id where itemid=?",$o['itemid'])->result_array();
 				foreach($pls as $p)
 				{
-					if(!isset($_POST['imei_'.$p_invoice.'_'.$o['id'].'_'.$p['product_id']]))
-						continue;
-					
-					$imei_arr = $_POST['imei_'.$p_invoice.'_'.$o['id'].'_'.$p['product_id']];
-					$imei = $imei_arr[0];
-					if($imei === 0 || $imei === '')
-						continue;
-					
-					if($imei)
+					foreach($imeis[$p['product_id']] as $il=>$imei)
 					{
 						if($imei===0)
 							continue;
@@ -2317,7 +2240,6 @@ courier disable ends
 							 
 						}
 					}
-
 				}
 				 
 			}
@@ -2334,7 +2256,7 @@ courier disable ends
 			$stk_allot_det = array();
 			foreach($pbcodes as $stk_prod_sel => $stk_mrp_det)
 			{
-				list($p_invoice_no,$itemid,$pid,$pbcode,$sid_tmp,$order_id) = explode('_',$stk_prod_sel);
+				list($itemid,$pid,$pbcode,$sid_tmp,$order_id) = explode('_',$stk_prod_sel);
 				list($stk_cnt,$pmrp,$stk_id) = explode('_',$stk_mrp_det);
 				
 				
@@ -2503,7 +2425,6 @@ courier disable ends
 				array_push($split_inv_grplist,$invoice_no);
 				$this->db->query("update king_invoice set split_inv_grpno = ? where invoice_no = ? ",array($split_inv_grpno,$invoice_no));
 			}
-
 				
 			// process refund for invoiced deals
 			$refund_res = $this->db->query('select a.p_invoice_no,c.quantity,di.is_combo,di.is_pnh,c.itemid,d.menuid,c.transid,a.order_id,a.product_id,i_orgprice as ordmrp,i_orgprice-(i_price-i_coup_discount) as disc,b.mrp,(a.qty-ifnull(a.release_qty,0)+ifnull(a.extra_qty,0)) as allot_qty 
@@ -2594,7 +2515,6 @@ courier disable ends
 							$this->db->query("insert into t_refund_order_item_link(refund_id,order_id,invoice_no,qty) values(?,?,?,?)",array($rid,$oid,$invoice_no,$r_ord_det['qty']));
 							
 							//$this->db->query("update king_invoice set mrp = ?,discount=?,nlc=? where invoice_no = ? and order_id = ? ",array($r_ord_det['prod_mrp']/$r_ord_det['qty'],($r_ord_det['prod_mrp']-$r_ord_det['new_disc'])/$r_ord_det['qty'],$r_ord_det['new_disc']/$r_ord_det['qty'],$invoice_no,$oid));
-
 						}
 								
 						if($tid && $total_refund_amout)
@@ -2667,29 +2587,26 @@ courier disable ends
 				$last_dispatch_id = 500000;
 			
 			
-			if(!$new_dispatch_id)        
-			    $new_dispatch_id = $last_dispatch_id+1;		
 			
-			$this->db->query("update proforma_invoices set dispatch_id = ? where p_invoice_no = ? ",array($new_dispatch_id,$p_invoice));
-
-                            $inv_nos_res = $this->db->query("select distinct invoice_no from shipment_batch_process_invoice_link where p_invoice_no = ? ",$p_invoice);
-                            if($inv_nos_res->num_rows())
-                                    foreach($inv_nos_res->result_array() as $inv_det)
-                                            $this->db->query("update king_invoice set ref_dispatch_id = ?,split_inv_grpno=? where invoice_no = ? ",array($new_dispatch_id,$new_dispatch_id,$inv_det['invoice_no']));
-                            
-                            $this->session->set_flashdata("erp_pop_info","Invoice status Updated");
-
-        }else
-        {
+			$this->session->set_flashdata("erp_pop_info","Invoice status Updated");
+			
+			redirect("admin/invoice/$invoice_no");
+			
+		}else
+		{
+			
+			
 			$this->session->set_flashdata("erp_pop_info","Packed status updated");
+			
+			redirect("admin/invoice/$invoice_no");
 		}
-	}
-                 
 		
-		if($new_dispatch_id)
-			redirect("admin/invoice/$new_dispatch_id");
+		/*
+		if($split_inv_grpno)
+			redirect("admin/invoice/$split_inv_grpno");
 		else
 			redirect("admin/invoice/$invoice_no");
+			*/
 			
 	}
 	
@@ -4091,8 +4008,8 @@ courier disable ends
 		$type=$this->input->post('main');
                 $attributes = $this->input->post('attributes');
                 
-                $attributes = array_filter(array_unique($attributes));
-                $grp_attr_ids = implode(",",$attributes);
+        $attributes = array_filter(array_unique($attributes));
+        $grp_attr_ids = implode(",",$attributes);
                 
 		$this->db->query("update king_categories set type=?,name=?,attribute_ids=? where id=?",array($type,$name,$grp_attr_ids,$cat));
 		$this->session->set_flashdata("erp_pop_info","Category updated");
@@ -5581,7 +5498,6 @@ order by p.product_name asc
 		$this->db->query("delete from m_vendor_contacts_info where vendor_id=?",$vid);
 		//$this->db->query("delete from m_vendor_brand_link where vendor_id=?",$vid);
 		
-
 		if($cnt_name)
 		{
 			foreach($cnt_name as $i=>$cn)
@@ -5602,7 +5518,6 @@ order by p.product_name asc
 					}
 					else
 					{
-
 						$this->db->query("insert into m_vendor_brand_link(brand_id,cat_id,vendor_id,brand_margin,applicable_from,applicable_till,created_on) values(?,?,?,?,UNIX_TIMESTAMP(?),UNIX_TIMESTAMP(?),now())",array($b,$l_catid[$i],$vid,$l_margin[$i],$l_from[$i],$l_until[$i]));
 					}
 			}
@@ -5905,7 +5820,6 @@ order by p.product_name asc
 		
 		return $grn;
 	}
-
 	
 	function do_addvariant()
 	{
@@ -7048,7 +6962,7 @@ order by p.product_name asc
      * @param type $fid
      * @param type $user 
      */
-	function do_pnh_topup($fid,$user)
+	function do_pnh_topup($fid,$user=0)
 	{
 		$user=$this->erpm->getadminuser();
 		foreach(array("r_type","amount","bank","type","no","date","msg","transit_type","sel_invoice","amt_unreconcile","amt_adjusted","total_val_reconcile","document_type") as $i)
@@ -7703,6 +7617,7 @@ order by p.product_name asc
 		}	
 		return $total_value;
 	}
+
 	
 	//function to get total value by bank
 	function pnh_getreceiptttl_valuebytypebank ($type=4,$bid=false)
@@ -8109,7 +8024,7 @@ order by p.product_name asc
 				';
 				
 		$to = 'sourcing@storeking.in';
-		$cc = array('accounts@storeking.in','shariff@storeking.in','gova@storeking.in','nagaraj@storeking.in');
+		$cc = array('accounts@storeking.in','shariff@storeking.in','gova@storeking.in','nagaraj@storeking.in','sowmya@storeking.in','logistics@storeking.in');
 		$this->_notifybymail($to,$subject,$msg,"Support",'support@snapittoday.com',$cc);				
 		redirect("admin/pnh_franchises");
 	}
@@ -8444,7 +8359,6 @@ order by p.product_name asc
 		}
 		$transid=strtoupper("PNH".random_string("alpha",3).$this->p_genid(5));
 		$bal_discount_amt = 0;
-
 		if($redeem)
 		{
 			$total-=$redeem_value;
@@ -9859,15 +9773,12 @@ order by action_date";
 	function get_pnh_invreturns_ttl($cond='',$param)
 	{
 		//$sql = "select count(*) as ttl from pnh_invoice_returns as a where 1 $cond";
-		$sql = "select c.transid,a.return_id,a.invoice_no,franchise_name,return_by,returned_on,
-						b.name as handled_by_name,a.status,g.name as partnername,a.order_from,h.bill_person
+		$sql = "select c.transid,a.return_id,a.invoice_no,franchise_name,return_by,returned_on,b.name as handled_by_name,a.status
 					from pnh_invoice_returns a
 					join king_admin b on a.handled_by = b.id
 					join king_invoice c on c.invoice_no = a.invoice_no
 					join king_transactions d on c.transid = d.transid
 					left join pnh_m_franchise_info e on e.franchise_id = d.franchise_id
-					left join partner_info g on g.id=d.partner_id
-					left join king_orders h on h.transid=d.transid
 					join pnh_invoice_returns_product_link f on f.return_id = a.return_id 
 					where 1 $cond
 					group by a.return_id
@@ -9913,23 +9824,9 @@ order by action_date";
 	 * @param unknown_type $invno
 	 * @return unknown
 	 */
-	function get_invoicedet_forreturn($invno,$order_id=0)
+	function get_invoicedet_forreturn($invno)
 	{
 		$invdet = array();
-		$cond='';
-		$param=array();
-		
-		if($invno)
-		{
-			$cond=" and a.invoice_no = ? ";
-			$param[]=$invno;
-		}
-		
-		if($order_id)
-		{
-			$cond=" and t.partner_reference_no  = ? ";
-			$param[]=$order_id;
-		}
 		
 		$sql = "select  a.invoice_no,b.id as order_id,b.itemid,c.name,b.quantity,d.packed,d.shipped,d.shipped_on,
 						a.invoice_status,a.transid  
@@ -10020,7 +9917,7 @@ order by action_date";
 												join king_admin b on a.handled_by = b.id 
 												join king_invoice c on c.invoice_no = a.invoice_no
 												join king_transactions d on d.transid = c.transid
-												left join pnh_m_franchise_info e on e.franchise_id = d.franchise_id 
+												join pnh_m_franchise_info e on e.franchise_id = d.franchise_id 
 												where return_id = ? 
 											",$return_id);
 		if($return_det_res->num_rows())
@@ -10035,7 +9932,7 @@ order by action_date";
 														join m_product_info b on a.product_id = b.product_id 
 														join king_invoice c on c.invoice_no = f.invoice_no
 														join king_transactions d on d.transid = c.transid
-														left join pnh_m_franchise_info e on e.franchise_id = d.franchise_id  
+														join pnh_m_franchise_info e on e.franchise_id = d.franchise_id  
 														where a.return_id = ?
 														group by a.id   
 													",$return_id);
@@ -12687,7 +12584,7 @@ order by action_date";
      * @param type $user array
      * @return string string
      */
-    function pnh_reverse_reconcile_receipt($receipt_id,$user) {
+    function pnh_reverse_reconcile_receipt($receipt_id,$user,$remarks="Receipt Cancelled") {
         /*
          On cancell receipt:
             => Get receipt id, reconcile id, reconciled_amount
@@ -12711,7 +12608,7 @@ order by action_date";
             $this->db->query("update `pnh_t_receipt_info` set `unreconciled_value` = `receipt_amount`,`unreconciled_status` = 'pending' where receipt_id = ? ",$receipt_id);
             
             #3. update is reversed=1 where given receipt id for reconcile log table
-            $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_reversed` = 1 where receipt_id = ? ",$receipt_id);
+            $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_reversed` = 1,`remarks` = ? where receipt_id = ? ",array($receipt_id,$remarks));
             
             $recon_output = 'Successfully reverced the reconcilation.';
         }
@@ -12724,7 +12621,7 @@ order by action_date";
      * @param type $user array
      * @return string string
      */
-    function pnh_reverse_reconcile_invoice($invoice_no,$user) {
+    function pnh_reverse_reconcile_invoice($invoice_no,$user,$remarks="Invoice Cancelled") {
         
         $recon_log_set = $this->db->query("select rlog.receipt_id,rcon.id as reconcile_id,rcon.invoice_no,rcon.inv_amount,rlog.reconcile_amount from pnh_t_receipt_reconcilation rcon 
                                             join pnh_t_receipt_reconcilation_log rlog on rlog.reconcile_id = rcon.id
@@ -12744,10 +12641,10 @@ order by action_date";
                 $this->db->query("update `pnh_t_receipt_reconcilation` set `unreconciled` = `unreconciled` + '".$reconcile_amount."',`modified_on`  = now(),`modified_by` = ?,is_invoice_cancelled = 1 where invoice_no = ? and id = ? ",array($userid,$invoice_no,$reconcile_id) );
                 
                 // update reconcile log table : is_invoice_cancelled = 1
-                $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_invoice_cancelled` = 1 where `reconcile_id` = ? ",$reconcile_id);
+                $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_invoice_cancelled` = 1,`remarks` = ? where `reconcile_id` = ? ",array($reconcile_id,$remarks));
                 
                 // update receipt info table : add the unreconciled value with reconcile amount and its reconcile status
-                $this->db->query("update `pnh_t_receipt_info` set `unreconciled_value` = `unreconciled_value` + '".$reconcile_amount."', unreconciled_status = if(unreconciled_value = receipt_amount,'pending', if(unreconciled_value = 0, 'done', 'partial') ) where receipt_id = ? ",$receipt_id);
+                $this->db->query("update `pnh_t_receipt_info` set `unreconciled_value` = `unreconciled_value` + '".$reconcile_amount."',unreconciled_status = if(unreconciled_value = receipt_amount,'pending', if(unreconciled_value = 0, 'done', 'partial') ) where receipt_id = ? ",$receipt_id);
                 
             }
             
@@ -12765,6 +12662,73 @@ order by action_date";
     	
     	return $this->db->query($sql,$fid)->result_array();
     }
+    
+	/**
+     * Get franchise experience information based on created_time
+     * @param type $f_created_on
+     * @return type array
+     */
+    function fran_experience_info($f_created_on) {
+        $fr_reg_diff = ceil((time()-$f_created_on)/(24*60*60));
+	 
+        if($fr_reg_diff <= 30)
+        {
+                $fr_reg_level_color = '#cd0000';
+                $fr_reg_level = 'Newbie';
+        }
+        else if($fr_reg_diff > 30 && $fr_reg_diff <= 60)
+        {
+                $fr_reg_level_color = 'orange';
+                $fr_reg_level = 'Mid Level';
+        }else if($fr_reg_diff > 60)
+        {
+                $fr_reg_level_color = 'green';
+                $fr_reg_level = 'Experienced';
+        }
+        return array("f_level"=>$fr_reg_level,"f_color"=>$fr_reg_level_color);
+    }
+
+    /**
+     * function to send delivery notification to franchise and customer
+     * @param unknown_type $inv
+     */
+    function notify_shipment_delivery_sms($inv,$notify_fr=0,$notify_mem=0,$emp_id=0)
+    {
+    	// get invoice franchise and member details if set
+    
+    	$sql = "select a.transid,a.invoice_no,sum((a.mrp-(a.discount-a.credit_note_amt))*a.invoice_qty) as fr_inv_amount,sum((a.mrp-(a.discount-b.i_coup_discount))*a.invoice_qty) as mem_inv_amount,count(b.itemid) as ttl_items,
+				    	pnh_member_id,d.first_name,d.last_name,d.mobile,e.franchise_id,franchise_name,login_mobile1,login_mobile2
+				    	from king_invoice a
+				    	join king_orders b on a.order_id = b.id
+				    	join king_transactions c on c.transid = b.transid
+				    	join pnh_member_info d on d.user_id = b.userid
+				    	join pnh_m_franchise_info e on e.franchise_id = c.franchise_id
+				    where a.invoice_no = ?
+				    group by a.invoice_no
+    			";
+    	$res = $this->db->query($sql,$inv);
+    	if($res->num_rows())
+    	{
+    		$inv_det = $res->row_array();
+    
+    		if($notify_fr)
+    		{
+    			// prepare franchise shipment delivery notification sms
+    			$fr_sms = 'Dear '.ucwords($inv_det['franchise_name']).', Your '.$inv_det['ttl_items'].' products of order '.$inv_det['transid'].'-'.$inv_det['pnh_member_id'].' of value Rs '.$inv_det['fr_inv_amount'].' are delivered today, Thanks for Shopping with StoreKing.';
+    			if(strlen($inv_det['login_mobile1']) == 10)
+    				$this->erpm->pnh_sendsms($inv_det['login_mobile1'],$fr_sms,$inv_det['franchise_id'],$emp_id,11);
+    		}
+    
+    		// prepare customer shipment delivery notification sms
+    		if(strlen($inv_det['mobile']) == 10 && ($notify_mem==1))
+    		{
+    			$cus_sms = 'Dear '.$inv_det['first_name'].', Your '.$inv_det['ttl_items'].' products of order '.$inv_det['transid'].' are delivered today to '.ucwords($inv_det['franchise_name']).', Please collect at your convenient time, Happy Shopping with StoreKing.';
+    			$this->erpm->pnh_sendsms($inv_det['mobile'],$cus_sms,$inv_det['franchise_id'],0,'NOTIFY_DELIVERY');
+    		}
+    
+    	}
+    }
+    
 }
 
 

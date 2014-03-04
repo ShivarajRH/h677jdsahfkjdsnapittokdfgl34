@@ -68,6 +68,7 @@ Loading...
 		<div></div>
 	</td>
 </tr>
+
 </table>
 
 </div>
@@ -358,6 +359,7 @@ Loading...
 </div>
 
 <script>
+
 $('select[name="cat_prod_disp"]').live( "change",function(){
 	var sel_cat_id = $(this).val();
 	if(sel_cat_id == 0)
@@ -1026,7 +1028,6 @@ $(function(){
 
 	
 });
-
 
 var pre_selected_vendor_id="<?php echo $vid?>";
 

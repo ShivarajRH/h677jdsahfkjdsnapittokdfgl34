@@ -52,7 +52,6 @@
 		<span style="margin:22px 0px 0px;float:right;"><b>Validated By</b> : _______________<br /></span><br />
 		<span style="margin:7px 0px;float:left;;"><b>Picked By</b> : _____________________<br /></span>
 	</div> 
-
 </body>
 </html>
 <?php
