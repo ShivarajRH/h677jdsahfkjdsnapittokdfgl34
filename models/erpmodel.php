@@ -4027,20 +4027,30 @@ courier disable ends
 	
 	function do_updatecat($cat)
 	{
-		$name=$_POST['cat_name'];
-		$type=$_POST['main'];
-		$this->db->query("update king_categories set type=?,name=? where id=?",array($type,$name,$cat));
+		$name=$this->input->post('cat_name');
+		$type=$this->input->post('main');
+		$attributes = $this->input->post('attributes');
+                
+        $attributes = array_filter(array_unique($attributes));
+        $grp_attr_ids = implode(",",$attributes);
+                
+		$this->db->query("update king_categories set type=?,name=?,attribute_ids=? where id=?",array($type,$name,$grp_attr_ids,$cat));
 		$this->session->set_flashdata("erp_pop_info","Category updated");
 		redirect("admin/viewcat/$cat");
 	}
 	
 	function do_addnewcat()
 	{
-		$name=$_POST['cat_name'];
-		$type=$_POST['main'];
+		$name=$this->input->post('cat_name');
+		$type=$this->input->post('main');
+        $attributes = $this->input->post('attributes');
+        
+        $attributes = array_filter(array_unique($attributes));
+        $grp_attr_ids = implode(",",$attributes);
+                
 		$url=preg_replace('/[^a-zA-Z0-9_\-]/','',$name);
 		$url=str_replace(" ","-",$url);
-		$this->db->query("insert into king_categories(name,type,url) values(?,?,?)",array($name,$type,$url));
+		$this->db->query("insert into king_categories(name,type,url,attribute_ids) values(?,?,?,?)",array($name,$type,$url,$grp_attr_ids));
 		$id=$this->db->insert_id();
 		$this->session->set_flashdata("erp_pop_info","new category added");
 		redirect("admin/viewcat/$id");
@@ -6944,48 +6954,54 @@ order by p.product_name asc
 		
 		$this->db->insert("pnh_t_receipt_info",$inp);
 		$recpt_id = $this->db->insert_id();
+                
+		#==================================< Start Reconcilation Code >================================================
+		//update unreconceiled value
+		if($r_type == 1){
+		//                    $recpt_id = 119;
+		if($sel_invoice) {
+		$unreconciled_value = $amount - $total_val_reconcile;
+		$invoice_arr = array();
+		foreach($sel_invoice as $i=>$invoice_no) {
+		    $docu_type = $document_type[$i];
+		    $unreconcile_amt = $amt_unreconcile[$i];
+		    $adjusted_amt = $amt_adjusted[$i];
+		    if($invoice_no!='' && $unreconcile_amt!='' && $adjusted_amt!='') {
+		            if($docu_type == 'inv') {
+		                $dispatch_id = $this->get_dispatch_id_invno($invoice_no);
+		                $sub_val = $unreconcile_amt - $adjusted_amt;
+		                $invoice_arr['invoices'][$i]["debit_note_id"] = 0;
+		                $invoice_arr['invoices'][$i]["invoice_no"] = $sel_invoice[$i];
+		                $invoice_arr['invoices'][$i]["dispatch_id"] = $dispatch_id;
+		            }
+		            elseif($docu_type == 'dr') {
+		                $invoice_arr['invoices'][$i]["debit_note_id"] = $sel_invoice[$i];
+		                $invoice_arr['invoices'][$i]["invoice_no"] = 0;
+                        $invoice_arr['invoices'][$i]["dispatch_id"] = 0;
 
-        //update unreconceiled value
-        if($r_type == 1){
-//                    $recpt_id = 119;
-            if($sel_invoice) {
-                $unreconciled_value = $amount - $total_val_reconcile;
-                $invoice_arr = array();
-                foreach($sel_invoice as $i=>$invoice_no) {
-                    $docu_type = $document_type[$i];
-                    $unreconcile_amt = $amt_unreconcile[$i];
-                    $adjusted_amt = $amt_adjusted[$i];
-                    if($invoice_no!='' && $unreconcile_amt!='' && $adjusted_amt!='') {
-                            if($docu_type == 'inv') {
-                                $dispatch_id = $this->get_dispatch_id_invno($invoice_no);
-                                $sub_val = $unreconcile_amt - $adjusted_amt;
-                                $invoice_arr['invoices'][$i]["debit_note_id"] = 0;
-                                $invoice_arr['invoices'][$i]["invoice_no"] = $sel_invoice[$i];
-                                $invoice_arr['invoices'][$i]["dispatch_id"] = $dispatch_id;
-                            }
-                            elseif($docu_type == 'dr') {
-                                $invoice_arr['invoices'][$i]["debit_note_id"] = $sel_invoice[$i];
-                                $invoice_arr['invoices'][$i]["invoice_no"] = 0;
-                                $invoice_arr['invoices'][$i]["dispatch_id"] = 0;
-                            }
-                            $invoice_arr['invoices'][$i]["invoice_amt"] = round($unreconcile_amt,2);
-                            $invoice_arr['invoices'][$i]["adjusted_amt"] = round($adjusted_amt,2);
-                            $invoice_arr['invoices'][$i]["unreconciled_amt"] = round($sub_val,2);
-                            $invoice_arr['document_type'] = $docu_type;
+
+
+
                     }
+	                    $invoice_arr['invoices'][$i]["invoice_amt"] = round($unreconcile_amt,2);
+	                    $invoice_arr['invoices'][$i]["adjusted_amt"] = round($adjusted_amt,2);
+	                    $invoice_arr['invoices'][$i]["unreconciled_amt"] = round($sub_val,2);
+	                    $invoice_arr['document_type'] = $docu_type;
                 }
-                $invoice_arr['userid'] = $user['userid'];
-                $invoice_arr['receipt_id'] = $recpt_id;
-                $invoice_arr['credit_note_id'] = 0;
-                $invoice_arr['amount']=round($amount,2);
-                $invoice_arr['total_reconcile_val'] = round($total_val_reconcile,2);
-                $invoice_arr['unreconciled_value'] = round($unreconciled_value,2);
-                $invoice_arr['fid'] = $fid;
-
-                //echo '<pre>'; print_r($invoice_arr);die();
-                $rdata = $this->reconcile_receipt($invoice_arr);
-            }
-        }
+	            }
+	            $invoice_arr['userid'] = $user['userid'];
+	            $invoice_arr['receipt_id'] = $recpt_id;
+	            $invoice_arr['credit_note_id'] = 0;
+	            $invoice_arr['amount']=round($amount,2);
+	            $invoice_arr['total_reconcile_val'] = round($total_val_reconcile,2);
+	            $invoice_arr['unreconciled_value'] = round($unreconciled_value,2);
+	            $invoice_arr['fid'] = $fid;
+	
+	            //echo '<pre>'; print_r($invoice_arr);die();
+	            $rdata = $this->reconcile_receipt($invoice_arr);
+	        }
+	    }
+	    #==================================< End Reconcilation Code >================================================
 
 //		$this->erpm->pnh_fran_account_stat($fid,0, $amount,"Topup $no $date");
 		
@@ -7010,7 +7026,7 @@ order by p.product_name asc
 		$prices_det=$this->db->query("select orgprice,price from king_dealitems where id=? and is_pnh=1",$itemid)->row_array();
 		
 		$msg_flag=0;
-		foreach(array("gender_attr","print_name","billon_orderprice","max_allowed_qty","menu","keywords","tagline","name","mrp","offer_price","store_offer_price","nyp_offer_price","brand","category","description","pid","qty","tax","shipsin","p_price") as $q)
+		foreach(array("gender_attr","print_name","billon_orderprice","max_allowed_qty","menu","keywords","tagline","name","mrp","offer_price","store_offer_price","nyp_offer_price","brand","category","description","pid","qty","tax","shipsin","p_price","is_group") as $q)
 			$$q=$this->input->post($q);
 		$imgname = randomChars ( 15 );
 		if (isset ( $_FILES ['pic'] ) && $_FILES ['pic'] ['error'] == 0)
@@ -7044,7 +7060,7 @@ order by p.product_name asc
 		
 		$is_combo = $this->input->post('is_combo')*1;
 
-		$this->db->query("update king_dealitems set max_allowed_qty=?,billon_orderprice=?,print_name=?,name=?,orgprice=?,price=?,store_price=?,nyp_price=?,gender_attr=?,tax=?,shipsin=?,modified=?,modified_on=?,modified_by=?,is_combo = ? where id=?",array($max_allowed_qty,$billon_orderprice,$print_name,$name,$mrp,$offer_price,$store_offer_price,$nyp_offer_price,$gender_attr,$tax*100,$shipsin,time(),date('Y-m-d H:i:s'),$user_det['userid'],$is_combo,$itemid));
+		$this->db->query("update king_dealitems set max_allowed_qty=?,billon_orderprice=?,print_name=?,name=?,orgprice=?,price=?,store_price=?,nyp_price=?,gender_attr=?,tax=?,shipsin=?,modified=?,modified_on=?,modified_by=?,is_combo = ?,is_group=? where id=?",array($max_allowed_qty,$billon_orderprice,$print_name,$name,$mrp,$offer_price,$store_offer_price,$nyp_offer_price,$gender_attr,$tax*100,$shipsin,time(),date('Y-m-d H:i:s'),$user_det['userid'],$is_combo,$is_group,$itemid));
 		$this->db->query("update king_deals set description=?,keywords=?,menuid=?,keywords=?,catid=?,brandid=?,tagline=? where dealid=?",array($description,$keywords,$menu,$keywords,$category,$brand,$tagline,$dealid));
 		
 		
@@ -7127,7 +7143,7 @@ order by p.product_name asc
 	{
 		$user=$this->erpm->getadminuser();
 		
-		foreach(array("gender_attr","billon_orderprice","max_allowed_qty","print_name","menu","keywords","tagline","name","mrp","offer_price","store_offer_price","nyp_offer_price","brand","category","description","pid","qty","tax","shipsin","pid_g","qty_g") as $q)
+		foreach(array("gender_attr","billon_orderprice","max_allowed_qty","print_name","menu","keywords","tagline","name","mrp","offer_price","store_offer_price","nyp_offer_price","brand","category","description","pid","qty","tax","shipsin","pid_g","qty_g","is_group") as $q)
 			$$q=$this->input->post($q);
 		$imgname = randomChars ( 15 );
 		if (isset ( $_FILES ['pic'] ) && $_FILES ['pic'] ['error'] == 0)
@@ -7162,8 +7178,8 @@ order by p.product_name asc
 		
 		$inp=array($dealid,$menu,$keywords,$category,$brand,$imgname,$tagline,$description,1);
 		$this->db->query("insert into king_deals(dealid,menuid,keywords,catid,brandid,pic,tagline,description,publish) values(?,?,?,?,?,?,?,?,?)",$inp);
-		$inp=array($itemid,$dealid,$print_name,$max_allowed_qty,$name,$imgname,$mrp,$offer_price,$store_offer_price,$nyp_offer_price,$billon_orderprice,$gender_attr,1,$pnh_id,$tax*100,$shipsin,1,time(),date("Y-m-d H:i:s"),$user['userid']);
-		$this->db->query("insert into king_dealitems(id,dealid,print_name,max_allowed_qty,name,pic,orgprice,price,store_price,nyp_price,billon_orderprice,gender_attr,is_pnh,pnh_id,tax,shipsin,live,created,created_on,created_by) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",$inp);
+		$inp=array($itemid,$dealid,$print_name,$max_allowed_qty,$name,$imgname,$mrp,$offer_price,$store_offer_price,$nyp_offer_price,$billon_orderprice,$gender_attr,1,$pnh_id,$tax*100,$shipsin,1,time(),date("Y-m-d H:i:s"),$user['userid'],$is_group);
+		$this->db->query("insert into king_dealitems(id,dealid,print_name,max_allowed_qty,name,pic,orgprice,price,store_price,nyp_price,billon_orderprice,gender_attr,is_pnh,pnh_id,tax,shipsin,live,created,created_on,created_by,is_group) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",$inp);
 		if(!empty($pid))
 		foreach($pid as $i=>$p)
 			$this->db->query("insert into m_product_deal_link(product_id,itemid,qty,created_on,created_by) values(?,?,?,?,?)",array($p,$itemid,$qty[$i],date('Y-m-d H:i:s'),$user['userid']));
@@ -12394,7 +12410,7 @@ order by action_date";
             $this->db->query("update `pnh_t_receipt_info` set `unreconciled_value` = `receipt_amount`,`unreconciled_status` = 'pending' where receipt_id = ? ",$receipt_id);
             
             #3. update is reversed=1 where given receipt id for reconcile log table
-            $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_reversed` = 1,`remarks` = ? where receipt_id = ? ",array($receipt_id,$remarks));
+            $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_reversed` = 1,`remarks` = ? where receipt_id = ? ",array($remarks,$receipt_id));
             
             $recon_output = 'Successfully reverced the reconcilation.';
         }
@@ -12408,7 +12424,7 @@ order by action_date";
      * @return string string
      */
     function pnh_reverse_reconcile_invoice($invoice_no,$user,$remarks="Invoice Cancelled") {
-        
+        $userid=$user['userid'];
         $recon_log_set = $this->db->query("select rlog.receipt_id,rcon.id as reconcile_id,rcon.invoice_no,rcon.inv_amount,rlog.reconcile_amount from pnh_t_receipt_reconcilation rcon 
                                             join pnh_t_receipt_reconcilation_log rlog on rlog.reconcile_id = rcon.id
                                             where rlog.is_reversed = 0 and rcon.invoice_no = ? ",$invoice_no);
@@ -12418,7 +12434,8 @@ order by action_date";
         }
         else {
             $recon_log_rslt = $recon_log_set->result_array();
-            foreach($recon_log_rslt as $reconlog) {
+            foreach($recon_log_rslt as $reconlog) 
+            {
                 $receipt_id = $reconlog['receipt_id'];
                 $reconcile_id = $reconlog['reconcile_id'];
                 $reconcile_amount = $reconlog['reconcile_amount'];
@@ -12427,7 +12444,7 @@ order by action_date";
                 $this->db->query("update `pnh_t_receipt_reconcilation` set `unreconciled` = `unreconciled` + '".$reconcile_amount."',`modified_on`  = now(),`modified_by` = ?,is_invoice_cancelled = 1 where invoice_no = ? and id = ? ",array($userid,$invoice_no,$reconcile_id) );
                 
                 // update reconcile log table : is_invoice_cancelled = 1
-                $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_invoice_cancelled` = 1,`remarks` = ? where `reconcile_id` = ? ",array($reconcile_id,$remarks));
+                $this->db->query("update `pnh_t_receipt_reconcilation_log` set `is_invoice_cancelled` = 1,`remarks` = ? where `reconcile_id` = ? ",array($remarks,$reconcile_id));
                 
                 // update receipt info table : add the unreconciled value with reconcile amount and its reconcile status
                 $this->db->query("update `pnh_t_receipt_info` set `unreconciled_value` = `unreconciled_value` + '".$reconcile_amount."',unreconciled_status = if(unreconciled_value = receipt_amount,'pending', if(unreconciled_value = 0, 'done', 'partial') ) where receipt_id = ? ",$receipt_id);

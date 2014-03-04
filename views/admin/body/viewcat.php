@@ -135,6 +135,27 @@ margin-bottom:0px;
 	    	</div>
 	    	<!------------- Details Blk end ------------->
 		</div>
+		<!------------- Attributes Display start ------------->
+		<div class="clear"></div>
+		<div>
+			<table class="datagrid">
+			    <tr>
+			        <th>Attributes:</th>
+			    </tr>
+			    <?php
+			    $arr_attributes = $this->db->query("select * from m_attributes where FIND_IN_SET(id, '".$cat['attribute_ids']."') order by attr_name asc limit 100")->result_array();
+			    foreach($arr_attributes as $arr) {
+			    ?>
+			    <tr>
+			        <td><?php 
+			            echo $arr['attr_name']; 
+			        ?></td>
+			    </tr>
+			    <?php } ?>
+			</table>
+		</div>
+		<!------------- Attributes Display end ------------->
+
 	</div>	
 </div>
 <script>
