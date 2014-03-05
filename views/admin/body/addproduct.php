@@ -1,9 +1,4 @@
-<?php $p=false; if(isset($prod)) $p=$prod;
-//echo '<pre>';
-//print_r($prod_attrs);
-//print_r($p);
-//die("TEST");
-?>
+<?php $p=false; if(isset($prod)) $p=$prod;?>
 <div class="container">
 <h2><?=$p?"Edit":"Add new"?> product</h2>
 

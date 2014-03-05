@@ -1229,3 +1229,7 @@ create table `m_product_attributes` (  `id` bigint NOT NULL AUTO_INCREMENT , `pi
 alter table `king_categories` add column `attribute_ids` varchar (125)  NULL  after `prior`;
 alter table `king_dealitems` add column `is_group` tinyint (1)  NULL  after `tmp_pnh_dealid`;
 #==========================================================================
+
+#Mar_04_2014
+alter table `t_imei_no` change `id` `id` bigint   NOT NULL AUTO_INCREMENT;
+

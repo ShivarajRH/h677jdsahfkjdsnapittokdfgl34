@@ -110,6 +110,7 @@ Search : <input type="text" class="inp" size=60 id="po_g_search">
 <div id="po_g_prod_list" class="closeonclick">
 </div>
 <?php }?>
+
 <table id="pprods_g" width="500" class="datagrid smallheader" style="margin-top:10px;">
 <thead><tr><th>Group Name</th><th>Qty</th></tr></thead>
 <tbody>
@@ -276,14 +277,12 @@ $(function(){
 				return false;
 			}
 		}
-               // print($("#is_group").is(":checked") +"&&"+ $(".p_pids",$("#pprods_g")).length);
-                
-                if( $("#is_group").is(":checked") && $(".p_pids",$("#pprods_g")).length == 0  ) {
-                    alert("Is group is checked please add some some products for deal");
-                    $("#po_g_search",this).focus();
-                    return false;
-                }
-                
+
+		if( $("#is_group").is(":checked") && $(".p_pids",$("#pprods_g")).length == 0  ) {
+		    alert("Is group is checked please add some some products for deal");
+		    $("#po_g_search",this).focus();
+		    return false;
+		}
 		
 		return true;
 	});

@@ -7,6 +7,7 @@ $('.leftcont').hide();
 <fieldset><legend><b>Search By Cheque Number:</b></legend><input  type="text" class="inp" style="width:170px;" id="c_srch">
 <input type="hidden" name="search_rid" value="0">
 </fieldset>
+
 </div>
 	
 <?php if($this->uri->segment(2)){ $type=$this->uri->segment(3); if(!$type) $type=0;?>
@@ -273,6 +274,7 @@ if($no_days >=4 && $r['activated_on'] == 0)
 		<tr><td><b>Updated By</b></td><td>:</td><td><?=$r['activated_by']?></td></tr>
 		<tr><td><b>Updated On</b></td><td>:</td><td><?=format_date_ts($r['activated_on'])?></td></tr>
 		</table>
+
 	</div>
 </td>
 </tr>

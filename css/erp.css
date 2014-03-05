@@ -214,6 +214,7 @@ ul.menu ul li:hover ul.submenu{
 	background: #F5F5F5;
 	padding: 3px;
 	color: #555;
+
 	text-align: center;
 	border-radius: 0px 0px 5px 5px;
 	border-bottom: 0px;
@@ -910,7 +911,6 @@ fieldset{border-color:#eee;background:#FAFAFA}
 .page_wrap .page_topbar .page_topbar_left{width: 49%;}
 .page_wrap .page_topbar .page_topbar_right{width: 49%;}
 .page_wrap .page_content{clear:both}
-
 .page_wrap .page_topbar .total_overview{padding:5px 0px;font-size: 16px;}
 	
 .ordered_list{margin:0px;padding-left:10px;}

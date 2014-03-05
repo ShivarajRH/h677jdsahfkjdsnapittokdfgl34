@@ -1093,8 +1093,6 @@ function cat_bychar(ch)
 	}		
 }   
 
-
-
 $('.Brands_bychar_list_content').hide();
 $(".Brands_bychar_list_head span").live("click",function() {
 	var $this = $(this);
@@ -1142,8 +1140,6 @@ function filter_deals_bymrp()
 }
 
 var pids=[];
-
-
 
 function selected_fran(pre_selected_fid)
 {
@@ -1592,9 +1588,8 @@ $("#order_form").submit(function(){
 				 return false;
 			}
 		 }
-
-		
 		var credit_days=$(".credit_days").val();
+
 		/*
 		if(credit_days==0 || isNaN(credit_days))
 		{
@@ -2036,10 +2031,12 @@ $("#sel_state").change(function(){
 	}
 });
 
+
 $(".fran_det").change(function(){
 	$("#fid").html('').trigger("liszt:updated");
 	var sel_stateid=$("#sel_state").val();
 	var sel_terrid=$("#sel_terr").val();
+
 	if(sel_stateid!=0)
 	{
 		$.post(site_url+'/admin/jx_load_all_franchise_bystate_territory',{stateid:sel_stateid,terrid:sel_terrid},function(resp){

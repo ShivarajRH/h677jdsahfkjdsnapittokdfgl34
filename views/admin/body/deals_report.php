@@ -1,10 +1,16 @@
 <h3 id="dr_loading">Loading...</h3>
 
+
 <div class="container" id="dr_show_after" style="display:none;">
 <?php $cnt=$this->pettakam->get("deals_report"); 
+
+
+
+
 if(!$cnt){
 $cnt['time']=time();
 ob_start();
+
 ?>
 
 <h2>Products report</h2>

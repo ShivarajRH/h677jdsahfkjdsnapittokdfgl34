@@ -572,7 +572,6 @@ else {
 </div>
 
 
-
 <script>
 <?php
 	 

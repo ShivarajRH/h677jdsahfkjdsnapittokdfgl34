@@ -413,6 +413,7 @@
                                                             </tr>';
 
                                                     }
+
                                                 $trans_ttl_orders = count($processed_oids);
 
                                 $resonse.='</tbody>
@@ -437,7 +438,6 @@
                                         }
                                 }
                                
-
 
                             $actiontime= ($o['actiontime']==0)?"na":format_datetime(date('Y-m-d H:i:s', $o['actiontime'] ) );
                         $resonse.='</td><td>'.$actiontime.'</td></tr>';

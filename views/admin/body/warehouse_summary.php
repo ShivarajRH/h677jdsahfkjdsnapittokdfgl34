@@ -23,6 +23,21 @@
     width: 48%;
     margin-right: 2%;
 }
+.total_wrap {
+    background: none repeat scroll 0 0 #F1F1F1;
+    float: left;
+    font-size: 13px !important;
+    font-weight: bold !important;
+    margin: 2px;
+    padding: 5px 6px;
+}
+.total_wrap a{
+	color:#000000;
+}
+.sk_deal_blk_wrap {
+    float: left;
+    margin: 0 0.5% 0;
+}
 </style>
 
 <div class="container">
@@ -31,8 +46,8 @@
 		<input type="text" name="srch_product" class="deal_prd_blk inp" placeholder="Search by Product Name" >
 	</div>
 	<div class="legends_outer_wrap">
-		<span class="legends_color_notsrc_wrap">&nbsp;</span> - Not Sourceble &nbsp; &nbsp; &nbsp;
-		<span class="legends_color_src_wrap">&nbsp;</span> - Sourceble &nbsp; &nbsp; &nbsp;
+		<span class="legends_color_notsrc_wrap">&nbsp;</span> - Not sourceable &nbsp; &nbsp; &nbsp;
+		<span class="legends_color_src_wrap">&nbsp;</span> - sourceable &nbsp; &nbsp; &nbsp;
 	</div>
 	<div id="cus_jq_alpha_sort_wrap" >
 	</div>
@@ -62,9 +77,7 @@
 		<div id="ven_log_pagination"></div>
 	</div>
 </div>
-<style>
-.stock_det_wrap h4{margin:5px 0px;font-size: 16px;margin-bottom: 15px;}
-</style>
+
 <script>
 /** jQuery  Custom Alpha sort pluin 
  * @author Suresh 
@@ -143,6 +156,7 @@ $(function(){
 	product_list_bycat(0,0,2);
 	$('.brand_lst_tab').addClass('selected_alpha_list');
 	$('.jq_alpha_sort_overview_content').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
+	
 });
 
 $('.Brands_bychar_list_content_listdata').live("click",function(){
@@ -263,6 +277,7 @@ $('.stock_det_close').live("click",function(){
 function product_list_bycat(brandid,catid)
 {
 	$('input[name="srch_product"]').val('');
+	$('.total_wrap a').html('0');
 	$('.sk_deal_container').css('opacity','0.5');//$('.jq_alpha_sort_overview_content').css('opacity','0.5');
 	if(catid != 0 && brandid==0)
 	{
@@ -317,9 +332,10 @@ function product_list_bycat(brandid,catid)
 				var d_lst = '';
 				d_lst+='<div class="sk_deal_filter_blk_wrap">';
 				d_lst+='<div class="fl_right"><a class="button button-tiny button-rounded" href="javascript:void(0)" onclick="print_warehouse_summary('+brandid+','+catid+')" >Print summary</a></div>';
-				d_lst+='<div class="fl_right"><span style="font-size:12px;padding:8px 8px;float:right">Total Avg Purchase : <b>'+resp.ttl_avg_purchase;
-				d_lst+='</b></span><span style="font-size:12px;padding:8px 11px;float:right">Total MRP Value : <b>'+resp.ttl_mrp_value+'</b></span></div>';
-				d_lst+='<span class="total_wrap">Total Products : '+resp.ttl_prd+'</span></div>';
+				d_lst+='<div class="fl_right" style="margin:3px"><b>Sourceable :</b> <select id="sourceable"><option value="choose">Choose</option><option value="1">Yes</option><option value="0">No</option></select></div>';
+				d_lst+='<div class="fl_left" style="margin-left:3px"><span class="total_wrap">Total Products : <a>'+resp.ttl_prd+'</a></span><span class="total_wrap">Total Avg Purchase : <a>'+resp.ttl_avg_purchase;
+				d_lst+='</a></span><span class="total_wrap">Total MRP Value : <a>'+resp.ttl_mrp_value+'</a></span></div>';
+				d_lst+='</div>';
 				
 				d_lst+='<div class="sk_deal_container">';
 				d_lst+='<table class="sk_deal_blk_wrap" cellpadding="0" cellspacing="0" width="99%">'
@@ -329,12 +345,12 @@ function product_list_bycat(brandid,catid)
 			 	
 			 	$.each(resp.prod_details,function(i,p){
 					
-					if(p.is_sourceable)
+					if(p.is_sourceable == 1)
 						var background='background:none repeat scroll 0 0 rgba(170, 255, 170, 0.8) !important'/*#40FC36*/;
 					else
 						var background='background:none repeat scroll 0 0 #FFAAAA !important';
 					
-					d_lst+='<tr style="'+background+'" class="prod_filter_wrap" name='+p.product_name+' bid='+p.brand_id+' cid='+p.product_cat_id+' qty='+p.stock+' mrp='+p.stock_value+' avg_pur='+p.avg_ttl_purchase+'>';
+					d_lst+='<tr style="'+background+'" class="prod_filter_wrap" sourceable="'+p.is_sourceable+'" name='+p.product_name+' bid='+p.brand_id+' cid='+p.product_cat_id+' qty='+p.stock+' mrp='+p.stock_value+' avg_pur='+p.avg_ttl_purchase+'>';
 			 			d_lst+='<td><span style="font-weight:bold;font-size:12px;color:green">'+p.product_id+'</span></td>';
 	 					d_lst+='<td><span class="title"><a class="product_name" href="'+site_url+'/admin/product/'+p.product_id+'" target="_blank">'+p.product_name+'</a></td>';
 						d_lst+='<td style="text-align:right"><span class="prod_det_font_wrap">'+p.mrp+'</span></td>';
@@ -346,7 +362,7 @@ function product_list_bycat(brandid,catid)
 	 				d_lst+='</tr>';
 				});
 				
-					d_lst+='<tr style="background:#ccc"><td colspan="2"><b>Total</b><td><td style="text-align:right"><b class="qty">'+resp.ttl_qty+'</b></td><td style="text-align:right"><b class="ttl_mrp">'+resp.ttl_mrp_value+'</b></td><td colspan="2" style="text-align:right"><b class="avg_pur">'+resp.ttl_avg_purchase+'</b></td></tr>';
+					//d_lst+='<tr style="background:#ccc"><td colspan="2"><b>Total</b><td><td style="text-align:right"><b class="qty">'+resp.ttl_qty+'</b></td><td style="text-align:right"><b class="ttl_mrp">'+resp.ttl_mrp_value+'</b></td><td colspan="2" style="text-align:right"><b class="avg_pur">'+resp.ttl_avg_purchase+'</b></td></tr>';
 				d_lst+='</table>';
 				d_lst+='</div>';
 				$('.jq_alpha_sort_overview_content').html(d_lst);
@@ -355,13 +371,26 @@ function product_list_bycat(brandid,catid)
 	},'json');	
 }
 
+$('#sourceable').live('change',function(){
+	var is_sourceable=$('#sourceable').val();
+	
+	if(is_sourceable != 'choose')
+	{
+		$(".prod_filter_wrap").each(function(){
+			var	sourceable=$(this).attr('sourceable');
+			if(is_sourceable==sourceable)
+					$(this).show();
+			else
+					$(this).hide();
+		});
+	}
+	
+});
+
 function cat_bychar(ch)
 {
-	$('.jq_alpha_sort_alphalist_itemlist').html('<div align="center" style="padding:20px 0px;"><img src="'+base_url+'/images/loading.gif'+'"></div>');
-	
 	if($('#cat_lab').val() == 1)
 	{
-		$('.jq_alpha_sort_alphalist_itemlist').html('<div align="center"><img src="'+base_url+'/images/loading_bar.gif'+'"></div>');
 		$.post(site_url+'/admin/cat_list_bycharacter',{ch:ch},function(resp){
     	if(resp.status == 'error')
 			{
@@ -450,20 +479,16 @@ $("#prod_stk_det_dlg" ).dialog({
 		open:function(){
 			var pid=$(this).data('pid');
 			var pname=$(this).data('pname');
-
-			$('.stock_det_wrap').html('<div align="center" style="padding:20px 0px;"><img src="'+base_url+'/images/loading_bar.gif'+'"></div>');
-			
 			$.post(site_url+'/admin/jx_prod_stk_det',{pid:pid,pname:pname},function(resp){
 				if(resp.status == 'error')
 					{
-					$('.stock_det_wrap').html('');
 						alert("Stock not found");
 						return false;
 				    }
 					else
 					{
 						var stk_lst='';
-						stk_lst+='<h4><a href="'+site_url+'/admin/product/'+pid+'" target="_blank">'+pname+'</h4>';
+						stk_lst+='<h3><a href="'+site_url+'/admin/product/'+pid+'" target="_blank">'+pname+'</h3>';
 						stk_lst+='<div class="stk_wrap" >';
 						stk_lst+='<h4 style="margin:0px">Total Stock : '+resp.in_stk+' </h4>';
 						stk_lst+='<table class="datagrid" width="100%"><thead><tr><th>Barcode</th><th>Rackbin</th><th>MRP</th><th>Quantity</th>';
@@ -495,13 +520,9 @@ $("#prod_stk_det_dlg" ).dialog({
 
 function load_ven_log(product_id,pg)
 	{
-		$('#ven_po_log').hide();
-		$('#ven_log_pagination').html("").hide();
+		$('#ven_po_log tbody').html('<tr><td colspan="6"><div align="center"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
 		$.post(site_url+'/admin/jx_prod_purchase_log_det/'+product_id+'/'+pg+'/5','',function(resp){
-
-			$('#ven_po_log').show();
-			
-			$('#ven_po_log tbody').html(resp.log_data).show();
+			$('#ven_po_log tbody').html(resp.log_data);
 			if(resp.ttl*1 > resp.limit*1)
 				$('#ven_log_pagination').html(resp.pagi_links).show();
 			else
@@ -529,7 +550,6 @@ function print_warehouse_summary(brandid,catid)
 	var print_url = site_url+'/admin/print_brands_summary/'+brandid+'/'+catid;
 	window.open(print_url);
 }
-
 </script>
 
 

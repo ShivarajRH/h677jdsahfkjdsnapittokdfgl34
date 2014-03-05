@@ -1,5 +1,4 @@
 <?php 
-
 	$v=false;
 	if(isset($fran))
 		$v=$fran;
@@ -153,6 +152,7 @@ to
 <tr><td>Service Tax No :</td><td><input type="text" name="shop_stax" class="inp" value="<?=$v?$v['store_service_tax_no']:""?>" size=30  maxlength="40"></td></tr> 
 <tr><td>Registration No :</td><td><input type="text" name="shop_reg" class="inp" value="<?=$v?$v['store_reg_no']:""?>" size=30  maxlength="40"></td></tr> 
 </table>
+
 </div>
 
 <div id="v_pnh_details">

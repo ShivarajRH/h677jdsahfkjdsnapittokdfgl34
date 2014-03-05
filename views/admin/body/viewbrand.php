@@ -312,6 +312,7 @@ $('#allocate_rack_dlg').dialog({
 });
 
 
+
 $(document).ready(function() 
 {
 	$('.success_wrap').hide();

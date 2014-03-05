@@ -181,7 +181,9 @@ $po_status_arr[3]="Cancelled";?>
 <?php }} else{ echo "<tr><td colspan='12'><div align='center'><b>No Data Found</b></div></td></tr>";}?>
 
 </tbody>
+
 </table>
+
 </div>
 <?php if($has_grn == '1') {?>
 <div id="grn_info">

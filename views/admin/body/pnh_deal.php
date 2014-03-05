@@ -226,8 +226,6 @@ ul.tabs li.active
 
 <div class="container page_wrap" style="padding:10px">
 
-
-
 <div style="width:75%;">	
 	<?=$deal['menu_name']?>  &raquo; 
 	<a href="<?=site_url("admin/viewcat/{$deal['catid']}")?>"><?=$deal['category']?></a>  &raquo; 
@@ -789,7 +787,6 @@ ul.tabs li.active
 	</div>	       			
 </div>	       			
 </div>
-
 <style>
 	#description {padding:10px;background: #fcfcfc;max-height: 200px;overflow: hidden}
 	#description table{background: #FFF;font-size: 11px;width: 100%;}
@@ -983,6 +980,7 @@ function deal_sale_stat()
 			}
 		});
 }
+
 function deal_stat_pieview(state_id)
 {
 	var state_id=state_id;
@@ -1080,6 +1078,7 @@ $(".dealstock").dealstock({
     popup:false
     ,change:"text" //text,row
 });
+
 </script>
 
 <?php

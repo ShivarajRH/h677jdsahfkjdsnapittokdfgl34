@@ -3080,7 +3080,7 @@ select fcs.acc_correc_id as debit_note_id,fcs.debit_amt as amount,rcon.unreconci
 #====================================================================
 
 -- <!--============================================<< BEST RECONCILE LOG VIEW >>===================================
-select rlog.*,rcon.debit_note_id,rcon.invoice_no from pnh_t_receipt_reconcilation_log rlog
+select rlog.*,rcon.debit_note_id,rcon.invoice_no,rcon.is_invoice_cancelled from pnh_t_receipt_reconcilation_log rlog
 join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
 where rlog.receipt_id='5396';
 #====================================================================
@@ -3269,4 +3269,52 @@ select d.*,i.*,d.description,d.keywords,d.tagline from king_dealitems i join kin
 
 select * from king_dealitems;
 
-select * from pnh_menu where id='125'
+select * from pnh_menu where id='125';
+
+# Mar_04_2014
+select * from pnh_t_receipt_reconcilation;
+
+#=========< 1. >==============================
+select rlog.receipt_id,rcon.id as reconcile_id,rcon.invoice_no,rcon.inv_amount,rlog.reconcile_amount from pnh_t_receipt_reconcilation rcon 
+                                            join pnh_t_receipt_reconcilation_log rlog on rlog.reconcile_id = rcon.id
+                                            where rlog.is_reversed = 0 and rcon.invoice_no = '200149';
+
+select * from pnh_t_receipt_reconcilation where invoice_no = '200149' and id = '3';
+
+select * from `pnh_t_receipt_reconcilation_log` where `reconcile_id` = '3'
+#==========< ## 2. >=================================
+select * from `pnh_t_receipt_reconcilation_log` where `is_reversed` = 0 and is_invoice_cancelled=0 and `receipt_id`='5399'
+
+select * from `pnh_t_receipt_reconcilation` where id in (3,4,5)
+
+
+-- <!--============================================<< BEST RECONCILE LOG VIEW >>===================================
+select rlog.*,rcon.debit_note_id,rcon.invoice_no,rcon.is_invoice_cancelled from pnh_t_receipt_reconcilation_log rlog
+join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+where rlog.receipt_id='5399';
+#====================================================================
+
+-- <!--============================================<< RESET RECONCILE TABLE >>===================================-->
+truncate table `pnh_t_receipt_reconcilation`;
+truncate table `pnh_t_receipt_reconcilation_log`;
+update pnh_t_receipt_info set unreconciled_value = receipt_amount,unreconciled_status = 'pending' where receipt_amount !=0;
+update pnh_franchise_account_summary set unreconciled_value = credit_amt,unreconciled_status = 'pending' where credit_amt !=0;
+
+#==========================================================
+select * from pnh_franchise_account_summary where acc_correc_id='11690';
+
+select * from king_invoice
+
+select * from t_imei_no = im
+
+===================================================================
+alter table `snapittoday_db_jan_2014`.`t_imei_no` auto_increment=24580 comment='' row_format=DYNAMIC ;
+alter table `snapittoday_db_jan_2014`.`t_imei_no` change `id` `id` bigint   NOT NULL AUTO_INCREMENT;
+===================================================================
+
+INSERT INTO `t_imei_no` (`product_id`, `imei_no`, `stock_id`, `grn_id`, `created_on`) VALUES ('152974', '6464646464', '163451', 4924, 1393923183);
+
+ALTER TABLE `pnh_t_receipt_info` ADD COLUMN `cheq_realized_on` VARCHAR(255) NULL AFTER `activated_on`;
+
+
+ALTER TABLE `pnh_m_deposited_receipts` ADD COLUMN `cheq_cancelled_on` VARCHAR(255) NULL AFTER `submitted_by`;

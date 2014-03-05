@@ -13,7 +13,6 @@ $order_status_arr[0]='Pending';
 $order_status_arr[1]='Processed';
 $order_status_arr[3]='Cancelled';
 
-
 $sql_trans_ttls = 'select status,ifnull(amt1,amt2) as amt from (
 select b.status,sum((mrp-(discount+credit_note_amt))*a.invoice_qty) as amt1,
 	sum((i_orgprice-(i_coup_discount+i_discount))*b.quantity) as amt2
@@ -94,7 +93,7 @@ Prepaid Voucher used : <?=$c?>
 	<input type="submit" class="button button-tiny button-flat-caution button-rounded " value="<?=$tran['batch_enabled']?"Dis":"En"?>able for Batch">
 </form>
 </div>
-<?php if($tran['batch_enabled']){?>
+<?php if($tran['batch_enabled'] && ($tran['is_pnh'] == 0)?1:0){ ?>
 <div style="float:right;padding-right:20px;" id="process_fulltrans">
 <form method="post" onsubmit='return confirm("Are you sure want to process this transaction for batch?")' action="<?=site_url("admin/add_batch_process")?>">
 <input type="hidden" name="num_orders" value="1">
@@ -137,6 +136,7 @@ if(count($allotted_memids) <= 1)
 {
 	echo implode(', ',$allotted_memids);
 }
+
 $is_pnh = $tran['is_pnh'];
 ?>
 

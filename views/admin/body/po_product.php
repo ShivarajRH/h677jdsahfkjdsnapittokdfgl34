@@ -71,7 +71,6 @@
 		<tbody></tbody>
 	</table>
 </div>
-
 <div id="sl_products" title="Choose and add to current order">
 	<span style="float: left">
 		<b>Show</b> :
@@ -1037,6 +1036,7 @@ $('input[name="srch_prod"]').autocomplete({
 		$("#sl_products").dialog('open');
 		$("#ttl_res").html('');
 	});
+
 	
 	$('select[name="fil_vendor"]').live("change",function(){
 			var vendorid=$(this).val();
@@ -1619,5 +1619,10 @@ function remove_prodfrmpo(ele)
 				
 	}
 }
+
 </script>
+
+
+
+
 <?php

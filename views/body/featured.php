@@ -38,7 +38,6 @@
 
 
 <div class="featuredbanners">
-	
 	<div class="banner">
 		<a href="<?=site_url("Olay")?>"><img src="<?=IMAGES_URL?>featured_banners/20140111/olay.png"></a>
 	</div>

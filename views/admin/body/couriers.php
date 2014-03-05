@@ -8,6 +8,7 @@ h2 {    width: 60%;    float: left; }
 </style>
 <div class="container">
 <h2>Couriers</h2>
+
 <div class="filter_used_for">
     <select id="sel_used_for" name="sel_used_for"  style="margin-right:20px;">
         <option value="00">Choose for</option>
@@ -30,7 +31,6 @@ h2 {    width: 60%;    float: left; }
 <td><?=$c['courier_id']?></td>
 <td><?=$c['courier_name']?></td>
 <td><?=$c['used_for']?></td>
-
 <td><?=$c['pincodes']?></td>
 <td><a href="<?=site_url("admin/edit_pincodes/{$c['courier_id']}")?>">view/edit pincodes</a></td>
 <td><?=$c['awb']?></td>

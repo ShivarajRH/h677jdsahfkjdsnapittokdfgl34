@@ -750,10 +750,15 @@ class Pnh extends Controller{
 			{
 				foreach($fran_invoice_delivered as $f_id=>$invoice_nos)
 				{
-					$fran_det = $this->db->query("select franchise_id,franchise_name,login_mobile1 from pnh_m_franchise_info where franchise_id = ? ",$f_id)->row_array();
-					$this->erpm->pnh_sendsms($fran_det['login_mobile1'],"Dear ".$fran_det['franchise_name'].",Invoice no-  ".implode(',',$invoice_nos)."is delivered.Happy Franchising!!!",$f_id,$emp_id,11);
+					//$fran_det = $this->db->query("select franchise_id,franchise_name,login_mobile1 from pnh_m_franchise_info where franchise_id = ? ",$f_id)->row_array();
+					//$this->erpm->pnh_sendsms($fran_det['login_mobile1'],"Dear ".$fran_det['franchise_name'].",Invoice no-  ".implode(',',$invoice_nos)."is delivered.Happy Franchising!!!",$f_id,$emp_id,11);
+					
+					// notify member about the delivery
+					foreach($invoice_nos as $inv_n)
+						$this->erpm->notify_shipment_delivery_sms($inv_n,1,1,0);
+					
 				}
-			} 
+			}
 				
 			$error_msg_arr = array();	
 			
@@ -1989,6 +1994,7 @@ class Pnh extends Controller{
 					$items[$i]['price']=$prod['store_price'];
 				else
 					$items[$i]['price']=$prod['price'];
+
 				$voucher_margin=@$is_voucher_activated['voucher_margin'];
 				$items[$i]['itemid']=$prod['id'];
 				if($prod['is_combo']=="1")
@@ -2147,6 +2153,7 @@ class Pnh extends Controller{
 				$voucher_code_used['gven_secretcode']=array();
 				$voucher_code_used['othr_secretcode']=array();
 				
+
 				foreach($voucher_codes as $v_code)
 				{
 						
@@ -2234,6 +2241,7 @@ class Pnh extends Controller{
 
 					}
 				}
+
 			}
 			else
 			{

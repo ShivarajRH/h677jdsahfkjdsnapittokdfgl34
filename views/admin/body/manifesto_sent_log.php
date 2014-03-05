@@ -418,6 +418,7 @@
 
 <style>.error_inp{border:2px solid #cd0000 !important;}</style>
 <!-- add alternative number end -->
+
 <script>
 prepare_daterange('from_date','to_date');
 
@@ -1550,7 +1551,6 @@ $("#mark_delivered_courier_transport").dialog({
 			$('#mark_delivered_courier_transport_form .readonly_inp').each(function(){
 				$('input[type="text"]',$(this).parents('tr:first')).attr('readonly',true);
 			}) 
-
 			if(show_submit)
 			{
 				var buttons={

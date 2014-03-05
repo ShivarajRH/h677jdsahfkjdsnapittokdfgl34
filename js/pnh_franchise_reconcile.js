@@ -627,6 +627,7 @@ if(error_msgs.length)
         var dlg = $("#dlg_credit_note_block");
         $("#dg_i_credit_note_id",dlg).val(credit_note_id);$("#dg_i_credit_amount",dlg).val(credit_amt);$("#dg_i_unreconciled_value",dlg).val(unreconciled_amount);
         dlg.dialog('open').dialog("option","title","Reconcile the Credit Note id #"+credit_note_id);
+
         var invs_id = $("#dlg_selected_invoices_1",dlg);
         load_unconciled_invoices(invs_id);
     }

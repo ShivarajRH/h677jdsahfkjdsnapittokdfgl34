@@ -1,4 +1,3 @@
-@import url(http://fonts.googleapis.com/css?family=Droid+Sans:400,700);
 ::selection{
 	background:#9C91C3;
 	color:#fff;
@@ -30,12 +29,18 @@ body {
 	margin: 0px;
 	padding: 0px;
 	color: #000;
-	font-family: 'Droid Sans',"Helvetica Neue",Helvetica,tahoma,Arial,Verdana,sans-serif;
-	font-size: 12px;
-	background:#fff url(../images/bg_grainy.jpg);
+	font-family: "Helvetica Neue",Helvetica,tahoma,Arial,Verdana,sans-serif;
+	font-size: 11px;
+	background:#fff;
 }
 a img {
 	border: 0px;
+}
+.fleft{
+	float:left;
+}
+.fright{
+	float:right;
 }
 .searchcont{
 	text-align:right;
@@ -60,11 +65,15 @@ a img {
 .cartheader .carticon{
 	float:left;
 	margin-top:3px;
+	width:26px;
+	height:18px;
+	display:block;
+	background:url(../images/imgprick.png) -6px -474px no-repeat;
 }
 .cartheader #nocartitems{
 	float:left;
 	margin-left:2px;
-	background:#FFED00;
+	background:#fff;
 	-moz-border-radius:10px;
 	-webkit-border-radius:10px;
 	-o-border-radius:10px;
@@ -88,6 +97,25 @@ a img {
 .cartheader .checkout{
 	float:right;
 }
+.cartheader .checkout a{
+	display:block;
+	background:#fff;
+	font-weight:bold;
+	text-transform:uppercase;
+	color:#000;
+	text-decoration:none;
+	text-align:center;
+/*	background:url(../images/imgprick.png) -4px -215px no-repeat;*/
+	width:88px;
+	height:16px;
+	border:1px solid #aaa;
+	-o-border-radius:5px;
+	-moz-border-radius:5px;
+	-webkitborder-radius:5px;
+	border-radius:5px;
+	padding-top:3px;
+	font-size:110%;
+}
 .foretop .cartheader{
 	background:#222;
 	padding:7px 7px 3px 7px;
@@ -98,17 +126,15 @@ a img {
 	border-radius:7px 7px 0px 0px;
 	min-width:200px;
 	margin-top:1px;
-	height:22px;
+	height:21px;
 	clear:right;
 }
 .foretop .foretop_righttop{
 	float:right;
 	height:24px;
 }
-.foretop{
-}
 .foretop .bgover{
-	background:#3D3F41;
+	background:#000;
 }
 .foretop a.link {
 	clear:right;
@@ -145,6 +171,9 @@ a img {
 	margin-top:2px;
 	display:block;
 	float:left;
+	width:59px;
+	height:16px;
+	background:url(../images/imgprick.png) -6px -452px no-repeat;
 }
 .foretop .welcomecont{
 	margin-left:15px;
@@ -157,7 +186,7 @@ a img {
 }
 .foretop .loginlink{
 	background:transparent !important;
-	color:#fff;
+	color:#FF67B2;
 	text-decoration:none;
 	float:none;
 	padding-top:3px;
@@ -192,16 +221,13 @@ a img {
 	background:#fff;
 	margin:5px;
 }
-.menu {
-	background:#F3F0E6;
-	background:#fff;
+.menu{
 	clear: both;
-    border:1px solid #ccc;
-    -webkit-border-radius:0px 0px 7px 7px;
-    -moz-border-radius:0px 0px 7px 7px;
-    -o-border-radius:0px 0px 7px 7px;
-    border-radius:0px 0px 7px 7px;
-    border-width:0px 1px 2px 1px;
+	background:#fff;
+	padding:20px 10px 10px 10px;
+	border:2px solid #ddd;
+	border-top:0px;
+	margin-bottom:15px;
 }
 .discover{
 	clear:right;

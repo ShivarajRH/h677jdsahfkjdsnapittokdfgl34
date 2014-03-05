@@ -16,7 +16,6 @@ Has Attributes? <input type="checkbox" name="has_attributes" id="has_attributes"
     <ul class="manageList">
         <?php
             $arr_attrids = explode(",",$c['attribute_ids']);
-        
             foreach($arr_attrids as $ed_attr_id) {
         ?>
         <li>
@@ -32,12 +31,8 @@ Has Attributes? <input type="checkbox" name="has_attributes" id="has_attributes"
                         ?>
                     </select>
         </li>
-        
-    <?php 
-                                               
-            } ?>
+	<?php } ?>
     </ul>
-   
 </div>
 <input type="submit" value="<?=$c?"Update":"Add"?>">
 </form>

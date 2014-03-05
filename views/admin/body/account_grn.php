@@ -79,7 +79,6 @@
 <td><?=format_date($inv['purchase_inv_date'])?></td>
 <td>Rs <b><input type="text" class="inp readonly" name="inv_amounts[]" readonly="readonly" value="<?=$inv['purchase_inv_value']?>" size=10></b></td>
 <td>Rs <b><span class="inv_<?=$inv['id']?>">0</span></b></td>
-
 <td>
 	<?php if(file_exists(ERP_PHYSICAL_IMAGES."invoices/{$inv['id']}.jpg")){ ?>
 		<a href="<?=ERP_IMAGES_URL?>invoices/<?=$inv['id']?>.jpg" target="_blank"><img src="<?=ERP_IMAGES_URL?>invoices/<?=$inv['id']?>.jpg" height=50></a>
@@ -172,6 +171,7 @@ function calc_vvalue()
 		
 		
 	});
+
 	
 	
 }

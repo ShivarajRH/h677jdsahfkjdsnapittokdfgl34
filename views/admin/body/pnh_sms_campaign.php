@@ -2,6 +2,7 @@
 <h2>Send SMS Notification</h2>
  
 <form id="pnh_sms_camp_frm" method="post">
+
 <table cellpadding="5" width="100%">
 	<tr>
 		<td>Territory : </td>
@@ -49,7 +50,6 @@
 </td>
 </tr>
 <tr><td>Send to :</td><td><label><input checked="checked" type="radio" name="send_to" value="1"> Both login mobiles</label> &nbsp; &nbsp;   <label><input type="radio" name="send_to" value="2"> Login mobile1 only</label></td></tr>
-
 <tr>
 <td>Type</td><td>
 	<select name="type">
@@ -594,7 +594,6 @@ $('#choose_menu').change(function(){
 			$('#fran_list').trigger('change');
 		});
 });
-
 
 $('#choose_menu').change(function(){
 	

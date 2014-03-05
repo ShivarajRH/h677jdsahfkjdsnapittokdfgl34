@@ -931,7 +931,6 @@ class Cron extends Controller{
 	{
 		
 		die();
-
 		if($authkey != '123871jnsnsd12312')
 		{
 			die();
@@ -1236,6 +1235,7 @@ class Cron extends Controller{
 												AND date(from_unixtime(a.init)) = curdate()
 											",$tm_det['territory_id'])->row()->total_order_value;
 				
+
 				$ttl_month_sales=@$this->db->query("SELECT SUM((o.i_orgprice-o.i_discount-o.i_coup_discount)*o.quantity) AS total_order_value
 						FROM pnh_m_franchise_info b
 						JOIN king_transactions a ON a.franchise_id = b.franchise_id AND is_pnh = 1
