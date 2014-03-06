@@ -472,7 +472,7 @@ if(error_msgs.length)
             }
 
             //new 
-            var available_rpt_unreconciled_value = rpt_unreconciled_value - reconciled_total;
+            /*var available_rpt_unreconciled_value = rpt_unreconciled_value - reconciled_total;
             var new_reconcile_amount = 0;
             if(available_rpt_unreconciled_value>sel_inv_amount){
                 new_reconcile_amount = sel_inv_amount;
@@ -480,7 +480,10 @@ if(error_msgs.length)
             else{
                 new_reconcile_amount = available_rpt_unreconciled_value;
             }
-            /*var i_sub_total = sel_inv_amount + reconciled_total;
+            amt_unreconcile.val(sel_inv_amount);
+            amt_adjusted.val(new_reconcile_amount);*/
+            
+            var i_sub_total = sel_inv_amount + reconciled_total;
             if(i_sub_total < rpt_unreconciled_value) {
                 if(dg_icount) {
                     amt_unreconcile.val(sel_inv_amount);
@@ -491,10 +494,8 @@ if(error_msgs.length)
                 var i_sub_total = rpt_unreconciled_value - reconciled_total;
                 amt_unreconcile.val(sel_inv_amount);
                 amt_adjusted.val(i_sub_total);
-                //alert("Invoice amount cannot be more than the receipt amount!");
-            }*/
-            amt_unreconcile.val(sel_inv_amount);
-            amt_adjusted.val(new_reconcile_amount);
+                alert("Invoice amount cannot be more than the receipt amount!");
+            }
             
             //dg_show_unconcile_total(dlgname);
             amt_adjusted.trigger("change");
@@ -514,15 +515,24 @@ if(error_msgs.length)
             
             var amt_adjusted_amount = amt_adjusted.val();
             
+            if( isNaN(amt_adjusted_amount) ) { alert("Invalid amount entered."); amt_adjusted.val(0).focus();  $(elt).trigger("change"); return false; }
+            
 //            alert(rowname+"-"+amt_unreconcile+"-"+amt_adjusted_amount);
             
+            //1
             // is adjusted amount is greater than invoice amount?
-            if( amt_adjusted_amount > amt_unreconcile && amt_adjusted_amount > receipt_amount) {
-                amt_adjusted.val(0).focus();  $(elt).trigger("change");
+            if( amt_adjusted_amount > amt_unreconcile ) {
                 alert("Adjusted amount is greater than invoice amount");
+                amt_adjusted.val(0).focus();  $(elt).trigger("change");
                 return false;
             }
-             
+            //2
+            else if(  amt_adjusted_amount > receipt_amount) {
+                alert("Adjusted amount is greater than receipt amount");
+                amt_adjusted.val(0).focus();  $(elt).trigger("change");
+                return false;
+            }
+           
             var adjusted_amount = 0;
             $(".dg_amt_adjusted",dlg).each(function(i,row) {
                 var amount = $(this).val();

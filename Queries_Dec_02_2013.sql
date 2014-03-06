@@ -3314,7 +3314,36 @@ alter table `snapittoday_db_jan_2014`.`t_imei_no` change `id` `id` bigint   NOT 
 
 INSERT INTO `t_imei_no` (`product_id`, `imei_no`, `stock_id`, `grn_id`, `created_on`) VALUES ('152974', '6464646464', '163451', 4924, 1393923183);
 
+
+#Mar_05_2014
+
 ALTER TABLE `pnh_t_receipt_info` ADD COLUMN `cheq_realized_on` VARCHAR(255) NULL AFTER `activated_on`;
-
-
 ALTER TABLE `pnh_m_deposited_receipts` ADD COLUMN `cheq_cancelled_on` VARCHAR(255) NULL AFTER `submitted_by`;
+
+-- old
+select order_id,mrp,inv_qty,round(mrp*a_disc_perc,2) as disc from (
+										select a.id,order_id,a.product_id,mrp,( (qty+extra_qty)-release_qty) as inv_qty,(i_discount+i_coup_discount) as a_disc,((i_discount+i_coup_discount)/i_orgprice) as a_disc_perc 
+											from t_reserved_batch_stock a
+											join t_stock_info b on a.stock_info_id = b.stock_id
+											join king_orders c on c.id = a.order_id 
+											where a.status = 1 # and p_invoice_no = ? #and a.order_id = ''
+										) as g 
+
+#oid = 1272208453 Rs. 125 Qty: 2 disc: 4.20
+select 125*2
+-- new
+select a.id,order_id,a.product_id,mrp,( (qty+extra_qty)-release_qty) as inv_qty,(i_discount+i_coup_discount) as a_disc,((i_discount+i_coup_discount)/i_orgprice) as a_disc_perc 
+											from t_reserved_batch_stock a
+											join t_stock_info b on a.stock_info_id = b.stock_id
+											join king_orders c on c.id = a.order_id 
+											where a.status = 1 and a.order_id = '1272208453' # and p_invoice_no = ? #
+-- 
+select * #a.id,order_id,a.product_id,mrp,( (qty+extra_qty)-release_qty) as inv_qty,(i_discount+i_coup_discount) as a_disc,((i_discount+i_coup_discount)/i_orgprice) as a_disc_perc 
+											from t_reserved_batch_stock a
+											#join t_stock_info b on a.stock_info_id = b.stock_id
+											join king_orders c on c.id = a.order_id 
+											where a.status = 1 and a.order_id = '1272208453'
+
+select * from shipment_batch_process_invoice_link where batch_id='5000' and p_invoice_no in ('116350','116335')
+
+select * from proforma_invoices where p_invoice_no in ('116307','116304','116350','116335') and invoice_status='1';
