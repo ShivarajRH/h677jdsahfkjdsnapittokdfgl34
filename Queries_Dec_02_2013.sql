@@ -3347,3 +3347,41 @@ select * #a.id,order_id,a.product_id,mrp,( (qty+extra_qty)-release_qty) as inv_q
 select * from shipment_batch_process_invoice_link where batch_id='5000' and p_invoice_no in ('116350','116335')
 
 select * from proforma_invoices where p_invoice_no in ('116307','116304','116350','116335') and invoice_status='1';
+
+# Mar_06_2014
+
+select * from m_product_attributes where pid='5954';
+
+select * from pnh
+-- new 
+select distinct pa.attr_id,a.attr_name,pa.attr_value,pa.pid,c.id as pcat_id from king_categories c
+join m_attributes a on find_in_set(a.id,c.attribute_ids) 
+left join m_product_attributes pa on pa.attr_id = a.id and pa.pid='5954'
+where c.attribute_ids !='' and pa.is_active=1 and c.id= '2'; # '1037'
+
+select a.id,a.attr_name,pa.attr_value,pa.pid from king_categories c join m_attributes a on find_in_set(a.id,c.attribute_ids) left join m_product_attributes pa on pa.attr_id = a.id and pa.pid= '0' where c.attribute_ids !='' and c.id='2'
+
+select * from m_product_info where product_id='5954'
+
+-- ========================< DB changes >==============================
+alter table `m_product_attributes` add column `pcat_id` bigint (20)  NULL  after `pid`, add column `created_on` varchar (100)  NULL  after `attr_value`, add column `created_by` tinyint (11)  NULL  after `created_on`, add column `modified_on` varchar (100)  NULL  after `created_by`, add column `modified_by` tinyint (100)  NULL  after `modified_on`;
+
+alter table `m_product_attributes` add column `is_active` tinyint (11) DEFAULT '1' NULL  COMMENT '1:active,2:deactive' after `attr_value`;
+alter table `snapittoday_db_jan_2014`.`m_product_attributes` change `created_on` `created_on` varchar (100)  NULL , change `modified_on` `modified_on` varchar (100)  NULL 
+
+-- ========================< DB changes >==============================
+
+-- ========================< Reset attributes column >==============================
+update king_categories set attribute_ids = '';
+truncate table m_product_attributes;
+-- ========================< Reset attributes column >==============================
+
+select * from m_product_attributes;
+select * from king_categories where id='1037'; #'2';
+
+select a.id,a.attr_name,pa.attr_value,pa.pid,pa.id from king_categories c
+                                                join m_attributes a on find_in_set(a.id,c.attribute_ids) 
+                                                left join m_product_attributes pa on pa.attr_id = a.id and pa.is_active=1 and pa.pid= '5954' and pa.pcat_id = c.id
+                                                where c.attribute_ids !='' and c.id='2';
+
+# Mar_07_2014

@@ -280,8 +280,8 @@ if(error_msgs.length)
     $("#dlg_unreconcile_view_list").dialog({
         modal:true,
 	autoOpen:false,
-	width:650,
-	height:506,
+	width:700,
+	height:600,
 	autoResize:true
         ,buttons:{
             "Close":function() {
@@ -302,7 +302,15 @@ if(error_msgs.length)
                                     <tr><td>Created On</td><th>"+resp.receipt_det.created_date+"</th></tr></table>";
                 recon_list += "<br><table width='100%' class='datagrid'><tr><th>#</th><th>Invoice No</th><th>Debitnote Id</th><th>Document Amount (Rs.)</th><th>Reconciled (Rs.)</th><th>Unreconciled (Rs.)</th><th>Created By</th><th>Created On</th></tr>";
                 $.each(resp.reconcile_list,function(i,recon) {
-                    recon_list += "<tr><td>"+(++i)+"</td><td>"+recon.invoice_no+"</td><td>"+((!recon.debit_note_id)?'--':recon.debit_note_id)+"</td><td>"+recon.inv_amount+"</td><td>"+recon.reconcile_amount+"</td><td>"+((!recon.unreconciled)?'Nill':recon.unreconciled)+"</td><td>"+recon.username+"</td><td>"+recon.created_date+"</td>";
+                    var invno = '--';
+                    var drid = '--';
+                    if(recon.invoice_no != 0) {
+                        var invno = recon.invoice_no;
+                    }
+                    if(recon.debit_note_id != 0) {
+                        var drid = recon.debit_note_id;
+                    }
+                    recon_list += "<tr><td>"+(++i)+"</td><td>"+invno+"</td><td>"+drid+"</td><td>"+recon.inv_amount+"</td><td>"+recon.reconcile_amount+"</td><td>"+((!recon.unreconciled)?'Nill':recon.unreconciled)+"</td><td>"+recon.username+"</td><td>"+recon.created_date+"</td>";
                 });
                 recon_list += "</table>";
             }
@@ -484,17 +492,20 @@ if(error_msgs.length)
             amt_adjusted.val(new_reconcile_amount);*/
             
             var i_sub_total = sel_inv_amount + reconciled_total;
-            if(i_sub_total < rpt_unreconciled_value) {
+            if(i_sub_total < rpt_unreconciled_value)
+            {
                 if(dg_icount) {
                     amt_unreconcile.val(sel_inv_amount);
                     amt_adjusted.val(sel_inv_amount);
                 }//else {$("#amt_unreconcile").val(sel_inv_amount);$("#amt_adjusted").val(sel_inv_amount);}
             }
-            else {
+            else
+            {
+                //Invoice amount is more than the receipt amount
                 var i_sub_total = rpt_unreconciled_value - reconciled_total;
                 amt_unreconcile.val(sel_inv_amount);
                 amt_adjusted.val(i_sub_total);
-                alert("Invoice amount cannot be more than the receipt amount!");
+                
             }
             
             //dg_show_unconcile_total(dlgname);
@@ -519,16 +530,15 @@ if(error_msgs.length)
             
 //            alert(rowname+"-"+amt_unreconcile+"-"+amt_adjusted_amount);
             
-            //1
-            // is adjusted amount is greater than invoice amount?
+            //1. Is adjusted amount is greater than invoice amount?
             if( amt_adjusted_amount > amt_unreconcile ) {
-                alert("Adjusted amount is greater than invoice amount");
+                alert("Adjusted amount is greater than Invoice amount");
                 amt_adjusted.val(0).focus();  $(elt).trigger("change");
                 return false;
             }
-            //2
+            //2. Is adjusted amount is greater than receipt amount
             else if(  amt_adjusted_amount > receipt_amount) {
-                alert("Adjusted amount is greater than receipt amount");
+                alert("Adjusted amount is greater than Receipt amount"+amt_adjusted_amount +">"+ receipt_amount);
                 amt_adjusted.val(0).focus();  $(elt).trigger("change");
                 return false;
             }

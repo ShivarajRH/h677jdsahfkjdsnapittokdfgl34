@@ -4689,7 +4689,7 @@ group by g.product_id order by product_name");
 	{
 		$user=$this->auth(PRODUCT_MANAGER_ROLE);
 		if($_POST){
-			foreach(array('pname','sku_code',"pdesc","psize","puom","pmrp","pvat","pcost","pbarcode","pisoffer","pissrc","pcat","pbrand","prackbin","pmoq","prorder","prqty","premarks","pissno","is_active","has_attributes") as $i)
+			foreach(array('pname','sku_code',"pdesc","psize","puom","pmrp","pvat","pcost","pbarcode","pisoffer","pissrc","pcat","pbrand","prackbin","pmoq","prorder","prqty","premarks","pissno","is_active") as $i)
 				$inp[]=$this->input->post($i);
 			$inp[]=$pid;
 			
@@ -4705,10 +4705,9 @@ group by g.product_id order by product_name");
 			
 			// Update product attributes
 			$attr = $this->input->post("attr");
-			if(isset($attr))
-			{
-			    $this->update_product_attributes($attr,$pid);
-			}
+			$pcat = $this->input->post("pcat");
+			if(!empty($attr))
+                            $this->update_product_attributes($attr,$pid,$pcat,$user);
                         
 			redirect("admin/product/$pid");
 		}
@@ -4724,7 +4723,7 @@ group by g.product_id order by product_name");
 		if($_POST)
 		{
 			$inp=array("P".rand(10000,99999));
-			foreach(array('pname','sku_code',"pdesc","psize","puom","pmrp","pvat","pcost","pbarcode","pisoffer","pissrc","pcat","pbrand","prackbin","pmoq","prorder","prqty","premarks","pissno","is_active","has_attributes","attr") as $i)
+			foreach(array('pname','sku_code',"pdesc","psize","puom","pmrp","pvat","pcost","pbarcode","pisoffer","pissrc","pcat","pbrand","prackbin","pmoq","prorder","prqty","premarks","pissno","is_active") as $i)
 				$inp[]= $$i = $this->input->post($i);
 				
 			$inp[] = $user['userid'];	
@@ -4740,49 +4739,67 @@ group by g.product_id order by product_name");
 			}
 			$this->db->query("insert into t_stock_info(product_id,location_id,rack_bin_id,mrp,available_qty,product_barcode) values(?,?,?,?,0,?)",array($pid,$location,$rackbin,$pmrp,$pbarcode));
 			
-            // Add product attributes
-            if(isset($attr))
-            {
-                $this->add_product_attributes($attr,$pid);
-            }
+			// Add product attributes
+			$attr = $this->input->post("attr");
+			if(!empty($attr))
+				$this->add_product_attributes($attr,$pid,$pcat,$user);
                         
 			redirect("admin/products");
 		}
 		$data['page']="addproduct";
 		$this->load->view("admin",$data);
 	}
-	
-    function add_product_attributes($attr,$pid)
-    {
-        $in_data=array();
-        foreach($attr['attr_id'] as $i=>$val)
+        
+        function add_product_attributes($attr,$pid,$pcat_id,$user)
         {
-            $attr_data[$i]["attr_id"]  = $attr['attr_id'][$i];
-            $attr_data[$i]["attr_value"]  = $attr['attr_value'][$i];
-            if($attr['attr_id'][$i] !='' and $attr['attr_value'][$i] != '') {
-                $in_data[] = ' ("'.$pid.'",'.$attr['attr_id'][$i].',"'.$attr['attr_value'][$i].'") ';
+            if(!isset($attr['attr_id']))
+                return;
+            
+            $in_data=array();
+            foreach($attr['attr_id'] as $i=>$val)
+            {
+                $attr_data[$i]["attr_id"]  = $attr['attr_id'][$i];
+                $attr_data[$i]["attr_value"]  = $attr['attr_value'][$i];
+                $timestamp = date("Y-m-d H:i:s",time());
+                if($attr['attr_id'][$i] !='' and $attr['attr_value'][$i] != '') {
+                    $in_data[] = ' ("'.$pid.'","'.$pcat_id.'",'.$attr['attr_id'][$i].',"'.$attr['attr_value'][$i].'","now()","'.$user['userid'].'") ';
+                }
+            }
+            if(!empty($in_data))
+            {
+                $this->db->query("insert into m_product_attributes(pid,pcat_id,attr_id,attr_value,created_on,created_by) values ".implode(",",$in_data)." ");
             }
         }
-        if(!empty($in_data))
+
+        function update_product_attributes($attr,$pid,$pcat_id,$user)
         {
-            $this->db->query("insert into m_product_attributes(pid,attr_id,attr_value) values ".implode(",",$in_data)." ");
-        }
-    }
-    
-    function update_product_attributes($attr,$pid)
-    {
-        $in_data=array();
-        foreach($attr['attr_id'] as $i=>$val)
-        {
-            $attr_data[$i]["attr_id"]  = $attr['attr_id'][$i];
-            $attr_data[$i]["attr_value"]  = $attr['attr_value'][$i];
-            if($attr['attr_id'][$i] !='' and $attr['attr_value'][$i] != '') {
-                $attr_id=$attr['attr_id'][$i];
-                $attr_value=$attr['attr_value'][$i];
-                $this->db->query("update m_product_attributes set attr_value= ? where attr_id =? and pid=? ",array($attr_value,$attr_id,$pid));
+            if( !isset($attr['attr_id']) )
+                return;
+            
+//            echo '<pre>111';print_r($attr); 
+//            echo $pid.'<br>';
+//            echo $pcat_id.'<br>';
+//            die();
+            $timestamp = date("Y-m-d H:i:s",time());
+            foreach($attr['attr_id'] as $i=>$val)
+            {
+                if($attr['attr_id'][$i] !='' && $attr['attr_value'][$i] != '')
+                {
+                    $attr_id=$attr['attr_id'][$i];
+                    $attr_value=$attr['attr_value'][$i];
+                    if($this->db->query("select count(*) as t from m_product_attributes where pid=? and pcat_id=? and attr_id =? and is_active=1",array($pid,$pcat_id,$attr_id))->row()->t)
+                    {
+                        $this->db->query("update m_product_attributes set attr_value=?,modified_on=?,modified_by=? where pcat_id=? and attr_id=? and pid=? ",array($attr_value,$timestamp,$user['userid'],$pcat_id,$attr_id,$pid));
+                    }
+                    else
+                    {
+                        $this->db->query("update m_product_attributes set is_active=0,modified_on=?,modified_by=? where pcat_id=? and attr_id=? and pid=? ",array($timestamp,$user['userid'],$pcat_id,$attr_id,$pid));
+                        
+                        $this->db->query("insert into m_product_attributes(pid,pcat_id,attr_id,attr_value,created_on,created_by) values (?,?,?,?,?,?) ",array($pid,$pcat_id,$attr_id,$attr_value,$timestamp,$user['userid']));
+                    }
+                }
             }
         }
-    }
         
 	function createblankstockrows()
 	{
@@ -8202,7 +8219,7 @@ group by g.product_id order by product_name");
 		if(!$rid)
 			show_error("Input Missing");
 		else {
-			$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user,'Receipt Cancelled');
+			$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user,'Receipt Cancelled.');
 			$this->erpm->do_pnh_cancel_receipt($rid);
 		}
 	}
@@ -20177,6 +20194,10 @@ order by action_date";
 			$tm_sms=$this->input->post('tm_sms');
 			$cheq_cancelled_on=$this->input->post('cheq_canceled_on');
 			$d=0;
+                        
+			// reverse reconcilation
+			$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($receipt_id,$user,'Processed Receipt Cancelled');
+                        
 			$output=array();
 			$this->db->query("update pnh_m_deposited_receipts set status=2,is_cancelled=1,cancel_reason=?,cancelled_on=now(),cancel_status=?,dbt_amt=?,cheq_cancelled_on=? where receipt_id=?",array($desc,$cancel_status,$amount,$cheq_cancelled_on,$receipt_id));
 			$this->db->query("update pnh_t_receipt_info set status=2,activated_by=?,reason=?,activated_on=? where receipt_id=?",array($user['userid'],$desc,time(),$receipt_id));
@@ -20226,21 +20247,17 @@ order by action_date";
 					}
 					$this->erpm->flash_msg("Account statement corrected");
 				}
+                                $d+=$this->db->affected_rows();
+                                if($d)
+                                {
+                                        $output['status']="success";
 
-			// reverse reconcilation
-			$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($receipt_id,$user,'Processed Receipt Cancelled');
-
-			$d+=$this->db->affected_rows();
-			if($d)
-			{
-				$output['status']="success";
-				
-			}
-			else 
-			{
-				$output['status']="Error";
-			}
-			echo json_encode($output);
+                                }
+                                else 
+                                {
+                                        $output['status']="Error";
+                                }
+                                echo json_encode($output);
 		
 		}
 
@@ -24259,7 +24276,7 @@ die; */
         else if($type=="unreconcile")
 		{
                         // receipts
-			$sql="select * from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) order by created_on desc";
+			$sql="select * from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) and receipt_type != 0 order by created_on desc";
 			$total_records=$this->db->query($sql,$fid)->num_rows;
         		$sql.=" limit $pg , $limit ";
                         $data['receipt_log']=$this->db->query($sql,$fid)->result_array();
@@ -28518,23 +28535,22 @@ die; */
          * Get category attributes
          * @param type $cat_id
          */
-        function jx_get_cat_attributes($cat_id='') {
+        function jx_get_cat_attributes($cat_id='',$pid='')
+        {
             $this->erpm->auth(true);
-            $rdata = array();
-            
             if($cat_id == '') print_error("Categoryid not found");
-            $ar_cat_list = $this->db->query("select * from king_categories where attribute_ids !='' and id=? ",$cat_id);
-            $rdata['lst_qry_cats'] = $this->db->last_query();
             
-            if($ar_cat_list->num_rows() == 0) {
+            $rdata = array();
+            $ar_cat_list = $this->db->query("select a.id,a.attr_name,pa.attr_value,pa.pid from king_categories c
+                                                join m_attributes a on find_in_set(a.id,c.attribute_ids) 
+                                                left join m_product_attributes pa on pa.attr_id = a.id and pa.is_active=1 and pa.pid= ? and pa.pcat_id = c.id
+                                                where c.attribute_ids !='' and c.id= ? ",array($pid,$cat_id) );
+            if($ar_cat_list->num_rows() == 0)
                 print_msg("No Categories found");
-            }
-            else {
+            else
+            {
                 $rdata['status'] = 'success';
-                $cat_id = $ar_cat_list->row_array();
-                $attr_list = $this->db->query("select id,attr_name from m_attributes where FIND_IN_SET(id,'".$cat_id['attribute_ids']."' ) ")->result_array();
-                $rdata['lst_qry'] = $this->db->last_query();
-                $rdata['attr_list'] = $attr_list;
+                $rdata['attr_list'] = $ar_cat_list->result_array();
                 echo json_encode($rdata);
             }
         }

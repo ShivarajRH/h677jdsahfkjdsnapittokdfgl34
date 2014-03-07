@@ -49,47 +49,28 @@
 <tr><td></td><td><input type="submit" value="<?=$p?"Update":"Add"?> product">
 </table>
 </form>
-
 </div>
 <script>
     $("#pcat").live("change",function() {
         var cat_id = $(this).find(":selected").val();
+        var pid='<?=$p['product_id'];?>';
         
         if(cat_id != '') 
         {
-            $.post(site_url+"/admin/jx_get_cat_attributes/"+cat_id,function(resp) {
+            $.post(site_url+"/admin/jx_get_cat_attributes/"+cat_id+"/"+pid,function(resp) {
                 var atrr_list = '';
                 
                 if(resp.status == 'success') {
-                    atrr_list += '<h5>Set attribute values:</h5><table class="datagrid">\n\
+                    atrr_list += '<h5>Set attribute values</h5><table class="datagrid">\n\
                                 <tr>\n\
                                     <th>Attribute Name</th><th></th>\n\
                                 <tr>';
                                 $.each(resp.attr_list,function(i,attr) {
                                     
-                                    <?php
-                                    if(isset($prod_attrs))
-                                    {
-                                        foreach($prod_attrs as $edit_attr)
-                                        {
-                                        ?>
-                                            var attr_val = '';
-                                            var edit_attrid = '<?=$edit_attr['attr_id'];?>';
-                                            if(edit_attrid == attr.id) {
-                                                attr_val = '<?=$edit_attr['attr_value'];?>';
-                                                atrr_list +='<tr>\n\
-                                                                <td>'+attr.attr_name+'</td><td><input type="hidden" name="attr[attr_id][]" value="'+attr.id+'"/> <input type="text" name="attr[attr_value][]" value="'+attr_val+'"/></td>\n\
-                                                            <tr>';
-                                            }
-                                            <?php 
-                                        }
-                                    }
-                                    else {
-                                    ?>
-                                            atrr_list +='<tr>\n\
-                                                            <td>'+attr.attr_name+'</td><td><input type="hidden" name="attr[attr_id][]" value="'+attr.id+'"/> <input type="text" name="attr[attr_value][]" value=""/></td>\n\
-                                                        <tr>';
-                                    <?php } ?>
+                                        atrr_list +='<tr>\n\
+                                                        <td>'+attr.attr_name+'</td><td><input type="hidden" name="attr[attr_id][]" value="'+attr.id+'"/> <input type="text" name="attr[attr_value][]" value="'+((attr.attr_value==null)?"":attr.attr_value)+'"/></td>\n\
+                                                    <tr>';
+                                    
                                 });
                     atrr_list +='</table>';
                 }

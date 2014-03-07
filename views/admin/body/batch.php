@@ -415,7 +415,7 @@
 			
 			<form action="<?php echo site_url('admin/process_bulkorderinvoice') ?>" target="hndl_process_bulkinvoice" id="process_bulk_invoice_frm" method="post" style="display: none;">
 				<b>Bulk Invoice Orders</b> - <span id="sel_prodname"></span> <br>
-				<input type="text" value="<?php echo $batch['batch_id']; ?>" name="batch_id">
+				<input type="hidden" value="<?php echo $batch['batch_id']; ?>" name="batch_id">
 				<textarea name="pinv_nos" style="display: none;"></textarea> 
 				<b>Selected Invoices</b> <input type="text" readonly="readonly" size="5" class="inp" value="0" id="bulk_orderttl" >
 				<b>Required Qty </b> <input type="text" readonly="readonly" size="5" class="inp" value="0" id="process_bulkorderinv_ttlqty" >

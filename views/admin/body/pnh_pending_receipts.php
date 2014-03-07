@@ -406,7 +406,7 @@ if($no_days >=4 && $r['activated_on'] == 0)
 </div>
 
 <div id="cancel_receipt" title="Receipt Cancellation">
-<form id="cancel_receipt_frm" method="post" data-validate="parsley" action="<?php echo site_url('admin/to_update_cancelreceipt_onprocessed')?>" >
+<form id="cancel_receipt_frm" method="post">
 <table width="100%">
 <tr><td><input type="hidden" name="can_receiptid" id="can_receiptid"></td></tr>
 <tr><td>Franchise Name</td><td>:</td><td id="can_recptfran"><b></b></td></tr>
@@ -430,10 +430,26 @@ if($no_days >=4 && $r['activated_on'] == 0)
 </div>
 
 <div id="realize" title="Realize">
-<form id="ac_form" action="<?php echo site_url('admin/pnh_pending_receipts')?>" method="post" data-validate="parsley" >
-<table><tr><td><b>Receipt ID</b></td><td><b>:</b></td><td id="r_receiptid"><b></b></td><tr><td style="vertical-align: bottom;"><b>Realized On</b></td><td style="vertical-align: bottom;"><b>:</b><span class="red_star">*</span></td><td><input type="text" name="cheq_realizedon" value=""  data-required="true" readonly="readonly"></td></tr><tr><td style="vertical-align: top;"><b>Remarks</b></td><td style="vertical-align: top;"><b>:</b><span class="red_star">*</span></td><td><textarea name="msg" class="a_reason" data-required="true" style="width: 350px; height: 171px;"></textarea></td></tr></table>
-<input type="hidden" name="type" class="a_type">
-<input type="hidden" name="rid" class="a_rid">
+<form id="ac_form" action="<?php echo site_url('admin/pnh_pending_receipts')?>" method="post">
+<table>
+    <tr>
+        <td><b>Receipt ID</b></td>
+        <td><b>:</b></td>
+        <td id="r_receiptid"><b></b></td>
+    </tr>
+    <tr>
+        <td style="vertical-align: bottom;"><b>Realized On</b></td>
+        <td style="vertical-align: bottom;"><b>:</b><span class="red_star">*</span></td>
+        <td><input type="text" name="cheq_realizedon" value=""  data-required="true" readonly="readonly"></td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top;"><b>Remarks</b></td>
+        <td style="vertical-align: top;"><b>:</b><span class="red_star">*</span></td>
+        <td><textarea name="msg" class="a_reason" data-required="true" style="width: 350px; height: 171px;"></textarea></td>
+    </tr>
+</table>
+<input type="hidden" name="type" class="a_type" value="">
+<input type="hidden" name="rid" class="a_rid" value="">
 </form>
 </div>
 
@@ -526,7 +542,7 @@ function can_rec(rid)
 	var reason=prompt("Reason For Cancel");
 	if(!reason || reason.length==0)
 		return false;
-            
+        
 	$(".a_rid").val(rid);
 	$(".a_type").val("can");
 	$(".a_reason").val(reason);
@@ -574,21 +590,24 @@ $("#cancel_receipt").dialog({
 			var c=confirm("Are you sure you want to cancel");
 			if(c)
 			{
-			var frm_cancel = $("#cancel_receipt_frm",this);
+                                var frm_cancel = $("#cancel_receipt_frm",this);
 			 	if(frm_cancel.parsley('validate'))
 				{
 			 		 $.post(site_url+'/admin/jx_cancel_processedreceipts',frm_cancel.serialize(),function(resp){
-					 if(resp.status == 'success')
-                         {
-							 $("#cancel_receipt").dialog('close');
-							 location.href = location.href;
-                         }
-	                },'json');
+                                            if(resp.status == 'success')
+                                            {
+                                                    $("#cancel_receipt").dialog('close');
+                                                    location.href = $(location).attr('href');
+                                            }
+                                            else {
+                                                print(resp);
+                                            }
+                                        },'json');
 		 		}
-            	else
-		            {
-		             alert('All Fields Required!!!');
-		            }
+                                else
+                                {
+                                 alert('All Fields Required!!!');
+                                }
 			}
 			else
 				return false;
@@ -755,7 +774,7 @@ $('#submit_tobank').dialog({
 				 $.post(site_url+'/admin/update_check_issubmitted',frm_checksubmit.serialize(),function(resp){
 			          if(resp.status == 'success')
                       {
-                      	location.href = location.href;
+                      	location.href = $(location).attr('href');
                       	dlg.dialog('close');
                       }
                 },'json');

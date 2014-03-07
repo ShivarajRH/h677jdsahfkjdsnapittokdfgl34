@@ -322,10 +322,12 @@ are defined individually in color classes */
 {
 	background: #808000 !important;
 }
+/*
 .bcode_scanned
 {
 	background: rgb(149, 238, 195) !important;
 }
+*/
 .lastScanned
 {
 	background:none repeat scroll 0 0 #FF9600 !important; 

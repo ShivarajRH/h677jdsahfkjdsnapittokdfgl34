@@ -7093,51 +7093,51 @@ order by p.product_name asc
                 
 		#==================================< Start Reconcilation Code >================================================
 		//update unreconceiled value
-		if($r_type == 1){
+		if($r_type == 1)
+		{
 		//                    $recpt_id = 119;
-		if($sel_invoice) {
-		$unreconciled_value = $amount - $total_val_reconcile;
-		$invoice_arr = array();
-		foreach($sel_invoice as $i=>$invoice_no) {
-		    $docu_type = $document_type[$i];
-		    $unreconcile_amt = $amt_unreconcile[$i];
-		    $adjusted_amt = $amt_adjusted[$i];
-		    if($invoice_no!='' && $unreconcile_amt!='' && $adjusted_amt!='') {
-		            if($docu_type == 'inv') {
-		                $dispatch_id = $this->get_dispatch_id_invno($invoice_no);
-		                $sub_val = $unreconcile_amt - $adjusted_amt;
-		                $invoice_arr['invoices'][$i]["debit_note_id"] = 0;
-		                $invoice_arr['invoices'][$i]["invoice_no"] = $sel_invoice[$i];
-		                $invoice_arr['invoices'][$i]["dispatch_id"] = $dispatch_id;
-		            }
-		            elseif($docu_type == 'dr') {
-		                $invoice_arr['invoices'][$i]["debit_note_id"] = $sel_invoice[$i];
-		                $invoice_arr['invoices'][$i]["invoice_no"] = 0;
-                        $invoice_arr['invoices'][$i]["dispatch_id"] = 0;
+                    if($sel_invoice)
+                    {
+                        $unreconciled_value = $amount - $total_val_reconcile;
+                        $invoice_arr = array();
+                        foreach($sel_invoice as $i=>$invoice_no)
+                        {
+                            $docu_type = $document_type[$i];
+                            $unreconcile_amt = $amt_unreconcile[$i];
+                            $adjusted_amt = $amt_adjusted[$i];
+                            if($invoice_no!='' && $unreconcile_amt!='' && $adjusted_amt!='')
+                            {
+                                    if($docu_type == 'inv') {
+                                        $dispatch_id = $this->get_dispatch_id_invno($invoice_no);
+                                        $sub_val = $unreconcile_amt - $adjusted_amt;
+                                        $invoice_arr['invoices'][$i]["debit_note_id"] = 0;
+                                        $invoice_arr['invoices'][$i]["invoice_no"] = $sel_invoice[$i];
+                                        $invoice_arr['invoices'][$i]["dispatch_id"] = $dispatch_id;
+                                    }
+                                    elseif($docu_type == 'dr') {
+                                        $invoice_arr['invoices'][$i]["debit_note_id"] = $sel_invoice[$i];
+                                        $invoice_arr['invoices'][$i]["invoice_no"] = 0;
+                                        $invoice_arr['invoices'][$i]["dispatch_id"] = 0;
+                                    }
+                                    $invoice_arr['invoices'][$i]["invoice_amt"] = round($unreconcile_amt,2);
+                                    $invoice_arr['invoices'][$i]["adjusted_amt"] = round($adjusted_amt,2);
+                                    $invoice_arr['invoices'][$i]["unreconciled_amt"] = round($sub_val,2);
+                                    $invoice_arr['document_type'] = $docu_type;
+                            }
+                        }
+                        $invoice_arr['userid'] = $user['userid'];
+                        $invoice_arr['receipt_id'] = $recpt_id;
+                        $invoice_arr['credit_note_id'] = 0;
+                        $invoice_arr['amount']=round($amount,2);
+                        $invoice_arr['total_reconcile_val'] = round($total_val_reconcile,2);
+                        $invoice_arr['unreconciled_value'] = round($unreconciled_value,2);
+                        $invoice_arr['fid'] = $fid;
 
-
-
-
+                        //echo '<pre>'; print_r($invoice_arr);die();
+                        $rdata = $this->reconcile_receipt($invoice_arr);
                     }
-	                    $invoice_arr['invoices'][$i]["invoice_amt"] = round($unreconcile_amt,2);
-	                    $invoice_arr['invoices'][$i]["adjusted_amt"] = round($adjusted_amt,2);
-	                    $invoice_arr['invoices'][$i]["unreconciled_amt"] = round($sub_val,2);
-	                    $invoice_arr['document_type'] = $docu_type;
                 }
-	            }
-	            $invoice_arr['userid'] = $user['userid'];
-	            $invoice_arr['receipt_id'] = $recpt_id;
-	            $invoice_arr['credit_note_id'] = 0;
-	            $invoice_arr['amount']=round($amount,2);
-	            $invoice_arr['total_reconcile_val'] = round($total_val_reconcile,2);
-	            $invoice_arr['unreconciled_value'] = round($unreconciled_value,2);
-	            $invoice_arr['fid'] = $fid;
-	
-	            //echo '<pre>'; print_r($invoice_arr);die();
-	            $rdata = $this->reconcile_receipt($invoice_arr);
-	        }
-	    }
-	    #==================================< End Reconcilation Code >================================================
+                #==================================< End Reconcilation Code >================================================
 
 //		$this->erpm->pnh_fran_account_stat($fid,0, $amount,"Topup $no $date");
 		
@@ -7150,7 +7150,8 @@ order by p.product_name asc
 		{
 			$this->db->query("update pnh_m_franchise_info set is_suspended=0 where franchise_id=?",$fid);
 		}
-		redirect("admin/pnh_franchise/$fid");
+		$this->session->set_flashdata("erp_pop_info","Receipt #".$recpt_id." created.");
+		redirect("admin/pnh_franchise/$fid","refresh");
 	}
 	
 	function do_pnh_updatedeal($itemid)

@@ -1233,3 +1233,5 @@ alter table `king_dealitems` add column `is_group` tinyint (1)  NULL  after `tmp
 #Mar_04_2014
 alter table `t_imei_no` change `id` `id` bigint   NOT NULL AUTO_INCREMENT;
 
+#Mar_05_2014
+alter table `m_product_attributes` add column `pcat_id` bigint (20)  NULL  after `pid`;

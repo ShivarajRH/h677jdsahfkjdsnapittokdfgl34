@@ -1,6 +1,5 @@
 <link type="text/css" rel="stylesheet" href="<?=base_url()?>/css/stock_intake.css">
 <style>
-
 *{outline: medium}
 h2
 {
@@ -21,7 +20,6 @@ h2
 	 color: #008000;
      margin: 0 2px;
 }
-
 #grn input[type="text"]:focus,#grn select:focus,#grn a:focus{
 	font-weight:bolder !important;
 	font-size: 110% !important; 
@@ -30,7 +28,6 @@ h2
 	width: auto;
 	height: auto;
 }
-
 </style>
 
 <div class="container">
@@ -52,7 +49,6 @@ h2
 	
 		<form method="post" id="apply_grn_form" enctype="multipart/form-data">
 			<div id="grn_pids"></div>
-			
 			<div id="grn">
 				<table class="datagrid nofooter" style="width: 86% !important	">
 					<thead>
@@ -275,7 +271,6 @@ h2
 
 var pids_selected=[];
 var ttl_imei_row_scanned=0;
-
 function vendors(ch)
 {
 	 $.post(site_url+'/admin/vendors_list',{ch:ch},function(resp){
@@ -299,7 +294,6 @@ function vendors(ch)
     },'json');
 }
 
-
 function polist_byvendor(id)
 {
 	pids_selected=[];
@@ -310,7 +304,6 @@ function polist_byvendor(id)
 			$.each(resp.po_list,function(i,p){
 				$('.jq_alpha_sort_overview_title').html("<h4>Purchase Order List for <span>"+p.vendor_name+"</span></h4>")
 	 			po_list +='<a class="" id="pos_'+p.po_id+'" poid="'+p.po_id+'" href="javascript:void(0)" onclick=pid_container('+p.po_id+')>';
-	 			
 	 			po_list +='<div id="pricing_plan2" class="four columns">';
             	po_list +='<dl class="plans">';
                 po_list +='</dl>';
@@ -327,19 +320,9 @@ function polist_byvendor(id)
                	po_list +='<dd class="plan_features">';
                 po_list +='<div class="feature_desc">D. Date : <span class="title_highlight">'+p.delivery_date+'</span> </div>';
                 po_list +='</dd>';
-                
-                /*
-                if(p.remarks)
- 				{
-                    po_list +='<dd class="plan_features">';
-					po_list +='<div class="feature_desc">Remarks : <span class="title_highlight">'+p.remarks+'</span> </div>';
-                    po_list +='</dd>';
-                }*/
-                
-            	po_list +='</dl>';
+                po_list +='</dl>';
         		po_list +='</div>';
-	 			
-				po_list +="</a>";
+	 			po_list +="</a>";
 			});
 			po_list +="</div>";
 		$('.jq_alpha_sort_overview_content').html(po_list);
@@ -353,23 +336,18 @@ $('.form_cancel').click(function(){
 	}
 });
 
-
- $(".po_list_byvendor_wrap a").change(function() {
- 	 $(".po_list_byvendor_wrap div").removeClass("jq_alpha_active");
-      // add class to the one we clicked
-      $(this).addClass("jq_alpha_active");
-   });
-   
+$(".po_list_byvendor_wrap a").change(function() {
+	 $(".po_list_byvendor_wrap div").removeClass("jq_alpha_active");
+	  // add class to the one we clicked
+	 $(this).addClass("jq_alpha_active");
+});
    
 var added_pos=[];
-
 function pid_container(pid)
 {
-	
 	if($.inArray(pid,pids_selected)!=-1)
 	{
 		pids_selected.splice(pids_selected.indexOf('pid'), 1);
-		
 	}
 	else
 	{
@@ -384,7 +362,6 @@ function check_dup_imei(imei,prodid)
 		c=$(this).val().split(",");
 		imeis=imeis.concat(c);
 	});
-	 
 	if($.inArray(imei,imeis)!=-1)
 	{
 		alert("This Serial no is already entered");return false;
@@ -399,12 +376,10 @@ function cal_invoice_value()
 		$i=$(this);
 		inv_inp_amount=parseFloat($(".inv_inp_amount",$i).val());
 		inv_inp_amount=isNaN(inv_inp_amount)?"":inv_inp_amount;
-		
 		inv_total +=inv_inp_amount;
 	});
 	$("#invoice_ttl_value").html(inv_total);
 }
-
 
 function calc_rec_value()
 {
@@ -417,12 +392,10 @@ function calc_rec_value()
 		rqty=isNaN(rqty)?"0":rqty;
 		pprice=parseFloat($(".pprice",$p).val());
 		pprice=isNaN(pprice)?"0":pprice;
-		
 		$('.subttl_'+prodid,$p).val(rqty*pprice);
 		
 		r_total+=rqty*pprice;
 		r_total_qty += rqty;
-		
 		if(!$.trim($('.scan_pbarcode',this).val()))
 		{
 			if(rqty == 0)
@@ -439,7 +412,6 @@ function calc_rec_value()
 				}
 			}
 		}
-		
 	});
 	$("#grn_ttl_value").html("Rs "+r_total.toFixed(2));
 	$("#grn_ttl").html(r_total.toFixed(0));
@@ -479,7 +451,6 @@ function loadpo(pids)
 	$("#po_loading").show();
 	$(".venl"+$("#grn_vendor").val()).show();
 	$.post('<?=site_url('admin/jx_grn_load_po')?>',{p:pids},function(data){
-		
 		pois=$.parseJSON(data);
 		g_rows="";
 		dpes=[];
@@ -528,7 +499,6 @@ function loadpo(pids)
 			grow=grow.replace(/%pid%/g,poi.po_id);
 			grow=grow.replace(/%name%/g,'<a href="'+site_url+'/admin/product/'+poi.product_id+'" target="_blank">'+poi.product_name+'</a>');
 			grow=grow.replace(/%qty%/g,poi.order_qty);
-			
 			grow=grow.replace(/%pqty%/g,tot_rqty);
             grow=grow.replace(/%po_mrp%/g,poi.mrp);
             grow=grow.replace(/%po_margin%/g,poi.margin);
@@ -548,7 +518,6 @@ function loadpo(pids)
 				
 			grow=grow.replace(/%price%/g,poi.purchase_price);
 			grow=grow.replace(/%rqty%/g,poi.received_qty);
-			
 			grow=grow.replace(/%ppur_price%/g,(poi.prod_mrp*poi.purchase_price/poi.mrp));
 			
 			if(poi.rbs)
@@ -572,11 +541,8 @@ function loadpo(pids)
 		});
 		
 		$("#grn .datagrid tbody").append(g_rows);
-		
 		$(dpes.join(", ")).datepicker({minDate:0});
-		
 		reset_tabindex(0,function(){});
-		
 		$("#po_loading").hide();
 		$("#loadafterselect").show();
 		calc_rec_value();
@@ -589,7 +555,6 @@ function loadpo(pids)
 				$('.imei_scanned_div',this).hide();
 				
 		});
-		
 		scanned_rows();
 		Tipped.create('.addrow_tooltip',{
 			skin: 'black',
@@ -611,7 +576,6 @@ function scanned_rows(prodid)
 	$('#grn .datagrid tbody tr').each(function(){
 		if($(this).hasClass('processed_mode'))
 				ttl_prod_rows_scanned ++;
-				
 	});
 	$('#summ_scanned_ttl_qty').text(ttl_prod_rows_scanned);
 	$('#summ_ttl_qty').text(ttl_prod_rows);
@@ -619,7 +583,6 @@ function scanned_rows(prodid)
 
 function reset_tabindex(row,cb)
 {
-	//$('span.name').parents('tr:first').attr('tabindex',tabindex_cnt);
 	$("#grn .datagrid tbody tr").each(function(){
 		// pr index 1 loc
 		// pr index 1 mrp
@@ -628,7 +591,6 @@ function reset_tabindex(row,cb)
 	
 		$('.add_barcode_wrap a',this).attr('tabindex',tabindex_cnt);
 		tabindex_cnt++;
-		
 		$('select.stkloc',this).attr('tabindex',tabindex_cnt);
 		tabindex_cnt++;
 		$('input.rqty',this).attr('tabindex',tabindex_cnt);
@@ -643,15 +605,12 @@ function reset_tabindex(row,cb)
 		tabindex_cnt++;
 		$('.validate_edit_mode',this).attr('tabindex',tabindex_cnt);
 		tabindex_cnt++;
-	
 	});
 	
 	$('.recv_qty_wrapper').attr('tabindex',tabindex_cnt);
 	tabindex_cnt++;
 	return cb(row);
 }
-
-
 
 function reset_rec_f()
 {
@@ -677,9 +636,7 @@ function reset_inv_f()
 		$("#apply_grn_form .iqty").val(v).change();
 }
 
-
 function print_imei_inputs(tot_rqty,prodid) {
-	
 	var imei_out =' <ol>';
     var c=0;
     for(i=0;i<tot_rqty;i++) {
@@ -710,7 +667,6 @@ $('#add_barcode_dialog').dialog({
 });
 
 $('.prod_mrp').live('change',function(){
-	
 	var trele = $(this).parents('tr:first');
 	var prodid = $(this).attr('prodid')*1;
 	var mrp = $(this).val();
@@ -742,7 +698,6 @@ $('.prod_mrp').live('change',function(){
 
 
 $('.prod_mrp').live('keyup',function(){
-	
 	var trele = $(this).parents('tr:first');
 	var mrp = $(this).val();
 	var pmrp = $(this).attr('pmrp')*1;
@@ -764,10 +719,9 @@ $('.upd_pmrp').unbind("change").live("change",function(){
 			$('.upd_pmrp_flag',$(this).parents('tr:first')).val("1");
 			$(this).attr('checked',true);
 		}
-	
 });
+
 $('.inv_inp_amount').live("change",function(){
-	
 	trele=$(this).parents('tr:first');
 	var amount = $(this).val();
 	$(this).val(amount);
@@ -783,7 +737,6 @@ $('.inv_inp_amount').live("change",function(){
 	}
 });
 
-
 $('.bcode_upd').live('click',function(e){
 	e.preventDefault();
 	var trEle = $(this).parents('tr:first');
@@ -791,15 +744,12 @@ $('.bcode_upd').live('click',function(e){
 	var prodid = $(this).attr('prodid');
 	var pname = $('span.name',trEle).text();
 	
-		//$("#add_imei_dialog").dialog('close');
 		$("#add_barcode_dialog").data('ref_tr',trEle).dialog('open');
 		$(".prod_title").html("Product : <a target='_blank' href='"+site_url+'/admin/product/'+prodid+"'>"+pname+'</a>');
 		$("#abd_barcode").focus().val("");
 		$("#abd_pid").val(pid);
 		$("#abd_pid").data('prodid',prodid);
-		//$(".add_barcode_dialog").dialog('open');
 });
-
 
 $(".datagrid .iqty").live("change",function(){
 	trele=$(this).parents('tr:first');
@@ -823,7 +773,6 @@ $(".datagrid .iqty").live("change",function(){
 				$(this).val("0").select();
 			}
     	}
-    
 });
 
 $(".inv_inp_blk").live("change",function(){
@@ -879,32 +828,27 @@ $(".datagrid .rqty").live("change",function(){
 					p_imei_scanned_arr = p_imei_scanned.split(',');
 					
 		    		if($("#list_imei_"+prodid,trele).val().length > 0)	
-				{
-					if(!confirm("Warning:\nRequired quantity is changed. All scanned IMEIs will be cleared.\nDo you want to proceed?")) 
-		            { 
-		            	// rset scannred imei ttl
-			    		$(this).val(p_imei_scanned_arr.length);
-		            	return false; 
-		            }
-		            else
-		            {
-		            	$("#list_imei_"+prodid,trele).val("");
-		            }
-		            
-				}
-				if(tot_rqty != 0)
-		    		$('#rqty_imei_blk_dlg').data("pro_data",{'prodid': $(this).attr("prodid"),'brandid': $(this).attr("brandid"),'ttl_qty':tot_rqty,'pid' : $(this).attr('pid'),'ref_tr' : trele,'state':'add'}).dialog('open');
-		    	
+					{
+						if(!confirm("Warning:\nRequired quantity is changed. All scanned IMEIs will be cleared.\nDo you want to proceed?")) 
+		            	{ 
+			            	// rset scannred imei ttl
+				    		$(this).val(p_imei_scanned_arr.length);
+			            	return false; 
+			            }
+			            else
+			            {
+			            	$("#list_imei_"+prodid,trele).val("");
+			            }
+			    	}
+					if(tot_rqty != 0)
+		    			$('#rqty_imei_blk_dlg').data("pro_data",{'prodid': $(this).attr("prodid"),'brandid': $(this).attr("brandid"),'ttl_qty':tot_rqty,'pid' : $(this).attr('pid'),'ref_tr' : trele,'state':'add'}).dialog('open');
 		    }
-		    
 		    var imeilist_html ='';
 		 	var scanned_imei = '';
-	
 			var p_imei_scanned = $("#list_imei_"+prodid,trele).val();
 				p_imei_scanned_arr = p_imei_scanned.split(',');
-				//imeis.push(p_imei_scanned_arr);
-				
 				imeilist_html = '<ol>'; 
+		    	
 		    	for(i=0;i<tot_rqty;i++) 
 		    	{
 		    			scanned_imei = ((p_imei_scanned_arr[i]==undefined)?"":p_imei_scanned_arr[i]);				    		
@@ -915,9 +859,8 @@ $(".datagrid .rqty").live("change",function(){
 				}
 				imeilist_html+='</ol>';
 				
-		 	$('.imei_nos_dlg').html(imeilist_html);
-			$('.dlg_imei_inp:first').focus();
-		    
+			 	$('.imei_nos_dlg').html(imeilist_html);
+				$('.dlg_imei_inp:first').focus();
 		    
 		    if(isNaN(tot_rqty*1))
 			{
@@ -930,232 +873,213 @@ $(".datagrid .rqty").live("change",function(){
     	}
 });
 
-
 $(function(){
-	
 	$('.page_title').html("Stock Intake");
 	$('.selected_po_list').hide();
-
-	/*
-	$(document).keydown(function(e){
-		if(e.which==27)
-			$("#add_barcode_dialog,#add_imei_dialog").hide();
-		return true;
-	});
-	*/
-
 	$("#srch_barcode").keyup(function(e){
-		if(e.which==13)
+		
+	if(e.which==13)
+	{
+		var scan_bc =  $(this).val();
+		
+		$(".barcodereset").removeClass("highlightprow");
+		
+		$('.lastScanned').removeClass('lastScanned');
+		
+		var bcodeRow = $(".barcode"+scan_bc);
+		
+		if(bcodeRow.length==0)
 		{
-			var scan_bc =  $(this).val();
-			
-			$(".barcodereset").removeClass("highlightprow");
-			
-			$('.lastScanned').removeClass('lastScanned');
-			
-			var bcodeRow = $(".barcode"+scan_bc);
-			
-			if(bcodeRow.length==0)
-			{
-				alert("Product not found for this Barcode");
-				return;
-			}
-			bcodeRow.addClass("row_hg").removeClass("bcode_scanned").removeClass("unsc");
-			
-			if(bcodeRow.length > 1)
-			{
-				alert(bcodeRow.length+" Products found with same barcode");
-			}
-			
-			bcodeRow.addClass("lastScanned");
-			$('.lastScanned .rqty').select();
-			
-			
-			setTimeout(function(){
-				$(".barcode"+scan_bc).addClass("bcode_scanned");
-			},500);
-			$(".barcode"+$(this).val()+' .scan_pbarcode').val($(this).val());
-			$(document).scrollTop($(".barcode"+$(this).val()).offset().top);
-			
+			alert("Product not found for this Barcode");
+			return;
+		}
+		bcodeRow.addClass("row_hg").removeClass("bcode_scanned").removeClass("unsc");
+		
+		if(bcodeRow.length > 1)
+		{
+			alert(bcodeRow.length+" Products found with same barcode");
+		}
+		
+		bcodeRow.addClass("lastScanned");
+		$('.lastScanned .rqty').select();
+		
+		
+		setTimeout(function(){
+			$(".barcode"+scan_bc).addClass("bcode_scanned");
+		},500);
+		$(".barcode"+$(this).val()+' .scan_pbarcode').val($(this).val());
+		$(document).scrollTop($(".barcode"+$(this).val()).offset().top);
+		
+	}
+});
+
+$(".static_pos a").click(function(){
+		$($(this).parents("td").get(0)).show();
+		vid=$("span.vid",$(this).parents("td").get(0)).text();
+		$("#grn_vendor").val(vid).attr("disabled",true);
+		$("#grn_po_load").attr("disabled",true);
+});
+
+$("#apply_grn_form input").live("keydown",function(e){
+	if(e.which==13)
+	{
+		e.stopPropagation();
+		e.preventDefault();
+		return false;
+	}
+});
+	
+$('#apply_grn_form .dp_price').live('keyup',function(){
+	var dp_price = $(this).attr('dp_price')*1;
+	var upd_dp_price_blk = $(this).parent().find('.upd_dp_price_blk');
+		if(($(this).attr('dp_price')*1 != $(this).val()*1) && ($(this).val() != "") ){
+			$('.upd_dp_price',upd_dp_price_blk).attr('checked',true);
+			upd_dp_price_blk.show();
+		}
+		else
+		{
+			$('.upd_dp_price',upd_dp_price_blk).attr('checked',false);
+			upd_dp_price_blk.hide();	
+		}
+});
+	
+var chk_for_vendor_ids = 1;
+$("#apply_grn_form").submit(function(){
+	flag=true;
+	var inv_ttl = $("#invoice_ttl_value").text();
+	var grn_ttl = $("#grn_ttl").text();
+	var scan_status = $(".processed_mode").length;
+	if(scan_status == 0)
+	{
+		alert("Please scan atleast 1 products from List before submitting");
+		flag=false;
+		return flag;
+	}	
+	
+	if($(".prod_addcheck").length==0)
+	{
+		alert("Please Load a PO");
+		flag=false;
+		return flag;
+	}
+	var stkloc_flag = true;
+	$('.stkloc',this).each(function(){
+		if($(this).val() == "")
+		{
+			stkloc_flag=false;
 		}
 	});
 
-	
-	$(".static_pos a").click(function(){
-			$($(this).parents("td").get(0)).show();
-			vid=$("span.vid",$(this).parents("td").get(0)).text();
-			$("#grn_vendor").val(vid).attr("disabled",true);
-			$("#grn_po_load").attr("disabled",true);
-	});
-
-	$("#apply_grn_form input").live("keydown",function(e){
-		if(e.which==13)
+	if(!stkloc_flag)
+	{
+		alert("Please choose rackbin");
+		return false;
+	}
+		
+	$('.invoice_tab tbody tr',this).each(function(){
+		var trele=$(this).parents('tr:first');
+		var inv_no =$('.inv_inp_blk',trele).val(); 
+		var inv_date =$('.inv_inp_datepick_blk',trele).val(); 
+		var inv_mrp =$('.inv_inp_amount',trele).val(); 
+		
+		if(inv_no.length == 0 || inv_date.length == 0 || inv_mrp.length == 0 || isNaN(inv_mrp*1))
 		{
-			e.stopPropagation();
-			e.preventDefault();
-			return false;
-		}
-	});
-	
-
-	$('#apply_grn_form .dp_price').live('keyup',function(){
-		var dp_price = $(this).attr('dp_price')*1;
-		var upd_dp_price_blk = $(this).parent().find('.upd_dp_price_blk');
-			if(($(this).attr('dp_price')*1 != $(this).val()*1) && ($(this).val() != "") ){
-				$('.upd_dp_price',upd_dp_price_blk).attr('checked',true);
-				upd_dp_price_blk.show();
+			alert("Please enter valid invoice Details");
+			
+			if(inv_no.length == 0)
+			{
+				$('.inv_inp_blk').select();
+				$('.inv_inp_blk').addClass('imei_error_inp');
+			}
+			else if(inv_date.length == 0)
+			{
+				$('.inv_inp_datepick_blk').addClass('imei_error_inp');
+			}
+			else if(inv_mrp.length == 0 || isNaN(inv_mrp*1))
+			{
+				$('.inv_inp_amount').addClass('imei_error_inp');
 			}
 			else
 			{
-				$('.upd_dp_price',upd_dp_price_blk).attr('checked',false);
-				upd_dp_price_blk.hide();	
+				$('.inv_inp_blk').removeClass('imei_error_inp');
+				$('.inv_inp_datepick_blk').removeClass('imei_error_inp');
+				$('.inv_inp_amount').removeClass('imei_error_inp');
 			}
-	});
-	
-	
-	var chk_for_vendor_ids = 1;
-	$("#apply_grn_form").submit(function(){
-		flag=true;
-		
-		var inv_ttl = $("#invoice_ttl_value").text();
-		var grn_ttl = $("#grn_ttl").text();
-		
-		
-		var scan_status = $(".processed_mode").length;
-		if(scan_status == 0)
-		{
-			alert("Please scan atleast 1 products from List before submitting");
 			flag=false;
-			return flag;
-		}	
-	
-		
-		if($(".prod_addcheck").length==0)
-		{
-			alert("Please Load a PO");
-			flag=false;
-			return flag;
-		}
-		var stkloc_flag = true;
-		$('.stkloc',this).each(function(){
-			if($(this).val() == "")
-			{
-				stkloc_flag=false;
-			}
-		});
-
-		if(!stkloc_flag)
-		{
-			alert("Please choose rackbin");
 			return false;
 		}
-		
-		
-		$('.invoice_tab tbody tr',this).each(function(){
-			
-			var trele=$(this).parents('tr:first');
-			var inv_no =$('.inv_inp_blk',trele).val(); 
-			var inv_date =$('.inv_inp_datepick_blk',trele).val(); 
-			var inv_mrp =$('.inv_inp_amount',trele).val(); 
-		
-			
-			if(inv_no.length == 0 || inv_date.length == 0 || inv_mrp.length == 0 || isNaN(inv_mrp*1))
-			{
-				alert("Please enter valid invoice Details");
-				
-				if(inv_no.length == 0)
-				{
-					$('.inv_inp_blk').select();
-					$('.inv_inp_blk').addClass('imei_error_inp');
-				}
-				else if(inv_date.length == 0)
-				{
-					$('.inv_inp_datepick_blk').addClass('imei_error_inp');
-				}
-				else if(inv_mrp.length == 0 || isNaN(inv_mrp*1))
-				{
-					$('.inv_inp_amount').addClass('imei_error_inp');
-				}
-				else
-				{
-					$('.inv_inp_blk').removeClass('imei_error_inp');
-					$('.inv_inp_datepick_blk').removeClass('imei_error_inp');
-					$('.inv_inp_amount').removeClass('imei_error_inp');
-				}
-				flag=false;
-				return false;
-			}
-		});
-		var remarks = $('.remarks').val();
-		if(!remarks)
-		{
-			alert("Please enter Remarks");
-			$('.remarks').addClass('imei_error_inp');
-			flag=false;
-			return flag;
-		}else
-		{
-			$('.remarks').removeClass('imei_error_inp');
-		} 
-		
-		if(chk_for_vendor_ids && flag)
-		{
-			var frm_ele = $(this);
-			$.post(site_url+'/admin/check_vendor_invs',$(this).serialize(),function(resp){
-				if(resp.error)
-				{
-					alert(resp.error);
-				}else
-				{
-					chk_for_vendor_ids = 0;
-					flag = false;
-					frm_ele.submit();
-				}
-			},'json');
-			flag = false;
-		}
-		
-		if(flag)
-			$("#form_submit").attr("disabled",true);
+	});
+	
+	var remarks = $('.remarks').val();
+	if(!remarks)
+	{
+		alert("Please enter Remarks");
+		$('.remarks').addClass('imei_error_inp');
+		flag=false;
 		return flag;
-	});
+	}else
+	{
+		$('.remarks').removeClass('imei_error_inp');
+	} 
 	
-	$(".expdate, .datepick").datepicker({minDate:0});
-	$("#grn_vendor").attr("disabled",false);
+	if(chk_for_vendor_ids && flag)
+	{
+		var frm_ele = $(this);
+		$.post(site_url+'/admin/check_vendor_invs',$(this).serialize(),function(resp){
+			if(resp.error)
+			{
+				alert(resp.error);
+			}else
+			{
+				chk_for_vendor_ids = 0;
+				flag = false;
+				frm_ele.submit();
+			}
+		},'json');
+		flag = false;
+	}
+		
+	if(flag)
+		$("#form_submit").attr("disabled",true);
+	return flag;
+});
 	
-	<?php if(isset($po)){?>
+$(".expdate, .datepick").datepicker({minDate:0});
+$("#grn_vendor").attr("disabled",false);
+
+<?php if(isset($po)){?>
+	$("#grn_vendor").attr("disabled",true);
+	added_pos.push(<?=$po['po_id']?>);
+<?php } ?>
+	
+$("#grn_po_load").click(function(){
+	$("#po_loading").show();
+	$.post('<?=site_url('admin/jx_getpos')?>',{v:$("#grn_vendor").val()},function(d){
+		$("#po_loading").hide();
+		
+		$("#pending_pos").html(d.ven_det_name);
 		$("#grn_vendor").attr("disabled",true);
-		added_pos.push(<?=$po['po_id']?>);
-	<?php } ?>
-	
-	$("#grn_po_load").click(function(){
-		$("#po_loading").show();
-		$.post('<?=site_url('admin/jx_getpos')?>',{v:$("#grn_vendor").val()},function(d){
-			$("#po_loading").hide();
-			
-			$("#pending_pos").html(d.ven_det_name);
-			$("#grn_vendor").attr("disabled",true);
-		});
 	});
+});
 	
-	$("#grn .datagrid .qtychange").live("change",function(){
-		$p=$(this).parents("tr").get(0);
-		q=parseInt($(".popqty",$p).val())-parseInt($(".rqty",$p).val());
-		if(q<0)
-			q="("+(q*-1)+")";
-		$(".pqty",$p).html(q);
-                
-	});
+$("#grn .datagrid .qtychange").live("change",function(){
+	$p=$(this).parents("tr").get(0);
+	q=parseInt($(".popqty",$p).val())-parseInt($(".rqty",$p).val());
+	if(q<0)
+		q="("+(q*-1)+")";
+	$(".pqty",$p).html(q);
+            
+});
         
-	$("#grn .datagrid .pprice, #grn .datagrid .rqty").live("change",function(){
-		calc_rec_value();
-	});
+$("#grn .datagrid .pprice, #grn .datagrid .rqty").live("change",function(){
+	calc_rec_value();
+});
 	
-	$("#aid_imei").keydown(function(e){
-		if(e.which==13)
-			add_imei();
-		return true;
-	});
+$("#aid_imei").keydown(function(e){
+	if(e.which==13)
+		add_imei();
+	return true;
+});
 });
 
 
@@ -1185,13 +1109,10 @@ $('.add_product_row').live('click',function(e){
 	var trele_has_serialno = trele.attr('has_serialno');
 	var trele_bcscanned = trele.hasClass('bcode_scanned');
 	//alert(trele_has_serialno);
-	
-	
 	process_edit_validation(function (stat) {
 		                if (stat) {
 		                    $('.edit_mode').removeClass('edit_mode');
-		                    
-							grow=$("#grn_template .right table tbody").html();
+		                    grow=$("#grn_template .right table tbody").html();
 							update_barcode='';
 							if(trele_bcode.length==0)
 								update_barcode="Add";
@@ -1199,8 +1120,7 @@ $('.add_product_row').live('click',function(e){
 							{
 								update_barcode="Update";
 							}
-							
-					      	grow=grow.replace(/%has_serialno%/g,trele_has_serialno);
+							grow=grow.replace(/%has_serialno%/g,trele_has_serialno);
 					      	grow=grow.replace(/%bcode%/g,trele_bcode);
 							grow=grow.replace(/%update_barcode%/g,update_barcode);
 							grow=grow.replace(/%prodid%/g,trele_prodid);
@@ -1218,10 +1138,8 @@ $('.add_product_row').live('click',function(e){
 								grow=grow.replace(/%dp_price%/g,0);
 								grow=grow.replace(/%dp_price_inp%/g,'hidden');
 							}
-							
 							grow=grow.replace(/%mrp%/g,trele_pmrp);
 							grow=grow.replace(/%vat%/g,trele_vat);
-							
 							grow=grow.replace(/%price%/g,trele_purprice);
 							grow=grow.replace(/%rqty%/g,0);
 							grow=grow.replace(/%ppur_price%/g,trele_purprice);
@@ -1240,7 +1158,6 @@ $('.add_product_row').live('click',function(e){
 							$('span.name',new_trele).hide();
 							$('td:first',new_trele).html('');
 							
-							
 							if(trele_has_serialno != 1)
 								$('.imei_scanned_div',new_trele).hide();
 							else
@@ -1251,9 +1168,7 @@ $('.add_product_row').live('click',function(e){
 							$('.edit_mode',new_trele).removeClass('processed_mode');
 							$('td:last a',new_trele).html('<span style="margin:4px 0px 0px 14px;float:left"><img width="12px" height="12px" src="'+base_url+'/images/remove.png'+'"></span>').removeClass('add_product_row').addClass('remove_product_row');
 							
-							
 							$('.prod_mrp',new_trele).val('');
-							
 							$('.upd_pmrp',new_trele).attr('checked',false);
 								tabindex_cnt = 1;
 								reset_tabindex(new_trele,function(row){
@@ -1268,11 +1183,9 @@ $('.add_product_row').live('click',function(e){
     			});	
 });
 
-
 $('.remove_product_row').live('click',function(e){
 	e.preventDefault();
 	var trele = $(this).parents('tr:first');
-	
 	if(confirm("Do you want to remove this product entry ?"))
 	{
 		$(this).parents('tr:first').fadeOut().remove();
@@ -1388,57 +1301,55 @@ $('#rqty_imei_blk_dlg form').submit(function(){
 			}
 		},'json');
 	}
-	
-	
 	return false;
 });
 
-	$('#add_barcode_dialog form').submit(function(){
+$('#add_barcode_dialog form').submit(function(){
+	
+	var dlgEle = $('#add_barcode_dialog');
+	var ref_trele = dlgEle.data('ref_tr');
+	var b_code=$("#add_barcode_dialog",this);
+	var inp_barcode=$("#abd_barcode").val();
+	var ttl_qty=$('.rqty',ref_trele).val();
+		//var product_name=$('.name',trele).text();
 		
-		var dlgEle = $('#add_barcode_dialog');
-		var ref_trele = dlgEle.data('ref_tr');
-		var b_code=$("#add_barcode_dialog",this);
-		var inp_barcode=$("#abd_barcode").val();
-		var ttl_qty=$('.rqty',ref_trele).val();
-			//var product_name=$('.name',trele).text();
-			
-			if(isNaN(inp_barcode))
-			{
-				$('.error_inp',dlgEle).html("<div style='color:red !important;'>Please enter valid Barcode</div>");
-				return false;
-			}else
-			{		
-				var chk_prodid = $('#abd_pid').data('prodid');
-					$('.pbcodecls'+chk_prodid,ref_trele).val($('#abd_barcode').val());
-					//$("#add_barcode_dialog").hide();
-					
-					$('.view_barcode'+chk_prodid,ref_trele).html($('#abd_barcode').val());
-					if($('#abd_barcode').val())
-					{
-						$('.pbcodecls'+chk_prodid,ref_trele).parents('tr:first').addClass('bcode_scanned');
-						$('.bcode_scanned_status',ref_trele).addClass('active').html("YES");
-						$('.bcode_scanned_status',ref_trele).show();
-						$('.pb_blk',ref_trele).show();
-					}else
-					{
-						$('.pbcodecls'+chk_prodid,ref_trele).parents('tr:first').removeClass('bcode_scanned');
-					}
-							
-					$('.pbcodecls'+chk_prodid,ref_trele).parents('tr:first').removeClass('lastScanned').removeClass('unsc');
-						setTimeout(function(){
-							process_edit_validation(function (stat) {
-				                if (stat) {
-				                    $('.edit_mode').removeClass('edit_mode');
-				                } else {
-				                    return false;
-				                }
-				            });	
-					},300);
+		if(isNaN(inp_barcode))
+		{
+			$('.error_inp',dlgEle).html("<div style='color:red !important;'>Please enter valid Barcode</div>");
+			return false;
+		}else
+		{		
+			var chk_prodid = $('#abd_pid').data('prodid');
+				$('.pbcodecls'+chk_prodid,ref_trele).val($('#abd_barcode').val());
+				//$("#add_barcode_dialog").hide();
+				
+				$('.view_barcode'+chk_prodid,ref_trele).html($('#abd_barcode').val());
+				if($('#abd_barcode').val())
+				{
+					$('.pbcodecls'+chk_prodid,ref_trele).parents('tr:first').addClass('bcode_scanned');
+					$('.bcode_scanned_status',ref_trele).addClass('active').html("YES");
+					$('.bcode_scanned_status',ref_trele).show();
+					$('.pb_blk',ref_trele).show();
+				}else
+				{
+					$('.pbcodecls'+chk_prodid,ref_trele).parents('tr:first').removeClass('bcode_scanned');
+				}
+						
+				$('.pbcodecls'+chk_prodid,ref_trele).parents('tr:first').removeClass('lastScanned').removeClass('unsc');
+					setTimeout(function(){
+						process_edit_validation(function (stat) {
+			                if (stat) {
+			                    $('.edit_mode').removeClass('edit_mode');
+			                } else {
+			                    return false;
+			                }
+			            });	
+				},300);
 
-					dlgEle.dialog('close');
-			 }
-		return false;
-	});
+				dlgEle.dialog('close');
+		 }
+	return false;
+});
 
 $('#rqty_imei_blk_dlg').dialog({
 		modal:true,
@@ -1493,7 +1404,6 @@ $('#rqty_imei_blk_dlg').dialog({
 $('.imei_input').live('keypress',function(e){
 	if((e.keyCode || e.which) == 13)
 	{
-	
 		if($(this).parent().next().find('.imei_input').length == 1)
 			$(this).parent().next().find('.imei_input').focus();
 		else
@@ -1504,7 +1414,6 @@ $('.imei_input').live('keypress',function(e){
 
 $('.show').click(function(){
 	var pos=[];
-	
 	$('.ajax_loadresult a.selected').each(function(){
 		pos.push($(this).attr('poid'));
 	});
@@ -1547,7 +1456,6 @@ $('.show').click(function(){
 		alert('Please Choose PO before Proceed');
 		return false;
 	}
-	
 });
 
 $('.view_imei').live('click',function(){
@@ -1558,10 +1466,8 @@ $('.view_imei').live('click',function(){
 	
 });
 
-
 function process_edit_validation(cb) {
-
-    // extra check to check if validation need to be done     
+	// extra check to check if validation need to be done     
     if (!$('.edit_mode').length) return cb(false);
     var edt_trele = $('#grn tr.edit_mode');
     $('#grn tr .error_inp').removeClass('error_inp');
