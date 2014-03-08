@@ -6523,9 +6523,9 @@ order by p.product_name asc
 		
 	}
 	
-	function getproductsforcategory($cid)
+	function getproductsforcategory($cid,$limit=100)
 	{
-		return $this->db->query("select * from m_product_info where product_cat_id=? order by product_id asc",$cid)->result_array();
+		return $this->db->query("select * from m_product_info where product_cat_id=? order by product_id asc limit ".$limit,$cid)->result_array();
 	}
 	
 	function getvendorsforcategory($cid)
@@ -7326,19 +7326,19 @@ order by p.product_name asc
 		redirect("admin/pnh_deals");
 	}
 	
-	function pnh_getdeals($brandid=false,$catid=false,$fid=false,$dealid=false)
+	function pnh_getdeals($brandid=false,$catid=false,$fid=false,$dealid=false,$limit=600)
 	{
 		
 		if($brandid == 0 && $catid == 0 && $dealid==0)
-			$cond=" where i.is_pnh=1 group by i.id order by i.name asc limit 100 ";
+			$cond=" where i.is_pnh=1 group by i.id order by i.sno desc limit ".$limit;//i.name asc
 		else if($catid != 0 && $brandid == 0 && $dealid==0)
-			$cond=" where i.is_pnh=1 and d.catid='".$catid."' group by i.id order by i.name asc ";
+			$cond=" where i.is_pnh=1 and d.catid='".$catid."' group by i.id order by i.sno desc limit ".$limit;
 		else if($catid == 0 && $brandid != 0 && $dealid==0)
-			$cond=" where i.is_pnh=1 and d.brandid='".$brandid."' group by i.id order by i.name asc ";
+			$cond=" where i.is_pnh=1 and d.brandid='".$brandid."' group by i.id order by i.sno desc limit ".$limit;
 		else if($catid != 0 && $brandid != 0 && $dealid==0)
-			$cond=" where i.is_pnh=1 and d.catid='".$catid."' and d.brandid='".$brandid."' group by i.id order by i.name asc ";
+			$cond=" where i.is_pnh=1 and d.catid='".$catid."' and d.brandid='".$brandid."' group by i.id order by i.sno desc asc limit ".$limit;
 		else if( $dealid!=0)
-			$cond=" where (i.dealid='".$dealid."' or i.pnh_id = '".$dealid."') group by i.id order by i.name asc ";
+			$cond=" where (i.dealid='".$dealid."' or i.pnh_id = '".$dealid."') group by i.id order by i.sno desc ";
 		
 		$join_cond = '';
 		if($fid!=0)
@@ -7346,7 +7346,7 @@ order by p.product_name asc
 			$join_cond ="	JOIN `pnh_franchise_menu_link` m ON m.menuid=d.menuid AND  m.status=1 and m.fid=".$fid;
 		}
 		
-		$sql = "select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,i.is_combo,d.publish,d.brandid,d.catid,i.orgprice,
+		$sql = "select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,i.is_combo,i.is_group,d.publish,d.brandid,d.catid,i.orgprice,
 					i.price,i.name,i.pic,i.pnh_id,i.id as itemid,
 					b.name as brand,c.name as category 
 				from king_deals d 
@@ -7356,6 +7356,7 @@ order by p.product_name asc
 				left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp()
 				$join_cond 
 				$cond
+                                    
 				";
 	 
 		return $this->db->query($sql)->result_array();

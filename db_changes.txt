@@ -1227,7 +1227,7 @@ insert into `m_attributes`(`id`,`attr_name`) values ( '1','Size');
 insert into `m_attributes`(`id`,`attr_name`) values ( '2','Color');
 create table `m_product_attributes` (  `id` bigint NOT NULL AUTO_INCREMENT , `pid` bigint , `attr_id` int (150) , `attr_value` varchar (150) , PRIMARY KEY ( `id`));
 alter table `king_categories` add column `attribute_ids` varchar (125)  NULL  after `prior`;
-alter table `king_dealitems` add column `is_group` tinyint (1)  NULL  after `tmp_pnh_dealid`;
+alter table `king_dealitems` add column `is_group` tinyint (11) NULL  after `tmp_pnh_dealid`;
 #==========================================================================
 
 #Mar_04_2014
@@ -1235,3 +1235,17 @@ alter table `t_imei_no` change `id` `id` bigint   NOT NULL AUTO_INCREMENT;
 
 #Mar_05_2014
 alter table `m_product_attributes` add column `pcat_id` bigint (20)  NULL  after `pid`;
+#Mar_07_2014
+alter table `king_dealitems` drop column `is_group`;
+alter table `king_dealitems` add column `is_group` tinyint (11) DEFAULT '0'  NULL  after `tmp_pnh_dealid`;
+CREATE TABLE `pnh_menu_margin_track` (       
+                         `id` bigint(20) NOT NULL AUTO_INCREMENT,   
+                         `menu_id` bigint(20) DEFAULT NULL,         
+                         `default_margin` double DEFAULT NULL,      
+                         `balance_discount` double DEFAULT NULL,    
+                         `balance_amount` bigint(20) DEFAULT NULL,  
+                         `loyality_pntvalue` double DEFAULT NULL,   
+                         `created_by` int(12) DEFAULT NULL,         
+                         `created_on` bigint(20) DEFAULT NULL,      
+                         PRIMARY KEY (`id`)                         
+                       );

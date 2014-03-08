@@ -249,13 +249,13 @@
                                             {
                                                 if(itemdata.deal_status == 'In Stock')
                                                 {
-                                                    base.removeClass();
-                                                    base.addClass(ELTCLASS+" in-stock");
+                                                    base.removeClassWild("out-of-stock");
+                                                    base.addClass("in-stock");
                                                 }
                                                 else 
                                                 {
-                                                    base.removeClass();
-                                                    base.addClass(ELTCLASS+" out-of-stock");
+                                                    base.removeClassWild("in-stock");
+                                                    base.addClass("out-of-stock");
                                                 
                                                 }
                                                 base.html(HTML_DATA.toUpperCase());
@@ -286,8 +286,14 @@
                 });
         },'json');
     }
-
     //<!--============================================<< DEAL STOCK PLUGIN SETTINGS END >>===================================-->
+    
+    $.fn.removeClassWild = function(mask) {
+        return this.removeClass(function(index, cls) {
+            var re = mask.replace(/\*/g, '\\S+');
+            return (cls.match(new RegExp('\\b' + re + '', 'g')) || []).join(' ');
+        });
+    };
     
 })(jQuery);
 

@@ -450,6 +450,7 @@ $fran_status_arr[3]="Temporary Suspension";
 						  	<span>MRP : <b>Rs. %qvk_mrp%</b></span>
 						  	<span>Offer Price : <b>Rs. %qvk_price%</b></span>
 						  	<span>Landing Cost : <b>Rs. %qvk_lcost% </b></span>
+                                                        <span>%attr_list%<br/></span>
 					  </div>
 				  </td>
 			</tr>
@@ -467,8 +468,18 @@ $fran_status_arr[3]="Temporary Suspension";
 	
 	
 </div>
-
-<SCRIPT>
+<style>
+    .attributes_block {
+        text-align: left;
+    }
+    .attributes_block span {
+        background-color: #F3EDED;
+        padding: 1px 25px;
+        margin: 5px 0;
+    }
+    
+</style>
+<script>
 $("#franchise_quickview").hide();
 
 function tooltip_popup(){
@@ -483,6 +494,7 @@ function tooltip_popup(){
 	 });
 
 }
+
 function quikview_product(pid)
 {
 	$("#quick_viewdiv").data('qvk_pid',pid).dialog('open');
@@ -496,7 +508,7 @@ $("#quick_viewdiv").dialog({
         .css({ position: 'fixed' })
         .position({ my: 'center', at: 'center', of: window });
 		$("#qvk_prod_temp tbody").html("");
-        $('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
+                $('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 		$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').addClass('add_to_cartbtn');
 		$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({"float":"right","background":"tomato","color":"white"});
 		$('.ui-dialog-buttonpane').find('button:contains("Price Query")').css({"float":"left"});
@@ -505,6 +517,12 @@ $("#quick_viewdiv").dialog({
 		
 		$.post("<?=site_url("admin/pnh_jx_loadpnhprod")?>",{pid:dlg.data('qvk_pid'),fid:pre_selected_fid,cartdeal:1},function(data){
 			obj=p=$.parseJSON(data);
+                        
+                        var attr_det = '';
+                        if(p.attr_list != undefined && (p.attr_list).length )
+                        {
+                            attr_det += p.attr_list;
+                        }
 			template=$("#qvkview_template tbody").html();
 			template=template.replace(/%qvk_image%/g,p.pic);
 			template=template.replace(/%qvk_pid%/g,p.pid);
@@ -516,6 +534,7 @@ $("#quick_viewdiv").dialog({
 			template=template.replace(/%qvk_lcost%/g,p.lcost);
 			template=template.replace(/%qvk_mrgn%/g,p.margin);
 			template=template.replace(/%qvk_margin_amt%/g,Math.ceil(p.price-p.lcost));
+			template=template.replace(/%attr_list%/g,attr_det);
 			$("#qvk_prod_temp tbody").html(template);
 			if(! p.allow_order.length || p.is_publish==0)
 			{

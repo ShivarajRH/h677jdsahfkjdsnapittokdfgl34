@@ -278,11 +278,11 @@ $(function(){
 			}
 		}
 
-		if( $("#is_group").is(":checked") && $(".p_pids",$("#pprods_g")).length == 0  ) {
+		/*if( $("#is_group").is(":checked") && $(".p_pids",$("#pprods_g")).length == 0  ) {
 		    alert("Is group is checked please add some some products for deal");
 		    $("#po_g_search",this).focus();
 		    return false;
-		}
+		}*/
 		
 		return true;
 	});

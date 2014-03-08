@@ -296,7 +296,7 @@ class Erp extends Stream
 		$data['page']="product_group";
 		$this->load->view("admin",$data);
 	}
-	
+        
 	function products($pg=0)
 	{
 		$user=$this->auth(PRODUCT_MANAGER_ROLE);
@@ -4755,6 +4755,7 @@ group by g.product_id order by product_name");
             if(!isset($attr['attr_id']))
                 return;
             
+            $timestamp = date("Y-m-d H:i:s",time());
             $in_data=array();
             foreach($attr['attr_id'] as $i=>$val)
             {
@@ -4762,7 +4763,7 @@ group by g.product_id order by product_name");
                 $attr_data[$i]["attr_value"]  = $attr['attr_value'][$i];
                 $timestamp = date("Y-m-d H:i:s",time());
                 if($attr['attr_id'][$i] !='' and $attr['attr_value'][$i] != '') {
-                    $in_data[] = ' ("'.$pid.'","'.$pcat_id.'",'.$attr['attr_id'][$i].',"'.$attr['attr_value'][$i].'","now()","'.$user['userid'].'") ';
+                    $in_data[] = ' ("'.$pid.'","'.$pcat_id.'",'.$attr['attr_id'][$i].',"'.$attr['attr_value'][$i].'","'.$timestamp.'","'.$user['userid'].'") ';
                 }
             }
             if(!empty($in_data))
@@ -4903,14 +4904,14 @@ group by g.product_id order by product_name");
 		$this->load->view("admin",$data);
 	}
 	
-	function viewcat($cat=false)
+	function viewcat($cat=false,$limit=100)
 	{
 		$user=$this->auth(PRODUCT_MANAGER_ROLE|DEAL_MANAGER_ROLE);
 		if(empty($cat))
 			show_404();
 		$data['cat']=$this->db->query("select c.*,m.name as main from king_categories c left outer join king_categories m on m.id=c.type where c.id=?",$cat)->row_array();
-		$data['deals']=$this->db->query("select i.*,c.name as category,c.id as catid from king_categories c join king_deals d on d.catid=c.id join king_dealitems i on i.dealid=d.dealid where c.id=? or c.type=?",array($cat,$cat))->result_array();
-		$data['products']=$this->erpm->getproductsforcategory($cat);
+		$data['deals']=$this->db->query("select i.*,c.name as category,c.id as catid from king_categories c join king_deals d on d.catid=c.id join king_dealitems i on i.dealid=d.dealid where c.id=? or c.type=? limit ".$limit,array($cat,$cat))->result_array();
+		$data['products']=$this->erpm->getproductsforcategory($cat,$limit);
 		$data['vendors']=$this->erpm->getvendorsforcategory($cat);
 		$data['page']="viewcat";
 		$this->load->view("admin",$data);
@@ -6280,7 +6281,7 @@ group by g.product_id order by product_name");
 		else 
 			$publish_cond="and publish=1";
 		
-		$prod=$this->db->query("select d.menuid,b.name as brand,c.name as cat,i.id,i.is_combo,i.pnh_id as pid,i.live,i.orgprice as mrp,i.price,i.name,i.pic,d.publish from king_dealitems i join king_deals d on d.dealid=i.dealid $publish_cond left join king_brands b on b.id = d.brandid join king_categories c on c.id = d.catid where pnh_id=? and is_pnh=1",$pid)->row_array();
+		$prod=$this->db->query("select d.menuid,b.name as brand,c.name as cat,i.id,i.is_combo,i.is_group,i.pnh_id as pid,i.live,i.orgprice as mrp,i.price,i.name,i.pic,d.publish from king_dealitems i join king_deals d on d.dealid=i.dealid $publish_cond left join king_brands b on b.id = d.brandid join king_categories c on c.id = d.catid where pnh_id=? and is_pnh=1",$pid)->row_array();
 		
 		if(!empty($prod))
 		{
@@ -6354,8 +6355,8 @@ group by g.product_id order by product_name");
 				$prod['confirm_stock'] = '';
 				
 				//confirmation for prod stock check for shoes  
-				if($prod['menuid'] == 123)
-					$prod['confirm_stock'] = '<b><input type="checkbox" name="confirm_stock" value="1" > : </b><span>Footwear Stock Available</span>';
+				//if($prod['menuid'] == 123)
+					//$prod['confirm_stock'] = '<b><input type="checkbox" name="confirm_stock" value="1" > : </b><span>Footwear Stock Available</span>';
 				
 				$prod['stock']=(($stock_tmp[0][0]['stk']>0)?$stock_tmp[0][0]['stk']:0);
 				
@@ -6373,15 +6374,43 @@ group by g.product_id order by product_name");
 				
 				$prod['allow_order'] = $this->erpm->do_stock_check(array($prod['id']));
 				
+				if($prod['is_group'])
+                                {
+                                    
+                                    $att_arry_set = $this->db->query("select a.id as attr_id,a.attr_name,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals,group_concat(pa.pid) as pids from king_dealitems di
+                                                                            join m_product_deal_link pd on pd.itemid = di.id
+                                                                            join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
+                                                                            join m_attributes a on a.id =  pa.attr_id
+                                                                            where di.pnh_id=? group by pa.attr_id",$pid)->result_array();
+                                    $att_arry='<div class="attributes_block"><h3>Select attributes:</h3><div>';
+                                    foreach($att_arry_set as $m=>$attr)
+                                    {
+                                            $att_arry .= '<lable><input type="hidden" name="attr['.$attr['attr_id'].']" value="'.$attr['attr_id'].'"/>'.$attr['attr_name'].'</lable> : ';
+
+                                            $arr_vals=explode(",",$attr['attr_vals']);
+                                            $arr_pids=explode(",",$attr['pids']);
+
+                                            $att_arry .= '<select id="attr'.$m.'" onchange="change_attributes(this,\''.$m.'\',\''.$attr['attr_vals'].'\',\''.$attr['pids'].'\');"><option value="0">Choose</option>';
+                                            foreach($arr_vals as $i=>$aval)
+                                            {
+                                                $val = explode(":",$aval);
+                                                $att_arry .= '<option value="'.$arr_pids[$i].'_'.$attr['attr_id'].'">'.$val[1].'</option>';
+                                            }
+                                            $att_arry .= '</select> <br/>';
+                                    }
+                                    $prod['attr_list']=$att_arry."</div>
+                                                        </div>";
+                                }
+                                
 				$prod['is_publish']=$prod['publish'];
 				unset($prod['is_combo']);
 			}else
 			{
 				$menu = $this->db->query("select c.name  
-												from king_dealitems a
-												join king_deals b on a.dealid = b.dealid 
-												join pnh_menu c on c.id = b.menuid 
-												where pnh_id = ? ",$pid)->row()->name;
+                                                                        from king_dealitems a
+                                                                        join king_deals b on a.dealid = b.dealid 
+                                                                        join pnh_menu c on c.id = b.menuid 
+                                                                        where pnh_id = ? ",$pid)->row()->name;
 												
 				$prod = array('error'=>$menu." Menu not linked to franchise");
 			}
@@ -28554,4 +28583,10 @@ die; */
                 echo json_encode($rdata);
             }
         }
+        
+        function test() 
+        {
+           // $this->db->d
+        }
+        
 }

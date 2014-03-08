@@ -3367,8 +3367,8 @@ select * from m_product_info where product_id='5954'
 alter table `m_product_attributes` add column `pcat_id` bigint (20)  NULL  after `pid`, add column `created_on` varchar (100)  NULL  after `attr_value`, add column `created_by` tinyint (11)  NULL  after `created_on`, add column `modified_on` varchar (100)  NULL  after `created_by`, add column `modified_by` tinyint (100)  NULL  after `modified_on`;
 
 alter table `m_product_attributes` add column `is_active` tinyint (11) DEFAULT '1' NULL  COMMENT '1:active,2:deactive' after `attr_value`;
-alter table `snapittoday_db_jan_2014`.`m_product_attributes` change `created_on` `created_on` varchar (100)  NULL , change `modified_on` `modified_on` varchar (100)  NULL 
-
+alter table `snapittoday_db_jan_2014`.`m_product_attributes` change `created_on` `created_on` varchar (100)  NULL , change `modified_on` `modified_on` varchar (100)  NULL;
+alter table `snapittoday_db_jan_2014`.`king_dealitems` change `is_group` `is_group` tinyint (1) DEFAULT '0' NULL;
 -- ========================< DB changes >==============================
 
 -- ========================< Reset attributes column >==============================
@@ -3385,3 +3385,92 @@ select a.id,a.attr_name,pa.attr_value,pa.pid,pa.id from king_categories c
                                                 where c.attribute_ids !='' and c.id='2';
 
 # Mar_07_2014
+select * from king_dealitems where is_group='1'
+select * from king_dealitems where id='9517175959';#'3628923721'//'9487464373';
+
+select * from m_product_deal_link where itemid='9487464373'
+select * from m_product_group_deal_link where itemid='9487464373'; #group_id:219495 #'9517175959';
+select * from products_group where group_id='219495';
+select * from products_group_pids where group_id='219495';
+
+select gdl.group_id,gdl.itemid,i.is_group from m_product_group_deal_link gdl
+join king_dealitems i on i.id=gdl.itemid;
+#=> 19493
+
+UPDATE m_product_info a 
+	JOIN (
+		SELECT itemid,product_id,catid,COUNT(*) AS t
+		FROM m_product_deal_link a 
+		JOIN king_dealitems b ON b.id = a.itemid
+		JOIN king_deals c ON c.dealid = b.dealid 
+		WHERE a.itemid IS NOT NULL AND a.itemid > 0 
+		GROUP BY a.itemid
+		HAVING t = 1 ) AS  h ON a.product_id = h.product_id 
+		SET a.product_cat_id = h.catid;
+
+-- ========================< Set is groupid status start >==============================
+select gdl.group_id,gdl.itemid,i.is_group,i.pnh_id from m_product_group_deal_link gdl
+join king_dealitems i on i.id=gdl.itemid;
+
+update king_dealitems di
+	join (
+		select gdl.itemid as itemid from m_product_group_deal_link gdl
+		join king_dealitems i on i.id=gdl.itemid
+	) as g on di.id = g.itemid set di.is_group = 1;
+
+#=>19485
+-- ========================< Set is groupid status end >==============================
+
+select * 
+from king_dealitems i 
+left join m_product_deal_link pd on pd.itemid = i.id
+join m_product_group_deal_link gd on gd.itemid = i.id
+join products_group_pids pg on pg.group_id = 
+where i.pnh_id='10005780';
+
+select * from m_product_attributes;
+select * from m_product_info where product_id='10005780'
+select * from m_product_deal_link where itemid='10005780'
+
+#=========================================
+select a.id as attr_id,a.attr_name,pa.attr_value,pa.pid,group_concat(pa.attr_value) as grp_attr_value,group_concat(pa.attr_id) as grp_attr_id
+from king_dealitems di
+join m_product_deal_link pd on pd.itemid = di.id
+join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
+join m_attributes a on a.id =  pa.attr_id
+where di.pnh_id='10005781' group by pa.pid,pa.attr_id order by pa.pid asc;
+
+#================================================
+select * from m_product_deal_link where itemid='9487464373';
+select * from m_product_attributes where pid='156143';
+#=========================================
+
+################
+# MENU
+pnh_order_margin_track;
+
+CREATE TABLE `pnh_menu_margin_track` (       
+                         `id` bigint(20) NOT NULL AUTO_INCREMENT,   
+                         `menu_id` bigint(20) DEFAULT NULL,         
+                         `default_margin` double DEFAULT NULL,      
+                         `balance_discount` double DEFAULT NULL,    
+                         `balance_amount` bigint(20) DEFAULT NULL,  
+                         `loyality_pntvalue` double DEFAULT NULL,   
+                         `created_by` int(12) DEFAULT NULL,         
+                         `created_on` bigint(20) DEFAULT NULL,      
+                         PRIMARY KEY (`id`)                         
+                       )
+
+select * from pnh_menu where status=1 group by id order by name asc;
+
+select a.id as attr_id,a.attr_name,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals,group_concat(pa.pid) as pids from king_dealitems di
+                                                                            join m_product_deal_link pd on pd.itemid = di.id
+                                                                            join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
+                                                                            join m_attributes a on a.id =  pa.attr_id
+                                                                            where di.pnh_id='10005781' group by pa.attr_id;
+
+select a.id as attr_id,a.attr_name,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals,group_concat(pa.pid) as pids from king_dealitems di
+                                                                            join m_product_deal_link pd on pd.itemid = di.id
+                                                                            join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
+                                                                            join m_attributes a on a.id =  pa.attr_id
+                                                                            where di.pnh_id='10005781' group by pa.attr_id;
