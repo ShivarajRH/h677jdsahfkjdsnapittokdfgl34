@@ -471,19 +471,78 @@ $fran_status_arr[3]="Temporary Suspension";
 <style>
     .attributes_block {
         text-align: left;
+        padding-: 10px 0px 1px 0px;
     }
     .attributes_block span {
         background-color: #F3EDED;
-        padding: 1px 25px;
+        padding: 1px 25px 1px 25px;
         margin: 5px 0;
     }
-    
+    .attributes_block select {
+        min-width:230px;
+    }
 </style>
 <script>
+    
+    function get_attributes(e) {
+         var attribute_id = $(e).find(":selected").val();
+         $.post(site_url+"jx_get_attributes/"+attribute_id,{},function(resp){
+                $("#sel_attr_"+serial).html(i+"-"+sel_pid);
+         },"json");
+    }
+    
+var g_serial = [];
+function change_attributes(e,serial,attr_vals,pids,ttl_attrs)
+{
+    
+    var attribute_val = $(e).find(":selected").val();
+    var arr_ids = attribute_val.split("_");
+    
+    //get which id is changed
+    var sel_pid = arr_ids[0];
+    var sel_attr_id = arr_ids[1];
+    
+    //print(sel_pid+"-"+sel_attr_id);
+    
+    
+    var a_attr_vals = attr_vals.split(",");
+    $.each(a_attr_vals,function(i,data) {
+        
+            //Get selected peoperty pid
+            //is not the same index
+            //else  change all the attribute selects 
+            // && set attribute values of that pid
+
+            //is already the select input choosen? check in global array
+            if(i != serial && $.inArray(serial,g_serial) === -1)
+            {
+                g_serial.push(serial);
+                $(e).attr({disabled:"disabled"});
+                print( "\n"+i+" try " + serial );
+                
+                //set all other related values
+                $("#sel_attr_"+serial).html(i+"-"+sel_pid);
+                
+            }
+            
+            //get all other attribute fields
+            if(i != serial)
+            {
+                //g_serial.push(serial);
+                //print( "\n"+i+" try " + serial );
+                
+                //set all other related values
+               // $("#sel_attr_"+serial).html(i+"-"+sel_pid);
+                
+            }
+            
+    });
+    
+}
+
 $("#franchise_quickview").hide();
 
 function tooltip_popup(){
-
  	Tipped.create('.tip_popup',{
  	 skin: 'black',
  	  hook: 'topleft',
@@ -492,7 +551,6 @@ function tooltip_popup(){
  	 	opacity: .5,
  	 	hideAfter: 200,
 	 });
-
 }
 
 function quikview_product(pid)

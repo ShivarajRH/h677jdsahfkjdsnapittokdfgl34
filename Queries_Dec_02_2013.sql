@@ -3474,3 +3474,33 @@ select a.id as attr_id,a.attr_name,group_concat(concat(pa.id,':',pa.attr_value))
                                                                             join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
                                                                             join m_attributes a on a.id =  pa.attr_id
                                                                             where di.pnh_id='10005781' group by pa.attr_id;
+
+#=========================< new count of num of products linked to a product by itemid >=====================================
+select * from (  select itemid,count(*) as ttl_prdt from m_product_deal_link
+where itemid is not null and itemid='2711322288' 
+group by itemid ) as g where g.ttl_prdt > 4;
+#=========================================
+-- new
+#=========================< new count of num of products linked to a product by PNH_ID >=====================================
+select pd.itemid,count(*),di.is_sourceable as ttl_prdt 
+from m_product_deal_link pd 
+join king_dealitems di on di.id=pd.itemid
+where pd.itemid is not null and di.pnh_id='10005781' group by pd.itemid
+
+#=========================================
+select a.id as attr_id,a.attr_name,group_concat(concat(pa.id,":",pa.attr_value)) as attr_vals#,group_concat(pa.pid) as pids
+ from king_dealitems di
+						join m_product_deal_link pd on pd.itemid = di.id
+						join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
+						join m_attributes a on a.id =  pa.attr_id
+						where di.pnh_id='10005781' group by pa.attr_id;
+#=========================================
+
+-- new
+select s.* from m_product_attributes s where s.id='11' ;
+
+-- new
+select a.id as attr_id,a.attr_name,pa.pid,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals
+ from m_product_attributes pa
+	join m_attributes a on a.id =  pa.attr_id
+	where pa.pid='156145' and pa.id!='11' group by pa.attr_id;

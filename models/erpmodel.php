@@ -4117,10 +4117,10 @@ courier disable ends
 	{
 		$name=$this->input->post('cat_name');
 		$type=$this->input->post('main');
-        $attributes = $this->input->post('attributes');
+                $attributes = $this->input->post('attributes');
         
-        $attributes = array_filter(array_unique($attributes));
-        $grp_attr_ids = implode(",",$attributes);
+                $attributes = array_filter(array_unique($attributes));
+                $grp_attr_ids = implode(",",$attributes);
                 
 		$url=preg_replace('/[^a-zA-Z0-9_\-]/','',$name);
 		$url=str_replace(" ","-",$url);

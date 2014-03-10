@@ -4763,7 +4763,9 @@ group by g.product_id order by product_name");
                 $attr_data[$i]["attr_value"]  = $attr['attr_value'][$i];
                 $timestamp = date("Y-m-d H:i:s",time());
                 if($attr['attr_id'][$i] !='' and $attr['attr_value'][$i] != '') {
-                    $in_data[] = ' ("'.$pid.'","'.$pcat_id.'",'.$attr['attr_id'][$i].',"'.$attr['attr_value'][$i].'","'.$timestamp.'","'.$user['userid'].'") ';
+                    //if attrval have comma(,) strip to space
+                    $attr_value = str_replace(","," ",$attr['attr_value'][$i]);
+                    $in_data[] = ' ("'.$pid.'","'.$pcat_id.'",'.$attr['attr_id'][$i].',"'.$attr_value.'","'.$timestamp.'","'.$user['userid'].'") ';
                 }
             }
             if(!empty($in_data))
@@ -4787,7 +4789,7 @@ group by g.product_id order by product_name");
                 if($attr['attr_id'][$i] !='' && $attr['attr_value'][$i] != '')
                 {
                     $attr_id=$attr['attr_id'][$i];
-                    $attr_value=$attr['attr_value'][$i];
+                    $attr_value = str_replace(","," ",$attr['attr_value'][$i]);
                     if($this->db->query("select count(*) as t from m_product_attributes where pid=? and pcat_id=? and attr_id =? and is_active=1",array($pid,$pcat_id,$attr_id))->row()->t)
                     {
                         $this->db->query("update m_product_attributes set attr_value=?,modified_on=?,modified_by=? where pcat_id=? and attr_id=? and pid=? ",array($attr_value,$timestamp,$user['userid'],$pcat_id,$attr_id,$pid));
@@ -6376,30 +6378,52 @@ group by g.product_id order by product_name");
 				
 				if($prod['is_group'])
                                 {
-                                    
-                                    $att_arry_set = $this->db->query("select a.id as attr_id,a.attr_name,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals,group_concat(pa.pid) as pids from king_dealitems di
-                                                                            join m_product_deal_link pd on pd.itemid = di.id
-                                                                            join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
-                                                                            join m_attributes a on a.id =  pa.attr_id
-                                                                            where di.pnh_id=? group by pa.attr_id",$pid)->result_array();
-                                    $att_arry='<div class="attributes_block"><h3>Select attributes:</h3><div>';
-                                    foreach($att_arry_set as $m=>$attr)
+                                    $num_link_prdts = $this->db->query("select pd.itemid,count(*) as ttl_prdt from m_product_deal_link pd join king_dealitems di on di.id=pd.itemid where pd.itemid is not null and di.pnh_id=? group by pd.itemid",$pid)->row()->ttl_prdt;
+                                    if($num_link_prdts > 0)
                                     {
-                                            $att_arry .= '<lable><input type="hidden" name="attr['.$attr['attr_id'].']" value="'.$attr['attr_id'].'"/>'.$attr['attr_name'].'</lable> : ';
+                                        //,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals
+                                        $att_arry_set = $this->db->query("select a.id as attr_id,a.attr_name,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals,group_concat(pa.pid) as pids from king_dealitems di
+                                                                                join m_product_deal_link pd on pd.itemid = di.id
+                                                                                join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
+                                                                                join m_attributes a on a.id =  pa.attr_id
+                                                                                where di.pnh_id=? group by pa.attr_id",$pid)->result_array();
 
-                                            $arr_vals=explode(",",$attr['attr_vals']);
-                                            $arr_pids=explode(",",$attr['pids']);
-
-                                            $att_arry .= '<select id="attr'.$m.'" onchange="change_attributes(this,\''.$m.'\',\''.$attr['attr_vals'].'\',\''.$attr['pids'].'\');"><option value="0">Choose</option>';
-                                            foreach($arr_vals as $i=>$aval)
+                                        $att_arry='<div class="attributes_block"> <br>  <h4>There are '.$num_link_prdts.' linked products</h4>';
+                                        //$ttl_attrs = count($att_arry_set);
+                                    
+                                            $att_arry.=' <h3>Select attributes:</h3> <div>';
+                                            
+                                            foreach($att_arry_set as $m=>$attr)
                                             {
-                                                $val = explode(":",$aval);
-                                                $att_arry .= '<option value="'.$arr_pids[$i].'_'.$attr['attr_id'].'">'.$val[1].'</option>';
+                                                    $att_arry .= '<lable><input type="hidden" name="attr['.$attr['attr_id'].']" value="'.$attr['attr_id'].'"/>'.$attr['attr_name'].'</lable> : ';
+                                                    $arr_vals=explode(",",$attr['attr_vals']);
+                                                    $arr_pids=explode(",",$attr['pids']);
+
+                                                    /* Logic 1 
+                                                    $att_arry .= '<select id="selattr_'.$m.'" name="attribute['.$attr['attr_id'].'][]" onchange="change_attributes(this,\''.$m.'\',\''.$attr['attr_vals'].'\',\''.$attr['pids'].'\','.$ttl_attrs.');"><option value="0">Choose</option>';
+                                                    foreach($arr_vals as $i=>$aval) {
+                                                        //$val = explode(":",$aval);
+                                                        $att_arry .= '<option value="'.$arr_pids[$i].'_'.$attr['attr_id'].'">'.$arr_pids[$i].'-'.$aval.'</option>';
+                                                    }
+                                                    $att_arry .= '</select> <br/>';
+                                                    */
+
+                                                    //new login 2
+                                                    //attr name
+                                                    $att_arry .= '<select id="" onchange="get_attributes(this)"><option value="0">Choose</option>';
+                                                    foreach($arr_vals as $i=>$aval)
+                                                    {
+                                                        $val = explode(":",$aval);
+                                                        
+                                                        $att_arry .= '<option class="attr_'.$aval.'_'.lcfirst($attr['attr_name']).'" linked="attr_'.$arr_vals[$i].'_'.$attr['attr_name'].'" value="'.$val[0].'">'.$val[1].'</option>';
+                                                    }
+                                                    $att_arry .= '</select><br/></div>';
+                                                    
                                             }
-                                            $att_arry .= '</select> <br/>';
+                                            
                                     }
-                                    $prod['attr_list']=$att_arry."</div>
-                                                        </div>";
+                                   
+                                    $prod['attr_list']=$att_arry."</div>";
                                 }
                                 
 				$prod['is_publish']=$prod['publish'];
@@ -28166,25 +28190,26 @@ die; */
         
         if(empty($deal_pstk[$itemid])) {
             $arr_stk['status'] = 'fail';
-            $arr_stk['message'] = 'Out of stock or Deal Doesnot exits';
+            $arr_stk['message'] = 'Out of stock or Deal Does not exits';
         }
         else {
                 $arr_stk['status'] = 'success';
                 $arr_stk['itemid'] = $itemid;
                 $arr_stk['total_products'] = count($deal_pstk[$itemid]);
-                $ttl_stk = 0;
+                $ttl_stk = $ttl_source_sts = 0;
                 foreach($deal_pstk[$itemid] as $pstk) {
                     $id = $pstk['pid'];
                     $arr_stk['prod_stk_det'][$id]['product_id'] = $pstk['pid'];
                     $arr_stk['prod_stk_det'][$id]['product_name'] = $pstk['product_name'];
                     $arr_stk['prod_stk_det'][$id]['qty'] = $pstk['qty'];
-                    $arr_stk['prod_stk_det'][$id]['sourcible'] = $pstk['status'];
+                    $arr_stk['prod_stk_det'][$id]['source'] = $pstk['status'];
                     $arr_stk['prod_stk_det'][$id]['stk'] = $pstk['stk'];
+                    $ttl_source_sts += $pstk['status'];
                     $ttl_stk += $pstk['stk'];
                 }
                 
-                // out of stock =  ttl_stk == 0
-                if($ttl_stk == 0 ) {
+                // out of stock =  ttl_stk == 0 && is all products are not sourceable
+                if($ttl_stk == 0 && $ttl_source_sts == 0 ) {
                     $arr_stk['deal_status'] = 'Out of Stock';
                     
                 }
@@ -28213,14 +28238,16 @@ die; */
                 $deal_stock = $this->erpm->do_stock_check(array($itemid),array(1),true);
                 
                         $arr_stk[$itemid]['status'] = 'success';
-                        $ttl_stk = 0;
+                        $ttl_stk = $ttl_source_sts = 0;
                         foreach($deal_stock[$itemid] as $pstk) {
                             //$id = $pstk['pid'];
                             //$arr_stk['prod_stk_det'][$id]['product_name'] = $pstk['product_name'];
+                            //$arr_stk['prod_stk_det'][$id]['sourceable'] = $pstk['status'];
+                            $ttl_source_sts += $pstk['status'];
                             $ttl_stk += $pstk['stk'];
                         }
                         // out of stock =  ttl_stk == 0
-                        if($ttl_stk == 0 ) {
+                        if($ttl_stk == 0 && $ttl_source_sts == 0) {
                             $arr_stk[$itemid]['deal_status'] = 'Out of Stock';
                                         }
                         else {// in stock = ttl_stk != 0
@@ -28236,14 +28263,15 @@ die; */
             $arr_stk = array();
             
                         $arr_stk[$itemid]['status'] = 'success';
-                        $ttl_stk = 0;
+                        $ttl_stk = $ttl_source_sts = 0;
                         foreach($deal_stock[$itemid] as $pstk) {
                             //$id = $pstk['pid'];
                             //$arr_stk['prod_stk_det'][$id]['product_name'] = $pstk['product_name'];
+                            $ttl_source_sts += $pstk['status'];
                             $ttl_stk += $pstk['stk'];
                         }
-                        // out of stock =  ttl_stk == 0
-                        if($ttl_stk == 0 ) {
+                        // out of stock =  ttl_stk == 0 && is all products are not sourceable
+                        if($ttl_stk == 0 && $ttl_source_sts == 0 ) {
                             $arr_stk[$itemid]['deal_status'] = 'Out of Stock';
                         }
                         else {// in stock = ttl_stk != 0
@@ -28584,9 +28612,28 @@ die; */
             }
         }
         
-        function test() 
+        function jx_get_attributes($id)
         {
-           // $this->db->d
+            //get pid
+            $pid=$this->db->query("select s.* from m_product_attributes s where s.id=?",$id)->row()->pid;
+            // get other attributes
+            $att_arry_set = $this->db->query("select a.id as attr_id,a.attr_name,pa.pid,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals
+                                            from m_product_attributes pa
+                                            join m_attributes a on a.id =  pa.attr_id
+                                            where pa.pid=? and pa.id!=? group by pa.attr_id",array($pid,$id))->results_array();
+            $att_arry = '<div>';
+            foreach($att_arry_set as $m=>$attr)
+            {
+                $att_arry .= '<select id="sel_attr_'.$m.'" onchange="get_attributes(this)"><option value="0">Choose</option>';
+                foreach($arr_vals as $i=>$aval)
+                {
+                    $val = explode(":",$aval);
+
+                    $att_arry .= '<option class="attr_'.$aval.'_'.lcfirst($attr['attr_name']).'" linked="attr_'.$arr_vals[$i].'_'.$attr['attr_name'].'" value="'.$val[0].'">'.$val[1].'</option>';
+                }
+                $att_arry .= '</select><br/>';
+            }
+            $att_arry .= '</div>';
+            
         }
-        
 }
