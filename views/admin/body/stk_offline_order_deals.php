@@ -17,7 +17,7 @@ $has_fid=1;
 $fdetails=$this->db->query("select * from pnh_m_franchise_info where franchise_id=?",$fid)->row_array();
 $franid=$fdetails['franchise_id'];
 $acc_statement = $this->erpm->get_franchise_account_stat_byid($franid);
-$pending_payment = format_price($acc_statement['shipped_tilldate']-($acc_statement['paid_tilldate']+$acc_statement['acc_adjustments_val']+$acc_statement['credit_note_amt']));
+$pending_payment = format_price($acc_statement['pending_payment']);
 $uncleared_payment = format_price($acc_statement['uncleared_payment']);
 $fran_crdet = $this->erpm->get_fran_availcreditlimit($franid);
 $current_balance = $fran_crdet[3];
@@ -171,8 +171,12 @@ $fran_status_arr[3]="Temporary Suspension";
 			<form method="post" id="order_form" autocomplete="off">
 				<input type="checkbox" id="redeem_r" name="redeem" value="1" style="display:none;">
 				<input type="hidden" id="redeem_p" name="redeem_points" value="0" style="display:none;">
-				<input type="hidden"  name="creditdays" value="" style="display:none;">
 				<input type="hidden" name="frannote" value="" style="display:none;">
+				<input type="hidden"  name="offr_sel_type"  class="offr_sel_type" value="" style="display:none;">
+				<input type="hidden" name="insurance[proof_type]"  class="proof_type" value="" style="display:none;">
+				<input type="hidden" name="insurance[proof_id]"  class="proof_id" value="" style="display:none;">
+				<input type="hidden" name="insurance[proof_address]" class="proof_address" value="" style="display:none;">
+				<input type="hidden" name="insurance[opted_insurance]" class="opted_insurance" value="" style="display:none;">
 				
 				<div style="clear:both;overflow: hidden;background: #fcfcfc">
 					<b class="ordr_fortext">Order For : </b><div id="member_ids" class="membr_block"></div>
@@ -194,9 +198,11 @@ $fran_status_arr[3]="Temporary Suspension";
 							</thead>
 						<tbody></tbody>
 					</table>
+					<!-- <div class="show_insurance"><span class="red_star">*</span><span><b><input type="checkbox" value="1" name="insurance" class="show_insurance"></b></span><span>Opting For a Insurance</span></div> -->
 				</div>
+				
+				
 				<div class="cart-footer">
-					<div style="float:left;margin-top: -12px;padding: 2px 0 0 6px;display: none;"><span class="red_star"  style="display: none;">*</span><span  style="display: none;"><b>Credit Days : </b></span><span style="display: none;"><input type="text" value="0" size="4" class="credit_days" style="border: 2px solid #000000;width: 50px;"></span></div>
 					<div class="cart_estimated_ttl_wrap">Estimated Total :Rs. <span id="cart_totl"></span></div>
 					<div class="clear"></div>
 					<div  style="<?php echo $mid?'':'display:none';'background-color:none repeat scroll 0 0 #E5F2FF';'width:100%'?>"> 
@@ -230,15 +236,13 @@ $fran_status_arr[3]="Temporary Suspension";
 			</form>
 		</div>
 		<div id="analytics">
-			<?php /*?>
-			<div class="fran_credit_detwrap" >
-				<span>Credit Limit : <b id="fran_credit"></b></span>
+			<div class="fran_credit_detwrap"  >
+				<span >Credit Limit : <b id="fran_credit"></b></span>
 				<span>Available Limit : <b id="fran_balance"></b></span>
 				<span>Activated Members : <b class="total_mem"></b></span>
 				<span>Orders : <b class="total_ord"></b></span>
 				<span>Last OrderedOn : <b class="last_ord"></b></span>
 			</div>
-			<?*/?>
 			<table width="100%">
 				<tr>
 					<td width="70%">
@@ -442,15 +446,17 @@ $fran_status_arr[3]="Temporary Suspension";
 				<td style="padding:10px 0px 0px;background: #FFF;">
 					<div  class="qvk_imgwrap">
 						<img alt="" height="100" src="<?=IMAGES_URL?>items/small/%qvk_image%.jpg">
+						<h4>PNH ID : %qvk_pid%</h4>
 						<input class="pids" type="hidden" name="pid[]" value="%qvk_pid%">
 					</div>
 					  <div class="qvk_productguide_wrap" >
-						  	<h5>PNH ID : %qvk_pid%</h5>
-						  	<h3><a href="<?=site_url("admin/pnh_deal")?>/%qvk_pid%" target="_blank">%qvk_pname%</a></h3>
-						  	<span>MRP : <b>Rs. %qvk_mrp%</b></span>
-						  	<span>Offer Price : <b>Rs. %qvk_price%</b></span>
-						  	<span>Landing Cost : <b>Rs. %qvk_lcost% </b></span>
-                                                        <span>%attr_list%<br/></span>
+					  		<h3><a href="<?=site_url("admin/pnh_deal")?>/%qvk_pid%" target="_blank">%qvk_pname%</a></h3>
+						  	<h5>Stock : %qvk_stk%</h5>
+						  	<span class="mrp_bkgrnd_wrap">MRP : <b>Rs. %qvk_mrp%</b></span>
+						  	<span class="ofrp_bkgrnd_wrap">Offer Price : <b>Rs. %qvk_price%</b></span>
+						  	<span class="disc_bkgrnd_wrap">Discount : <b> %qvk_mrgn%%</b></span>
+						  	<span class="lndpric_bkgrnd_wrap">Landing Cost : <b>Rs. %qvk_lcost% </b></span>
+						  	
 					  </div>
 				  </td>
 			</tr>
@@ -466,6 +472,71 @@ $fran_status_arr[3]="Temporary Suspension";
 	</div>
 	<div id="franchise_quickview"  title="Franchisee Info"><div id="fran_qvkview"></div></div>
 	
+	<div id="new_memoffrs" Title="Offer Bonanza For the Member first Order">
+	
+		<p><b>Congragulations!!!</b></p>
+		<div width="100%">
+		<form method="post" id="update_meminfo" data-validate="parsley" >
+			<table width="100%" cellspacing="5">
+				<input type="hidden" name="selected_mid" value="">
+				<tr><td><b>Free Recharge Talktime of worth(Rs 100)</b> <input type="radio" name="offerd_type" value="1" class="offerd_type"></td></tr>  
+				<tr class="insurance"><td><b>Free Insurance</b><input type="radio" name="offerd_type" checked value="2"  class="offerd_type"></td></tr>
+			</table>
+			<table class="insurance_blk">	
+				<tr><td width="34%"><b>Proof Type</b></td><td><b>: </b> </td>
+					<td>
+						<select name="dlg_insurence_type" id="dlg_insurence_type"  data-required="true">
+							<option value="">Select</option>
+							<?php $insurance_types=$this->db->query("select * from insurance_m_types order by name asc")->result_array();
+							if($insurance_types){
+							foreach($insurance_types as $i_type){
+							?>
+							<option value="<?php echo $i_type['id']?>"><?php echo $i_type['name']?></option>
+							<?php }}?>
+						</select>
+					</td>
+				</tr>
+				<!-- <input type="text" name="dlg_insurence_type" value="" data-required="true" > --></td></tr>
+				<tr><td><b>Proof Id</b></td><td><b>:</b></td><td><input type="text" name="dlg_insurence_id" value="" data-required="true"></td></tr></div>
+				<tr><td><b>Proof Address</b></td><td><b>:</b></td><td> <textarea name="dlg_mem_address" value="" data-required="true" id="dlg_mem_address"></textarea></td></tr>
+			</table>
+		</form>	
+		</div>
+	</div>
+	
+	
+	<div id="insurance_option" title="Payable Insurance" >
+		<p><b>Note : Insurance will be given upon adding 2% on the Actual Bill</b></p>
+		<p><b>Would you like to have insurance?</b></p>
+		<br>
+		<table id="insurance_srn_blc">
+			<tr><td><input type="radio" value="1" checked  name="insurance_srn" class="insurance_srn">Yes</td></tr>
+			<tr><td><input type="radio" value="0"  name="insurance_srn" class="insurance_srn">No</td></tr>
+		</table>
+		<div id="crdet_insurance_blk">
+			<form id="crdet_insurance" data-validate="parsley" method="post">
+				<table id="insurance_blk_html">
+					<tr><td width="35%"><b>Proof Type</b></td><td><b>:</b></td>
+						<td>
+							<!--  <input type="text" name="crd_insurence_type" value="" data-required="true" >-->
+							<select name="crd_insurence_type"  data-required="true" id="crd_insurence_type">
+							<option value="">Select</option>
+							<?php $insurance_types=$this->db->query("select * from insurance_m_types order by name asc")->result_array();
+							if($insurance_types){
+							foreach($insurance_types as $i_type){
+							?>
+							<option value="<?php echo $i_type['id']?>"><?php echo $i_type['name']?></option>
+							<?php }}?>
+						</select>
+						</td>	
+					</tr>
+					<tr><td><b>Proof Id</b></td><td><b>:</b></td><td><input type="text" name="crd_insurence_id" value="" data-required="true"></td></tr></div>
+					<tr><td><b>Proof Address</b></td><td><b>:</b></td><td> <textarea name="crd_insurance_mem_address" value="" data-required="true" id="crd_insurance_mem_address"></textarea></td></tr>
+				</table>
+			</form>	
+		</div>
+								
+	</div>
 	
 </div>
 <style>
@@ -483,7 +554,6 @@ $fran_status_arr[3]="Temporary Suspension";
     }
 </style>
 <script>
-    
     function get_attributes(e) {
          var attribute_id = $(e).find(":selected").val();
          $.post(site_url+"jx_get_attributes/"+attribute_id,{},function(resp){
@@ -539,10 +609,37 @@ function change_attributes(e,serial,attr_vals,pids,ttl_attrs)
     });
     
 }
-
 $("#franchise_quickview").hide();
+$(".insurance_blk").hide();
+$('.offerd_type').change(function(){
+	if($(this).val()==2)
+		$(".insurance_blk").show();
+	else
+		$(".insurance_blk").hide();
+});
 
+$('.insurance_srn').change(function(){
+	if($(this).val()==1)
+	{
+		$("#crdet_insurance_blk").show();
+		
+	}
+	if($(this).val()==0)
+	{
+		$("#crdet_insurance_blk").hide();
+		
+	}
+});
+
+var has_insurance_dl=0;
+
+if(has_insurance_dl==0)
+	$('.show_insurance').hide();
+else
+	$('.show_insurance').show();
+	
 function tooltip_popup(){
+
  	Tipped.create('.tip_popup',{
  	 skin: 'black',
  	  hook: 'topleft',
@@ -551,8 +648,8 @@ function tooltip_popup(){
  	 	opacity: .5,
  	 	hideAfter: 200,
 	 });
-}
 
+}
 function quikview_product(pid)
 {
 	$("#quick_viewdiv").data('qvk_pid',pid).dialog('open');
@@ -566,7 +663,7 @@ $("#quick_viewdiv").dialog({
         .css({ position: 'fixed' })
         .position({ my: 'center', at: 'center', of: window });
 		$("#qvk_prod_temp tbody").html("");
-                $('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
+        $('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 		$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').addClass('add_to_cartbtn');
 		$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({"float":"right","background":"tomato","color":"white"});
 		$('.ui-dialog-buttonpane').find('button:contains("Price Query")').css({"float":"left"});
@@ -591,15 +688,16 @@ $("#quick_viewdiv").dialog({
 			template=template.replace(/%qvk_price%/g,p.price);
 			template=template.replace(/%qvk_lcost%/g,p.lcost);
 			template=template.replace(/%qvk_mrgn%/g,p.margin);
+			template=template.replace(/%qvk_stk%/g,p.stock);
 			template=template.replace(/%qvk_margin_amt%/g,Math.ceil(p.price-p.lcost));
 			template=template.replace(/%attr_list%/g,attr_det);
 			$("#qvk_prod_temp tbody").html(template);
-			if(! p.allow_order.length || p.is_publish==0)
+			if(!p.allow_order.length && p.is_sourceable==0 )
 			{
 				$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').css({'display':'none'});
 				$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({'display':'block'});
 			}
-			else
+			if(p.is_sourceable==1 )
 			{
 				$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').css({'display':'block'});
 				$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({'display':'none'});
@@ -985,6 +1083,7 @@ $('.stock_det_close').live("click",function(){
 
 function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 {
+	$('.jq_alpha_sort_overview_content').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
 	
 	$('.sk_deal_container').css('opacity','0.5');
 	if(catid != 0 && brandid==0)
@@ -1001,7 +1100,7 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 				brand_linkedcat_html+='';
 				$.each(resp.brand_list,function(i,b){
 					brand_linkedcat_html+='<a class="Brands_bychar_list_content_listdata" cid="'+b.catid+'" bid="'+b.brandid+'">'+b.brand_name+'</a>';
-					$('.Brands_bychar_list_head').html('<h4>List of Brand for '+b.category_name+'</h4><span class="close_btn_dlpg">Hide</span>');
+					$('.Brands_bychar_list_head').html('<h4>List of Brand for '+b.category_name+'</h4><span class="close_btn_dlpg button button-tiny button-rounded ">Hide</span>');
 				});
 			}
 			$('.Brands_bychar_list_content').html(brand_linkedcat_html);
@@ -1020,7 +1119,7 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 				cat_linkedcat_html+='';
 				$.each(resp.cat_list,function(i,b){
 					cat_linkedcat_html+='<a class="Brands_bychar_list_content_listdata" cid="'+b.catid+'" bid="'+b.brandid+'">'+b.category_name+'</a>';
-					$('.Brands_bychar_list_head').html('<h4>List of Categories for '+b.brand_name+'</h4><span class="close_btn_dlpg">Hide</span>');
+					$('.Brands_bychar_list_head').html('<h4>List of Categories for '+b.brand_name+'</h4><span class="close_btn_dlpg button button-tiny button-rounded ">Hide</span>');
 				});
 			}
 			$('.Brands_bychar_list_content').html(cat_linkedcat_html);
@@ -1029,10 +1128,9 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 	}
 
 	if(!dealid)
-		$('.sk_deal_container').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
-		
+		{$('.sk_deal_container').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');}
+
 	$.post(site_url+'/admin/jx_deallist_bycat',{brandid:brandid,catid:catid,type:type,pre_selected_fid:pre_selected_fid,dealid:dealid},function(resp){
-		
 		$('.sk_deal_container').css('opacity','1');
 		if(resp.status == 'error')
 			{
@@ -1055,7 +1153,6 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 				d_lst+='<table class="sk_deal_blk_wrap" cellpadding="0" cellspacing="0" width="99%">'
 				d_lst+='<thead><tr>';
 				d_lst+='<th width="6%">PNH ID</th><th>Deal Name</th><th width="8%">Stock</th><th width="10%" style="">Brand</th><th width="15%">Category</th><th width="6%">MRP</th><th width="10%">DP/Offer Price</th><th width="1%" style="align:center;">Actions<br />';
-			
 				d_lst+='</th></tr></thead>';
 				var tmp_tbl_list = '';
 			 	$.each(resp.deals_lst,function(i,d){
@@ -1223,6 +1320,7 @@ function selected_fran(pre_selected_fid)
 	
 	$.post("<?=site_url("admin/pnh_jx_getfranbalance")?>",{id:pre_selected_fid},function(data){
 		o=$.parseJSON(data);
+
 		credit=parseInt(o.credit);
 		balance= format_number(o.balance);
 		if(balance < 5000)
@@ -1373,6 +1471,7 @@ function add_product(pid)
 		{
 			$("span.prod_"+pid).html('<a href="javascript:void(0)" onclick="remove_prod_frmcart('+pid+')" class="button button-rounded button-tiny remove_cart_btn" title="Remove From Cart" align="center">REMOVE</a>');
 			$("#item_count_in_cart_top_displayed").html(resp.ttl_cart_item);
+		
 		}else if(resp.status=='error')
 		{
 			alert(resp.message);
@@ -1403,6 +1502,7 @@ var ppids=[];
 			$('.ui-dialog-buttonpane').find('button:contains("Submit")').css({"float":"right"});
 			var dlg=$(this);
 			var html_cnt='';
+			
 					$.post("<?=site_url("admin/jx_getsaved_item_incart")?>",{fid:pre_selected_fid,mid:<?php echo $mid;?>},function(data){
 					if(data.status =='success')
 					{
@@ -1449,6 +1549,8 @@ var ppids=[];
 									
 									template=template.replace(/%max_ord_qty%/g,"<span class='tip_popup max_qty_wrap' title='Maximum Allowed Quantity'>/&nbsp;("+p.max_ord_qty+"&nbsp;Qty)</span>");
 								}
+								if(p.has_insurance==1)
+									has_insurance_dl++;
 								
 								if(p.imei_disc!= 0)
 								{
@@ -1475,8 +1577,6 @@ var ppids=[];
 								template=template.replace(/%mrp%/g,p.mrp);
 
 								html_cnt += template;
-							
-								
 						});
 						$("#cart_prod_temp tbody").html(html_cnt);
 						tooltip_popup();
@@ -1484,6 +1584,13 @@ var ppids=[];
 						$('.cart-footer div').show();
 						$(".confirm_bloc").show();
 						$("#cart_prod_temp thead").show();
+
+						//check for has insurance deal in cart and is new member
+						
+						if(has_insurance_dl>0 && data.new_mem==0)
+							$('.show_insurance').show();
+						else
+							$('.show_insurance').hide();
 					}
 					else
 					{
@@ -1574,12 +1681,13 @@ function remove_psel(ele)
 				$(ele).parents("tr:first").fadeOut().remove();
 				$("#item_count_in_cart_top_displayed").html(data.ttl_cart_item);
 				$("span.prod_"+sel_pid).html('<a href="javascript:void(0)" class="button button-rounded button-tiny quicklook_btn" onclick="quikview_product('+sel_pid+')" >Quick Look</a>');
-	
+				
 				$('#cart_prod_temp tbody tr').each(function(a,b){
 					$('td:first',this).html(a+1);
 				});
 				  change_total_subtotal();
 			}
+			has_insurance_dl--;
 		},'json');
 	}
 	
@@ -1638,6 +1746,8 @@ $("#order_form").submit(function(){
 	    var mid = selected_mid;
 		var fran_note=$("#fran_note").val();
 
+		var selected_mid=$("input[name='mid']",$(this)).val();
+
 		var stk_confirm_prods = $('input[name="confirm_stock"]').length;
 		
 		var stk_confirm_prods_checked = $('input[name="confirm_stock"]:checked').length;
@@ -1664,44 +1774,17 @@ $("#order_form").submit(function(){
 					 mem_reg(pre_selected_fid);
 				 return false;
 			}
-		 }
-		var credit_days=$(".credit_days").val();
 
-		/*
-		if(credit_days==0 || isNaN(credit_days))
+			
+		
+		 }
+		$("input[name='frannote']").val(fran_note);
+		$("#fran_note_edit_div").show();
+		if(fran_note.length<50)
 		{
-			alert("Please enter Valid Days");
+			franchise_note(pre_selected_fid);
 			return false;
 		}
-		
-		if(credit_days>5)
-		{
-			alert(" Days can't be greater than 5 Days");
-			return false;
-		}
-		if(credit_days<0)
-		{
-			alert(" Days can't be less than 1 Day");
-			return false;
-		}
-		*/
-		
-		$("input[name='creditdays']").val($('.credit_days').val());	
-		<?php 
-			if($pending_payment)
-			{
-		?>	
-				$("input[name='frannote']").val(fran_note);
-				$("#fran_note_edit_div").show();
-				if(fran_note.length<50)
-				{
-					franchise_note(pre_selected_fid);
-					return false;
-				}
-		<?php 
-			}
-		?>
-		
 	
 
 		if(stk_confirm_prods != stk_confirm_prods_checked && stk_confirm_prods > 0)
@@ -1715,25 +1798,48 @@ $("#order_form").submit(function(){
 			if(confirm("Total order value : Rs "+total+"\nAre you sure want to place the order?") )
 			{
 				attr=$(".attr").serialize();
-				$.post(site_url+"/admin/pnh_jx_checkstock_order",{attr:attr,pids:ppids.join(","),qty:qty.join(","),fid:pre_selected_fid,mid:$("input[name='mid']",$(this)).val(),credit_days:$('.credit_days').val()}, function(resp){
+				$.post(site_url+"/admin/pnh_jx_checkstock_order",{attr:attr,pids:ppids.join(","),qty:qty.join(","),fid:pre_selected_fid,mid:selected_mid}, function(resp){
 					
-					if(resp.e == 1)
+				if(resp.e == 1)
+				{
+					submit_order=0;
+					alert("ERROR!\n\n"+resp.msg);
+					return false;
+				}
+				 if(resp.new_mem==1 && resp.has_insurance==1)
+				{
+					 $("#new_memoffrs").data('mid',selected_mid).dialog('open');
+					 return false;	
+				}
+
+			 	if(resp.new_mem==0 && resp.has_insurance==1)
+				{
+			 		$('.offr_sel_type').val('0');
+				 	$("#insurance_option").data('mid',selected_mid).dialog('open');
+				 	 return false;	
+				}
+		 	 	if(resp.new_mem ==1 && resp.has_insurance==0 )
 					{
-						submit_order=0;
-						alert("ERROR!\n\n"+resp.msg);
-						return false;
+			 	 		$('.offr_sel_type').val('0');
+			 	 			submit_order++;
 					}
-					else
+				if(resp.new_mem==0 && resp.has_insurance==0 )	
 					{
-						submit_order=1;	
+                                           
+						submit_order++;
+						$("#order_form").submit();
+					}
+			 	else
+					{
+						submit_order>=1;	
 						$("#order_form").submit();
 					}
 				
 				},'json');
 			}
+		
 			return false;
 		}
-		
 });
 
 function mem_reg(fid)
@@ -2197,21 +2303,9 @@ $("#mid_det").dialog({
 
 function load_franchisebyid()
 {
-	/*sel_state=$("#sel_state").val();
-	sel_fran=$("#sel_fid").val();
-	sel_mtype=$(".mid_entrytype").val();
-	if(sel_state=='' || sel_state==0)
-		return;
-	if(sel_fran=='' || sel_fran==0)
-		return;
-	if(sel_mtype==0)
-	{
-		if($(".mid").val().length==0)
-			return;
-	}*/
-		$("#authentiacte_blk").dialog('open');
-		
+	$("#authentiacte_blk").dialog('open');
 }
+
 $( "#authentiacte_blk" ).dialog({
 	modal:true,
 	autoOpen:false,
@@ -2616,35 +2710,26 @@ function get_invoicetransit_log(ele,invno)
 
 var refcont = null;
 $('#inv_transitlogdet_dlg').dialog({width:'900',height:'auto',autoOpen:false,modal:true,
-											open:function(){
+		open:function(){
+			$('#inv_transitlogdet_tbl').html('loading...');
+			$.post(site_url+'/admin/jx_invoicetransit_det','invno='+$(this).data('invno'),function(resp){
+				if(resp.status == 'error')
+				{
+					alert(resp.error);
+				}else
+				{
+					var inv_transitlog_html = '<table class="datagrid" width="100%"><thead><th width="30%">Msg</th><th width="10%">Status</th><th width="10%">Handle By</th><th width="10%">Logged On</th><th width="15%">SMS</th></thead><tbody>';
+					$.each(resp.transit_log,function(i,log){
+						inv_transitlog_html += '<tr><td>'+log[5]+'</td><td>'+log[1]+'</td><td>'+log[2]+'('+log[4]+')</td><td>'+log[3]+'</td><td>'+log[6]+'</td></tr>';
+					});
+					inv_transitlog_html += '</tbody></table>';
+					$('#inv_transitlogdet_tbl').html(inv_transitlog_html);
 
-												
-												//,'width':refcont.width()
-												//$('div[aria-describedby="inv_transitlogdet_dlg"]').css({'top':(refcont.offset().top+15+refcont.height())+'px','left':refcont.offset().left});
-												
-												$('#inv_transitlogdet_tbl').html('loading...');
-												$.post(site_url+'/admin/jx_invoicetransit_det','invno='+$(this).data('invno'),function(resp){
-													if(resp.status == 'error')
-													{
-														alert(resp.error);
-													}else
-													{
-														var inv_transitlog_html = '<table class="datagrid" width="100%"><thead><th width="30%">Msg</th><th width="10%">Status</th><th width="10%">Handle By</th><th width="10%">Logged On</th><th width="15%">SMS</th></thead><tbody>';
-														$.each(resp.transit_log,function(i,log){
-															inv_transitlog_html += '<tr><td>'+log[5]+'</td><td>'+log[1]+'</td><td>'+log[2]+'('+log[4]+')</td><td>'+log[3]+'</td><td>'+log[6]+'</td></tr>';
-														});
-														inv_transitlog_html += '</tbody></table>';
-														$('#inv_transitlogdet_tbl').html(inv_transitlog_html);
-
-														$('#inv_transitlogdet_dlg h3').html('Invoice no :<span style="color:blue;font-size:12px">'+resp.invoice_no+'</span>  Franchise name: <span style="color:orange;font-size:12px">'+resp.Franchise_name +'</span> Town : <span style="color:gray;font-size:12px">'+resp.town_name+'</span>'+' ManifestoNo :'+resp.manifesto_id);
-
-
-														
-														
-													}
-												},'json');
-											}
-									});
+					$('#inv_transitlogdet_dlg h3').html('Invoice no :<span style="color:blue;font-size:12px">'+resp.invoice_no+'</span>  Franchise name: <span style="color:orange;font-size:12px">'+resp.Franchise_name +'</span> Town : <span style="color:gray;font-size:12px">'+resp.town_name+'</span>'+' ManifestoNo :'+resp.manifesto_id);
+				}
+			},'json');
+		}
+});
 
 
 $("#delivery_log_dlg" ).dialog({
@@ -2660,7 +2745,7 @@ $("#delivery_log_dlg" ).dialog({
 	var sel_date=$(this).data('sel_date');
 	var sel_mnth=$(this).data('sel_mnth');
 	var sel_year=$(this).data('sel_year');
-	// ajax request fetch task details
+	// ajax request fetch delivary log details
    $.post(site_url+'/admin/jx_franchise_delivery_log_bydate',{sel_date:$(this).data('sel_date'), sel_mnth:$(this).data('sel_mnth'), sel_year:$(this).data('sel_year'), fid:$(this).data('fid'), delivery_date:$(this).data('delivery_date')},function(result){
    if(result.status == 'failure')
 	{
@@ -2735,8 +2820,124 @@ $("#franchise_quickview").dialog({
 
 			},
 
-			}
+		}
 	
 });
+
+	$("#new_memoffrs").dialog({
+						modal:true,
+						autoOpen:false,
+						width:'874',
+						height:'346',
+						Open:function(event, ui){
+							$(event.target).dialog('widget')
+					        .css({ position: 'fixed' })
+					        .position({ my: 'center', at: 'center', of: window });
+						 	$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
+							$('.ui-dialog-buttonpane').find('button:contains("Submit")').css({"float":"right"});
+							var dlg=$(this);
+							$('input[name="selected_mid"]').val(dlg.data('mid'));
+							$('input[type=radio]:checked').val('1');
+							$("#dlg_insurence_type").val("");
+							$("input[name='dlg_insurence_id']").val("");
+							$("#dlg_mem_address").val("");
+							$('.insurance_blk').hide();
+							
+								if(resp.has_insurance==1)
+									$(".insurance").show();
+								else
+									$(".insurance").hide();
+							},
+						buttons:{
+						'Submit':function(){
+							var mem_updateform=$("#update_meminfo",this);
+							var offr_type=$('input[type=radio]:checked').val();
+							var proof_type=$("#dlg_insurence_type").val();
+							var proof_id=$("input[name='dlg_insurence_id']").val();
+							var proof_address=$("#dlg_mem_address").val();
+							submit_order=0;
+								$('.offr_sel_type').val(offr_type);
+								$('.proof_type').val(proof_type);
+							  	$('.proof_id').val(proof_id);
+							  	$('.proof_address').val(proof_address);
+							  	$('.opted_insurance').val('1');
+								//return false;
+							  	if(offr_type==2)
+							  	{
+							  		if(mem_updateform.parsley('validate'))
+							  		{
+							  			submit_order++;
+							  			$("#order_form").submit();
+							  		}
+							  		else
+							  		{
+							  			submit_order=0
+							  		}
+								 }
+							  	else if(offr_type==1)
+							  	{
+								  	submit_order++;
+								  	$("#order_form").submit();
+							  	}
+							}
+						}
+					});
+
+	$('#insurance_option').dialog({
+		modal:true,
+		autoOpen:false,
+		width:'600',
+		height:'300',
+		Open:function(event, ui){
+			$(event.target).dialog('widget')
+	       	$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
+			$('.ui-dialog-buttonpane').find('button:contains("Submit")').css({"float":"right"});
+			$("select[name='crd_insurence_type']").val("");
+			$("input[name='crd_insurence_id']").val("");
+			$("#crd_insurance_mem_address").val("");
+			},
+			buttons:{
+				'Submit':function(){
+					var credit_insurence_blk=$("#crdet_insurance",this);
+					var opted_insurence=$('input[name=insurance_srn]:checked').val();
+					var proof_type=$("#crd_insurence_type").val();
+					var proof_id=$("input[name='crd_insurence_id']").val();
+					var proof_address=$("#crd_insurance_mem_address").val();
+					$('.opted_insurance').val(opted_insurence);
+					$('.proof_type').val(proof_type);
+				  	$('.proof_id').val(proof_id);
+				  	$('.proof_address').val(proof_address);
+				  	if(opted_insurence==1)
+				  	{
+				  		if(credit_insurence_blk.parsley('validate'))
+				  		{
+				  			submit_order++;
+				  			$("#order_form").submit();
+				  		}
+				  		else
+				  		{
+				  			submit_order=0
+				  		}
+					 }
+				  	else if(opted_insurence==0)
+				  	{
+					  	submit_order++;
+					  	$("#order_form").submit();
+				  	}
+				  
+				}
+			}
+	});
+
 </script>
+<style>
+
+.show_insurance
+{
+float:left;
+margin-top: 13px;
+padding: 2px 0 0 6px;
+font-weight: bold;
+}
+</style>
 <?php

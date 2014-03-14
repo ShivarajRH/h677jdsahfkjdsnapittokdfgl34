@@ -1178,7 +1178,7 @@ $("#sl_products").dialog({
 													
 												});
 											$("#sl_products .datagrid").trigger("update");
-											$("table").trigger("sorton",[[[1,0]]]); 
+											$("table").trigger("sorton",[[[1,1]]]); 
 											}
 											else
 											{
@@ -1246,7 +1246,7 @@ $("#sl_products").dialog({
 
 						}
 					});
-$("#sl_products .datagrid").tablesorter({sortList: [[1,0]]});
+$("#sl_products .datagrid").tablesorter({sortList: [[1,1]]});
 
 
 function upd_prdsourceablestat(ele)

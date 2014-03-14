@@ -36,7 +36,7 @@ class Admin extends Erp {
 			show_404();
 		*/
 
-		if($_SERVER['HTTP_HOST']!="localhost" && $_SERVER['HTTP_HOST']!="sand43.snapittoday.com" && $_SERVER['HTTP_HOST']!="erp69.sand43.snapittoday.com")
+		if($_SERVER['HTTP_HOST']!="shivaraj" && $_SERVER['HTTP_HOST']!="localhost" && $_SERVER['HTTP_HOST']!="sand43.snapittoday.com" && $_SERVER['HTTP_HOST']!="erp69.sand43.snapittoday.com")
 		{
 			/*
 			if($this->uri->segment(2)=="key"){

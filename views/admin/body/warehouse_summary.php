@@ -38,6 +38,18 @@
     float: left;
     margin: 0 0.5% 0;
 }
+.filters_wrap{
+	margin-right: 0px;
+}
+.Brands_bychar_list_head .close_btn {
+	width: auto !important;
+	margin: 5px;
+	float: right;
+}
+.brands_bychar_list .Brands_bychar_list_head h4{
+	width: auto;
+	float: none;
+}
 </style>
 
 <div class="container">

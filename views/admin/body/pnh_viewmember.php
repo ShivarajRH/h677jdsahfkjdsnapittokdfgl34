@@ -26,7 +26,45 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 <li><a href="#orders">Orders</a></li>
 <li><a href="#points">Loyalty points</a></li>
 <li><a href="#voucher">Voucher Log</a></li>
+<li><a href="#offers_log">Offers Log</a></li>
 </ul>
+    
+<div id="offers_log">
+        <div style="margin:5px 0px;padding:5px;border:1px solid #f7f7f7;">
+                <?php 
+                $offers_q = $this->db->query("select * from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id where member_id=?",$u['pnh_member_id']);
+                if($offers_q->num_rows())
+                {?>
+                    <!--<h4>Offers</h4>-->
+                    <table class="datagrid smallheader">
+                        <tr>
+                            <th>#</th>
+                            <th>Created on</th>
+                            <th>Transid</th>
+                            <th>Type</th>
+                            <th>Value</th>
+                            <th>Status</th>
+                        </tr>
+
+                        <?php
+                        $offers = $offers_q->result_array();
+                        $arr_offer_type = array(1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
+                        $arr_offer_status = array(0=>"Not Processed",1=>"Ready to Process",2=>"Processed");
+                        foreach($offers as $i=>$offer) { ?>
+                        <tr>
+                            <td><?=++$i;?></td>
+                            <td><?=  format_datetime_ts($offer['created_on']);?></td>
+                            <td><a href="<?=site_url("/admin/trans/".$offer['transid_ref']);?>" target="_blank"><?=$offer['transid_ref'];?></a></td>
+                            <td><?=$arr_offer_type[$offer['offer_type']];?></td>
+                            <td>Rs. <?=formatInIndianStyle($offer['offer_value']);?></td>
+                            <td><?=$arr_offer_status[$offer['process_status']];?></td>
+                        </tr>
+                        <!--<div style="padding:4px 5px;border-bottom:1px solid #DDDDDD;">Rs. <?=formatInIndianStyle($offer['offer_value']);?> worth of <?=$arr_offer_type[$offer['offer_type']];?> given</div>-->
+                <?php   }
+                    } ?>
+                    </table>
+            </div>
+    </div>
 <div id="voucher">
 <div class="tab_view tab_view_inner">
 
@@ -156,7 +194,7 @@ foreach($ac_v->result_array() as $ac ){
 <table cellpadding=3>
 <tr><td class="label">Gender</td><td><?=$gender[$u['gender']]?></td></tr>
 <tr><td class="label">Name</td><td><?=$salutation[$u['salute']]?>. <?="{$u['first_name']} {$u['last_name']}"?></td></tr>
-<tr><td class="label">DOB</td><td><?=date("d/m/Y",strtotime($u['dob']))?></td></tr>
+<tr><td class="label">DOB</td><td><?=format_date($u['dob']);?></td></tr>
 <tr><td class="label">Address</td><td><?=nl2br($u['address'])?></td></tr>
 <tr><td class="label">City</td><td><?=$u['city']?></td></tr>
 <tr><td class="label">Pin Code</td><td><?=$u['pincode']?></td></tr>

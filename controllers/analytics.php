@@ -487,11 +487,8 @@
 			$output['summary'] = $sales_summary;
 			echo json_encode($output);			
 		}
-		
-		
-		
-		
-			/*
+	
+	/*
 	 * Ajax function to load brand sales 
 	 * 
 	 */
@@ -925,7 +922,7 @@
 		{
 			foreach($res->result_array() as $row)
 			{
-				array_push($sales_summary,array($row['franchise_name'],$row['ttl']*1)); 		
+				array_push($sales_summary,array($row['ttl']*1,$row['franchise_name'])); 		
 			}
 		}
 		$output = array();

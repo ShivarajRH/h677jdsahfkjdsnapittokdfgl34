@@ -1463,7 +1463,7 @@ $("#sl_products").dialog({
 							
 						});
 					$("#sl_products .datagrid").trigger("update");
-					$("table").trigger("sorton",[[[1,0]]]); 
+					$("table").trigger("sorton",[[[1,1]]]); 
 					}
 					else
 					{

@@ -3504,3 +3504,119 @@ select a.id as attr_id,a.attr_name,pa.pid,group_concat(concat(pa.id,':',pa.attr_
  from m_product_attributes pa
 	join m_attributes a on a.id =  pa.attr_id
 	where pa.pid='156145' and pa.id!='11' group by pa.attr_id;
+#=========================================
+
+#Mar-10_2014
+
+select 1 from pnh_member_info where pnh_member_id='21111111';
+
+#====================================================================================================================================================================
+create table `pnh_member_offers` (  `sno` bigint UNSIGNED NOT NULL AUTO_INCREMENT , `member_id` varchar (120) , `offer_type` tinyint (11) DEFAULT '0', `offer_value` varchar (120) DEFAULT '0', `offer_towards` varchar (200) , `transid_ref` varchar (120) , `insurance_id` varchar (120) DEFAULT '0', `process_status` tinyint (11),`feedback_status` varchar (50) DEFAULT '0' NULL , `created_by` int (120) ,`referred_by` varchar (100) DEFAULT '0' NULL,`referred_status` tinyint (11)  DEFAULT '0' NULL , `created_on` varchar (120) , PRIMARY KEY ( `sno`));
+
+#alter table `pnh_member_offers` add column `feedback_status` varchar (50) DEFAULT '0' NULL  after `status`;
+#alter table `pnh_member_offers` add column `referred_by` varchar (100) DEFAULT '0' NULL  after `feedback_status`;
+#alter table `snapittoday_db_jan_2014`.`pnh_member_offers` add column `referred_status` tinyint (11)  NULL  after `referred_by`;
+#====================================================================================================================================================================
+
+
+
+select * from pnh_invoice_transit_log;
+
+select * from pnh_member_offers;
+
+select count(*) as c from pnh_member_offers where member_id='22017123' and offer_type=0;
+
+select * from pnh_member_offers where process_status = 0 order by desc created_on limit 100;
+
+select * from (
+	select count(*) as  from pnh_member_offers where referred_by !=0 and referred_status = 0 order by created_on desc limit 100
+) as count join pnh_member_offers a
+	join pnh_member_info b on b.id=a.referred_by;
+
+-- new
+select b.* from pnh_member_offers a
+	join pnh_member_info b on b.pnh_member_id=a.referred_by
+	where a.referred_by !=0 and a.referred_status = 0 
+	order by a.created_on desc limit 100;
+
+-- new 
+select num_referred,referred_by,floor(num_referred/3) as times from (
+	select count(referred_by) as num_referred,referred_by from pnh_member_offers where referred_by !=0 and referred_status = 0 group by referred_by order by created_on desc limit 100 
+) as a where a.num_referred >= 3;
+
+select * from pnh_invoice_transit_log;
+#1:in-transit,2:pickup or hand-over,3:delivered,4:return
+
+select r.receipt_id,rlog.credit_note_id,r.franchise_id,rcon.debit_note_id,rcon.invoice_no,rcon.inv_amount,sum(rlog.reconcile_amount) as reconcile_amount,rcon.unreconciled,r.receipt_amount,r.remarks,			r.unreconciled_value,unreconciled_status
+                    ,rlog.is_invoice_cancelled,rlog.is_reversed
+                    ,rcon.modified_on,rcon.modified_by
+                    ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date
+                    ,a.username
+                    from pnh_t_receipt_info r 
+                    join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
+                    join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+                    join king_admin a on a.id=rcon.created_by
+                    where r.franchise_id = '408' and r.receipt_id = '5415' group by rcon.invoice_no,rcon.debit_note_id;
+
+
+#================================
+select * from process_insurance_details;
+
+#===============================================================================
+#Mar_11_2014
+create table `pnh_member_insurance` (  `sno` bigint UNSIGNED NOT NULL AUTO_INCREMENT , `fid` varchar (120) , `mid` varchar (120) , `insurance_id` varchar (120) , `insurance_type` varchar (100) , `mem_address` varchar (150) , PRIMARY KEY ( `sno`));
+#===============================================================================
+
+# Mar_12_2014
+# ====================< RESET MEMBER OFFERS TABLES START >=====================================
+truncate table `pnh_member_insurance`;
+truncate table `pnh_member_offers`;
+truncate table `pnh_member_offers_referral`;
+# ====================< RESET MEMBER OFFERS TABLES END >=====================================
+se
+
+select count(*) as m from pnh_member_info mi
+join pnh_member_offers mo on mo.member_id != mi.id
+ where member_id=
+
+select * from pnh_member_offers where process_status = 0  and offer_type=1 order by created_on desc limit 100
+select * from pnh_member_offers where process_status = 0  and offer_type=2 order by created_on desc limit 100;
+
+/*[11:36:52 AM][51 ms]*/ CREATE TABLE `insurance_m_types`( `id` BIGINT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(255), PRIMARY KEY (`id`) ); 
+ /*[11:37:05 AM][0 ms]*/INSERT INTO `insurance_m_types`(`id`,`name`) VALUES ( '1',NULL); 
+/*[11:37:53 AM][0 ms]*/ UPDATE `insurance_m_types` SET `name`='Aadhar ' WHERE `id`='1'; 
+/*[11:38:22 AM][0 ms]*/ INSERT INTO `insurance_m_types`(`id`,`name`) VALUES ( '2','Driving Licence'); 
+/*[11:38:37 AM][0 ms]*/ INSERT INTO `insurance_m_types`(`id`,`name`) VALUES ( NULL,'Voter ID');  
+CREATE TABLE `pnh_member_insurance` (                    
+                        `sno` bigint(20) unsigned NOT NULL AUTO_INCREMENT,     
+                        `fid` varchar(120) DEFAULT NULL,                       
+                        `mid` varchar(120) DEFAULT NULL,                       
+                        `offer_type` tinyint(11) DEFAULT NULL,                 
+                        `insurance_id` varchar(120) DEFAULT NULL,              
+                        `insurance_type` varchar(100) DEFAULT NULL,            
+                        `mem_address` varchar(150) DEFAULT NULL,               
+                        `offer_status` tinyint(11) DEFAULT NULL,               
+                        PRIMARY KEY (`sno`)                                    
+                      );
+
+#===============================================================================
+
+alter table `pnh_member_insurance` add column `opted_insurance` tinyint (11) DEFAULT '0' NULL  after `proof_address`,change `offer_type` `offer_type` tinyint (11)  NULL , change `insurance_id` `proof_id` varchar (120)  NULL  COLLATE latin1_swedish_ci , change `insurance_type` `proof_type` varchar (100)  NULL  COLLATE latin1_swedish_ci , change `mem_address` `proof_address` varchar (150)  NULL  COLLATE latin1_swedish_ci;
+alter table `pnh_member_offers` change `insurance_id` `proof_id` varchar (120) DEFAULT '0' NULL  COLLATE latin1_swedish_ci;
+
+alter table `pnh_member_offers` add column `delivery_status` varchar (11) DEFAULT '0' NULL  COMMENT '0:not delivered,1:delivered' after `feedback_status`,change `process_status` `process_status` tinyint (11)  NULL  COMMENT '0:Not Processed,1:Ready Process,2:Processed,', change `feedback_status` `feedback_status` varchar (50) DEFAULT '0' NULL  COLLATE latin1_swedish_ci  COMMENT '0:not given,1:given';
+
+#===============================================================================
+-- 
+select * from pnh_member_offers where transid_ref='PNH38292';
+-- 
+update pnh_member_offers set delivery_status = 1 where transid_ref='PNH22337';
+-- 
+select u.*,count(o.transid) as orders,f.franchise_name as fran from pnh_member_info u left outer join king_orders o on o.userid=u.user_id left outer join pnh_m_franchise_info f on f.franchise_id=u.franchise_id where u.user_id='103440';
+
+-- 
+select a.*,b.user_id,b.first_name,f.franchise_name from pnh_member_offers a 
+join pnh_member_info b on b.pnh_member_id=a.member_id  
+join pnh_m_franchise_info f on f.franchise_id= a.franchise_id
+where a.offer_type=2 order by a.created_on desc limit 100;
+

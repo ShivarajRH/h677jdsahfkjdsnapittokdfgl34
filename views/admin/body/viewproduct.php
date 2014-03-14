@@ -1,6 +1,6 @@
 <style>
 #content .rightcont {
-	background: #f1f1f1 !important;
+	background: #fafafa !important;
 }
 #prod_fea_tab h4
 {

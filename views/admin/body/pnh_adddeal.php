@@ -22,6 +22,7 @@ $d=$deal;
 <tr><td>Is Combo : </td><td><input type="checkbox" name="is_combo" value="1" <?=$d&&$d['is_combo']?"checked":""?>></td></tr>
 <tr><td>Is Grouped : </td><td><input type="checkbox" name="is_group" id="is_group" value="1" <?=$d&&$d['is_group']?"checked":""?> /></td></tr>
 <tr><td>Max Allowed Qty <br> (for franchise per day) : </td><td><input type="text" name="max_allowed_qty" class="inp" size=4 value="<?=$d?$d['max_allowed_qty']:""?>"></td></tr>
+<tr><td><b>Has Insurance</b> : </td><td><input type="checkbox" name="has_insurance" value="1" <?=$d&&$d['has_insurance']?"checked":""?>></td></tr>
 <tr><td>Image : </td><td><input type="file" name="pic" class="inp">
 <?php if($d){?>To replace, upload a image<?php }?>
 </td></tr>

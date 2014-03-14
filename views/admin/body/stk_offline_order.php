@@ -11,19 +11,29 @@
 		<div  class="stk_ordr_inpwrap"><b>Territory : </b><select class="fran_det chzn-select" data-placeholder="Choose Territory" name="sel_terr" id="sel_terr" style="width: 250px;"></select></div>
 		<div class="stk_ordr_inpwrap"><b>Franchise : <span class="red_star">*</span></b> <select class=" chzn-select" data-placeholder="Choose Franchise "  name="sel_fid" id="sel_fid" style="width:250px;" ></select></div>
 		<div class="stk_ordr_inpwrap"><b>Order For : <span class="red_star">*</span></b><select name="mid_entrytype" id="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
-		<div class="stk_ordr_inpwrap mid_blk"><b>Member Id : <span class="red_star">*</span></b><input style="font-size:120%" maxlength="8"  type="text" class="mid" name="mid" size=18 ></div>
-		<div id="signin" style="display:none;"><input type="button" value="Proceed" onclick='load_franchisebyid()' class="button button-rounded button-action"></div>
-	</div>
+		<div class="mid_blk" style="background-color:#FAFAFA;padding-left: 100px;margin: 20px 0px;"><b>Member Id</b>  <input type="radio" value="1" name="mtype" checked="checked"> <b>Member Mobno</b><input type="radio" value="2" name="mtype"></div>
+		<div class="stk_ordr_inpwrap mid_blk m_blk"><b> Id : <span class="red_star">*</span></b><input style="font-size:120%" maxlength="8"  type="text" class="mid" name="mid" size=18 ></div>
+		<div class="stk_ordr_inpwrap mmob_blk"><b> Mobno : <span class="red_star">*</span></b><input style="font-size:120%" maxlength="10"  type="text" class="mid" name="mid" size=18 ></div>
+		<div class="reg_blk" style="float:right;font-weight: bold;"><a href="javascript:void(0)" onclick="mem_reg()">Register</a></div>
+		<!--  <div id="signin" style="display:none;"><input type="button" value="Proceed" onclick='load_franchisebyid()' class="button button-rounded button-action"></div>-->
+		</div>
 	<div id="mid_det" title="Member Details"><div id="mem_fran"></div></div>
 	<div id="authentiacte_blk" title="Franchisee Authentacation" ><div id="franchise_det"></div></div>
 	<div id="franchise_quickview"  title="Franchisee Info"><div id="fran_qvkview"></div></div>
-		
-			
-		
-	
+	 <div id="reg_mem_dlg" title="Instant Member Registration" style="display:none;">
+		<form id="reg_mem_frm" action="<?php echo site_url('admin/jx_reg_newmem')?>" method="post">
+			<input type="hidden" name="franchise_id" value="" id="memreg_fid">
+			<table>
+				<tr><td>Member Name</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_name" id="memreg_name" ></td></tr>
+				<tr><td>Mobile Number</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_mobno" id="memreg_mobno" data-required="true" maxlength="10"></td></tr>
+			</table>
+		</form>
+	</div>
 </div>
 
 <script>
+$('.reg_blk').hide();
+$('.mmob_blk').hide();
 $("#franchise_quickview").hide();
 $(".fran_det").chosen();
 $("#sel_fid").chosen();
@@ -87,15 +97,20 @@ $('#mid_entrytype').change(function(){
 	{
 		$('.mid_blk').show();
 		$("#signin").hide();
+		$('.reg_blk').hide();
+		
 	}
 	else
 	{
+		$('.reg_blk').show();
 		$('.mid_blk').hide();
-		$("#signin").show();
+		$('.mmob_blk').hide();
+		
 	}
 });
 
 $(".mid").change(function(){
+	
 	sel_state=$("#sel_state").val();
 	sel_fran=$("#sel_fid").val();
 	sel_mtype=$("#mid_entrytype").val();
@@ -103,12 +118,13 @@ $(".mid").change(function(){
 		{$('select[name="sel_state"]').addClass('error_inp');return;}
 	if(sel_fran=='' || sel_fran==0)
 		{$("#sel_fid").addClass('error_inp');return;}
-	if($(".mid").val().length!=0)
+	if($(this).val().length!=0)
 	{
+		$('.mid').val($(this).val());
 		$("#mid_det").data('mid',$(this).val()).dialog('open');
-	//	$(".stk_offlinecard").hide();
 	}
 });
+
 
 $("#mid_det").dialog({
 model:true,
@@ -118,12 +134,22 @@ autoOpen:false,
 open:function()
 {
 	$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"background":"tomato","color":"white"});
-	
 	dlg=$(this);
 	$("#mem_fran").html("");
-	$.post("<?=site_url("admin/jx_pnh_getmid")?>",{mid:dlg.data('mid'),more:1},function(data){
-		$("#mem_fran").html(data).show();
-	});
+	 $.post(site_url+'/admin/jx_check_forvalid_mid',{mid:dlg.data('mid')},function(resp){
+         if(resp.status == 'success')
+         {
+             $('.mid').val(resp.mem_det.pnh_member_id);
+        	 $.post("<?=site_url("admin/jx_pnh_getmid")?>",{mid:dlg.data('mid'),more:1},function(data){
+        			$("#mem_fran").html(data).show();
+        		});
+         }else
+         {
+			alert("Invalid Member Details!!!");
+				return false;
+          }
+	 },'json');
+	
 },
 buttons:{
 	'Proceed':function(){
@@ -141,14 +167,13 @@ function select_fran(fid)
 {
 	fid=$("#sel_fid").val();
 	mid=$(".mid").val();
-	if($("#mid_entrytype").val() == 1)
-		{ mid=0; }
 	$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"});
 	location="<?=site_url("admin/stk_offline_order_deals") ?>/"+fid+'/'+mid; 
 }
 
 function load_franchisebyid()
 {
+	
 	sel_state=$("#sel_state").val();
 	sel_fran=$("#sel_fid").val();
 	sel_mtype=$("#mid_entrytype").val();
@@ -156,12 +181,10 @@ function load_franchisebyid()
 		return;
 	if(sel_fran=='' || sel_fran==0)
 		return;
-	if(sel_mtype==0)
-	{
-		if($(".mid").val().length==0)
+	sel_mid=$(".mid").val();
+	if($(".mid").val().length==0)
 			return;
-	}
-		$("#authentiacte_blk").dialog('open');
+	$("#authentiacte_blk").dialog('open');
 		
 }
 
@@ -197,7 +220,8 @@ $("#franchise_quickview").dialog({
 	width:'448',
 	height:'auto',
 	open:function(){
-			$('.ui-dialog-buttonpane').find('button:contains("Proceed")').css({"background":"#4AA02C","color":"white"});
+			$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
+			$('.ui-dialog-buttonpane').find('button:contains("Proceed")').css({"background":"#4AA02C","color":"white","float":"right"});
 			dlg=$(this);
 			$("#fran_qvkview").html("");
 			$.post(site_url+'/admin/jx_load_franchise_qvkview',{fid:dlg.data('fid')},function(data){
@@ -214,7 +238,90 @@ $("#franchise_quickview").dialog({
 			}
 	
 });
+$("input[type='radio']").change(function(){
+	if($(this).val()==2)
+	{
+		$('.mmob_blk').show();
+		$('.m_blk').hide();
+	}
+	else
+	{
+		$('.mmob_blk').hide();
+		$('.m_blk').show();
+	}
+		
+});
 
+function mem_reg()
+{
+	var fid=$("#sel_fid").val();
+	if(fid<=0)
+	{
+		alert("Please select Franchise");
+		return false;
+	}else
+		$('#reg_mem_dlg').data('fid',fid).dialog('open');
+}
+$('#reg_mem_dlg').dialog({
+			autoOpen:false,
+			width:336,
+			modal:true,
+			height:'auto',
+			open:function(){
+				$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
+				$('.ui-dialog-buttonpane').find('button:contains("Register")').css({"float":"right","background":"#4AA02C","color":"white"});
+				$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"float":"right","background":"tomato","color":"white"});
+				var dlg=$(this);
+				var fid=$("#sel_fid").val();
+					$('#reg_mem_frm input[name="franchise_id"]',this).val(fid);
+				},
+				buttons:{
+					'Cancel':function(){
+						$(this).dialog('close');
+					},
+					'Register':function(){
+						$(this)
+						var error_list = new Array();
+						// register member 
+						var mem_regname = $.trim($('input[name="memreg_name"]').val());
+						var mem_mobno = parseInt($.trim($('input[name="memreg_mobno"]').val()));
+					
+                    		if(mem_regname.length == 0)
+                             	error_list.push("Please Enter Member name.");
+
+							if(mem_mobno.length == 0 || mem_mobno =='')
+                                error_list.push("Please Enter Mobile Number.");
+
+							if(isNaN(mem_mobno))
+                                error_list.push("Please Enter valid Mobile number.");	
+							
+							if(error_list.length)
+	                        {
+	                                alert(error_list.join("\r\n"));
+	                        }else
+	                        {
+                                $.post(site_url+'/admin/jx_reg_newmem',$('#reg_mem_frm').serialize(),function(resp){
+                                        if(resp.status == 'success')
+                                        {
+                                        	  var mid=$('input[name="mid"]').val(resp.mid);
+                                        	
+                                            $.post("<?=site_url("admin/jx_pnh_getmid")?>",{mid:resp.mid},function(data){
+                                            	 	$("#mid_det").data('mid',resp.mid).dialog('open');
+                                        		});
+                                            	$(".mid").val(resp.mid);
+                                                $('#reg_mem_dlg').dialog('close');
+                                        		
+                                        }else
+                                        {
+                                                $('input[name="mid"]').val('');
+                                                alert(resp.error);
+                                        }
+                                },'json');
+                        }
+					},
+					
+				}
+});
 </script>
 
 <style>

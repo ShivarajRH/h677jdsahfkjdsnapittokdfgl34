@@ -2690,9 +2690,9 @@ courier disable ends
 	}
                  
 		
-		if($new_dispatch_id)
-			redirect("admin/invoice/$new_dispatch_id");
-		else
+		//if($new_dispatch_id)
+		//	redirect("admin/invoice/$new_dispatch_id");
+		//else
 			redirect("admin/invoice/$invoice_no");
 			
 	}
@@ -3342,7 +3342,7 @@ courier disable ends
 		$count=0;
 		while(($data=fgetcsv($f))!==false)
 		{
-			if(count(array_keys($data)) != 20)
+			if(count(array_keys($data)) != 21)
 				show_error("Invalid File format Submitted");
 			
 			$invoice_no=$data[1];
@@ -4117,10 +4117,9 @@ courier disable ends
 	{
 		$name=$this->input->post('cat_name');
 		$type=$this->input->post('main');
-                $attributes = $this->input->post('attributes');
-        
-                $attributes = array_filter(array_unique($attributes));
-                $grp_attr_ids = implode(",",$attributes);
+        $attributes = $this->input->post('attributes');
+        $attributes = array_filter(array_unique($attributes));
+        $grp_attr_ids = implode(",",$attributes);
                 
 		$url=preg_replace('/[^a-zA-Z0-9_\-]/','',$name);
 		$url=str_replace(" ","-",$url);
@@ -6528,6 +6527,17 @@ order by p.product_name asc
 		return $this->db->query("select * from m_product_info where product_cat_id=? order by product_id asc limit ".$limit,$cid)->result_array();
 	}
 	
+	function getcategoryforbrand($bid)
+	{
+		return $this->db->query("select brandid,catid,c.name as cat_name,b.name as brandname
+								from king_categories c 
+								join king_deals d on d.catid=c.id
+								join king_brands b on b.id=d.brandid
+								where b.id=?
+								group by c.id 
+								order by cat_name",$bid)->result_array();
+	}
+
 	function getvendorsforcategory($cid)
 	{
 		return $this->db->query("select brandid,b.name,d.catid,v.vendor_id,v.vendor_name
@@ -7163,7 +7173,7 @@ order by p.product_name asc
 		$prices_det=$this->db->query("select orgprice,price from king_dealitems where id=? and is_pnh=1",$itemid)->row_array();
 		
 		$msg_flag=0;
-		foreach(array("gender_attr","print_name","billon_orderprice","max_allowed_qty","menu","keywords","tagline","name","mrp","offer_price","store_offer_price","nyp_offer_price","brand","category","description","pid","qty","tax","shipsin","p_price","is_group") as $q)
+		foreach(array("gender_attr","print_name","billon_orderprice","max_allowed_qty","menu","keywords","tagline","name","mrp","offer_price","store_offer_price","nyp_offer_price","brand","category","description","pid","qty","tax","shipsin","p_price","is_group","has_insurance") as $q)
 			$$q=$this->input->post($q);
 		$imgname = randomChars ( 15 );
 		if (isset ( $_FILES ['pic'] ) && $_FILES ['pic'] ['error'] == 0)
@@ -7197,7 +7207,7 @@ order by p.product_name asc
 		
 		$is_combo = $this->input->post('is_combo')*1;
 
-		$this->db->query("update king_dealitems set max_allowed_qty=?,billon_orderprice=?,print_name=?,name=?,orgprice=?,price=?,store_price=?,nyp_price=?,gender_attr=?,tax=?,shipsin=?,modified=?,modified_on=?,modified_by=?,is_combo = ?,is_group=? where id=?",array($max_allowed_qty,$billon_orderprice,$print_name,$name,$mrp,$offer_price,$store_offer_price,$nyp_offer_price,$gender_attr,$tax*100,$shipsin,time(),date('Y-m-d H:i:s'),$user_det['userid'],$is_combo,$is_group,$itemid));
+		$this->db->query("update king_dealitems set max_allowed_qty=?,billon_orderprice=?,print_name=?,name=?,orgprice=?,price=?,store_price=?,nyp_price=?,gender_attr=?,tax=?,shipsin=?,modified=?,modified_on=?,modified_by=?,is_combo = ?,is_group=?,has_insurance=? where id=?",array($max_allowed_qty,$billon_orderprice,$print_name,$name,$mrp,$offer_price,$store_offer_price,$nyp_offer_price,$gender_attr,$tax*100,$shipsin,time(),date('Y-m-d H:i:s'),$user_det['userid'],$is_combo,$is_group,$has_insurance,$itemid));
 		$this->db->query("update king_deals set description=?,keywords=?,menuid=?,keywords=?,catid=?,brandid=?,tagline=? where dealid=?",array($description,$keywords,$menu,$keywords,$category,$brand,$tagline,$dealid));
 		
 		
@@ -7280,7 +7290,7 @@ order by p.product_name asc
 	{
 		$user=$this->erpm->getadminuser();
 		
-		foreach(array("gender_attr","billon_orderprice","max_allowed_qty","print_name","menu","keywords","tagline","name","mrp","offer_price","store_offer_price","nyp_offer_price","brand","category","description","pid","qty","tax","shipsin","pid_g","qty_g","is_group") as $q)
+		foreach(array("gender_attr","billon_orderprice","max_allowed_qty","print_name","menu","keywords","tagline","name","mrp","offer_price","store_offer_price","nyp_offer_price","brand","category","description","pid","qty","tax","shipsin","pid_g","qty_g","is_group","has_insurance") as $q)
 			$$q=$this->input->post($q);
 		$imgname = randomChars ( 15 );
 		if (isset ( $_FILES ['pic'] ) && $_FILES ['pic'] ['error'] == 0)
@@ -7316,7 +7326,7 @@ order by p.product_name asc
 		$inp=array($dealid,$menu,$keywords,$category,$brand,$imgname,$tagline,$description,1);
 		$this->db->query("insert into king_deals(dealid,menuid,keywords,catid,brandid,pic,tagline,description,publish) values(?,?,?,?,?,?,?,?,?)",$inp);
 		$inp=array($itemid,$dealid,$print_name,$max_allowed_qty,$name,$imgname,$mrp,$offer_price,$store_offer_price,$nyp_offer_price,$billon_orderprice,$gender_attr,1,$pnh_id,$tax*100,$shipsin,1,time(),date("Y-m-d H:i:s"),$user['userid'],$is_group);
-		$this->db->query("insert into king_dealitems(id,dealid,print_name,max_allowed_qty,name,pic,orgprice,price,store_price,nyp_price,billon_orderprice,gender_attr,is_pnh,pnh_id,tax,shipsin,live,created,created_on,created_by,is_group) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",$inp);
+		$this->db->query("insert into king_dealitems(id,dealid,print_name,max_allowed_qty,name,pic,orgprice,price,store_price,nyp_price,billon_orderprice,gender_attr,is_pnh,pnh_id,tax,shipsin,live,has_insurance,created,created_on,created_by,is_group) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",$inp);
 		if(!empty($pid))
 		foreach($pid as $i=>$p)
 			$this->db->query("insert into m_product_deal_link(product_id,itemid,qty,created_on,created_by) values(?,?,?,?,?)",array($p,$itemid,$qty[$i],date('Y-m-d H:i:s'),$user['userid']));
@@ -7330,7 +7340,7 @@ order by p.product_name asc
 	{
 		
 		if($brandid == 0 && $catid == 0 && $dealid==0)
-			$cond=" where i.is_pnh=1 group by i.id order by i.sno desc limit ".$limit;//i.name asc
+			$cond=" where i.is_pnh=1 group by i.id order by i.sno asc limit ".$limit;//i.name asc
 		else if($catid != 0 && $brandid == 0 && $dealid==0)
 			$cond=" where i.is_pnh=1 and d.catid='".$catid."' group by i.id order by i.sno desc limit ".$limit;
 		else if($catid == 0 && $brandid != 0 && $dealid==0)
@@ -7356,7 +7366,6 @@ order by p.product_name asc
 				left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp()
 				$join_cond 
 				$cond
-                                    
 				";
 	 
 		return $this->db->query($sql)->result_array();
@@ -7869,8 +7878,6 @@ order by p.product_name asc
 		return $total_value;
 	}*/
 	
-
-	
 	function pnh_getdealsbybrand($brandid,$type=0)
 	{
 		if($type==0)
@@ -8317,7 +8324,7 @@ order by p.product_name asc
 	{
 		$this->db->query("update m_config_params set value = ? where name = ? limit 1",array($value,$name));
 	}
-	
+        
 	function do_pnh_offline_order()
 	{
 		$user=$this->auth(CALLCENTER_ROLE);
@@ -8327,10 +8334,11 @@ order by p.product_name asc
 		$fran_status_arr[2]="Payment Suspension";
 		$fran_status_arr[3]="Temporary Suspension";
 		$admin = $this->auth(false);
-		foreach(array("fid","pid","qty","mid","redeem","redeem_points","mid_entrytype","local_distributor_mrgn","creditdays","frannote") as $i)
+		foreach(array("fid","pid","qty","mid","redeem","redeem_points","mid_entrytype","local_distributor_mrgn","creditdays","frannote","offr_sel_type","insurance") as $i)
 			$$i=$this->input->post($i);
-		
-        $updated_by=$admin["userid"];
+                
+//		echo "<pre>";print_r($_POST); die();
+                $updated_by=$admin["userid"];
 
 		if($redeem)
 			$redeem_points = 150;
@@ -8342,7 +8350,7 @@ order by p.product_name asc
 		$fran1=$this->db->query("select * from pnh_franchise_menu_link where fid=? and menuid=?",array($fid,$menuid['menuid']))->row_array();
 		$margin=$this->db->query("select margin,combo_margin from pnh_m_class_info where id=?",$fran['class_id'])->row_array();
 		$fran_status=$fran['is_suspended'];//franchise suspension status
-		
+		$mem_info = $this->get_memberinfo_byid($mid);
 		$has_super_scheme=0;
 		$has_scheme_discount=0;
 		$has_member_scheme=0;
@@ -8415,6 +8423,11 @@ order by p.product_name asc
 			$items[$i]['margin']=$margin;
 			$total+=$items[$i]['price']*$items[$i]['qty'];
 			$d_total+=($items[$i]['price']-$items[$i]['discount'])*$items[$i]['qty'];
+                        
+            if($prod['menuid'] == '112') {
+                $mobile_menu_total +=($items[$i]['price']-$items[$i]['discount'])*$items[$i]['qty'];
+            }
+            
 			$itemids[]=$prod['id'];
 			$itemnames[]=$prod['name'];
 			$loyalty_pntvalue=$prod['loyality_pntvalue'];
@@ -8499,6 +8512,18 @@ order by p.product_name asc
 		
 			$this->db->query("insert into king_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,trans_created_by,batch_enabled,credit_days) values(?,?,?,?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran['franchise_id'],$admin['userid'],$batch_enabled,$creditdays));
 		
+                //===================< Implement the member offers START>============================
+                if($offr_sel_type == 2 || $insurance['opted_insurance'] == 1 ) {
+                    //process insurance document and address details & get insurance process id
+                    $insurance['mid'] =$mid;
+                    $insurance['fid'] =$fid;
+                    $insurance['offer_type'] =$offr_sel_type;
+                    $insu_id = $this->process_insurance_details($insurance);
+                }
+                $offer_ret = $this->pnh_member_offer($menuid,$mid,$fid,$d_total,$mobile_menu_total,$offr_sel_type,$insurance,$transid,$updated_by);
+                
+                //===================< Implement the member offers END>============================
+                
 		foreach($items as $item)
 		{
 			
@@ -8700,6 +8725,10 @@ order by p.product_name asc
 		
 		$this->sendsms_franchise_order($transid,$d_total);
 		
+                $mem_msg ="Thank you for ordering with StoreKing.";
+                $this->erpm->pnh_sendsms($mem_info['mobile'],$mem_msg,0,$mid,'MEM_ORDER');
+                
+
 		$points=0;
 		if(!$redeem)
 		{
@@ -8730,12 +8759,158 @@ order by p.product_name asc
 		$batch_remarks='Created by pnh offline order system';
 
 		$this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
-
+                
 		$this->session->set_flashdata("erp_pop_info"," PNH Order Placed");
 		redirect("admin/trans/$transid",'refresh');
 	}
 	
+        function pnh_member_offer($menuid,$member_id,$fid,$d_total=0,$mobile_menu_total=0,$offr_sel_type,$insurance,$transid,$userid)
+        {
+            define(LEVEL_1,500); //Rs
+            define(LEVEL_1_MOBILE,5000); //Rs
+            define(LEVEL_2,10000); //Rs
+            define(LEVEL_3,15000); //Rs
+            define(LEVEL_4,20000); //Rs
+
+            define(INSUR_VAL_DEF,50); //Rs
+            define(INSUR_VAL_2, INSUR_VAL_DEF + 50); //Rs
+            define(INSUR_VAL_3,INSUR_VAL_DEF + 100); //Rs
+            define(DEF_TALKTIME, 100); //Rs
+            define(INSURANCE_PERC,2); //2% from second order on on mobile bill amount
+            
+            $has_offer = 1;
+            
+                //if offer type-1 == talktime & type-2 ==  insurance & 3== NA,not opted & 0== not offred,new & 4 == insurance opted on demand(Not first time)
+                if(!$this->db->query("select count(*) as c from pnh_member_offers where member_id=? and offer_type=0",$member_id)->row()->c)
+                {
+                    
+                    if($this->db->query("select count(*) as m from pnh_member_info where id=?",$member_id)->row()->m)
+                    {
+                            if(in_array("112",$menuid))
+                            {
+                                // If order deals belongs to 112(mobile&tablets) menu
+                                if($offr_sel_type == 2) // Insurance
+                                {
+                                    if($mobile_menu_total >= LEVEL_1_MOBILE )
+                                    {
+                                            //if mobile menu & insurance is opted
+                                            if( $mobile_menu_total >= LEVEL_1_MOBILE && $mobile_menu_total <= LEVEL_2 )
+                                            {
+                                                $offer_value = INSUR_VAL_DEF;
+
+                                            }
+                                            elseif( $mobile_menu_total >= LEVEL_2 && $mobile_menu_total <= LEVEL_3 )
+                                            {
+                                                $offer_value = INSUR_VAL_2;
+
+                                            }
+                                            elseif( $mobile_menu_total >= LEVEL_3 && $mobile_menu_total <= LEVEL_4 )
+                                            {
+                                                $offer_value = INSUR_VAL_3;
+
+                                            }
+                                            $offer_type = 2;
+                                            $offer_towards = $mobile_menu_total;
+                                    }
+                                    else
+                                    {
+                                        $has_offer = 0;
+                                    }
+                                }
+                                elseif($offr_sel_type == 1) //Talktime
+                                {
+                                    $offer_value = DEF_TALKTIME;
+                                    $offer_type = 1;
+                                    $offer_towards = $d_total;
+                                }
+                                else
+                                {
+                                    //if mobile menu & insurance is not opted
+                                    $offer_value = 0;
+                                    $offer_type = 3;
+                                    $offer_towards = 0;
+                                }
+                            }
+                            else
+                            {
+
+
+                                //Only if not of any menu is 112
+                                if($d_total >= LEVEL_1)
+                                {
+                                    // if all order deals are beauty products
+                                    $offer_value = DEF_TALKTIME;
+                                    $offer_type = 1;
+                                    $offer_towards = $d_total;
+                                }
+                                else
+                                {
+                                    //No offer
+                                    $has_offer=0;
+
+                                }
+
+                            }
+                    }
+                    else
+                    {
+                        //Already member id exists
+                        if($insurance['opted_insurance'] == 1) // 2nd time opted for insurance
+                        {
+                            //and requested for insurance
+                            //make 2% insurance value on bill amount
+                            $offer_value = ($mobile_menu_total/100) * INSURANCE_PERC;
+                            $offer_towards = $mobile_menu_total;
+                            $offer_type = 4; // Insurance on next orders, on request
+                        }
+                    }
+            }
+            
+            
+            //if($offer_type != 3) 
+            if($has_offer == 1) {
+                //insert to db
+                $in_array = array(
+                                'member_id'=>$member_id
+                                ,'franchise_id'=>$fid
+                                ,'offer_type'=>$offer_type
+                                ,'offer_value'=>$offer_value
+                                ,'offer_towards' => $offer_towards
+                                ,'transid_ref' => $transid
+                                ,'proof_id'=>$insurance['proof_id']
+                                ,'process_status'=>0 //(waiting feedback) // 0=> Not Processed, 1=>Ready to Process 2=>Processed //Offer is assigned not yet activated
+                                ,'referred_by'=> $referred_by_mid
+                                ,'created_by'=>$userid
+                                ,'created_on'=>time()
+                            );
+                echo '<pre>'; print_r($in_array); //die();
+                $this->db->insert("pnh_member_offers",$in_array);
+            }
+            // update referral status
+//            $this->db->query("select count(*) as ",$member_id);
+            return $in_array;
+        }
 	
+        
+        function process_insurance_details($insurance)
+        {
+
+            $in_data = array(
+                'fid'=>$insurance['fid']
+                ,'mid'=>$insurance['mid']
+                ,'offer_type'=>$insurance['offer_type']
+                ,'proof_id' => $insurance['proof_id']
+                ,'proof_type'=>$insurance['proof_type']
+                ,'proof_address'=> $insurance['proof_address']
+                ,'opted_insurance'=> $insurance['opted_insurance']
+            );
+            
+            $this->db->insert("pnh_member_insurance",$in_data);
+            $insu_id = $this->db->insert_id();
+            
+        }
+	
+        
 	function sendsms_franchise_order($transid = '',$d_total=0)
 	{
 		$d_total = $d_total*-1;
@@ -12830,7 +13005,7 @@ order by action_date";
     }
 
     /**
-     * function to send delivery notification to franchise and customer
+     * Function to send delivery notification to franchise and customer
      * @param unknown_type $inv
      */
     function notify_shipment_delivery_sms($inv,$notify_fr=0,$notify_mem=0,$emp_id=0)
@@ -12866,10 +13041,32 @@ order by action_date";
     			$cus_sms = 'Dear '.$inv_det['first_name'].', Your '.$inv_det['ttl_items'].' products of order '.$inv_det['transid'].' are delivered today to '.ucwords($inv_det['franchise_name']).', Please collect at your convenient time, Happy Shopping with StoreKing.';
     			$this->erpm->pnh_sendsms($inv_det['mobile'],$cus_sms,$inv_det['franchise_id'],0,'NOTIFY_DELIVERY');
     		}
+                //Set offers table status
+                $this->update_offer_order_stauts($inv_det['transid']);
     
     	}
     }
+
+    function fran_det_byid($fid)
+    {
+        return $this->db->query('select * from pnh_m_franchise_info where franchise_id=?',$fid)->row_array();
+    }
     
+    /**
+    * 
+    * @param type $mid
+    */
+   function get_memberinfo_byid($mid)
+   {
+      return $this->db->query("select * from pnh_member_info where id=?",$mid)->row_array(); 
+   }
+   
+   function update_offer_order_stauts($transid)
+   {
+       $this->db->query("update pnh_member_offers set delivery_status = 1 where transid_ref=?",$transid);
+   }
+   
+	
 }
 
 

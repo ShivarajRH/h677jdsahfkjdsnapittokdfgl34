@@ -50,7 +50,7 @@
 	$menu['accounting']=array("vouchers"=>"Vouchers","pending_pay_grns"=>"Ready for payment","list_allbanks"=>"Bank Accounts","pending_grns"=>"Unaccounted Stock Intakes","clients"=>"Corporate Clients","client_orders"=>"Corporate Orders","client_invoices"=>"Corporate Invoices","pending_refunds_list"=>"Pending Refunds","partners"=>"Partners","deals_report"=>"Deals Report","pnh_executive_account_log"=>"PNH Executive Paid Log");
 	$menu['marketing']=array("featured_newsletter"=>"Newsletter","announcements"=>"Announcements","stats"=>"Stats","coupons"=>"Coupons","cashback_campaigns"=>"Cashback Campaigns","pointsys"=>"Loyalty Points","headtotoe"=>"Head to toe");
 	
-	if($this->erpm->auth(PAF_ROLE,true) && !$this->erpm->auth(true,true))
+	if($this->erpm->auth(PAF_ROLE,true) && !$this->erpm->auth(true,true) && ($user['access'] == 32768) )
 	{
 		$menu = array();
 		$menu['pnh']=array("pnh_reports"=>"Reports");
@@ -62,7 +62,7 @@
 	//$menu['pnh']=array("pnh_franchises"=>"Franchises","pnh_class"=>"Admin","pnh_deals"=>"Deals","pnh_members"=>"Members","list_employee"=>"Employees","pnh_special_margins"=>"Special Margins","pnh_offline_order"=>"Place Order",'pnh_invoice_returns'=>"PNH Invoice Returns","pnh_quotes"=>"Franchise Requests","pnh_pending_receipts"=>"Pending Receipts","pnh_comp_details"=>"Company Details","pnh_catalogue"=>"Products Catalogue","pnh_special_margins"=>"Discounts","pnh_add_credits"=>"Add Credit","pnh_gen_statement"=>"Generate Account Statement",'pnh_sales_report'=>"PNH Sales Report","pnh_employee_sales_summary"=>"Employee Sales Summary","export_pnh_sales_report"=>"Export PNH Franchise Sales");
 	$menu['streams']=array("streams"=>"View Streams","stream_create"=>"Create Stream",'streams_manager'=>"Streams Manager");
 	
-	if($this->erpm->auth(PAF_ROLE,true) && !$this->erpm->auth(true,true))
+	if($this->erpm->auth(PAF_ROLE,true) && !$this->erpm->auth(true,true) && ($user['access'] == 32768) )
 	{
 		$menu = array();
 		$menu['pnh']=array("pnh_reports"=>"Reports");
@@ -94,7 +94,7 @@
 	$submenu['clients']=array("addclient"=>"Add Client");
 	$submenu['client_orders']=array("addclientorder"=>"Add Client Order");
 	
-	$submenu['pnh_franchises']=array("pnh_addfranchise"=>"Add franchise","pnh_addmember"=>"Add Member","orders_status_summary"=>"Order Status Summary","pnh_quotes"=>"Franchise Requests",'pnh_invoice_returns'=>"Manage Returns","pnh_add_credits"=>"Add Credit","pnh_franchise_activate_imei"=>"Franchise IMEI Activation","pnh_activation"=>"SMS Alternative Activations","pnh_imei_activation_log"=>'IMEI Activation Log');
+	$submenu['pnh_franchises']=array("pnh_addfranchise"=>"Add franchise","pnh_addmember"=>"Add Member","orders_status_summary"=>"Order Status Summary","pnh_quotes"=>"Franchise Requests",'pnh_invoice_returns'=>"Manage Returns","pnh_add_credits"=>"Add Credit","pnh_franchise_activate_imei"=>"Franchise IMEI Activation","pnh_activation"=>"SMS Alternative Activations","pnh_imei_activation_log"=>'IMEI Activation Log','manage_offers'=>'Manage Member Offers');
 	
 	
 	$submenu['menu']=array("addmenu"=>"Add Menu");
