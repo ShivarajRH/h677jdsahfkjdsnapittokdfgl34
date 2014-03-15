@@ -5426,186 +5426,6 @@ group by g.product_id order by product_name");
 		$this->load->view("admin",$data);
 	}
 	
-	function pnh_jx_checkstock_order()
-	{
-		$fid=$this->input->post("fid");
-		$mid=$this->input->post("mid");
-		$pids=explode(",",$this->input->post("pids"));
-		$qty=explode(",",$this->input->post("qty"));
-		$credit_days=$this->input->post("credit_days");
-		$offr_sel_type=$this->input->post("offr_sel_type");
-		$insurance_type=$this->input->post("insurance_type");
-		$insurance_id=$this->input->post("insurance_id");
-		$mem_addres=$this->input->post("mem_address");
-		$iids=$this->db->query("select id,pnh_id from king_dealitems where is_pnh=1 and pnh_id in('".implode("','",$pids)."')")->result_array();
-		$m_userid=$this->db->query("select user_id from pnh_member_info where pnh_member_id=?",$mid)->row()->user_id;
-		$ttl_orders=$this->db->query("SELECT COUNT(DISTINCT(transid)) AS l FROM king_orders WHERE userid=? AND STATUS NOT IN (0,3,5,6)",$m_userid)->row()->l;
-		
-		$itemids=array();
-		$order_det=array();
-		$e=0;
-		foreach($pids as $pid)
-			foreach($iids as $id)
-			if($id['pnh_id']==$pid)
-			$itemids[]=$id['id'];
-		$avail=$this->erpm->do_stock_check($itemids,$qty);
-		$un="";
-		$attr=$this->input->post('attr');
-		$attr_data=array();
-		if($attr)
-		{
-			$attrs=explode("&",$attr);
-			foreach($attrs as $attr)
-			{
-				list($pp,$v)=explode("=",$attr);
-				list($p,$a)=explode("_",$pp);
-				if(!isset($attr_data[$p]))
-					$attr_data[$p]=array();
-				$attr_data[$p][$a]=$v;
-			}
-		}
-		foreach($pids as $pid)
-		{
-			if(!isset($attr_data[$pid]))
-				continue;
-			$prods=array();
-			$i=0;
-			foreach($attr_data[$pid] as $a=>$v)
-			{
-				if($i==0)
-				{
-					$pr=$this->db->query("select product_id from products_group_pids where attribute_name_id=? and attribute_value_id=?",array($a,$v))->result_array();
-					foreach($pr as $p)
-						$prods[]=$p['product_id'];
-				}else{
-					$c_prods=$prods;
-					$prods=array();
-					$pr=$this->db->query("select product_id from products_group_pids where attribute_name_id=? and attribute_value_id=?",array($a,$v))->result_array();
-					foreach($pr as $p)
-						if(in_array($p['product_id'],$c_prods))
-						$prods[]=$p['product_id'];
-				}
-				$i++;
-				if(empty($prods))
-				{
-					$e=1;
-					$un.="{$pid} is not available for selected combination";
-					break;
-				}
-			}
-		}
-		if($e==0)
-		{
-			foreach($itemids as $i=>$itemid)
-				if(!in_array($itemid,$avail))
-		 	$un.="{$pids[$i]} is out of stock\n";
-		 $e=0;
-		 if(strlen($un)!=0)
-		 	$e=1;
-		}
-		$total=$d_total=$bal=$abal=0;
-		$pc="";
-		if($e==0 && $mid && $this->db->query("select 1 from pnh_member_info where pnh_member_id=?",$mid)->num_rows()==0 && $this->db->query("select 1 from pnh_m_allotted_mid where franchise_id=? and ? between mid_start and mid_end",array($fid,$mid))->num_rows()==0)
-		{
-			$e=1;$un="MID : $mid is not allotted to this franchise";
-		}
-		if($e==0)
-		{
-			$iids=array();
-			$itemid=$this->db->query("select id from king_dealitems where pnh_id=?",$pid)->row()->id;
-			$menuid=$this->db->QUERY("select *,d.menuid,m.default_margin as margin from king_dealitems i join king_deals d on d.dealid=i.dealid JOIN pnh_menu m ON m.id=d.menuid where i.is_pnh=1 and i.pnh_id=?",$pid)->row_array();
-			$fran=$this->db->query("select * from pnh_m_franchise_info where franchise_id=?",$fid)->row_array();
-			$fran1=$this->db->query("select * from pnh_franchise_menu_link where fid=? and menuid=?",array($fid,$menuid['menuid']))->row_array();
-			$margin=$this->db->query("select margin,combo_margin from pnh_m_class_info where id=?",$fran['class_id'])->row_array();
-
-			if($fran1['sch_discount_start']<time() && $fran1['sch_discount_end']>time() && $fran1['is_sch_enabled'])
-				$menuid['margin']+=$fran1['sch_discount'];
-
-			$ordered_menu_list=array();
-			foreach($pids as $i=>$iid)
-			{
-				$prod=$this->db->query("select i.*,d.publish,d.menuid,d.brandid,d.catid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.is_pnh=1 and i.pnh_id=?",$iid)->row_array();
-			//	echo $this->db->last_query();exit;
-				$has_insurance[]=$prod['has_insurance'];
-				$ordered_menu_list[]=$prod['menuid'];
-				$items[$i]['brandid']=$prod['brandid'];
-				$items[$i]['menuid']=$prod['menuid'];
-				$items[$i]['catid']=$prod['catid'];
-				$items[$i]['name']=$prod['name'];
-				$items[$i]['tax']=$prod['tax'];
-				$items[$i]['mrp']=$prod['orgprice'];
-				$items[$i]['price']=$prod['price'];
-				$items[$i]['itemid']=$prod['id'];
-				$margin=$this->erpm->get_pnh_margin($fran['franchise_id'],$iid);
-				$items[$i]['base_margin']=$margin['base_margin'];
-				$items[$i]['sch_margin']=$margin['sch_margin'];
-				$items[$i]['bal_discount']=$margin['bal_discount'];
-				if($prod['is_combo']=="1")
-				{
-					$items[$i]['discount']=$items[$i]['price']/100*$margin['combo_margin'];
-					$items[$i]['base_margin']=$margin['combo_margin'];
-				}
-				else
-					$items[$i]['discount']=$items[$i]['price']/100*$margin['margin'];
-				$total+=$items[$i]['price']*$qty[$i];
-				$items[$i]['qty']=$qty[$i];
-				$d_total+=($items[$i]['price']-$items[$i]['discount'])*$qty[$i];
-				$items[$i]['final_price']=($items[$i]['price']-$items[$i]['discount']);
-					
-				$iids[]=$prod['id'];
-			}
-
-			$fran_crdet = $this->erpm->get_fran_availcreditlimit($fid);
-			$fran['current_balance'] = $fran_crdet[3];
-
-			$bal=$fran['current_balance'];
-			$abal=$fran['current_balance']-$d_total;
-
-			//check if it is prepaid franchise block
-			$is_prepaid_franchise=$this->erpm->is_prepaid_franchise($fid);
-			if($is_prepaid_franchise)
-			{
-				if(count(array_unique($ordered_menu_list))==1)
-				{
-					if($ordered_menu_list[0]!=VOUCHERMENU)
-						$is_prepaid_franchise=false;
-
-				}else{
-					$is_prepaid_franchise=false;
-				}
-			}
-			//check if it is prepaid franchise block    
-                        // check for has insurance deal
-                        if(in_array(1,$has_insurance))
-                        $has_insurance=1;
-                        else 
-                        $has_insurance=0;
-                        
-
-			if($fran['current_balance']<$d_total && !$is_prepaid_franchise)
-			{
-				$required_credit=$d_total-$fran['current_balance'];
-				$e=1;$un="Balance in your account Rs {$fran['current_balance']}\n\nTotal order amount : Rs $d_total\n\n Required Credit : Rs.$required_credit";
-			}
-			if($ttl_orders==0 && $d_total>=500 )
-				$new_mem=1;
-			else 
-				$new_mem=0;
-			$pc_data['deals']=$this->erpm->pnh_getdealpricechanges($fran['app_version'],$iids);
-			$pc_data['total']=$total;
-			$pc_data['mid']=$mid;
-			$pc_data['items']=$items;
-			$pc_data['menuid']=$menuid;
-			$pc_data['fid']=$fid;
-			$pc_data['has_insurance']=$has_insurance;
-			$pc_data['new_mem']=$new_mem;
-
-			$pc=$this->load->view("admin/body/pc_offline_frag",$pc_data,true);
-
-		}
-		die(json_encode(array("e"=>$e,"msg"=>$un,"total"=>$total,"d_total"=>$d_total,"com"=>$total-$d_total,"bal"=>$bal,"abal"=>$abal,"pc"=>$pc,"has_insurance"=>$has_insurance,"new_mem"=>$new_mem)));
-	}
-	
 	function pnh_fran_ver_change($fid,$v)
 	{
 		$user=$this->auth(true);
@@ -6288,189 +6108,133 @@ group by g.product_id order by product_name");
 		echo json_encode($output);
 	}
 	
-	function pnh_jx_loadpnhprod($fid=0,$pid=0,$return=0)
-	{
-		$user=$this->auth();
-		if(!$fid)
-		{
-			$fid=$_POST['fid'];
-			$pid=$_POST['pid'];
-		}
-		$cartdeal=$this->input->post('cartdeal');
-		if($cartdeal==1)
-			$publish_cond="and 1";
-		else
-			$publish_cond="and publish=1";
+	function pnh_jx_loadpnhprod($fid = 0, $pid = 0, $return = 0) {
+        $user = $this->auth();
+        if (!$fid) {
+            $fid = $_POST['fid'];
+            $pid = $_POST['pid'];
+        }
+        $cartdeal = $this->input->post('cartdeal');
+        if ($cartdeal == 1)
+            $publish_cond = "and 1";
+        else
+            $publish_cond = "and publish=1";
 
-		$prod=$this->db->query("select d.menuid,b.name as brand,c.name as cat,i.id,i.is_combo,i.is_group,i.pnh_id as pid,i.live,i.orgprice as mrp,i.price,i.name,i.pic,d.publish,p.is_sourceable,i.has_insurance  from king_dealitems i join king_deals d on d.dealid=i.dealid $publish_cond left join king_brands b on b.id = d.brandid join king_categories c on c.id = d.catid JOIN `m_product_deal_link` l ON l.itemid=i.id JOIN m_product_info p ON p.product_id=l.product_id where pnh_id=? and is_pnh=1",$pid)->row_array();
-		if(!empty($prod))
-		{
+        //$prod=$this->db->query("select d.menuid,b.name as brand,c.name as cat,i.id,i.is_combo,i.pnh_id as pid,i.live,i.orgprice as mrp,i.price,i.name,i.pic,d.publish from king_dealitems i join king_deals d on d.dealid=i.dealid $publish_cond left join king_brands b on b.id = d.brandid join king_categories c on c.id = d.catid where pnh_id=? and is_pnh=1",$pid)->row_array();
 
-			$allow_for_fran = $this->db->query("select count(*) as t from pnh_franchise_menu_link where status = 1 and fid = ? and menuid in (select menuid
+        $prod = $this->db->query("select d.menuid,b.name as brand,c.name as cat,i.id,i.is_combo,i.pnh_id as pid,i.live,i.orgprice as mrp,i.price,i.name,i.pic,d.publish,p.is_sourceable,i.has_insurance  from king_dealitems i join king_deals d on d.dealid=i.dealid $publish_cond left join king_brands b on b.id = d.brandid join king_categories c on c.id = d.catid JOIN `m_product_deal_link` l ON l.itemid=i.id JOIN m_product_info p ON p.product_id=l.product_id where pnh_id=? and is_pnh=1", $pid)->row_array();
+        if (!empty($prod)) {
+
+            $allow_for_fran = $this->db->query("select count(*) as t from pnh_franchise_menu_link where status = 1 and fid = ? and menuid in (select menuid
 					from king_dealitems a
 					join king_deals b on a.dealid = b.dealid
-					where pnh_id = ? )",array($fid,$pid))->row()->t;
+					where pnh_id = ? )", array($fid, $pid))->row()->t;
 
-			if($allow_for_fran)
-			{
-				$stock=$this->erpm->do_stock_check(array($prod['id']),array(1),true);
-				
-				$stock_tmp = array();
-				$stock_tmp[0] = array();
-				$stock_tmp[0][0] = array('stk'=>0);
-				foreach($stock as $plist)
-					foreach($plist as $pdet)
-					{
-					
-						if(!$pdet['status'])
-						{
-							$prod['live']=0;
-							$stock_tmp[0][0] = array('stk'=>$pdet['stk']);
-						}
-						else
-						{
-							$prod['live']=1;
-							$stock_tmp[0][0] = array('stk'=>$pdet['stk']);
-						}
-							
-					}	
-			
-			
-				$prod_mrp_changelog_res = $this->db->query("select * from deal_price_changelog where itemid=? order by id desc limit 1",$prod['id']);
-				if($prod_mrp_changelog_res->num_rows())
-				{
-					$prod_mrp_changelog = $prod_mrp_changelog_res->row_array();
-					$prod['oldmrp']=$prod_mrp_changelog['old_mrp'];
-				}
-				else 
-				{
-					$prod['oldmrp']='-';
-				}
-				 
-				
-				$margin=$this->erpm->get_pnh_margin($fid,$pid);
-				if($prod['is_combo'])
-					$prod['margin']=$margin['combo_margin'];
-				else 
-					$prod['margin']=$margin['margin'];
-				$attr="";
-				foreach($this->db->query("select group_id from m_product_group_deal_link where itemid=?",$prod['id'])->result_array() as $g)
-				{
-					$group=$this->db->query("select group_id,group_name from products_group where group_id=?",$g['group_id'])->row_array();
-					$attr.="";
-					$anames=$this->db->query("select attribute_name_id,attribute_name from products_group_attributes where group_id=?",$g['group_id'])->result_array();
-					foreach($anames as $a)
-					{
-						$attr.="<b>{$a['attribute_name']} :</b><span><select class='attr' name='{$pid}_{$a['attribute_name_id']}'>";
-						$avalues=$this->db->query("select * from products_group_attribute_values where attribute_name_id=?",$a['attribute_name_id'])->result_array();
-						foreach($avalues as $v)
-							$attr.="<option value='{$v['attribute_value_id']}'>{$v['attribute_value']}</option>";
-						$attr.='</select></span>';
-					}
-				
-				}
-				$prod['lcost']=round($prod['price']-($prod['price']/100*$prod['margin']),2);
-				$prod['attr']=$attr;
-				
-				$prod['confirm_stock'] = '';
-				
-				//confirmation for prod stock check for shoes  
-				//if($prod['menuid'] == 123)
-					//$prod['confirm_stock'] = '<b><input type="checkbox" name="confirm_stock" value="1" > : </b><span>Footwear Stock Available</span>';
-				
-				$prod['stock']=(($stock_tmp[0][0]['stk']>0)?$stock_tmp[0][0]['stk']:0);
-				
-				$prod['max_allowed_qty'] = $this->db->query("select max_allowed_qty from king_dealitems where pnh_id = ? ",$pid)->row()->max_allowed_qty;
-				$prod['imei_disc'] = $this->erpm->get_franimeischdisc_pid($fid,$pid);
-				
-				//to save the updated cart quantity		
-				$prod['svd_cartqty']=$this->db->query("select qty as cart_qty from pnh_api_franchise_cart_info where pid=? and franchise_id=? and status=1",array($pid,$fid))->row()->cart_qty;
-				
-				// get pid super scheme 
-				$prod['super_sch']= $this->erpm->get_fransuperschdisc_pid($fid,$pid);
-		
-				// get pid ordered total for today.
-				$prod['max_ord_qty'] = $this->erpm->get_maxordqty_pid($fid,$pid);
-				
-				$prod['allow_order'] = $this->erpm->do_stock_check(array($prod['id']));
-				$prod['is_publish']=$prod['publish'];
-					
-				$prod['is_sourceable']=$prod['is_sourceable'];
-					
-				$prod['has_insurance']=$prod['has_insurance'];
-	
-				$prod['is_publish']=$prod['publish'];
-				
-				if($prod['is_group'])
-                {
-                    $num_link_prdts = $this->db->query("select pd.itemid,count(*) as ttl_prdt from m_product_deal_link pd join king_dealitems di on di.id=pd.itemid where pd.itemid is not null and di.pnh_id=? group by pd.itemid",$pid)->row()->ttl_prdt;
-                    if($num_link_prdts > 0)
-                    {
-                        //,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals
-                        $att_arry_set = $this->db->query("select a.id as attr_id,a.attr_name,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals,group_concat(pa.pid) as pids from king_dealitems di
-                                                                join m_product_deal_link pd on pd.itemid = di.id
-                                                                join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
-                                                                join m_attributes a on a.id =  pa.attr_id
-                                                                where di.pnh_id=? group by pa.attr_id",$pid)->result_array();
+            if ($allow_for_fran) {
+                $stock = $this->erpm->do_stock_check(array($prod['id']), array(1), true);
 
-                        $att_arry='<div class="attributes_block"> <br>  <h4>There are '.$num_link_prdts.' linked products</h4>';
-                        //$ttl_attrs = count($att_arry_set);
-                    
-                            $att_arry.=' <h3>Select attributes:</h3> <div>';
-                            
-                            foreach($att_arry_set as $m=>$attr)
-                            {
-                                    $att_arry .= '<lable><input type="hidden" name="attr['.$attr['attr_id'].']" value="'.$attr['attr_id'].'"/>'.$attr['attr_name'].'</lable> : ';
-                                    $arr_vals=explode(",",$attr['attr_vals']);
-                                    $arr_pids=explode(",",$attr['pids']);
+                $stock_tmp = array();
+                $stock_tmp[0] = array();
+                $stock_tmp[0][0] = array('stk' => 0);
+                foreach ($stock as $plist)
+                    foreach ($plist as $pdet) {
 
-                                    /* Logic 1 
-                                    $att_arry .= '<select id="selattr_'.$m.'" name="attribute['.$attr['attr_id'].'][]" onchange="change_attributes(this,\''.$m.'\',\''.$attr['attr_vals'].'\',\''.$attr['pids'].'\','.$ttl_attrs.');"><option value="0">Choose</option>';
-                                    foreach($arr_vals as $i=>$aval) {
-                                        //$val = explode(":",$aval);
-                                        $att_arry .= '<option value="'.$arr_pids[$i].'_'.$attr['attr_id'].'">'.$arr_pids[$i].'-'.$aval.'</option>';
-                                    }
-                                    $att_arry .= '</select> <br/>';
-                                    */
-
-                                    //new login 2
-                                    //attr name
-                                    $att_arry .= '<select id="" onchange="get_attributes(this)"><option value="0">Choose</option>';
-                                    foreach($arr_vals as $i=>$aval)
-                                    {
-                                        $val = explode(":",$aval);
-                                        
-                                        $att_arry .= '<option class="attr_'.$aval.'_'.lcfirst($attr['attr_name']).'" linked="attr_'.$arr_vals[$i].'_'.$attr['attr_name'].'" value="'.$val[0].'">'.$val[1].'</option>';
-                                    }
-                                    $att_arry .= '</select><br/></div>';
-                                    
-                            }
-                            
+                        if (!$pdet['status']) {
+                            $prod['live'] = 0;
+                            $stock_tmp[0][0] = array('stk' => $pdet['stk']);
+                        } else {
+                            $prod['live'] = 1;
+                            $stock_tmp[0][0] = array('stk' => $pdet['stk']);
+                        }
                     }
-                   
-                    $prod['attr_list']=$att_arry."</div>";
+
+
+                $prod_mrp_changelog_res = $this->db->query("select * from deal_price_changelog where itemid=? order by id desc limit 1", $prod['id']);
+                if ($prod_mrp_changelog_res->num_rows()) {
+                    $prod_mrp_changelog = $prod_mrp_changelog_res->row_array();
+                    $prod['oldmrp'] = $prod_mrp_changelog['old_mrp'];
+                } else {
+                    $prod['oldmrp'] = '-';
                 }
-                                
-				unset($prod['is_combo']);
-			}else
-			{
-				$menu = $this->db->query("select c.name  
-												from king_dealitems a
-												join king_deals b on a.dealid = b.dealid 
-												join pnh_menu c on c.id = b.menuid 
-												where pnh_id = ? ",$pid)->row()->name;
-												
-				$prod = array('error'=>$menu." Menu not linked to franchise");
-			}
-		}
-		
-		if($return)
-			return $prod;
-		else
-			echo json_encode($prod);
-	}
-	
-	function jx_pnh_load_voucherprod()
+
+
+
+                //get insurance range details by menu and deal mrp 
+
+                $insurance_det = $this->erpm->get_insurance_value_det($prod['menuid'], $prod['mrp']);
+
+                $prod['insurance_value'] = $insurance_det['insurance_value'];
+                $prod['insurance_margin'] = $insurance_det['insurance_margin'];
+
+                $margin = $this->erpm->get_pnh_margin($fid, $pid);
+
+                if ($prod['is_combo'])
+                    $prod['margin'] = $margin['combo_margin'];
+                else
+                    $prod['margin'] = $margin['margin'];
+                $attr = "";
+                foreach ($this->db->query("select group_id from m_product_group_deal_link where itemid=?", $prod['id'])->result_array() as $g) {
+                    $group = $this->db->query("select group_id,group_name from products_group where group_id=?", $g['group_id'])->row_array();
+                    $attr.="";
+                    $anames = $this->db->query("select attribute_name_id,attribute_name from products_group_attributes where group_id=?", $g['group_id'])->result_array();
+                    foreach ($anames as $a) {
+                        $attr.="<b>{$a['attribute_name']} :</b><span><select class='attr' name='{$pid}_{$a['attribute_name_id']}'>";
+                        $avalues = $this->db->query("select * from products_group_attribute_values where attribute_name_id=?", $a['attribute_name_id'])->result_array();
+                        foreach ($avalues as $v)
+                            $attr.="<option value='{$v['attribute_value_id']}'>{$v['attribute_value']}</option>";
+                        $attr.='</select></span>';
+                    }
+                }
+                $prod['lcost'] = round($prod['price'] - ($prod['price'] / 100 * $prod['margin']), 2);
+                $prod['attr'] = $attr;
+
+                $prod['confirm_stock'] = '';
+
+                //confirmation for prod stock check for shoes
+                if ($prod['menuid'] == 123)
+                    $prod['confirm_stock'] = '<b><input type="checkbox" name="confirm_stock" value="1" > : </b><span>Footwear Stock Available</span>';
+
+                $prod['stock'] = (($stock_tmp[0][0]['stk'] > 0) ? $stock_tmp[0][0]['stk'] : 0);
+
+                $prod['max_allowed_qty'] = $this->db->query("select max_allowed_qty from king_dealitems where pnh_id = ? ", $pid)->row()->max_allowed_qty;
+                $prod['imei_disc'] = $this->erpm->get_franimeischdisc_pid($fid, $pid);
+
+                //to save the updated cart quantity
+                $prod['svd_cartqty'] = $this->db->query("select qty as cart_qty from pnh_api_franchise_cart_info where pid=? and franchise_id=? and status=1", array($pid, $fid))->row()->cart_qty;
+
+                // get pid super scheme
+                $prod['super_sch'] = $this->erpm->get_fransuperschdisc_pid($fid, $pid);
+
+                // get pid ordered total for today.
+                $prod['max_ord_qty'] = $this->erpm->get_maxordqty_pid($fid, $pid);
+
+                $prod['allow_order'] = $this->erpm->do_stock_check(array($prod['id']));
+
+                $prod['is_publish'] = $prod['publish'];
+
+                $prod['is_sourceable'] = $prod['is_sourceable'];
+
+                $prod['has_insurance'] = $prod['has_insurance'];
+
+                unset($prod['is_combo']);
+            }else {
+                $menu = $this->db->query("select c.name
+						from king_dealitems a
+						join king_deals b on a.dealid = b.dealid
+						join pnh_menu c on c.id = b.menuid
+						where pnh_id = ? ", $pid)->row()->name;
+
+                $prod = array('error' => $menu . " Menu not linked to franchise");
+            }
+        }
+
+        if ($return)
+            return $prod;
+        else
+            echo json_encode($prod);
+    }
+
+    function jx_pnh_load_voucherprod()
 	{
 		$user=$this->auth();
 		$fid=$_POST['fid'];
@@ -27930,38 +27694,7 @@ die; */
     	echo json_encode($output);
     }
     
-	/**
-	 * function to get saved cart items
-	 */
-    function jx_getsaved_item_incart()
-    {
-    	$fid=$this->input->post('fid');
-    	$mid=$this->input->post('mid');
-    	
-    	$output=array();
-    	$saved_cart_res=$this->db->query("SELECT i.pnh_id,i.name,i.price,i.orgprice,i.store_price,i.pic FROM `pnh_api_franchise_cart_info` c
-							    			JOIN king_dealitems i ON i.pnh_id=c.pid
-							    			JOIN king_deals d ON d.dealid=i.dealid
-							    			WHERE franchise_id=? AND STATUS=1 and member_id=?",array($fid,$mid));
-    	if($saved_cart_res->num_rows())
-    	{
-    		$output['status']='success';
-    		$output['saved_cart_itms']=$saved_cart_res->result_array();
-    		$output['saved_cart_itms']['items']=array();
-    		foreach($saved_cart_res->result_array() as $i=>$cart_prod)
-    		{
-    			$output['saved_cart_itms']['items'][]=$this->pnh_jx_loadpnhprod($fid,$cart_prod['pnh_id'],1);
-    		}
-    	}
-    	else
-    	{
-    		$output['status']='error';
-    		$output['msg']='No Items in the cart';
-    	}
-    	echo json_encode($output);
-    }
-
-	/**
+    /**
      * function to load all trerritories by state
      * @param unknown_type $stateid
      */
@@ -28675,15 +28408,44 @@ die; */
         function manage_offers()
         {
             $this->erpm->auth();
+            $insu_franchisee_arr=array();
+            $insu_territory_arr=array();
+            $insu_town_arr=array();
+            $recharge_franchisee_arr=array();
+            $recharge_territory_arr=array();
+			$recharge_town_arr=array();
+            
             define("MAX_REFERAL_COUNT",3);
-            $data['offers_insurance'] = $this->db->query("select a.*,b.user_id,b.first_name,f.franchise_name from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  where a.offer_type=2 order by a.created_on desc limit 100")->result_array();
-            $data['offers_talktime'] = $this->db->query("select a.*,b.user_id,b.first_name,f.franchise_name from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100")->result_array();
+            $offers_insurance = $this->db->query("select a.*,b.user_id,b.first_name,f.*, date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  where a.offer_type=2 order by a.created_on desc limit 100")->result_array();
+            $offers_talktime = $this->db->query("select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100")->result_array();
             
             /*$data['referral_offers'] = $this->db->query("select num_referred,referred_by,offer_value,floor(num_referred/?) as times from (
                                                                 select count(referred_by) as num_referred,offer_value,referred_by from pnh_member_offers where referred_by !=0 and referred_status = 0 group by referred_by order by created_on desc limit 100 
                                                                 ) as a where a.num_referred >= ?",array(MAX_REFERAL_COUNT,MAX_REFERAL_COUNT))->result_array();*/
             
-            
+            foreach($offers_insurance as $o_i)
+            {
+            	array_push($insu_franchisee_arr,$o_i['franchise_id']);
+                array_push($insu_territory_arr,$o_i['territory_id']);
+                array_push($insu_town_arr,$o_i['town_id']);
+            }
+			
+            foreach($offers_talktime as $o_r)
+            {
+            	array_push($recharge_franchisee_arr,$o_r['franchise_id']);
+            	array_push($recharge_territory_arr,$o_r['territory_id']);
+                array_push($recharge_town_arr,$o_r['town_id']);
+            }
+			
+            $data['insu_franchisee_arr']=implode(",",$insu_franchisee_arr);
+            $data['recharge_franchisee_arr']=implode(",",$recharge_franchisee_arr);
+            //print_r($data['recharge_franchisee_arr']);exit;
+            $data['insu_territory_arr']=implode(",",$insu_territory_arr);
+            $data['recharge_territory_arr']=implode(",",$recharge_territory_arr);
+            $data['insu_town_arr']=implode(",",$insu_town_arr);
+            $data['recharge_town_arr']=implode(",",$recharge_town_arr);
+            $data['offers_insurance']=$offers_insurance;
+            $data['offers_talktime']=$offers_talktime;
             $data['page']="manage_offers";
             $this->load->view("admin",$data);
         }
@@ -28869,77 +28631,436 @@ die; */
 		echo json_encode($output);
 	}
         
-        function insurance_view($insuranceid='')
-        {
+	function jx_transids_delivered_status_bydate()
+	{
+		$fids=$this->input->post('fids');
+		$from=$this->input->post('from');
+		$to=$this->input->post('to');
+		
+		$delivered_transids=$this->db->query("select a.invoice_no,b.transid from shipment_batch_process_invoice_link a
+									join king_invoice b on b.invoice_no = a.invoice_no
+									join pnh_member_offers c on c.transid_ref=b.transid
+									where date(a.delivered_on) between ? and ?",array($from,$to))->result_array();
+		
+		$output=array();
+		if($delivered_transids)
+		{
+			$output['status']='success';
+			$output['transids']=$delivered_transids;
+		}
+		else
+		{
+			$output['status']='error';
+			$output['message']='No details found';
+		}
+		
+		echo json_encode($output);
+	}
+	
+	function jx_load_all_towns_byterrid($terrid=FALSE,$offer_type='')
+    {
+    	if($terrid != 0)
+		{
+			if($offer_type == 1)
+				$cond='b.territory_id=? and a.offer_type=1';
+			else if($offer_type == 2)	
+				$cond='b.territory_id=? and a.offer_type=2';
+		}else if($terrid == 0)
+		{
+			if($offer_type == 1)
+				$cond='a.offer_type=1';
+			else if($offer_type == 2)	
+				$cond='a.offer_type=2';
+		}	
+		
+		$output=array();
+    	$town_res=$this->db->query("select distinct a.franchise_id,b.franchise_name,c.town_name,c.id from pnh_member_offers a
+										join pnh_m_franchise_info b on b.franchise_id=a.franchise_id
+										join pnh_towns c on c.id=b.town_id
+										where $cond",$terrid)->result_array();
+    	if($town_res)
+    	{
+    		$output['status']='success';
+    		$output['town_list']=$town_res;
+    	}
+    	else
+    	{
+    		$output['status']='error';
+    		$output['status']='No Towns Found ';
+    	}
+    	echo json_encode($output);
+    }
+    
+    function jx_load_all_franch_bytownid($townid=FALSE,$offer_type='')
+    {
+    	if($townid != 0)
+		{
+			if($offer_type == 1)
+				$cond='b.town_id=? and a.offer_type=1';
+			else if($offer_type == 2)	
+				$cond='b.town_id=? and a.offer_type=2';
+		}else if($townid == 0)
+		{
+			if($offer_type == 1)
+				$cond='a.offer_type=1';
+			else if($offer_type == 2)	
+				$cond='a.offer_type=2';
+		}
+		
+    	$output=array();
+    	$franch_res=$this->db->query("select distinct a.franchise_id,b.franchise_name from pnh_member_offers a
+									join pnh_m_franchise_info b on b.franchise_id=a.franchise_id
+									where $cond",$townid)->result_array();
+    	if($franch_res)
+    	{
+    		$output['status']='success';
+    		$output['fran_list']=$franch_res;
+    	}
+    	else
+    	{
+    		$output['status']='error';
+    		$output['status']='No Franchise Found ';
+    	}
+    	echo json_encode($output);
+    }
+    
+    function manage_skinsurance_bymenu()
+    {
+            $data['pnh_menu']=$this->db->query("select id,name from pnh_menu where status=1 order by name  asc")->result_array();
+            $data['page']='manage_skinsurance_bymenu';
+            $this->load->view('admin',$data);
+    }
+
+    function jx_load_menu_insurance_info()
+    {
+            $menuid=$this->input->post('menuid');
+            $output=array();
+            $menu_name=$this->db->query("select name from pnh_menu where id=?",$menuid)->row()->name;
+            $menu_imargin=$this->db->query("SELECT insurance_margin FROM pnh_member_insurance_menu where menu_id=?",$menuid)->row()->insurance_margin;
+            $i_menu_res=$this->db->query("SELECT * FROM pnh_member_insurance_menu where menu_id=? ORDER BY less_than ASC",$menuid);
+            $output['menuname']=$menu_name;
+            $output['insurance_margin']=$menu_imargin;
+            if($i_menu_res)
+            {
+                    $output['status']='success';
+                    $output['i_menu_det']=$i_menu_res->result_array();
+
+            }
+            else
+            {
+
+                    $output['status']='error';
+
+            }
+
+            echo json_encode($output);
+    }
+
+    function jx_upd_insurancemenu()
+    {
+            $output=array();
+            $user=$this->auth(true);
+            $menuid=$this->input->post('upd_menuid');
+            foreach(array("less_than","greater_than","insurance_value","insurance_margn") as $i)
+                    $$i=$this->input->post("$i");
+
+            //check for duplicate menuid insert
+            if($this->db->query("select * from pnh_member_insurance_menu where menu_id=?",$menuid)->num_rows()==0)
+            {
+                    foreach($less_than as $i=>$a)
+                            if(!empty($a))
+                            $this->db->query("insert into pnh_member_insurance_menu(menu_id,less_than,greater_than,insurance_value,insurance_margin,created_on,created_by,is_active) values(?,?,?,?,?,now(),?,1)",array($menuid,$a,$greater_than[$i],$insurance_value[$i],$insurance_margn,$user['userid']));
+                            $output['status']=='success';
+            }
+            else
+            {
+                    $this->db->query("update pnh_member_insurance_menu set is_active=0,updated_by=?,updated_on=now() where menu_id=?",array($user['userid'],$menuid,));
+                    foreach($less_than as $i=>$a)
+                            if(!empty($a))
+                    $this->db->query("insert into pnh_member_insurance_menu(menu_id,less_than,greater_than,insurance_value,insurance_margin,created_on,created_by,is_active) values(?,?,?,?,?,now(),?,1)",array($menuid,$a,$greater_than[$i],$insurance_value[$i],$insurance_margn,$user['userid']));
+                    $output['status']=='success';
+            }
+            echo json_encode($output);
+    }
+    
+    function insurance_print_view($insuranceid='')
+    {
             if($insuranceid=='')
                 show_error ("No insurance id found.");
-            
-                $data['page']="insurance_view";
-                $this->load->view("admin",$data);
-        }
+
+            $data['page']="insurance_print_view";
+            $this->load->view("admin",$data);
+    }
+    
+    function pnh_jx_checkstock_order()
+    {
+            $fid=$this->input->post("fid");
+            $mid=$this->input->post("mid");
+            $pids=explode(",",$this->input->post("pids"));
+            $qty=explode(",",$this->input->post("qty"));
+            $credit_days=$this->input->post("credit_days");
+            $offr_sel_type=$this->input->post("offr_sel_type");
+            $insurance_type=$this->input->post("insurance_type");
+            $insurance_id=$this->input->post("insurance_id");
+            $mem_addres=$this->input->post("mem_address");
+            $iids=$this->db->query("select id,pnh_id from king_dealitems where is_pnh=1 and pnh_id in('".implode("','",$pids)."')")->result_array();
+            $m_userid=$this->db->query("select user_id from pnh_member_info where pnh_member_id=?",$mid)->row()->user_id;
+            $ttl_orders=$this->db->query("SELECT COUNT(DISTINCT(transid)) AS l FROM king_orders WHERE userid=? AND STATUS NOT IN (0,3,5,6)",$m_userid)->row()->l;
+
+            $itemids=array();
+            $order_det=array();
+            $e=0;
+            foreach($pids as $pid)
+                    foreach($iids as $id)
+                    if($id['pnh_id']==$pid)
+                    $itemids[]=$id['id'];
+            $avail=$this->erpm->do_stock_check($itemids,$qty);
+            $un="";
+            $attr=$this->input->post('attr');
+            $attr_data=array();
+            if($attr)
+            {
+                    $attrs=explode("&",$attr);
+                    foreach($attrs as $attr)
+                    {
+                            list($pp,$v)=explode("=",$attr);
+                            list($p,$a)=explode("_",$pp);
+                            if(!isset($attr_data[$p]))
+                                    $attr_data[$p]=array();
+                            $attr_data[$p][$a]=$v;
+                    }
+            }
+            foreach($pids as $pid)
+            {
+                    if(!isset($attr_data[$pid]))
+                            continue;
+                    $prods=array();
+                    $i=0;
+                    foreach($attr_data[$pid] as $a=>$v)
+                    {
+                            if($i==0)
+                            {
+                                    $pr=$this->db->query("select product_id from products_group_pids where attribute_name_id=? and attribute_value_id=?",array($a,$v))->result_array();
+                                    foreach($pr as $p)
+                                            $prods[]=$p['product_id'];
+                            }else{
+                                    $c_prods=$prods;
+                                    $prods=array();
+                                    $pr=$this->db->query("select product_id from products_group_pids where attribute_name_id=? and attribute_value_id=?",array($a,$v))->result_array();
+                                    foreach($pr as $p)
+                                            if(in_array($p['product_id'],$c_prods))
+                                            $prods[]=$p['product_id'];
+                            }
+                            $i++;
+                            if(empty($prods))
+                            {
+                                    $e=1;
+                                    $un.="{$pid} is not available for selected combination";
+                                    break;
+                            }
+                    }
+            }
+            if($e==0)
+            {
+                    foreach($itemids as $i=>$itemid)
+                            if(!in_array($itemid,$avail))
+                    $un.="{$pids[$i]} is out of stock\n";
+             $e=0;
+             if(strlen($un)!=0)
+                    $e=1;
+            }
+            $total=$d_total=$bal=$abal=0;
+            $pc="";
+            if($e==0 && $mid && $this->db->query("select 1 from pnh_member_info where pnh_member_id=?",$mid)->num_rows()==0 && $this->db->query("select 1 from pnh_m_allotted_mid where franchise_id=? and ? between mid_start and mid_end",array($fid,$mid))->num_rows()==0)
+            {
+                    $e=1;$un="MID : $mid is not allotted to this franchise";
+            }
+            if($e==0)
+            {
+                    $iids=array();
+                    $itemid=$this->db->query("select id from king_dealitems where pnh_id=?",$pid)->row()->id;
+                    $menuid=$this->db->QUERY("select *,d.menuid,m.default_margin as margin from king_dealitems i join king_deals d on d.dealid=i.dealid JOIN pnh_menu m ON m.id=d.menuid where i.is_pnh=1 and i.pnh_id=?",$pid)->row_array();
+                    $fran=$this->db->query("select * from pnh_m_franchise_info where franchise_id=?",$fid)->row_array();
+                    $fran1=$this->db->query("select * from pnh_franchise_menu_link where fid=? and menuid=?",array($fid,$menuid['menuid']))->row_array();
+                    $margin=$this->db->query("select margin,combo_margin from pnh_m_class_info where id=?",$fran['class_id'])->row_array();
+
+                    if($fran1['sch_discount_start']<time() && $fran1['sch_discount_end']>time() && $fran1['is_sch_enabled'])
+                            $menuid['margin']+=$fran1['sch_discount'];
+
+                    $ordered_menu_list=array();
+                    foreach($pids as $i=>$iid)
+                    {
+                            $prod=$this->db->query("select i.*,d.publish,d.menuid,d.brandid,d.catid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.is_pnh=1 and i.pnh_id=?",$iid)->row_array();
+                            $has_insurance[]=$prod['has_insurance'];
+                            $ordered_menu_list[]=$prod['menuid'];
+                            $items[$i]['brandid']=$prod['brandid'];
+                            $items[$i]['menuid']=$prod['menuid'];
+                            $items[$i]['catid']=$prod['catid'];
+                            $items[$i]['name']=$prod['name'];
+                            $items[$i]['tax']=$prod['tax'];
+                            $items[$i]['mrp']=$prod['orgprice'];
+                            $items[$i]['price']=$prod['price'];
+                            $items[$i]['itemid']=$prod['id'];
+                            $margin=$this->erpm->get_pnh_margin($fran['franchise_id'],$iid);
+                            $items[$i]['base_margin']=$margin['base_margin'];
+                            $items[$i]['sch_margin']=$margin['sch_margin'];
+                            $items[$i]['bal_discount']=$margin['bal_discount'];
+                            $items[$i]['has_insurance']=$prod['has_insurance'];
+                            $items[$i]['pnh_id']=$prod['pnh_id'];
+                            $insurance_det=$this->erpm->get_insurance_value_det($prod['menuid'],$prod['orgprice']);
+                            if($prod['has_insurance']==1)
+                            {
+                                    $items[$i]['insurance_value']=$insurance_det['insurance_value'];
+                                    $items[$i]['insurance_margin']=$insurance_det['insurance_margin'];
+                            }
+                            if($prod['is_combo']=="1")
+                            {
+                                    $items[$i]['discount']=$items[$i]['price']/100*$margin['combo_margin'];
+                                    $items[$i]['base_margin']=$margin['combo_margin'];
+                            }
+                            else
+                                    $items[$i]['discount']=$items[$i]['price']/100*$margin['margin'];
+                            $total+=$items[$i]['price']*$qty[$i];
+                            $items[$i]['qty']=$qty[$i];
+                            $d_total+=($items[$i]['price']-$items[$i]['discount'])*$qty[$i];
+                            $items[$i]['final_price']=($items[$i]['price']-$items[$i]['discount']);
+
+                            $iids[]=$prod['id'];
+                    }
+
+                    $fran_crdet = $this->erpm->get_fran_availcreditlimit($fid);
+                    $fran['current_balance'] = $fran_crdet[3];
+
+                    $bal=$fran['current_balance'];
+                    $abal=$fran['current_balance']-$d_total;
+
+                    //check if it is prepaid franchise block
+                    $is_prepaid_franchise=$this->erpm->is_prepaid_franchise($fid);
+                    if($is_prepaid_franchise)
+                    {
+                            if(count(array_unique($ordered_menu_list))==1)
+                            {
+                                    if($ordered_menu_list[0]!=VOUCHERMENU)
+                                            $is_prepaid_franchise=false;
+
+                            }else{
+                                    $is_prepaid_franchise=false;
+                            }
+                    }
+                    //check if it is prepaid franchise block
+
+                    // check for has insurance deal
+                    if(in_array(1,$has_insurance))
+                            $has_insurance=1;
+                    else 
+                            $has_insurance=0;
+
+                    if($fran['current_balance']<$d_total && !$is_prepaid_franchise)
+                    {
+                            $required_credit=$d_total-$fran['current_balance'];
+                            $e=1;$un="Balance in your account Rs {$fran['current_balance']}\n\nTotal order amount : Rs $d_total\n\n Required Credit : Rs.$required_credit";
+                    }
+                    if($ttl_orders==0 && $d_total>=500 )
+                            $new_mem=1;
+                    else 
+                            $new_mem=0;
+                    $pc_data['deals']=$this->erpm->pnh_getdealpricechanges($fran['app_version'],$iids);
+                    $pc_data['total']=$total;
+                    $pc_data['mid']=$mid;
+                    $pc_data['items']=$items;
+                    $pc_data['menuid']=$menuid;
+                    $pc_data['fid']=$fid;
+                    $pc_data['has_insurance']=$has_insurance;
+                    $pc_data['new_mem']=$new_mem;
+
+                    $pc=$this->load->view("admin/body/pc_offline_frag",$pc_data,true);
+
+            }
+            die(json_encode(array("e"=>$e,"msg"=>$un,"total"=>$total,"d_total"=>$d_total,"com"=>$total-$d_total,"bal"=>$bal,"abal"=>$abal,"pc"=>$pc,"has_insurance"=>$has_insurance,"new_mem"=>$new_mem,"items"=>$items)));
+    }
+
+    function jx_get_member_det()
+    {
+            $mid=$this->input->post('mid');
+            $mem_det=$this->db->query("select * from pnh_member_info where pnh_member_id=?",$mid);
+            $output=array();
+            if($mem_det)
+            {
+                    $output['status']='success';
+                    $output['i_memdet']=$mem_det->row_array();
+            }
+            else
+            {
+                    $output['status']='error';
+                    $output['msg']='Invalid Member ID';
+            }
+            echo json_encode($output);
+    }
         
-        function jx_submit_insurance_attach()
+    /*function jx_submit_insurance_attach()
+    {
+        $file=($_FILES['attach']);
+        $config['upload_path'] = base_url().'erp-attachments/';
+        $config['allowed_types'] = 'gif|jpg|png';
+        $config['max_size']	= '100';
+        $config['max_width']  = '1024';
+        $config['max_height']  = '768';
+        $this->load->library('attach', $config);
+        if ( ! $this->upload->do_upload())
         {
-            //echo json_encode($_POST);
-            $file=($_FILES['attach']);
-            
-            
-            $config['upload_path'] = './uploads/';
-            $config['allowed_types'] = 'gif|jpg|png';
-            $config['max_size']	= '100';
-            $config['max_width']  = '1024';
-            $config['max_height']  = '768';
-
-            $this->load->library('upload', $config);
-
-            if ( ! $this->upload->do_upload())
-            {
-                    $error = array('error' => $this->upload->display_errors());
-                    
-                    echo json_encode($error);
-                    //$this->load->view('upload_form', $error);
-            }
-            else
-            {
-                    $data = array('upload_data' => $this->upload->data());
-                    $this->load->view('upload_success', $data);
-            }
-            
-            //Normal method
-            /*$allowedExts = array("gif", "jpeg", "jpg", "png");
-            $temp = explode(".", $file["name"]);
-            $extension = end($temp);
-            if ( ( ($file["type"] == "image/gif")|| ($file["type"] == "image/jpeg")|| ($file["type"] == "image/jpg")|| ($file["type"] == "image/pjpeg")
-                    || ($file["type"] == "image/x-png")|| ($file["type"] == "image/png") ) && ($file["size"] < 20000) && in_array($extension, $allowedExts) )
-            {
-              if ($file["error"] > 0)
-                {
-                    echo "Return Code: " . $file["error"] . "<br>";
-                }
-              else
-                {
-                    echo "Upload: " . $file["name"] . "<br>";
-                    echo "Type: " . $file["type"] . "<br>";
-                    echo "Size: " . ($file["size"] / 1024) . " kB<br>";
-                    echo "Temp file: " . $file["tmp_name"] . "<br>";
-
-                    if (file_exists("upload/" . $file["name"]))
-                      {
-                      echo $file["name"] . " already exists. ";
-                      }
-                    else
-                      {
-                        move_uploaded_file($file["tmp_name"],
-                        "upload/" . $file["name"]);
-                        echo "Stored in: " . "upload/" . $file["name"];
-                      }
-                }
-              }
-            else
-              {
-              echo "Invalid file";
-              }*/
-             
+                $result = array("status"=>'error',"response" => $this->upload->display_errors());
+                //$this->load->view('upload_form', $error);
         }
-        
+        else
+        {
+                //insert data to db
+                $result = array("status"=>'success','upload_data' => $this->upload->data());
+                $result['post']=json_encode($_POST);
+                //$this->load->view('upload_success', $data);
+        }
+        echo '<script>window.parent.hndl_insurance_upload_response('.json_encode($result).');</script>';//json_encode($file);
+        die();
+    }*/
+    
+    /**
+    * function to get saved cart items
+    */
+    function jx_getsaved_item_incart()
+    {
+    	$fid=$this->input->post('fid');
+    	$mid=$this->input->post('mid');
+    	
+    	$output=array();
+    	$saved_cart_res=$this->db->query("SELECT i.pnh_id,i.name,i.price,i.orgprice,i.store_price,i.pic FROM `pnh_api_franchise_cart_info` c
+							    			JOIN king_dealitems i ON i.pnh_id=c.pid
+							    			JOIN king_deals d ON d.dealid=i.dealid
+							    			WHERE franchise_id=? AND STATUS=1 and member_id=?",array($fid,$mid));
+    	//check if mid's first order
+    	
+    	$m_userid=$this->db->query("select user_id from pnh_member_info where pnh_member_id=?",$mid)->row()->user_id;
+    	$ttl_orders=$this->db->query("SELECT COUNT(DISTINCT(transid)) AS l FROM king_orders WHERE userid=? AND STATUS NOT IN (0,3,5,6)",$m_userid)->row()->l;
+    	
+    	if($ttl_orders==0)
+    		$is_new_mem=1;
+    	else 
+    		$is_new_mem=0;
+
+    	if($saved_cart_res->num_rows())
+    	{
+    		$output['status']='success';
+    		$output['saved_cart_itms']=$saved_cart_res->result_array();
+    		$output['new_mem']=$is_new_mem;
+    		$output['saved_cart_itms']['items']=array();
+    		foreach($saved_cart_res->result_array() as $i=>$cart_prod)
+    		{
+    			$output['saved_cart_itms']['items'][]=$this->pnh_jx_loadpnhprod($fid,$cart_prod['pnh_id'],1);
+    		}
+    	}
+    	else
+    	{
+    		$output['status']='error';
+    		$output['msg']='No Items in the cart';
+    	}
+    	echo json_encode($output);
+    }
 }

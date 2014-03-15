@@ -1256,11 +1256,11 @@ CREATE TABLE `pnh_menu_margin_track` (
 
 #Mar_11_2014
 create table `pnh_member_offers` (  `sno` bigint UNSIGNED NOT NULL AUTO_INCREMENT , `member_id` varchar (120) , `offer_type` tinyint (11) DEFAULT '0', `offer_value` varchar (120) DEFAULT '0', `offer_towards` varchar (200) , `transid_ref` varchar (120) , `insurance_id` varchar (120) DEFAULT '0', `process_status` tinyint (11),`feedback_status` varchar (50) DEFAULT '0' NULL , `created_by` int (120) ,`referred_by` varchar (100) DEFAULT '0' NULL,`referred_status` tinyint (11)  DEFAULT '0' NULL , `created_on` varchar (120) , PRIMARY KEY ( `sno`));
-
 create table `pnh_member_insurance` (  `sno` bigint UNSIGNED NOT NULL AUTO_INCREMENT , `fid` varchar (120) , `mid` varchar (120) , `insurance_id` varchar (120) , `insurance_type` varchar (100) , `mem_address` varchar (150) , PRIMARY KEY ( `sno`));
 
 alter table `pnh_member_insurance` add column `opted_insurance` tinyint (11) DEFAULT '0' NULL  after `proof_address`,change `offer_type` `offer_type` tinyint (11)  NULL , change `insurance_id` `proof_id` varchar (120)  NULL  COLLATE latin1_swedish_ci , change `insurance_type` `proof_type` varchar (100)  NULL  COLLATE latin1_swedish_ci , change `mem_address` `proof_address` varchar (150)  NULL  COLLATE latin1_swedish_ci;
 
 alter table `pnh_member_offers` change `insurance_id` `proof_id` varchar (120) DEFAULT '0' NULL  COLLATE latin1_swedish_ci;
 
-select * from pnh_member_info where pnh_member_id=21111113
+# Mar_14_2014
+alter table `king_orders` add column `has_insurance` tinyint (11) DEFAULT '0' NULL  after `is_paid`, add column `insurance_logid` bigint   NULL  after `has_insurance`, add column `insurance_amount` double   NULL  after `insurance_logid`;

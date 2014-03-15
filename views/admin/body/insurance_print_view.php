@@ -23,8 +23,7 @@
                     display: block;
             }
     }
-     @media print 
-{
+ 
 
     </style>
     <div id="insurance_block" class="insurance_block" style="padding: 10px; page-break-after: always;">

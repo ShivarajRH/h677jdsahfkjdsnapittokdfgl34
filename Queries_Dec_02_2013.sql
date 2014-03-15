@@ -3602,6 +3602,7 @@ CREATE TABLE `pnh_member_insurance` (
 #===============================================================================
 
 alter table `pnh_member_insurance` add column `opted_insurance` tinyint (11) DEFAULT '0' NULL  after `proof_address`,change `offer_type` `offer_type` tinyint (11)  NULL , change `insurance_id` `proof_id` varchar (120)  NULL  COLLATE latin1_swedish_ci , change `insurance_type` `proof_type` varchar (100)  NULL  COLLATE latin1_swedish_ci , change `mem_address` `proof_address` varchar (150)  NULL  COLLATE latin1_swedish_ci;
+
 alter table `pnh_member_offers` change `insurance_id` `proof_id` varchar (120) DEFAULT '0' NULL  COLLATE latin1_swedish_ci;
 
 alter table `pnh_member_offers` add column `delivery_status` varchar (11) DEFAULT '0' NULL  COMMENT '0:not delivered,1:delivered' after `feedback_status`,change `process_status` `process_status` tinyint (11)  NULL  COMMENT '0:Not Processed,1:Ready Process,2:Processed,', change `feedback_status` `feedback_status` varchar (50) DEFAULT '0' NULL  COLLATE latin1_swedish_ci  COMMENT '0:not given,1:given';
@@ -3619,4 +3620,74 @@ select a.*,b.user_id,b.first_name,f.franchise_name from pnh_member_offers a
 join pnh_member_info b on b.pnh_member_id=a.member_id  
 join pnh_m_franchise_info f on f.franchise_id= a.franchise_id
 where a.offer_type=2 order by a.created_on desc limit 100;
+
+# Mar_14_2014
+has_insurance
+insurance_logid
+insurance_amount
+#===============================================================================
+alter table `king_orders` add column `has_insurance` tinyint (11) DEFAULT '0' NULL  after `is_paid`, add column `insurance_logid` bigint   NULL  after `has_insurance`, add column `insurance_amount` double   NULL  after `insurance_logid`;
+
+#drop table `insurance_m_type`;
+alter table `pnh_member_offers` add column `pnh_pid` varchar (120)  NULL  after `offer_towards`;
+
+#===============================================================================
+
+select * from king_dealitems where pnh_id='12759871' #=>9884254185
+select * from king_deals where dealid='5172296214';
+
+-- -- -- -- -- -- -- -- -- new ----=------------------------
+select d.menuid,* from king_orders o
+join king_dealitems di on di.id=o.itemid
+join king_deals d on d.dealid=di.dealid
+where o.transid='PNH64833' and di.pnh_id='12759871';
+
+alter table `snapittoday_db_jan_2014`.`pnh_member_insurance` add column `insurance_id` varchar (150)  NULL  after `sno`, add column `insurance_value` double   NULL  after `offer_status`, add column `insurance_margin` varchar (50) DEFAULT '0' NULL  after `insurance_value`, add column `order_value` double   NULL  after `insurance_margin`, add column `first_name` varchar (60)  NULL  after `order_value`, add column `last_name` varchar (60)  NULL  after `first_name`, add column `mob_no` varchar (50)  NULL  after `last_name`, add column `address` text   NULL  after `mob_no`, add column `city` varchar (50)  NULL  after `address`, add column `pincode` varchar (50)  NULL  after `city`, add column `created_by` varchar (20)  NULL  after `pincode`, add column `created_on` varchar (60)  NULL  
+after `created_by`,change `offer_status` `offer_status` tinyint (11) DEFAULT '0' NULL;
+
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+
+CREATE TABLE `pnh_member_insurance_menu` (
+  `id` bigint(11) NOT NULL AUTO_INCREMENT,
+  `menu_id` bigint(11) NOT NULL,
+  `greater_than` double DEFAULT NULL,
+  `less_than` double DEFAULT NULL,
+  `insurance_value` double DEFAULT NULL,
+  `insurance_margin` double NOT NULL DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_by` bigint(11) DEFAULT NULL,
+  `created_on` datetime DEFAULT NULL,
+  `updated_by` bigint(11) DEFAULT NULL,
+  `updated_on` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
+id
+menu_id           
+greater_than      
+less_than         
+insurance_value   
+insurance_margin  
+is_active         
+created_by        
+created_on        
+updated_by        
+updated_on      
+===============
+is_group           tinyint(11)          (NULL)             YES             0                        select,insert,update,references         
+has_insurance  
+
+-- old
+select a.*,b.user_id,b.first_name,f.*, date(from_unixtime(a.created_on)) as date from pnh_member_offers a 
+join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  
+where a.offer_type=2 order by a.created_on desc limit 100;
+
+select insurance_value,insurance_margin from pnh_member_insurance_menu im where menu_id='112' and is_active = 1
+
+select insurance_value,insurance_margin from pnh_member_insurance_menu im where is_active = 1 and menu_id='112'
+
+select d.menuid from king_orders o
+                                    join king_dealitems di on di.id=o.itemid
+                                    join king_deals d on d.dealid=di.dealid
+                                    where o.transid='PNH33729' and di.pnh_id='12759871;
 

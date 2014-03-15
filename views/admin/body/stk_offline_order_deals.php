@@ -177,6 +177,15 @@ $fran_status_arr[3]="Temporary Suspension";
 				<input type="hidden" name="insurance[proof_id]"  class="proof_id" value="" style="display:none;">
 				<input type="hidden" name="insurance[proof_address]" class="proof_address" value="" style="display:none;">
 				<input type="hidden" name="insurance[opted_insurance]" class="opted_insurance" value="" style="display:none;">
+				<input type="hidden" name="insurance[insurance_deals]" class="opted_insurance_deal" value="" style="display:none;">
+				<input type="hidden" name="insurance[first_name]" class="member_fname" value="" style="display:none;">
+				<input type="hidden" name="insurance[last_name]" class="member_lname" value="" style="display:none;">
+				<input type="hidden" name="insurance[mob_no]" class="member_mobno" value="" style="display:none;">
+				<input type="hidden" name="insurance[address]" class="member_address" value="" style="display:none;">
+				<input type="hidden" name="insurance[city]" class="member_city" value="" style="display:none;">
+				<input type="hidden" name="insurance[pincode]" class="member_pincode" value="" style="display:none;">
+				
+				
 				
 				<div style="clear:both;overflow: hidden;background: #fcfcfc">
 					<b class="ordr_fortext">Order For : </b><div id="member_ids" class="membr_block"></div>
@@ -207,7 +216,7 @@ $fran_status_arr[3]="Temporary Suspension";
 					<div class="clear"></div>
 					<div  style="<?php echo $mid?'':'display:none';'background-color:none repeat scroll 0 0 #E5F2FF';'width:100%'?>"> 
 					<h4 class="module_title">Redeem loyalty points</h4> 
-					<?php $mpointsr=$this->db->query("select points,concat(first_name,' ',last_name) as m_name from pnh_member_info where pnh_member_id=?",$mid)->row_array(); $mpoints=0; if(!empty($mpointsr)) $mpoints=$mpointsr['points'];?>
+					<?php $mpointsr=$this->db->query("select points,concat(first_name,' ',last_name) as m_name from pnh_member_info where pnh_member_id = ?",$mid)->row_array(); $mpoints=0; if(!empty($mpointsr)) $mpoints=$mpointsr['points'];?>
 							<table class="datagrid noprint" width="100%">
 							
 							<thead>
@@ -357,7 +366,11 @@ $fran_status_arr[3]="Temporary Suspension";
 						<div class="p_attr pcart_extra">%attr%</div>
 					</div>
 					<span></span>
-					<div class="sch_wrap">%super_sch%</div>
+					<div class="sch_wrap">
+						<div>%super_sch%</div>
+						<div class="blue">%has_insurance%</div>
+						<div>%opt_insurance%</div>
+					</div>
 				</td>
 				<td style="text-align: center;" valign="top" class="cart_background_wrap1">
 					<div class="p_extra p_top"> <b style="font-size: 13px">%mrp%</b><div style="padding-top:10px;color: #cd0000;font-size: 11px;display: %dspmrp%;"><b>OldMRP :</b> %oldmrp%</div></div>
@@ -473,8 +486,6 @@ $fran_status_arr[3]="Temporary Suspension";
 	<div id="franchise_quickview"  title="Franchisee Info"><div id="fran_qvkview"></div></div>
 	
 	<div id="new_memoffrs" Title="Offer Bonanza For the Member first Order">
-	
-		<p><b>Congragulations!!!</b></p>
 		<div width="100%">
 		<form method="post" id="update_meminfo" data-validate="parsley" >
 			<table width="100%" cellspacing="5">
@@ -496,7 +507,6 @@ $fran_status_arr[3]="Temporary Suspension";
 						</select>
 					</td>
 				</tr>
-				<!-- <input type="text" name="dlg_insurence_type" value="" data-required="true" > --></td></tr>
 				<tr><td><b>Proof Id</b></td><td><b>:</b></td><td><input type="text" name="dlg_insurence_id" value="" data-required="true"></td></tr></div>
 				<tr><td><b>Proof Address</b></td><td><b>:</b></td><td> <textarea name="dlg_mem_address" value="" data-required="true" id="dlg_mem_address"></textarea></td></tr>
 			</table>
@@ -506,20 +516,38 @@ $fran_status_arr[3]="Temporary Suspension";
 	
 	
 	<div id="insurance_option" title="Payable Insurance" >
-		<p><b>Note : Insurance will be given upon adding 2% on the Actual Bill</b></p>
-		<p><b>Would you like to have insurance?</b></p>
+		<p><b>Would you like to have insurance?</b>
+			<span><input type="radio" value="1"   name="insurance_srn" class="insurance_srn">Yes</span>
+			<span><input type="radio" value="0" checked name="insurance_srn" class="insurance_srn">No</span>
+		</p>
+		
+	<div id="crdet_insurance_blk">
+	
+		<div id="insurance_items_info">
+			<table class="datagrid" width="100%">
+				<thead><th>Product</th><th>Insurance cost</th></thead>
+				<tbody></tbody>
+			</table>
+		</div>
 		<br>
-		<table id="insurance_srn_blc">
-			<tr><td><input type="radio" value="1" checked  name="insurance_srn" class="insurance_srn">Yes</td></tr>
-			<tr><td><input type="radio" value="0"  name="insurance_srn" class="insurance_srn">No</td></tr>
-		</table>
-		<div id="crdet_insurance_blk">
+		<h4 style="background-color:#FAFAFA; ">Member Details</h4>
+		<div id="member_info_bloc">
 			<form id="crdet_insurance" data-validate="parsley" method="post">
-				<table id="insurance_blk_html">
-					<tr><td width="35%"><b>Proof Type</b></td><td><b>:</b></td>
-						<td>
-							<!--  <input type="text" name="crd_insurence_type" value="" data-required="true" >-->
-							<select name="crd_insurence_type"  data-required="true" id="crd_insurence_type">
+				<span class="form_label_wrap">First Name :</span>
+				<span class="form_input_wrap"><input class="max_width" type="text" name="i_memberfname" id="i_memberfname" value="" data-required="true"></span> 
+				
+				<span class="form_label_wrap">Last Name :</span>
+				<span class="form_input_wrap"><input class="max_width" type="text" name="i_memberlname" id="i_memberlname" value="" ></span>
+				
+				<span class="form_label_wrap">Mobile :</span>
+				<span class="form_input_wrap"><input class="max_width" type="text" name="i_membermob" id="i_membermob" value="" data-required="true"></span>
+				
+				<span class="form_label_wrap" style="height:63px !important">Address :</span>
+				<span class="form_input_wrap" style="height:63px !important"><textarea class="max_width"  name="i_member_add" id="i_member_add" value="" data-required="true"></textarea></span>
+				
+				<span class="form_label_wrap">Proof Type :</span>
+				<span class="form_input_wrap">
+					<select name="crd_insurence_type" class="max_width"  data-required="true" id="crd_insurence_type">
 							<option value="">Select</option>
 							<?php $insurance_types=$this->db->query("select * from insurance_m_types order by name asc")->result_array();
 							if($insurance_types){
@@ -528,15 +556,23 @@ $fran_status_arr[3]="Temporary Suspension";
 							<option value="<?php echo $i_type['id']?>"><?php echo $i_type['name']?></option>
 							<?php }}?>
 						</select>
-						</td>	
-					</tr>
-					<tr><td><b>Proof Id</b></td><td><b>:</b></td><td><input type="text" name="crd_insurence_id" value="" data-required="true"></td></tr></div>
-					<tr><td><b>Proof Address</b></td><td><b>:</b></td><td> <textarea name="crd_insurance_mem_address" value="" data-required="true" id="crd_insurance_mem_address"></textarea></td></tr>
-				</table>
+				</span>
+				
+				<span class="form_label_wrap">Proof Id :</span>
+				<span class="form_input_wrap"><input class="max_width" type="text" name="crd_insurence_id" value="" data-required="true"></span>
+				
+				<span class="form_label_wrap" style="height:63px !important">Proof Address :</span>
+				<span class="form_input_wrap" style="height:63px !important"><textarea class="max_width" name="crd_insurance_mem_address" value="" data-required="true" id="crd_insurance_mem_address"></textarea></span>
+				
+				<span class="form_label_wrap">City :</span>
+				<span class="form_input_wrap"><input class="max_width" type="text" name="i_member_city" id="i_member_city" value=""></span>
+				
+				<span class="form_label_wrap">PinCode :</span>
+				<span class="form_input_wrap"><input class="max_width" type="text" name="i_member_pcode" id="i_member_pcode" value=""></span>
 			</form>	
 		</div>
-								
 	</div>
+</div>
 	
 </div>
 <style>
@@ -611,6 +647,7 @@ function change_attributes(e,serial,attr_vals,pids,ttl_attrs)
 }
 $("#franchise_quickview").hide();
 $(".insurance_blk").hide();
+$("#crdet_insurance_blk").hide();
 $('.offerd_type').change(function(){
 	if($(this).val()==2)
 		$(".insurance_blk").show();
@@ -622,7 +659,18 @@ $('.insurance_srn').change(function(){
 	if($(this).val()==1)
 	{
 		$("#crdet_insurance_blk").show();
-		
+			var mem_det_html='';
+			$.post(site_url+'admin/jx_get_member_det',{mid:selected_mid},function(resp){
+				if(resp.status=='success')
+				{
+					$("#i_memberfname").val(resp.i_memdet.first_name);
+					$("#i_memberlname").val(resp.i_memdet.last_name);
+					$("#i_membermob").val(resp.i_memdet.mobile);
+					$("#i_member_add").val(resp.i_memdet.address);
+					$("#i_member_city").val(resp.i_memdet.city);
+					$("#i_member_pcode").val(resp.i_memdet.pincode);
+				}
+		},'json');
 	}
 	if($(this).val()==0)
 	{
@@ -663,6 +711,7 @@ $("#quick_viewdiv").dialog({
         .css({ position: 'fixed' })
         .position({ my: 'center', at: 'center', of: window });
 		$("#qvk_prod_temp tbody").html("");
+		$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"none"});
         $('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 		$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').addClass('add_to_cartbtn');
 		$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({"float":"right","background":"tomato","color":"white"});
@@ -1352,8 +1401,9 @@ $("#show_scheme_details").dialog({
 	autoOpen:false,
 	width:'800',
 	height:'500',
-	open:function(){
+	open:function(event, ui){
 		dlg = $(this);
+		$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"block"});
 		$('#active_scheme_discount tbody').html("");
 		$('#active_super_scheme tbody').html("");
 		$('#active_imei_scheme tbody').html("");
@@ -1496,6 +1546,7 @@ var ppids=[];
 	        $(event.target).dialog('widget')
             .css({ position: 'fixed' })
             .position({ my: 'center', at: 'center', of: window });
+			$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"block"});
 	        $('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 			$('.ui-dialog-buttonpane').find('button:contains("Continue Shopping")').addClass('continue_btn');
 			$('.ui-dialog-buttonpane').find('button:contains("Place Order")').addClass('placeorder_btn');
@@ -1550,8 +1601,20 @@ var ppids=[];
 									template=template.replace(/%max_ord_qty%/g,"<span class='tip_popup max_qty_wrap' title='Maximum Allowed Quantity'>/&nbsp;("+p.max_ord_qty+"&nbsp;Qty)</span>");
 								}
 								if(p.has_insurance==1)
+								{
 									has_insurance_dl++;
+										template=template.replace(/%has_insurance%/g,"Insurance : <span style='font-size:11px;color:#000;'>Yes</span> ");
+									if(p.insurance_value!=0 && p.insurance_margin!=0)
+											template=template.replace(/%opt_insurance%/g,"<input type='checkbox' style='margin-top:-1px' name='opt_insurance[]' class='opt_insurance' value='"+p.pid+"'> <span style='font-size:11px;color:#000;float:right;'>: Opting Insurance</span> ");
+									else
+											template=template.replace(/%opt_insurance%/g," ");	
 								
+								}
+								else
+								{
+									template=template.replace(/%has_insurance%/g," ");
+									template=template.replace(/%opt_insurance%/g," ");	
+								}
 								if(p.imei_disc!= 0)
 								{
 									if(p.imei_disc.scheme_type==0)
@@ -1562,7 +1625,7 @@ var ppids=[];
 									template=template.replace(/%imei_sch_disc%/g,"<span style='font-size:11px;' class='tip_popup imei_wrap' title='On IMEI Activation'><b>IMEI Activation: </b>(Rs."+format_number(imei)+") </span> ");
 								}else
 								{
-									template=template.replace(/%imei_sch_disc%/g,"");
+									template=template.replace(/%imei_sch_disc%/g," ");
 								}
 								
 								if(p.super_sch!=0)
@@ -1712,6 +1775,7 @@ $(".cart_prodcontinue").click(function(){
 	$("#cart_prod_div").dialog('close');
 });
 
+
 var submit_order=0;
 $("#order_form").submit(function(){
 	
@@ -1792,6 +1856,11 @@ $("#order_form").submit(function(){
 			alert("Please verify whether stock for the footwear is available?");
 			return false;
 		}
+		if($('.opt_insurance').length>=1 && $('input[name="opt_insurance[]"]:checked').length==0)
+		{
+			alert("Is Insurance Option communicated to franchise?");
+			return false;
+		}
 		
 		if(submit_order==0)
 		{
@@ -1800,35 +1869,48 @@ $("#order_form").submit(function(){
 				attr=$(".attr").serialize();
 				$.post(site_url+"/admin/pnh_jx_checkstock_order",{attr:attr,pids:ppids.join(","),qty:qty.join(","),fid:pre_selected_fid,mid:selected_mid}, function(resp){
 					
+
+					var insuranceids=[];
+					$(".opt_insurance:checked").each(function(){
+						insuranceids.push($(this).val());
+					});	
+
+					
 				if(resp.e == 1)
 				{
 					submit_order=0;
 					alert("ERROR!\n\n"+resp.msg);
 					return false;
 				}
+		
 				 if(resp.new_mem==1 && resp.has_insurance==1)
 				{
-					 $("#new_memoffrs").data('mid',selected_mid).dialog('open');
+						
+						$('.offerd_type').val('2');
+						//$('#rqty_imei_blk_dlg').data("pro_data",{'prodid': $(this).attr("prodid"),'brandid':$(this).attr("brandid"),'ttl_qty':tot_rqty,'ref_tr' : trele,'state':'edit'}).dialog('open');
+						//$("#insurance_option").data('insurance_data',{'insurance_pids':insuranceids,'':}).dialog('open');
+						$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 					 return false;	
 				}
 
 			 	if(resp.new_mem==0 && resp.has_insurance==1)
 				{
 			 		$('.offr_sel_type').val('0');
-				 	$("#insurance_option").data('mid',selected_mid).dialog('open');
+				 		$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 				 	 return false;	
 				}
-		 	 	if(resp.new_mem ==1 && resp.has_insurance==0 )
+			 	 	if(resp.new_mem==1 && resp.has_insurance==0 )
 					{
+			 	 		$('.offerd_type').val('1');
 			 	 		$('.offr_sel_type').val('0');
 			 	 			submit_order++;
 					}
 				if(resp.new_mem==0 && resp.has_insurance==0 )	
 					{
-                                           
 						submit_order++;
 						$("#order_form").submit();
 					}
+					
 			 	else
 					{
 						submit_order>=1;	
@@ -1853,6 +1935,7 @@ $('#reg_mem_dlg').dialog({
 			modal:true,
 			height:'auto',
 			open:function(){
+				$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"block"});
 				$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 				$('.ui-dialog-buttonpane').find('button:contains("Register")').css({"float":"right","background":"#4AA02C","color":"white"});
 				$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"float":"right","background":"tomato","color":"white"});
@@ -1920,6 +2003,7 @@ $('#franchise_note').dialog({
 	width:'855',
 	autoOpen:false,
 	open:function(){
+		$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"block"});
 		$('.ui-dialog-buttonpane').find('button:contains("Save Note")').css({"float":"right"});
 	},
 	buttons:{
@@ -2279,6 +2363,7 @@ $("#mid_det").dialog({
 	autoOpen:false,
 	open:function()
 	{
+		$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"block"});
 		$('.ui-dialog-buttonpane').find('button:contains("Proceed")').css({"background":"#4AA02C","color":"white"});
 		$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"background":"tomato","color":"white"});
 		
@@ -2290,7 +2375,10 @@ $("#mid_det").dialog({
 	},
 	buttons:{
 		'Proceed':function(){
-			load_franchisebyid();
+			fid=$("#fid").val();
+			mid=$(".membrid").val();
+			$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"});
+			location="<?=site_url("admin/stk_offline_order_deals") ?>/"+fid+'/'+mid; 
 			$(this).dialog('close');
 		},
 		'Cancel':function(){
@@ -2325,10 +2413,12 @@ function select_fran(fid)
 {
 	fid=$("#fid").val();
 	mid=$(".membrid").val();
+/*	$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"});
+	location="<?=site_url("admin/stk_offline_order_deals") ?>/"+fid+'/'+mid;*/ 
 	if($(".mid_entrytype").val() == 1)
 		{ mid=0; }
-	$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"});
-	location="<?=site_url("admin/stk_offline_order_deals") ?>/"+fid+'/'+mid; 
+	$( "#authentiacte_blk" ).dialog('close');
+	
 }
 
 function change_member()
@@ -2342,6 +2432,7 @@ $("#change_member_blk").dialog({
 	height:'auto',
 	autoOpen:false,
 	open:function(){
+		$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"block"});
 		$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 		$('.ui-dialog-buttonpane').find('button:contains("Submit")').css({"float":"right","background":"#4AA02C","color":"white"});
 		$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"float":"right","background":"tomato","color":"white"});
@@ -2446,6 +2537,7 @@ function pricequery_product(pid)
 function pricenotmatch_product(pid)
 {
 	$("#product_priceqoute").data('pid',pid).dialog('open');
+	$("#quick_viewdiv").dialog('close');
 }
 $("#product_priceqoute").dialog({
 	width:'549',
@@ -2456,6 +2548,7 @@ $("#product_priceqoute").dialog({
 		$(event.target).dialog('widget')
         .css({ position: 'fixed' })
         .position({ my: 'center', at: 'center', of: window });
+		$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"block"});
 		$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 		$('.ui-dialog-buttonpane').find('button:contains("Price Enquiry")').addClass('price_enquiry_btn');
 		$('.ui-dialog-buttonpane').find('button:contains("Price Not Matching")').css({"float":"right"});
@@ -2601,6 +2694,7 @@ $("#ordered_log_dlg" ).dialog({
 	autoResize:true,
 	open:function(){
 	dlg = $(this);
+	$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"block"});
 
 	var ordered_date=$(this).data('ordered_date');
 	var sel_date=$(this).data('sel_date');
@@ -2655,6 +2749,7 @@ $("#ship_log_dlg" ).dialog({
 	autoResize:true,
 	open:function(){
 	dlg = $(this);
+	$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"block"});
 
 	var ship_date=$(this).data('ship_date');
 	var sel_date=$(this).data('sel_date');
@@ -2793,10 +2888,11 @@ $("#fid").change(function(){
 	
 	if($(this).val()>0)
 	{
-		$("#franchise_quickview").data('fid',$(this).val()).dialog('open');
+		load_franchisebyid();
 			}
 	else
-		$("#franchise_quickview").hide();
+		
+		return;
 });
 
 $("#franchise_quickview").dialog({
@@ -2833,6 +2929,7 @@ $("#franchise_quickview").dialog({
 							$(event.target).dialog('widget')
 					        .css({ position: 'fixed' })
 					        .position({ my: 'center', at: 'center', of: window });
+							$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"block"});
 						 	$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 							$('.ui-dialog-buttonpane').find('button:contains("Submit")').css({"float":"right"});
 							var dlg=$(this);
@@ -2887,26 +2984,74 @@ $("#franchise_quickview").dialog({
 		modal:true,
 		autoOpen:false,
 		width:'600',
-		height:'300',
-		Open:function(event, ui){
+		height:'550',
+		open:function(event, ui){
+			var dlg=$(this);
 			$(event.target).dialog('widget')
+				$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"block"});
 	       	$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 			$('.ui-dialog-buttonpane').find('button:contains("Submit")').css({"float":"right"});
+				
 			$("select[name='crd_insurence_type']").val("");
 			$("input[name='crd_insurence_id']").val("");
 			$("#crd_insurance_mem_address").val("");
+				$(".opted_insurance_deal").val(dlg.data('insuranceids'));
+				var order_det = $(this).data('order_det');
+				var insuranceid =[];
+				insuranceid = $(".opted_insurance_deal").val().split(",");
+				var ins_plisthtml = '';
+
+				// prepare insurance applicable items display.
+					$.each(order_det.items,function(a,b){
+					
+						
+						if($.inArray(b.pnh_id,insuranceid)!=-1)
+						{
+							if(b.has_insurance==1)
+							{ 
+								if(order_det.new_mem=='1')
+									insurance_cost=b.insurance_value;
+								else
+									insurance_cost=b.insurance_margin+'%';
+								 
+								ins_plisthtml += '<tr>';
+								ins_plisthtml += '	<td>'+b.name+'</td>';
+								ins_plisthtml += '	<td>'+insurance_cost+'</td>';
+								ins_plisthtml += '</tr>';	
+							}
+						}
+						
+					});
+
+					$('#insurance_items_info tbody').html(ins_plisthtml);
+					
 			},
 			buttons:{
 				'Submit':function(){
+					var dlg=$(this);
 					var credit_insurence_blk=$("#crdet_insurance",this);
 					var opted_insurence=$('input[name=insurance_srn]:checked').val();
 					var proof_type=$("#crd_insurence_type").val();
 					var proof_id=$("input[name='crd_insurence_id']").val();
 					var proof_address=$("#crd_insurance_mem_address").val();
+					var mem_fname=$('#i_memberfname').val();
+					var mem_lname=$('#i_memberlname').val();
+					var mem_mobno=$('#i_membermob').val();
+					var mem_address=$('#i_member_add').val();
+					var mem_city=$('#i_member_city').val();
+					var mem_pincode=$('#i_member_pcode').val();
+					$(".opted_insurance_deal").val(dlg.data('insuranceids'));
 					$('.opted_insurance').val(opted_insurence);
 					$('.proof_type').val(proof_type);
 				  	$('.proof_id').val(proof_id);
 				  	$('.proof_address').val(proof_address);
+
+				  	$('.member_fname').val(mem_fname);
+				  	$('.member_lname').val(mem_lname);
+				  	$('.member_mobno').val(mem_mobno);
+				  	$('.member_address').val(mem_address);
+				  	$('.member_city').val(mem_city);
+				  	$('.member_pincode').val(mem_pincode);
 				  	if(opted_insurence==1)
 				  	{
 				  		if(credit_insurence_blk.parsley('validate'))
