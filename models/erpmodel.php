@@ -8337,7 +8337,7 @@ order by p.product_name asc
 		foreach(array("fid","pid","qty","mid","redeem","redeem_points","mid_entrytype","local_distributor_mrgn","creditdays","frannote","offr_sel_type","insurance") as $i)
 			$$i=$this->input->post($i);
                 
-                //echo '<pre>';print_r($_POST);die();
+//                echo '<pre>';print_r($_POST);die();
                 $updated_by=$admin["userid"];
 
 		if($redeem)
@@ -8441,7 +8441,7 @@ order by p.product_name asc
 				$redeem_value += $item_pnt_value = $item_pnt*$prod['loyality_pntvalue']; 
                         
                         // test
-			//@$this->db->query("update pnh_api_franchise_cart_info set status=0 ,updated_on=now() where franchise_id=? and pid=? and member_id=?",array($fran['franchise_id'],$item['pid'],$mid));
+			@$this->db->query("update pnh_api_franchise_cart_info set status=0 ,updated_on=now() where franchise_id=? and pid=? and member_id=?",array($fran['franchise_id'],$item['pid'],$mid));
 
 		}
 		$avail=$this->erpm->do_stock_check($itemids);
@@ -8517,23 +8517,7 @@ order by p.product_name asc
 			$batch_enabled = 0;
 		
 	
-                //===================< Implement the member offers START>============================
-                if($offr_sel_type == 2 || $insurance['opted_insurance'] == 1 )
-                {
-                    //process insurance document and address details & get insurance process id
-                    $insurance['mid'] =$mid;
-                    $insurance['fid'] =$fid;
-                    $insurance['offer_type'] =$offr_sel_type;
-                    $insurance['transid'] = $transid;
-                    $insurance['created_by'] = $updated_by;
-                    $insu_id = $this->process_insurance_details($insurance);
-                    
-                }
-                //echo '<pre>';print_r($insurance);die();
-                
-                //$offer_ret = $this->pnh_member_offer($menuid,$d_total,$insurance);
-                //===================< Implement the member offers END>============================
-                die();
+                //11
                 
                 $this->db->query("insert into king_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,trans_created_by,batch_enabled,credit_days) values(?,?,?,?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran['franchise_id'],$admin['userid'],$batch_enabled,$creditdays));
                                         
@@ -8773,11 +8757,32 @@ order by p.product_name asc
 
 		$this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
                 
+                //===================< Implement the member offers START>============================
+                $insurance['mid'] =$mid;
+                $insurance['fid'] =$fid;
+                $insurance['offer_type'] =$offr_sel_type;
+                $insurance['transid'] = $transid;
+                $insurance['created_by'] = $updated_by;
+                if($offr_sel_type == 2 || $insurance['opted_insurance'] == 1 )
+                {
+                    //process insurance document and address details & get insurance process id
+                    $insu_id = $this->process_insurance_details($insurance);
+                    //echo '<pre>';print_r($insurance);die();
+                }
+                elseif($offr_sel_type == 1 )
+                {
+                    // Recharge
+                    $offer_ret = $this->pnh_member_offer($d_total,$insurance);
+                    //print_r($_POST);
+                }
+                //===================< Implement the member offers END>============================
+                //die();
+                
 		$this->session->set_flashdata("erp_pop_info"," PNH Order Placed");
 		redirect("admin/trans/$transid",'refresh');
 	}
 	
-        function pnh_member_offer($menuid,$d_total=0,$insurance)
+        function pnh_member_offer($d_total=0,$insurance)
         {
             /*define(LEVEL_1,500); //Rs
             define(LEVEL_1_MOBILE,5000); //Rs
@@ -8890,23 +8895,64 @@ order by p.product_name asc
 //            $this->db->query("select count(*) as ",$member_id);
             return $in_array; */
             
+            /*
+             Array(
+(               [redeem_points] => 0
+                [frannote] => Pending Payment details is Mandatorily collected, please communicate this to franchisee and its a reponsibility of a Franchsiee support executive to recover this and only upon satisfaction place orders
+                [offr_sel_type] => 0
+                [insurance] => Array(
+                        [proof_type] => 1
+                        [proof_id] => dfsgdfg
+                        [proof_address] => dfghdfghdfgh
+                        [opted_insurance] => 1
+                        [insurance_deals] => 12759871
+                        [first_name] => Sridhar Gundaiah 
+                        [last_name] => adsfsadf
+                        [mob_no] => 43252345
+                        [address] => dfsgsdfg
+                        [city] => tryetrey
+                        [pincode] => 6435654
+                    )
+                [fid] => 250
+                [mid] => 21111111
+                [mid_entrytype] => 0
+                [pid] => Array(
+                        [0] => 12759871
+                        [1] => 19756699
+                    )
+                [menu] => Array(
+                        [0] => 112
+                        [1] => 112
+                    )
+                [opt_insurance] => Array(
+                        [0] => 12759871
+                    )
+                [qty] => Array (
+                        [0] => 1
+                        [1] => 1
+                    )
+            )
+            */
+                
             // insert to member offers table
-            
+            $time = date("Y-m-d H:i:s",time());
+            $offer_value = PNH_MEMBER_FREE_RECHARGE;
+            $offer_towards = $d_total;
             $in_array = array(
-                                'member_id'=>$member_id
-                                ,'franchise_id'=>$fid
-                                ,'offer_type'=>$offer_type
-                                ,'offer_value'=>$offer_value
-                                ,'offer_towards' => $offer_towards
-                                ,'pnh_pid' => $insurance['pnh_pid']
-                                ,'transid_ref' => $insurance['transid']
-                                ,'proof_id'=>$insurance['proof_id']
-                                ,'process_status'=>0 //(waiting feedback) // 0=> Not Processed, 1=>Ready to Process 2=>Processed //Offer is assigned not yet activated
-                                ,'referred_by'=> $referred_by_mid
-                                ,'created_by'=>$userid
-                                ,'created_on'=>time()
-                            );
-                echo '<pre>'; print_r($in_array); //die();
+                            'member_id'=>$insurance['mid']
+                            ,'franchise_id'=>$insurance['fid']
+                            ,'offer_type'=>$insurance['offer_type']
+                            ,'offer_value'=>$offer_value
+                            ,'offer_towards' => $offer_towards
+                            ,'pnh_pid' => ''
+                            ,'transid_ref' => $insurance['transid']
+                            ,'insurance_id'=>''
+                            ,'process_status'=>0 //(waiting feedback) // 0=> Not Processed, 1=>Ready to Process 2=>Processed //Offer is assigned not yet activated
+                            ,'referred_by'=> ''
+                            ,'created_by'=>$insurance['created_by']
+                            ,'created_on' => $time
+                        );
+                //echo '<pre>'; print_r($in_array); die();
                 $this->db->insert("pnh_member_offers",$in_array);
             
             // update referral status
@@ -8918,34 +8964,42 @@ order by p.product_name asc
         function process_insurance_details($insurance)
         {
             /*
-             [insurance] => Array
-        (
-            [proof_type] => 1
-            [proof_id] => dfsgdfg
-            [proof_address] => dfghdfghdfgh
-            [opted_insurance] => 1
-            [insurance_deals] => 12759871
-            [first_name] => Sridhar Gundaiah  [first_name] [last_name] =>  [mob_no] => [address] => [city] =>  [pincode] => 
-            [last_name] => adsfsadf
-            [mob_no] => 43252345
-            [address] => dfsgsdfg
-            [city] => tryetrey
-            [pincode] => 6435654
-        )
-            [proof_type] => 1
-            [proof_id] => 435345
-            [proof_address] => retwretwert
-            [opted_insurance] => 1
-            [order_value] => Array
-            (
-                [12759871] => 3456.11
-                [19756699] => 3657.87
+             Array(
+(               [redeem_points] => 0
+                [frannote] => Pending Payment details is Mandatorily collected, please communicate this to franchisee and its a reponsibility of a Franchsiee support executive to recover this and only upon satisfaction place orders
+                [offr_sel_type] => 0
+                [insurance] => Array(
+                        [proof_type] => 1
+                        [proof_id] => dfsgdfg
+                        [proof_address] => dfghdfghdfgh
+                        [opted_insurance] => 1
+                        [insurance_deals] => 12759871
+                        [first_name] => Sridhar Gundaiah 
+                        [last_name] => adsfsadf
+                        [mob_no] => 43252345
+                        //[address] => dfsgsdfg
+                        [city] => tryetrey
+                        [pincode] => 6435654
+                    )
+                [fid] => 250
+                [mid] => 21111111
+                [mid_entrytype] => 0
+                [pid] => Array(
+                        [0] => 12759871
+                        [1] => 19756699
+                    )
+                [menu] => Array(
+                        [0] => 112
+                        [1] => 112
+                    )
+                [opt_insurance] => Array(
+                        [0] => 12759871
+                    )
+                [qty] => Array (
+                        [0] => 1
+                        [1] => 1
+                    )
             )
-            [insurance_deals] => 1113949,1276648
-            [mid] => 21111111
-            [fid] => 250
-            [offer_type] => 0
-            [transid] => PNH23461
             */
             $arr_ins_ords = explode(",",$insurance['insurance_deals']);
             
@@ -8958,31 +9012,40 @@ order by p.product_name asc
                 $menuid = $menuids[$pnhid];
                 
                 
-                $menuid = $this->db->query("select d.menuid from king_orders o
+                /*$menuid = $this->db->query("select d.menuid from king_orders o
                                     join king_dealitems di on di.id=o.itemid
                                     join king_deals d on d.dealid=di.dealid
-                                    where o.transid=? and di.pnh_id=?",array($insurance['transid'],$pnhid))->row()->menuid;
+                                    where o.transid=? and di.pnh_id=?",array($insurance['transid'],$pnhid))->row()->menuid;*/
+                $itemid = $this->db->query("select o.itemid from king_orders o join king_dealitems di on di.id=o.itemid
+                                                where o.transid=? and di.pnh_id=? ",array($insurance['transid'],$pnhid))->row()->itemid;
                 //echo '<pre>'.$this->db->last_query();
                 
                 $margin_arr = $this->db->query("select insurance_value,insurance_margin,greater_than,less_than from pnh_member_insurance_menu im where is_active = 1 and menu_id= ? ",array($menuid))->result_array();
-                 print_r($margin_arr);
+                //print_r($margin_arr);
                 foreach($margin_arr as $margin)
                 {
                     
                     if( $order_val > $margin['greater_than'] &&  $order_val < $margin['less_than'] )
                     {
+                        if($insurance['opted_insurance'] == 1 && $insurance['offer_type'] == 0 )
+                        {
+                            $insurance_margin = $margin['insurance_margin'];
+                            $insurance_value = ($order_val/100) * $insurance_margin;
+                        }
+                        else
+                        {
+                            $insurance_margin=0;
+                            $insurance_value = $margin['insurance_value'];
+                        }
                         
-                        $insurance_value = $margin['insurance_value'];
-                        $insurance_margin = $margin['insurance_margin'];
                     }
-                    
                 
                 }
                 
-                
+                $time = date("Y-m-d H:i:s",time());
                 
                 $in_data = array(
-                    'insurance_id'=> random_string("nozero", $len=8)//alnum,numeric
+                    'insurance_id'=> random_string("nozero", $len=10)//alnum,numeric
                     ,'fid'=>$insurance['fid']
                     ,'mid'=>$insurance['mid']
                     ,'offer_type'=>$insurance['offer_type']
@@ -8990,21 +9053,20 @@ order by p.product_name asc
                     ,'proof_type'=>$insurance['proof_type']
                     ,'proof_address'=> $insurance['proof_address']
                     ,'opted_insurance'=> $insurance['opted_insurance']
-                    ,'offer_status'=> 1
+                    ,'offer_status'=> 0
                     ,'insurance_value'=> $insurance_value
                     ,'insurance_margin'=> $insurance_margin
                     ,'order_value'=> $order_val
+                    ,"itemid"=>$itemid
                     ,"first_name" => $insurance["first_name"]
                     ,"last_name" => $insurance["last_name"]
                     ,"mob_no" => $insurance["mob_no"]
-                    ,"address" => $insurance["address"]
                     ,"city" => $insurance["city"]
                     ,"pincode" =>  $insurance["pincode"]
                     ,"created_by" => $insurance['created_by']
-                    ,"created_on" => date("Y-m-d H:i:s",time())
+                    ,"created_on" => $time
                 );
-                echo '<pre>';print_r($in_data);
-                die();
+//                echo '<pre>';print_r($in_data);die();
                 $this->db->insert("pnh_member_insurance",$in_data);
                 $insu_log_id = $this->db->insert_id();
                 
@@ -9015,15 +9077,32 @@ order by p.product_name asc
                     ,"insurance_amount"=>$insurance_value
                 );
                 $up_where=array(
-                    'has_insurance'=>1
-                    ,"insurance_logid"=>$insu_log_id
-                    ,"insurance_amount"=>$insurance_value
+                    'transid'=>$insurance['transid']
+                    ,"itemid"=>$itemid
                 );
-                
                 $this->db->update("king_orders",$up_in,$up_where);
                 
+                
+                // insert to member offers table
+                    $in_array = array(
+                                    'member_id'=>$insurance['mid']
+                                    ,'franchise_id'=>$insurance['fid']
+                                    ,'offer_type'=>$insurance['offer_type']
+                                    ,'offer_value'=>$insurance_value
+                                    ,'offer_towards' => $order_val
+                                    ,'pnh_pid' => $pnhid
+                                    ,'transid_ref' => $insurance['transid']
+                                    ,'insurance_id'=> $insu_log_id
+                                    ,'process_status'=>0 //(waiting feedback) // 0=> Not Processed, 1=>Ready to Process 2=>Processed //Offer is assigned not yet activated
+                                    ,'referred_by'=> 0
+                                    ,'created_by'=>$insurance['created_by']
+                                    ,'created_on' => $time
+                                );
+                    //echo '<pre>'; print_r($in_array); //die();
+                    $this->db->insert("pnh_member_offers",$in_array);
+                    
             }
-            
+            //die();
         }
 	
         

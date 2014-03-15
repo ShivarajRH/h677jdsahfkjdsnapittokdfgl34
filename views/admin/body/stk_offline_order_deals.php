@@ -484,37 +484,6 @@ $fran_status_arr[3]="Temporary Suspension";
 		</form>
 	</div>
 	<div id="franchise_quickview"  title="Franchisee Info"><div id="fran_qvkview"></div></div>
-	
-	<div id="new_memoffrs" Title="Offer Bonanza For the Member first Order">
-		<div width="100%">
-		<form method="post" id="update_meminfo" data-validate="parsley" >
-			<table width="100%" cellspacing="5">
-				<input type="hidden" name="selected_mid" value="">
-				<tr><td><b>Free Recharge Talktime of worth(Rs 100)</b> <input type="radio" name="offerd_type" value="1" class="offerd_type"></td></tr>  
-				<tr class="insurance"><td><b>Free Insurance</b><input type="radio" name="offerd_type" checked value="2"  class="offerd_type"></td></tr>
-			</table>
-			<table class="insurance_blk">	
-				<tr><td width="34%"><b>Proof Type</b></td><td><b>: </b> </td>
-					<td>
-						<select name="dlg_insurence_type" id="dlg_insurence_type"  data-required="true">
-							<option value="">Select</option>
-							<?php $insurance_types=$this->db->query("select * from insurance_m_types order by name asc")->result_array();
-							if($insurance_types){
-							foreach($insurance_types as $i_type){
-							?>
-							<option value="<?php echo $i_type['id']?>"><?php echo $i_type['name']?></option>
-							<?php }}?>
-						</select>
-					</td>
-				</tr>
-				<tr><td><b>Proof Id</b></td><td><b>:</b></td><td><input type="text" name="dlg_insurence_id" value="" data-required="true"></td></tr></div>
-				<tr><td><b>Proof Address</b></td><td><b>:</b></td><td> <textarea name="dlg_mem_address" value="" data-required="true" id="dlg_mem_address"></textarea></td></tr>
-			</table>
-		</form>	
-		</div>
-	</div>
-	
-	
 	<div id="insurance_option" title="Payable Insurance" >
 		<p><b>Would you like to have insurance?</b>
 			<span><input type="radio" value="1"   name="insurance_srn" class="insurance_srn">Yes</span>
@@ -522,7 +491,6 @@ $fran_status_arr[3]="Temporary Suspension";
 		</p>
 		
 	<div id="crdet_insurance_blk">
-	
 		<div id="insurance_items_info">
 			<table class="datagrid" width="100%">
 				<thead><th>Product</th><th>Insurance cost</th></thead>
@@ -530,7 +498,7 @@ $fran_status_arr[3]="Temporary Suspension";
 			</table>
 		</div>
 		<br>
-		<h4 style="background-color:#FAFAFA; ">Member Details</h4>
+		<h4 style="background-color:#F6F6F6;padding:5px;text-align:center;">Member Details</h4>
 		<div id="member_info_bloc">
 			<form id="crdet_insurance" data-validate="parsley" method="post">
 				<span class="form_label_wrap">First Name :</span>
@@ -1885,10 +1853,8 @@ $("#order_form").submit(function(){
 		
 				 if(resp.new_mem==1 && resp.has_insurance==1)
 				{
-						
+						$('.offr_sel_type').val('2');
 						$('.offerd_type').val('2');
-						//$('#rqty_imei_blk_dlg').data("pro_data",{'prodid': $(this).attr("prodid"),'brandid':$(this).attr("brandid"),'ttl_qty':tot_rqty,'ref_tr' : trele,'state':'edit'}).dialog('open');
-						//$("#insurance_option").data('insurance_data',{'insurance_pids':insuranceids,'':}).dialog('open');
 						$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 					 return false;	
 				}
@@ -1901,8 +1867,8 @@ $("#order_form").submit(function(){
 				}
 			 	 	if(resp.new_mem==1 && resp.has_insurance==0 )
 					{
-			 	 		$('.offerd_type').val('1');
-			 	 		$('.offr_sel_type').val('0');
+			 	 	
+			 	 		$('.offr_sel_type').val('1');
 			 	 			submit_order++;
 					}
 				if(resp.new_mem==0 && resp.has_insurance==0 )	
@@ -2920,65 +2886,6 @@ $("#franchise_quickview").dialog({
 	
 });
 
-	$("#new_memoffrs").dialog({
-						modal:true,
-						autoOpen:false,
-						width:'874',
-						height:'346',
-						Open:function(event, ui){
-							$(event.target).dialog('widget')
-					        .css({ position: 'fixed' })
-					        .position({ my: 'center', at: 'center', of: window });
-							$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"block"});
-						 	$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
-							$('.ui-dialog-buttonpane').find('button:contains("Submit")').css({"float":"right"});
-							var dlg=$(this);
-							$('input[name="selected_mid"]').val(dlg.data('mid'));
-							$('input[type=radio]:checked').val('1');
-							$("#dlg_insurence_type").val("");
-							$("input[name='dlg_insurence_id']").val("");
-							$("#dlg_mem_address").val("");
-							$('.insurance_blk').hide();
-							
-								if(resp.has_insurance==1)
-									$(".insurance").show();
-								else
-									$(".insurance").hide();
-							},
-						buttons:{
-						'Submit':function(){
-							var mem_updateform=$("#update_meminfo",this);
-							var offr_type=$('input[type=radio]:checked').val();
-							var proof_type=$("#dlg_insurence_type").val();
-							var proof_id=$("input[name='dlg_insurence_id']").val();
-							var proof_address=$("#dlg_mem_address").val();
-							submit_order=0;
-								$('.offr_sel_type').val(offr_type);
-								$('.proof_type').val(proof_type);
-							  	$('.proof_id').val(proof_id);
-							  	$('.proof_address').val(proof_address);
-							  	$('.opted_insurance').val('1');
-								//return false;
-							  	if(offr_type==2)
-							  	{
-							  		if(mem_updateform.parsley('validate'))
-							  		{
-							  			submit_order++;
-							  			$("#order_form").submit();
-							  		}
-							  		else
-							  		{
-							  			submit_order=0
-							  		}
-								 }
-							  	else if(offr_type==1)
-							  	{
-								  	submit_order++;
-								  	$("#order_form").submit();
-							  	}
-							}
-						}
-					});
 
 	$('#insurance_option').dialog({
 		modal:true,

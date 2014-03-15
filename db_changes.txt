@@ -1264,3 +1264,10 @@ alter table `pnh_member_offers` change `insurance_id` `proof_id` varchar (120) D
 
 # Mar_14_2014
 alter table `king_orders` add column `has_insurance` tinyint (11) DEFAULT '0' NULL  after `is_paid`, add column `insurance_logid` bigint   NULL  after `has_insurance`, add column `insurance_amount` double   NULL  after `insurance_logid`;
+
+alter table `pnh_member_insurance` add column `insurance_id` varchar (150)  NULL  after `sno`, add column `insurance_value` double   NULL  after `offer_status`, add column `insurance_margin` varchar (50) DEFAULT '0' NULL  after `insurance_value`, add column `order_value` double   NULL  after `insurance_margin`, add column `first_name` varchar (60)  NULL  after `order_value`, add column `last_name` varchar (60)  NULL  after `first_name`, add column `mob_no` varchar (50)  NULL  after `last_name`, add column `address` text   NULL  after `mob_no`, add column `city` varchar (50)  NULL  after `address`, add column `pincode` varchar (50)  NULL  after `city`, add column `created_by` varchar (20)  NULL  after `pincode`, add column `created_on` varchar (60)  NULL  
+after `created_by`,change `offer_status` `offer_status` tinyint (11) DEFAULT '0' NULL;
+
+alter table `pnh_member_insurance` add column `itemid` varchar (25)  NULL  after `order_value`;
+alter table `pnh_member_offers` change `proof_id` `insurance_id` varchar (120) DEFAULT '0' NULL  COLLATE latin1_swedish_ci;
+alter table `pnh_member_insurance` drop column `address`;

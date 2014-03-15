@@ -3571,7 +3571,7 @@ create table `pnh_member_insurance` (  `sno` bigint UNSIGNED NOT NULL AUTO_INCRE
 # ====================< RESET MEMBER OFFERS TABLES START >=====================================
 truncate table `pnh_member_insurance`;
 truncate table `pnh_member_offers`;
-truncate table `pnh_member_offers_referral`;
+#truncate table `pnh_member_offers_referral`;
 # ====================< RESET MEMBER OFFERS TABLES END >=====================================
 se
 
@@ -3637,16 +3637,19 @@ select * from king_dealitems where pnh_id='12759871' #=>9884254185
 select * from king_deals where dealid='5172296214';
 
 -- -- -- -- -- -- -- -- -- new ----=------------------------
-select d.menuid,* from king_orders o
+select *,d.menuid from king_orders o
 join king_dealitems di on di.id=o.itemid
 join king_deals d on d.dealid=di.dealid
 where o.transid='PNH64833' and di.pnh_id='12759871';
-
-alter table `snapittoday_db_jan_2014`.`pnh_member_insurance` add column `insurance_id` varchar (150)  NULL  after `sno`, add column `insurance_value` double   NULL  after `offer_status`, add column `insurance_margin` varchar (50) DEFAULT '0' NULL  after `insurance_value`, add column `order_value` double   NULL  after `insurance_margin`, add column `first_name` varchar (60)  NULL  after `order_value`, add column `last_name` varchar (60)  NULL  after `first_name`, add column `mob_no` varchar (50)  NULL  after `last_name`, add column `address` text   NULL  after `mob_no`, add column `city` varchar (50)  NULL  after `address`, add column `pincode` varchar (50)  NULL  after `city`, add column `created_by` varchar (20)  NULL  after `pincode`, add column `created_on` varchar (60)  NULL  
+#==========================================================================================
+alter table `pnh_member_insurance` add column `insurance_id` varchar (150)  NULL  after `sno`, add column `insurance_value` double   NULL  after `offer_status`, add column `insurance_margin` varchar (50) DEFAULT '0' NULL  after `insurance_value`, add column `order_value` double   NULL  after `insurance_margin`, add column `first_name` varchar (60)  NULL  after `order_value`, add column `last_name` varchar (60)  NULL  after `first_name`, add column `mob_no` varchar (50)  NULL  after `last_name`, add column `address` text   NULL  after `mob_no`, add column `city` varchar (50)  NULL  after `address`, add column `pincode` varchar (50)  NULL  after `city`, add column `created_by` varchar (20)  NULL  after `pincode`, add column `created_on` varchar (60)  NULL  
 after `created_by`,change `offer_status` `offer_status` tinyint (11) DEFAULT '0' NULL;
 
+alter table `pnh_member_insurance` add column `itemid` varchar (25)  NULL  after `order_value`;
+alter table `pnh_member_offers` change `proof_id` `insurance_id` varchar (120) DEFAULT '0' NULL  COLLATE latin1_swedish_ci;
+alter table `pnh_member_insurance` drop column `address`;
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
-
+#==========================================================================================
 CREATE TABLE `pnh_member_insurance_menu` (
   `id` bigint(11) NOT NULL AUTO_INCREMENT,
   `menu_id` bigint(11) NOT NULL,
@@ -3689,5 +3692,47 @@ select insurance_value,insurance_margin from pnh_member_insurance_menu im where 
 select d.menuid from king_orders o
                                     join king_dealitems di on di.id=o.itemid
                                     join king_deals d on d.dealid=di.dealid
-                                    where o.transid='PNH33729' and di.pnh_id='12759871;
+                                    where o.transid='PNH33729' and di.pnh_id='12759871';
 
+select o.itemid,o.transid from king_orders o
+join king_dealitems di on di.id=o.itemid
+where o.transid='PNH64833' and di.pnh_id='12759871'; # => 5172296214
+
+# Mar_15_2014
+select *,o.itemid,o.transid from king_orders o where o.transid='PNH64833' and o.itemid='5172296214'
+-- old
+select o.itemid from king_orders o join king_dealitems di on di.id=o.itemid
+                                                where o.transid='PNH45641' and di.pnh_id='12759871';
+
+# ====================< RESET MEMBER OFFERS TABLES START >=====================================
+truncate table `pnh_member_insurance`;
+truncate table `pnh_member_offers`;
+truncate table `pnh_member_offers_log`;
+update king_orders set has_insurance='',insurance_logid='',insurance_amount='' where 1=1;
+#truncate table `pnh_member_offers_referral`;
+# ====================< RESET MEMBER OFFERS TABLES END >=====================================
+
+-- old
+select a.*,b.user_id,b.first_name,f.*, date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  
+where a.offer_type in (0,2)
+order by a.created_on desc limit 100;
+
+select a.*,b.first_name,b.user_id from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id  where a.transid_ref='PNH16326';
+
+select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100;
+
+select * from pnh_member_info where pnh_member_id='22017148';
+# 7962767596  4922585172  1797426333
+3854235621
+7338377355
+4685349726
+4896893429
+6612136114
+
+#,mi.insurance_id,mi.fid,mi.mid
+select *,a.username,mf.member_id,mf.transid_ref as transid from pnh_member_insurance mi
+                        join pnh_member_offers mf on mf.insurance_id = mi.insurance_id
+                        join king_admin a on a.id = mi.created_by
+                        where mi.insurance_id = '2971433743';
+
+select name as dealname,pnh_id from king_dealitems where id='5172296214';

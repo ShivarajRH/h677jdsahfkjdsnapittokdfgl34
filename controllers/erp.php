@@ -28416,7 +28416,7 @@ die; */
 			$recharge_town_arr=array();
             
             define("MAX_REFERAL_COUNT",3);
-            $offers_insurance = $this->db->query("select a.*,b.user_id,b.first_name,f.*, date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  where a.offer_type=2 order by a.created_on desc limit 100")->result_array();
+            $offers_insurance = $this->db->query("select a.*,b.user_id,b.first_name,f.*, date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  where a.offer_type in (0,2) order by a.created_on desc limit 100")->result_array();
             $offers_talktime = $this->db->query("select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100")->result_array();
             
             /*$data['referral_offers'] = $this->db->query("select num_referred,referred_by,offer_value,floor(num_referred/?) as times from (
@@ -28787,7 +28787,10 @@ die; */
     {
             if($insuranceid=='')
                 show_error ("No insurance id found.");
-
+            $data['insurance_det'] = $this->db->query("select mi.*,a.username,mf.member_id,mf.transid_ref as transid from pnh_member_insurance mi
+                        join pnh_member_offers mf on mf.insurance_id = mi.insurance_id
+                        join king_admin a on a.id = mi.created_by
+                        where mi.insurance_id =? ",$insuranceid)->result_array();
             $data['page']="insurance_print_view";
             $this->load->view("admin",$data);
     }

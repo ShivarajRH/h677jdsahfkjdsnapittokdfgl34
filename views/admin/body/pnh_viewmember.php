@@ -32,7 +32,7 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 <div id="offers_log">
         <div style="margin:5px 0px;padding:5px;border:1px solid #f7f7f7;">
                 <?php 
-                $offers_q = $this->db->query("select * from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id where member_id=?",$u['pnh_member_id']);
+                $offers_q = $this->db->query("select a.*,b.first_name,b.user_id from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id where member_id=?",$u['pnh_member_id']);
                 if($offers_q->num_rows())
                 {?>
                     <!--<h4>Offers</h4>-->
@@ -48,12 +48,12 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 
                         <?php
                         $offers = $offers_q->result_array();
-                        $arr_offer_type = array(1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
+                        $arr_offer_type = array(0=>"Insurance Opted",1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
                         $arr_offer_status = array(0=>"Not Processed",1=>"Ready to Process",2=>"Processed");
                         foreach($offers as $i=>$offer) { ?>
                         <tr>
                             <td><?=++$i;?></td>
-                            <td><?=  format_datetime_ts($offer['created_on']);?></td>
+                            <td><?=  format_datetime($offer['created_on']);?></td>
                             <td><a href="<?=site_url("/admin/trans/".$offer['transid_ref']);?>" target="_blank"><?=$offer['transid_ref'];?></a></td>
                             <td><?=$arr_offer_type[$offer['offer_type']];?></td>
                             <td>Rs. <?=formatInIndianStyle($offer['offer_value']);?></td>
