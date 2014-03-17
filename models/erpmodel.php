@@ -2690,9 +2690,7 @@ courier disable ends
 	}
                  
 		
-		//if($new_dispatch_id)
-		//	redirect("admin/invoice/$new_dispatch_id");
-		//else
+
 			redirect("admin/invoice/$invoice_no");
 			
 	}
@@ -8424,14 +8422,13 @@ order by p.product_name asc
 			$total+=$items[$i]['price']*$items[$i]['qty'];
 			$d_total+=($items[$i]['price']-$items[$i]['discount'])*$items[$i]['qty'];
                         
-        
-
-                        // offers check
-                        if($offr_sel_type == 2 || $insurance['opted_insurance'] == 1 )
-                        {
-                            $insurance['menuids'][$item['pid']] = $prod['menuid'];//$items[$i]['menuid'];
-                            $insurance['order_value'][$item['pid']] = ($items[$i]['price']-$items[$i]['discount'])*$items[$i]['qty'];
-                        }
+       
+			// offers check
+			if($offr_sel_type == 2 || $insurance['opted_insurance'] == 1 )
+			{
+			    $insurance['menuids'][$item['pid']] = $prod['menuid'];//$items[$i]['menuid'];
+			    $insurance['order_value'][$item['pid']] = ($items[$i]['price']-$items[$i]['discount'])*$items[$i]['qty'];
+			}
 
 			$itemids[]=$prod['id'];
 			$itemnames[]=$prod['name'];
@@ -8440,9 +8437,8 @@ order by p.product_name asc
 			if($redeem)
 				$redeem_value += $item_pnt_value = $item_pnt*$prod['loyality_pntvalue']; 
                         
-                        // test
 			@$this->db->query("update pnh_api_franchise_cart_info set status=0 ,updated_on=now() where franchise_id=? and pid=? and member_id=?",array($fran['franchise_id'],$item['pid'],$mid));
-
+			//	echo $this->db->last_query();exit;
 		}
 		$avail=$this->erpm->do_stock_check($itemids);
 		foreach($itemids as $i=>$itemid)
@@ -8516,10 +8512,11 @@ order by p.product_name asc
 		else	
 			$batch_enabled = 0;
 		
+		$this->db->query("insert into king_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,trans_created_by,batch_enabled,credit_days) values(?,?,?,?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran['franchise_id'],$admin['userid'],$batch_enabled,$creditdays));
 	
                 //11
                 
-                $this->db->query("insert into king_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,trans_created_by,batch_enabled,credit_days) values(?,?,?,?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran['franchise_id'],$admin['userid'],$batch_enabled,$creditdays));
+                
                                         
 		foreach($items as $item)
 		{
@@ -8772,7 +8769,7 @@ order by p.product_name asc
                 elseif($offr_sel_type == 1 )
                 {
                     // Recharge
-                    $offer_ret = $this->pnh_member_offer($d_total,$insurance);
+                    $offer_ret = $this->pnh_member_recharge($d_total,$insurance);
                     //print_r($_POST);
                 }
                 //===================< Implement the member offers END>============================
@@ -8782,158 +8779,8 @@ order by p.product_name asc
 		redirect("admin/trans/$transid",'refresh');
 	}
 	
-        function pnh_member_offer($d_total=0,$insurance)
+        function pnh_member_recharge($d_total=0,$insurance)
         {
-            /*define(LEVEL_1,500); //Rs
-            define(LEVEL_1_MOBILE,5000); //Rs
-            define(LEVEL_2,10000); //Rs
-            define(LEVEL_3,15000); //Rs
-            define(LEVEL_4,20000); //Rs
-            define(INSUR_VAL_DEF,50); //Rs
-            define(INSUR_VAL_2, INSUR_VAL_DEF + 50); //Rs
-            define(INSUR_VAL_3,INSUR_VAL_DEF + 100); //Rs
-            define(DEF_TALKTIME, 100); //Rs
-            define(INSURANCE_PERC,2); //2% from second order on on mobile bill amount
-            $has_offer = 1;
-                //if offer type-1 == talktime & type-2 ==  insurance & 3== NA,not opted & 0== not offred,new & 4 == insurance opted on demand(Not first time)
-                if(!$this->db->query("select count(*) as c from pnh_member_offers where member_id=? and offer_type=0",$member_id)->row()->c)
-                {
-                    if($this->db->query("select count(*) as m from pnh_member_info where id=?",$member_id)->row()->m)
-                    {
-                            if(in_array("112",$menuid))
-                            {
-                                // If order deals belongs to 112(mobile&tablets) menu
-                                if($offr_sel_type == 2) // Insurance
-                                {
-                                    if($mobile_menu_total >= LEVEL_1_MOBILE )
-                                    {
-                                            //if mobile menu & insurance is opted
-                                            if( $mobile_menu_total >= LEVEL_1_MOBILE && $mobile_menu_total <= LEVEL_2 )
-                                            {
-                                                $offer_value = INSUR_VAL_DEF;
-                                            }
-                                            elseif( $mobile_menu_total >= LEVEL_2 && $mobile_menu_total <= LEVEL_3 )
-                                            {
-                                                $offer_value = INSUR_VAL_2;
-                                            }
-                                            elseif( $mobile_menu_total >= LEVEL_3 && $mobile_menu_total <= LEVEL_4 )
-                                            {
-                                                $offer_value = INSUR_VAL_3;
-                                            }
-                                            $offer_type = 2;
-                                            $offer_towards = $mobile_menu_total;
-                                    }
-                                    else
-                                    {
-                                        $has_offer = 0;
-                                    }
-                                }
-                                elseif($offr_sel_type == 1) //Talktime
-                                {
-                                    $offer_value = DEF_TALKTIME;
-                                    $offer_type = 1;
-                                    $offer_towards = $d_total;
-                                }
-                                else
-                                {
-                                    //if mobile menu & insurance is not opted
-                                    $offer_value = 0;
-                                    $offer_type = 3;
-                                    $offer_towards = 0;
-                                }
-                            }
-                            else
-                            {
-                                //Only if not of any menu is 112
-                                if($d_total >= LEVEL_1)
-                                {
-                                    // if all order deals are beauty products
-                                    $offer_value = DEF_TALKTIME;
-                                    $offer_type = 1;
-                                    $offer_towards = $d_total;
-                                }
-                                else
-                                {
-                                    //No offer
-                                    $has_offer=0;
-                                }
-                            }
-                    }
-                    else
-                    {
-                        //Already member id exists
-                        if($insurance['opted_insurance'] == 1) // 2nd time opted for insurance
-                        {
-                            //and requested for insurance
-                            //make 2% insurance value on bill amount
-                            $offer_value = ($mobile_menu_total/100) * INSURANCE_PERC;
-                            $offer_towards = $mobile_menu_total;
-                            $offer_type = 4; // Insurance on next orders, on request
-                        }
-                    }
-            }
-            //if($offer_type != 3) 
-            if($has_offer == 1) {
-                //insert to db
-                $in_array = array(
-                                'member_id'=>$member_id
-                                ,'franchise_id'=>$fid
-                                ,'offer_type'=>$offer_type
-                                ,'offer_value'=>$offer_value
-                                ,'offer_towards' => $offer_towards
-                                ,'transid_ref' => $transid
-                                ,'proof_id'=>$insurance['proof_id']
-                                ,'process_status'=>0 //(waiting feedback) // 0=> Not Processed, 1=>Ready to Process 2=>Processed //Offer is assigned not yet activated
-                                ,'referred_by'=> $referred_by_mid
-                                ,'created_by'=>$userid
-                                ,'created_on'=>time()
-                            );
-                echo '<pre>'; print_r($in_array); //die();
-                $this->db->insert("pnh_member_offers",$in_array);
-            }
-            // update referral status
-//            $this->db->query("select count(*) as ",$member_id);
-            return $in_array; */
-            
-            /*
-             Array(
-(               [redeem_points] => 0
-                [frannote] => Pending Payment details is Mandatorily collected, please communicate this to franchisee and its a reponsibility of a Franchsiee support executive to recover this and only upon satisfaction place orders
-                [offr_sel_type] => 0
-                [insurance] => Array(
-                        [proof_type] => 1
-                        [proof_id] => dfsgdfg
-                        [proof_address] => dfghdfghdfgh
-                        [opted_insurance] => 1
-                        [insurance_deals] => 12759871
-                        [first_name] => Sridhar Gundaiah 
-                        [last_name] => adsfsadf
-                        [mob_no] => 43252345
-                        [address] => dfsgsdfg
-                        [city] => tryetrey
-                        [pincode] => 6435654
-                    )
-                [fid] => 250
-                [mid] => 21111111
-                [mid_entrytype] => 0
-                [pid] => Array(
-                        [0] => 12759871
-                        [1] => 19756699
-                    )
-                [menu] => Array(
-                        [0] => 112
-                        [1] => 112
-                    )
-                [opt_insurance] => Array(
-                        [0] => 12759871
-                    )
-                [qty] => Array (
-                        [0] => 1
-                        [1] => 1
-                    )
-            )
-            */
-                
             // insert to member offers table
             $time = date("Y-m-d H:i:s",time());
             $offer_value = PNH_MEMBER_FREE_RECHARGE;
@@ -8955,17 +8802,15 @@ order by p.product_name asc
                 //echo '<pre>'; print_r($in_array); die();
                 $this->db->insert("pnh_member_offers",$in_array);
             
-            // update referral status
-//            $this->db->query("select count(*) as ",$member_id);
-            
+                // update referral status
+                // $this->db->query("select count(*) as ",$member_id);
+
         }
 	
         
         function process_insurance_details($insurance)
         {
-            /*
-             Array(
-(               [redeem_points] => 0
+            /*  [redeem_points] => 0
                 [frannote] => Pending Payment details is Mandatorily collected, please communicate this to franchisee and its a reponsibility of a Franchsiee support executive to recover this and only upon satisfaction place orders
                 [offr_sel_type] => 0
                 [insurance] => Array(
@@ -8977,7 +8822,6 @@ order by p.product_name asc
                         [first_name] => Sridhar Gundaiah 
                         [last_name] => adsfsadf
                         [mob_no] => 43252345
-                        //[address] => dfsgsdfg
                         [city] => tryetrey
                         [pincode] => 6435654
                     )
@@ -8999,7 +8843,6 @@ order by p.product_name asc
                         [0] => 1
                         [1] => 1
                     )
-            )
             */
             $arr_ins_ords = explode(",",$insurance['insurance_deals']);
             
@@ -9010,18 +8853,15 @@ order by p.product_name asc
                 
                 $order_val = $orders_val[$pnhid];
                 $menuid = $menuids[$pnhid];
-                
-                
                 /*$menuid = $this->db->query("select d.menuid from king_orders o
                                     join king_dealitems di on di.id=o.itemid
                                     join king_deals d on d.dealid=di.dealid
                                     where o.transid=? and di.pnh_id=?",array($insurance['transid'],$pnhid))->row()->menuid;*/
                 $itemid = $this->db->query("select o.itemid from king_orders o join king_dealitems di on di.id=o.itemid
                                                 where o.transid=? and di.pnh_id=? ",array($insurance['transid'],$pnhid))->row()->itemid;
-                //echo '<pre>'.$this->db->last_query();
                 
                 $margin_arr = $this->db->query("select insurance_value,insurance_margin,greater_than,less_than from pnh_member_insurance_menu im where is_active = 1 and menu_id= ? ",array($menuid))->result_array();
-                //print_r($margin_arr);
+
                 foreach($margin_arr as $margin)
                 {
                     
@@ -9030,7 +8870,7 @@ order by p.product_name asc
                         if($insurance['opted_insurance'] == 1 && $insurance['offer_type'] == 0 )
                         {
                             $insurance_margin = $margin['insurance_margin'];
-                            $insurance_value = ($order_val/100) * $insurance_margin;
+                            $insurance_value = ($order_val/100) * $insurance_margin; // percentage of offer value
                         }
                         else
                         {
@@ -9084,25 +8924,25 @@ order by p.product_name asc
                 
                 
                 // insert to member offers table
-                    $in_array = array(
-                                    'member_id'=>$insurance['mid']
-                                    ,'franchise_id'=>$insurance['fid']
-                                    ,'offer_type'=>$insurance['offer_type']
-                                    ,'offer_value'=>$insurance_value
-                                    ,'offer_towards' => $order_val
-                                    ,'pnh_pid' => $pnhid
-                                    ,'transid_ref' => $insurance['transid']
-                                    ,'insurance_id'=> $insu_log_id
-                                    ,'process_status'=>0 //(waiting feedback) // 0=> Not Processed, 1=>Ready to Process 2=>Processed //Offer is assigned not yet activated
-                                    ,'referred_by'=> 0
-                                    ,'created_by'=>$insurance['created_by']
-                                    ,'created_on' => $time
-                                );
+                $in_array = array(
+                                'member_id'=>$insurance['mid']
+                                ,'franchise_id'=>$insurance['fid']
+                                ,'offer_type'=>$insurance['offer_type']
+                                ,'offer_value'=>$insurance_value
+                                ,'offer_towards' => $order_val
+                                ,'pnh_pid' => $pnhid
+                                ,'transid_ref' => $insurance['transid']
+                                ,'insurance_id'=> $insu_log_id
+                                ,'process_status'=>0 //(waiting feedback) // 0=> Not Processed, 1=>Ready to Process 2=>Processed //Offer is assigned not yet activated
+                                ,'referred_by'=> 0
+                                ,'created_by'=>$insurance['created_by']
+                                ,'created_on' => $time
+                            );
                     //echo '<pre>'; print_r($in_array); //die();
                     $this->db->insert("pnh_member_offers",$in_array);
                     
             }
-            //die();
+
         }
 	
         

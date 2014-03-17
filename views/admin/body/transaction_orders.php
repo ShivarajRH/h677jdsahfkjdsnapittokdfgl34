@@ -279,6 +279,8 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
             $offers = $offers_q->result_array();
             $arr_offer_type = array(0=>"Insurance Opted",1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
             $arr_offer_status = array(0=>"Not Processed",1=>"Ready to Process",2=>"Processed");
+            $arr_feedback_status = array(0=>"No Feedback",1=>"Feedback received");
+            
             foreach($offers as $i=>$offer) { ?>
             <tr>
                 <td><?=++$i;?></td>

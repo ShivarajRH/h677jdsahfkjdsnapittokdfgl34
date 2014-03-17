@@ -3736,3 +3736,13 @@ select *,a.username,mf.member_id,mf.transid_ref as transid from pnh_member_insur
                         where mi.insurance_id = '2971433743';
 
 select name as dealname,pnh_id from king_dealitems where id='5172296214';
+
+select mi.*,a.username,mf.transid_ref as transid from pnh_member_insurance mi
+                        join pnh_member_offers mf on mf.insurance_id = mi.insurance_id
+                        join king_admin a on a.id = mi.created_by
+                        where mi.insurance_id = '2971433743'
+
+select di.name as dealname,di.pnh_id,d.menuid,mn.name as menuname,d.brandid from king_dealitems di
+                                                    join king_deals d on d.dealid=di.dealid
+                                                    join pnh_menu mn on mn.id=d.menuid
+                                                    where di.id='2971433743';

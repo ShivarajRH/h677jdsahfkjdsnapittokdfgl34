@@ -177,18 +177,20 @@ $('.Brands_bychar_list_content_listdata').live("click",function(){
 	var ttl_avg_pur=0;
 	var ttl_mrp=0;
 	var ttl_qty=0;
+	var i=0;
 	
 	$(this).toggleClass("selected_class");
 	if($(this).hasClass('selected_class'))
  	{
  		$('.selected_class').removeClass('selected_class');
   		$(this).addClass('selected_class');
+  		
   	 	$('.prod_filter_wrap').each(function(){
   	 		brandid=$(this).attr('bid');
   	 		catid=$(this).attr('cid');
   	 		if((sel_brandid==brandid) && (sel_catid==catid))
   	 		{
-  	 			$(this).show();
+  	 			i++;
   	 			qty=$(this).attr('qty');
 		 		mrp=$(this).attr('mrp');
 		 		mrp=mrp.replace(/\,/g,'');
@@ -199,22 +201,26 @@ $('.Brands_bychar_list_content_listdata').live("click",function(){
 		 		ttl_avg_pur =Number(ttl_avg_pur) + Number(avg_pur);
 		 		ttl_mrp =Number(ttl_mrp) + Number(mrp);
 		 		ttl_qty =Number(ttl_qty) + Number(qty);
+		 		$(this).show();
   	 		}else
   	 		{
   	 			$(this).hide();	
   	 		}
   	 	});
+  	 	$('.total_wrap .ttl').text(i);
+  	 	$('.ttl_mrp').text(ttl_mrp+'.00');
+ 		$('.ttl_avg').text(ttl_avg_pur+'.00'); 
   	 	if(!$('.prod_filter_wrap'))
   	 	{
   	 		$('.sk_deal_container').html('<div class="page_alert_wrap">No Products Found</div>');
   	 	}
-  	 	$('.qty').text(ttl_qty);
- 		$('.ttl_mrp').text(ttl_mrp);
- 		$('.avg_pur').text(ttl_avg_pur); 
+  	 	
   	}
   	else
   	{ 
+  		
 	  $('.prod_filter_wrap').each(function(){
+	  	i++;
 	  	$(this).show();
 	  	qty=$(this).attr('qty');
  		mrp=$(this).attr('mrp');
@@ -228,11 +234,67 @@ $('.Brands_bychar_list_content_listdata').live("click",function(){
  		ttl_qty =Number(ttl_qty) + Number(qty);
 	  });
 	
-	 	$('.qty').text(ttl_qty);
-		$('.ttl_mrp').text(ttl_mrp);
-		$('.avg_pur').text(ttl_avg_pur); 
+		$('.total_wrap .ttl').text(i);
+  	 	$('.ttl_mrp').text(ttl_mrp+'.00');
+ 		$('.ttl_avg').text(ttl_avg_pur+'.00');
   	}
 	$('.left_filter_wrap').show();
+});
+
+$('#sourceable').live('change',function(){
+	var is_sourceable=$('#sourceable').val();
+	var i=0; 
+	var ttl_avg_pur=0;
+	var ttl_mrp=0;
+	var ttl_qty=0;
+	
+	if(is_sourceable != 'choose')
+	{
+		
+		$(".prod_filter_wrap").each(function(){
+			var	sourceable=$(this).attr('sourceable');
+			
+			if(is_sourceable==sourceable)
+			{
+				$(this).show();
+				i++;
+				qty=$(this).attr('qty');
+		 		mrp=$(this).attr('mrp');
+		 		mrp=mrp.replace(/\,/g,'');
+		 		mrp=parseInt(mrp,10);
+		 		avg_pur=$(this).attr('avg_pur');
+		 		avg_pur=avg_pur.replace(/\,/g,'');
+		 		avg_pur=parseInt(avg_pur,10);
+		 		ttl_avg_pur =Number(ttl_avg_pur) + Number(avg_pur);
+		 		ttl_mrp =Number(ttl_mrp) + Number(mrp);
+		 		ttl_qty =Number(ttl_qty) + Number(qty);
+			}
+			else
+			{
+				$(this).hide();
+			}
+		});
+	}
+	else
+	{
+		$(".prod_filter_wrap").each(function(){
+			$(this).show();
+			i++;
+			qty=$(this).attr('qty');
+	 		mrp=$(this).attr('mrp');
+	 		mrp=mrp.replace(/\,/g,'');
+	 		mrp=parseInt(mrp,10);
+	 		avg_pur=$(this).attr('avg_pur');
+	 		avg_pur=avg_pur.replace(/\,/g,'');
+	 		avg_pur=parseInt(avg_pur,10);
+	 		ttl_avg_pur =Number(ttl_avg_pur) + Number(avg_pur);
+	 		ttl_mrp =Number(ttl_mrp) + Number(mrp);
+	 		ttl_qty =Number(ttl_qty) + Number(qty);
+	 	});
+	}
+	$('.total_wrap .ttl').text(i);
+ 	$('.ttl_mrp').text(ttl_mrp+'.00');
+	$('.ttl_avg').text(ttl_avg_pur+'.00');
 });
 
 $('input[name="search_name"]').live('keyup',function(){
@@ -345,8 +407,8 @@ function product_list_bycat(brandid,catid)
 				d_lst+='<div class="sk_deal_filter_blk_wrap">';
 				d_lst+='<div class="fl_right"><a class="button button-tiny button-rounded" href="javascript:void(0)" onclick="print_warehouse_summary('+brandid+','+catid+')" >Print summary</a></div>';
 				d_lst+='<div class="fl_right" style="margin:3px"><b>Sourceable :</b> <select id="sourceable"><option value="choose">Choose</option><option value="1">Yes</option><option value="0">No</option></select></div>';
-				d_lst+='<div class="fl_left" style="margin-left:3px"><span class="total_wrap">Total Products : <a>'+resp.ttl_prd+'</a></span><span class="total_wrap">Total Avg Purchase : <a>'+resp.ttl_avg_purchase;
-				d_lst+='</a></span><span class="total_wrap">Total MRP Value : <a>'+resp.ttl_mrp_value+'</a></span></div>';
+				d_lst+='<div class="fl_left" style="margin-left:3px"><span class="total_wrap">Total Products : <a class="ttl">'+resp.ttl_prd+'</a></span><span class="total_wrap">Total Avg Purchase : <a class="ttl_avg">'+resp.ttl_avg_purchase;
+				d_lst+='</a></span><span class="total_wrap">Total MRP Value :  <a class="ttl_mrp">'+resp.ttl_mrp_value+'</a></span></div>';
 				d_lst+='</div>';
 				
 				d_lst+='<div class="sk_deal_container">';
@@ -383,21 +445,6 @@ function product_list_bycat(brandid,catid)
 	},'json');	
 }
 
-$('#sourceable').live('change',function(){
-	var is_sourceable=$('#sourceable').val();
-	
-	if(is_sourceable != 'choose')
-	{
-		$(".prod_filter_wrap").each(function(){
-			var	sourceable=$(this).attr('sourceable');
-			if(is_sourceable==sourceable)
-					$(this).show();
-			else
-					$(this).hide();
-		});
-	}
-	
-});
 
 function cat_bychar(ch)
 {
@@ -461,8 +508,6 @@ function cat_bychar(ch)
 	}	
 		
 }   
-
-
 
 $('.Brands_bychar_list_content').hide();
 $(".Brands_bychar_list_head span").live("click",function() {

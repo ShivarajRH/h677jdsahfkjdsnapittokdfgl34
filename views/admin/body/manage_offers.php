@@ -91,7 +91,7 @@
 							<th width="4%">Offer towards</th>
 							<th width="4%">Insurance Amount</th>
 							<th width="4%">Status</th>
-							<th width="4%">Actions</th>									
+							<th width="4%">Actions <br><label for="chk_all_insurances">Check All</label><input type="checkbox" name="chk_all_insurances" id="chk_all_insurances" class="chk_all_insurances"/></th>									
 						</tr>	
 					</thead>
 					
@@ -113,26 +113,22 @@
                                  </td>
                                                 <td>
                                                     
-                                                    <?php if($offer['delivery_status']==1){ ?>
-                                                        <input type="checkbox" name="" value="1">
-                                                       <?php }
+                                                    <?php if($offer['feedback_status'] == 1 and $offer['delivery_status'] == 1) { ?>
+                                                            <input type="checkbox" name="chk_insurance" class="chk_insurance" value="1">
+                                                    <?php }
                                                             else echo '--'; ?>
 						</td>
 					</tr>
                         <?php } ?>
 					</tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <td colspan="9">
-                                                    <?php //if($offer['delivery_status']==1){ ?>
-                                                        <button type="button" class="button button-tiny button-action process_status" onclick="process_offer(this)" >Process</button>
-                                                       <?php //} else 
-                                                       echo '--'; ?>
-                                                </td>
-                                            </tr>
-                                        </tfoot>
-				</table>
 
+				</table>
+                                <div align="right">
+                                    <?php //if($offer['delivery_status']==0){ ?>
+                                        <button type="button" class="button button-tiny button-action process_status" onclick="process_offer(this)" >Process</button>
+                                    <?php //} else echo '--'; ?>
+                                </div>
+                                    
 				<?php }else { ?>
 					<b>No Insurance Offers Found</b>
 				<?php } ?>			
@@ -210,13 +206,13 @@
                                                         <td>Rs. <?=$offer['offer_towards'];?></td>
                                                         <td>Rs. <?=$offer['offer_value'];?></td>
                                                         <td><?php
-                                                            $arr_offer_type = array(1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
+                                                            //$arr_offer_type = array(1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
                                                             $arr_delivery_status = array(0=>"Not delivered",1=>"Order Delivered");
                                                             echo $arr_delivery_status[$offer['delivery_status']];
 									?>
 								</td>
                                                         <td>
-                                    <?php if($offer['delivery_status']==1) { ?>
+                                                            <?php if($offer['delivery_status']==1) { ?>
                                                             <button type="button" class="button button-tiny button-action process_status" onclick="process_offer(this)" >Process</button>
                                                                <?php }
                                                                else echo '--';
@@ -232,20 +228,7 @@
 		</div>
 	</div>
 </div>
-<!--<div id="upload_insurance_docs" class="hide">
-     <form target="insurance_attach_form_hndl" action="<?=site_url("/admin/jx_submit_insurance_attach");?>" name="insurance_attach_form" id="insurance_attach_form" enctype="multipart/form-data" method="post">
-         <table>
-             <tr>
-                <td>Upload file :</td>
-                <td><input type="file" name="attach" id="attach" /></td>
-            </tr>
-            <tr>
-               <td>Enter Remarks :</td><td><textarea name="remarks" id="remarks" rows="6" cols="36"></textarea></td>
-            </tr>
-         </table>
-     </form>
-     <iframe id="insurance_attach_form_hndl" name="insurance_attach_form_hndl" style="width: 0px;height: 0px;"></iframe>
- </div>-->
+
  <style>
      .hide { display:none; }
      textarea,input { padding: 2px 4px; }
@@ -257,56 +240,6 @@ $('#insu_frm_date,#insu_to_date,#rech_frm_date,#rech_to_date').datepicker();
 //$('.insu_franchise_filter,.recharge_franchise_filter').chosen();
 //$('.insu_territory_filter,.recharge_territory_filter').chosen();
 //$('.insu_town_filter,.recharge_town_filter').chosen();
-
-var refresh_time = 3000;
-
-/*function hndl_insurance_upload_response(resp)
-{
-    alert("OK");
-    console.log(resp);
-    if(resp.status=='error')
-    {
-        alert("Error:"+resp.response);
-        return false;
-    }
-    else
-    {
-        
-    }
-}*/
-
-$("#upload_insurance_docs").dialog({
-    autoOpen:false
-    ,width:600
-    ,height:300
-    ,buttons:{
-        "Upload":function() {
-           
-           $("#insurance_attach_form").submit();
-           
-           //alert("Form Submitted");
-           
-           /*
-                    if($("#remarks").val() == '')
-                    {
-                        alert("Please enter remarks.");
-                        return false;
-                    }
-                    
-                    $.post(site_url+"/admin/jx_submit_insurance_attach",$("#insurance_attach_form").serialize(),function(resp) {
-                            print(resp);
-                    },"json");
-                    */
-                }
-        }
-        ,title:"Upload documents form"
-        ,close:function(){
-            $(this).close();
-        }
-});
-
-
-
 
 //process member offers
 function process_offer(e)
@@ -347,11 +280,6 @@ function process_offer(e)
     return false;
 }
 
-function reloadpg()
-{
-    location.href=$(location).attr("href");
-}
-
 $('.insu_franchise_filter').change(function(){
     var sort_franchise_id=$('.insu_franchise_filter').val();
     $('.insu_territory_filter').val(0).trigger('click');
@@ -363,17 +291,16 @@ $('.insu_franchise_filter').change(function(){
     }
     else
     {
-		trname.each(function() {
-		  var fid=$(this).attr('franchise_id');   
-		  if(parseInt(fid) == parseInt(sort_franchise_id) )
-          {
-              $(this).show();
-          }
-          else
-          {
-              $(this).hide();
-          }
-
+        trname.each(function() {
+            var fid=$(this).attr('franchise_id');   
+            if(parseInt(fid) == parseInt(sort_franchise_id) )
+            {
+                $(this).show();
+            }
+            else
+            {
+                $(this).hide();
+            }
        });
     }
     return false;
@@ -549,7 +476,7 @@ $('.recharge_town_filter').change(function(){
 		}
 		$(".recharge_franchise_filter").html(franch_html).trigger("liszt:updated");
 		
- 	});
+    });
  	
     if(sort_town_id == 0)
     {
@@ -585,31 +512,31 @@ $('.insu_date_filter').live('click',function(){
 	$.post(site_url+'/admin/jx_transids_delivered_status_bydate',{from:from,to:to,fids:fids},function(resp){
     
 	if(resp.status == 'error')
-		{
-			alert("No details found");
-			return false;
-	    }
-		else
-    {
-				 var trname=$('.insurance_table');
-				
-				$.each(resp.transids,function(i,t){
-		 				trname.each(function() {
-		 				  var transid=$(this).attr('transid');
-		 				  //alert(transid+"---"+t.transid);
-		 				  if(t.transid == transid)
-                {
-				              $(this).show();
-				          }
-				          else
-                {
-				              $(this).hide();
-				          }
-				
-				      });
-				});
-                }
-        },'json');
+        {
+                alert("No details found.");
+                return false;
+        }
+        else
+        {
+                var trname=$('.insurance_table');
+
+               $.each(resp.transids,function(i,t){
+                    trname.each(function() {
+                        var transid=$(this).attr('transid');
+                        //alert(transid+"---"+t.transid);
+                        if(t.transid == transid)
+                        {
+                             $(this).show();
+                        }
+                        else
+                        {
+                            $(this).hide();
+                        }
+
+                    });
+                });
+        }
+    },'json');
 });
 
 $('.rech_date_filter').live('click',function(){
@@ -625,29 +552,115 @@ $('.rech_date_filter').live('click',function(){
 		{
 			alert("No details found");
 			return false;
-    }
+                }
 		else
 		{
-				 var trname=$('.recharge_table');
-				
-				$.each(resp.transids,function(i,t){
-		 				trname.each(function() {
-		 				  var transid=$(this).attr('transid');
-		 				  //alert(transid+"---"+t.transid);
-		 				  if(t.transid == transid)
-				          {
-				              $(this).show();
-				          }
-				          else
-				          {
-				              $(this).hide();
-				          }
-				
-				      });
-				});
+                        var trname=$('.recharge_table');
+                        $.each(resp.transids,function(i,t){
+                                trname.each(function() {
+                                    var transid=$(this).attr('transid');
+                                    //alert(transid+"---"+t.transid);
+                                    if(t.transid == transid)
+                                    {
+                                        $(this).show();
+                                    }
+                                    else
+                                    {
+                                        $(this).hide();
+                                    }
+
+                              });
+                        });
 			//$('.jq_alpha_sort_alphalist_itemlist').html(b_list);
 		}
 	},'json');
 });
+$(".chk_all_insurances").live("click",function(e) {
+    if($(this).is(":checked"))
+    {
+        //alert("is ckecked");
+        $(".chk_insurance").each(function() {
+            $(this).attr("checked",true);
+        });
+    }
+    else
+    {
+        $(".chk_insurance").each(function() {
+            $(this).attr("checked",false);
+        });
+    }
+    
+});
 
+/*
+var refresh_time = 3000;
+function reloadpg()
+{
+    location.href=$(location).attr("href");
+}
+function hndl_insurance_upload_response(resp) {
+    alert("OK"); console.log(resp);
+    if(resp.status=='error') {
+        alert("Error:"+resp.response);
+        return false;
+    }
+    else { // success }
+}
+$("#upload_insurance_docs").dialog({
+    autoOpen:false
+    ,width:600
+    ,height:300
+    ,buttons:{
+            "Upload":function() {
+               $("#insurance_attach_form").submit();
+               alert("Form Submitted");
+
+            }
+    }
+    ,title:"Upload documents form"
+    ,close:function(){
+        $(this).close();
+    }
+});
+*/
 </script>
+<!--<div id="upload_insurance_docs" class="hide">
+     <form target="insurance_attach_form_hndl" action="<?=site_url("/admin/jx_submit_insurance_attach");?>" name="insurance_attach_form" id="insurance_attach_form" enctype="multipart/form-data" method="post">
+         <table>
+             <tr>
+                <td>Upload file :</td>
+                <td><input type="file" name="attach" id="attach" /></td>
+            </tr>
+            <tr>
+               <td>Enter Remarks :</td><td><textarea name="remarks" id="remarks" rows="6" cols="36"></textarea></td>
+            </tr>
+         </table>
+     </form>
+     <iframe id="insurance_attach_form_hndl" name="insurance_attach_form_hndl" style="width: 0px;height: 0px;"></iframe>
+ </div>-->
+<?php
+/*function jx_submit_insurance_attach()
+    {
+        $file=($_FILES['attach']);
+        $config['upload_path'] = base_url().'erp-attachments/';
+        $config['allowed_types'] = 'gif|jpg|png';
+        $config['max_size']	= '100';
+        $config['max_width']  = '1024';
+        $config['max_height']  = '768';
+        $this->load->library('attach', $config);
+        if ( ! $this->upload->do_upload())
+        {
+                $result = array("status"=>'error',"response" => $this->upload->display_errors());
+                //$this->load->view('upload_form', $error);
+        }
+        else
+        {
+                //insert data to db
+                $result = array("status"=>'success','upload_data' => $this->upload->data());
+                $result['post']=json_encode($_POST);
+                //$this->load->view('upload_success', $data);
+        }
+        echo '<script>window.parent.hndl_insurance_upload_response('.json_encode($result).');</script>';//json_encode($file);
+        die();
+    }*/
+?>

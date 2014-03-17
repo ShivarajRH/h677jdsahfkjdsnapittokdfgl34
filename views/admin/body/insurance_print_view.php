@@ -1,25 +1,26 @@
 <div class="container">
 <?php 
-     echo '<pre>';
-    print_r($insurance_det); 
+     //echo '<pre>';
+    //print_r($insurance_det); 
 //    die();
     $ins = $insurance_det[0];
-    echo '</pre>';
+    //echo '</pre>';
     ?>
-    <h2>View Insurance</h2>
     
-    <div align="right">
+    
+    <div style="float:right;">
         <button onclick="print_preview();">Print</button>
     </div>
     
     <style>
+        h2 { float: left;width: 65%; }
     table{
             font-size:12px;
     }
     .showinprint{
                     display: none;
     }
-
+    .clear { clear:both; }
     @media print {
             .hideinprint{
                     display:none;
@@ -32,9 +33,13 @@
  
 
     </style>
+    
+    <div class="clear">&nbsp;</div>
     <div id="insurance_block" class="insurance_block" style="padding: 10px; page-break-after: always;">
         <div style="font-family:arial;font-size:12px;">
-            <div align="right">
+            <h2>Insurance #<?=$insuranceid;?></h2>
+            
+            <div style="float:right;">
                 <table cellpadding="5" cellspacing="2">
                     <tr>
                         <th>Created By:</th><td><?=ucfirst($ins['username']);?></td>
@@ -45,39 +50,72 @@
             
             <table width="100%" cellspacing="0" cellpadding="5" border="1">
                 <tr>
-                    <td>Member Details:</td>
-                    <td><b>MID:</b><?=$ins['member_id'];?>
-                    
+                    <td width="30%">Member Details:</td>
+                    <td>
+                        <?=$ins['first_name'];?> <?=$ins['last_name'];?>
+                        <br><b>MID : </b><?=$ins['mid'];?>
                     </td>
                 </tr>
                 <tr>
-                    <td>Insurance To</td>
+                    <td>Insurance Product</td>
                     <td><?php 
-                    $item_det = $this->db->query("select name as dealname,pnh_id from king_dealitems where id=?",$ins['itemid'])->row_array();
+                    $item_det = $this->db->query("select di.name as dealname,di.pnh_id,d.menuid,mn.name as menuname,d.brandid,b.name as brandname,d.catid,c.name as catname from king_dealitems di
+                                                    join king_deals d on d.dealid=di.dealid
+                                                    join pnh_menu mn on mn.id=d.menuid
+                                                    join king_brands b on b.id = d.brandid
+                                                    join king_categories c on c.id = d.catid
+                                                    where di.id=?",$ins['itemid'])->row_array();
                     echo $item_det['dealname'];
                     ?>
                     </td>
                 </tr>
                 <tr>
-                    <td>Address</td>
-                    <td><?=$ins['proof_address'];?></td>
+                    <td>Insurance Address</td>
+                    <td>
+                        <?=$ins['first_name'];?> <?=$ins['last_name'];?>
+                        <br>
+                        <address><?=$ins['proof_address'];?>
+                            <br><?=$ins['city'];?>
+                            <br><?=$ins['pincode'];?>
+                        </address>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Franchise</td>
+                    <td><?=$ins['franchise_name'];?></td>
                 </tr>
                 <tr>
                     <td>Transid</td>
-                    <td><?=$ins['transid'];?>PNH4375643</td>
+                    <td><?=$ins['transid'];?></td>
                 </tr>
                 <tr>
                     <td>Menu Name</td>
-                    <td><?=$ins['transid'];?>Mobile & Tablets</td>
+                    <td><?=$item_det['menuname']; ?></td>
                 </tr>
                 <tr>
                     <td>Brand Name</td>
-                    <td><?=$ins['transid'];?>Nokia</td>
+                    <td><?=$item_det['brandname'];?></td>
                 </tr>
+                <tr>
+                    <td>Category Name</td>
+                    <td><?=$item_det['catname'];?></td>
+                </tr>
+                <tr>
                     <td>Insurance Value</td>
-                    <td>Rs. <?=$ins['insurance_value'];?></td>
+                    <td>Rs. <?=$ins['insurance_value'];?> insurance value for Rs. <?=$ins['order_value'];?> item value.</td>
                 </tr>
-
+                <tr>
+                    <td>Insurance Status</td>
+                    <td><?php
+                    $arr_offer_status = array(0=>"Insurance Not Processed",1=>"Ready to Process",2=>"Processed");
+                    echo $arr_offer_status[$ins['process_status']];
+                    
+                            $arr_delivery_status = array(0=>"Not delivered",1=>"Order Delivered");
+                            echo ", ".$arr_delivery_status[$ins['delivery_status']];
+                    ?>
+                        
+                    </td>
+                </tr>
             </table>
         </div>
         
