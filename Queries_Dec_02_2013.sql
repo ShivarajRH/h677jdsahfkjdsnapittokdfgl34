@@ -3746,3 +3746,13 @@ select di.name as dealname,di.pnh_id,d.menuid,mn.name as menuname,d.brandid from
                                                     join king_deals d on d.dealid=di.dealid
                                                     join pnh_menu mn on mn.id=d.menuid
                                                     where di.id='2971433743';
+# Mar_17_2014
+
+update pnh_member_offers set feedback_status = 1 where 1=0; sno in ( select sno from pnh_member_offers where feedback_status=0 and delivery_status=1 and member_id='21111111'  );
+
+select sno from pnh_member_offers where feedback_status=0 and delivery_status=1 and member_id= '21111111';
+
+-- new 
+select count(*) as t from pnh_member_offers where delivery_status = '0' and process_status='0' and feedback_status='0' and transid_ref='PNH16326';
+
+select * from pnh_member_info where pnh_member_id='22012596';

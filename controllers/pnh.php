@@ -156,8 +156,11 @@ class Pnh extends Controller{
 					$this->fran_alloting_voucher_tomem($from,$msg,$fran);
 					break;
 				case 'chm';
-				$this->is_mbr_regd($from,$msg,$fran);
-				break;
+                                        $this->is_mbr_regd($from,$msg,$fran);
+                                        break;
+                                case 'rate':
+                                        $this->process_memrating($from,$msg,$fran);
+                                        break;
 				default :
 					$this->createOrder($from,$msg,$fran);
 					break; 
@@ -280,6 +283,44 @@ class Pnh extends Controller{
 		//$avail_stat = ; 
 		echo "{$name} {$avail_stat}\n Mrp : Rs {$deal['mrp']}, Landing Cost : Rs {$cost}";
 		
+	}
+        
+	function process_memrating($from,$msg,$fran)
+	{
+                //E.g: rate {memberid} 5
+		$frags=explode(" ",trim($msg) );
+                
+		if(count($frags) < 3)
+                {
+                    $this->pdie("Member id or Rate value is not found.");
+                }
+
+                $pnh_memberid = $frags[1];
+                $rate = strtolower($frags[2]);
+                
+                if($rate > MAX_RATE_VAL)
+                    $this->pdie("Rate value is greater than ".MAX_RATE_VAL);
+                
+                if( $this->db->query("select count(*) as t from pnh_member_info where pnh_member_id=?",$pnh_memberid)->row()->t == 0 )
+                {
+                    $this->pdie("You have not registered with this Member ID ".$pnh_memberid);
+                }
+                
+                $mem_set = $this->db->query("select group_concat('\'',sno,'\'') as snos from pnh_member_offers where feedback_status=0 and delivery_status=1 and member_id= ? ",$pnh_memberid);
+                if($mem_set->num_rows() == 0)
+                {
+                    $this->pdie("There is no member offers for MEMBER_ID $pnh_memberid");
+                }
+                else
+                {
+                    //found
+                    $snos = $mem_set->row()->snos;
+                    
+                    //echo "update pnh_member_offers set feedback_status = 1 where sno in = (".$snos.")";
+                    $this->db->query("update pnh_member_offers set feedback_status = 1 where sno in (".$snos.")");
+                    echo "Member feedback updated successfully.";
+                }
+                
 	}
 	
 	

@@ -36,7 +36,7 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
                 if($offers_q->num_rows())
                 {?>
                     <!--<h4>Offers</h4>-->
-                    <table class="datagrid smallheader">
+                    <table class="datagrid smallheader" width="100%">
                         <tr>
                             <th>#</th>
                             <th>Created on</th>
@@ -44,6 +44,7 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
                             <th>Type</th>
                             <th>Value</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
 
                         <?php
@@ -58,6 +59,13 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
                             <td><?=$arr_offer_type[$offer['offer_type']];?></td>
                             <td>Rs. <?=formatInIndianStyle($offer['offer_value']);?></td>
                             <td><?=$arr_offer_status[$offer['process_status']];?></td>
+                            <td><?php
+                                    if($offer['insurance_id'] != '') {?>
+                                        <a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank">View</a>
+                                <?php }
+                                        else echo '--';
+                                ?>
+                            </td>
                         </tr>
                         <!--<div style="padding:4px 5px;border-bottom:1px solid #DDDDDD;">Rs. <?=formatInIndianStyle($offer['offer_value']);?> worth of <?=$arr_offer_type[$offer['offer_type']];?> given</div>-->
                 <?php   }

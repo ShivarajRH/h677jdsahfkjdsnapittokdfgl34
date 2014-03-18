@@ -824,7 +824,7 @@ $(function(){
                                                                         <?php $offers_q = $this->db->query("select a.*,b.first_name,b.user_id from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id where a.franchise_id=?",$f['franchise_id']);
                                                                         if($offers_q->num_rows())
                                                                         {?>
-                                                                            <table class="datagrid smallheader">
+                                                                            <table class="datagrid smallheader" width="100%">
                                                                                     <tr>
                                                                                         <th>#</th>
                                                                                         <th>Created on</th>
@@ -833,6 +833,7 @@ $(function(){
                                                                                         <th>Type</th>
                                                                                         <th>Value</th>
                                                                                         <th>Status</th>
+                                                                                        <th>Actions</th>
                                                                                     </tr>
 
                                                                                     <?php
@@ -848,6 +849,12 @@ $(function(){
                                                                                         <td><?=$arr_offer_type[$offer['offer_type']];?></td>
                                                                                         <td>Rs. <?=formatInIndianStyle($offer['offer_value']);?></td>
                                                                                         <td><?=$arr_offer_status[$offer['process_status']];?></td>
+                                                                                        <td><?php
+                                                                                            if($offer['insurance_id'] != '') {?>
+                                                                                                <a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank">View</a>
+                                                                                        <?php }
+                                                                                                else echo '--';
+                                                                                            ?></td>
                                                                                     </tr>
                                                                                     <!--<div style="padding:4px 5px;border-bottom:1px solid #DDDDDD;">Rs. <?=formatInIndianStyle($offer['offer_value']);?> worth of <?=$arr_offer_type[$offer['offer_type']];?> given</div>-->
                                                                         <?php   }

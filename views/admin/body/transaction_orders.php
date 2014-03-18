@@ -264,7 +264,7 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
 <div style="margin:5px 0px;padding:5px;border:1px solid #f7f7f7;">
    
         <h4>Offers</h4>
-        <table class="datagrid smallheader">
+        <table class="datagrid smallheader" width="100%">
             <tr>
                 <th>#</th>
                 <th>Created on</th>
@@ -287,12 +287,13 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
                 <td><?=format_datetime($offer['created_on']);?></td>
                 <td><a href="<?=site_url("/admin/pnh_viewmember/".$offer['user_id']);?>" target="_blank"><?=$offer['first_name'];?></a></td>
                 <td><?=$arr_offer_type[$offer['offer_type']];?></td>
-                <td><?=formatInIndianStyle($offer['offer_value']);?></td>
+                <td>Rs. <?=formatInIndianStyle($offer['offer_value']);?></td>
                 <td><?=$arr_offer_status[$offer['process_status']];?></td>
                 <td><?php
                 if($offer['insurance_id'] != '') {?>
-                    <a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank"><?=$offer['insurance_id'];?></a>
+                    <a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank">View</a>
                 <?php }
+                    else echo '--';
                 ?></td>
             </tr>
             <!--<div style="padding:4px 5px;border-bottom:1px solid #DDDDDD;">Rs. <?=formatInIndianStyle($offer['offer_value']);?> worth of <?=$arr_offer_type[$offer['offer_type']];?> given</div>-->

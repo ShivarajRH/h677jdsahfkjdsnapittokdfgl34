@@ -300,6 +300,11 @@ table{
 							<?php } ?>
 							</td>
 							</tr>
+                                                        <tr><th>Offers :</th>
+                                                            <td>
+                                                                
+                                                            </td>
+                                                        </tr>
 						</table>
 					</td>
 				</tr>

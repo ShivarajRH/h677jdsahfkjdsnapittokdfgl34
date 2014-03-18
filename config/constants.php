@@ -72,6 +72,7 @@ define('HTTP_IS_AJAX', isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_
 define('GLOBAL_BATCH_ID', 5000);
 
 define('PNH_MEMBER_FREE_RECHARGE',100);
+define("MAX_RATE_VAL",5);
 
 /* End of file constants.php */
 /* Location: ./system/application/config/constants.php */

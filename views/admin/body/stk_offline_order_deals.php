@@ -28,29 +28,18 @@ else
 	$mid_entrytype=1;
 }
 $fran_status=$fdetails['is_suspended'];
-$fr_reg_diff = ceil((time()-$fdetails['created_on'])/(24*60*60));
-if($fr_reg_diff <= 30)
-{
-	$fr_reg_level_color = '#cd0000';
-	$fr_reg_level = 'Newbie';
-}
-else if($fr_reg_diff > 30 && $fr_reg_diff <= 60)
-{
-	$fr_reg_level_color = 'orange';
-	$fr_reg_level = 'Mid Level';
-}else if($fr_reg_diff > 60)
-{
-	$fr_reg_level_color = 'green';
-	$fr_reg_level = 'Experienced';
-}
+
+$fran_exp = $this->erpm->fran_experience_info($fdetails['created_on']);
+
 if($fran_status != 0)
 {
-	$fr_status_color='red';
+        $fr_status_color='red';
 }
 else
 {
-	$fr_status_color='green';
+        $fr_status_color='green';
 }
+
 
 $fran_status_arr=array();
 $fran_status_arr[0]="Live";
@@ -67,8 +56,8 @@ $fran_status_arr[3]="Temporary Suspension";
 				<?php echo $fran_status_arr[$fran_status];?>
 			</b>|
 				
-			<b class="level_wrapper" style="margin-left:2px;background-color:<?php echo $fr_reg_level_color;?>;">
-					 <?php echo $fr_reg_level;?>
+			<b class="level_wrapper" style="margin-left:2px;background-color:<?php echo $fran_exp['f_color'];?>;">
+					 <?php echo $fran_exp['f_level'];?>
 			</b>
 		</span>
 		<div class="filters_wrap"><img class="search_img_wrap" src="<?php echo base_url().'images/search_icon.png'?>">

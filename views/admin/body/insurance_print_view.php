@@ -47,7 +47,7 @@
                     </tr>
                 </table> 
             </div>
-            
+            <div class="clear">&nbsp;</div>
             <table width="100%" cellspacing="0" cellpadding="5" border="1">
                 <tr>
                     <td width="30%">Member Details:</td>

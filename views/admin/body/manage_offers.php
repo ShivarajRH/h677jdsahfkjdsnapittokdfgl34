@@ -104,7 +104,14 @@
 						<td><a href="<?=site_url("admin/pnh_franchise/".$offer['franchise_id']);?>" target="_blank"><?=$offer['franchise_name'];?></a></td>
 						<td><a href="<?=site_url("admin/trans/".$offer['transid_ref'])?>" target="_blank"><?=$offer['transid_ref'];?></a></td>
 						<td>Rs. <?=$offer['offer_towards'];?></td>
-						<td>Rs. <?=$offer['offer_value'];?></td>
+						<td> Rs. <?php echo $offer['offer_value']."&nbsp;&nbsp;&nbsp;";
+                                                
+                                                        if($offer['insurance_id'] != '') {?>
+                                                                <a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank" style="float:right; margin-right: 25px;">View</a>
+                                                    <?php }
+                                                    else echo '--';?>
+                                                
+                                                </td>
                                                 <td><?php
                                                     $arr_offer_type = array(1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
                                                     $arr_delivery_status = array(0=>"Not delivered",1=>"Order Delivered");
@@ -116,7 +123,8 @@
                                                     <?php if($offer['feedback_status'] == 1 and $offer['delivery_status'] == 1) { ?>
                                                             <input type="checkbox" name="chk_insurance" class="chk_insurance" value="1">
                                                     <?php }
-                                                            else echo '--'; ?>
+                                                            else echo '--'; 
+                                                        ?>
 						</td>
 					</tr>
                         <?php } ?>
@@ -591,8 +599,9 @@ $(".chk_all_insurances").live("click",function(e) {
     }
     
 });
-
 /*
+#====================================================
+
 var refresh_time = 3000;
 function reloadpg()
 {

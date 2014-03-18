@@ -2683,8 +2683,8 @@ courier disable ends
                             
                             $this->session->set_flashdata("erp_pop_info","Invoice status Updated");
 
-        }else
-        {
+                }else
+                {
 			$this->session->set_flashdata("erp_pop_info","Packed status updated");
 		}
 	}
@@ -8883,9 +8883,9 @@ order by p.product_name asc
                 }
                 
                 $time = date("Y-m-d H:i:s",time());
-                
+                $insurance_id = random_string("nozero", $len=10); //alnum,numeric;
                 $in_data = array(
-                    'insurance_id'=> random_string("nozero", $len=10)//alnum,numeric
+                    'insurance_id'=> $insurance_id
                     ,'fid'=>$insurance['fid']
                     ,'mid'=>$insurance['mid']
                     ,'offer_type'=>$insurance['offer_type']
@@ -8913,7 +8913,7 @@ order by p.product_name asc
                 // Update to king_orders of insurance value & id
                 $up_in=array(
                     'has_insurance'=>1
-                    ,"insurance_logid"=>$insu_log_id
+                    ,"insurance_logid"=>$insurance_id
                     ,"insurance_amount"=>$insurance_value
                 );
                 $up_where=array(
@@ -8932,7 +8932,7 @@ order by p.product_name asc
                                 ,'offer_towards' => $order_val
                                 ,'pnh_pid' => $pnhid
                                 ,'transid_ref' => $insurance['transid']
-                                ,'insurance_id'=> $insu_log_id
+                                ,'insurance_id'=> $insurance_id
                                 ,'process_status'=>0 //(waiting feedback) // 0=> Not Processed, 1=>Ready to Process 2=>Processed //Offer is assigned not yet activated
                                 ,'referred_by'=> 0
                                 ,'created_by'=>$insurance['created_by']
@@ -13073,38 +13073,71 @@ order by action_date";
     		// prepare customer shipment delivery notification sms
     		if(strlen($inv_det['mobile']) == 10 && ($notify_mem==1))
     		{
-    			$cus_sms = 'Dear '.$inv_det['first_name'].', Your '.$inv_det['ttl_items'].' products of order '.$inv_det['transid'].' are delivered today to '.ucwords($inv_det['franchise_name']).', Please collect at your convenient time, Happy Shopping with StoreKing.';
-    			$this->erpm->pnh_sendsms($inv_det['mobile'],$cus_sms,$inv_det['franchise_id'],0,'NOTIFY_DELIVERY');
+    			// Delivery sms
+                        $cus_sms = 'Dear '.$inv_det['first_name'].', Your '.$inv_det['ttl_items'].' products of order '.$inv_det['transid'].' are delivered today to '.ucwords($inv_det['franchise_name']).', Please collect at your convenient time, Happy Shopping with StoreKing.';
+                        $this->erpm->pnh_sendsms($inv_det['mobile'],$cus_sms,$inv_det['franchise_id'],0,'NOTIFY_DELIVERY');
+                        
+                        //Update offers table
+                        if( $this->is_transid_have_member_offer($inv_det['transid']) )
+                        {
+                            // Feedback SMS
+                            $cus_sms = 'Dear '.$inv_det['first_name'].', Please reply your feedback of order received from our store with any number between 1 to '.MAX_RATE_VAL.'. Your feedback is important to process your further offers, StoreKing.';
+                            $this->erpm->pnh_sendsms($inv_det['mobile'],$cus_sms,$inv_det['franchise_id'],0,'NOTIFY_FEEDBACK_REQ');
+                            
+                            //Set member offers status
+                            $this->update_offer_order_status($inv_det['transid']);
+                            
+                        }
+                        
     		}
-                //Set offers table status
-                $this->update_offer_order_stauts($inv_det['transid']);
     
     	}
     }
-
+    
+    /**
+     * Return franchise details by franchise id
+     * @param type $fid int
+     * @return type array
+     */
     function fran_det_byid($fid)
     {
         return $this->db->query('select * from pnh_m_franchise_info where franchise_id=?',$fid)->row_array();
     }
     
     /**
-    * 
-    * @param type $mid
-    */
+     * Return member info by member id
+     * @param type $mid int
+     * @return type array
+     */
     function get_memberinfo_byid($mid)
     {
       return $this->db->query("select * from pnh_member_info where id=?",$mid)->row_array(); 
     }
-   
-    function update_offer_order_stauts($transid)
+    
+    /**
+     * Update the member offers table as transacion delivered
+     * @param type $transid int
+     */
+    function update_offer_order_status($transid)
     {
        $this->db->query("update pnh_member_offers set delivery_status = 1 where transid_ref=?",$transid);
     }
    
     function get_insurance_value_det($menuid,$pid)
     {
-                 return $this->db->query("select insurance_value,insurance_margin from pnh_member_insurance_menu where menu_id=? and ? between greater_than AND less_than and is_active=1  limit 1",array($menuid,$pid))->row_array();    		
+            return $this->db->query("select insurance_value,insurance_margin from pnh_member_insurance_menu where menu_id=? and ? between greater_than AND less_than and is_active=1  limit 1",array($menuid,$pid))->row_array();    		
 
+    }
+    
+    /**
+     * Return count of offers in member offers table
+     * @param type $transid int
+     * @return type int
+     */
+    function is_transid_have_member_offer($transid)
+    {
+        $delivery_status=0;$process_status=0;$feedback_status=0;
+        return ($this->db->query("select count(*) as t from pnh_member_offers where delivery_status = ? and process_status=? and feedback_status=? and transid_ref=?",array($delivery_status,$process_status,$feedback_status,$transid))->t);
     }
     
 }

@@ -334,7 +334,27 @@ class Stream extends Analytics
 			}
 			echo $output;
 	}
-
+        
+    function jx_get_streamdetails($streamid) 
+	{
+            $user=$this->erpm->auth();
+            $output='';
+    		$arr_userids=$this->db->query("select su.*,ka.name,ka.username from m_stream_users as su 
+                                    join king_admin ka on ka.id=su.user_id 
+                                    where stream_id=?
+                                    group by su.user_id order by ka.name",$streamid)->result_array();
+//            $output.="<option value='00'>All</option>";
+    foreach($arr_userids as $assigneduser) {
+        if($user['userid'] == $assigneduser['user_id']) {
+            $output.="";
+        }
+        else {
+            $output.="<option value='".$assigneduser['user_id']."'>".$assigneduser['name']."</option>";
+            }
+        }
+        echo $output;
+    }
+    
     /**
      * Store the stream post
      */
