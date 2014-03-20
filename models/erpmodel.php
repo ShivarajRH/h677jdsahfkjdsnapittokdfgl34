@@ -1555,7 +1555,7 @@ class Erpmodel extends Model
 					{
 						$this->db->insert("t_reserved_batch_stock",$allot_stk);
 
-						$this->db->query("update t_stock_info set available_qty = available_qty-? where stock_id = ? ",array($allot_stk['qty'],$allot_stk['stock_info_id']));
+						$this->db->query("update t_stock_info set available_qty = available_qty - ? where stock_id = ? ",array($allot_stk['qty'],$allot_stk['stock_info_id']));
 						$this->erpm->do_stock_log(0,$allot_stk['qty'],$p['product_id'],$invid,false,false,true,-1,0,0,$allot_stk['stock_info_id']);
 					}
 				}
@@ -8883,7 +8883,7 @@ order by p.product_name asc
                 }
                 
                 $time = date("Y-m-d H:i:s",time());
-                $insurance_id = random_string("nozero", $len=10); //alnum,numeric;
+                $insurance_id = random_string("alnum", $len=2).random_string("nozero", $len=10); //alnum,numeric;
                 $in_data = array(
                     'insurance_id'=> $insurance_id
                     ,'fid'=>$insurance['fid']
@@ -8913,7 +8913,7 @@ order by p.product_name asc
                 // Update to king_orders of insurance value & id
                 $up_in=array(
                     'has_insurance'=>1
-                    ,"insurance_logid"=>$insurance_id
+                    ,"insurance_id"=>$insurance_id
                     ,"insurance_amount"=>$insurance_value
                 );
                 $up_where=array(
@@ -13071,8 +13071,9 @@ order by action_date";
     		}
     
     		// prepare customer shipment delivery notification sms
-    		if(strlen($inv_det['mobile']) == 10 && ($notify_mem==1))
+    		if( ($notify_mem==1)) //strlen($inv_det['mobile']) == 10 &&
     		{
+                        
     			// Delivery sms
                         $cus_sms = 'Dear '.$inv_det['first_name'].', Your '.$inv_det['ttl_items'].' products of order '.$inv_det['transid'].' are delivered today to '.ucwords($inv_det['franchise_name']).', Please collect at your convenient time, Happy Shopping with StoreKing.';
                         $this->erpm->pnh_sendsms($inv_det['mobile'],$cus_sms,$inv_det['franchise_id'],0,'NOTIFY_DELIVERY');

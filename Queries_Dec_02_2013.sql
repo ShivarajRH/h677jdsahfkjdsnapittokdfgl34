@@ -3756,3 +3756,52 @@ select sno from pnh_member_offers where feedback_status=0 and delivery_status=1 
 select count(*) as t from pnh_member_offers where delivery_status = '0' and process_status='0' and feedback_status='0' and transid_ref='PNH16326';
 
 select * from pnh_member_info where pnh_member_id='22012596';
+#=========================================================================
+# Mar_18_2014
+
+select * from king_invoice where transid='PNH55553'
+select * from king_orders where transid='PNH55553'
+5=>3854235621
+6=>7338377355
+
+#=========================================================================
+alter table `king_orders` change `insurance_logid` `insurance_id` varchar (100)  NULL;
+#=========================================================================
+
+select a.*,b.first_name,b.user_id,di.name product_name from pnh_member_offers a 
+                                                        join pnh_member_info b on b.pnh_member_id=a.member_id
+                                                        join pnh_member_insurance mi on mi.insurance_id=a.insurance_id
+                                                        left join king_dealitems di on di.id = mi.itemid
+                                                        where a.transid_ref='PNH55553' and mi.itemid='7682578652';
+#PNH98587 
+
+select a.*,di.name,di.id as itemid,pdl.product_id,b.user_id,b.first_name,f.franchise_name,f.address,f.territory_id,f.town_id
+from pnh_member_offers a
+join pnh_member_info b on b.pnh_member_id=a.member_id
+join pnh_m_franchise_info f on f.franchise_id= a.franchise_id
+join king_dealitems di on di.pnh_id = a.pnh_pid
+join m_product_deal_link pdl on pdl.itemid=di.id
+where a.offer_type in (0,2) order by a.created_on desc limit 100;
+
+select * from king_dealitems where id='7682578652'
+select * from m_product_info where product_id='28089'
+select * from m_product_deal_link where product_id='28089';
+
+#Mar_19_2014
+
+select ifnull(sum(s.available_qty),0) as stock,group_concat(s.available_qty) as stocks,p.*,b.name as brand,b.id as bid,c.id as cid,c.name as category from m_product_info p 
+left outer join t_stock_info s on s.product_id=p.product_id 
+join king_brands b on b.id=p.brand_id 
+join king_categories c on c.id=p.product_cat_id 
+where p.product_id= '155921'; #'155926';
+
+select p.product_id,p.mrp,r.default_location_id as loc,r.default_rack_bin_id as rack from m_product_info p left outer join m_brand_location_link r on r.brand_id=p.brand_id left outer join t_stock_info s on s.product_id=p.product_id 
+where p.product_id='155921'
+group by p.product_id having count(s.product_id)=0;
+
+#Mar_20_2014
+
+alter table `pnh_member_insurance` add column `menu_log_id` varchar (100)  NULL  after `mid`;
+
+select * from t_reserved_batch_stock where product_id='3115';
+select * from t_stock_info where available_qty < 0;

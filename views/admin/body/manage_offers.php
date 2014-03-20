@@ -62,23 +62,23 @@
 		            
 					<?php $fran_list=$this->db->query("select * from pnh_m_franchise_info where franchise_id in ($insu_franchisee_arr) order by franchise_name asc"); ?>
  					 	<div class="filter">
-			                <b>Franchise :</b>
-			                <select class="insu_franchise_filter">
-			                    <option value="0">All</option>
-			                    <?php foreach($fran_list->result_array() as $f) { ?>
-			                    	<option value="<?=$f['franchise_id'];?>"><?=$f['franchise_name'];?></option>
-			                    <?php } ?>
-			                </select>
-			            </div>
-		            
-		            <div class="filter">
-		            	<form style="margin-top:5px;">
-			                <b>Delivery from :</b><input type="date" id="insu_frm_date">
-			                <b>Delivery to :</b><input type="date" id="insu_to_date">
-			                <button type="button" class="button button-tiny insu_date_filter">Go</button>
-		                </form>
-		            </div>
-		        </div>
+                                                    <b>Franchise :</b>
+                                                    <select class="insu_franchise_filter">
+                                                        <option value="0">All</option>
+                                                        <?php foreach($fran_list->result_array() as $f) { ?>
+                                                            <option value="<?=$f['franchise_id'];?>"><?=$f['franchise_name'];?></option>
+                                                        <?php } ?>
+                                                    </select>
+                                                </div>
+
+                                        <div class="filter">
+                                            <form style="margin-top:5px;">
+                                                    <b>Delivery from :</b><input type="date" id="insu_frm_date">
+                                                    <b>Delivery to :</b><input type="date" id="insu_to_date">
+                                                    <button type="button" class="button button-tiny insu_date_filter">Go</button>
+                                            </form>
+                                        </div>
+                                    </div>
 				
 				<table class="datagrid smallheader noprint datagridsort" width="100%">
 					<thead>
@@ -87,37 +87,39 @@
 							<th width="4%">Registered Date</th>
 							<th width="6%">Member Name</th>
 							<th width="10%">Franchise_name</th>
-							<th width="4%">TransID</th>
+							<th width="3%">TransID</th>
+							<th width="10%">Product Name</th>
 							<th width="4%">Offer towards</th>
-							<th width="4%">Insurance Amount</th>
+							<th width="5%">Insurance Amount</th>
 							<th width="4%">Status</th>
 							<th width="4%">Actions <br><label for="chk_all_insurances">Check All</label><input type="checkbox" name="chk_all_insurances" id="chk_all_insurances" class="chk_all_insurances"/></th>									
 						</tr>	
 					</thead>
 					
 					<tbody>
-						<?php foreach($offers_insurance as $i=>$offer){ ?>
-							<tr class="insurance_table"  member_id="<?=$offer['member_id'];?>" date=<?=$offer['date'];?> territory_id="<?=$offer['territory_id'];?>" town_id="<?=$offer['town_id'];?>" franchise_id="<?=$offer['franchise_id'];?>" transid="<?=$offer['transid_ref'];?>" offer_type="<?=$offer['offer_type'];?>" offer_value="<?=$offer['offer_value'];?>">
+                                    <?php foreach($offers_insurance as $i=>$offer){ ?>
+                                        <tr class="insurance_table"  member_id="<?=$offer['member_id'];?>" date=<?=$offer['date'];?> territory_id="<?=$offer['territory_id'];?>" town_id="<?=$offer['town_id'];?>" franchise_id="<?=$offer['franchise_id'];?>" transid="<?=$offer['transid_ref'];?>" offer_type="<?=$offer['offer_type'];?>" offer_value="<?=$offer['offer_value'];?>">
 						<td><?=++$i?></td>
                                                 <td><?=format_datetime_ts($offer['created_on']);?></td>
 						<td><a href="<?=site_url("admin/pnh_viewmember/".$offer['user_id']);?>" target="_blank"><?=$offer['first_name'];?></a></td>
 						<td><a href="<?=site_url("admin/pnh_franchise/".$offer['franchise_id']);?>" target="_blank"><?=$offer['franchise_name'];?></a></td>
 						<td><a href="<?=site_url("admin/trans/".$offer['transid_ref'])?>" target="_blank"><?=$offer['transid_ref'];?></a></td>
+						<td><a href="<?=site_url("admin/product/".$offer['product_id'])?>" target="_blank"><?=$offer['product_name'];?></a></td>
 						<td>Rs. <?=$offer['offer_towards'];?></td>
 						<td> Rs. <?php echo $offer['offer_value']."&nbsp;&nbsp;&nbsp;";
                                                 
                                                         if($offer['insurance_id'] != '') {?>
-                                                                <a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank" style="float:right; margin-right: 25px;">View</a>
+                                                                <a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" class="button button-tiny button-flat" target="blank" style="float:right; margin-right: 25px;">View</a>
                                                     <?php }
                                                     else echo '--';?>
                                                 
                                                 </td>
                                                 <td><?php
-                                                    $arr_offer_type = array(1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
+                                                    $arr_offer_type = array(0=>"Insurance Opted",1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
                                                     $arr_delivery_status = array(0=>"Not delivered",1=>"Order Delivered");
                                                     echo $arr_delivery_status[$offer['delivery_status']];
-									?>
-                                 </td>
+                                                    ?>
+                                                </td>
                                                 <td>
                                                     
                                                     <?php if($offer['feedback_status'] == 1 and $offer['delivery_status'] == 1) { ?>
@@ -132,14 +134,15 @@
 
 				</table>
                                 <div align="right">
-                                    <?php //if($offer['delivery_status']==0){ ?>
-                                        <button type="button" class="button button-tiny button-action process_status" onclick="process_offer(this)" >Process</button>
+                                    <?php //if($offer['delivery_status']==0){  onclick="process_offer(this)"  ?>
+                                        <input type="submit" class="button button-tiny button-action process_status" value="Process" />
                                     <?php //} else echo '--'; ?>
                                 </div>
                                     
 				<?php }else { ?>
 					<b>No Insurance Offers Found</b>
-				<?php } ?>			
+				<?php } ?>
+                        </form>
 		</div>
 
 		<div id="recharge_offers">
@@ -158,15 +161,15 @@
 			            </div>
 		            
 		             <?php $town_list_rech=$this->db->query("select * from pnh_towns where id in ($recharge_town_arr) order by town_name asc"); ?>
-		            	<div class="filter">
-		                	<b>Town :</b>
-		                	<select class="recharge_town_filter">
-		                    	<option value="0">All</option>
-			                    <?php foreach($town_list_rech->result_array() as $t) { ?>
-			                    	<option value="<?=$t['id'];?>"><?=$t['town_name'];?></option>
-			                    <?php } ?>
-		                </select>
-		            </div>
+                                    <div class="filter">
+                                            <b>Town :</b>
+                                            <select class="recharge_town_filter">
+                                                <option value="0">All</option>
+                                                <?php foreach($town_list_rech->result_array() as $t) { ?>
+                                                    <option value="<?=$t['id'];?>"><?=$t['town_name'];?></option>
+                                                <?php } ?>
+                                            </select>
+                                    </div>
 		            
 					<?php $fran_list_rech=$this->db->query("select * from pnh_m_franchise_info where franchise_id in ($recharge_franchisee_arr) order by franchise_name asc"); ?>
  					 	<div class="filter">
@@ -202,7 +205,6 @@
                                                     <th width="4%">Actions</th>									
                                                 </tr>	
                                         </thead>
-                        
                                         <tbody>
                                         <?php foreach($offers_talktime as $i=>$offer){ ?>
                                                 <tr class="recharge_table" territory_id="<?=$offer['territory_id'];?>" date=<?=$offer['date'];?> town_id="<?=$offer['town_id'];?>" member_id="<?=$offer['member_id'];?>" franchise_id="<?=$offer['franchise_id'];?>" transid="<?=$offer['transid_ref'];?>" offer_type="<?=$offer['offer_type'];?>" offer_value="<?=$offer['offer_value'];?>">
@@ -250,8 +252,85 @@ $('#insu_frm_date,#insu_to_date,#rech_frm_date,#rech_to_date').datepicker();
 //$('.insu_town_filter,.recharge_town_filter').chosen();
 
 //process member offers
-function process_offer(e)
+function process_insurance_offers(e)
 {
+    //var trEle = $(e).parents('tr:first');
+    var elt =$(e);
+    alert("dsd");
+    if( $(".chk_insurance:checked",elt).length <= 0)
+    {
+        alert("Minimum one offer need to be checked!");
+        return false;
+    }
+    
+//    $(".chk_insurance:checked",elt).each(function() {
+//            var im = $(this);
+//            var trEle = $(im).parents('tr:first');
+//            var member_id = trEle.attr('member_id');
+//            var offer_type = trEle.attr('offer_type');
+//            var transid_ref = trEle.attr('transid_ref');
+//            var fid = trEle.attr('franchise_id');
+//            //print(fid);
+//            
+//			if(confirm("Are you sure you want to process these offers?"))
+//		    {
+//	            $.post(site_url+'/admin/process_member_offer',{member_id:member_id,transid_ref:transid_ref,fid:fid,offer_type:offer_type},function(resp){
+//	                if(resp.status=="error")
+//	                {
+//	                        alert("Error: Failed to process Member information");
+//	                }else
+//	                {
+//	                        $('.notification_blk').html('Member information processed successfully').fadeIn().delay(refresh_time).fadeOut();
+//	                        //setTimeout(reloadpg,3000);
+//	                        //alert("Member information processed successfully");
+//	                        location.href=$(location).attr("href");
+//	                }
+//	            },'json');
+//			}
+//        
+//    });
+    
+    return false;
+}
+
+/*function process_offer(e)
+{
+    var trEle = $(e).parents('tr:first');
+    
+    if( $(".chk_insurance:checked",trEle).length <= 0)
+    {
+        alert("Minimum one offer need to be checked!");
+        return false;
+    }
+    
+    $(".chk_insurance:checked",trEle).each(function() {
+            var im = $(this);
+            var trEle = $(im).parents('tr:first');
+            var member_id = trEle.attr('member_id');
+            var offer_type = trEle.attr('offer_type');
+            var transid_ref = trEle.attr('transid_ref');
+            var fid = trEle.attr('franchise_id');
+            //print(fid);
+            
+			if(confirm("Are you sure you want to process these offers?"))
+		    {
+	            $.post(site_url+'/admin/process_member_offer',{member_id:member_id,transid_ref:transid_ref,fid:fid,offer_type:offer_type},function(resp){
+	                if(resp.status=="error")
+	                {
+	                        alert("Error: Failed to process Member information");
+	                }else
+	                {
+	                        $('.notification_blk').html('Member information processed successfully').fadeIn().delay(refresh_time).fadeOut();
+	                        //setTimeout(reloadpg,3000);
+	                        //alert("Member information processed successfully");
+	                        location.href=$(location).attr("href");
+	                }
+	            },'json');
+			}
+        
+    });
+    
+    return false;
     //$("#upload_insurance_docs").dialog("open");return false;
     
     var trEle = $(e).parents('tr:first');
@@ -286,7 +365,7 @@ function process_offer(e)
         },'json');
     }
     return false;
-}
+}*/
 
 $('.insu_franchise_filter').change(function(){
     var sort_franchise_id=$('.insu_franchise_filter').val();
@@ -599,6 +678,7 @@ $(".chk_all_insurances").live("click",function(e) {
     }
     
 });
+
 /*
 #====================================================
 

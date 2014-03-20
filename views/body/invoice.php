@@ -98,12 +98,13 @@ table{
 							in.service_tax,
 							item.pnh_id,f.offer_text,f.immediate_payment,
 							in.invoice_qty as quantity,
-							ordert.member_id  as alloted_mem_id 
+							ordert.member_id  as alloted_mem_id,mo.*,ordert.has_insurance,ordert.insurance_amount
 						from king_orders as ordert
 						join king_dealitems as item on item.id=ordert.itemid 
 						join king_deals as deal on deal.dealid=item.dealid 
 						left join king_brands as brand on brand.id=deal.brandid 
 						left join pnh_m_offers f on f.id= ordert.offer_refid
+						left join pnh_member_offers mo on mo.transid_ref = ordert.transid 
 						join king_invoice `in` on in.transid=ordert.transid and in.order_id=ordert.id  
 						where in.invoice_no=? or split_inv_grpno = ?
 						
@@ -300,11 +301,15 @@ table{
 							<?php } ?>
 							</td>
 							</tr>
-                                                        <tr><th>Offers :</th>
-                                                            <td>
-                                                                
-                                                            </td>
-                                                        </tr>
+                                    <tr><th>Offers :</th>
+                                        <td>
+                                            <?php 
+                                            $arr_offer_type = array(0=>"Insurance Opted",1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
+                                            echo $arr_offer_type[$order['offer_type']];
+
+                                            ?>
+                                        </td>
+                                    </tr>
 						</table>
 					</td>
 				</tr>
@@ -490,6 +495,28 @@ table{
 				?>
 				<td align="right"><?php echo ($order['status'] == 4)?'<strike>':'';?><?=$ttl_amt?><?php echo ($order['status'] == 4)?'</strike>':'';?></td>
 			</tr>
+                        <?php
+                        /*$offers_q = $this->db->query("select a.*,b.first_name,b.user_id,di.name product_name from pnh_member_offers a 
+                                                        join pnh_member_info b on b.pnh_member_id=a.member_id
+                                                        join pnh_member_insurance mi on mi.insurance_id=a.insurance_id
+                                                        left join king_dealitems di on di.id = mi.itemid
+                                                        where a.transid_ref=? and mi.itemid=?",array($order['transid'],$order['itemid']) );
+                        if($offers_q->num_rows())
+                        {
+                            $offers = $offers_q->result_array();
+                            foreach($offers as $i=>$offer_arr)
+                            {$offer_arr['product_name']*/ 
+                        if($order['has_insurance'] == 1)
+                        {
+                        ?>
+                        <tr>
+                            <td colspan="5"><?=$order['name'];?></td>
+                            <td align="right">Rs. <?=formatInIndianStyle($order['insurance_amount']);?></td>
+                        </tr>
+                        <?php
+                          //  }
+                        }
+                        ?>
 
 <?php
 			if($order['status'] != 4)

@@ -284,7 +284,10 @@ class Pnh extends Controller{
 		echo "{$name} {$avail_stat}\n Mrp : Rs {$deal['mrp']}, Landing Cost : Rs {$cost}";
 		
 	}
-        
+	
+	/**
+	* Process the Product Rating with SMS Feedback
+	*/
 	function process_memrating($from,$msg,$fran)
 	{
                 //E.g: rate {memberid} 5
@@ -303,7 +306,7 @@ class Pnh extends Controller{
                 
                 if( $this->db->query("select count(*) as t from pnh_member_info where pnh_member_id=?",$pnh_memberid)->row()->t == 0 )
                 {
-                    $this->pdie("You have not registered with this Member ID ".$pnh_memberid);
+                    $this->pdie("Un registered Member ID ".$pnh_memberid);
                 }
                 
                 $mem_set = $this->db->query("select group_concat('\'',sno,'\'') as snos from pnh_member_offers where feedback_status=0 and delivery_status=1 and member_id= ? ",$pnh_memberid);

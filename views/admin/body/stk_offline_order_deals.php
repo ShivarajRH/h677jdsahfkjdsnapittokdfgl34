@@ -499,10 +499,10 @@ $fran_status_arr[3]="Temporary Suspension";
 				<span class="form_label_wrap">Mobile :</span>
 				<span class="form_input_wrap"><input class="max_width" type="text" name="i_membermob" id="i_membermob" value="" data-required="true"></span>
 				
-				<span class="form_label_wrap" style="height:63px !important">Address :</span>
+				<span class="form_label_wrap" style="height:63px !important">Address <span class="red_star">*</span>: </span>
 				<span class="form_input_wrap" style="height:63px !important"><textarea class="max_width"  name="i_member_add" id="i_member_add" value="" data-required="true"></textarea></span>
 				
-				<span class="form_label_wrap">Proof Type :</span>
+				<span class="form_label_wrap">Proof Type<span class="red_star">*</span>:</span>
 				<span class="form_input_wrap">
 					<select name="crd_insurence_type" class="max_width"  data-required="true" id="crd_insurence_type">
 							<option value="">Select</option>
@@ -515,10 +515,10 @@ $fran_status_arr[3]="Temporary Suspension";
 						</select>
 				</span>
 				
-				<span class="form_label_wrap">Proof Id :</span>
+				<span class="form_label_wrap">Proof Id<span class="red_star">*</span>:</span>
 				<span class="form_input_wrap"><input class="max_width" type="text" name="crd_insurence_id" value="" data-required="true"></span>
 				
-				<span class="form_label_wrap" style="height:63px !important">Proof Address :</span>
+				<span class="form_label_wrap" style="height:63px !important">Proof Address<span class="red_star">*</span>:</span>
 				<span class="form_input_wrap" style="height:63px !important"><textarea class="max_width" name="crd_insurance_mem_address" value="" data-required="true" id="crd_insurance_mem_address"></textarea></span>
 				
 				<span class="form_label_wrap">City :</span>

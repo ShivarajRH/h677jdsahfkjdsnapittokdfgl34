@@ -9,23 +9,57 @@
 														<?php }}?></select>
 		</div>
 		<div  class="stk_ordr_inpwrap"><b>Territory : </b><select class="fran_det chzn-select" data-placeholder="Choose Territory" name="sel_terr" id="sel_terr" style="width: 250px;"></select></div>
-		<div class="stk_ordr_inpwrap"><b>Franchise : <span class="red_star">*</span></b> <select class=" chzn-select" data-placeholder="Choose Franchise "  name="sel_fid" id="sel_fid" style="width:250px;" ></select></div>
-		<div class="stk_ordr_inpwrap"><b>Order For : <span class="red_star">*</span></b><select name="mid_entrytype" id="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
+		<div class="stk_ordr_inpwrap"><b>Franchise<span class="red_star">*</span> : </b> <select class=" chzn-select" data-placeholder="Choose Franchise "  name="sel_fid" id="sel_fid" style="width:250px;" ></select></div>
+		<div class="stk_ordr_inpwrap"><b>Order For<span class="red_star">*</span> : </b><select name="mid_entrytype" id="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
 		<div class="mid_blk" style="background-color:#FAFAFA;padding-left: 100px;margin: 20px 0px;"><b>Member Id</b>  <input type="radio" value="1" name="mtype" checked="checked"> <b>Member Mobno</b><input type="radio" value="2" name="mtype"></div>
-		<div class="stk_ordr_inpwrap mid_blk m_blk"><b> Id : <span class="red_star">*</span></b><input style="font-size:120%" maxlength="8"  type="text" class="mid" name="mid" size=18 ></div>
+		<div class="stk_ordr_inpwrap mid_blk m_blk"><b> Id<span class="red_star">*</span>	 : </b><input style="font-size:120%" maxlength="8"  type="text" class="mid" name="mid" size=18 ></div>
 		<div class="stk_ordr_inpwrap mmob_blk"><b> Mobno : <span class="red_star">*</span></b><input style="font-size:120%" maxlength="10"  type="text" class="mid" name="mid" size=18 ></div>
 		<div class="reg_blk" style="float:right;font-weight: bold;"><a href="javascript:void(0)" onclick="mem_reg()">Register</a></div>
 		<!--  <div id="signin" style="display:none;"><input type="button" value="Proceed" onclick='load_franchisebyid()' class="button button-rounded button-action"></div>-->
 		</div>
 	<div id="mid_det" title="Member Details"><div id="mem_fran"></div></div>
-	<div id="authentiacte_blk" title="Franchisee Authentacation" ><div id="franchise_det"></div></div>
+	<div id="authentiacte_blk" title="Franchisee Authentication" ><div id="franchise_det"></div></div>
 	<div id="franchise_quickview"  title="Franchisee Info"><div id="fran_qvkview"></div></div>
 	 <div id="reg_mem_dlg" title="Instant Member Registration" style="display:none;">
 		<form id="reg_mem_frm" action="<?php echo site_url('admin/jx_reg_newmem')?>" method="post">
 			<input type="hidden" name="franchise_id" value="" id="memreg_fid">
+			<table cellpadding="10" cellspacing="0" border="0" style="border-collapse: collapse">
+				<tr>
+					<td style="text-align: right;"><b>Member Name</b><span class="red_star">*</span> : </td>
+					<td><input type="text" name="memreg_name" id="memreg_name" ></td>
+				</tr>
+				<tr>
+					<td style="text-align: right;"><b>Mobile Number</	b><span class="red_star">*</span> : </td>
+					<td><input type="text" name="memreg_mobno" id="memreg_mobno" data-required="true" maxlength="10"></td>
+				</tr>
+				<tr>
+					<td style="text-align: right;"><b>DOB</b> : </td>
+					<td><input type="text" name="mem_dob" value=""></td>
+				</tr>
+				<tr>
+					<td style="text-align: right;"><b>Gender</b><span class="red_star">*</span> : </td>
+					<td><input  type="radio" name="gender" value="0">Male <input type="radio" name="gender" value="1">Female  <?php echo form_error('gender','<span class="error_msg">','</span>');?></td>
+				</tr>
+				<tr>
+					<td style="text-align: right;"><b>Marital Status</b><span class="red_star">*</span> : </td>
+					<td><input type="radio" value="1" name="marital" checked="checked">
+						Married
+						<input type="radio" checked="checked" value="0" name="marital">
+						Single
+						<input type="radio" value="2" name="marital">Other</td>
+						
+				</tr>
+				<tr>
+					<td style="text-align: right;"><b>Address</b> : </td>
+					<td><textarea name="mem_address" value=""></textarea></td>
+				</tr>
+				<tr>
+					<td style="text-align: right;"><b>PinCode</b> : </td>
+					<td><input type="text" name="pin_code" value="" size="18px"></td>
+				</tr>
+			</table>
 			<table>
-				<tr><td>Member Name</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_name" id="memreg_name" ></td></tr>
-				<tr><td>Mobile Number</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_mobno" id="memreg_mobno" data-required="true" maxlength="10"></td></tr>
+				
 			</table>
 		</form>
 	</div>
@@ -264,7 +298,7 @@ function mem_reg()
 }
 $('#reg_mem_dlg').dialog({
 			autoOpen:false,
-			width:336,
+			width:600,
 			modal:true,
 			height:'auto',
 			open:function(){
@@ -285,15 +319,12 @@ $('#reg_mem_dlg').dialog({
 						// register member 
 						var mem_regname = $.trim($('input[name="memreg_name"]').val());
 						var mem_mobno = parseInt($.trim($('input[name="memreg_mobno"]').val()));
+						var mem_dob = $.trim($('input[name="mem_dob"]').val());
+						var gender = $.trim($('input[name="gender"]').val());
+						var marital = $.trim($('input[name="marital"]').val());
 					
-                    		if(mem_regname.length == 0)
-                             	error_list.push("Please Enter Member name.");
-
-							if(mem_mobno.length == 0 || mem_mobno =='')
-                                error_list.push("Please Enter Mobile Number.");
-
-							if(isNaN(mem_mobno))
-                                error_list.push("Please Enter valid Mobile number.");	
+                    		if(mem_regname.length == 0 || mem_mobno.length == 0 || mem_mobno =='' || isNaN(mem_mobno) || mem_dob == '' || gender == '' || marital == '')
+                             	error_list.push("Please Enter Valid Data.");
 							
 							if(error_list.length)
 	                        {
@@ -361,13 +392,15 @@ margin: 20px 0px;
     width: 35%;
 }
 .stk_mem_detwrap a {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: bold;
+    color:#000;
 }
 .stk_mem_detwrap a:HOVER {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: bold;
     text-decoration: none;
+    color:#000;
 }
 
 #signin{

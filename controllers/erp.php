@@ -4440,7 +4440,7 @@ group by g.product_id order by product_name");
 	
 	/*
 	 * Ajax pagination fun to get stock log
-	 */ 
+	 */
 	function jx_stocklog($pid='',$start='',$end='',$pg=0,$limit=25)
 	{
 		$this->erpm->auth();
@@ -28494,7 +28494,13 @@ die; */
 			$recharge_town_arr=array();
             
             define("MAX_REFERAL_COUNT",3);
-            $offers_insurance = $this->db->query("select a.*,b.user_id,b.first_name,f.*, date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  where a.offer_type in (0,2) order by a.created_on desc limit 100")->result_array();
+            $offers_insurance = $this->db->query("select a.*,di.name as product_name,di.id as itemid,pdl.product_id,b.user_id,b.first_name,f.franchise_name,f.address,f.territory_id,f.town_id
+                                                    from pnh_member_offers a
+                                                    join pnh_member_info b on b.pnh_member_id=a.member_id
+                                                    join pnh_m_franchise_info f on f.franchise_id= a.franchise_id
+                                                    join king_dealitems di on di.pnh_id = a.pnh_pid
+                                                    join m_product_deal_link pdl on pdl.itemid=di.id
+                                                    where a.offer_type in (0,2) order by a.created_on desc limit 100")->result_array();
             $offers_talktime = $this->db->query("select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100")->result_array();
             
             /*$data['referral_offers'] = $this->db->query("select num_referred,referred_by,offer_value,floor(num_referred/?) as times from (
@@ -28545,7 +28551,7 @@ die; */
             if($this->db->affected_rows())
             {
                    $output['status']='success';
-                    $output['message']='Member information Processed Successfully';
+                    $output['message']='Member Information Processed Successfully';
                    // if($offer_type == 1)
                    //     redirect('admin/manage_offers#talktime_offers','refresh');
                    // else if($offer_type == 2)
