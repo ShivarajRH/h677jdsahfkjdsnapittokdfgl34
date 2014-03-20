@@ -156,6 +156,9 @@ class Erp extends Stream
 			{
 				$inp=array("product_id"=>$pid,"is_sourceable"=>$action,"created_on"=>time(),"created_by"=>$user['userid']);
 				$this->db->insert("products_src_changelog",$inp);
+				
+				$this->erpm->_upd_product_deal_statusbyproduct($pid,$user['userid']);
+				
 			}
 		}
 		redirect($_SERVER['HTTP_REFERER']);
@@ -177,6 +180,7 @@ class Erp extends Stream
 					$this->db->query("update m_product_info set is_sourceable=1 where product_id in ($pid) limit ".count($pids));
 					$inp=array("product_id"=>$pid,"is_sourceable"=>1,"created_on"=>time(),"created_by"=>$user['userid']);
 					$this->db->insert("products_src_changelog",$inp);
+					$this->erpm->_upd_product_deal_statusbyproduct($pid,$user['userid']);
 				}
 				
 			}
@@ -205,6 +209,7 @@ class Erp extends Stream
 					}
 					$inp=array("product_id"=>$pid,"is_sourceable"=>0,"created_on"=>time(),"created_by"=>$user['userid']);
 					$this->db->insert("products_src_changelog",$inp);
+					$this->erpm->_upd_product_deal_statusbyproduct($pid,$user['userid']);
 					
 				}
 			}
@@ -1843,6 +1848,7 @@ class Erp extends Stream
 	
 	function order_summary($s=false,$e=false)
 	{
+		$user=$this->erpm->auth(true);
 		$user=$this->auth(CALLCENTER_ROLE);
 		if(!$s)
 			$e=$s=date("Y-m-d");
@@ -1939,7 +1945,7 @@ class Erp extends Stream
             $data['limit']=$limit;
             
             
-//          print_r($data);die();
+
             $this->load->view("admin/body/jx_orderstatus_summary",$data);
 
         }
@@ -2076,6 +2082,8 @@ class Erp extends Stream
         
 	function orders($status=0,$s=false,$e=false,$orders_by='all',$limit=50,$pg=0)
 	{
+		$user=$this->erpm->auth(true);
+		
 		$user=$this->auth(CALLCENTER_ROLE|PARTNER_ORDERS_ROLE);
 		if($s!=false && $e!=false && (strtotime($s)<=0 || strtotime($e)<=0))
 			show_404();
@@ -2367,7 +2375,7 @@ class Erp extends Stream
 		}
 		echo json_encode($output);
 	}
-		
+	
 	function cancel_invoice($invno="")
 	{
 		$user=$this->erpm->auth(true);
@@ -4667,6 +4675,8 @@ group by g.product_id order by product_name");
 			$this->db->query("update m_product_info set product_name=?,sku_code=?,short_desc=?,size=?,uom=?,mrp=?,vat=?,purchase_cost=?,barcode=?,is_offer=?,is_sourceable=?,product_cat_id=?,brand_id=?,default_rackbin_id=?,moq=?,reorder_level=?,reorder_qty=?,remarks=?,modified_on=now(),is_serial_required=?,is_active=? where product_id=? limit 1",$inp);
 			$t_inp=array("product_id"=>$pid,"is_sourceable"=>$this->input->post("pissrc"),"created_on"=>time(),"created_by"=>$user['userid']);
 			$this->db->insert("products_src_changelog",$t_inp);
+			
+			$this->erpm->_upd_product_deal_statusbyproduct($pid,$user['userid']);
 			
 			redirect("admin/product/$pid");
 		}
@@ -11892,6 +11902,7 @@ group by g.product_id order by product_name");
 		$output['status'] = $this->db->affected_rows();
 		$t_inp=array("product_id"=>$pid,"is_sourceable"=>$stat,"created_on"=>time(),"created_by"=>$user['userid']);
 		$this->db->insert("products_src_changelog",$t_inp);
+		$this->erpm->_upd_product_deal_statusbyproduct($pid,$user['userid']);
 		echo json_encode($output);
 	}
 	
@@ -11912,6 +11923,7 @@ group by g.product_id order by product_name");
 			{
 				$t_inp=array("product_id"=>$pid,"is_sourceable"=>$stat,"created_on"=>time(),"created_by"=>$user['userid']);
 				$this->db->insert("products_src_changelog",$t_inp);	
+				$this->erpm->_upd_product_deal_statusbyproduct($pid,$user['userid']);
 			}
 				
 		}
@@ -25967,6 +25979,7 @@ die; */
 		{
 			$inp=array("product_id"=>$pid,"is_sourceable"=>$p_det['is_sourceable'],"created_on"=>time(),"created_by"=>$user['userid']);
 			$this->db->insert("products_src_changelog",$inp);	
+			$this->erpm->_upd_product_deal_statusbyproduct($pid,$user['userid']);
 		}
 		
 		$output['pstatus'] = ($p_det['is_sourceable']?'Sourceable':'Not Sourceable');

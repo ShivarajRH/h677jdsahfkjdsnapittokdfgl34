@@ -12335,6 +12335,72 @@ order by action_date";
     	}
     }
     
+    /**
+     * function to update deal status by linked product status
+     *
+     * @param unknown_type $pid
+     */
+    function _upd_product_deal_statusbyproduct($pid,$userid,$remarks='')
+    {
+    	
+    	// get product sourceable status
+    	$ndeal_res = $this->db->query("(
+							    			select i.itemid,di.dealid,d.publish,!sum(stat) as new_deal_stat from (
+							    			select itemid,product_id,psrc,stk,if(sum(psrc+if(ifnull(stk,0),1,0)),0,1) as stat from (
+							    			select a.itemid,b.product_id,a.qty,a.is_active,c.is_sourceable as psrc,sum(available_qty) as stk
+							    			from m_product_group_deal_link a
+							    			join products_group_pids b on a.group_id = b.group_id
+							    			join (select itemid
+							    			from m_product_group_deal_link a
+							    			join products_group_pids b on a.group_id = b.group_id
+							    			where product_id = ? and is_active = 1) as b on b.itemid = a.itemid
+							    			join m_product_info c on c.product_id = b.product_id
+							    			left join t_stock_info d on d.product_id = b.product_id
+							    			group by a.itemid,b.product_id )as h
+							    			group by itemid,product_id ) as i
+							    			join king_dealitems di on di.id = i.itemid
+							    			join king_deals d on d.dealid = di.dealid
+							    			group by itemid
+							    			having publish != new_deal_stat
+							    	)
+					    			union(
+							    			select i.itemid,di.dealid,d.publish,!sum(stat) as new_deal_stat
+							    			from (
+							    			select itemid,product_id,psrc,stk,if(sum(psrc+if(stk,1,0)),0,1) as stat from (
+							    			select a.itemid,a.product_id,a.qty,a.is_active,c.is_sourceable as psrc,sum(available_qty) as stk
+							    			from m_product_deal_link a
+							    			join (select itemid from m_product_deal_link where product_id = ? and is_active = 1) as b on b.itemid = a.itemid
+							    			join m_product_info c on c.product_id = a.product_id
+							    			left join t_stock_info d on d.product_id = a.product_id
+    										where a.is_active = 1 
+							    			group by a.itemid,a.product_id
+							    			)as h
+							    			group by itemid,product_id ) as i
+							    			join king_dealitems di on di.id = i.itemid
+							    			join king_deals d on d.dealid = di.dealid
+							    			group by itemid
+							    			having publish != new_deal_stat
+					    			)
+    			",array($pid,$pid));
+    
+    	if($ndeal_res->num_rows())
+    	{
+	    	foreach($ndeal_res->result_array() as $deal)
+	    	{
+	    		$deal['live'] = $deal['new_deal_stat'];
+	    
+	    		// Check and update deal status accordingly.
+	    		$this->db->query("update king_deals set publish = ? where dealid = ? limit 1",array($deal['new_deal_stat'],$deal['dealid']));
+	    		$this->db->query("update king_dealitems set live = ? where id = ? limit 1",array($deal['live'],$deal['itemid']));
+	    		
+	    		$arr = array($deal['itemid'],$deal['new_deal_stat'],$remarks,$userid);
+	    		
+	    		$this->db->query("insert into t_deal_publish_changelog (item_id,is_publish,remarks,created_by,created_on) values (?,?,?,?,now()) ",$arr);
+	    		
+	    	}
+    	}
+    }
+    
 }
 
 

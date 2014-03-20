@@ -1,2 +1,13 @@
 ALTER TABLE `pnh_sch_discount_track` ADD COLUMN `dealid` BIGINT(0) NULL AFTER `catid`; 
 ALTER TABLE `pnh_sch_discount_brands` ADD COLUMN `dealid` BIGINT(11) DEFAULT 0 NULL AFTER `discount`;  
+
+
+CREATE TABLE `t_deal_publish_changelog` (                
+                            `id` int(10) unsigned NOT NULL AUTO_INCREMENT,         
+                            `item_id` bigint(20) unsigned NOT NULL,                
+                            `is_publish` tinyint(1) DEFAULT '0',                   
+                            `remarks` text,                                        
+                            `created_by` int(10) DEFAULT '0',                      
+                            `created_on` datetime NOT NULL,                        
+                            PRIMARY KEY (`id`)                                     
+                          );
