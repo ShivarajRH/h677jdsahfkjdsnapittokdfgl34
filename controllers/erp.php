@@ -24529,7 +24529,7 @@ die; */
 	//Interface to menu Margin - start	
 	function list_allmenumargin()
 	{
-		$user=$this->auth(PRODUCT_MANAGER_ROLE);
+		$user=$this->auth(true,true);
 		$menu_list_res=$this->db->query("select * from pnh_menu where status=1 group by id order by name asc");
 		$data['menu_list_res']=$menu_list_res;
 		$data['page']='menumargin_list';
