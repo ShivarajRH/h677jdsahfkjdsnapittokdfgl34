@@ -218,7 +218,14 @@ class Datamodel extends Model
 		$ques=array();
 		foreach($catids as $b)
 			$ques[]="?";
-		return $this->output_deals($this->db->query("select pnh_id as pid,i.gender_attr,i.id as itemid,i.name,d.tagline,c.name as category,m.name as menu,d.menuid as menu_id,d.catid as category_id,mc.name as main_category,c.type as main_category_id,b.name as brand,d.brandid as brand_id,i.orgprice as mrp,i.price as price,i.store_price,i.is_combo,concat('".IMAGES_URL."items/',d.pic,'.jpg') as image_url,d.description,i.shipsin as ships_in,d.keywords from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join pnh_menu m on m.id=d.menuid left outer join king_categories mc on mc.id=c.type where d.publish=1 and is_pnh=1 and d.menuid in (".implode(",",$ques).") order by d.sno asc",$catids)->result_array());
+		
+		$uris = $this->uris;
+
+		$page = isset($uris[4])?$uris[4]:1;
+		
+		$l=200;
+		
+		return $this->output_deals($this->db->query("select pnh_id as pid,i.gender_attr,i.id as itemid,i.name,d.tagline,c.name as category,m.name as menu,d.menuid as menu_id,d.catid as category_id,mc.name as main_category,c.type as main_category_id,b.name as brand,d.brandid as brand_id,i.orgprice as mrp,i.price as price,i.store_price,i.is_combo,concat('".IMAGES_URL."items/',d.pic,'.jpg') as image_url,d.description,i.shipsin as ships_in,d.keywords from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join pnh_menu m on m.id=d.menuid left outer join king_categories mc on mc.id=c.type where d.publish=1 and is_pnh=1 and d.menuid in (".implode(",",$ques).") order by d.sno asc limit ".(($page-1)*$l).", $l",$catids)->result_array());
 	}
 	
 	function getdeal()
@@ -551,6 +558,9 @@ class Datamodel extends Model
 				break;
 			case 'getdealsbypnhrange' :
 				$data=$this->dpm->getdealsbypnhrange();
+				break;
+			case 'getdealsbymenu':
+				$data=$this->dpm->getdealsbymenu();
 				break;
 			case 'get_pnh_deals_mrp_change_log' :
 				$data=$this->dpm->get_pnh_deals_mrp_change_log();

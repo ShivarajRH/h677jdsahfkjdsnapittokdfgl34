@@ -487,11 +487,8 @@
 			$output['summary'] = $sales_summary;
 			echo json_encode($output);			
 		}
-		
-		
-		
-		
-			/*
+	
+	/*
 	 * Ajax function to load brand sales 
 	 * 
 	 */

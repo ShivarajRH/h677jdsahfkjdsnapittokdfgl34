@@ -60,7 +60,7 @@ define('GMAP_KEY','ABQIAAAAeNP67zzDfiHO9x8bftOY2hR2xb83VVuvy_z2dBdLSs4PrqlsDRTq2
 define("CS_TELEPHONE","+91-92-4340-4342");
 define("CS_EMAIL","hello@snapittoday.com");
 
-
+define('REQUEST_URI',$_SERVER['REQUEST_URI']);
 define("CRON_IMAGES_LOC","/home/snapitto/cron_images_updater/imgs/subfolder/images/");
 
 define('HTTP_IS_AJAX', isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');

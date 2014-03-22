@@ -2247,7 +2247,7 @@ class Erp extends Stream
 			$oids[]=$i['order_id'];
 		$orders=$this->db->query("select quantity as qty,itemid,id from king_orders where id in ('".implode("','",$oids)."')")->result_array();
 		
-		
+		$recon_status = $this->erpm->pnh_reverse_reconcile_invoice($invno,$user,"Invoice Cancelled");
 		
 		$batch_id = $this->db->query("select batch_id from shipment_batch_process_invoice_link where invoice_no=?",$invno)->row()->batch_id;
 		$pinvno = $this->db->query("select a.p_invoice_no  
@@ -2410,8 +2410,8 @@ class Erp extends Stream
 		
 		if($inv_trans_det['is_pnh'])
 		{
-			$arr = array($inv_trans_det['franchise_id'],1,$inv_trans_det['invoice_no'],$inv_trans_det['inv_amt'],'',1,date('Y-m-d H:i:s'),$user['userid']);
-			$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,invoice_no,credit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?)",$arr);
+			$arr = array($inv_trans_det['franchise_id'],1,$inv_trans_det['invoice_no'],$inv_trans_det['inv_amt'],'',1,date('Y-m-d H:i:s'),$user['userid'],$inv_trans_det['inv_amt'],'pending');
+			$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,invoice_no,credit_amt,remarks,status,created_on,created_by,unreconciled_value,unreconciled_status) values(?,?,?,?,?,?,?,?,?,?)",$arr);
 			
 			// cancel credit note raised against invoice.
 			$credit_note_id = $this->db->query("select credit_note_id from king_invoice where invoice_no = ? ",$invno)->row()->credit_note_id;
@@ -2419,8 +2419,9 @@ class Erp extends Stream
 			{
 				//cancel credit note 
 				$this->db->query("update t_invoice_credit_notes set is_active = 0,modified_on=now() where id = ? ",$credit_note_id);
-				$arr = array($inv_trans_det['franchise_id'],7,$inv_trans_det['invoice_no'],$this->db->query('select amount from t_invoice_credit_notes where id = ? ',$credit_note_id)->row()->amount,'credit note cancelled',1,date('Y-m-d H:i:s'),$user['userid']);
-				$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,invoice_no,debit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?)",$arr);
+                                $amount = $this->db->query('select amount from t_invoice_credit_notes where id = ? ',$credit_note_id)->row()->amount;
+				$arr = array($inv_trans_det['franchise_id'],7,$inv_trans_det['invoice_no'],$amount,'credit note cancelled',1,date('Y-m-d H:i:s'),$user['userid'],$amount,'pending');
+				$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,invoice_no,debit_amt,remarks,status,created_on,created_by,unreconciled_value,unreconciled_status) values(?,?,?,?,?,?,?,?,?,?)",$arr);
 			}
 		}
 		
@@ -2483,7 +2484,7 @@ class Erp extends Stream
 			redirect("admin/trans/".$transid);
 		redirect("admin/pending_refunds_list");
 	}
-
+	
 	function change_qy_order($transid)
 	{
 		$user=$this->auth(CALLCENTER_ROLE);
@@ -2725,7 +2726,25 @@ class Erp extends Stream
 		$user=$this->auth(OUTSCAN_ROLE|INVOICE_PRINT_ROLE);
 		if($_POST)
 			$this->erpm->do_addcourier();
+        $data['partners']=$this->erpm->getpartners();
 		$data['page']="add_courier";
+		$this->load->view("admin",$data);
+	}
+
+	/**
+     * 
+     * @param type $cid is courier id
+     */
+    function courier_edit($cid=false)
+	{
+		$user=$this->auth(OUTSCAN_ROLE|INVOICE_PRINT_ROLE);
+                if(!$cid) show_404();
+		if($_POST)
+			$this->erpm->do_updatecourier();
+                
+                $data['couriers']=$this->erpm->getcourier_details($cid);
+                $data['partners']=$this->erpm->getpartners();
+		$data['page']="courier_edit";
 		$this->load->view("admin",$data);
 	}
 	
@@ -2749,6 +2768,7 @@ class Erp extends Stream
 	{
 		$user=$this->auth(OUTSCAN_ROLE|INVOICE_PRINT_ROLE|ORDER_BATCH_PROCESS_ROLE);
 		$data['couriers']=$this->erpm->getcouriers();
+		$data['couriers_used_for']=$this->erpm->getcouriers_used_for();
 		$data['page']="couriers";
 		$this->load->view("admin",$data);
 	}
@@ -4109,7 +4129,7 @@ select a.product_id,a.p_invoice_no,c.product_name,concat(rack_name,bin_name) as 
 	where a.p_invoice_no in (".$_POST['tids'].")
 group by product_id,mrp ) as g
 	join proforma_invoices e on e.p_invoice_no = g.p_invoice_no and invoice_status = 1 
-group by g.product_id ");
+group by g.product_id order by product_name");
 
 		$data['stk_rsv_list'] = $this->db->query("select p_invoice_no,transid from proforma_invoices where p_invoice_no in (".$_POST['tids'].") and invoice_status = 1 group by p_invoice_no ");
 
@@ -4161,8 +4181,12 @@ group by g.product_id ");
 	function pnh_reverse_receipt($rid)
 	{
 		$user=$this->auth(FINANCE_ROLE);
+
+		// reverse reconcilation
+		$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user,'Receipt Reversed');
+                
 		$r=$this->db->query("select * from pnh_t_receipt_info where receipt_id=?",$rid)->row_array();
-		$this->db->query("update pnh_t_receipt_info set status=3 where receipt_id=? limit 1",$rid);
+		$this->db->query("update pnh_t_receipt_info set status=3,modified_on=?,modified_by=? where receipt_id=? limit 1",array(time(),$user['userid'],$rid));
 		$_POST=array("type"=>1,"amount"=>$r['receipt_amount'],"desc"=>"Reversal of receipt $rid","internal"=>true,"sms"=>false,"receipt_id"=>$rid);
 		$this->pnh_acc_stat_c($r['franchise_id']);
 		redirect($_SERVER['HTTP_REFERER']);
@@ -4189,8 +4213,8 @@ group by g.product_id ");
 		if($receipt_id)
 			$trans_type = 3;
 		
-		$arr = array($fid,$receipt_id,$trans_type,$acc_stat_id,$type?$amount:0,!$type?$amount:0,$desc,1,date('Y-m-d H:i:s'),$user['userid']);
-		$this->db->query("insert into pnh_franchise_account_summary (franchise_id,receipt_id,action_type,acc_correc_id,debit_amt,credit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?,?,?)",$arr);
+		$arr = array($fid,$receipt_id,$trans_type,$acc_stat_id,$type?$amount:0,!$type?$amount:0,$desc,1,date('Y-m-d H:i:s'),$user['userid'],$amount,'pending');
+		$this->db->query("insert into pnh_franchise_account_summary (franchise_id,receipt_id,action_type,acc_correc_id,debit_amt,credit_amt,remarks,status,created_on,created_by,unreconciled_value,unreconciled_status) values(?,?,?,?,?,?,?,?,?,?,?,?)",$arr);
 			
 		if($sms)
 			$this->erpm->pnh_sendsms($mob,"Amount of Rs $amount has been ".($type==0?"credited to":"debited from")." your franchise account against '$desc'",$fid);
@@ -6668,7 +6692,7 @@ group by g.product_id ");
 			
 			//update credit note to account summary 
 			$arr = array($franid,7,$credit_note_id,$invno,$imei_credit,'imeino : '.$imeino,1,date('Y-m-d H:i:s'),$user['userid']);
-			$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,credit_note_id,invoice_no,credit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?,?)",$arr);
+			$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,credit_note_id,invoice_no,credit_amt,remarks,status,created_on,created_by,unreconciled_value,unreconciled_status) values(?,?,?,?,?,?,?,?,?,?,?)",$arr);
 			
 			$this->db->query("update t_imei_no set ref_credit_note_id = ? where imei_no = ? and ref_credit_note_id = 0 ",array($credit_note_id,$imeino));
 			
@@ -7882,11 +7906,13 @@ group by g.product_id ");
 	
 	function pnh_cancel_receipt($rid=false)
 	{
-		$this->auth(FINANCE_ROLE);
+		$user = $this->auth(FINANCE_ROLE);
 		if(!$rid)
 			show_error("Input Missing");
-		else
-		$this->erpm->do_pnh_cancel_receipt($rid);
+		else {
+			$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($rid,$user,'Receipt Cancelled.');
+			$this->erpm->do_pnh_cancel_receipt($rid);
+		}
 	}
 	
 	function pnh_disenable_sch($fid,$en)
@@ -8940,7 +8966,7 @@ group by g.product_id ");
 	{
 		$user=$this->auth(FINANCE_ROLE);
 		if($_POST)
-			$this->erpm->do_pnh_topup($fid);
+			$this->erpm->do_pnh_topup($fid,$user);
 		$data['fid']=$fid;
 		$data['page']="pnh_topup";
 		$this->load->view("admin",$data);
@@ -15633,18 +15659,19 @@ order by action_date";
 									join king_transactions e on e.transid = b.transid 
 									where b.id = ? order by a.id desc limit 1 ",$return_prod_order_no)->row_array();
 						 
-						$arr = array($inv_trans_det['franchise_id'],1,$inv_trans_det['invoice_no'],$inv_trans_det['inv_amt'],'Product Return - Order:'.$return_prod_order_no,1,date('Y-m-d H:i:s'),$user['userid']);
-						$this->db->query("insert into pnh_franchise_account_summary (is_returned,franchise_id,action_type,invoice_no,credit_amt,remarks,status,created_on,created_by) values(1,?,?,?,?,?,?,?,?)",$arr);	
+						$arr = array($inv_trans_det['franchise_id'],1,$inv_trans_det['invoice_no'],$inv_trans_det['inv_amt'],'Product Return - Order:'.$return_prod_order_no,1,date('Y-m-d H:i:s'),$user['userid'],$inv_trans_det['inv_amt'],'pending');
+						$this->db->query("insert into pnh_franchise_account_summary (is_returned,franchise_id,action_type,invoice_no,credit_amt,remarks,status,created_on,created_by,unreconciled_value,unreconciled_status) values(1,?,?,?,?,?,?,?,?,?,?)",$arr);
 						// auto debit credit note from statement.
 						
 						// cancel credit note raised against invoice.
 						$credit_note_id = $this->db->query("select credit_note_id from king_invoice where invoice_no = ? ",$inv_trans_det['invoice_no'])->row()->credit_note_id;
 						if($credit_note_id)
 						{
-							//cancel credit note 
+							//cancel credit note
 							$this->db->query("update t_invoice_credit_notes set is_active = 0,modified_on=now() where id = ? ",$credit_note_id);
-							$arr = array($inv_trans_det['franchise_id'],7,$inv_trans_det['invoice_no'],$this->db->query('select amount from t_invoice_credit_notes where id = ? ',$credit_note_id)->row()->amount,'credit note cancelled - '.$return_prod_order_no,1,date('Y-m-d H:i:s'),$user['userid']);
-							$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,invoice_no,debit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?)",$arr);
+							$cr_amt = $this->db->query('select amount from t_invoice_credit_notes where id = ? ',$credit_note_id)->row()->amount;
+							$arr = array($inv_trans_det['franchise_id'],7,$inv_trans_det['invoice_no'],$cr_amt,'credit note cancelled - '.$return_prod_order_no,1,date('Y-m-d H:i:s'),$user['userid'],$cr_amt,'pending');
+							$this->db->query("insert into pnh_franchise_account_summary (franchise_id,action_type,invoice_no,debit_amt,remarks,status,created_on,created_by,unreconciled_value,unreconciled_status) values(?,?,?,?,?,?,?,?,?,?)",$arr);
 						}
 					}
 				}else
@@ -19532,13 +19559,17 @@ order by action_date";
 			$amount=$this->input->post('debit_amt');
 			$sms=$this->input->post('sms');
 			$tm_sms=$this->input->post('tm_sms');
+			$cheq_cancelled_on=$this->input->post('cheq_canceled_on');
 			$d=0;
+                        
+			// reverse reconcilation
+			$recon_status = $this->erpm->pnh_reverse_reconcile_receipt($receipt_id,$user,'Processed Receipt Cancelled');
+                        
 			$output=array();
-			$this->db->query("update pnh_m_deposited_receipts set status=2,is_cancelled=1,cancel_reason=?,cancelled_on=now(),cancel_status=?,dbt_amt=? where receipt_id=?",array($desc,$cancel_status,$amount,$receipt_id));
+			$this->db->query("update pnh_m_deposited_receipts set status=2,is_cancelled=1,cancel_reason=?,cancelled_on=now(),cancel_status=?,dbt_amt=?,cheq_cancelled_on=? where receipt_id=?",array($desc,$cancel_status,$amount,$cheq_cancelled_on,$receipt_id));
 			$this->db->query("update pnh_t_receipt_info set status=2,activated_by=?,reason=?,activated_on=? where receipt_id=?",array($user['userid'],$desc,time(),$receipt_id));
 				
-			//if($sms || $tm_sms)
-			//{
+			
 				$franchise_info=@$this->db->query("select f.*,r.receipt_id,r.instrument_no,r.receipt_amount from pnh_t_receipt_info r join pnh_m_franchise_info f on f.franchise_id=r.franchise_id where receipt_id=?",$receipt_id)->row_array();
 				$tm_info=@$this->db->query("SELECT b.contact_no,b.employee_id FROM m_town_territory_link a JOIN m_employee_info b ON b.employee_id=a.employee_id WHERE territory_id=? AND a.is_active=1 AND b.is_suspended=0 AND b.job_title2=4",$franchise_info['territory_id'])->row_array();
 				$fid=$franchise_info['franchise_id'];
@@ -19557,8 +19588,8 @@ order by action_date";
 					$acc_stat_id = $this->erpm->pnh_fran_account_stat($fid,$type,$amount,$desc,"correction",$fid);
 					$trans_type = 5;
 				
-					$arr = array($fid,$receipt_id,$trans_type,$acc_stat_id,$type?$amount:0,!$type?$amount:0,$desc,1,date('Y-m-d H:i:s'),$user['userid']);
-					$this->db->query("insert into pnh_franchise_account_summary (franchise_id,receipt_id,action_type,acc_correc_id,debit_amt,credit_amt,remarks,status,created_on,created_by) values(?,?,?,?,?,?,?,?,?,?)",$arr);
+					$arr = array($fid,$receipt_id,$trans_type,$acc_stat_id,$type?$amount:0,!$type?$amount:0,$desc,1,date('Y-m-d H:i:s'),$user['userid'],$amount,'pending');
+					$this->db->query("insert into pnh_franchise_account_summary (franchise_id,receipt_id,action_type,acc_correc_id,debit_amt,credit_amt,remarks,status,created_on,created_by,unreconciled_value,unreconciled_status) values(?,?,?,?,?,?,?,?,?,?,?,?)",$arr);
 				}
 				
 				$empid=$tm_info['employee_id'];
@@ -19583,18 +19614,16 @@ order by action_date";
 					}
 					$this->erpm->flash_msg("Account statement corrected");
 				}
-			//}
 			$d+=$this->db->affected_rows();
-			if($d)
-			{
-				$output['status']="success";
-				
+            if($d)
+            {
+            	$output['status']="success";
 			}
 			else 
 			{
-				$output['status']="Error";
+            	$output['status']="Error";
 			}
-			echo json_encode($output);
+            echo json_encode($output);
 		
 		}
 
@@ -22308,7 +22337,7 @@ die; */
 							$acc_stat_id = $this->erpm->pnh_fran_account_stat($s['franchise_id'],$type,$amount,$desc,"correction",$s['franchise_id']);
 						if($this->db->affected_rows()>0)
 							$remarks="super scheme cash back";
-						$this->db->query("insert into pnh_franchise_account_summary(franchise_id,action_type,acc_correc_id,credit_amt,status,created_on,remarks)values(?,6,?,?,1,now(),?)",array($s['franchise_id'],$acc_correc_id,$amount,$remarks));
+						$this->db->query("insert into pnh_franchise_account_summary(franchise_id,action_type,acc_correc_id,credit_amt,status,created_on,remarks,unreconciled_value,unreconciled_status) values(?,6,?,?,1,now(),?,?,?)",array($s['franchise_id'],$acc_correc_id,$amount,$remarks,$amount,'pending'));
 
 					}
 				}
@@ -23477,7 +23506,7 @@ die; */
 	/**
 	 * function for manage the franchise receipts
 	 */
-	function jx_pnh_franchise_reports($fid,$type,$limit=10,$pg=0)
+	function jx_pnh_franchise_reports($fid,$type,$cr_tab=0,$limit=10,$pg=0)
 	{
 		$this->erpm->auth();
 		$output=array();
@@ -23496,7 +23525,7 @@ die; */
 						WHERE r.status=0 AND r.is_active=1 and is_submitted=0 and r.status=0 and r.franchise_id=?
 						ORDER BY instrument_date asc";
 	
-			$total_records=$this->db->query($sql,$fid)->num_rows;
+			$total_records=$this->db->query($sql,$fid)->num_rows();
 	
 			$sql.=" limit $pg , $limit ";
 	
@@ -23517,7 +23546,7 @@ die; */
 						group by r.receipt_id
 						order by d.submitted_on desc";
 	
-			$total_records=$this->db->query($sql,$fid)->num_rows;
+			$total_records=$this->db->query($sql,$fid)->num_rows();
 	
 			$sql.=" limit $pg , $limit ";
 	
@@ -23526,16 +23555,18 @@ die; */
 	
 		}else if($type=='realized')
 		{
-			$sql="SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by
-						FROM pnh_t_receipt_info r
-						JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id
-						LEFT OUTER JOIN king_admin a ON a.id=r.created_by
-						LEFT OUTER JOIN king_admin d ON d.id=r.activated_by
-						WHERE r.status=1 AND r.is_active=1 AND (is_submitted=1 or r.activated_on!=0) and r.is_active=1 and r.franchise_id=?
-						group by r.receipt_id
-						ORDER BY activated_on desc";
-	
-			$total_records=$this->db->query($sql,$fid)->num_rows;
+			
+			$sql="SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by,b.bank_name AS submit_bankname,c.submitted_on,s.name AS submitted_by,c.remarks AS submittedremarks
+					FROM pnh_t_receipt_info r
+					JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id
+					LEFT JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
+					LEFT OUTER JOIN king_admin a ON a.id=r.created_by
+					LEFT OUTER JOIN king_admin d ON d.id=r.activated_by
+					LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id
+					LEFT JOIN king_admin s ON s.id=c.submitted_by
+					WHERE r.status=1 AND r.is_active=1 AND f.is_suspended=0 AND (r.is_submitted=1 OR r.activated_on!=0) AND r.is_active=1 AND r.franchise_id=?
+					ORDER BY activated_on DESC";
+			$total_records=$this->db->query($sql,$fid)->num_rows();
 	
 			$sql.=" limit $pg , $limit ";
 	
@@ -23544,17 +23575,21 @@ die; */
 	
 		}else if($type=='cancelled')
 		{
-			$sql="SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on
-							FROM pnh_t_receipt_info r
-							JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id
-							left JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
-							LEFT OUTER JOIN king_admin a ON a.id=r.created_by
-							LEFT OUTER JOIN king_admin d ON d.id=r.activated_by
-							WHERE r.status in (2,3) AND r.is_active=1 AND r.is_active=1 AND  r.franchise_id=?
-							group by r.receipt_id
-							ORDER BY cancelled_on DESC";
+			
+			$sql="SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on,c.cheq_cancelled_on,c.cancel_status,b.bank_name AS submit_bankname,c.submitted_on,s.name as submitted_by,c.remarks AS submittedremarks,m.name AS reversed_by
+						FROM pnh_t_receipt_info r 
+						JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
+						left JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
+						LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
+						LEFT OUTER JOIN king_admin d ON d.id=r.activated_by 
+						LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id
+						LEFT JOIN king_admin s ON s.id=c.submitted_by
+						LEFT JOIN king_admin m ON m.id=r.modified_by
+						WHERE r.status in (2,3) AND r.is_active=1 and r.franchise_id=?
+						GROUP BY r.receipt_id
+						ORDER BY activated_on DESC";
 	
-			$total_records=$this->db->query($sql,$fid)->num_rows;
+			$total_records=$this->db->query($sql,$fid)->num_rows();
 	
 			$sql.=" limit $pg , $limit ";
 	
@@ -23563,11 +23598,13 @@ die; */
 	
 		}else if($type=='acct_stat')
 		{
-			$sql="SELECT debit_amt,credit_amt,remarks,status,created_on
-						FROM `pnh_franchise_account_summary` a
-						WHERE a.franchise_id=? and (a.action_type = 5 or a.action_type = 6)
-						order by created_on desc";
-	
+
+            $sql = "select fcs.franchise_id,fcs.action_type,fcs.acc_correc_id,fcs.debit_amt,fcs.is_returned,fcs.credit_amt,fcs.remarks,fcs.status,fcs.created_on,fcs.created_by
+                        ,fcs.unreconciled_value,fcs.unreconciled_status,  sum(rlog.reconcile_amount) as reconcile_amount
+                        from pnh_franchise_account_summary fcs 
+                        left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id and rlog.is_reversed !=1
+                        where fcs.action_type in (5,6) and fcs.acc_correc_id != 0 and fcs.franchise_id=? group by fcs.acc_correc_id,fcs.franchise_id ";
+
 			$total_records=$this->db->query($sql,$fid)->num_rows;
 	
 			$sql.=" limit $pg , $limit ";
@@ -23581,15 +23618,52 @@ die; */
 					join king_admin a on a.id=c.credit_given_by
 					where franchise_id=? order by id desc";
 	
-			$total_records=$this->db->query($sql,$fid)->num_rows;
+			$total_records=$this->db->query($sql,$fid)->num_rows();
 	
 			$sql.=" limit $pg , $limit ";
 	
 			$data['credit_log']=$this->db->query($sql,$fid)->result_array();
 		}
+        else if($type=="unreconcile")
+		{
+                        // receipts
+			$sql="select * from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) and receipt_type != 0 order by created_on desc";
+			$total_records=$this->db->query($sql,$fid)->num_rows;
+        		$sql.=" limit $pg , $limit ";
+                        $data['receipt_log']=$this->db->query($sql,$fid)->result_array();
+                        $data['ttl_receipts_val']=$this->db->query("select sum(receipt_amount) as ttl_receipts_val from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) order by created_on desc",$fid)->row()->ttl_receipts_val;
+                        
+                        // credit notes
+                        $credits_log_sql = "select * from (select fcs.acc_correc_id as credit_note_id,fcs.action_type,fcs.credit_amt,fcs.remarks,DATE_FORMAT(fcs.created_on,'%e/%m/%Y') as created_on,fcs.franchise_id
+                                                ,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.credit_amt,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
+                                                ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.credit_amt,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+                                                ,fcs.unreconciled_status
+                                                from pnh_franchise_account_summary fcs 
+                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id 
+                                                where fcs.action_type = '5' and fcs.franchise_id = ? and credit_amt !='0' and acc_correc_id !=0
+                                                group by fcs.acc_correc_id 
+                                                order by fcs.created_on desc
+                                            ) as g where g.unreconciled_amount > 0";
+                        $count_credit_records=$this->db->query($credits_log_sql,$fid)->num_rows();
+                        $data['count_credit_records'] = $count_credit_records;
+                        
+                        $data['total_credit_amount'] = $this->db->query("select round(sum(credit_amt),2) ttl_cr_amount,round(sum(unreconciled_amount),2) as ttl_un_cr_amount from ( select fcs.credit_amt
+                                                                        ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.credit_amt,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+                                                                        from pnh_franchise_account_summary fcs 
+                                                                        left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id
+                                                                        where fcs.action_type = '5' and fcs.franchise_id = ? and credit_amt !='0'
+                                                                        group by fcs.acc_correc_id 
+                                                                        order by fcs.created_on desc
+                                                                        ) as g where g.unreconciled_amount > 0",$fid)->row()->ttl_un_cr_amount;
+                        
+                        $credits_log_sql .= " limit $pg , $limit ";
+                        $data['credits_log']=$this->db->query($credits_log_sql,$fid)->result_array();
+                        $cr_tab = 1;
+                        $data['cr_pagination']=$this->_prepare_pagination("admin/jx_pnh_franchise_reports/$fid/$type/$cr_tab/$limit",$count_credit_records,$limit,7);
+		}
 	
 		$data['total_records']=$total_records;
-		$data['pagination']=$this->_prepare_pagination("admin/jx_pnh_franchise_reports/$fid/$type/$limit",$total_records,$limit,6);
+		$data['pagination']=$this->_prepare_pagination("admin/jx_pnh_franchise_reports/$fid/$type/$cr_tab/$limit",$total_records,$limit,7);
 		$output['page']=$this->load->view('admin/body/jx_pnh_franchise_receipts',$data,true);
 	
 		echo json_encode($output);
@@ -25296,5 +25370,288 @@ die; */
 		$this->load->view('admin/body/print_brands_summary',$data);
 		
 	}
+
+	 /**
+     * Function to get list of reconciled invoices or dr data of given credit note id
+     * @param type $credit_note_id int 
+     * @param type $franchise_id int
+     * @return string array
+     */
+    function jx_get_fran_credit_reconcile_list($credit_note_id,$franchise_id)
+    {
+        $user = $this->erpm->auth(FINANCE_ROLE);
+        $sql = "select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.invoice_no,rcon.debit_note_id
+                    ,rcon.inv_amount,rcon.unreconciled
+                    ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date,a.username
+                from pnh_franchise_account_summary fcs
+                join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id and rlog.is_reversed = 0
+                join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+                join king_admin a on a.id=rcon.created_by
+                where fcs.franchise_id = ? and fcs.acc_correc_id = ?
+                group by rcon.invoice_no,rcon.debit_note_id";
+
+            $reconcile_set = $this->db->query($sql,array($franchise_id,$credit_note_id));
+            if( $reconcile_set->num_rows() ) 
+            {
+                $rdata['status'] = 'success';
+                $rdata['reconcile_list'] = $reconcile_set->result_array();
+                $rdata['credit_note_det'] = $this->db->query("select fcs.acc_correc_id as credit_note_id,fcs.franchise_id,`action_type`,fcs.credit_amt,fcs.`remarks`,fcs.unreconciled_value,fcs.unreconciled_status,DATE_FORMAT(from_unixtime(rlog.created_on),'%e/%m/%Y') as created_date
+                                                                from pnh_franchise_account_summary fcs
+                                                                join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id
+                                                                where franchise_id=? and acc_correc_id=? order by rlog.created_on desc",array($franchise_id,$credit_note_id))->row_array();
+            }
+            else
+            {
+                $rdata['status'] = 'fail';
+                $rdata['response'] = 'No records found';
+                $rdata['lst_qry'] = $this->db->last_query();
+            }
+            echo json_encode($rdata);
+    }
+
+	/**
+     * Function to get list of reconciled invoices or dr data of given receipt id
+     * @param type $receipt_id int 
+     * @param type $franchise_id int
+     * @return string array
+     */
+    function jx_receipt_reconcile_list($receipt_id,$franchise_id)
+    {
+        $user = $this->erpm->auth(FINANCE_ROLE);
+        $sql = "select r.receipt_id,rlog.credit_note_id,r.franchise_id,rcon.debit_note_id,rcon.invoice_no,rcon.inv_amount,sum(rlog.reconcile_amount) as reconcile_amount,rcon.unreconciled,r.receipt_amount,r.remarks,r.unreconciled_value,unreconciled_status
+                    ,rlog.is_invoice_cancelled,rlog.is_reversed
+                    ,rcon.modified_on,rcon.modified_by
+                    ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date
+                    ,a.username
+                    from pnh_t_receipt_info r 
+                    join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
+                    join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
+                    join king_admin a on a.id=rcon.created_by
+                    where r.franchise_id = ? and r.receipt_id = ? group by rcon.invoice_no,rcon.debit_note_id";
+
+            $reconcile_set = $this->db->query($sql,array($franchise_id,$receipt_id));
+            if( $reconcile_set->num_rows() ) 
+            {
+                $rdata['status'] = 'success';
+                $rdata['reconcile_list'] = $reconcile_set->result_array();
+                $rdata['receipt_det'] = $this->db->query("select r.receipt_id,r.unreconciled_value,r.receipt_amount,DATE_FORMAT(from_unixtime(r.created_on),'%e/%m/%Y') as created_date from pnh_t_receipt_info r where r.receipt_amount != 0 and r.franchise_id = ? and r.receipt_id=?",array($franchise_id,$receipt_id))->row_array();
+            }
+            else
+            {
+                $rdata['status'] = 'fail';
+                $rdata['response'] = 'No records found';
+                $rdata['lst_qry'] = $this->db->last_query();
+            }
+            echo json_encode($rdata);
+    }
+        
+    /**
+     * Function to return Un-Reconciled invoices as json response
+     * @param type $fid int 
+     */
+    function jx_get_unreconciled_invoice_list($fid) {
+        $user = $this->erpm->auth(FINANCE_ROLE);
+        $arr_rslt = $this->db->query("select * from (select distinct i.invoice_no,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2), min(rcon.unreconciled) ) as inv_amount
+                                                        from king_invoice i
+                                                        join king_transactions tr on tr.transid=i.transid
+                                                        left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no
+                                                        where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id= ? 
+                                                        group by i.invoice_no,i.transid order by i.invoice_no asc) as g where g.inv_amount > 0 ",$fid);
+        if($arr_rslt->num_rows()==0) {
+            $rdata['status'] = 'fail';
+            $rdata['message'] = 'No invoices found for this franchise.';
+        }
+        else {
+            $rdata['status'] = 'success';
+            $rdata['fran_invoices']= $arr_rslt->result_array();
+        }
+        echo json_encode($rdata);
+    }
+    
+    /**
+     * Function to load unreconciled debit notes ids with amount info in JSON format
+     * @param type $fid int
+     */
+    function jx_get_unreconciled_debit_notes_list($fid) {
+        $user = $this->erpm->auth(FINANCE_ROLE);
+        //select * from  pnh_franchise_account_summary where action_type='5' and debit_amt != 0 and franchise_id = '59'
+        $arr_rslt =$this->db->query("select * from (select fcs.acc_correc_id as debit_note_id,fcs.debit_amt as amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.debit_amt, 2), (rcon.unreconciled) ) as inv_amount
+                        from pnh_franchise_account_summary fcs
+                        left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.acc_correc_id
+                        where fcs.action_type='5' and debit_amt != 0 and fcs.franchise_id = ?
+                        order by fcs.created_on desc
+                    ) as g where g.inv_amount > 0",$fid);
+        if($arr_rslt->num_rows()==0) {
+            $rdata['status'] = 'fail';
+            $rdata['message'] = 'No debit notes found for this franchise.';
+        }
+        else {
+            $rdata['status'] = 'success';
+            $rdata['fran_debit_notes']= $arr_rslt->result_array();
+        }
+        echo json_encode($rdata);
+    }
+    
+    /**
+     * Check franchise have any unreconciled invoices or debit notes?
+     * @param type $fid int
+     * @return boolean
+     */
+    function jx_chk_reconcile_fran_status($fid) {
+        $user = $this->erpm->auth(FINANCE_ROLE);
+        $num_invs =$this->db->query("select distinct i.invoice_no,rcon.unreconciled as unreconciled from king_invoice i
+                                        join king_transactions tr on tr.transid=i.transid
+                                        left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no
+                                        where i.invoice_status=1 and tr.is_pnh=1 and rcon.unreconciled is null and tr.franchise_id= ? ",$fid)->num_rows();
+        
+        $num_debits =$this->db->query("select fcs.acc_correc_id as debit_note_id,fcs.debit_amt as amount,rcon.unreconciled as unreconciled
+                                        from pnh_franchise_account_summary fcs
+                                        left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.acc_correc_id
+                                        where fcs.action_type='5' and debit_amt != 0 and fcs.franchise_id = ? ",$fid)->num_rows();
+        if( $num_invs == 0 and $num_debits == 0 ) {
+            $rdata['status'] = 'fail';
+            $rdata['message'] = 'No Invoice or Debit notes found for this franchise.';
+        }
+        else {
+            $rdata['status'] = 'success';
+            $rdata['num_invs']= $num_invs;
+            $rdata['num_debits']= $num_debits;
+        }
+        echo json_encode($rdata);
+    }
+    
+    /**
+     * Function to save reconciled invoices or credit notes
+     */
+    function jx_dl_submit_reconcile_form($fid) {
+        $user = $this->erpm->auth(FINANCE_ROLE);
+                //$rdata['post'] = $_POST; echo json_encode($rdata); die();
+        foreach(array("dg_i_receipt_id"
+                        ,"dg_i_receipt_amount"
+                        ,"dg_i_unreconciled_value"
+                        ,"sel_invoice"
+                        ,"amt_unreconcile"
+                        ,"amt_adjusted"
+                        ,"ttl_reconciled"
+                        ,"ttl_unreconciled_after"
+                        ,"document_type") as $i)
+                $$i=$this->input->post($i);
+
+            //update unreconceiled value
+            $invoice_arr = array();
+            foreach($sel_invoice as $i=>$invoice_no) {
+                    $docu_type = $document_type[$i];
+                    $unreconcile_amt = $amt_unreconcile[$i];
+                    $adjusted_amt = $amt_adjusted[$i];
+                    if($invoice_no!='' && $unreconcile_amt!='' && $adjusted_amt!='') {
+                            $sub_val = $unreconcile_amt - $adjusted_amt;
+                            if($docu_type == 'inv') {
+                                $dispatch_id = $this->erpm->get_dispatch_id_invno($invoice_no);
+                                $invoice_arr['invoices'][$i]["debit_note_id"] = 0;
+                                $invoice_arr['invoices'][$i]["invoice_no"] = $sel_invoice[$i];
+                                $invoice_arr['invoices'][$i]["dispatch_id"] = $dispatch_id;
+                            }
+                            elseif($docu_type == 'dr') {
+                                $invoice_arr['invoices'][$i]["debit_note_id"] = $sel_invoice[$i];
+                                $invoice_arr['invoices'][$i]["invoice_no"] = 0;
+                                $invoice_arr['invoices'][$i]["dispatch_id"] = 0;
+                            }
+                            $invoice_arr['invoices'][$i]["invoice_amt"] = round($unreconcile_amt,2);
+                            $invoice_arr['invoices'][$i]["adjusted_amt"] = round($adjusted_amt,2);
+                            $invoice_arr['invoices'][$i]["unreconciled_amt"] = round($sub_val,2);
+                            $invoice_arr['document_type'] = $docu_type;
+                    }
+            }
+            $invoice_arr['userid'] = $user['userid'];
+            $invoice_arr['receipt_id'] = $dg_i_receipt_id;
+            $invoice_arr['credit_note_id'] = 0;
+            $invoice_arr['amount']=round($dg_i_receipt_amount,2);
+            $invoice_arr['total_reconcile_val'] = round($ttl_reconciled,2);
+            $invoice_arr['unreconciled_value'] = round($ttl_unreconciled_after,2);
+            $invoice_arr['fid'] = $fid;
+
+            //$rdata['inputdata'] = $invoice_arr;
+//            echo '<pre>'; print_r($invoice_arr);die();
+            $result = $this->erpm->reconcile_receipt($invoice_arr);
+                
+            if(count($result) ) {
+                $rdata['status'] = 'success';
+                $rdata['reconcile_output'] = $result;
+            }
+            else {
+                $rdata['status'] = 'error';
+                $rdata['message'] = $invoice_arr;
+            }
+	
+            echo json_encode($rdata);
+    }
+        
+    /**
+     * Function to reconcile the credit notes by invoice no or debit ids
+     * @param type $fid int
+     */
+     function jx_creditnote_reconcile_form_submit($fid) {
+        $user = $this->erpm->auth(FINANCE_ROLE);
+        
+        foreach(array('dg_i_credit_note_id'
+                        ,'dg_i_credit_amount'
+                        ,'dg_i_unreconciled_value'
+                        ,"sel_invoice"
+                        ,"amt_unreconcile"
+                        ,"amt_adjusted"
+                        ,"ttl_reconciled"
+                        ,"ttl_unreconciled_after"
+                        ,"document_type") as $i )
+            $$i =$this->input->post($i);
+        
+       //update unreconceiled value
+            $invoice_arr = array();
+            foreach($sel_invoice as $i=>$invoice_no) {
+                    $docu_type = $document_type[$i];
+                    $unreconcile_amt = $amt_unreconcile[$i];
+                    $adjusted_amt = $amt_adjusted[$i];
+                    if($invoice_no!='' && $unreconcile_amt!='' && $adjusted_amt!='') {
+                            $sub_val = $unreconcile_amt - $adjusted_amt;
+                            if($docu_type == 'inv') {
+                                $dispatch_id = $this->erpm->get_dispatch_id_invno($invoice_no);
+                                $invoice_arr['invoices'][$i]["debit_note_id"] = 0;
+                                $invoice_arr['invoices'][$i]["invoice_no"] = $sel_invoice[$i];
+                                $invoice_arr['invoices'][$i]["dispatch_id"] = $dispatch_id;
+                            }
+                            elseif($docu_type == 'dr') {
+                                $invoice_arr['invoices'][$i]["debit_note_id"] = $sel_invoice[$i];
+                                $invoice_arr['invoices'][$i]["invoice_no"] = 0;
+                                $invoice_arr['invoices'][$i]["dispatch_id"] = 0;
+                            }
+                            $invoice_arr['invoices'][$i]["invoice_amt"] = round($unreconcile_amt,2);
+                            $invoice_arr['invoices'][$i]["adjusted_amt"] = round($adjusted_amt,2);
+                            $invoice_arr['invoices'][$i]["unreconciled_amt"] = round($sub_val,2);
+                            $invoice_arr['document_type'] = $docu_type;
+                    }
+            }
+            $invoice_arr['userid'] = $user['userid'];
+            $invoice_arr['receipt_id'] = 0;
+            $invoice_arr['credit_note_id'] = $dg_i_credit_note_id; //imp
+            $invoice_arr['amount']=round($dg_i_credit_amount,2); // imp
+            $invoice_arr['total_reconcile_val'] = round($ttl_reconciled,2);
+            $invoice_arr['unreconciled_value'] = round($ttl_unreconciled_after,2);
+            $invoice_arr['fid'] = $fid;
+
+
+            //$rdata['inputdata'] = $invoice_arr;
+            //echo '<pre>'; print_r($invoice_arr);die();
+            $result = $this->erpm->reconcile_receipt($invoice_arr);
+                
+            if(count($result) ) {
+                $rdata['status'] = 'success';
+                $rdata['reconcile_output'] = $result;
+            }
+            else {
+                $rdata['status'] = 'error';
+                $rdata['message'] = $invoice_arr;
+            }
+			echo json_encode($rdata);
+    }
+    
 
 }

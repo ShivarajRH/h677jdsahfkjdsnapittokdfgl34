@@ -37,17 +37,18 @@ if(error_msgs.length)
             var rtype = $("#r_type").find(":selected").val();
             if(rtype == 0) { alert("Security Deposit of type can not reconcile the Amount."); return false; }
             
-            var receipt_amount = $("#receipt_amount").val();
+            var receipt_amount = format_number($("#receipt_amount").val());
             if( $(".error_status").html() != '' && receipt_amount != '') {
                 return false;
             }
             // check is this franchise have any unreconciled invoices or debit notes?
             $.get(site_url+"/admin/jx_chk_reconcile_fran_status/"+franchise_id,{},function(resp) {
-                if(resp.status != 'success') {
+                if(resp.status == 'fail') {
                     alert("Franchise not having any invoices or debit entries.");
                     return false;
                 }
-                else {
+                else
+                {
                     
                      // check is all amount adjusted
                     var reconciled_total= parseFloat( $("abbr",".reconciled_total").html() );
@@ -105,7 +106,7 @@ if(error_msgs.length)
             $.post(site_url+"/admin/jx_get_unreconciled_invoice_list/"+franchise_id,{},function(resp) {
                     if(resp.status == 'success') {
                         $.each(resp.fran_invoices,function(i,invoice) {
-                            invs += "<option value='"+invoice.invoice_no+"' inv_amount='"+invoice.inv_amount+"'>"+invoice.invoice_no+" (Rs."+invoice.inv_amount+") </option>\n";
+                            invs += "<option value='"+invoice.invoice_no+"' inv_amount='"+format_number(invoice.inv_amount)+"'>"+invoice.invoice_no+" (Rs."+format_number(invoice.inv_amount)+") </option>\n";
                         });
                     }
                     else {
@@ -131,7 +132,7 @@ if(error_msgs.length)
             $.post(site_url+"/admin/jx_get_unreconciled_debit_notes_list/"+franchise_id,{},function(resp) {
                     if(resp.status == 'success') {
                         $.each(resp.fran_debit_notes,function(i,invoice) {
-                            invs += "<option value='"+invoice.debit_note_id+"' inv_amount='"+invoice.inv_amount+"'>Dr. "+invoice.debit_note_id+" (Rs."+invoice.inv_amount+") </option>\n";
+                            invs += "<option value='"+invoice.debit_note_id+"' inv_amount='"+format_number(invoice.inv_amount)+"'>Dr. "+invoice.debit_note_id+" (Rs."+format_number(invoice.inv_amount)+") </option>\n";
                         });
                     }
                     else {
@@ -170,12 +171,12 @@ if(error_msgs.length)
         if(icount == 0) {
             $("#reconcile_row").html("");
         }
-        var amt_adjusted = $("#amt_adjusted_"+rowid).val();
-        var reconciled_total= parseFloat( $("abbr",".reconciled_total").html() );
+        var amt_adjusted = format_number($("#amt_adjusted_"+rowid).val());
+        var reconciled_total= format_number( $("abbr",".reconciled_total").html() );
         var sub_amount = reconciled_total - amt_adjusted;
         
         sub_amount = sub_amount ? sub_amount : 0
-        $("abbr",".reconciled_total").html(sub_amount);
+        $("abbr",".reconciled_total").html(format_number(sub_amount));
 
         if(rowid == 0)
             $("#reconcile_row").parent().html("");
@@ -186,9 +187,9 @@ if(error_msgs.length)
         var receipt_amount = $("#receipt_amount").val();
         var error_status = $(".error_status");
         var sel_invoice_dropbox = $("#selected_invoices_"+count);
-        var reconciled_total= parseFloat( $("abbr",".reconciled_total").html() );
+        var reconciled_total= format_number( $("abbr",".reconciled_total").html() );
         var sel_inv = $(elt).find(':selected').val();
-        var sel_inv_amount = parseFloat( $(elt).find(':selected').attr("inv_amount") );
+        var sel_inv_amount = format_number( $(elt).find(':selected').attr("inv_amount") );
         var invoice_row = $("#reconcile_row_"+count);
 		
         error_status.html("");
@@ -280,8 +281,8 @@ if(error_msgs.length)
     $("#dlg_unreconcile_view_list").dialog({
         modal:true,
 	autoOpen:false,
-	width:650,
-	height:506,
+	width:700,
+	height:600,
 	autoResize:true
         ,buttons:{
             "Close":function() {
@@ -302,7 +303,15 @@ if(error_msgs.length)
                                     <tr><td>Created On</td><th>"+resp.receipt_det.created_date+"</th></tr></table>";
                 recon_list += "<br><table width='100%' class='datagrid'><tr><th>#</th><th>Invoice No</th><th>Debitnote Id</th><th>Document Amount (Rs.)</th><th>Reconciled (Rs.)</th><th>Unreconciled (Rs.)</th><th>Created By</th><th>Created On</th></tr>";
                 $.each(resp.reconcile_list,function(i,recon) {
-                    recon_list += "<tr><td>"+(++i)+"</td><td>"+recon.invoice_no+"</td><td>"+((!recon.debit_note_id)?'--':recon.debit_note_id)+"</td><td>"+recon.inv_amount+"</td><td>"+recon.reconcile_amount+"</td><td>"+((!recon.unreconciled)?'Nill':recon.unreconciled)+"</td><td>"+recon.username+"</td><td>"+recon.created_date+"</td>";
+                    var invno = '--';
+                    var drid = '--';
+                    if(recon.invoice_no != 0) {
+                        var invno = recon.invoice_no;
+                    }
+                    if(recon.debit_note_id != 0) {
+                        var drid = recon.debit_note_id;
+                    }
+                    recon_list += "<tr><td>"+(++i)+"</td><td>"+invno+"</td><td>"+drid+"</td><td>"+format_number(recon.inv_amount)+"</td><td>"+format_number(recon.reconcile_amount)+"</td><td>"+((!recon.unreconciled)?'Nill':recon.unreconciled)+"</td><td>"+recon.username+"</td><td>"+recon.created_date+"</td>";
                 });
                 recon_list += "</table>";
             }
@@ -380,7 +389,9 @@ if(error_msgs.length)
     function clk_reconcile_action(elt,receipt_id,franchise_id,receipt_amount,unreconciled_value) {
             // set data
             var dlg = $("#dlg_unreconcile_form");
-            $("#dg_i_receipt_id",dlg).val(receipt_id);$("#dg_i_receipt_amount",dlg).val(receipt_amount);$("#dg_i_unreconciled_value",dlg).val(unreconciled_value);
+            $("#dg_i_receipt_id",dlg).val(receipt_id);
+            $("#dg_i_receipt_amount",dlg).val(format_number(receipt_amount));
+            $("#dg_i_unreconciled_value",dlg).val(format_number(unreconciled_value));
             dlg.dialog('open').dialog("option","title","Reconcile the Receipt #"+receipt_id);
             var invs_id = $("#dlg_selected_invoices_1");
             load_unconciled_invoices(invs_id);
@@ -428,8 +439,8 @@ if(error_msgs.length)
             var dg_rowparent = $("."+rowparent);
             
             var row =  $("#"+row_name+"_"+dg_icount);
-        
-            var rpt_unreconciled_value = $("#dg_i_unreconciled_value",dlg).val();
+            
+            var rpt_unreconciled_value = format_number( $("#dg_i_unreconciled_value",dlg).val() );
             var error_status = $(".dg_error_status",dlg).html("");
             var reconciled_total= format_number( $(".dg_l_total_adjusted_val",dlg).val() );
             
@@ -448,7 +459,7 @@ if(error_msgs.length)
             //var amt_unreconcile_value= format_number( amt_unreconcile.val() );
             
             var sel_inv = $(elt).find(':selected').val();
-            var inv_amount = $(elt).find(':selected').attr("inv_amount");
+            var inv_amount = format_number( $(elt).find(':selected').attr("inv_amount") );
             
             //check is invoice amount is number
             if( isNaN(inv_amount) ) {
@@ -467,34 +478,36 @@ if(error_msgs.length)
                     error_status.html("Already this invoice selected"); return false;
             }
             else {
-                 dg_rowname.removeClass();
+                    dg_rowname.removeClass();
                     dg_rowname.addClass(row_classname+" "+row_name+" inv_"+sel_inv);
             }
 
             //new 
-            var available_rpt_unreconciled_value = rpt_unreconciled_value - reconciled_total;
+            /*var available_rpt_unreconciled_value = rpt_unreconciled_value - reconciled_total;
             var new_reconcile_amount = 0;
-            if(available_rpt_unreconciled_value>sel_inv_amount){
+            if(available_rpt_unreconciled_value>sel_inv_amount) {
                 new_reconcile_amount = sel_inv_amount;
             }
-            else{
-                new_reconcile_amount = available_rpt_unreconciled_value;
-            }
-            /*var i_sub_total = sel_inv_amount + reconciled_total;
-            if(i_sub_total < rpt_unreconciled_value) {
+            else{  new_reconcile_amount = available_rpt_unreconciled_value; }
+            amt_unreconcile.val(sel_inv_amount);
+            amt_adjusted.val(new_reconcile_amount);*/
+            
+            var i_sub_total = sel_inv_amount + reconciled_total;
+            if(i_sub_total < rpt_unreconciled_value)
+            {
                 if(dg_icount) {
                     amt_unreconcile.val(sel_inv_amount);
                     amt_adjusted.val(sel_inv_amount);
                 }//else {$("#amt_unreconcile").val(sel_inv_amount);$("#amt_adjusted").val(sel_inv_amount);}
             }
-            else {
+            else
+            {
+                //Invoice amount is more than the receipt amount
                 var i_sub_total = rpt_unreconciled_value - reconciled_total;
                 amt_unreconcile.val(sel_inv_amount);
                 amt_adjusted.val(i_sub_total);
-                //alert("Invoice amount cannot be more than the receipt amount!");
-            }*/
-            amt_unreconcile.val(sel_inv_amount);
-            amt_adjusted.val(new_reconcile_amount);
+                
+            }
             
             //dg_show_unconcile_total(dlgname);
             amt_adjusted.trigger("change");
@@ -507,22 +520,31 @@ if(error_msgs.length)
             
             var rowname = $(elt).parent().parent().attr("id");
             
-            var amt_unreconcile = $("#"+rowname+" .dg_amt_unreconcile",dlg).val();
+            var amt_unreconcile = format_number( $("#"+rowname+" .dg_amt_unreconcile",dlg).val() );
             var amt_adjusted = $("#"+rowname+" .dg_amt_adjusted",dlg);
             
-            var receipt_amount = $("#dg_i_unreconciled_value",dlg).val();
+            var receipt_amount = format_number( $("#dg_i_unreconciled_value",dlg).val() );
             
-            var amt_adjusted_amount = amt_adjusted.val();
+            var amt_adjusted_amount = format_number(amt_adjusted.val());
+            
+            if( isNaN(amt_adjusted_amount) ) { alert("Invalid amount entered."); amt_adjusted.val(0).focus();  $(elt).trigger("change"); return false; }
             
 //            alert(rowname+"-"+amt_unreconcile+"-"+amt_adjusted_amount);
             
-            // is adjusted amount is greater than invoice amount?
-            if( amt_adjusted_amount > amt_unreconcile && amt_adjusted_amount > receipt_amount) {
+            //1. Is adjusted amount is greater than invoice amount?
+            if( amt_adjusted_amount > amt_unreconcile ) {
+                alert("Adjusted amount is greater than Invoice amount");
                 amt_adjusted.val(0).focus();  $(elt).trigger("change");
-                alert("Adjusted amount is greater than invoice amount");
                 return false;
             }
-             
+            
+            //2. Is adjusted amount is greater than receipt amount
+            else if(  amt_adjusted_amount > receipt_amount) {
+                alert("Adjusted amount is greater than Receipt amount "+amt_adjusted_amount +">"+ receipt_amount);
+                amt_adjusted.val(0).focus();  $(elt).trigger("change");
+                return false;
+            }
+           
             var adjusted_amount = 0;
             $(".dg_amt_adjusted",dlg).each(function(i,row) {
                 var amount = $(this).val();
@@ -562,7 +584,7 @@ if(error_msgs.length)
         var ttl_unreconciled_value= format_number( $(".dg_i_unreconciled_value",dlg).val() );
         var reconciled_total= format_number( $(".dg_l_total_adjusted_val",dlg).val() );
         
-        var amt_adjusted = $("#dg_amt_adjusted_"+rowid,dlg).val();
+        var amt_adjusted = format_number($("#dg_amt_adjusted_"+rowid,dlg).val());
 
         // Reconciled
         var sub_amount = reconciled_total - amt_adjusted;
@@ -625,7 +647,7 @@ if(error_msgs.length)
     
     function reconcile_cr_amount(elt,credit_note_id,credit_amt,unreconciled_amount) {
         var dlg = $("#dlg_credit_note_block");
-        $("#dg_i_credit_note_id",dlg).val(credit_note_id);$("#dg_i_credit_amount",dlg).val(credit_amt);$("#dg_i_unreconciled_value",dlg).val(unreconciled_amount);
+        $("#dg_i_credit_note_id",dlg).val(credit_note_id);$("#dg_i_credit_amount",dlg).val( format_number(credit_amt) );$("#dg_i_unreconciled_value",dlg).val( format_number(unreconciled_amount) );
         dlg.dialog('open').dialog("option","title","Reconcile the Credit Note id #"+credit_note_id);
         var invs_id = $("#dlg_selected_invoices_1",dlg);
         load_unconciled_invoices(invs_id);

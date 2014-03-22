@@ -36,23 +36,24 @@
                 $.getJSON(site_url+'/admin/jx_pnh_deal_stock_det/'+ITEMID+"/"+IS_PNH,{},function(resp){ // height:'+HEIGHT+'; top:'+TOP+'px;  left:'+LEFT+'px;
                         var HTML_DATA = '<div style="float:left;width:100%"><div style="width:'+WIDTH+'; background:'+BGCOLOR+'; position: '+POSITION+'; " class="'+CLASSNAME+'">\n\
                                             <span dealid="'+ITEMID+'" class="stock_det_close">X</span>';
+                            HTML_DATA += '<table width="100%" border=1 class="datagrid" cellpadding=1 cellspacing=0>';
                         if(resp.status == 'fail')
                         {
-                                HTML_DATA += '<div class="error_msg">Error: '+resp.message+'</div>';
+                                HTML_DATA += '<tr><td><div class="error_msg">Error: '+resp.message+'</div></td></tr>';
                         }
                         else
                         {
-                                    HTML_DATA += '<table width="100%" border=1 class="datagrid" cellpadding=3 cellspacing=0>';
-                                    HTML_DATA += '<thead><tr><th>Product Name</th><th>Stock</th></tr></thead><tbody>';
+                                    HTML_DATA += '<thead><tr><th>Product Name</th><th>Stock</th><th>Source</th></tr></thead><tbody>';
                                     $.each(resp.prod_stk_det,function(a,b){
                                             HTML_DATA +='<tr>';
                                             HTML_DATA +='	<td width="80%" style="font-size:10px"><a href="'+site_url+'/admin/product/'+b.product_id+'" target="_blank">'+b.product_name+'</a></td>';
-                                            HTML_DATA +='	<td width="20%" style="font-size:10px">'+b.stk+'</td>';
+                                            HTML_DATA +='	<td width="10%" style="font-size:10px">'+b.stk+'</td>';
+                                            HTML_DATA +='	<td width="10%" style="font-size:10px">'+b.source+'</td>';
                                             HTML_DATA +='</tr>';
                                     });
-                                    HTML_DATA += '</tbody></table></div>';
+                                    HTML_DATA += '</tbody>';
                         }
-                        HTML_DATA += '</div>';
+                        HTML_DATA += '</table></div>';
                         base.$el.after(HTML_DATA);
                         
                         //position
@@ -109,11 +110,10 @@
         base_core.options = $.extend({}, $.dealstock.defaultOptions, options);
         var CLASSNAME = base_core.options.classname;
         var stylesheet = '.'+CLASSNAME+' .stock_det_close { float: right;color: #FFFFFF;cursor: pointer;background-color: #7E88AD;padding: 0 13px;font-weight: bold;margin-top: -4%; } \n\
-                            .'+CLASSNAME+' .error_msg { background-color: #CCC4C4; color:#ffffff; padding:10px 10px;float:left; } \n\
                             .'+CLASSNAME+' .datagrid th { background-color:#7E88AD !important; }\n\
                             .in-stock { color:green;margin:10px;font-size: 14px; }\n\
                             .out-of-stock { color:red;margin:10px;font-size: 14px; }';
-        
+                            //.'+CLASSNAME+' .error_msg { background-color: #CCC4C4; color:#ffffff; padding:10px 10px;float:left; } \n\
         $("body").append('<style>'+stylesheet+'</style>');
 
         var myVar = 0;
@@ -250,13 +250,13 @@
                                             {
                                                 if(itemdata.deal_status == 'In Stock')
                                                 {
-                                                    base.removeClass();
-                                                    base.addClass(ELTCLASS+" in-stock");
+                                                    base.removeClassWild("out-of-stock");
+                                                    base.addClass("in-stock");
                                                 }
                                                 else 
                                                 {
-                                                    base.removeClass();
-                                                    base.addClass(ELTCLASS+" out-of-stock");
+                                                    base.removeClassWild("in-stock");
+                                                    base.addClass("out-of-stock");
                                                 
                                                 }
                                                 base.html(HTML_DATA.toUpperCase());
@@ -289,6 +289,13 @@
     }
 
     //<!--============================================<< DEAL STOCK PLUGIN SETTINGS END >>===================================-->
+    
+    $.fn.removeClassWild = function(mask) {
+        return this.removeClass(function(index, cls) {
+            var re = mask.replace(/\*/g, '\\S+');
+            return (cls.match(new RegExp('\\b' + re + '', 'g')) || []).join(' ');
+        });
+    };
     
 })(jQuery);
 

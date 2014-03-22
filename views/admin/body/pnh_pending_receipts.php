@@ -1,6 +1,50 @@
 <script>
 $('.leftcont').hide();
 </script>
+
+<style>
+input[type="checkbox"]{cursor: pointer;}
+.warn td{background: #FDD2D2 !important;}
+.datagrid th{padding:12px 7px}
+.datagrid td{padding:5px !important;}
+.datagrid1 {border-collapse: collapse;border:none !important;width: 100%;background: #fffff0;}
+.datagrid1 th{border:none !important;font-size: 13px;padding:0px 0px;}
+.datagrid1 td{border-right:none;border-left:none;border-bottom:none !important;font-size: 12px;padding:5px !important;color: #444;text-transform: capitalize}
+.datagrid1 td a{text-transform: capitalize}
+.datagrid1 td b{font-weight: bold;font-size: 11px;}
+
+td{vertical-align: top;}
+
+#srch_results{
+	margin-left: 1147px;
+	position: absolute;
+	display: none;
+	width: 400px;
+	overflow-y: auto;
+	background: #EEE;
+	border: 1px solid #AAA;
+	max-height: 200px;
+	min-width: 140px;
+	max-width: 176px;
+	overflow-x: hidden;
+	margin-top: 46px;
+}
+#srch_results a{
+	display: block;
+	padding: 5px 6px;
+	font-size: 12px;
+	display: inline-table;
+	width: 300px;
+	text-transform: capitalize;
+	border-bottom: 1px dotted #DDD;
+	background: white;
+} 
+#srch_results a:hover{
+background: #CCC;
+color: black;
+text-decoration: none;
+}
+</style>
 <div class="container">
 <div id="srch_results"></div>
 <div style="float: right;">
@@ -116,7 +160,7 @@ Transit Type:<select id="t_type" name="t_type"  style="width: 150px;">
 
 <?php if($type<=2){?>
 <table class="datagrid" cellspacing="5" cellpadding="5" width="100%" >
-<thead><tr><?php if ($type==1){?><th><input class="chk_all" type="checkbox"></th><?php }else{?><th></th><?php }?><th>Receipt Details</th><th>Franchise</th><Th>Type</Th><Th>Payment Details</Th><th>Payment Date</th><th>Remarks</th><th></th></tr></thead>
+<thead><tr><?php if ($type==1){?><th><input class="chk_all" type="checkbox"></th><?php }else{?><th></th><?php }?><th width="250">Receipt Details</th><th>Franchise</th><Th>Type</Th><th width="250px">Payment Details</th><th>Payment Date</th><th width="200">Remarks</th><th></th></tr></thead>
 <?php if($receipts){?>
 <tbody>
 <?php foreach($receipts as $r){?>
@@ -174,7 +218,7 @@ Transit Type:<select id="t_type" name="t_type"  style="width: 150px;">
 <?php }elseif($type==4){?>
 <table class="datagrid" cellspacing="5" cellpadding="5" width="100%">
 <thead >
-<th>Receipt Details</th><th>Franchisee Name</th><th>Payment Details</th><th>Payment Date</th><th>Submitted Bank Name</th><th>Remarks</th><th>Submitted On</th><th>Submitted By</th><th>Actions</th>
+<th width="250">Receipt Details</th><th>Franchisee Name</th><th width="250px">Payment Details</th><th>Payment Date</th><th>Submitted Bank Name</th><th width="200">Remarks</th><th>Processed On</th><th>Processed By</th><th>Actions</th>
 </thead>
 <tbody>
 <?php foreach($receipts as $r){?>
@@ -210,7 +254,7 @@ if($no_days >=4 && $r['activated_on'] == 0)
 <td><?php if($r['instrument_date']){?><?=date("d/m/Y",$r['instrument_date'])?><?php }?></td>
 <td><?php if($r['submit_bankname']){?><?=$r['submit_bankname']?><?php }?></td>
 <td><?php if($r['submittedremarks']){?><?=$r['submittedremarks']?><?php }?></td>
-<td><?php if($r['submitted_on']){?><?=format_datetime_ts($r['created_on'])?><?php }?></td>
+<td><?php if($r['submitted_on']){?><?=format_date($r['submitted_on'])?><?php }?></td>
 <td><?php if($r['submittedby']){?><?=$r['submittedby']?><?php }?></td>
 <td>
 <?php if(($r['is_submitted']==1 && $r['status']==0)|| ($r['activated_on']==0)){?>
@@ -228,7 +272,7 @@ if($no_days >=4 && $r['activated_on'] == 0)
 
 <?php }elseif ($type==3){?>
 <table class="datagrid" width="100%">
-<thead><th>Receipt Details</th><th>Franchisee Name</th><th>Payment Deatils</th><th>Payment Date</th><th>Remarks</th><th>Realized On</th><th>Realized By</th></thead>
+<thead><th width="250">Receipt Details</th><th>Franchisee Name</th><th>Payment Deatils</th><th>Processed Details</th><th>Realized Details</th><!-- <th width="200">Remarks</th><th>Realized On</th><th>Realized By</th> --></thead>
 <tbody>
 <?php foreach($receipts as $r){?>
 <tr class="fr_receipt_det" fr_id="<?php echo $r['franchise_id']?>">
@@ -250,13 +294,32 @@ if($no_days >=4 && $r['activated_on'] == 0)
 			<tr><td><b>Amount</b></td><td><b>:</b></td><td>Rs <?=$r['receipt_amount']?></td></tr> 
 			<?php if($r['payment_mode']==1){?><tr><td><b>Cheque no</b></td><td><b>:</b></td><td><?=$r['instrument_no']?></td></tr><?php }?>
 			<?php if($r['bank_name']){?><tr><td><b>Bank</b></td><td><b>:</b></td><td><?=$r['bank_name']?></td></tr><?php }?>
+			<tr><td><b>Instrument Date</b></td><td><b>:</b></td><td><?php if($r['instrument_date']){?><?=date("d/m/Y",$r['instrument_date'])?><?php }?></td></tr>
 		</table>
 	</div>
 </td>
-<td><?php if($r['instrument_date']){?><?=date("d/m/Y",$r['instrument_date'])?><?php }?></td>
-<td><?=$r['reason']?></td>
-<td><?=format_date_ts($r['activated_on'])?></td>
-<td><?=$r['activated_by']?></td>
+
+<td>
+<div>
+	<table class="datagrid1" cellpadding="0" cellspacing="0">
+		<tr><td><b>Bank</b></td><td>:</td><td><?=$r['submit_bankname']?></td></tr>
+		<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['submittedremarks']?></td></tr>
+		<tr><td><b>Deposited On</b></td><td>:</td><td><?=format_date($r['submitted_on'])?></td></tr>
+		<tr><td  width="80"><b>Deposited By</b></td><td>:</td><td><?=$r['submitted_by']?></td></tr>
+	</table>
+</div>
+</td>
+<td>
+	<div>
+		<table class="datagrid1" cellpadding="0" cellspacing="0">
+		<tr><td><b>Realized On</b></td><td><b>:</b></td><td><?=$r['cheq_realized_on']!=null?format_date($r['cheq_realized_on']):format_date_ts($r['activated_on']);?></td></tr>
+		<tr><td><b>Remarks</b></td><td>:</td><td><?=$r['reason']?></td></tr>
+		<tr><td><b>Updated By</b></td><td>:</td><td><?=$r['activated_by']?></td></tr>
+		<tr><td><b>Updated On</b></td><td>:</td><td><?=format_date_ts($r['activated_on'])?></td></tr>
+		</table>
+
+	</div>
+</td>
 </tr>
 <?php }?>
 </tbody>
@@ -264,7 +327,7 @@ if($no_days >=4 && $r['activated_on'] == 0)
 <?php } elseif ($type==5){?>
 <table class="datagrid" width="100%">
 <?php if($receipts){?>
-<thead><th>Receipt Details</th><th>Franchisee Name</th><th>Payment Details</th><th>Remarks</th><th>Cancelled On</th><th>Cancelled By</th></thead>
+<thead><th width="250">Receipt Details</th><th>Franchisee Name</th><th width="250px">Payment Details</th><th>Processed Details</th><th>Cancelled Details</th><!-- <th>Cancelled On</th><th>Cancelled By</th> --></thead>
 <tbody>
 <?php foreach($receipts as $r){?>
 <tr class="fr_receipt_det" fr_id="<?php echo $r['franchise_id']?>">
@@ -290,14 +353,28 @@ if($no_days >=4 && $r['activated_on'] == 0)
 		</table>
 	</div>
 </td>
-<td class="remarks_det">
-<?=$r['cancel_reason']?$r['cancel_reason']:$r['reason']?>
+
+<td>
+	<div>
+		<table class="datagrid1" cellpadding="0" cellspacing="0">
+		<tr><td><b>Bank</b></td><td>:</td><td><?=$r['submit_bankname']?></td></tr>
+		<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['submittedremarks']?></td></tr>
+		<tr><td><b>Deposited On</b></td><td>:</td><td><?=format_date($r['submitted_on'])?></td></tr>
+		<tr><td  width="80"><b>Deposited By</b></td><td>:</td><td><?=$r['submitted_by']?></td></tr>
+		</table>
+	</div>
+
 </td>
-<td class="cash_det">
-<?=$r['cancelled_on']?format_datetime($r['cancelled_on']):format_datetime_ts($r['activated_on'])?>
-</td>
-<td class="remarks_det">
-<?=$r['activated_by']?>
+<td>
+	<div>
+		<table class="datagrid1" cellpadding="0" cellspacing="0">
+		<tr><td width="80"><b>Cancel Status</b></td><td><b>:</b></td><td><?php $cstatus=array("Reversed","Return","Bounce");?><?=$cstatus[$r['cancel_status']];?></td></tr>
+		<tr><td><b>Cheque Cancelled On</b></td><td><b>:</b></td><td><?=$r['cheq_cancelled_on']!=null?format_date($r['cheq_cancelled_on']):format_datetime($r['modified_on'])?></td></tr>
+		<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['cancel_reason']?$r['cancel_reason']:$r['reason']?></td></tr>
+		<tr><td><b>Updated By</b></td><td><b>:</b></td><td><?= $r['activated_by']?$r['activated_by']:$r['reversed_by']?> </td></tr>
+		<tr><td><b>Updated On</b></td><td><b>:</b></td><td><?=$r['cancelled_on']!=null?format_datetime($r['cancelled_on']):format_datetime_ts($r['modified_on'])?></td></tr>
+		</table>
+	</div>
 </td>
 </tr>
 </tbody>
@@ -309,7 +386,7 @@ if($no_days >=4 && $r['activated_on'] == 0)
 <?php if($type==1){?>
 <div id="submit_bank">With Selected:<input type="button" value="Submit To Bank" onclick="load_bankdetails()"></div>
 <?php }?>
-<div id="submit_tobank"title="Submit To Bank"  data-placeholder="Select Bank" style="display:none;">
+<div id="submit_tobank" title="Submit To Bank"  data-placeholder="Select Bank" style="display:none;">
 <form id="submit_cheks" action="<?php echo site_url('admin/update_check_issubmitted');?>" method="post" data-validate="parsley">
 <input type="hidden" name="rids" class="rids" value= "" >
 <input type="hidden" name="action" class="action" value="1">
@@ -333,9 +410,9 @@ if($no_days >=4 && $r['activated_on'] == 0)
 				</td>
 			</tr>
 			<tr>
-			<td>Choose Date of submission</td>
+			<td>Date of submission</td>
 			<td>:</td>
-			<td><input type="text" name="check_date" class="check_date" style="width:90px;height:25px;" value="<?php echo set_value('check_date');?>"  data-required="true"/></td>
+			<td><input type="text" name="check_date" class="check_date" style="width:90px;padding:3px;" value="<?php echo set_value('check_date');?>"  data-required="true"/></td>
 			</tr>				
 		
 			<tr>
@@ -378,9 +455,10 @@ if($no_days >=4 && $r['activated_on'] == 0)
 <tr><td>Franchise Name</td><td>:</td><td id="can_recptfran"><b></b></td></tr>
 <tr><td>Receipt ID</td><td>:</td><td id="can_recptid"><b></b></td></tr>
 <tr><td>Cheque Number</td><td>:</td><td id="can_recptchqueno"><b></b></td></tr>
-<tr><td>Select Cheque Return Status</td><td>:</td><td><select name="cancel_status" id="cancel_status" date-required="true"><option value="0">Choose</option><option value="1">Return</option><option value="2">Bounce</option></select></td></tr>
+<tr><td>Select Cheque Return Status</td><td>:<span class="red_star">*</span></td><td><select name="cancel_status" id="cancel_status" data-required="true"><option value=" ">Choose</option><option value="1">Return</option><option value="2">Bounce</option></select></td></tr>
+<tr><td>Cheque Returned On</td><td>:<span class="red_star">*</span></td><td><input type="text" name="cheq_canceled_on" value="" data-required="true"  readonly="readonly"></td></tr>
 <tr id="dbt_amt"><td>Bounce Charges</td><td>:</td><td><input type="text" name="debit_amt" id="debit_amt" > Rs </td></tr>
-<tr><td>Remarks</td><td>:</td><td><textarea name="act_remarks" id="act_remarks" data-required="true"></textarea></td></tr>
+<tr><td>Remarks</td><td>:<span class="red_star">*</span></td><td><textarea name="act_remarks" id="act_remarks" data-required="true"></textarea></td></tr>
 <tr><td><b>Notify via SMS</b></td></tr>
 <tr><td>Franchisee</td><td>:</td><td><input type="checkbox" name="sms" value="1"></td></tr>
 <tr><td>Territory Manager</td><td>:</td><td><input type="checkbox" name="tm_sms" value="1"></td></tr>
@@ -395,10 +473,26 @@ if($no_days >=4 && $r['activated_on'] == 0)
 </div>
 
 <div id="realize" title="Realize">
-<form id="ac_form" action="<?php echo site_url('admin/pnh_pending_receipts')?>" method="post" data-validate="parsley" >
-<table><tr><td><b>Receipt ID</b></td><td><b>:</b></td><td id="r_receiptid"><b></b></td><tr><td><b>Remarks</b></td><td><b>:</b></td><td><textarea name="msg" class="a_reason" data-required="true" style="width: 350px; height: 171px;"></textarea></td></table>
-<input type="hidden" name="type" class="a_type">
-<input type="hidden" name="rid" class="a_rid">
+<form id="ac_form" action="<?php echo site_url('admin/pnh_pending_receipts')?>" method="post">
+<table>
+    <tr>
+        <td><b>Receipt ID</b></td>
+        <td><b>:</b></td>
+        <td id="r_receiptid"><b></b></td>
+    </tr>
+    <tr>
+        <td style="vertical-align: bottom;"><b>Realized On</b></td>
+        <td style="vertical-align: bottom;"><b>:</b><span class="red_star">*</span></td>
+        <td><input type="text" name="cheq_realizedon" value=""  data-required="true" readonly="readonly"></td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top;"><b>Remarks</b></td>
+        <td style="vertical-align: top;"><b>:</b><span class="red_star">*</span></td>
+        <td><textarea name="msg" class="a_reason" data-required="true" style="width: 350px; height: 171px;"></textarea></td>
+    </tr>
+</table>
+<input type="hidden" name="type" class="a_type" value="">
+<input type="hidden" name="rid" class="a_rid" value="">
 </form>
 </div>
 
@@ -411,6 +505,17 @@ if($no_days >=4 && $r['activated_on'] == 0)
 <?php } ?>
 
 <script>
+//$('input[name="cheq_realizedon"]').datepicker({maxDate: '+0d'});
+$('input[name="cheq_realizedon"]').datepicker({beforeShowDay: onlyPastdays});
+
+$('input[name="cheq_canceled_on"]').datepicker({beforeShowDay: onlyPastdays});
+
+function onlyPastdays(date) {
+	var day = date.getDay();
+	var today = new Date();
+	today.setDate(today.getDate());
+	return [(date <today), ''];
+	}
 
 $("#ds_range,#de_range").datepicker();
 $(".check_date").datepicker({minDate:0});
@@ -464,7 +569,7 @@ $('#realize').dialog({
 				}
 		       else
 		       {
-		       	alert('Remarks Need to be addedd!!!');
+		       	alert('All Fields required!!!');
 		       }
 			
 		},
@@ -477,9 +582,10 @@ $('#realize').dialog({
 });
 function can_rec(rid)
 {
-	reason=prompt("Reason For Cancel");
+	var reason=prompt("Reason For Cancel");
 	if(!reason || reason.length==0)
-		return;
+		return false;
+        
 	$(".a_rid").val(rid);
 	$(".a_type").val("can");
 	$(".a_reason").val(reason);
@@ -527,21 +633,25 @@ $("#cancel_receipt").dialog({
 			var c=confirm("Are you sure you want to cancel");
 			if(c)
 			{
-			var frm_cancel = $("#cancel_receipt_frm",this);
+                                var frm_cancel = $("#cancel_receipt_frm",this);
 			 	if(frm_cancel.parsley('validate'))
 				{
 			 		 $.post(site_url+'/admin/jx_cancel_processedreceipts',frm_cancel.serialize(),function(resp){
-					 if(resp.status == 'success')
-                         {
-							 $("#cancel_receipt").dialog('close');
-							 location.href = location.href;
-                         }
-	                },'json');
+                                            if(resp.status == 'success')
+                                            {
+                                                    $("#cancel_receipt").dialog('close');
+                                                    location.href = $(location).attr('href');
+                                            }
+
+                                            else {
+                                                print(resp);
+                                            }
+                                        },'json');
 		 		}
-            	else
-		            {
-		             alert('All Fields Required!!!');
-		            }
+                                else
+                                {
+                                 alert('All Fields Required!!!');
+                                }
 			}
 			else
 				return false;
@@ -708,7 +818,7 @@ $('#submit_tobank').dialog({
 				 $.post(site_url+'/admin/update_check_issubmitted',frm_checksubmit.serialize(),function(resp){
 			          if(resp.status == 'success')
                       {
-                      	location.href = location.href;
+                      	location.href = $(location).attr('href');
                       	dlg.dialog('close');
                       }
                 },'json');
@@ -883,47 +993,5 @@ $("#load_searchcheq").dialog({
 
 </script>
 
-<style>
-input[type="checkbox"]{cursor: pointer;}
-.warn td{background: #FDD2D2 !important;}
-.datagrid th{padding:12px 7px}
-.datagrid1 {border-collapse: collapse;border:none !important}
-.datagrid1 th{border:none !important;font-size: 13px;padding:0px 0px;}
-.datagrid1 td{border-right:none;border-left:none;border-bottom:none;font-size: 12px;padding:2px;color: #444;text-transform: capitalize}
-.datagrid1 td a{text-transform: capitalize}
-.datagrid1 td b{font-weight: bold;font-size: 11px;}
-
-td{vertical-align: top;}
-
-#srch_results{
-	margin-left: 1147px;
-	position: absolute;
-	display: none;
-	width: 400px;
-	overflow-y: auto;
-	background: #EEE;
-	border: 1px solid #AAA;
-	max-height: 200px;
-	min-width: 140px;
-	max-width: 176px;
-	overflow-x: hidden;
-	margin-top: 46px;
-}
-#srch_results a{
-	display: block;
-	padding: 5px 6px;
-	font-size: 12px;
-	display: inline-table;
-	width: 300px;
-	text-transform: capitalize;
-	border-bottom: 1px dotted #DDD;
-	background: white;
-} 
-#srch_results a:hover{
-background: #CCC;
-color: black;
-text-decoration: none;
-}
-</style>
 
 <?php
