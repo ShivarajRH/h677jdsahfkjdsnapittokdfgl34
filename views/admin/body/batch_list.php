@@ -42,12 +42,12 @@ Partial Shipment Orders
 				<h4>Orders by :</h4>
 			 	
 				<div style="clear: both;">
-						
+					
 					<div style="padding:4px;margin:2px;background: #e6e6e6;">
-						<input type="radio" checked="checked" name="snp_pnh" checked value="pnh">Storeking
+						<input type="radio" checked="checked" name="snp_pnh" value="pnh">Paynearhome
 					</div>
 					<div style="background: #e6e6e6;padding:4px;margin:2px;">
-						<input type="radio" name="snp_pnh" value="others" >Others
+						<input type="radio" name="snp_pnh" value="others">Others
 							
 						<div id="snp_pnh_part_sel" style="clear: both;display: none;">
 								<div style="display: inline-block;"><input type="checkbox" name="snp_pnh_part[]" value="0">Snapittoday</div>

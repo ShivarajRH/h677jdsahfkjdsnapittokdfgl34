@@ -104,12 +104,12 @@ Orders this month
 Orders prev month
 </div>
 
-<div class="dash_bar qtipblk" qtip-txt="Sales Value : Rs <?=format_price($this->db->query("select sum((i_orgprice-(i_discount+i_coup_discount))*quantity) as l from king_orders a join king_transactions b on a.transid = b.transid where date(from_unixtime(b.init)) >= ? ",date('Y-m-01'))->row()->l,0)?>" > 
+<div class="dash_bar qtipblk" qtip-txt="Sales Value : Rs <?=format_price($this->db->query("select sum(i_orgprice-(i_discount+i_coup_discount)*quantity) as l from king_orders a join king_transactions b on a.transid = b.transid where date(from_unixtime(b.init)) >= ? ",date('Y-m-01'))->row()->l,0)?>" > 
 <span>Rs <?=format_price($this->db->query("select sum(i_orgprice*quantity) as l from king_orders where time>?",mktime(0,0,0,date("n"),1))->row()->l,0)?></span>
  this month
 </div>
 
-<div class="dash_bar qtipblk" qtip-txt="Sales Value : Rs <?=format_price($this->db->query("select sum((i_orgprice-(i_discount+i_coup_discount))*quantity) as l from king_orders a join king_transactions b on a.transid = b.transid where b.init between ? and ?",array(mktime(0,0,0,date("n")-1,1),mktime(0,0,0,date("n"),1)))->row()->l,0)?>" >
+<div class="dash_bar qtipblk" qtip-txt="Sales Value : Rs <?=format_price($this->db->query("select sum(i_orgprice-(i_discount+i_coup_discount)*quantity) as l from king_orders a join king_transactions b on a.transid = b.transid where b.init between ? and ?",array(mktime(0,0,0,date("n")-1,1),mktime(0,0,0,date("n"),1)))->row()->l,0)?>" >
 <span>Rs <?=format_price($this->db->query("select sum(i_orgprice*quantity) as l from king_orders where time between ? and ?",array(mktime(0,0,0,date("n")-1,1),mktime(0,0,0,date("n"),1)))->row()->l,0)?></span>
  prev month
 </div>
@@ -257,7 +257,7 @@ margin-top: 12px;">
 	<b>Order By :</b>  
 	<select name="orders_by">
 		<option value="all" <?php echo ($sel_orders_by == 'all')?'selected':'' ?>>All</option>
-		<option value="pnh" <?php echo (($sel_orders_by=='pnh')?'selected':'') ?> >Storeking</option>
+		<option value="pnh" <?php echo (($sel_orders_by=='pnh')?'selected':'') ?> >Paynearhome</option>
 		<option value="snp" <?php echo (($sel_orders_by=='snp')?'selected':'') ?> >Snapittoday</option>
 		<?php
 			$partners_available_res = $this->db->query("select name,trans_prefix from partner_info order by name ");
@@ -287,8 +287,7 @@ margin-top: 12px;">
 	
 	
 	<span class="pagination">
-		<?php /*Showing<b style="font-size: 14px;"> <?php echo ($cur_pg+1).'-'.($cur_pg+count($orders)).'/'.$total_orders; ?> </b> Orders */?>
-		Showing<b style="font-size: 14px;"> <?php echo ($cur_pg+1).'-'.($cur_pg+count($orders)); ?> </b> Orders
+		Showing<b style="font-size: 14px;"> <?php echo ($cur_pg+1).'-'.($cur_pg+count($orders)).'/'.$total_orders; ?> </b> Orders
 		&nbsp;
 		&nbsp;
 		&nbsp;

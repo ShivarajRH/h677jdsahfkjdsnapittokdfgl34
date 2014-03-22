@@ -4,11 +4,7 @@
 
 <h2><?=$pagetitle?></h2>
 
-<div class="dash_bar " style="padding:5px;">
-Date range : <input type="text" class="inp" size=10 id="s_from"> to <input type="text" class="inp" size=10 id="s_to"> <input type="button" value="Go" onclick='go_date()'>  
-</div>
-
-<div class="dash_bar fl_right">
+<div class="dash_bar">
 Show for vendor : <select id="vendor"><option value="0">select</option>
 <?php foreach($this->db->query("select vendor_id,vendor_name from m_vendor_info order by vendor_name asc")->result_array() as $v){?>
 <option <?php if($this->uri->segment(3)==$v['vendor_id']){?>selected<?php }?> value="<?=$v['vendor_id']?>"><?=$v['vendor_name']?></option>
@@ -16,10 +12,13 @@ Show for vendor : <select id="vendor"><option value="0">select</option>
 </select>
 </div>
 
+<div class="dash_bar" style="padding:5px;">
+Date range : <input type="text" class="inp" size=10 id="s_from"> to <input type="text" class="inp" size=10 id="s_to"> <input type="button" value="Go" onclick='go_date()'>  
+</div>
 
 <div class="clear"></div>
 
-<table class="datagrid" width="100%">
+<table class="datagrid">
 <thead><tr><th>Sno</th><th>GRN</th><th>Vendor</th><th>Items</th><th>Received Qtys</th><th>Invoiced Qtys</th><th>Invoice Value</th><th>Taken On</th></tr></thead>
 <tbody>
 <?php  $i=1; foreach($grns as $g){?>
@@ -31,7 +30,7 @@ Show for vendor : <select id="vendor"><option value="0">select</option>
 <td><?=$g['received']?></td>
 <td><?=$g['invoiced']?></td>
 <td>Rs <?=number_format($g['invoice_value'],2)?></td>
-<td><?=format_datetime($g['created_on'])?></td>
+<td><?=date("g:ia d/m/y",strtotime($g['created_on']))?></td>
 </Tr>
 <?php }?>
 </tbody>

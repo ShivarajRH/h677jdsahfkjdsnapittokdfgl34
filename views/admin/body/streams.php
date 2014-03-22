@@ -9,7 +9,7 @@
 </style>
 
 <div id="stream_block" class="container" style="visibility: hidden">
-		<h2>Streams</h2>    
+    <h2>Streams </h2>
     <div  class="container_div" style="margin-top: 0px;">
         <?php 
         if(empty($streams)) { 
@@ -293,7 +293,7 @@ function subreply_block(e,post_id,replied_by,streamid) {
     }
     function refresh_unreplied_posts(stream_id) {
         //var stream_id=$("#stream_id").val();
-        $.post(site_url+"/admin/jx_get_unreplied_posts/"+stream_id,{},function(rdata){
+        $.post(site_url+"admin/jx_get_unreplied_posts/"+stream_id,{},function(rdata){
             $("#total_unreply_block_"+stream_id).html(rdata+"");
         });
     }

@@ -5,7 +5,7 @@ $marital=array("Single","Married","Other");
 $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; Rs. 10000");
 ?>
 <div class="container vm">
-<h2>Storeking Member Details</h2>
+<h2>PNH Member Details</h2>
 
 <div>
 <div class="dash_bar">Member ID : <span><?=$u['pnh_member_id']?></span></div>
@@ -199,7 +199,7 @@ foreach($ac_v->result_array() as $ac ){
 
 <div id="orders">
 <table class="datagrid">
-<thead><tr><th>Transid</th><th>Amount</th><th>Cancelled/Returned</th><th>Payable</th><th>Ordered On</th><th>Status</th><?php /*?><th>Payment Type</th>/*/?></tr></thead>
+<thead><tr><th>Transid</th><th>Amount</th><th>Cancelled/Returned</th><th>Payable</th><th>Ordered On</th><th>Status</th><th>Payment Type</th></tr></thead>
 <tbody>
 <?php $status=array("Pending","Invoiced","Shipped","Cancelled"); foreach($this->db->query("select o.*,t.amount,sum((o.i_orgprice-(i_discount+i_coup_discount))*o.quantity) as payable,l.voucher_slno 
 	from king_orders o 
@@ -215,9 +215,7 @@ foreach($ac_v->result_array() as $ac ){
 <td><?=$o['payable']?></td>
 <td><?=date("g:ia d/m/y",$o['time'])?></td>
 <td><?=$status[$o['status']]?></td>
-<?php /*?>
 <td><?php echo  $o['voucher_slno']?'<b>Prepaid</b>':'<b>Postpaid</b>'?></td>
-<?php /*/?>
 </tr>
 <?php }?>
 </tbody>

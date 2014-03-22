@@ -58,7 +58,7 @@ $d=$deal;
 </tr>
 </table>
 
-<?php $superadmin=$this->erpm->auth(TRUE,TRUE);?>
+<?php $superadmin=$this->erpm->auth(DEAL_MANAGER_ROLE,TRUE);?>
 
 <fieldset style="width:600px;">
 <legend><h4>Link Products</h4></legend>

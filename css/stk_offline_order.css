@@ -161,17 +161,28 @@ width:25%;
     text-align: left;
     width: 55% !important;
 }
-.sch_wrap {
+.sch_wrap
+{
+	width:74%;
+	float:left;
+	margin-top: 25px;
+}
+.sch_wrap div{
     background: none repeat scroll 0 0 #F6F6F6;
     color: #008000;
     display: block;
     float: left;
     font-size: 12px;
     font-weight: bold;
-    margin-top: 25px;
- 	padding: 6px 5px;
+    padding: 6px 5px;
+ 	margin-right:5px;
     text-align: center;
  }
+ 
+.blue
+{
+	color:blue !important;
+}
 .price span
 {text-align: justify;}
 #prods_order
@@ -412,16 +423,18 @@ background: none repeat scroll 0 0 #000000 !important;
 {
 	float:right;
     padding-top: 0;
-    width: 395px;
+   
   
 }
 .qvk_productguide_wrap span{
-	background:none repeat scroll 0 0 #E0E0E0;
 	padding: 4px 2px 2px;
     text-align: center;
   	
     }
-    
+.mrp_bkgrnd_wrap{background-color:rgb(212, 239, 241);}
+.ofrp_bkgrnd_wrap{background-color: rgb(133, 221, 210);}
+.lndpric_bkgrnd_wrap{background-color: lightgreen; }
+.disc_bkgrnd_wrap{background-color: rgb(240, 189, 155);}
 .price_enquiry_btn
 {
 background:#F5DEB3  !important;
@@ -474,4 +487,31 @@ color:#FFFFFF !important;
 {
 	padding:5px 7px 0px ;
 	float:left;
+}
+/************************ Insurance details form css ***********************************/
+#insurance_option span
+{
+	margin-top:5px;
+}
+#crdet_insurance .form_label_wrap
+{
+	float: left;
+    font-size: 13px;
+    font-weight: bold;
+    height: 30px;
+    text-align: right;
+    width: 20%;
+}
+#crdet_insurance .form_input_wrap
+{
+	 float: right;
+    text-align: left;
+    width: 78%;
+    height: 30px;
+	font-size: 11px;
+    font-weight: bold;
+}
+#crdet_insurance .form_input_wrap .max_width
+{
+	width:40% !important;
 }

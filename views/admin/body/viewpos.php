@@ -1,10 +1,5 @@
 <?php
 	
-	$po_stats_flags = array(); 
-	$po_stats_flags[''] = 'All';
-	$po_stats_flags['0'] = 'Open';
-	$po_stats_flags['1'] = 'Partial';
-	$po_stats_flags['2'] = 'Close';
 	
 	$cond = '';
 	$cond1 = '';
@@ -69,19 +64,17 @@
 	<div class="page_topbar" align="left">
 		 
 			
-			<div class="stat_block color_red"><b>Open</b> <span><?=$this->db->query("select count(1) as l from t_po_info where po_status=0 $cond ")->row()->l?></span>
-			<?php /*?> 
+			<div class="stat_block color_red"><b>Open</b> <span><?=$this->db->query("select count(1) as l from t_po_info where po_status=0 $cond ")->row()->l?></span> 
 			<div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1 and po_status = 0  ")->row()->l,0)?>)</div>
-			<?php /*/?>
 			</div>
 			<div class="stat_block color_orange"><b>Partial</b><span><?=$this->db->query("select count(1) as l from t_po_info where po_status=1 $cond ")->row()->l?></span> 
-			<?php /*?><div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1  and po_status = 1 ")->row()->l,0)?>)</div><?php /*/?>
+			<div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1  and po_status = 1 ")->row()->l,0)?>)</div>
 			</div>
 			<div class="stat_block color_green"><b>Closed</b> <span><?=$this->db->query("select count(1) as l from t_po_info where po_status=2 $cond ")->row()->l?></span> 
-			<?php /*?><div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1 and po_status = 2 ")->row()->l,0)?>)</div><?php /*/?>
+			<div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1 and po_status = 2 ")->row()->l,0)?>)</div>
 			</div>
 			<div class="stat_block color_blue"><b>Total</b> <span><?=$this->db->query("select count(1) as l from t_po_info where 1 $cond ")->row()->l?>
-				<?php /*?><div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1 ")->row()->l,0)?>)</div><?php /*/?>
+				<div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1 ")->row()->l,0)?>)</div>
 			</span> </div>
 			
 		 
@@ -93,7 +86,7 @@
 		<div class="fl_left">
 			<b style="vertical-align: baseline;display: inline-block;font-size:16px;padding:10px 0px;padding-top:14px">
 				<?php if(count($pos)) { ?>
-				Showing <?php echo ($pg+1).'-'.($pg+count($pos)).'/'.$total_po ?> <?php echo (($status!="")?$po_stats_flags[$status]:'');?> POs
+				Showing <?php echo ($pg+1).'-'.($pg+count($pos)).'/'.$total_po ?> POs
 				<?php }else{
 				?>
 				No POs Found
@@ -109,24 +102,22 @@
 <table class="datagrid" style="width: 100%">
 <thead>
 <tr>
-<th>Reference</th>
-<th>Order Date</th>
-<th>Supplier</th>
-<th>Expected Date</th>
-<th>PO Value</th>
+<th>ID</th>
+<th>Created On</th>
+<th>Vendor</th>
+<th>Value</th>
 <th>Purchase Status</th>
 <th>Stock Status</th>
 <th></th>
-
+<th>Remarks</th>
 </tr>
 </thead>
 <tbody>
 <?php foreach($pos as $p){?>
-<tr class="<?php echo $p['po_status']==3?'warn':''?>" >
+<tr>
 <td>PO<?=$p['po_id']?></td>
 <td><?=date("d/m/y g:ia ",strtotime($p['created_on']))?></td>
-<td><a target="_blank" href="<?php echo site_url("admin/vendor/{$p['vendor_id']}")?>"><?=$p['vendor_name']?></a><br><?=$p['city']?></td>
-<td><?php echo format_date($p['date_of_delivery'])?></td>
+<td><a href=""><?=$p['vendor_name']?></a><br><?=$p['city']?></td>
 <td>Rs <?=number_format($p['total_value'])?></td>
 <td><?php switch($p['po_status']){
 	case 1:
@@ -146,10 +137,9 @@
 <a class="link" href="<?=site_url("admin/viewpo/{$p['po_id']}")?>">view</a>
 <?php if($p['po_status']!=2 && $p['po_status']!=3){?>
 &nbsp;&nbsp;&nbsp;<a href="<?=site_url("admin/apply_grn/{$p['po_id']}")?>">Stock Intake</a>
-<?php }?>&nbsp;<a onclick="print_po(<?=$p['po_id']?>)" >Print po</a>
-
+<?php }?>
 </td>
-
+<td><?=$p['remarks']?></td>
 </tr>
 <?php } if(empty($pos)){?><tr><td colspan="100%">no POs to show</td></tr><?php }?>
 <?php if($pagination){ ?>
@@ -188,18 +178,6 @@ function rl_pgbyfilters()
 $(function(){
 	$("#ds_range,#de_range").datepicker();
 	 $('.datagrid').jq_fix_header_onscroll();	
-	
 }); 
-
-function print_po(poid)
-{
-	var print_url = site_url+'/admin/print_po/'+poid;
-		window.open(print_url);
-}
-$('.leftcont').hide();
 </script>
-<style>
-.warn td{background: #FDD2D2 !important;}
-
-</style>
 <?php

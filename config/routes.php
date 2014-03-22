@@ -161,6 +161,9 @@ $route['saleitem/(:any)']="deals/showsaleitem/$1";
 
 $route['pr/(:any)']="deals/procpr/$1";
 
+$route['exotel/(:any)']="exotel/$1";
+$route['exotel/(:any)/(:any)']="exotel/$1/$2";
+
 $route['getstarted']="deals/getstarted";
 $route['newuser_guide']="deals/newuser_guide";
 
@@ -216,6 +219,10 @@ $route['discovery/(:any)']="discovery/$1";
 
 
 $route['trend/(:any)']="trends/trend/$1";
+
+/** Storeking Api route Configs **/
+$route['api/(:any)/(:any)']="api/$1/$2";
+$route['api/(:any)']="api/$1";
 
 $route['(:any)/(:any)']="deals/menuncat/$1/$2";
 $route['(:any)']="deals/trig_url/$1";

@@ -8,38 +8,6 @@ h4
 {
 	margin-bottom: 5px !important;
 }
-.products
-{
-	 background: none repeat scroll 0 0 #F1F1F1;
-    float: left;
-    max-height: 450px;
-    overflow: scroll;
-    padding: 5px;
-    width: 45%;
-}
-.selected{
-	background:#fdfdfd;
-}
-#rack_id_chzn
-{
-	margin-top:6px;
-	width:45% !important;
-}
-.chzn-drop{
-	width:auto !important;
-}
-.chzn-search input
-{
-	width:80% !important;
-}
-.success_wrap
-{
-	background: none repeat scroll 0 0 #008000;
-    color: #FFFFFF;
-    float: right;
-    padding: 5px;
-    width: 8%;
-}
 </style>
 
 <div class="container viewbrand">
@@ -47,7 +15,6 @@ h4
 		<h2 style="margin-left:10px;"><?=ucfirst($brand['name'])?> Brand Details</h2>
 	    <ul class="tabs"> 
 	        <li rel="brand_det" class="active">Brand Details</li>
-	        <li rel="add_loc" class="allot_rack">Allot Rack</li>
 	        <li rel="analytics" class="sales_anal">Analytics</li>
 	    </ul>
 	    
@@ -157,21 +124,6 @@ h4
 				</table>
 	    	</div>
 	    	<!------------- Details Blk end ------------->
-	    	
-	    	<!------------- Allot Rack Blk Start ------------->
-	    	<div id="add_loc" class="tabcontent">
-	    		<div class="products_wrap">
-	    			<h3>Choose Products to Allot RackBin</h3>
-	    			<div class="products"></div>
-	    		</div>
-	    		<div class="success_wrap">
-	    		</div>
-	    		<div class="fl_left" style="width:100%;margin: 1%;text-align: right">
-	    			<button class="button button-tiny allocate_stock">Allocate Stock</button>
-	    		</div>
-	    	</div>
-	    	<!------------- Allot Rack Blk end ------------->
-	    	
 	    	<!------------- Analytics Blk Start ------------->
 	    	<div id="analytics" class="tabcontent">
 	    		<div class="header_wrap">
@@ -253,22 +205,6 @@ h4
 	</div>	
 </div>
 
-<div id="allocate_rack_dlg" title="Allocate Rack">
-	<div class="allocate_rack_dlg_wrap">
-		<div class="fl_left" style="width:100%">
-			<b style="float:left;margin:10px 10px 0 0">Rack :</b> <select name="rack" id="rack_id">
-    			<option value="0">Choose</option>
-	    			<?php foreach($rbs as $r){?>
-						<option value="<?=$r['id']?>" <?=$rb['rack_bin_id']==$r['id']?"selected":""?>>
-							<?=$r['rack_name']?>-<?=$r['bin_name']?>
-						</option>
-					<?php }?>
-    		</select>
-		 </div>
-		 
-	</div>
-</div>
-
 <script>
 $('.sales_anal').click(function(){
 	total_sales();
@@ -277,44 +213,11 @@ $('.sales_anal').click(function(){
 	prod_sales();
 	top_sale_terr();
 	$("#date_from,#date_to").datepicker({dateFormat:'dd-mm-yy'});
-	
-});
-
-
-$('#allocate_rack_dlg').dialog({
-		modal:true,
-		autoOpen:false,
-		width:350,
-		height:350,
-		autoResize:true,
-		
-		open:function(){
-		dlg = $(this);
-	},
-	buttons: {
-	    "submit": function() { 
-	    	var rack_loc = $('#rack_id').val();
-	    	var ids=$(this).data('prod_ids');
-	    	
-	    	if(ids)
-	    	{
-	    		$.post(site_url+'/admin/jx_allot_rack_forproduct',{rack_loc:rack_loc,ids:ids},function(resp){
-				},'json');
-				$('#allocate_rack_dlg').dialog('close');
-				$('.selected').removeClass('selected');
-				$('.success_wrap').html('Location allotted');
-				$('.prod_check').attr('checked',false);
-				$('.success_wrap').show();
-	    	}
-	    	
-	  }
-	} 
 });
 
 
 $(document).ready(function() 
 {
-	$('.success_wrap').hide();
 	$(".tabcontent").hide();
 	$(".tabcontent:first").show();
 	$("ul.tabs li").click(function() 
@@ -329,55 +232,6 @@ $(document).ready(function()
 	$('.br_franch_popup').hide();
 	
 });
-
-$('.allocate_stock').live('click',function(){
-	
-	$('#rack_id').chosen();
-	var prod_ids=[];
-	
-	$('.selected').each(function(){
-		prod_ids.push($(this).attr('prodid'));
-	});
-	if(prod_ids.length > 0)
-		$('#allocate_rack_dlg').data("prod_ids",prod_ids).dialog("open");
-	else
-		alert('Please Choose atleast one product before Proceed');
-});
-
-
-
-
-$('.allot_rack').live('click',function(){
-	var id='<?php echo $this->uri->segment(3) ?>';
-	$.getJSON(site_url+'/admin/jx_prod_bybrand/'+id,'',function(resp){
-		if(resp.status == 'error')
-		{
-			alert(resp.message)	
-		}
-		else
-		{
-			prod_html="";
-			$.each(resp.products,function(i,p){
-				prod_html+='<div class="prod_select_wrap_'+p.product_id+' " prodid="'+p.product_id+'" style="margin:5px 0px;padding:4px"><input type="checkbox" class="prod_check" prodid="'+p.product_id+'"><a target="_blank" href="'+site_url+'/admin/product/'+p.product_id+'">'+p.product_name+'</a></div>';
-			});
-		}
-		$('.products').html(prod_html);
-		$('.products').show();
-});
-});
-
-$('.prod_check').live('click',function(){
-	var pid=$(this).attr('prodid');
-	$('.success_wrap').hide();
-	
-	if($('.prod_select_wrap_'+pid).hasClass('selected'))
-		$('.prod_select_wrap_'+pid).removeClass('selected');
-	else
-		$('.prod_select_wrap_'+pid).addClass('selected');
-	
-});
-
-
 
 $("#stat_frm_to").bind("submit",function(e){
     e.preventDefault();
@@ -928,7 +782,4 @@ function town_franch_sales(town_id,town_name)
 
 
 </script>
-<style>
-.br_max_height_wrap table{width: 100%;}
-</style>
 <?php

@@ -739,7 +739,7 @@ if(!isset($is_edit))
 
 <div id="product_details">
 
-	<?php $superadmin=$this->erpm->auth(TRUE,TRUE); ?>
+	<?php $superadmin=$this->erpm->auth(DEAL_MANAGER_ROLE,TRUE); ?>
 	<?php if(!$e || ($e && $superadmin)){?>
 	Search : <input type="text" size="40" class="inp prod_search_add">
 	<?php }?>

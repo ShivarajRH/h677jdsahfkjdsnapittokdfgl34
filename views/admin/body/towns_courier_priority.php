@@ -245,7 +245,7 @@ h2 {    width: 60%;    float: left; }
                             ,delivery_type_priority2:delivery_type_priority2
                             ,delivery_type_priority3:delivery_type_priority3};
 
-        $.post(site_url+"/admin/jx_put_courier_priority/",postdata,function(rdata) {
+        $.post(site_url+"admin/jx_put_courier_priority/",postdata,function(rdata) {
                 $("#response_status_"+townid).html(rdata);
                 $("#submit_"+townid).removeAttr("disabled"); //.val("Change");
                 $("#response_status_"+townid).delay(3000).slideUp("slow");
@@ -267,7 +267,7 @@ h2 {    width: 60%;    float: left; }
     function disp_franchise(townid) {
         
         
-        $.post(site_url+"/admin/get_franchisebytwn_id",{townid:townid},function(rdata){
+        $.post(site_url+"admin/get_franchisebytwn_id",{townid:townid},function(rdata){
            if(rdata.status == 'success') {
                var  franchiselist_html='<div class="dlg_fr_list" style="padding:10px;background:#f5f5f5">';
                		franchiselist_html += '<ol>';

@@ -16,14 +16,6 @@
 <tr><td>Is Offer :</td><td><input type="checkbox" name="pisoffer" value=1 <?=$p?($p['is_offer']?"checked":""):""?>></td></tr>
 <tr><td>Is Sourceable :</td><td><input type="checkbox" name="pissrc" value="1" <?=$p?($p['is_sourceable']?"checked":""):""?> ></td></tr>
 <tr><td>Is Serial No.required :</td><td><input type="checkbox" name="pissno" value="1" <?=$p?($p['is_serial_required']?"checked":""):""?>></td></tr>
-<tr><td>Category :</td><td>
-<select name="pcat" data-required="true">
-<option value="">Choose</option>
-<?php foreach($this->db->query("select id,name from king_categories order by name asc")->result_array() as $c){?>
-<option value="<?=$c['id']?>" <?=$p?($p['product_cat_id']==$c['id']?"selected":""):""?>><?=$c['name']?></option>
-<?php }?>
-</select>
-</td></tr>
 <tr><td>Brand :</td><td>
 <select name="pbrand" data-required="true">
 <option value="">Choose</option>

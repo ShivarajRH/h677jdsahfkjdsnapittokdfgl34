@@ -75,21 +75,22 @@ class Stream extends Analytics
      */
     function streams() 
     {
-		$data['user']=$user=$this->erpm->auth();
+    	$data['user']=$user=$this->erpm->auth();
 
-            $ou_cond='';
-			if(!$this->erpm->auth(true,true)) 
-				$ou_cond=' and su.user_id='.$user['userid'];
+		$oh_cond='';
+        if(!$this->erpm->auth(true,true)) 
+            $oh_cond=' and su.user_id='.$user['userid'];
 
-                $data['streams']=$this->db->query("select s.*,su.* from m_streams s 
-												join m_stream_users su on su.stream_id = s.id
-                                                where status=1 ".$ou_cond." group by s.id order by s.title asc")->result_array();
+	        $data['streams']=$this->db->query("select s.*,su.* from m_streams s 
+                                            join m_stream_users su on su.stream_id = s.id
+                                                where status=1 ".$oh_cond." group by s.id order by s.title asc")->result_array();
 
                 $data['users']=$this->db->query("select * from king_admin order by name asc")->result_array();
-                $data['pg']=0;
                 $data['page']="streams";
                 $this->load->view("admin",$data);
-    }
+	    
+	}
+        
 	/**
      * Function to add stream
      */
@@ -109,7 +110,7 @@ class Stream extends Analytics
 	 * Function to get user stream notifications
 	 * @param type $userid
 	 */
-	function jx_get_stream_notifications($userid,$update='') {
+		function jx_get_stream_notifications($userid,$update='') {
             $user=$this->erpm->auth();
 	    if($update == 1) {
 	        $this->db->query("update m_stream_post_assigned_users set viewed=1 where assigned_userid=?",$userid);
@@ -188,8 +189,10 @@ class Stream extends Analytics
 	    echo $outdata;
 	}
 	
-	function jx_get_streampostdetails($streamid,$pg=0,$limit=5) 
+	function jx_get_streampostdetails($streamid) 
 	{
+		
+		
 		$user=$this->erpm->auth();
                 $date_cond='';
                 if(isset($_POST['date_from'])) {
@@ -200,37 +203,20 @@ class Stream extends Analytics
                     $dt_st = strtotime(date('Y-m-d 00:00:00',  time()-60*60*24*30));
                     $dt_end=  strtotime(date('Y-m-d 23:59:59',  time()));
                 }
-                
-                if( $this->input->post('date_to') != '') {
-                    $dt_end= strtotime($this->input->post('date_to'));
-                }
-                else {
-                    $dt_end= strtotime(date('Y-m-d 24:59:59',  time() ) );
-                }
-                $cond.="and (sp.posted_on between $dt_st and $dt_end )";
-                
-                if($this->input->post('search_text') != '') {
-                        $search_text = $this->input->post('search_text');
-                        $cond.=' and (sp.description like "%'.$search_text.'%" or spr.description like "%'.$search_text.'%")';
-                }
-               
-                $output['date_output']="Posts from ".date("M/d/Y",$dt_st)." to ".date("M/d/Y",$dt_end);
-         
 
-				$sql="select sp.*,ka.id as userid,ka.username,ka.name,ka.email from m_stream_posts sp
+                $date_cond="and (sp.posted_on between $dt_st and $dt_end )";
+
+                $output['date_output']="Posts from ".date("M/d/Y",$dt_st)." to ".date("M/d/Y",$dt_end);
+            
+	    
+                $arr_streams_rslt=$this->db->query("select sp.*,ka.id as userid,ka.username,ka.name,ka.email from m_stream_posts sp
 	                                    join king_admin ka on ka.id=sp.posted_by
-                                            left join m_stream_post_reply spr on spr.post_id=sp.id
-	                                    where sp.stream_id=? and sp.status=1 $cond
-	                                    group by sp.id order by sp.posted_on desc";
-            
-	    $total_items= $output['total_items']=$this->db->query($sql,array($streamid))->num_rows();
-            
-            
-            $sql .=" limit $pg,$limit ";
-            
-            $arr_streams_rslt=$this->db->query($sql,array($streamid));
-            $arr_streams=$arr_streams_rslt->result_array();
-            
+	                                    where sp.stream_id=? and sp.status=1 $date_cond
+	                                    order by sp.posted_on desc",$streamid);
+	                                    
+	                            // echo $this->db->last_query();       
+	    $arr_streams=$arr_streams_rslt->result_array();
+	    $total_items= $output['total_items']=$arr_streams_rslt->num_rows();
 	    if($total_items>0) {
 	        $output['items']="<table border='0' width='100%'>
 	                        <thead><tr><th></th></tr></thead>
@@ -287,35 +273,15 @@ class Stream extends Analytics
 	                                    </td>
 	                                </tr>';
 	        }
-			$output['items'].='</tbody>
-	            </table>';           
-//                  PAGINATION
-                    $date_from=date("Y-m-d",$st_ts);
-                    $date_to=date("Y-m-d",$en_ts);
-                    
-                    $this->load->library('pagination');
-                   
-                    $config['base_url'] = site_url("admin/jx_get_streampostdetails/".$streamid); //site_url("admin/orders/$status/$s/$e/$orders_by/$limit");
-                    $config['total_rows'] = $total_items;
-                    $config['per_page'] = $limit;
-                    $config['uri_segment'] = 4; 
-                    $config['num_links'] = 5;
-                    
-                    $this->config->set_item('enable_query_strings',false); 
-                    $this->pagination->initialize($config); 
-                    $posts_pagination = $this->pagination->create_links();
-                    $this->config->set_item('enable_query_strings',TRUE);
-//                  PAGINATION ENDS
-                    
-                    $output['pagination'].='<div class="stream_posts_pagination">'.$posts_pagination."</div>";
-                    if($output['items']=='') { $output['status']='<div class="no_more_posts" align="center"><strong>No more posts to display.</strong></div>'; }
+	        $output['items'].='</tbody>
+	            </table>';
 	    } 
-            else { $output['items'].=''; $output['status']='<div class="no_more_posts" align="center"><strong>No results found.</strong></div>'; } 
-            
-            echo json_encode($output);
+            else { $output['items']='<h4 align="center">No Stream posts found</h4>'; }
+                
+                echo json_encode($output);
         }
-	 
-	function jx_get_assignto_list($streamid) 
+	  
+	function jx_get_streamdetails($streamid) 
 	{
             $user=$this->erpm->auth();
             $output='';
@@ -324,20 +290,17 @@ class Stream extends Analytics
                                     where stream_id=?
                                     group by su.user_id order by ka.name",$streamid)->result_array();
 //            $output.="<option value='00'>All</option>";
-			foreach($arr_userids as $assigneduser) {
-				if($user['userid'] == $assigneduser['user_id']) {
-				    $output.="";
-				}
-				else {
-				    $output.="<option value='".$assigneduser['user_id']."'>".$assigneduser['name']."</option>";
-				}
-			}
-			echo $output;
-	}
-
-    /**
-     * Store the stream post
-     */
+    foreach($arr_userids as $assigneduser) {
+        if($user['userid'] == $assigneduser['user_id']) {
+            $output.="";
+        }
+        else {
+            $output.="<option value='".$assigneduser['user_id']."'>".$assigneduser['name']."</option>";
+            }
+        }
+        echo $output;
+    }
+	
     function jx_stream_post() 
     {
         $user=$this->erpm->auth();

@@ -1832,6 +1832,139 @@ order by action_date ";
 		
 	}
 
+	function rmv_deals($menuid=0,$cat_ids=0)
+	{
+
+		
+		error_reporting(E_ALL);
+		ini_set('max_execution_time',60000);
+		ini_set('memory_limit','1024M');
+		
+		//$cat_ids = "142,124,140,914,916,917,918,920,923,924,926,929,930,657,319,841,842,854,849,850,851,852,500,502,503,504,505,506,507,508,509,510,511,521,522,523,524,525,526,528,529,530,531,532,533,535,538,539,540,542,543,47,513,675,846,847,848,856,857,858,248";
+		
+		$cond = '';
+		if($menuid)
+			$cond .= ' and b.menuid in ('.$menuid.') ';
+		
+		if($cat_ids)
+			$cond .= ' and b.catid in ('.$cat_ids.') ';
+		
+		$counter = 1;
+		$deleted = 1;
+		// get deals by category  
+		$deal_list_res = $this->db->query("select a.id,a.dealid from king_dealitems a join king_deals b on a.dealid = b.dealid and is_pnh = 1 where 1 $cond ");
+		 
+		if($deal_list_res->num_rows())
+		{
+			foreach($deal_list_res->result_array() as $deal)
+			{
+				echo "Slno ".$counter.' - '.$deal['id'].'<br>';
+				$counter++;
+				// conditions to check  before deal is deleted
+				// check if deal is ordered atleast one time 
+				$is_deal_ordered = (@$this->db->query("select count(a.id) as t from king_orders a join king_dealitems b on a.itemid = b.id where b.id = ? and is_pnh = 1 ",$deal['id'])->row()->t)*1;
+				if($is_deal_ordered)
+					continue;
+				
+				// check if deal has stock 
+				$is_deal_stock = (@$this->db->query("select sum(s) as s from 
+										(
+											(
+												select ifnull(sum(s),0) as s from (
+												select a.product_id,sum(available_qty) as s 
+													from m_product_deal_link a 
+													join t_stock_info b on a.product_id = b.product_id 
+													where itemid = ? 
+													group by product_id 
+													) as g
+											)
+											union (
+												select ifnull(sum(s),0) as s from (
+												select c.product_id,sum(ifnull(available_qty,0)) as s 
+													from m_product_group_deal_link a 
+													join products_group_pids c on c.group_id = a.group_id
+													left join t_stock_info b on b.product_id = c.product_id 
+													where itemid = ?
+													group by product_id ) as g 
+											)
+										) as h",array($deal['id'],$deal['id']))->row()->s)*1;
+				if($is_deal_stock)
+					continue;
+				
+				$process_delete = 0;
+				// deal can be deleted as it is checked for no order and no stock 
+				// check if deal is normal deal or group product deal 
+				if($this->db->query("select count(*) as t from m_product_deal_link where itemid = ? ",$deal['id'])->row()->t)
+				{
+					$process_delete = 1;
+					// delete linked product info
+
+					foreach($this->db->query("select product_id from m_product_deal_link where itemid = ? ",$deal['id'])->result_array() as $dprd)
+					{
+						$this->db->query("delete from m_product_info where product_id = ? ",array($dprd['product_id']));
+						$this->db->query("delete from m_product_deal_link where itemid = ? and product_id = ? ",array($deal['id'],$dprd['product_id']));
+					}
+					
+					
+					
+				}else if($this->db->query("select count(*) as t from m_product_group_deal_link where itemid = ? ",$deal['id'])->row()->t)
+				{
+					$process_delete = 1;
+					
+					foreach($this->db->query("select product_id from m_product_group_deal_link a join products_group_pids b on a.group_id = b.group_id where a.itemid = ? ",$deal['id'])->result_array() as $dprd)
+					{
+						$this->db->query("delete from m_product_info where product_id = ? ",array($dprd['product_id']));
+					}
+					
+					// delete linked group product info
+					$group_id = $this->db->query("select group_id from m_product_group_deal_link where itemid = ? ",$deal['id'])->row()->group_id;
+					$this->db->query("delete from m_product_group_deal_link where group_id = ? ",$group_id);
+					$this->db->query("delete from products_group_pids where group_id = ? ",$group_id);
+					$this->db->query("delete from products_group where group_id = ? ",$group_id);
+					$this->db->query("delete from products_group_attribute_values where group_id = ? ",$group_id);
+					$this->db->query("delete from products_group_attributes where group_id = ? ",$group_id);
+					
+				}
+				
+				if($process_delete)
+				{
+					// delete deals info 
+					$this->db->query("delete from king_deals where dealid = ? ",$deal['dealid']);
+					$this->db->query("delete from king_dealitems where dealid = ? ",$deal['dealid']);
+					
+					echo "Deleted ".$deleted.' - '.$deal['id'].'<br>';
+					$deleted++;
+					
+				}
+				
+				
+			}
+		}
+		
+	}
+
+	
+	function bulk_cr_brands()
+	{
+		//$blist = array("Christian Dior","Prince Matchabelli","Viva Perfume","Titan Skinn","Royal Copenhagen","Royal Doulton","Royal Mirage","Velvet Touch","Roberto Cavalli","Swiss Arabian","United Fun","Jacques M","Peter Nygard","Giorgio Valenti","Jean Louis","Max Mara","Clean","Classic Collection","Light Fever","Milton Llyod","Creed","Arjun Rampal","Bogart","Bond","Clinique","Coach","Coty","Dame","Deluxe Parfum","Demure","Diadora","Donna Karan","DSquared2","Duccati","Dude","Elie Saab","Elite Model","Ellen Tracy","English Blazer","Eurolux","Faconnable","Fashion Police","Flyback","Fred Hayman","Gabriela Sabatini","Gale Hayman","GAP","Geoffrey Beene","Geparlys","Ghiaccio","Ghost","Gianni Venturi","Girogio Valenti","Halston","Helios","Houbigant","Hummer","Iceberg","Instyle Parfums","Isseymiyake","Juicy Couture","Justin Bieber","Karl Lagerfeld","Kathy Hilton","Kim Kardashian","Kiton","Lady Gaga","Lanvin","Laura Biagiotti","Logic","Luciano Soprani","Mancera","Manufaktura","Mariah Carey","Marilyn Miglin","Mary Quant.","Mercedes Benz","Michael Kors","Mila Schon","Montale","Muelhens","Myrurgia","Narciso Rodriguez","NBA","Nikos","Nu Parfums","Nuroma","Oleg Cassini","Pal Zileri","Paloma Picasso","Paulino Rubio","Perfumeria Antica","Perfumers Workshop","Puig","Ramy Latour","Remy Latour","Remy Marquis","Rich","Sean John","Seris Parfume","Shiseido","Snobz","Society Parfums","Star Luxe","Starry","Stella Mccartney","Steve McQueen","Taylor Swift","Trina","Trussardi","Ungaro","Usher","Versus Versace","Viviane Vendeile","Woods","WPC","Zippo");
+		//$blist = array("Alda","Alessi USA","Anchor","Anchor Hocking","Anjali","Ankit Enterprises","Apex Home Appliances","Apollo International","arttd-inox","Bakers & Chefs","Bakers Edge","Bayou Classic","Bazooka","Bergner","Bergner Impex","Borosil","Borosil Glass Works Ltd.","Brentwood Appliances","Butterflyindia","Cook n Style","Cooking Concepts","Crystal","Cuisinox","DIY","Doughmakers","Dynaudio","Eagle Home","Exotic Thai","Fab Kitchen","Fenda","Fenda Audio","Freshware","General Electric","Geneva","Gibson","Harman Kardon","HAZEL","iSound","Jawbone","Kailash","Kaiser Bakeware","Kitchen Craft","Kitchen Elements","Kitchen Essentials","lazzaro","Libertyware","Mahavir","Maverick","Mebelkart","Murugan","Nirali","nirlon","OmniMount","Presto","Prime","Rubbermaid","Seagull","Silicone Kitchen","Silicone Solutions","Steelcraft","SteelSeries","Stovekraft","TTK Prestige","Wondercraft");
+		$blist = array("A&D","Accelerade","Accu-Chek","AccuSure","Activeheat","Alacer","Alarsin","ALBUMEN","American Diagnostic","AMRUTANJAN","ANS","ANS Performance","ANSI","At Lumiscope","Atkins","Atkins Advantage","Bach","Biomerica","Body Essentials","Cerelac","Chef Jays","Clever Chek","Clif Bar","Clif Builders Snack","Clif Kid","Clif Kid Z Bar","Clif Shot","Clif Shot Bloks","Cobra Magnum","Combo","Contour","Cytomax","Detour","DIABLOC-K","DIAVITA-H","digital","Dr. Fresh","Easy Care","Electronic Digital Thermometer","Endurox","Enzymatic","Escali","ESN","Estroven","Freestyle","FRS","Fullbar","Gargem","GeniSoy","Glucerna","Glucocard","GlucoCare","GlucoOne","GNC","Gondwana","GRD","Hammer","Healthline","Healthvit","Herbal Hills","Herbalife","Himalaya","Himani","Ibp","iHealth","ILJIN","iSatori","ISHNEE","ISS","ISS Research","Kashi","Kelloggs","Kind","Kind Snacks","Lactogen","Lass Naturals","LifeSource","Lucem","Luna","Metagenics","Met-Rx","Microlife","Natrol","Naturade","Nature","Nature Valley","Natures Alchemy","Natures Bounty","Niscomed","NoGii","Now Foods","Nutrakey","Olex","Olympian Labs","One Touch Ultra","OneTouch","Oriyanna","Osim","Paramount","PEE SAFE","Pentasure","PINDIA","PowerBar","Pristine","Probar","Prodigy","Prolab","Promax","PROSURE","Protidiet","Pulman","Pulsatom","PureLife","Quantum Naturals","QuestBar","Re-Body","Relief Pak","RELISH","Riester","Rise","RollingMate","Rossmax","Sargam","Schiff","SD Biosenor","SeriCha","Shivalik Herbals","Slim-Fast","Smart Care","Solgar","SportPharma","Squirrel","SSN","STAMIN","Star","Sugarless Bliss","Summer Infant","Sunkist","Supractiv","Sweetwell","ThermoHAWK","THREPTIN","Tonico","Unistar","USPlabs","VAPORITE","Veridian Healthcare","Visalus","West Coast","Zenith Nutrition","ZEROLAC","Zims Crack Creme","ZoLi");
+		foreach($blist as $name)
+		{
+			if($this->db->query("select count(*) as t from king_brands where name = ? ",$name)->row()->t)
+				continue;
+			
+			$name = trim($name);
+			
+			$bid=$this->adminmodel->genbrandid();
+			$url=preg_replace('/[^a-zA-Z0-9_\-]/','',$name);
+			$url=str_replace(" ","-",$url);
+			$this->db->query("insert into king_brands(id,name,url) values(?,?,?)",array($bid,$name,$url));
+			$r = 10;
+			$this->db->query("insert into m_rack_bin_brand_link(rack_bin_id,brandid) values(?,?)",array($r,$bid));
+		}
+	}
+	
 	function product_statsbymenu($menuid = 100)
 	{
 	
@@ -1977,8 +2110,7 @@ order by action_date ";
 		}
 	}
 
-	
-	function bulk_notifymember_point_alert()
+	function bulk_notifymember_point_alert_ooodoood()
 	{
 		ini_set('max_execution_time','6000');
 		ini_set('memory_limit','512M');
@@ -2014,11 +2146,14 @@ order by action_date ";
 				$pnts = @($this->db->query("select points_after from pnh_member_points_track where user_id = ? order by id desc limit 1;",$row['user_id'])->row()->points_after);
 				
 				// ADD 50 Points to list. 
-				$newpnts = $pnts*1+50;
+				$newpnts = $pnts*1;//+50;
+
+				
+
 				
 				if($newpnts > 150)
 					$newpnts = 150;
-				
+				/*
 				// insert new points summary to log.
 				$data = array();
 				$data[] = $row['user_id'];
@@ -2026,7 +2161,8 @@ order by action_date ";
 				$data[] = 50;
 				$data[] = $newpnts;
 				$this->db->query("insert into pnh_member_points_track(user_id,transid,points,points_after,created_on) values (?,?,?,?,unix_timestamp())",$data);
-				
+				*/
+
 				$name = trim($row['mem_name']);
 				$name = (strlen($name) > 0)?$name:'Storeking Member';
 				$mob = $row['mobile'];
@@ -2045,4 +2181,27 @@ Please use your points for your next purchase in one of the StoreKing retailer i
 			} 
 		}
 	}
+
+	function ___trg_resend_shipment_sms()
+	{
+		
+		$sms_list_res = $this->db->query("select * from pnh_employee_grpsms_log where date(created_on) >= date('2014-03-06') and type = 4 order by id asc ");
+		
+		foreach($sms_list_res->result_array() as $sms)
+		{
+			$this->erpm->pnh_sendsms($sms['contact_no'],$sms['grp_msg'],0,$sms['emp_id']);
+
+			//	echo $emp_mob_no,$sms_msg;
+			$log_prm=array();
+			$log_prm['emp_id']=$sms['emp_id'];
+			$log_prm['contact_no']=$sms['contact_no'];
+			$log_prm['type']=4;
+			$log_prm['territory_id']=$sms['territory_id'];
+			$log_prm['town_id']=$sms['town_id'];
+			$log_prm['grp_msg']=$sms['grp_msg'];
+			$log_prm['created_on']=cur_datetime();
+			$this->erpm->insert_pnh_employee_grpsms_log($log_prm);
+		}
+	}
+
 }
