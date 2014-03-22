@@ -1,16 +1,17 @@
 <div class="container page_wrap">
 <h2>Manage Menu Margin</h2>
-<table class="datagrid datagridsort"   width="70%" >
-<thead><th>Sl no</th><th>Menu</th><th>Menu Margin</th><th width="20%">Loyalty Point Value(1 point value)</th><th>Minimum Balance Discount</th><th>Actions</th></thead>
+<table class="datagrid datagridsort"   width="50%" >
+<!--<thead><th>Sl no</th><th>Menu</th><th>Menu Margin</th><th width="20%">Loyalty Point Value(1 point value)</th><th>Minimum Balance Discount</th><th>Actions</th></thead>-->
+<thead><th>Sl no</th><th>Menu</th><th>Menu Margin</th><th>Actions</th></thead>
 <?php $i=1; foreach($menu_list_res->result_array() as $menu_det ){?>
 <tbody>
 	<tr>
 		<td><?php echo $i;?></td>
 		<td><?php echo $menu_det['name']?></td>
-		<td><?php echo $menu_det['default_margin']?> %</td>
-		<td ><?php echo 'Rs '.$menu_det['loyality_pntvalue'] ?></td>
-		<td>Amount : <b>Rs <?php echo formatInIndianStyle($menu_det['min_balance_value'])?></b>
-			<p style="margin:3px 0px">Discount: <b><?php echo $menu_det['bal_discount']?>%</b></p>
+		<td><?php echo $menu_det['default_margin'];?> %</td>
+		<!--<td ><?php // echo 'Rs '.$menu_det['loyality_pntvalue'] ?></td>-->
+		<!--<td>Amount : <b>Rs <?php // echo formatInIndianStyle($menu_det['min_balance_value'])?></b>-->
+			<!--<p style="margin:3px 0px">Discount: <b><?php // echo $menu_det['bal_discount']?>%</b></p>-->
 		</td>
 		<td>
 			<a href="javascript:void(0)" onclick="edit_margindetails(<?php echo $menu_det['id']?>)">Edit</a> &nbsp;&nbsp;<a href="javascript:void(0)" onclick="view_marginupdatelog(<?php echo $menu_det['id']?>)">View Log</a>
@@ -29,10 +30,10 @@
 				<td><input type="text" name="menu_name" value="" size="25px" readonly='readonly' style='background-color:#E6E6E6 !important;color:grey!important;'></td>
 			</tr>
 			<tr></tr>
-			<tr>
+			<tr style="display:none;">
 					
-					<td><b>Minimum Balance Value</b></td><td><b>:</b></td><td><input type="text" name="min_bal_val" value="" size="6px"></td>
-					<td><b>Balance Discount:</b></td><td><b>:</b></td><td><input type="text" name="bal_disc" value="" size="3px">%</td>
+					<td style="display:none;"><b>Minimum Balance Value</b></td><td><b>:</b></td><td><input type="text" name="min_bal_val" value="0" size="6px"></td>
+					<td style="display:none;"><b>Balance Discount:</b></td><td><b>:</b></td><td><input type="text" name="bal_disc" value="0" size="3px">%</td>
 					
 			</tr>
 			<tr></tr>
@@ -41,9 +42,9 @@
 				<td><b>:</b></td>
 				<td><input type="text" size="3px" name="margin" value="">%
 				</td>
-				<td><b>Loyalty Point Value</b></td>
-				<td><b>:</b></td>
-				<td>Rs<input type="text" name="loyalty_pntvalue" size="3px" value=""></td>
+				<td style="display:none;"><b>Loyalty Point Value</b></td>
+				<td style="display:none;"><b>:</b></td>
+				<td style="display:none;">Rs.<input type="hidden" name="loyalty_pntvalue" size="3px" value="0"></td>
 			</tr>
 		</table>
 		</form>
@@ -52,7 +53,7 @@
 	<div id="view_marginupdatelog" title="Margin update Log">
 	<br><br>
 	<table class="datagrid" id="menumargin_updatelog" width="100%">
-	<thead><th>Menu</th><th>Menu Margin(%)</th><th>Loyality Point(rs)</th><th>Balance Amount(rs)</th><th>Balance Discount(%)</th><th>Last Updated By</th><th>Updated On</th></thead>
+	<thead><th>Menu</th><th>Menu Margin(%)</th><th>Loyality Point(Rs)</th><th>Balance Amount(rs)</th><th>Balance Discount(%)</th><th>Last Updated By</th><th>Updated On</th></thead>
 	<tbody></tbody>
 	</table>
 	
@@ -68,7 +69,7 @@ function edit_margindetails(id)
 $('#edit_menudiv').dialog({
 modal:true,
 autoOpen:false,
-width:'650',
+width:'300',
 height:'250',
 open:function(){
 	dlg = $(this);
@@ -149,9 +150,9 @@ $("#view_marginupdatelog").dialog({
 		},'json');
 	},
 	buttons:{
-		'close':function()
+		'Close':function()
 		{$(this).dialog('close');}
-	},
+	}
 	
 });
 

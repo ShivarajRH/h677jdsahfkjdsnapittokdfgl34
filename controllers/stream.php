@@ -889,8 +889,22 @@ class Stream extends Analytics
 				
 				$loc_id = 1;
 				$rbid = 10;
-				
-				$this->erpm->_upd_product_stock($pid,$nsmrp,$nsbc,$loc_id,$rbid,0,$nsqty,0,1,0,-1,"Stock Correction - Bulk - New MRP ($nsmrp) Added");
+				$msg = "Stock Correction - Bulk - New MRP ($nsmrp) Added";
+                                $stk_up_arr = array(
+                                    'product_id'=>$pid
+                                    ,'mrp'=>$nsmrp
+                                    ,'bc'=>$nsbc
+                                    ,'loc_id'=>$loc_id
+                                    ,'rb_id'=>$rbid
+                                    ,'p_stk_id'=>0
+                                    ,'qty'=>$nsqty
+                                    ,'update_by'=>0
+                                    ,'stl_movtype'=>1
+                                    ,'update_by_refid'=>0
+                                    ,'mrp_change_updated'=>-1
+                                    ,'msg'=>$msg
+                                );
+                                $this->erpm->_upd_product_stock($stk_up_arr); //$this->erpm->_upd_product_stock($pid,$nsmrp,$nsbc,$loc_id,$rbid,0,$nsqty,0,1,0,-1,);
 				$is_updated++;
 				
 				$this->_prod_corr_updlog($pid,'corr','In of Rs'.($nsmrp).' - '.$nsqty.' Qty');
@@ -922,8 +936,23 @@ class Stream extends Analytics
 					$diff_qty = $old_qty-$pqty[$i];
 					$stock_mov_status = 0;
 				}
-				
-				$this->erpm->_upd_product_stock($stk_info['product_id'],$stk_info['mrp'],$stk_info['product_barcode'],$stk_info['location_id'],$stk_info['rack_bin_id'],0,$diff_qty,0,$stock_mov_status,0,-1,"Stock Correction - Bulk");
+				$msg="Stock Correction - Bulk";
+                                $stk_up_arr = array(
+                                    'product_id'=>$stk_info['product_id']
+                                    ,'mrp'=>$stk_info['mrp']
+                                    ,'bc'=>$stk_info['product_barcode']
+                                    ,'loc_id'=>$stk_info['location_id']
+                                    ,'rb_id'=>$stk_info['rack_bin_id']
+                                    ,'p_stk_id'=>0
+                                    ,'qty'=>$diff_qty
+                                    ,'update_by'=>0
+                                    ,'stl_movtype'=>$stock_mov_status
+                                    ,'update_by_refid'=>0
+                                    ,'mrp_change_updated'=>-1
+                                    ,'msg'=>$msg
+                                );
+                                $this->erpm->_upd_product_stock($stk_up_arr); // $this->erpm->_upd_product_stock($stk_info['product_id'],$stk_info['mrp'],$stk_info['product_barcode'],$stk_info['location_id'],$stk_info['rack_bin_id'],0,$diff_qty,0,$stock_mov_status,0,-1,"Stock Correction - Bulk");
+                                
 				$this->db->query('update m_product_info set corr_status = 1,corr_updated_on=now() where product_id = ? ',$pid);
 				
 				$this->_prod_corr_updlog($pid,'corr',($stock_mov_status?'In':'Out').' of Rs'.($stk_info['mrp']).' - '.$diff_qty.' Qty');

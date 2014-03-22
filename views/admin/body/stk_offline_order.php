@@ -34,7 +34,7 @@
 				</tr>
 				<tr>
 					<td style="text-align: right;"><b>DOB</b> : </td>
-					<td><input type="text" name="mem_dob" value=""></td>
+					<td><input type="text" name="mem_dob" value="" id="dob"></td>
 				</tr>
 				<tr>
 					<td style="text-align: right;"><b>Gender</b><span class="red_star">*</span> : </td>
@@ -68,10 +68,9 @@
 <script>
 $('.reg_blk').hide();
 $('.mmob_blk').hide();
-$("#franchise_quickview").hide();
 $(".fran_det").chosen();
 $("#sel_fid").chosen();
-
+$('#dob').datepicker();
 $("#sel_state").change(function(){
 	$("#sel_terr").html('').trigger("liszt:updated");
 	var sel_stateid=$("#sel_state").val();
@@ -167,7 +166,8 @@ height:'300',
 autoOpen:false,
 open:function()
 {
-	$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"background":"tomato","color":"white"});
+	$('.ui-dialog-buttonpane').find('button:contains("Cancel")').css({"background":"tomato","color":"white","float":"right"});
+	 $('.ui-dialog-buttonpane').find('button:contains("Proceed")').css({"float":"right"});
 	dlg=$(this);
 	$("#mem_fran").html("");
 	 $.post(site_url+'/admin/jx_check_forvalid_mid',{mid:dlg.data('mid')},function(resp){
@@ -177,9 +177,11 @@ open:function()
         	 $.post("<?=site_url("admin/jx_pnh_getmid")?>",{mid:dlg.data('mid'),more:1},function(data){
         			$("#mem_fran").html(data).show();
         		});
+        	 $('.ui-dialog-buttonpane').find('button:contains("Proceed")').css({"display":"block"});
          }else
          {
 			alert("Invalid Member Details!!!");
+			$('.ui-dialog-buttonpane').find('button:contains("Proceed")').css({"display":"none"});
 				return false;
           }
 	 },'json');
@@ -188,7 +190,10 @@ open:function()
 buttons:{
 	'Proceed':function(){
 		$(this).dialog('close');
-		load_franchisebyid();
+		fid=$("#sel_fid").val();
+		mid=$(".mid").val();
+		$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"});
+		location="<?=site_url("admin/stk_offline_order_deals") ?>/"+fid+'/'+mid; 
 		},
 	'Cancel':function(){
 		$(this).dialog('close');
@@ -201,25 +206,15 @@ function select_fran(fid)
 {
 	fid=$("#sel_fid").val();
 	mid=$(".mid").val();
-	$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"});
-	location="<?=site_url("admin/stk_offline_order_deals") ?>/"+fid+'/'+mid; 
+	$( "#authentiacte_blk" ).dialog('close');
+	
 }
 
 function load_franchisebyid()
 {
-	
 	sel_state=$("#sel_state").val();
 	sel_fran=$("#sel_fid").val();
-	sel_mtype=$("#mid_entrytype").val();
-	if(sel_state=='' || sel_state==0)
-		return;
-	if(sel_fran=='' || sel_fran==0)
-		return;
-	sel_mid=$(".mid").val();
-	if($(".mid").val().length==0)
-			return;
 	$("#authentiacte_blk").dialog('open');
-		
 }
 
 $( "#authentiacte_blk" ).dialog({
@@ -235,20 +230,22 @@ $( "#authentiacte_blk" ).dialog({
 		});
 		$(".stk_offlinecard").show();
 	},
-	
+	buttons:{
+	'Authenticate':function(){
+		$(this).dialog('close');
+		}
+	}
 });
 
 $("#sel_fid").change(function(){
 	
 	if($(this).val()>0)
-	{
-		$("#franchise_quickview").data('fid',$(this).val()).dialog('open');
-			}
+		load_franchisebyid();
 	else
-		$("#franchise_quickview").hide();
+		return;
 });
 
-$("#franchise_quickview").dialog({
+/*$("#franchise_quickview").dialog({
 	autoOpen:false,
 	model:true,
 	width:'448',
@@ -271,7 +268,7 @@ $("#franchise_quickview").dialog({
 
 			}
 	
-});
+});*/
 $("input[type='radio']").change(function(){
 	if($(this).val()==2)
 	{

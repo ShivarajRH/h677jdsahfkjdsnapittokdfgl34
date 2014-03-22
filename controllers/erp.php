@@ -156,6 +156,9 @@ class Erp extends Stream
 			{
 				$inp=array("product_id"=>$pid,"is_sourceable"=>$action,"created_on"=>time(),"created_by"=>$user['userid']);
 				$this->db->insert("products_src_changelog",$inp);
+				
+				$this->erpm->_upd_product_deal_statusbyproduct($pid,$user['userid']);
+				
 			}
 		}
 		redirect($_SERVER['HTTP_REFERER']);
@@ -177,6 +180,7 @@ class Erp extends Stream
 					$this->db->query("update m_product_info set is_sourceable=1 where product_id in ($pid) limit ".count($pids));
 					$inp=array("product_id"=>$pid,"is_sourceable"=>1,"created_on"=>time(),"created_by"=>$user['userid']);
 					$this->db->insert("products_src_changelog",$inp);
+					$this->erpm->_upd_product_deal_statusbyproduct($pid,$user['userid']);
 				}
 				
 			}
@@ -205,6 +209,7 @@ class Erp extends Stream
 					}
 					$inp=array("product_id"=>$pid,"is_sourceable"=>0,"created_on"=>time(),"created_by"=>$user['userid']);
 					$this->db->insert("products_src_changelog",$inp);
+					$this->erpm->_upd_product_deal_statusbyproduct($pid,$user['userid']);
 					
 				}
 			}
@@ -2219,7 +2224,22 @@ class Erp extends Stream
 			
 			
 			$st_pmsg = 'Stock Transfered To '.$dest_prodid.' Qty '.$corr.' '.($s_imeino_list?('<b>IMEI LIST </b><br>'.implode('<br>',$s_imeino_list)):'').' <br> Note:'.$msg;
-			$this->erpm->_upd_product_stock($pid,$mrp,$bc,$loc_id,$rb_id,0,$corr,0,$type,0,-1,$st_pmsg);	
+                        
+                        $stk_up_arr = array(
+                                'product_id'=>$pid
+                                ,'mrp'=>$mrp
+                                ,'bc'=>$bc
+                                ,'loc_id'=>$loc_id
+                                ,'rb_id'=>$rb_id
+                                ,'p_stk_id'=>0
+                                ,'qty'=>$corr
+                                ,'update_by'=>0
+                                ,'stl_movtype'=>$type
+                                ,'update_by_refid'=>0
+                                ,'mrp_change_updated'=>-1
+                                ,'msg'=>$st_pmsg
+                            );
+                            $this->erpm->_upd_product_stock($stk_up_arr);
 			
 			$d_p_msg = 'Stock Transfered From '.$pid.' Qty '.$corr.' '.($s_imeino_list?('<br><b>IMEI LIST </b><br>'.implode('<br>',$s_imeino_list)):'');
 			if($dest_prod_stockdet == "new")
@@ -2229,13 +2249,42 @@ class Erp extends Stream
 				$d_prb = $this->input->post('dest_prod_newstk_rbid');
 				
 				$d_ploc = $this->db->query('select location_id from m_rack_bin_info where id = ? ',$d_prb)->row()->location_id;
-					
-				$upd_stk_id = $this->erpm->_upd_product_stock($dest_prodid,$d_pmrp,$d_pbc,$d_ploc,$d_prb,0,$corr,0,1,0,-1,$d_p_msg);
+				
+                                $stk_up_arr = array(
+                                    'product_id'=>$dest_prodid
+                                    ,'mrp'=>$d_pmrp
+                                    ,'bc'=>$d_pbc
+                                    ,'loc_id'=>$d_ploc
+                                    ,'rb_id'=>$d_prb
+                                    ,'p_stk_id'=>0
+                                    ,'qty'=>$corr
+                                    ,'update_by'=>0
+                                    ,'stl_movtype'=>1
+                                    ,'update_by_refid'=>0
+                                    ,'mrp_change_updated'=>-1
+                                    ,'msg'=>$d_p_msg
+                                );
+				$upd_stk_id = $this->erpm->_upd_product_stock($stk_up_arr);
 			}
 			else 
 			{
 				list($d_pbc,$d_pmrp,$d_ploc,$d_prb) = explode('_',$dest_prod_stockdet);
-				$upd_stk_id = $this->erpm->_upd_product_stock($dest_prodid,$d_pmrp,$d_pbc,$d_ploc,$d_prb,0,$corr,0,1,0,-1,$d_p_msg);
+                                
+                                $stk_up_arr = array(
+                                    'product_id'=>$dest_prodid
+                                    ,'mrp'=>$d_pmrp
+                                    ,'bc'=>$d_pbc
+                                    ,'loc_id'=>$d_ploc
+                                    ,'rb_id'=>$d_prb
+                                    ,'p_stk_id'=>0
+                                    ,'qty'=>$corr
+                                    ,'update_by'=>0
+                                    ,'stl_movtype'=>1
+                                    ,'update_by_refid'=>0
+                                    ,'mrp_change_updated'=>-1
+                                    ,'msg'=>$d_p_msg
+                                );
+				$upd_stk_id = $this->erpm->_upd_product_stock($stk_up_arr);
 			}
 
 			$s_imeino_list = $this->input->post('s_imeino');
@@ -2281,7 +2330,21 @@ class Erp extends Stream
 
 		}else
 		{
-			$this->erpm->_upd_product_stock($pid,$mrp,$bc,$loc_id,$rb_id,0,$corr,0,$type,0,-1,$msg);
+                        $stk_up_arr = array(
+                            'product_id'=>$pid
+                            ,'mrp'=>$mrp
+                            ,'bc'=>$bc
+                            ,'loc_id'=>$loc_id
+                            ,'rb_id'=>$rb_id
+                            ,'p_stk_id'=>0
+                            ,'qty'=>$corr
+                            ,'update_by'=>0
+                            ,'stl_movtype'=>$type
+                            ,'update_by_refid'=>0
+                            ,'mrp_change_updated'=>-1
+                            ,'msg'=>$msg
+                        );
+			$this->erpm->_upd_product_stock($stk_up_arr);
 		}
 		 
 		$this->erpm->flash_msg("Stock corrected");
@@ -2374,7 +2437,7 @@ class Erp extends Stream
 		echo json_encode($output);
 	}
 		
-	function cancel_invoice($invno="")
+	function cancel_invoice($invno="",$msg="Invoice Cancelled")
 	{
 		$user=$this->erpm->auth(true);
 		
@@ -2387,7 +2450,7 @@ class Erp extends Stream
 			$oids[]=$i['order_id'];
 		$orders=$this->db->query("select quantity as qty,itemid,id from king_orders where id in ('".implode("','",$oids)."')")->result_array();
 		
-		$recon_status = $this->erpm->pnh_reverse_reconcile_invoice($invno,$user,"Invoice Cancelled");
+		$recon_status = $this->erpm->pnh_reverse_reconcile_invoice($invno,$user,$msg);
 		
 		$batch_id = $this->db->query("select batch_id from shipment_batch_process_invoice_link where invoice_no=?",$invno)->row()->batch_id;
 		$pinvno = $this->db->query("select a.p_invoice_no  
@@ -2444,18 +2507,59 @@ class Erp extends Stream
 						
 						if($stk_info)
 						{
-							$this->erpm->_upd_product_stock($stk_info['product_id'],$stk_info['mrp'],$stk_info['product_barcode'],$stk_info['location_id'],$stk_info['rack_bin_id'],0,$rqty,3,1,$invoice[0]['id']);	
+                                                    $stk_up_arr = array(
+                                                                        'product_id'=>$stk_info['product_id']
+                                                                        ,'mrp'=>$stk_info['mrp']
+                                                                        ,'bc'=>$stk_info['product_barcode']
+                                                                        ,'loc_id'=>$stk_info['location_id']
+                                                                        ,'rb_id'=>$stk_info['rack_bin_id']
+                                                                        ,'p_stk_id'=>0
+                                                                        ,'qty'=>$rqty
+                                                                        ,'update_by'=>3
+                                                                        ,'stl_movtype'=>1
+                                                                        ,'update_by_refid'=>$invoice[0]['id']
+                                                                        ,'mrp_change_updated'=>-1
+                                                                        ,'msg'=>$msg
+                                                                    );
+                                                                    $this->erpm->_upd_product_stock($stk_up_arr); // $this->erpm->_upd_product_stock($stk_info['product_id'],$stk_info['mrp'],$stk_info['product_barcode'],$stk_info['location_id'],$stk_info['rack_bin_id'],0,$rqty,3,1,$invoice[0]['id']);	
 						}else
 						{
-							$this->erpm->_upd_product_stock($p['product_id'],$p['mrp'],'',$p['location'],$p['rackbin'],0,$rqty,3,1,$invoice[0]['id']);
+                                                        $stk_up_arr = array(
+                                                            'product_id'=>$p['product_id']
+                                                            ,'mrp'=>$p['mrp']
+                                                            ,'bc'=>''
+                                                            ,'loc_id'=>$p['location']
+                                                            ,'rb_id'=>$p['rackbin']
+                                                            ,'p_stk_id'=>0
+                                                            ,'qty'=>$rqty
+                                                            ,'update_by'=>3
+                                                            ,'stl_movtype'=>1
+                                                            ,'update_by_refid'=>$invoice[0]['id']
+                                                            ,'mrp_change_updated'=>-1
+                                                            ,'msg'=>$msg
+                                                        );
+                                                        $this->erpm->_upd_product_stock($stk_up_arr);//$this->erpm->_upd_product_stock($p['product_id'],$p['mrp'],'',$p['location'],$p['rackbin'],0,$rqty,3,1,$invoice[0]['id']);
 						}
 						
 					}
 					 
 				}else{
 					
-					
-					$this->erpm->_upd_product_stock($p['product_id'],$p['mrp'],'',$p['location'],$p['rackbin'],0,$p['qty']*$o['qty'],3,1,$invoice[0]['id']);
+					$stk_up_arr = array(
+                                            'product_id'=>$p['product_id']
+                                            ,'mrp'=>$p['mrp']
+                                            ,'bc'=>''
+                                            ,'loc_id'=>$p['location']
+                                            ,'rb_id'=>$p['rackbin']
+                                            ,'p_stk_id'=>0
+                                            ,'qty'=>$p['qty']*$o['qty']
+                                            ,'update_by'=>3
+                                            ,'stl_movtype'=>1
+                                            ,'update_by_refid'=>$invoice[0]['id']
+                                            ,'mrp_change_updated'=>-1
+                                            ,'msg'=>$msg
+                                        );
+                                        $this->erpm->_upd_product_stock($stk_up_arr); //$this->erpm->_upd_product_stock($p['product_id'],$p['mrp'],'',$p['location'],$p['rackbin'],0,$p['qty']*$o['qty'],3,1,$invoice[0]['id']);
 					
 					/*
 					$new_stock_entry = true;
@@ -3976,7 +4080,7 @@ class Erp extends Stream
 		$this->load->view("admin",$data);
 	}
 	
-	function cancel_proforma_invoice($p_invoice)
+	function cancel_proforma_invoice($p_invoice,$msg = 'Proforma invoice Cancelled')
 	{
 		$invoice=$this->db->query("select transid,order_id,p_invoice_no,p_invoice_no as invoice_no from proforma_invoices where p_invoice_no=? and invoice_status=1",$p_invoice)->result_array();
 		if(empty($invoice))
@@ -4047,21 +4151,60 @@ class Erp extends Stream
 						
 						
 						$stk_info = $this->db->query("select * from t_stock_info where stock_id = ? ",$reserv_stk_det['stock_info_id'])->row_array();
-						
+                                                
 						if($stk_info)
 						{
-							 
-							$this->erpm->_upd_product_stock($stk_info['product_id'],$stk_info['mrp'],$stk_info['product_barcode'],$stk_info['location_id'],$stk_info['rack_bin_id'],0,$rqty,1,1,$proforma_inv_id);	
+                                                        $stk_up_arr = array(
+                                                            'product_id'=>$stk_info['product_id']
+                                                            ,'mrp'=>$stk_info['mrp']
+                                                            ,'bc'=>$stk_info['product_barcode']
+                                                            ,'loc_id'=>$stk_info['location_id']
+                                                            ,'rb_id'=>$stk_info['rack_bin_id']
+                                                            ,'p_stk_id'=>0
+                                                            ,'qty'=>$rqty
+                                                            ,'update_by'=>1
+                                                            ,'stl_movtype'=>1
+                                                            ,'update_by_refid'=>$proforma_inv_id
+                                                            ,'mrp_change_updated'=>-1
+                                                            ,'msg'=>$msg
+                                                        );
+                                                        $this->erpm->_upd_product_stock($stk_up_arr); //$this->erpm->_upd_product_stock($stk_info['product_id'],$stk_info['mrp'],$stk_info['product_barcode'],$stk_info['location_id'],$stk_info['rack_bin_id'],0,$rqty,1,1,$proforma_inv_id);
 						}else
 						{
-							 
-							$this->erpm->_upd_product_stock($p['product_id'],$p['mrp'],'',$p['location'],$p['rackbin'],0,$rqty,1,1,$proforma_inv_id);
+							 $stk_up_arr = array(
+                                                            'product_id'=> $p['product_id']
+                                                            ,'mrp'=>$p['mrp']
+                                                            ,'bc'=>''
+                                                            ,'loc_id'=>$p['location']
+                                                            ,'rb_id'=>$p['rackbin']
+                                                            ,'p_stk_id'=>0
+                                                            ,'qty'=>$rqty
+                                                            ,'update_by'=>1
+                                                            ,'stl_movtype'=>1
+                                                            ,'update_by_refid'=>$proforma_inv_id
+                                                            ,'mrp_change_updated'=>-1
+                                                            ,'msg'=>$msg
+                                                        );
+                                                        $this->erpm->_upd_product_stock($stk_up_arr); //$this->erpm->_upd_product_stock($p['product_id'],$p['mrp'],'',$p['location'],$p['rackbin'],0,$rqty,1,1,$proforma_inv_id);
 						}
 					}
 					
 				}else{
-					 
-					$this->erpm->_upd_product_stock($p['product_id'],$p['mrp'],'',$p['location'],$p['rackbin'],0,$p['qty']*$o['qty'],1,1,$proforma_inv_id);
+                                        $stk_up_arr = array(
+                                                        'product_id'=> $p['product_id']
+                                                        ,'mrp'=>$p['mrp']
+                                                        ,'bc'=>''
+                                                        ,'loc_id'=>$p['location']
+                                                        ,'rb_id'=>$p['rackbin']
+                                                        ,'p_stk_id'=>0
+                                                        ,'qty'=>($p['qty']*$o['qty'])
+                                                        ,'update_by'=>1
+                                                        ,'stl_movtype'=>1
+                                                        ,'update_by_refid'=>$proforma_inv_id
+                                                        ,'mrp_change_updated'=>-1
+                                                        ,'msg'=>$msg
+                                                    );
+                                                    $this->erpm->_upd_product_stock($stk_up_arr); //$this->erpm->_upd_product_stock($p['product_id'],$p['mrp'],'',$p['location'],$p['rackbin'],0,$p['qty']*$o['qty'],1,1,$proforma_inv_id);
 					
 					/*
 					$new_stock_entry = true;
@@ -5927,8 +6070,8 @@ group by g.product_id order by product_name");
 		echo "<td>{$f['receipt_date']}</td><td>{$modes[$f['receipt_type']]}</td><td>{$f['receipt_amount']}</td><td>{$r_status[$f['status']]}</td></tr></tbody>";}
 		echo "</table></td></tr>";
 		echo "</table>";
-		echo '<br>';
-		echo "<div id='auth_cont'style='float:right;margin-top: 11px;'><input type='button' class='button button-flat-royal button-small button-rounded' value='Authenticate' onclick='select_fran({$fran['franchise_id']})'></div>";
+		//echo '<br>';
+		//echo "<div id='auth_cont'style='float:right;margin-top: 11px;'><input type='button' class='auth_cont_btn button button-flat-royal button-small button-rounded' value='Authenticate' ></div>";
 		
 		
 	}
@@ -11952,6 +12095,7 @@ group by g.product_id order by product_name");
 		$output['status'] = $this->db->affected_rows();
 		$t_inp=array("product_id"=>$pid,"is_sourceable"=>$stat,"created_on"=>time(),"created_by"=>$user['userid']);
 		$this->db->insert("products_src_changelog",$t_inp);
+		$this->erpm->_upd_product_deal_statusbyproduct($pid,$user['userid']);
 		echo json_encode($output);
 	}
 	
@@ -11971,6 +12115,7 @@ group by g.product_id order by product_name");
 			{
 				$t_inp=array("product_id"=>$pid,"is_sourceable"=>$stat,"created_on"=>time(),"created_by"=>$user['userid']);
 				$this->db->insert("products_src_changelog",$t_inp);	
+				$this->erpm->_upd_product_deal_statusbyproduct($pid,$user['userid']);
 			}
 				
 		}
@@ -23855,6 +24000,7 @@ die; */
 			$this->db->query("insert into pnh_member_info(pnh_member_id,user_id,first_name,last_name,mobile,franchise_id,created_by,created_on)values(?,?,?,?,?,?,?,?)",array($membr_id,$userid,$mem_name,'',$mem_mobno,$fid,$admin['userid'],time()));
                         $fran_msg="Dear ".$fran_det['franchise_name']." Member registered successfully.Alloted member id:$membr_id";
                         $mem_msg ="Congratulation & Welcome to StoreKing Family,Your Member id is $membr_id";
+				
                         $this->erpm->pnh_sendsms($fran_det['login_mobile1'],$fran_msg,$fid,0,'MEM_REG');
 			$this->erpm->pnh_sendsms($mem_mobno,$mem_msg,$fid,$membr_id,'MEM_REG');
 			$output['status'] = 'success';
@@ -26406,6 +26552,7 @@ die; */
 		{
 			$inp=array("product_id"=>$pid,"is_sourceable"=>$p_det['is_sourceable'],"created_on"=>time(),"created_by"=>$user['userid']);
 			$this->db->insert("products_src_changelog",$inp);	
+			$this->erpm->_upd_product_deal_statusbyproduct($pid,$user['userid']);
 		}
 		
 		$output['pstatus'] = ($p_det['is_sourceable']?'Sourceable':'Not Sourceable');

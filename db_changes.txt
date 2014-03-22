@@ -1242,7 +1242,6 @@ alter table `m_product_attributes` add column `pcat_id` bigint (20)  NULL  after
 #Mar_07_2014 - is group changes
 alter table `king_dealitems` drop column `is_group`;
 alter table `king_dealitems` add column `is_group` tinyint (11) DEFAULT '0'  NULL  after `tmp_pnh_dealid`;
-
 CREATE TABLE `pnh_menu_margin_track` (       
                          `id` bigint(20) NOT NULL AUTO_INCREMENT,   
                          `menu_id` bigint(20) DEFAULT NULL,         
@@ -1257,7 +1256,6 @@ CREATE TABLE `pnh_menu_margin_track` (
 
 #Mar_11_2014
 create table `pnh_member_offers` (  `sno` bigint UNSIGNED NOT NULL AUTO_INCREMENT , `member_id` varchar (120) , `offer_type` tinyint (11) DEFAULT '0', `offer_value` varchar (120) DEFAULT '0', `offer_towards` varchar (200) , `transid_ref` varchar (120) , `insurance_id` varchar (120) DEFAULT '0', `process_status` tinyint (11),`feedback_status` varchar (50) DEFAULT '0' NULL , `created_by` int (120) ,`referred_by` varchar (100) DEFAULT '0' NULL,`referred_status` tinyint (11)  DEFAULT '0' NULL , `created_on` varchar (120) , PRIMARY KEY ( `sno`));
-
 create table `pnh_member_insurance` (  `sno` bigint UNSIGNED NOT NULL AUTO_INCREMENT , `fid` varchar (120) , `mid` varchar (120) , `insurance_id` varchar (120) , `insurance_type` varchar (100) , `mem_address` varchar (150) , PRIMARY KEY ( `sno`));
 
 alter table `pnh_member_insurance` add column `opted_insurance` tinyint (11) DEFAULT '0' NULL  after `proof_address`,change `offer_type` `offer_type` tinyint (11)  NULL , change `insurance_id` `proof_id` varchar (120)  NULL  COLLATE latin1_swedish_ci , change `insurance_type` `proof_type` varchar (100)  NULL  COLLATE latin1_swedish_ci , change `mem_address` `proof_address` varchar (150)  NULL  COLLATE latin1_swedish_ci;
@@ -1277,3 +1275,14 @@ alter table `pnh_member_insurance` drop column `address`;
 #Mar_18_2014
 alter table `king_orders` change `insurance_logid` `insurance_id` varchar (100)  NULL;
 alter table `pnh_member_insurance` add column `menu_log_id` varchar (100)  NULL  after `mid`;
+
+CREATE TABLE `t_deal_publish_changelog` (                
+                            `id` int(10) unsigned NOT NULL AUTO_INCREMENT,         
+                            `item_id` bigint(20) unsigned NOT NULL,                
+                            `is_publish` tinyint(1) DEFAULT '0',                   
+                            `remarks` text,                                        
+                            `created_by` int(10) DEFAULT '0',                      
+                            `created_on` datetime NOT NULL,                        
+                            PRIMARY KEY (`id`)                                     
+                          );
+

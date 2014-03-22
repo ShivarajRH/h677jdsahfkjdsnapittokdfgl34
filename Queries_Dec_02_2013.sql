@@ -3805,3 +3805,59 @@ alter table `pnh_member_insurance` add column `menu_log_id` varchar (100)  NULL 
 
 select * from t_reserved_batch_stock where product_id='3115';
 select * from t_stock_info where available_qty < 0;
+
+
+select product_barcode,stock_id,product_id,available_qty,location_id,rack_bin_id,mrp,if((mrp-'0'),1,0) as mrp_diff 
+                                            from t_stock_info where mrp > 0  and product_id = '155921' and available_qty > 0 
+                                            order by product_id desc,mrp_diff,mrp;
+
+
+select * from (
+(
+select i.itemid,di.dealid,d.publish,!sum(stat) as new_deal_stat from (
+select itemid,product_id,psrc,stk,if(sum(psrc+if(ifnull(stk,0),1,0)),0,1) as stat from (
+select a.itemid,b.product_id,a.qty,a.is_active,c.is_sourceable as psrc,sum(available_qty) as stk 
+from m_product_group_deal_link a
+join products_group_pids b on a.group_id = b.group_id 
+join (select itemid 
+from m_product_group_deal_link a 
+join products_group_pids b on a.group_id = b.group_id 
+where product_id = '28089' and is_active = 1) as b on b.itemid = a.itemid 
+join m_product_info c on c.product_id = b.product_id
+left join t_stock_info d on d.product_id = b.product_id 
+group by a.itemid,b.product_id )as h
+group by itemid,product_id ) as i 
+join king_dealitems di on di.id = i.itemid
+join king_deals d on d.dealid = di.dealid
+group by itemid 
+having publish != new_deal_stat 
+)
+union(
+select i.itemid,di.dealid,d.publish,!sum(stat) as new_deal_stat 
+from (
+select itemid,product_id,psrc,stk,if(sum(psrc+if(stk,1,0)),0,1) as stat from (
+select a.itemid,a.product_id,a.qty,a.is_active,c.is_sourceable as psrc,sum(available_qty) as stk 
+from m_product_deal_link a
+join (select itemid from m_product_deal_link where product_id = '28089' and is_active = 1) as b on b.itemid = a.itemid 
+join m_product_info c on c.product_id = a.product_id
+left join t_stock_info d on d.product_id = a.product_id 
+group by a.itemid,a.product_id 
+)as h
+group by itemid,product_id ) as i 
+join king_dealitems di on di.id = i.itemid
+join king_deals d on d.dealid = di.dealid
+group by itemid 
+having publish != new_deal_stat 
+) ) as g;
+
+#================================================================================================
+# Mar_21_2014
+
+block_ip_addr;
+
+-- new 
+select si.*,pi.product_name,pi.mrp,pi.is_sourceable from t_stock_info si
+join m_product_info pi on pi.product_id =  si.product_id
+where si.available_qty < 0;
+
+select * from 

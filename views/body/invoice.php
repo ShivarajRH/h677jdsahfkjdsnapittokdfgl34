@@ -98,13 +98,13 @@ table{
 							in.service_tax,
 							item.pnh_id,f.offer_text,f.immediate_payment,
 							in.invoice_qty as quantity,
-							ordert.member_id  as alloted_mem_id,mo.*,ordert.has_insurance,ordert.insurance_amount
+							ordert.member_id  as alloted_mem_id,ordert.has_insurance,ordert.insurance_amount
 						from king_orders as ordert
 						join king_dealitems as item on item.id=ordert.itemid 
 						join king_deals as deal on deal.dealid=item.dealid 
 						left join king_brands as brand on brand.id=deal.brandid 
 						left join pnh_m_offers f on f.id= ordert.offer_refid
-						left join pnh_member_offers mo on mo.transid_ref = ordert.transid 
+						#left join pnh_member_offers mo on mo.transid_ref = ordert.transid 
 						join king_invoice `in` on in.transid=ordert.transid and in.order_id=ordert.id  
 						where in.invoice_no=? or split_inv_grpno = ?
 						
@@ -333,7 +333,8 @@ table{
 					<td align="right" width="80" ><b>MRP</b></td>
 					<td align="right"><b>Sub Total</b></td>
 					<td align="right"><b>Discount</b></td>
-					<?php }?>
+					<?php } ?>
+					<td align="right"><b>Insurance value</b></td>
 					<?php 
 						if($inv_type =='auditing'){
 					?>
@@ -482,7 +483,7 @@ table{
 				<?php if(!$is_pnh){?>
 				<td align="right"><?=$order['mrp']?></td>
 				<td align="right"><?=number_format($order['mrp']*$order['quantity'],2)?></td>
-				<td align="right"><?=number_format($order['discount']*$order['quantity'],2)?></td>
+				
 				<?php }
 					if($inv_type == 'auditing')
 					{
@@ -491,32 +492,25 @@ table{
 				<td align="right"><?=number_format($product_rate_tax,2)?></td>
 				<?php 
 					}
-					$ttl_amt = number_format(round($item_total_amount));
+					
 				?>
-				<td align="right"><?php echo ($order['status'] == 4)?'<strike>':'';?><?=$ttl_amt?><?php echo ($order['status'] == 4)?'</strike>':'';?></td>
-			</tr>
+				<td align="right">
                         <?php
-                        /*$offers_q = $this->db->query("select a.*,b.first_name,b.user_id,di.name product_name from pnh_member_offers a 
-                                                        join pnh_member_info b on b.pnh_member_id=a.member_id
-                                                        join pnh_member_insurance mi on mi.insurance_id=a.insurance_id
-                                                        left join king_dealitems di on di.id = mi.itemid
-                                                        where a.transid_ref=? and mi.itemid=?",array($order['transid'],$order['itemid']) );
-                        if($offers_q->num_rows())
-                        {
-                            $offers = $offers_q->result_array();
-                            foreach($offers as $i=>$offer_arr)
-                            {$offer_arr['product_name']*/ 
                         if($order['has_insurance'] == 1)
                         {
+                        	$ttl_insu_val += $order['insurance_amount'];
                         ?>
-                        <tr>
-                            <td colspan="5"><?=$order['name'];?></td>
-                            <td align="right">Rs. <?=formatInIndianStyle($order['insurance_amount']);?></td>
-                        </tr>
+                        	 Rs. <?=formatInIndianStyle($order['insurance_amount']);?>
                         <?php
-                          //  }
                         }
                         ?>
+				</td>
+				<?php 
+				$item_total_amount = $item_total_amount + $ttl_insu_val;
+				$ttl_amt = number_format(round($item_total_amount));
+				?>
+				<td align="right"><?php echo ($order['status'] == 4)?'<strike>':'';?><?=$ttl_amt; ?><?php echo ($order['status'] == 4)?'</strike>':'';?></td>
+			</tr>
 
 <?php
 			if($order['status'] != 4)
@@ -590,7 +584,7 @@ table{
 
 
 			<tr style="font-weight: bold;">
-				<td colspan="<?=($is_pnh&&$inv_type =='auditing')?"5"+$col_span_fix:($is_pnh?"5":"4")+$col_span_fix?>" align="right">
+				<td colspan="<?=($is_pnh&&$inv_type =='auditing')?"5"+$col_span_fix:($is_pnh?"6":"4")+$col_span_fix?>" align="right">
 					&nbsp; 
 				</td>
 				<?php if(!$is_pnh){?>
@@ -660,10 +654,24 @@ table{
 							<td><b>COD/Handling/Packaging Charges</b></td>
 							<td align="right"><?=number_format($cod_ship_charges,2)?></td>
 						</tr>
-						<?php }?>
+						<?php }
+						
+						?>
+						<?php
+							$mem_reg_fee = 0;
+							$num_recharge_offer = $this->db->query("select * from pnh_member_offers where offer_type='1' and process_status='0' and transid_ref = ? ",$order['transid'])->num_rows();
+							if($num_recharge_offer) {
+								$mem_reg_fee = PNH_MEMBER_FEE;
+						?>
+						<tr>
+							<td>Member Registration Fee</td>
+							<td>Rs. <?=$mem_reg_fee;?></td>
+						</tr>
+						<?php }  ?>
 						<tr>
 							<td width="180"><b>Total Amount </b></td>
-							<td align="right" ><b>Rs. <?=number_format($cod_ship_charges+$total_item_amount-$returned_item_amt,0)?></b></td>
+							<?php $ttl_invoice_amt = number_format( ($cod_ship_charges + $ttl_insu_val + $total_item_amount + $mem_reg_fee) - $returned_item_amt,0); ?>
+							<td align="right" ><b>Rs. <?=$ttl_invoice_amt?></b></td>
 						</tr>
 					</table>
 				</td>

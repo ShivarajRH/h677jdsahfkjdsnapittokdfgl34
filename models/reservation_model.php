@@ -715,7 +715,23 @@ class reservation_model extends Model
                                     {
                                             $stk_movtype=0;
                                             //$prod_id=0,$mrp=0,$bc='',$loc_id=0,$rb_id=0,$p_stk_id=0,$qty=0,$update_by=0,$stk_movtype=0,$update_by_refid=0,$mrp_change_updated=-1,$msg=''
-                                            $rdata=$this->erpm->_upd_product_stock($stk_prod['product_id'],$stk_prod['mrp'],$stk_prod['product_barcode'],$stk_prod['location_id'],$stk_prod['rack_bin_id'],$stk_prod['stock_info_id'],$stk_prod['qty'],$updated_by,$stk_movtype,$invid,-1,$batch_remarks);
+                                            
+                                            $stk_up_arr = array(
+                                                'product_id'=>$stk_prod['product_id']
+                                                ,'mrp'=>$stk_prod['mrp']
+                                                ,'bc'=>$stk_prod['product_barcode']
+                                                ,'loc_id'=>$stk_prod['location_id']
+                                                ,'rb_id'=>$stk_prod['rack_bin_id']
+                                                ,'p_stk_id'=>$stk_prod['stock_info_id']
+                                                ,'qty'=>$stk_prod['qty']
+                                                ,'update_by'=>$updated_by
+                                                ,'stl_movtype'=>$stk_movtype
+                                                ,'update_by_refid'=>$invid
+                                                ,'mrp_change_updated'=>-1
+                                                ,'msg'=>$batch_remarks
+                                            );
+                                            $rdata=$this->erpm->_upd_product_stock($stk_up_arr);
+                                            
                                             if($rdata) {
                                                 //Stock log updated.
                                                 $stk_movtype_msg = ($stk_movtype)?' De-Alloted. ': " Alloted. ";
@@ -850,18 +866,61 @@ class reservation_model extends Model
 
                                             if($stk_info)
                                             {
-                                                     //($prod_id=0,$mrp=0,$bc='',$loc_id=0,$rb_id=0,$p_stk_id=0,$qty=0,$update_by=0,$stk_movtype=0,$update_by_refid=0,$mrp_change_updated=-1,$msg='')
-                                                    $this->erpm->_upd_product_stock($stk_info['product_id'],$stk_info['mrp'],$stk_info['product_barcode'],$stk_info['location_id'],$stk_info['rack_bin_id'],0,$rqty,$update_by,$stk_movtype,$proforma_inv_id,-1,$msg);	
+                                                    $stk_up_arr = array(
+                                                        'product_id'=>$stk_info['product_id']
+                                                        ,'mrp'=>$stk_info['mrp']
+                                                        ,'bc'=>$stk_info['product_barcode']
+                                                        ,'loc_id'=>$stk_info['location_id']
+                                                        ,'rb_id'=>$stk_info['rack_bin_id']
+                                                        ,'p_stk_id'=>0
+                                                        ,'qty'=>$rqty
+                                                        ,'update_by'=>$update_by
+                                                        ,'stl_movtype'=>$stk_movtype
+                                                        ,'update_by_refid'=>$proforma_inv_id
+                                                        ,'mrp_change_updated'=>-1
+                                                        ,'msg'=>$msg
+                                                    );
+                                                    $this->erpm->_upd_product_stock($stk_up_arr);
                                             }else
                                             {
-
-                                                    $this->erpm->_upd_product_stock($p['product_id'],$p['mrp'],'',$p['location'],$p['rackbin'],0,$rqty,$update_by,$stk_movtype,$proforma_inv_id,-1,$msg);
+                                                    $stk_up_arr = array(
+                                                        'product_id'=>$p['product_id']
+                                                        ,'mrp'=>$p['mrp']
+                                                        ,'bc'=>''
+                                                        ,'loc_id'=>$p['location']
+                                                        ,'rb_id'=>$p['rackbin']
+                                                        ,'p_stk_id'=>0
+                                                        ,'qty'=>$rqty
+                                                        ,'update_by'=>$update_by
+                                                        ,'stl_movtype'=>$stk_movtype
+                                                        ,'update_by_refid'=>$proforma_inv_id
+                                                        ,'mrp_change_updated'=>-1
+                                                        ,'msg'=>$msg
+                                                    );
+                                                    $this->erpm->_upd_product_stock($stk_up_arr);
                                             }
                                     }
 
                             }else{
-                                    //($prod_id=0,$mrp=0,$bc='',$loc_id=0,$rb_id=0,$p_stk_id=0,$qty=0,$update_by=0,$stk_movtype=0,$update_by_refid=0,$mrp_change_updated=-1,$msg='')
-                                    $this->erpm->_upd_product_stock($p['product_id'],$p['mrp'],'',$p['location'],$p['rackbin'],0,($p['qty']*$o['qty']),$update_by,$stk_movtype,$proforma_inv_id,-1,$msg);
+                                
+                                    //$prod_id=0,$mrp=0,$bc='',$loc_id=0,$rb_id=0,$p_stk_id=0,$qty=0,$update_by=0,$stk_movtype=0,$update_by_refid=0,$mrp_change_updated=-1,$msg='';
+                                
+                                    $stk_up_arr = array(
+                                        'product_id'=>$p['product_id']
+                                        ,'mrp'=>$p['mrp']
+                                        ,'bc'=>''
+                                        ,'loc_id'=>$p['location']
+                                        ,'rb_id'=>$p['rackbin']
+                                        ,'p_stk_id'=>0
+                                        ,'qty'=>($p['qty']*$o['qty'])
+                                        ,'update_by'=>$update_by
+                                        ,'stl_movtype'=>$stk_movtype
+                                        ,'update_by_refid'=>$proforma_inv_id
+                                        ,'mrp_change_updated'=>-1
+                                        ,'msg'=>$msg
+                                    );
+                                    
+                                    $this->erpm->_upd_product_stock($stk_up_arr);
 
                                     /*
                                     $new_stock_entry = true;
