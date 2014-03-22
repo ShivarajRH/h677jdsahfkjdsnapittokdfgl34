@@ -2483,7 +2483,7 @@ class Erp extends Stream
 			redirect("admin/trans/".$transid);
 		redirect("admin/pending_refunds_list");
 	}
-	
+
 	function change_qy_order($transid)
 	{
 		$user=$this->auth(CALLCENTER_ROLE);
@@ -2496,9 +2496,20 @@ class Erp extends Stream
 		
 		$prod=$this->db->query("select name from king_dealitems where id=?",$order['itemid'])->row_array();
 		$n_qty=$order['quantity']-$qty;
-		$inp=array($n_oid,$transid,$order['userid'],$order['itemid'],$order['vendorid'],$order['brandid'],$n_qty,3,$order['i_orgprice'],$order['i_price'],$order['i_nlc'],$order['i_phc'],$order['i_tax'],$order['i_discount'],$order['i_coup_discount'],$order['i_discount_applied_on'],$order['time'],time());
 		
-		$this->db->query("insert into king_orders(id,transid,userid,itemid,vendorid,brandid,quantity,status,i_orgprice,i_price,i_nlc,i_phc,i_tax,i_discount,i_coup_discount,i_discount_applied_on,time,actiontime) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",$inp);
+		$norder = $order;
+		$norder['id'] = $n_oid;
+		$norder['quantity'] = $n_qty;
+		$norder['status'] = 3;
+		$norder['actiontime'] = time();
+		
+		unset($norder['sno']);
+		
+		$this->db->insert('king_orders',$norder);
+		
+		//$inp=array($n_oid,$transid,$order['userid'],$order['itemid'],$order['vendorid'],$order['brandid'],$n_qty,3,$order['i_orgprice'],$order['i_price'],$order['i_nlc'],$order['i_phc'],$order['i_tax'],$order['i_discount'],$order['i_coup_discount'],$order['i_discount_applied_on'],$order['time'],time());
+		//$this->db->query("insert into king_orders(id,transid,userid,itemid,vendorid,brandid,quantity,status,i_orgprice,i_price,i_nlc,i_phc,i_tax,i_discount,i_coup_discount,i_discount_applied_on,time,actiontime) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",$inp);
+		
 		$this->db->query("update king_orders set quantity=? where id=? limit 1",array($qty,$oid));
 		$this->erpm->do_trans_changelog($transid,"Order '{$prod['name']}' quantity changed from {$order['quantity']} to {$qty}");
 		
