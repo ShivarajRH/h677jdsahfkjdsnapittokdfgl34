@@ -51,12 +51,10 @@
 	</div>
 	
 	<div id="view_marginupdatelog" title="Margin update Log">
-	<br><br>
 	<table class="datagrid" id="menumargin_updatelog" width="100%">
 	<thead><th>Menu</th><th>Menu Margin(%)</th><th>Loyality Point(Rs)</th><th>Balance Amount(rs)</th><th>Balance Discount(%)</th><th>Last Updated By</th><th>Updated On</th></thead>
 	<tbody></tbody>
 	</table>
-	
 	</div>
 </div>
 <script>

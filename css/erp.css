@@ -898,7 +898,7 @@ fieldset{border-color:#eee;background:#FAFAFA}
 .page_wrap .page_title{  
 	float: left;
     margin: 7px 0;
-    width: 76%;}
+/*    width: 76%;*/}
 .page_wrap .stock_wrap
 {
 	float: right;

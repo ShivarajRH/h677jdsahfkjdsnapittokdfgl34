@@ -96,7 +96,7 @@
 </div>-->
 
 
-<div style="margin:5px 0px;background:#fcfcfc;border:1px solid #f1f1f1;padding:10px;width:100% !important;">
+<div style="margin:5px 0px;background:#fcfcfc;border:1px solid #f1f1f1;padding:10px;">
 <div style="clear: both">
 		<div id="display_fr_totals" style="float: right">
 			<table width="500" cellpadding="4" cellspacing="0" style="border-collapse: collapse;">
@@ -139,7 +139,7 @@
 <table class="datagrid nofooter" id="prods_order">
 <thead><tr><th width="3%">Sno</th><th>Product Name</th><th width="3%">MRP<br>(Rs)</th><th width="6%">Offer price/<br>DP price<br>(Rs)</th>
 			<th width="8%">Discount <br>(Rs)</th><th width="12%">Landing Price<br>(Rs)</th>
-			<th width="7%">Qty</th>
+			<th width="7%" align="right">Qty</th>
 			<th width="7%">Sub Total <br> (Rs)</th> <th width="5%">Quote</th><th width="3%">Actions</th></tr></thead>
 <tbody>
 </tbody>

@@ -406,7 +406,7 @@ if($no_days >=4 && $r['activated_on'] == 0)
 </div>
 
 <div id="cancel_receipt" title="Receipt Cancellation">
-<form id="cancel_receipt_frm" method="post">
+<form id="cancel_receipt_frm" method="post" data-validate="parsley" action="<?php echo site_url('admin/to_update_cancelreceipt_onprocessed')?>" >
 <table width="100%">
 <tr><td><input type="hidden" name="can_receiptid" id="can_receiptid"></td></tr>
 <tr><td>Franchise Name</td><td>:</td><td id="can_recptfran"><b></b></td></tr>

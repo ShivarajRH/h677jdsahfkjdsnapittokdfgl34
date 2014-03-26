@@ -34,7 +34,7 @@
 				</tr>
 				<tr>
 					<td style="text-align: right;"><b>DOB</b> : </td>
-					<td><input type="text" name="mem_dob" value="" id="dob"></td>
+					<td><input type="text" name="mem_dob" value="" id="dob" placeholder="YYYY-MM-DD"></td>
 				</tr>
 				<tr>
 					<td style="text-align: right;"><b>Gender</b><span class="red_star">*</span> : </td>

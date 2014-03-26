@@ -1220,6 +1220,28 @@ CREATE TABLE `pnh_api_franchise_cart_info` (
   PRIMARY KEY (`id`)
 );
 
+//MANAGE LOYALITY POINTS
+
+/*[1:58:19 PM][2077 ms]*/ ALTER TABLE `king_orders` ADD COLUMN `lpoint_valid_days` DOUBLE NULL AFTER `member_id`; 
+
+/*[5:24:49 PM][98 ms]*/ ALTER TABLE `pnh_member_points_track` ADD COLUMN `valid_till` BIGINT(20) NULL AFTER `created_on`; 
+
+/*[12:32:00 PM][30 ms]*/ ALTER TABLE `pnh_loyalty_points` ADD COLUMN `created_on` DATETIME NULL AFTER `valid_days`, ADD COLUMN `updated_on` DATETIME NULL AFTER `created_on`, ADD COLUMN `created_by` INT(11) NULL AFTER `updated_on`;
+
+/*[6:02:58 PM][99 ms]*/ ALTER TABLE `pnh_member_points_track` ADD COLUMN `is_active` TINYINT(1) DEFAULT 1 NULL AFTER `valid_till`; 
+
+
+/*[1:29:02 PM][3501 ms]*/ ALTER TABLE `snapitto_dbexisting`.`king_dealitems` ADD COLUMN `has_insurance` TINYINT(1) NULL AFTER `is_group`; 
+/*[2:49:13 PM][63 ms]*/ ALTER TABLE `king_dealitems` CHANGE `has_insurance` `has_insurance` TINYINT(1) DEFAULT 0 NULL; 
+/*[3:19:55 PM][3392 ms]*/ ALTER TABLE `king_dealitems` CHANGE `has_insurance` `has_insurance` TINYINT(1) DEFAULT 0 NOT NULL; 
+
+ /*[11:36:52 AM][51 ms]*/ CREATE TABLE `insurance_m_types`( `id` BIGINT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(255), PRIMARY KEY (`id`) ); 
+ /*[11:37:05 AM][0 ms]*/INSERT INTO `insurance_m_types`(`id`,`name`) VALUES ( '1',NULL); 
+/*[11:37:53 AM][0 ms]*/ UPDATE `insurance_m_types` SET `name`='Aadhar ' WHERE `id`='1'; 
+/*[11:38:22 AM][0 ms]*/ INSERT INTO `insurance_m_types`(`id`,`name`) VALUES ( '2','Driving Licence'); 
+/*[11:38:37 AM][0 ms]*/ INSERT INTO `insurance_m_types`(`id`,`name`) VALUES ( NULL,'Voter ID'); 
+
+/*[1:10:01 PM][61 ms]*/ CREATE TABLE `pnh_m_insurance_menu`( `id` BIGINT(11) NOT NULL AUTO_INCREMENT, `menu_id` BIGINT(11) NOT NULL, `greater_than` DOUBLE, `less_than` DOUBLE, `insurance_value` DOUBLE, `created_by` BIGINT(11), `created_on` DATETIME, `updated_by` BIGINT(11), `updated_on` DATETIME, PRIMARY KEY (`id`) ); 
 #==========================================================================
 # Mar_01_2014 - Attribute Feature - products, deal, category
 create table `m_attributes` (  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT , `attr_name` varchar (150) , PRIMARY KEY ( `id`))
@@ -1286,3 +1308,138 @@ CREATE TABLE `t_deal_publish_changelog` (
                             PRIMARY KEY (`id`)                                     
                           );
 
+
+  
+  
+  
+  
+  
+  
+  CREATE TABLE `pnh_member_insurance_menu` (
+  `id` bigint(11) NOT NULL AUTO_INCREMENT,
+  `menu_id` bigint(11) NOT NULL,
+  `greater_than` double DEFAULT NULL,
+  `less_than` double DEFAULT NULL,
+  `insurance_value` double DEFAULT NULL,
+  `insurance_margin` double NOT NULL DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_by` bigint(11) DEFAULT NULL,
+  `created_on` datetime DEFAULT NULL,
+  `updated_by` bigint(11) DEFAULT NULL,
+  `updated_on` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ;
+CREATE TABLE `user_order_transactions` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `transid` char(18) NOT NULL,
+  `orderid` bigint(20) unsigned NOT NULL,
+  `amount` double unsigned NOT NULL,
+  `paid` double unsigned NOT NULL,
+  `mode` tinyint(3) unsigned NOT NULL,
+  `voucher_payment` tinyint(3) DEFAULT '0',
+  `cod` double unsigned NOT NULL,
+  `ship` double unsigned NOT NULL,
+  `giftwrap_charge` double DEFAULT '0',
+  `response_code` int(10) unsigned NOT NULL,
+  `msg` text NOT NULL,
+  `payment_id` varchar(50) NOT NULL,
+  `pg_transaction_id` varchar(50) NOT NULL,
+  `is_flagged` varchar(10) NOT NULL,
+  `init` bigint(20) unsigned NOT NULL,
+  `actiontime` int(10) unsigned NOT NULL,
+  `status` tinyint(3) unsigned NOT NULL,
+  `is_pnh` tinyint(1) NOT NULL,
+  `franchise_id` int(10) unsigned NOT NULL,
+  `batch_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `admin_trans_status` tinyint(3) DEFAULT '0',
+  `priority` tinyint(1) NOT NULL,
+  `priority_note` varchar(200) NOT NULL,
+  `note` text NOT NULL,
+  `offline` tinyint(1) NOT NULL,
+  `status_backup` tinyint(1) DEFAULT NULL,
+  `trans_created_by` int(11) DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `transid` (`transid`),
+  KEY `franchise_id` (`franchise_id`),
+  KEY `trans_created_by` (`trans_created_by`)
+);
+
+CREATE TABLE `user_order_margin_track` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `transid` varchar(20) NOT NULL,
+  `itemid` bigint(20) unsigned NOT NULL,
+  `mrp` decimal(10,2) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `base_margin` decimal(10,2) NOT NULL,
+  `sch_margin` decimal(10,2) NOT NULL,
+  `bal_discount` double DEFAULT NULL,
+  `qty` int(10) unsigned NOT NULL,
+  `final_price` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `transid` (`transid`)
+);
+
+CREATE TABLE `king_user_orders` (
+  `sno` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) unsigned NOT NULL,
+  `transid` char(18) NOT NULL,
+  `userid` int(11) unsigned NOT NULL,
+  `itemid` bigint(20) unsigned NOT NULL,
+  `brandid` bigint(20) unsigned NOT NULL,
+  `vendorid` bigint(20) unsigned NOT NULL,
+  `bill_person` varchar(100) NOT NULL,
+  `bill_address` text NOT NULL,
+  `bill_city` text NOT NULL,
+  `bill_pincode` varchar(20) NOT NULL,
+  `ship_person` varchar(100) NOT NULL,
+  `ship_address` text NOT NULL,
+  `ship_city` text NOT NULL,
+  `ship_pincode` varchar(20) NOT NULL,
+  `bill_phone` varchar(50) NOT NULL,
+  `ship_phone` varchar(50) NOT NULL,
+  `bill_state` varchar(100) NOT NULL,
+  `ship_state` varchar(100) NOT NULL,
+  `ship_email` varchar(150) NOT NULL,
+  `bill_email` varchar(150) NOT NULL,
+  `quantity` int(10) unsigned NOT NULL,
+  `paid` int(10) unsigned NOT NULL,
+  `mode` tinyint(3) unsigned NOT NULL COMMENT '0 - PG (cc,netbanking), 1 - cod',
+  `status` tinyint(4) NOT NULL DEFAULT '0',
+  `admin_order_status` tinyint(3) DEFAULT '0',
+  `shipped` tinyint(1) NOT NULL,
+  `buyer_options` text NOT NULL,
+  `time` bigint(20) NOT NULL,
+  `actiontime` bigint(20) unsigned NOT NULL,
+  `shiptime` bigint(20) unsigned NOT NULL,
+  `shipid` varchar(50) NOT NULL,
+  `medium` varchar(100) NOT NULL,
+  `bpid` bigint(20) unsigned NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `ship_landmark` text NOT NULL,
+  `bill_landmark` text NOT NULL,
+  `ship_telephone` varchar(50) NOT NULL,
+  `ship_country` varchar(255) DEFAULT NULL,
+  `bill_country` varchar(255) DEFAULT NULL,
+  `bill_telephone` varchar(50) NOT NULL,
+  `invoice_no` bigint(20) unsigned NOT NULL,
+  `priority` tinyint(1) NOT NULL,
+  `priority_note` varchar(200) NOT NULL,
+  `note` text NOT NULL,
+  `billon_orderprice` tinyint(1) DEFAULT '0',
+  `i_orgprice` double DEFAULT '0',
+  `i_price` double DEFAULT '0',
+  `i_nlc` double DEFAULT '0',
+  `i_phc` double DEFAULT '0',
+  `i_tax` double DEFAULT '0',
+  `i_discount` double DEFAULT '0',
+  `i_coup_discount` double DEFAULT '0',
+  `member_id` bigint(11) DEFAULT '0',
+  PRIMARY KEY (`sno`),
+  KEY `transid` (`transid`),
+  KEY `itemid` (`itemid`),
+  KEY `userid` (`userid`),
+  KEY `id` (`id`),
+  KEY `status` (`status`)
+); ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
+
+ALTER TABLE `pnh_member_offers` ADD COLUMN `mem_fee_applicable` tinyint(11) DEFAULT NULL AFTER `offer_type`;

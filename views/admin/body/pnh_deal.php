@@ -282,6 +282,7 @@ ul.tabs li.active
 									<tr><td>Bill on Orderprice :</td><td><?=$deal['billon_orderprice']?'Yes':'No'?></td></tr>
 									<tr><Td>Gender Attribute :</Td><td><?=$deal['gender_attr']?></td></tr>
 									<tr><Td>Max Allowed Qty <br>(for franchise per day):</Td><td><?=$deal['max_allowed_qty']?></td></tr>
+									<tr><td><b>Has Insurance</b> :</td><td><?=$deal['has_insurance']==1?'Yes':'No';?></td></tr>
 									<tr><td>Brand :</td><Td style="font-weight:bold;"><?=$deal['brand']?></Td></tr>
 									<tr><td>Category :</td><Td style="font-weight:bold;"><?=$deal['category']?></Td></tr>
 									<tr>

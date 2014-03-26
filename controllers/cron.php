@@ -1357,5 +1357,64 @@ class Cron extends Controller{
 			}
 		}
 	}
+	
+	/**
+	 * fucntion to updte franchise app version
+	 */
+	function cron_update_app_version()
+	{
+		
+		ini_set('max_execution_time',6000);
+		ini_set('memory_limit','1024M');
+		
+		// get working versions 
+		$res_vl = $this->db->query("select id,release_version,code_version,max(db_version) as v,max(db_changes_v) as dcv from (select * from m_apk_version order by id desc) as g group by  release_version order by id desc ");
+		if($res_vl->num_rows())
+		{
+			foreach($res_vl->result_array() as $row_vl)
+			{
+				// check for version price updates and status updates.
+				$res_v = $this->db->query("
+						 					select a.id,a.dealid,a.orgprice,a.price,b.publish,ifnull(if(c.id,0,1),1) as is_new_deal,ifnull(c.id,0) as deal_v_id,
+												ifnull(if(c.mrp=a.orgprice,0,a.orgprice),0) as mrp_diff,
+												ifnull(if(c.price=a.price,0,a.price),0) as price_diff,
+												ifnull(if(b.publish=c.is_publish,0,1),0) as status_diff
+												from king_dealitems a 
+												join king_deals b on a.dealid = b.dealid 
+												left join m_apk_version_deal_link c on c.item_id = a.id  
+												join m_apk_store_menu_link d on d.menu_id = b.menuid 
+											where store_id = ? and (c.version_id = ? or c.version_id is null ) 
+											having mrp_diff+price_diff+status_diff != 0
+										",array($row_vl['release_version'],$row_vl['id']));
+				
+				if(!$res_v->num_rows())
+					continue;
+				
+				$row_vl['dcv'] = $row_vl['dcv']+1;
+				
+				// reset db version index on 3 digits
+				if($row_vl['dcv'] > 999)
+				{
+					$row_vl['v'] = $row_vl['v']+1;
+					$row_vl['dcv'] = 1;
+				}
+					
+				
+				$inp = array($row_vl['release_version'].'.'.$row_vl['code_version'].'.'.$row_vl['v'].'.'.$row_vl['dcv'],$row_vl['release_version'],$row_vl['code_version'],$row_vl['v'],$row_vl['dcv']);
+				
+				// create new version 
+				$this->db->query("insert into m_apk_version (version,release_version,code_version,db_version,db_changes_v,created_by,created_on) values (?,?,?,?,?,0,now())",$inp);
+				$new_version_id = $this->db->insert_id();
+				
+				foreach($res_v->result_array() as $row_v)
+				{
+					// get price,status and new deal updates.
+					$inp = array($new_version_id,$row_v['id'],$row_v['orgprice'],$row_v['price'],$row_v['publish'],$row_v['is_new_deal']);
+					$this->db->query("insert into m_apk_version_deal_link (version_id,item_id,mrp,price,is_publish,is_new,created_on,created_by) values(?,?,?,?,?,?,now(),0) ",$inp);
+				}
+			}
+		}
+		
+	}
 
 }

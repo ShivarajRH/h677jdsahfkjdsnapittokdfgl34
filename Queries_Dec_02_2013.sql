@@ -1,414 +1,414 @@
-select * from m_batch_config
+SELECT * FROM m_batch_config
 
 ###########################################################################################
-alter table `m_batch_config` #add column `territory_id` int (11) DEFAULT '0' NULL  after `assigned_uid`, add column `townid` int (11) DEFAULT '0' NULL  after `territory_id`
-,change `batch_grp_name` `batch_grp_name` varchar (150)  NULL  COLLATE utf8_unicode_ci 
-, change `assigned_menuid` `assigned_menuid` varchar (100)  NULL  COLLATE utf8_unicode_ci 
-, change `assigned_uid` `assigned_uid` varchar (100)  NULL  COLLATE utf8_unicode_ci;
+ALTER TABLE `m_batch_config` #add column `territory_id` int (11) DEFAULT '0' NULL  after `assigned_uid`, add column `townid` int (11) DEFAULT '0' NULL  after `territory_id`
+,CHANGE `batch_grp_name` `batch_grp_name` VARCHAR (150)  NULL  COLLATE utf8_unicode_ci 
+, CHANGE `assigned_menuid` `assigned_menuid` VARCHAR (100)  NULL  COLLATE utf8_unicode_ci 
+, CHANGE `assigned_uid` `assigned_uid` VARCHAR (100)  NULL  COLLATE utf8_unicode_ci;
 
-alter table `snapittoday_db_nov`.`m_batch_config` drop column `townid`, drop column `territory_id`, drop column `assigned_uid`;
+ALTER TABLE `snapittoday_db_nov`.`m_batch_config` DROP COLUMN `townid`, DROP COLUMN `territory_id`, DROP COLUMN `assigned_uid`;
 
 ###########################################################################################
 
-select  *#d.menuid,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) 
+SELECT  *#d.menuid,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) 
 
-from king_transactions tr
-                                join king_orders as o on o.transid=tr.transid
-                                join proforma_invoices as `pi` on pi.order_id = o.id
-                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
-                                join king_dealitems dl on dl.id = o.itemid
-                                join king_deals d on d.dealid = dl.dealid  #and d.menuid in (?)
-                                where sd.batch_id=5000
-                                order by tr.init asc;
+FROM king_transactions tr
+                                JOIN king_orders AS o ON o.transid=tr.transid
+                                JOIN proforma_invoices AS `pi` ON pi.order_id = o.id
+                                JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no =pi.p_invoice_no
+                                JOIN king_dealitems dl ON dl.id = o.itemid
+                                JOIN king_deals d ON d.dealid = dl.dealid  #and d.menuid in (?)
+                                WHERE sd.batch_id=5000
+                                ORDER BY tr.init ASC;
 
-select * from shipment_batch_process where batch_id='5000'
-select * from shipment_batch_process_invoice_link where batch_id='5000';
+SELECT * FROM shipment_batch_process WHERE batch_id='5000'
+SELECT * FROM shipment_batch_process_invoice_link WHERE batch_id='5000';
 
-select o.*,tr.transid,tr.amount,tr.paid,tr.init,tr.is_pnh,tr.franchise_id,di.name
+SELECT o.*,tr.transid,tr.amount,tr.paid,tr.init,tr.is_pnh,tr.franchise_id,di.name
                                 ,o.status,pi.p_invoice_no,o.quantity
                                 ,f.franchise_id,pi.p_invoice_no
-                                from king_orders o
-                                join king_transactions tr on tr.transid = o.transid and o.status in (0,1) and tr.batch_enabled = 1
-                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-                                left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
-                                left join proforma_invoices `pi` on pi.order_id = o.id and pi.invoice_status = 1 
-                                join king_dealitems di on di.id = o.itemid 
-                                where i.id is null # and tr.transid in ('PNHESC16249') # and f.franchise_id = ? $cond 
-                                order by tr.init desc; #,di.name
+                                FROM king_orders o
+                                JOIN king_transactions tr ON tr.transid = o.transid AND o.status IN (0,1) AND tr.batch_enabled = 1
+                                JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+                                LEFT JOIN king_invoice i ON o.id = i.order_id AND i.invoice_status = 1
+                                LEFT JOIN proforma_invoices `pi` ON pi.order_id = o.id AND pi.invoice_status = 1 
+                                JOIN king_dealitems di ON di.id = o.itemid 
+                                WHERE i.id IS NULL # and tr.transid in ('PNHESC16249') # and f.franchise_id = ? $cond 
+                                ORDER BY tr.init DESC; #,di.name
 
 #### Nov_03_2013 ###
-select * from shipment_batch_process where batch_id=5000
+SELECT * FROM shipment_batch_process WHERE batch_id=5000
 
-D:--> added assigned_userid, territory_id,batch_configid fields to shipment_batch_process 
+D:--> added assigned_userid, territory_id,batch_configid FIELDS TO shipment_batch_process 
 
 D:--> picklist-invoice id shoulkd carry 
 
---> generate picklist for un-grouped batches
+--> generate picklist FOR un-grouped batches
 
 ###########################################################################################
-alter table `shipment_batch_process` 
-	add column `assigned_userid` int (11) DEFAULT '0' NULL  after `status`, 
-	add column `territory_id` int (11) DEFAULT '0' NULL  after `assigned_userid`, 
-	add column `batch_configid` int (11) DEFAULT '0' NULL  after `territory_id`;
+ALTER TABLE `shipment_batch_process` 
+	ADD COLUMN `assigned_userid` INT (11) DEFAULT '0' NULL  AFTER `status`, 
+	ADD COLUMN `territory_id` INT (11) DEFAULT '0' NULL  AFTER `assigned_userid`, 
+	ADD COLUMN `batch_configid` INT (11) DEFAULT '0' NULL  AFTER `territory_id`;
 
-alter table `snapittoday_db_nov`.`m_batch_config` drop column `assigned_uid`
+ALTER TABLE `snapittoday_db_nov`.`m_batch_config` DROP COLUMN `assigned_uid`
 
-alter table `snapittoday_db_nov`.`m_batch_config` add column `group_assigned_uid` varchar (120)  NULL  after `batch_size`;
+ALTER TABLE `snapittoday_db_nov`.`m_batch_config` ADD COLUMN `group_assigned_uid` VARCHAR (120)  NULL  AFTER `batch_size`;
 
-alter table `snapittoday_db_nov`.`shipment_batch_process_invoice_link` drop column `assigned_userid`;
+ALTER TABLE `snapittoday_db_nov`.`shipment_batch_process_invoice_link` DROP COLUMN `assigned_userid`;
 
 ###########################################################################################
 
 
-select * from m_batch_config;
+SELECT * FROM m_batch_config;
 
-select o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
+SELECT o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
                     ,di.name
                     ,tr.init,tr.actiontime,tr.status tr_status,tr.is_pnh,tr.batch_enabled
                     ,pi.p_invoice_no
-                    from king_orders o
-                    join king_transactions tr on tr.transid = o.transid and o.status in (0,1) and tr.batch_enabled = 1
-                    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-                    left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
-                    left join proforma_invoices `pi` on pi.order_id = o.id and pi.invoice_status = 1
+                    FROM king_orders o
+                    JOIN king_transactions tr ON tr.transid = o.transid AND o.status IN (0,1) AND tr.batch_enabled = 1
+                    JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+                    LEFT JOIN king_invoice i ON o.id = i.order_id AND i.invoice_status = 1
+                    LEFT JOIN proforma_invoices `pi` ON pi.order_id = o.id AND pi.invoice_status = 1
 			#left join shipment_batch_process_invoice_link sd on sd.p_invoice_no=pi.p_invoice_no
-                    join king_dealitems di on di.id = o.itemid 
-                    where i.id is null #and tr.transid = ?
-                    order by tr.init,di.name;
+                    JOIN king_dealitems di ON di.id = o.itemid 
+                    WHERE i.id IS NULL #and tr.transid = ?
+                    ORDER BY tr.init,di.name;
 
-select * from proforma_invoices
-select * from shipment_batch_process_invoice_link
-select * from king_invoice
+SELECT * FROM proforma_invoices
+SELECT * FROM shipment_batch_process_invoice_link
+SELECT * FROM king_invoice
 
-select distinct o.*,tr.transid,tr.amount,tr.paid,tr.init,tr.is_pnh,tr.franchise_id,di.name
+SELECT DISTINCT o.*,tr.transid,tr.amount,tr.paid,tr.init,tr.is_pnh,tr.franchise_id,di.name
                                 ,o.status,pi.p_invoice_no,o.quantity
                                 ,f.franchise_id,pi.p_invoice_no
                                 ,sd.batch_id
-                                from king_orders o
-                                join king_transactions tr on tr.transid = o.transid and o.status in (0,1) and tr.batch_enabled = 1
-                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-                                left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
-                                left join proforma_invoices `pi` on pi.order_id = o.id and pi.invoice_status = 1
-                                left join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no 
-                                join king_dealitems di on di.id = o.itemid 
-                                where f.franchise_id = '83'  and i.id is null and tr.transid in ('PNHTQE79561') #('PNHEIP95585')
-                                order by tr.init desc;
+                                FROM king_orders o
+                                JOIN king_transactions tr ON tr.transid = o.transid AND o.status IN (0,1) AND tr.batch_enabled = 1
+                                JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+                                LEFT JOIN king_invoice i ON o.id = i.order_id AND i.invoice_status = 1
+                                LEFT JOIN proforma_invoices `pi` ON pi.order_id = o.id AND pi.invoice_status = 1
+                                LEFT JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no = pi.p_invoice_no 
+                                JOIN king_dealitems di ON di.id = o.itemid 
+                                WHERE f.franchise_id = '83'  AND i.id IS NULL AND tr.transid IN ('PNHTQE79561') #('PNHEIP95585')
+                                ORDER BY tr.init DESC;
 
 
 #Dec_04_2013
 
-select * from shipment_batch_process_invoice_link
+SELECT * FROM shipment_batch_process_invoice_link
 
-select * from king_admin
+SELECT * FROM king_admin
 
-select * from ( 
-                    select transid,TRIM(BOTH ',' FROM group_concat(p_inv_nos)) as p_inv_nos,status,count(*) as t,if(count(*)>1,'partial',(if(status,'ready','pending'))) as trans_status,franchise_id  
-                    from (
-                    select o.transid,ifnull(group_concat(distinct pi.p_invoice_no),'') as p_inv_nos,o.status,count(*) as ttl_o,tr.franchise_id,tr.actiontime
-                            from king_orders o
-                            join king_transactions tr on tr.transid=o.transid
-                            left join king_invoice i on i.order_id = o.id and i.invoice_status = 1 
-                            left join proforma_invoices pi on pi.order_id = o.id and o.transid  = pi.transid and pi.invoice_status = 1 
-                            left join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no 
-                            left join shipment_batch_process sbp on sbp.batch_id = sd.batch_id
-                            where o.status in (0,1)  and i.id is null and tr.franchise_id != 0  and sbp.assigned_userid = 37  and ((sd.packed=0 and sd.p_invoice_no > 0) or (sd.p_invoice_no is null and sd.packed is null ))
-                            group by o.transid,o.status
-                    ) as g 
-                    group by g.transid )as g1 having g1.trans_status = 'ready';
+SELECT * FROM ( 
+                    SELECT transid,TRIM(BOTH ',' FROM GROUP_CONCAT(p_inv_nos)) AS p_inv_nos,STATUS,COUNT(*) AS t,IF(COUNT(*)>1,'partial',(IF(STATUS,'ready','pending'))) AS trans_status,franchise_id  
+                    FROM (
+                    SELECT o.transid,IFNULL(GROUP_CONCAT(DISTINCT pi.p_invoice_no),'') AS p_inv_nos,o.status,COUNT(*) AS ttl_o,tr.franchise_id,tr.actiontime
+                            FROM king_orders o
+                            JOIN king_transactions tr ON tr.transid=o.transid
+                            LEFT JOIN king_invoice i ON i.order_id = o.id AND i.invoice_status = 1 
+                            LEFT JOIN proforma_invoices PI ON pi.order_id = o.id AND o.transid  = pi.transid AND pi.invoice_status = 1 
+                            LEFT JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no = pi.p_invoice_no 
+                            LEFT JOIN shipment_batch_process sbp ON sbp.batch_id = sd.batch_id
+                            WHERE o.status IN (0,1)  AND i.id IS NULL AND tr.franchise_id != 0  AND sbp.assigned_userid = 37  AND ((sd.packed=0 AND sd.p_invoice_no > 0) OR (sd.p_invoice_no IS NULL AND sd.packed IS NULL ))
+                            GROUP BY o.transid,o.status
+                    ) AS g 
+                    GROUP BY g.transid )AS g1 HAVING g1.trans_status = 'ready';
 
-select * from (
-            select distinct from_unixtime(tr.init,'%D %M %Y') as str_date,from_unixtime(tr.init,'%h:%i:%s %p') as str_time, count(tr.transid) as total_trans,tr.transid
+SELECT * FROM (
+            SELECT DISTINCT FROM_UNIXTIME(tr.init,'%D %M %Y') AS str_date,FROM_UNIXTIME(tr.init,'%h:%i:%s %p') AS str_time, COUNT(tr.transid) AS total_trans,tr.transid
                     ,o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
                     ,tr.init,tr.actiontime,tr.status tr_status,tr.is_pnh,tr.batch_enabled
-                    ,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,f.created_on as f_created_on
+                    ,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,f.created_on AS f_created_on
                     ,ter.territory_name
                     ,twn.town_name
-                    ,dl.menuid,m.name as menu_name,bs.name as brand_name
+                    ,dl.menuid,m.name AS menu_name,bs.name AS brand_name
                     ,sd.batch_id
-            from king_transactions tr
-                    join king_orders o on o.transid=tr.transid
-                    join king_dealitems di on di.id=o.itemid
-                    join king_deals dl on dl.dealid=di.dealid
-                    join pnh_menu m on m.id = dl.menuid
-                    join king_brands bs on bs.id = o.brandid
-            join pnh_m_franchise_info  f on f.franchise_id=tr.franchise_id #and f.is_suspended = 0
-            join pnh_m_territory_info ter on ter.id = f.territory_id 
-            join pnh_towns twn on twn.id=f.town_id
-                    left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
-                    left join proforma_invoices pi on pi.order_id = o.id and pi.invoice_status = 1 
-                    left join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no
-            WHERE o.status in (0,1) and tr.batch_enabled=1 and i.id is null  and tr.transid in ('PNHEQC73122')
-            group by o.transid) as g  group by transid order by  g.actiontime DESC
+            FROM king_transactions tr
+                    JOIN king_orders o ON o.transid=tr.transid
+                    JOIN king_dealitems di ON di.id=o.itemid
+                    JOIN king_deals dl ON dl.dealid=di.dealid
+                    JOIN pnh_menu m ON m.id = dl.menuid
+                    JOIN king_brands bs ON bs.id = o.brandid
+            JOIN pnh_m_franchise_info  f ON f.franchise_id=tr.franchise_id #and f.is_suspended = 0
+            JOIN pnh_m_territory_info ter ON ter.id = f.territory_id 
+            JOIN pnh_towns twn ON twn.id=f.town_id
+                    LEFT JOIN king_invoice i ON o.id = i.order_id AND i.invoice_status = 1
+                    LEFT JOIN proforma_invoices PI ON pi.order_id = o.id AND pi.invoice_status = 1 
+                    LEFT JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no = pi.p_invoice_no
+            WHERE o.status IN (0,1) AND tr.batch_enabled=1 AND i.id IS NULL  AND tr.transid IN ('PNHEQC73122')
+            GROUP BY o.transid) AS g  GROUP BY transid ORDER BY  g.actiontime DESC
 #=================================================
 
-select distinct o.itemid,d.menuid,mn.name as menuname,f.territory_id,
-	sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) 
-from king_transactions tr
-                                    join king_orders as o on o.transid=tr.transid
-                                    join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
-                                    join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
-                                    join king_dealitems dl on dl.id = o.itemid
-                                    join king_deals d on d.dealid = dl.dealid
+SELECT DISTINCT o.itemid,d.menuid,mn.name AS menuname,f.territory_id,
+	sd.id,sd.batch_id,sd.p_invoice_no,FROM_UNIXTIME(tr.init) 
+FROM king_transactions tr
+                                    JOIN king_orders AS o ON o.transid=tr.transid
+                                    JOIN proforma_invoices AS `pi` ON pi.order_id = o.id AND pi.invoice_status=1
+                                    JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no =pi.p_invoice_no
+                                    JOIN king_dealitems dl ON dl.id = o.itemid
+                                    JOIN king_deals d ON d.dealid = dl.dealid
 				
-				join pnh_menu mn on mn.id=d.menuid
-				join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-                                    where sd.batch_id='5000' and f.territory_id='4'
-                                    order by tr.init asc
+				JOIN pnh_menu mn ON mn.id=d.menuid
+				JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+                                    WHERE sd.batch_id='5000' AND f.territory_id='4'
+                                    ORDER BY tr.init ASC
 
 #                                   limit 0,4
-=>115rows
+=>115ROWS
 
-select * from pnh_m_territory_info
+SELECT * FROM pnh_m_territory_info
 
-select * from shipment_batch_process where batch_id='5000';
+SELECT * FROM shipment_batch_process WHERE batch_id='5000';
 
 ####################################################################
-delete from shipment_batch_process  where batch_id='5040';
+DELETE FROM shipment_batch_process  WHERE batch_id='5040';
 ####################################################################
 
-select distinct * from shipment_batch_process_invoice_link where batch_id='5042' group by id
+SELECT DISTINCT * FROM shipment_batch_process_invoice_link WHERE batch_id='5042' GROUP BY id
 
 UPDATE `shipment_batch_process_invoice_link` SET `batch_id` = 5000 WHERE `batch_id` = '5040';
 
 UPDATE `shipment_batch_process_invoice_link` SET `batch_id` = 5038 WHERE `id` = 372675
 #=============================================================
 CREATE TABLE `pnh_m_states` (                            
-                `state_id` int(11) NOT NULL AUTO_INCREMENT,            
-                `state_name` varchar(255) DEFAULT NULL,                
-                `created_on` datetime DEFAULT NULL,                    
-                `created_by` int(11) DEFAULT '0',                      
+                `state_id` INT(11) NOT NULL AUTO_INCREMENT,            
+                `state_name` VARCHAR(255) DEFAULT NULL,                
+                `created_on` DATETIME DEFAULT NULL,                    
+                `created_by` INT(11) DEFAULT '0',                      
                 PRIMARY KEY (`state_id`)                               
               );
 
 #Dec_05_2013
-select id,username from king_admin where account_blocked=0
+SELECT id,username FROM king_admin WHERE account_blocked=0
 
-select * from shipment_batch_process_invoice_link where p_invoice_no='114299';
+SELECT * FROM shipment_batch_process_invoice_link WHERE p_invoice_no='114299';
 
-select count(*) as ttl from proforma_invoices where p_invoice_no='114299'
+SELECT COUNT(*) AS ttl FROM proforma_invoices WHERE p_invoice_no='114299'
 
 
-select distinct d.pic,d.is_pnh,e.menuid,i.discount,p.product_id,p.mrp,p.barcode,i.transid,i.p_invoice_no,p.product_name,o.i_orgprice as order_mrp,o.quantity*pl.qty as qty,d.name as deal,d.dealid,o.itemid,o.id as order_id,i.p_invoice_no 
-									from proforma_invoices i 
-									join king_orders o on o.id=i.order_id and i.transid = o.transid 
-									join m_product_deal_link pl on pl.itemid=o.itemid 
-									join m_product_info p on p.product_id=pl.product_id 
-									join king_dealitems d on d.id=o.itemid 
-									join king_deals e on e.dealid=d.dealid 
-									join shipment_batch_process_invoice_link sb on sb.p_invoice_no = i.p_invoice_no and sb.invoice_no = 0  
-									where i.p_invoice_no='114299' and i.invoice_status=1 order by o.sno
+SELECT DISTINCT d.pic,d.is_pnh,e.menuid,i.discount,p.product_id,p.mrp,p.barcode,i.transid,i.p_invoice_no,p.product_name,o.i_orgprice AS order_mrp,o.quantity*pl.qty AS qty,d.name AS deal,d.dealid,o.itemid,o.id AS order_id,i.p_invoice_no 
+									FROM proforma_invoices i 
+									JOIN king_orders o ON o.id=i.order_id AND i.transid = o.transid 
+									JOIN m_product_deal_link pl ON pl.itemid=o.itemid 
+									JOIN m_product_info p ON p.product_id=pl.product_id 
+									JOIN king_dealitems d ON d.id=o.itemid 
+									JOIN king_deals e ON e.dealid=d.dealid 
+									JOIN shipment_batch_process_invoice_link sb ON sb.p_invoice_no = i.p_invoice_no AND sb.invoice_no = 0  
+									WHERE i.p_invoice_no='114299' AND i.invoice_status=1 ORDER BY o.sno
 
-select d.pic,d.is_pnh,e.menuid,i.discount,i.discount,p.product_id,p.mrp,i.transid,p.barcode,i.p_invoice_no,p.product_name,o.i_orgprice as order_mrp,o.quantity*pl.qty as qty,d.name as deal,d.dealid,o.itemid,o.id as order_id,i.p_invoice_no 
-from proforma_invoices i 
-join king_orders o on o.id=i.order_id and i.transid = o.transid 
-join products_group_orders pgo on pgo.order_id=o.id 
-join m_product_group_deal_link pl on pl.itemid=o.itemid 
-join m_product_info p on p.product_id=pgo.product_id 
-join king_dealitems d on d.id=o.itemid join king_deals e on e.dealid=d.dealid 
-join shipment_batch_process_invoice_link sb on sb.p_invoice_no = i.p_invoice_no and sb.invoice_no = 0  
-where i.p_invoice_no='114299' and i.invoice_status=1 order by o.sno 
+SELECT d.pic,d.is_pnh,e.menuid,i.discount,i.discount,p.product_id,p.mrp,i.transid,p.barcode,i.p_invoice_no,p.product_name,o.i_orgprice AS order_mrp,o.quantity*pl.qty AS qty,d.name AS deal,d.dealid,o.itemid,o.id AS order_id,i.p_invoice_no 
+FROM proforma_invoices i 
+JOIN king_orders o ON o.id=i.order_id AND i.transid = o.transid 
+JOIN products_group_orders pgo ON pgo.order_id=o.id 
+JOIN m_product_group_deal_link pl ON pl.itemid=o.itemid 
+JOIN m_product_info p ON p.product_id=pgo.product_id 
+JOIN king_dealitems d ON d.id=o.itemid JOIN king_deals e ON e.dealid=d.dealid 
+JOIN shipment_batch_process_invoice_link sb ON sb.p_invoice_no = i.p_invoice_no AND sb.invoice_no = 0  
+WHERE i.p_invoice_no='114299' AND i.invoice_status=1 ORDER BY o.sno 
 
 
 ### Dec_11_2013
 #==============================================================================
-update t_imei_no set status=0 and order_id=0 where imei_no = '356631059543977';
+UPDATE t_imei_no SET STATUS=0 AND order_id=0 WHERE imei_no = '356631059543977';
 #==============================================================================
 
-join king_orders o on o.id = rbs.order_id
-                        join king_dealitems dlt on dlt.id = o.itemid
-			join king_deals dl on dl.dealid = dlt.dealid
-			join pnh_menu as mnu on mnu.id = dl.menuid and mnu.status=1
+JOIN king_orders o ON o.id = rbs.order_id
+                        JOIN king_dealitems dlt ON dlt.id = o.itemid
+			JOIN king_deals dl ON dl.dealid = dlt.dealid
+			JOIN pnh_menu AS mnu ON mnu.id = dl.menuid AND mnu.status=1
 
 
 
 
-set @inv_no='114077';
-select distinct o.time,e.menuid,mnu.name as menuname,d.pic,d.is_pnh,e.menuid,i.discount,p.product_id,p.mrp,p.barcode,i.transid,i.p_invoice_no,p.product_name,o.i_orgprice as order_mrp,o.quantity*pl.qty as qty,d.name as deal,d.dealid,o.itemid,o.id as order_id,i.p_invoice_no 
-									from proforma_invoices i 
-									join king_orders o on o.id=i.order_id and i.transid = o.transid 
-									join m_product_deal_link pl on pl.itemid=o.itemid 
-									join m_product_info p on p.product_id=pl.product_id 
-									join king_dealitems d on d.id=o.itemid 
-									join king_deals e on e.dealid=d.dealid
-									left join pnh_menu as mnu on mnu.id = e.menuid and mnu.status=1
-									join shipment_batch_process_invoice_link sb on sb.p_invoice_no = i.p_invoice_no and sb.invoice_no = 0  
-									where i.invoice_status=1 
-											and i.p_invoice_no in (@inv_no) 
-									order by o.sno;
-==> 187 rows
-==> 152 rows
+SET @inv_no='114077';
+SELECT DISTINCT o.time,e.menuid,mnu.name AS menuname,d.pic,d.is_pnh,e.menuid,i.discount,p.product_id,p.mrp,p.barcode,i.transid,i.p_invoice_no,p.product_name,o.i_orgprice AS order_mrp,o.quantity*pl.qty AS qty,d.name AS deal,d.dealid,o.itemid,o.id AS order_id,i.p_invoice_no 
+									FROM proforma_invoices i 
+									JOIN king_orders o ON o.id=i.order_id AND i.transid = o.transid 
+									JOIN m_product_deal_link pl ON pl.itemid=o.itemid 
+									JOIN m_product_info p ON p.product_id=pl.product_id 
+									JOIN king_dealitems d ON d.id=o.itemid 
+									JOIN king_deals e ON e.dealid=d.dealid
+									LEFT JOIN pnh_menu AS mnu ON mnu.id = e.menuid AND mnu.status=1
+									JOIN shipment_batch_process_invoice_link sb ON sb.p_invoice_no = i.p_invoice_no AND sb.invoice_no = 0  
+									WHERE i.invoice_status=1 
+											AND i.p_invoice_no IN (@inv_no) 
+									ORDER BY o.sno;
+==> 187 ROWS
+==> 152 ROWS
 
 
 
-set @inv_no='114077';
-select d.pic,d.is_pnh,e.menuid,i.discount,i.discount,p.product_id,p.mrp,i.transid,p.barcode,i.p_invoice_no,p.product_name,o.i_orgprice as order_mrp,o.quantity*pl.qty as qty,d.name as deal,d.dealid,o.itemid,o.id as order_id,i.p_invoice_no 
-									from proforma_invoices i 
-									join king_orders o on o.id=i.order_id and i.transid = o.transid 
-									join products_group_orders pgo on pgo.order_id=o.id 
-									join m_product_group_deal_link pl on pl.itemid=o.itemid 
-									join m_product_info p on p.product_id=pgo.product_id 
-									join king_dealitems d on d.id=o.itemid 
-									join king_deals e on e.dealid=d.dealid 
-									left join pnh_menu as mnu on mnu.id = e.menuid and mnu.status=1
-									join shipment_batch_process_invoice_link sb on sb.p_invoice_no = i.p_invoice_no and sb.invoice_no = 0  
-									where i.invoice_status=1 and i.p_invoice_no in (@inv_no) 
-									order by o.sno;
+SET @inv_no='114077';
+SELECT d.pic,d.is_pnh,e.menuid,i.discount,i.discount,p.product_id,p.mrp,i.transid,p.barcode,i.p_invoice_no,p.product_name,o.i_orgprice AS order_mrp,o.quantity*pl.qty AS qty,d.name AS deal,d.dealid,o.itemid,o.id AS order_id,i.p_invoice_no 
+									FROM proforma_invoices i 
+									JOIN king_orders o ON o.id=i.order_id AND i.transid = o.transid 
+									JOIN products_group_orders pgo ON pgo.order_id=o.id 
+									JOIN m_product_group_deal_link pl ON pl.itemid=o.itemid 
+									JOIN m_product_info p ON p.product_id=pgo.product_id 
+									JOIN king_dealitems d ON d.id=o.itemid 
+									JOIN king_deals e ON e.dealid=d.dealid 
+									LEFT JOIN pnh_menu AS mnu ON mnu.id = e.menuid AND mnu.status=1
+									JOIN shipment_batch_process_invoice_link sb ON sb.p_invoice_no = i.p_invoice_no AND sb.invoice_no = 0  
+									WHERE i.invoice_status=1 AND i.p_invoice_no IN (@inv_no) 
+									ORDER BY o.sno;
 
-select * from king_orders
-desc king_orders;
+SELECT * FROM king_orders
+DESC king_orders;
 
 #Dec_12_2013
-select consider_mrp_chng from pnh_menu
+SELECT consider_mrp_chng FROM pnh_menu
 
 #Dec_13_2013
-select note from king_transaction_notes where transid=? and note_priority=1 order by id asc limit 1;
-select transid from proforma_invoices where p_invoice_no in ($p_invno_list);
+SELECT note FROM king_transaction_notes WHERE transid=? AND note_priority=1 ORDER BY id ASC LIMIT 1;
+SELECT transid FROM proforma_invoices WHERE p_invoice_no IN ($p_invno_list);
 
-select note from king_transaction_notes tnote
-join proforma_invoices `pi` on pi.transid=tnote.transid
-where tnote.note_priority=1 and pi.p_invoice_no in ('10004')
-order by tnote.id asc limit 1;
+SELECT note FROM king_transaction_notes tnote
+JOIN proforma_invoices `pi` ON pi.transid=tnote.transid
+WHERE tnote.note_priority=1 AND pi.p_invoice_no IN ('10004')
+ORDER BY tnote.id ASC LIMIT 1;
 
-select * from proforma_invoices where invoice_status=1
+SELECT * FROM proforma_invoices WHERE invoice_status=1
 
 
-select c.status,a.product_id,product_barcode,mrp,location_id,rack_bin_id,b.stock_id 
-			from t_reserved_batch_stock a 
-			join t_stock_info b on a.stock_info_id = b.stock_id 
-			join t_imei_no c on c.product_id = b.product_id 
+SELECT c.status,a.product_id,product_barcode,mrp,location_id,rack_bin_id,b.stock_id 
+			FROM t_reserved_batch_stock a 
+			JOIN t_stock_info b ON a.stock_info_id = b.stock_id 
+			JOIN t_imei_no c ON c.product_id = b.product_id 
 	#where a.p_invoice_no = ? and a.order_id = ? and imei_no = ?
 #==> 7880888 rows / 374ms
 
-select a.status,a.product_id,b.product_barcode,b.mrp,b.location_id as location_id,
-										b.rack_bin_id as rack_bin_id,
-										b.stock_id from (
-									select a.status,a.product_id,b.product_barcode,ifnull(b.mrp,c.mrp) as mrp,ifnull(b.location_id,c.location_id) as location_id,
-										ifnull(b.rack_bin_id,c.rack_bin_id) as rack_bin_id,
+SELECT a.status,a.product_id,b.product_barcode,b.mrp,b.location_id AS location_id,
+										b.rack_bin_id AS rack_bin_id,
+										b.stock_id FROM (
+									SELECT a.status,a.product_id,b.product_barcode,IFNULL(b.mrp,c.mrp) AS mrp,IFNULL(b.location_id,c.location_id) AS location_id,
+										IFNULL(b.rack_bin_id,c.rack_bin_id) AS rack_bin_id,
 										b.stock_id
-										from t_imei_no a 
-										left join t_stock_info b on a.stock_id = b.stock_id and a.product_id = b.product_id
-										join t_grn_product_link c on c.grn_id = a.grn_id and a.product_id = c.product_id 
-										where imei_no = '356631059543977' 
-									) as a 
-									join t_stock_info b on a.product_id = b.product_id 
-									where a.mrp = b.mrp and a.location_id = b.location_id and a.rack_bin_id = b.rack_bin_id
+										FROM t_imei_no a 
+										LEFT JOIN t_stock_info b ON a.stock_id = b.stock_id AND a.product_id = b.product_id
+										JOIN t_grn_product_link c ON c.grn_id = a.grn_id AND a.product_id = c.product_id 
+										WHERE imei_no = '356631059543977' 
+									) AS a 
+									JOIN t_stock_info b ON a.product_id = b.product_id 
+									WHERE a.mrp = b.mrp AND a.location_id = b.location_id AND a.rack_bin_id = b.rack_bin_id
 
-select status,product_id from t_imei_no where imei_no = '358956056763247';
+SELECT STATUS,product_id FROM t_imei_no WHERE imei_no = '358956056763247';
 
 
-select distinct o.time,e.menuid,mnu.name as menuname,d.pic,d.is_pnh,i.discount,p.product_id,p.mrp,p.barcode,i.transid,i.p_invoice_no,p.product_name,o.i_orgprice as order_mrp,o.quantity*pl.qty as qty,d.name as deal,d.dealid,o.itemid,o.id as order_id,i.p_invoice_no 
-									from proforma_invoices i 
-									join king_orders o on o.id=i.order_id and i.transid = o.transid 
-									join m_product_deal_link pl on pl.itemid=o.itemid 
-									join m_product_info p on p.product_id=pl.product_id 
-									join king_dealitems d on d.id=o.itemid 
-									join king_deals e on e.dealid=d.dealid
-                                                                        left join pnh_menu as mnu on mnu.id = e.menuid and mnu.status=1
-                                                                        join shipment_batch_process_invoice_link sb on sb.p_invoice_no = i.p_invoice_no and sb.invoice_no = 0  
-									where i.invoice_status=1 order by e.menuid DESC # and i.p_invoice_no in ($inv_no)
+SELECT DISTINCT o.time,e.menuid,mnu.name AS menuname,d.pic,d.is_pnh,i.discount,p.product_id,p.mrp,p.barcode,i.transid,i.p_invoice_no,p.product_name,o.i_orgprice AS order_mrp,o.quantity*pl.qty AS qty,d.name AS deal,d.dealid,o.itemid,o.id AS order_id,i.p_invoice_no 
+									FROM proforma_invoices i 
+									JOIN king_orders o ON o.id=i.order_id AND i.transid = o.transid 
+									JOIN m_product_deal_link pl ON pl.itemid=o.itemid 
+									JOIN m_product_info p ON p.product_id=pl.product_id 
+									JOIN king_dealitems d ON d.id=o.itemid 
+									JOIN king_deals e ON e.dealid=d.dealid
+                                                                        LEFT JOIN pnh_menu AS mnu ON mnu.id = e.menuid AND mnu.status=1
+                                                                        JOIN shipment_batch_process_invoice_link sb ON sb.p_invoice_no = i.p_invoice_no AND sb.invoice_no = 0  
+									WHERE i.invoice_status=1 ORDER BY e.menuid DESC # and i.p_invoice_no in ($inv_no)
 
 # Dec_14_2013
 
-select territory_name from pnh_m_territory_info where id='3';
+SELECT territory_name FROM pnh_m_territory_info WHERE id='3';
 
-select distinct o.itemid,d.menuid,mn.name as menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) from king_transactions tr
-                                join king_orders as o on o.transid=tr.transid
-                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
-                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
-                                join king_dealitems dl on dl.id = o.itemid
-                                join king_deals d on d.dealid = dl.dealid # and d.menuid in ('')
+SELECT DISTINCT o.itemid,d.menuid,mn.name AS menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,FROM_UNIXTIME(tr.init) FROM king_transactions tr
+                                JOIN king_orders AS o ON o.transid=tr.transid
+                                JOIN proforma_invoices AS `pi` ON pi.order_id = o.id AND pi.invoice_status=1
+                                JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no =pi.p_invoice_no
+                                JOIN king_dealitems dl ON dl.id = o.itemid
+                                JOIN king_deals d ON d.dealid = dl.dealid # and d.menuid in ('')
                                 
-                                join pnh_menu mn on mn.id=d.menuid
-                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id #and f.is_suspended = 0
+                                JOIN pnh_menu mn ON mn.id=d.menuid
+                                JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id #and f.is_suspended = 0
                                 
-                                where sd.batch_id=5000  and f.territory_id = 3 
-                                order by tr.init asc
-                                limit 0,1;
+                                WHERE sd.batch_id=5000  AND f.territory_id = 3 
+                                ORDER BY tr.init ASC
+                                LIMIT 0,1;
 
-select dispatch_id,group_concat(distinct a.id) as man_id,group_concat(distinct b.invoice_no) as invs 
-                                                                                                    from pnh_m_manifesto_sent_log a
-                                                                                                    join shipment_batch_process_invoice_link b on a.manifesto_id = b.inv_manifesto_id and b.invoice_no != 0 
-                                                                                                    join proforma_invoices c on c.p_invoice_no = b.p_invoice_no and c.invoice_status = 1  
-                                                                                                    join king_transactions d on d.transid = c.transid 
-                                                                                                    where date(sent_on) between '2013-11-01' and '2013-11-07' and dispatch_id != 0  
-                                                                                            group by franchise_id;
+SELECT dispatch_id,GROUP_CONCAT(DISTINCT a.id) AS man_id,GROUP_CONCAT(DISTINCT b.invoice_no) AS invs 
+                                                                                                    FROM pnh_m_manifesto_sent_log a
+                                                                                                    JOIN shipment_batch_process_invoice_link b ON a.manifesto_id = b.inv_manifesto_id AND b.invoice_no != 0 
+                                                                                                    JOIN proforma_invoices c ON c.p_invoice_no = b.p_invoice_no AND c.invoice_status = 1  
+                                                                                                    JOIN king_transactions d ON d.transid = c.transid 
+                                                                                                    WHERE DATE(sent_on) BETWEEN '2013-11-01' AND '2013-11-07' AND dispatch_id != 0  
+                                                                                            GROUP BY franchise_id;
 
 #100rows/93ms
 
-select * from pnh_m_manifesto_sent_log
+SELECT * FROM pnh_m_manifesto_sent_log
 
 
 #Dec_16_2013
 
-select dispatch_id,group_concat(distinct a.id) as man_id,group_concat(distinct b.invoice_no) as invs,f.territory_id
-				    from pnh_m_manifesto_sent_log a
-				    join shipment_batch_process_invoice_link b on a.manifesto_id = b.inv_manifesto_id and b.invoice_no != 0 
-				    join proforma_invoices c on c.p_invoice_no = b.p_invoice_no and c.invoice_status = 1  
-				    join king_transactions d on d.transid = c.transid 
-				    join pnh_m_franchise_info f on f.franchise_id = d.franchise_id
-				    where date(sent_on) between '2013-11-01' and '2013-11-07' and dispatch_id != 0 #and f.territory_id='3'
-			    group by d.franchise_id
+SELECT dispatch_id,GROUP_CONCAT(DISTINCT a.id) AS man_id,GROUP_CONCAT(DISTINCT b.invoice_no) AS invs,f.territory_id
+				    FROM pnh_m_manifesto_sent_log a
+				    JOIN shipment_batch_process_invoice_link b ON a.manifesto_id = b.inv_manifesto_id AND b.invoice_no != 0 
+				    JOIN proforma_invoices c ON c.p_invoice_no = b.p_invoice_no AND c.invoice_status = 1  
+				    JOIN king_transactions d ON d.transid = c.transid 
+				    JOIN pnh_m_franchise_info f ON f.franchise_id = d.franchise_id
+				    WHERE DATE(sent_on) BETWEEN '2013-11-01' AND '2013-11-07' AND dispatch_id != 0 #and f.territory_id='3'
+			    GROUP BY d.franchise_id
 #100 rows/187ms
 
-select * from shipment_batch_process_invoice_link
+SELECT * FROM shipment_batch_process_invoice_link
 
-desc shipment_batch_process_invoice_link;
+DESC shipment_batch_process_invoice_link;
 
-select f.territory_id,d.franchise_id,dispatch_id,group_concat(distinct a.id) as man_id,group_concat(distinct b.invoice_no) as invs 
-	from pnh_m_manifesto_sent_log a 
-	join shipment_batch_process_invoice_link b on a.manifesto_id = b.inv_manifesto_id and b.invoice_no != 0 
-	join proforma_invoices c on c.p_invoice_no = b.p_invoice_no and c.invoice_status = 1 join king_transactions d on d.transid = c.transid 
-	join pnh_m_franchise_info f on f.franchise_id = d.franchise_id where date(sent_on) between '2013-11-01' and '2013-12-16' and dispatch_id != 0 and f.territory_id='3' group by d.franchise_id;
+SELECT f.territory_id,d.franchise_id,dispatch_id,GROUP_CONCAT(DISTINCT a.id) AS man_id,GROUP_CONCAT(DISTINCT b.invoice_no) AS invs 
+	FROM pnh_m_manifesto_sent_log a 
+	JOIN shipment_batch_process_invoice_link b ON a.manifesto_id = b.inv_manifesto_id AND b.invoice_no != 0 
+	JOIN proforma_invoices c ON c.p_invoice_no = b.p_invoice_no AND c.invoice_status = 1 JOIN king_transactions d ON d.transid = c.transid 
+	JOIN pnh_m_franchise_info f ON f.franchise_id = d.franchise_id WHERE DATE(sent_on) BETWEEN '2013-11-01' AND '2013-12-16' AND dispatch_id != 0 AND f.territory_id='3' GROUP BY d.franchise_id;
 
 
-set @invs='20141014918,20141014287,20141014389';
-select a.transid,a.createdon as invoiced_on,b.bill_person,b.bill_address,b.bill_landmark,b.bill_city,b.bill_state,b.bill_pincode,d.init,b.itemid,c.name,if(c.print_name,c.print_name,c.name) as print_name,c.pnh_id,group_concat(distinct a.invoice_no) as invs,
-                                                        sum((i_orgprice-(i_discount+i_coup_discount))*a.invoice_qty) as amt,
-                                                        sum(a.invoice_qty) as qty 
-                                                from king_invoice a 
-                                                join king_orders b on a.order_id = b.id 
-                                                join king_dealitems c on c.id = b.itemid
-                                                join king_transactions d on d.transid = a.transid
-                                                where a.invoice_no in (@invs) 
-                                group by itemid
+SET @invs='20141014918,20141014287,20141014389';
+SELECT a.transid,a.createdon AS invoiced_on,b.bill_person,b.bill_address,b.bill_landmark,b.bill_city,b.bill_state,b.bill_pincode,d.init,b.itemid,c.name,IF(c.print_name,c.print_name,c.name) AS print_name,c.pnh_id,GROUP_CONCAT(DISTINCT a.invoice_no) AS invs,
+                                                        SUM((i_orgprice-(i_discount+i_coup_discount))*a.invoice_qty) AS amt,
+                                                        SUM(a.invoice_qty) AS qty 
+                                                FROM king_invoice a 
+                                                JOIN king_orders b ON a.order_id = b.id 
+                                                JOIN king_dealitems c ON c.id = b.itemid
+                                                JOIN king_transactions d ON d.transid = a.transid
+                                                WHERE a.invoice_no IN (@invs) 
+                                GROUP BY itemid
 
 
 
 ####################################################################
-alter table `shipment_batch_process_invoice_link` add column `is_acknowlege_printed` int (11) DEFAULT '0' NULL  after `delivered_by`;
+ALTER TABLE `shipment_batch_process_invoice_link` ADD COLUMN `is_acknowlege_printed` INT (11) DEFAULT '0' NULL  AFTER `delivered_by`;
 ####################################################################
 
-select * from pnh_m_territory_info where id=3
+SELECT * FROM pnh_m_territory_info WHERE id=3
 
-select f.territory_id,dispatch_id,group_concat(distinct a.id) as man_id,group_concat(distinct b.invoice_no) as invs,count(distinct b.invoice_no) as ttl_invs
-                                                            from pnh_m_manifesto_sent_log a
-                                                            join shipment_batch_process_invoice_link b on a.manifesto_id = b.inv_manifesto_id and b.invoice_no != 0 and b.is_acknowlege_printed = 0
-                                                            join proforma_invoices c on c.p_invoice_no = b.p_invoice_no and c.invoice_status = 1  
-                                                            join king_transactions d on d.transid = c.transid 
-                                                            join pnh_m_franchise_info f on f.franchise_id = d.franchise_id
-                                                            where date(sent_on) between '2013-11-01' and '2013-12-16' and dispatch_id != 0  and f.territory_id=16
-                                                    group by d.franchise_id order by f.territory_id asc;
+SELECT f.territory_id,dispatch_id,GROUP_CONCAT(DISTINCT a.id) AS man_id,GROUP_CONCAT(DISTINCT b.invoice_no) AS invs,COUNT(DISTINCT b.invoice_no) AS ttl_invs
+                                                            FROM pnh_m_manifesto_sent_log a
+                                                            JOIN shipment_batch_process_invoice_link b ON a.manifesto_id = b.inv_manifesto_id AND b.invoice_no != 0 AND b.is_acknowlege_printed = 0
+                                                            JOIN proforma_invoices c ON c.p_invoice_no = b.p_invoice_no AND c.invoice_status = 1  
+                                                            JOIN king_transactions d ON d.transid = c.transid 
+                                                            JOIN pnh_m_franchise_info f ON f.franchise_id = d.franchise_id
+                                                            WHERE DATE(sent_on) BETWEEN '2013-11-01' AND '2013-12-16' AND dispatch_id != 0  AND f.territory_id=16
+                                                    GROUP BY d.franchise_id ORDER BY f.territory_id ASC;
 
 ### Dec_17_2013 ###
-update `shipment_batch_process_invoice_link` set `is_acknowlege_printed`='0' where 
+UPDATE `shipment_batch_process_invoice_link` SET `is_acknowlege_printed`='0' WHERE 
 
-select * from shipment_batch_process_invoice_link where is_acknowlege_printed>0
+SELECT * FROM shipment_batch_process_invoice_link WHERE is_acknowlege_printed>0
 
 
-    Table: "picklist_log_reservation"
+    TABLE: "picklist_log_reservation"
 id
 printcount
 p_inv_no
 created_by
 createdon
 ####################################################################
-create table `picklist_log_reservation` (  `id` bigint NOT NULL AUTO_INCREMENT , `group_no` bigint (20) DEFAULT '0', `p_inv_no` int (100) , `created_by` int (11) DEFAULT '0', `createdon` datetime , `printcount` int (100) , PRIMARY KEY ( `id`));
+CREATE TABLE `picklist_log_reservation` (  `id` BIGINT NOT NULL AUTO_INCREMENT , `group_no` BIGINT (20) DEFAULT '0', `p_inv_no` INT (100) , `created_by` INT (11) DEFAULT '0', `createdon` DATETIME , `printcount` INT (100) , PRIMARY KEY ( `id`));
 ####################################################################
 
 picklist_log_reservationpicklist_log_reservation
 
-X insert into `picklist_log_reservation`(`id`,`group_no`,`p_inv_no`,`created_by`,`createdon`,`printcount`) values ( NULL,'1','114344','1',NULL,NULL);
-X truncate table `snapittoday_db_nov`.`picklist_log_reservation`picklist_log_reservation;
+X INSERT INTO `picklist_log_reservation`(`id`,`group_no`,`p_inv_no`,`created_by`,`createdon`,`printcount`) VALUES ( NULL,'1','114344','1',NULL,NULL);
+X TRUNCATE TABLE `snapittoday_db_nov`.`picklist_log_reservation`picklist_log_reservation;
 
 
 INSERT INTO `picklist_log_reservation` (`group_no`, `p_inv_no`, `created_by`, `createdon`, `printcount`) VALUES (1387288766, '114344', '1', '2013-12-17 07:29:26', 1)
@@ -423,560 +423,560 @@ INSERT INTO `picklist_log_reservation` (`group_no`, `p_inv_no`, `created_by`, `c
 INSERT INTO `picklist_log_reservation` (`group_no`, `p_inv_no`, `created_by`, `createdon`, `printcount`) VALUES (1387288766, '114334', '1', '2013-12-17 07:29:26', 1)
 INSERT INTO `picklist_log_reservation` (`group_no`, `p_inv_no`, `created_by`, `createdon`, `printcount`) VALUES (1387288766, '114308', '1', '2013-12-17 07:29:26', 1)
 INSERT INTO `picklist_log_reservation` (`group_no`, `p_inv_no`, `created_by`, `createdon`, `printcount`) VALUES (1387288766, '114319', '1', '2013-12-17 07:29:26', 1)
-update picklist_log_reservation set printcount = `printcount` + 1 where id = 11 limit 1
+UPDATE picklist_log_reservation SET printcount = `printcount` + 1 WHERE id = 11 LIMIT 1
 
 ## Dec_18_2013 ##
 
-select DATE_FORMAT(shipped_on,"%w-%a") as day_of_week,DATE(shipped_on) as normaldate,shipped_on,shipped,invoice_no 
-from shipment_batch_process_invoice_link 
-where shipped_by=1 and day_of_week is not null .
-order by shipped_on ASC
+SELECT DATE_FORMAT(shipped_on,"%w-%a") AS day_of_week,DATE(shipped_on) AS normaldate,shipped_on,shipped,invoice_no 
+FROM shipment_batch_process_invoice_link 
+WHERE shipped_by=1 AND day_of_week IS NOT NULL .
+ORDER BY shipped_on ASC
 
 #7627rows
 
-desc shipment_batch_process_invoice_link;
+DESC shipment_batch_process_invoice_link;
 
-select * from shipment_batch_process_invoice_link
+SELECT * FROM shipment_batch_process_invoice_link
 
-select * from shipment_batch_process
+SELECT * FROM shipment_batch_process
 
 #73124rows
 
-select week_day,shipped_on,shipped_on_time,shipped,invoice_no,shipped_by from (
-select DATE_FORMAT(shipped_on,"%w") as week_day,shipped_on,unix_timestamp(shipped_on) as shipped_on_time,shipped,invoice_no,shipped_by
-from shipment_batch_process_invoice_link
-where shipped=1
-order by shipped_on DESC
-) as g where g.week_day is not null and shipped_on_time!=0 and shipped_by>0 and shipped_on_time between '1383284282' and '1385619678'
+SELECT week_day,shipped_on,shipped_on_time,shipped,invoice_no,shipped_by FROM (
+SELECT DATE_FORMAT(shipped_on,"%w") AS week_day,shipped_on,UNIX_TIMESTAMP(shipped_on) AS shipped_on_time,shipped,invoice_no,shipped_by
+FROM shipment_batch_process_invoice_link
+WHERE shipped=1
+ORDER BY shipped_on DESC
+) AS g WHERE g.week_day IS NOT NULL AND shipped_on_time!=0 AND shipped_by>0 AND shipped_on_time BETWEEN '1383284282' AND '1385619678'
 
 # =>5086rows/62ms
 
 # Dec_19_2013
 
-select week_day,shipped_on,shipped_on_time,shipped,invoice_no,shipped_by from (
-select DATE_FORMAT(shipped_on,"%w") as week_day,shipped_on,unix_timestamp(shipped_on) as shipped_on_time,shipped,invoice_no,shipped_by
-from shipment_batch_process_invoice_link
-where shipped=1
-order by shipped_on DESC
-) as g where g.week_day is not null and shipped_on_time!=0 and shipped_by>0
+SELECT week_day,shipped_on,shipped_on_time,shipped,invoice_no,shipped_by FROM (
+SELECT DATE_FORMAT(shipped_on,"%w") AS week_day,shipped_on,UNIX_TIMESTAMP(shipped_on) AS shipped_on_time,shipped,invoice_no,shipped_by
+FROM shipment_batch_process_invoice_link
+WHERE shipped=1
+ORDER BY shipped_on DESC
+) AS g WHERE g.week_day IS NOT NULL AND shipped_on_time!=0 AND shipped_by>0
 
 # =>65078rows
 
-select * from shipment_batch_process_invoice_link
-select * from batch
-select * from shipment_batch_process
+SELECT * FROM shipment_batch_process_invoice_link
+SELECT * FROM batch
+SELECT * FROM shipment_batch_process
 
-select week_day,shipped_on,shipped_on_time,shipped,invoice_no,shipped_by from (
-select DATE_FORMAT(shipped_on,"%w") as week_day,shipped_on,unix_timestamp(shipped_on) as shipped_on_time,shipped,invoice_no,shipped_by
-from shipment_batch_process_invoice_link
-where shipped=1
-order by shipped_on DESC
-) as g where g.week_day is not null and shipped_on_time!=0 and shipped_by>0
+SELECT week_day,shipped_on,shipped_on_time,shipped,invoice_no,shipped_by FROM (
+SELECT DATE_FORMAT(shipped_on,"%w") AS week_day,shipped_on,UNIX_TIMESTAMP(shipped_on) AS shipped_on_time,shipped,invoice_no,shipped_by
+FROM shipment_batch_process_invoice_link
+WHERE shipped=1
+ORDER BY shipped_on DESC
+) AS g WHERE g.week_day IS NOT NULL AND shipped_on_time!=0 AND shipped_by>0
 
-select * from pnh_m_territory_info;
+SELECT * FROM pnh_m_territory_info;
 
-select employee_id,name,email,gender,city,contact_no,if(job_title=4,'TM','BE') as job_role 
-from m_employee_info 
-where job_title in (4,5) and is_suspended=0 order by job_title ASC;
-=>28rows
+SELECT employee_id,NAME,email,gender,city,contact_no,IF(job_title=4,'TM','BE') AS job_role 
+FROM m_employee_info 
+WHERE job_title IN (4,5) AND is_suspended=0 ORDER BY job_title ASC;
+=>28ROWS
 
-select distinct emp.employee_id,emp.name,emp.email,emp.gender,emp.city,emp.contact_no,if(emp.job_title=4,'TM','BE') as job_role,ttl.is_active
-from m_employee_info emp
-join m_town_territory_link ttl on ttl.employee_id = emp.employee_id and ttl.is_active=1
-join pnh_m_territory_info t on t.id = ttl.territory_id
-where job_title in (4) and is_suspended=0 #and t.id='1'
+SELECT DISTINCT emp.employee_id,emp.name,emp.email,emp.gender,emp.city,emp.contact_no,IF(emp.job_title=4,'TM','BE') AS job_role,ttl.is_active
+FROM m_employee_info emp
+JOIN m_town_territory_link ttl ON ttl.employee_id = emp.employee_id AND ttl.is_active=1
+JOIN pnh_m_territory_info t ON t.id = ttl.territory_id
+WHERE job_title IN (4) AND is_suspended=0 #and t.id='1'
 #group by emp.employee_id
-order by job_title ASC;
+ORDER BY job_title ASC;
 
-select * from m_town_territory_link
+SELECT * FROM m_town_territory_link
 
-select  * from m_employee_info w where w.name like '%Kantaraj Naik%' and is_suspended=0;
+SELECT  * FROM m_employee_info w WHERE w.name LIKE '%Kantaraj Naik%' AND is_suspended=0;
 
-select * from proforma_invoices
-select * from shipment_batch_process_invoice_link
-
-
-select week_day,shipped_on,shipped_on_time,shipped,invoice_no,shipped_by from (
-select DATE_FORMAT(shipped_on,"%w") as week_day,shipped_on,unix_timestamp(shipped_on) as shipped_on_time,shipped,invoice_no,shipped_by
-from shipment_batch_process_invoice_link
-where shipped=1
-order by shipped_on DESC
-) as g where g.week_day is not null and shipped_on_time!=0 and shipped_by>0 and shipped_on_time between '1383284282' and '1385619678';
+SELECT * FROM proforma_invoices
+SELECT * FROM shipment_batch_process_invoice_link
 
 
-select week_day,shipped_on_time,shipped,invoice_no,shipped_by from (
-	select DATE_FORMAT(sd.shipped_on,'%w') as week_day,unix_timestamp(sd.shipped_on) as shipped_on_time,sd.shipped,sd.invoice_no,sd.shipped_by
-	from shipment_batch_process_invoice_link sd
-	join proforma_invoices pi on pi.p_invoice_no = sd.p_invoice_no and pi.invoice_status = 1  
-	join king_transactions tr on tr.transid = pi.transid
-	join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-    where shipped=1 and sd.shipped_by>0 and f.territory_id ='4'
-    order by shipped_on DESC
-) as g where g.week_day is not null and g.shipped_on_time!=0 and g.shipped_on_time between 1383244200 and 1387391400 
+SELECT week_day,shipped_on,shipped_on_time,shipped,invoice_no,shipped_by FROM (
+SELECT DATE_FORMAT(shipped_on,"%w") AS week_day,shipped_on,UNIX_TIMESTAMP(shipped_on) AS shipped_on_time,shipped,invoice_no,shipped_by
+FROM shipment_batch_process_invoice_link
+WHERE shipped=1
+ORDER BY shipped_on DESC
+) AS g WHERE g.week_day IS NOT NULL AND shipped_on_time!=0 AND shipped_by>0 AND shipped_on_time BETWEEN '1383284282' AND '1385619678';
+
+
+SELECT week_day,shipped_on_time,shipped,invoice_no,shipped_by FROM (
+	SELECT DATE_FORMAT(sd.shipped_on,'%w') AS week_day,UNIX_TIMESTAMP(sd.shipped_on) AS shipped_on_time,sd.shipped,sd.invoice_no,sd.shipped_by
+	FROM shipment_batch_process_invoice_link sd
+	JOIN proforma_invoices PI ON pi.p_invoice_no = sd.p_invoice_no AND pi.invoice_status = 1  
+	JOIN king_transactions tr ON tr.transid = pi.transid
+	JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+    WHERE shipped=1 AND sd.shipped_by>0 AND f.territory_id ='4'
+    ORDER BY shipped_on DESC
+) AS g WHERE g.week_day IS NOT NULL AND g.shipped_on_time!=0 AND g.shipped_on_time BETWEEN 1383244200 AND 1387391400 
 
 #5346 rows => #18008
 
 
-select distinct week_day,shipped,invoice_no,shipped_by from ( select DATE_FORMAT(sd.shipped_on,'%w') as week_day,sd.shipped,sd.invoice_no,sd.shipped_by from shipment_batch_process_invoice_link sd join proforma_invoices pi on pi.p_invoice_no = sd.p_invoice_no and pi.invoice_status = 1  join king_transactions tr on tr.transid = pi.transid join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id where shipped=1 and f.territory_id ='3' and unix_timestamp(sd.shipped_on) !=0 and unix_timestamp(sd.shipped_on) between 1383244200 and 1387477800 order by shipped_on DESC ) as g where g.week_day is not null
+SELECT DISTINCT week_day,shipped,invoice_no,shipped_by FROM ( SELECT DATE_FORMAT(sd.shipped_on,'%w') AS week_day,sd.shipped,sd.invoice_no,sd.shipped_by FROM shipment_batch_process_invoice_link sd JOIN proforma_invoices PI ON pi.p_invoice_no = sd.p_invoice_no AND pi.invoice_status = 1  JOIN king_transactions tr ON tr.transid = pi.transid JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id WHERE shipped=1 AND f.territory_id ='3' AND UNIX_TIMESTAMP(sd.shipped_on) !=0 AND UNIX_TIMESTAMP(sd.shipped_on) BETWEEN 1383244200 AND 1387477800 ORDER BY shipped_on DESC ) AS g WHERE g.week_day IS NOT NULL
 
 # Dec_20_2013
 
-select week_day,shipped_on,shipped,invoice_no,shipped_by from ( select DATE_FORMAT(sd.shipped_on,'%w') as week_day,sd.shipped_on,sd.shipped,sd.invoice_no,sd.shipped_by from shipment_batch_process_invoice_link sd join proforma_invoices pi on pi.p_invoice_no = sd.p_invoice_no and pi.invoice_status = 1  join king_transactions tr on tr.transid = pi.transid join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id where shipped=1 and sd.shipped_by>0 and unix_timestamp(sd.shipped_on)!=0 and f.territory_id ='3' and unix_timestamp(sd.shipped_on) between 1383244200 and 1387477800 order by shipped_on DESC ) as g where g.week_day is not null
+SELECT week_day,shipped_on,shipped,invoice_no,shipped_by FROM ( SELECT DATE_FORMAT(sd.shipped_on,'%w') AS week_day,sd.shipped_on,sd.shipped,sd.invoice_no,sd.shipped_by FROM shipment_batch_process_invoice_link sd JOIN proforma_invoices PI ON pi.p_invoice_no = sd.p_invoice_no AND pi.invoice_status = 1  JOIN king_transactions tr ON tr.transid = pi.transid JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id WHERE shipped=1 AND sd.shipped_by>0 AND UNIX_TIMESTAMP(sd.shipped_on)!=0 AND f.territory_id ='3' AND UNIX_TIMESTAMP(sd.shipped_on) BETWEEN 1383244200 AND 1387477800 ORDER BY shipped_on DESC ) AS g WHERE g.week_day IS NOT NULL
 
 
-select distinct week_day,shipped_on,shipped,invoice_no,shipped_by from (
-select DATE_FORMAT(sd.shipped_on,'%w') as week_day,sd.shipped_on,sd.shipped,sd.invoice_no,sd.shipped_by
-from shipment_batch_process_invoice_link sd
-join proforma_invoices pi on pi.p_invoice_no = sd.p_invoice_no and pi.invoice_status = 1
-join king_transactions tr on tr.transid = pi.transid
-join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-where shipped=1 and sd.shipped_by>0 and unix_timestamp(sd.shipped_on)!=0 and f.territory_id ='' and unix_timestamp(sd.shipped_on) between 1383244200 and 1387477800
-order by shipped_on DESC
-) as g where g.week_day is not null;
+SELECT DISTINCT week_day,shipped_on,shipped,invoice_no,shipped_by FROM (
+SELECT DATE_FORMAT(sd.shipped_on,'%w') AS week_day,sd.shipped_on,sd.shipped,sd.invoice_no,sd.shipped_by
+FROM shipment_batch_process_invoice_link sd
+JOIN proforma_invoices PI ON pi.p_invoice_no = sd.p_invoice_no AND pi.invoice_status = 1
+JOIN king_transactions tr ON tr.transid = pi.transid
+JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+WHERE shipped=1 AND sd.shipped_by>0 AND UNIX_TIMESTAMP(sd.shipped_on)!=0 AND f.territory_id ='' AND UNIX_TIMESTAMP(sd.shipped_on) BETWEEN 1383244200 AND 1387477800
+ORDER BY shipped_on DESC
+) AS g WHERE g.week_day IS NOT NULL;
 
 -- select distinct week_day,shipped_on,shipped,invoice_no_str,shipped_by from (
-		    select sd.shipped_on,sd.shipped,group_concat(sd.invoice_no) as invoice_no_str,count(distinct sd.invoice_no) as ttl_invs,sd.shipped_by
-		    from shipment_batch_process_invoice_link sd
-		    join proforma_invoices pi on pi.p_invoice_no = sd.p_invoice_no and pi.invoice_status = 1 
-		    join king_transactions tr on tr.transid = pi.transid
-		    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-		    where shipped=1 and sd.shipped_by>0 and unix_timestamp(sd.shipped_on)!=0 and unix_timestamp(sd.shipped_on) between 1383244200 and 1387477800 and f.territory_id ='3'
+		    SELECT sd.shipped_on,sd.shipped,GROUP_CONCAT(sd.invoice_no) AS invoice_no_str,COUNT(DISTINCT sd.invoice_no) AS ttl_invs,sd.shipped_by
+		    FROM shipment_batch_process_invoice_link sd
+		    JOIN proforma_invoices PI ON pi.p_invoice_no = sd.p_invoice_no AND pi.invoice_status = 1 
+		    JOIN king_transactions tr ON tr.transid = pi.transid
+		    JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+		    WHERE shipped=1 AND sd.shipped_by>0 AND UNIX_TIMESTAMP(sd.shipped_on)!=0 AND UNIX_TIMESTAMP(sd.shipped_on) BETWEEN 1383244200 AND 1387477800 AND f.territory_id ='3'
 		   
-			order by shipped_on DESC
+			ORDER BY shipped_on DESC
 --                                                 ) as g where g.week_day is not null;
 
 
-select f.territory_id,dispatch_id,group_concat(distinct a.id) as man_id,group_concat(distinct b.invoice_no) as invs,count(distinct b.invoice_no) as ttl_invs
-                                                               from pnh_m_manifesto_sent_log a
-                                                               join shipment_batch_process_invoice_link b on a.manifesto_id = b.inv_manifesto_id and b.invoice_no != 0 #$cond_join
-                                                               join proforma_invoices c on c.p_invoice_no = b.p_invoice_no and c.invoice_status = 1  
-                                                               join king_transactions d on d.transid = c.transid 
-                                                               join pnh_m_franchise_info f on f.franchise_id = d.franchise_id
-                                                               where date(sent_on) between '2013-11-01 17:27:17' and '2013-11-27 18:44:22' and dispatch_id != 0  and f.territory_id='3'
-                                                       group by d.franchise_id order by f.territory_id asc
+SELECT f.territory_id,dispatch_id,GROUP_CONCAT(DISTINCT a.id) AS man_id,GROUP_CONCAT(DISTINCT b.invoice_no) AS invs,COUNT(DISTINCT b.invoice_no) AS ttl_invs
+                                                               FROM pnh_m_manifesto_sent_log a
+                                                               JOIN shipment_batch_process_invoice_link b ON a.manifesto_id = b.inv_manifesto_id AND b.invoice_no != 0 #$cond_join
+                                                               JOIN proforma_invoices c ON c.p_invoice_no = b.p_invoice_no AND c.invoice_status = 1  
+                                                               JOIN king_transactions d ON d.transid = c.transid 
+                                                               JOIN pnh_m_franchise_info f ON f.franchise_id = d.franchise_id
+                                                               WHERE DATE(sent_on) BETWEEN '2013-11-01 17:27:17' AND '2013-11-27 18:44:22' AND dispatch_id != 0  AND f.territory_id='3'
+                                                       GROUP BY d.franchise_id ORDER BY f.territory_id ASC
 
 
 ## idea 1
-select f.territory_id,pi.dispatch_id,group_concat(distinct man.id) as man_id,sd.shipped_on,sd.shipped,group_concat(sd.invoice_no) as invoice_no_str,count(distinct sd.invoice_no) as ttl_invs,sd.shipped_by
-		    from pnh_m_manifesto_sent_log man
-			join shipment_batch_process_invoice_link sd on sd.inv_manifesto_id = man.manifesto_id
-		    join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no and pi.invoice_status = 1 
-		    join king_transactions tr on tr.transid = pi.transid
-		    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-		    where shipped=1 and sd.shipped_by>0 and unix_timestamp(sd.shipped_on)!=0 and unix_timestamp(sd.shipped_on) between 1383244200 and 1387477800 #and f.territory_id ='3'
-			group by f.territory_id
-			order by f.territory_id DESC
+SELECT f.territory_id,pi.dispatch_id,GROUP_CONCAT(DISTINCT man.id) AS man_id,sd.shipped_on,sd.shipped,GROUP_CONCAT(sd.invoice_no) AS invoice_no_str,COUNT(DISTINCT sd.invoice_no) AS ttl_invs,sd.shipped_by
+		    FROM pnh_m_manifesto_sent_log man
+			JOIN shipment_batch_process_invoice_link sd ON sd.inv_manifesto_id = man.manifesto_id
+		    JOIN proforma_invoices `pi` ON pi.p_invoice_no = sd.p_invoice_no AND pi.invoice_status = 1 
+		    JOIN king_transactions tr ON tr.transid = pi.transid
+		    JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+		    WHERE shipped=1 AND sd.shipped_by>0 AND UNIX_TIMESTAMP(sd.shipped_on)!=0 AND UNIX_TIMESTAMP(sd.shipped_on) BETWEEN 1383244200 AND 1387477800 #and f.territory_id ='3'
+			GROUP BY f.territory_id
+			ORDER BY f.territory_id DESC
 
 
 -- idea 2
-select f.territory_id,t.territory_name,pi.dispatch_id,group_concat(distinct man.id) as man_id,sd.shipped_on,sd.shipped,group_concat(sd.invoice_no) as invoice_no_str,count(distinct sd.invoice_no) as ttl_invs,emp.employee_id		    
-		from pnh_m_manifesto_sent_log man
-			join shipment_batch_process_invoice_link sd on sd.inv_manifesto_id = man.manifesto_id
-		    join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no and pi.invoice_status = 1 
-		    join king_transactions tr on tr.transid = pi.transid
-		    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
- 			join m_town_territory_link ttl on ttl.territory_id = f.territory_id and is_active=1
-			join m_employee_info emp on emp.employee_id = ttl.employee_id
+SELECT f.territory_id,t.territory_name,pi.dispatch_id,GROUP_CONCAT(DISTINCT man.id) AS man_id,sd.shipped_on,sd.shipped,GROUP_CONCAT(sd.invoice_no) AS invoice_no_str,COUNT(DISTINCT sd.invoice_no) AS ttl_invs,emp.employee_id		    
+		FROM pnh_m_manifesto_sent_log man
+			JOIN shipment_batch_process_invoice_link sd ON sd.inv_manifesto_id = man.manifesto_id
+		    JOIN proforma_invoices `pi` ON pi.p_invoice_no = sd.p_invoice_no AND pi.invoice_status = 1 
+		    JOIN king_transactions tr ON tr.transid = pi.transid
+		    JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+ 			JOIN m_town_territory_link ttl ON ttl.territory_id = f.territory_id AND is_active=1
+			JOIN m_employee_info emp ON emp.employee_id = ttl.employee_id
 
 
-			join pnh_m_territory_info t on t.id = f.territory_id
-                    where shipped=1 and sd.shipped_by>0 and unix_timestamp(sd.shipped_on)!=0 and unix_timestamp(sd.shipped_on) between 1383244200 and 1387477800 #and f.territory_id ='3'
-			group by f.territory_id
-			order by f.territory_id DESC;
+			JOIN pnh_m_territory_info t ON t.id = f.territory_id
+                    WHERE shipped=1 AND sd.shipped_by>0 AND UNIX_TIMESTAMP(sd.shipped_on)!=0 AND UNIX_TIMESTAMP(sd.shipped_on) BETWEEN 1383244200 AND 1387477800 #and f.territory_id ='3'
+			GROUP BY f.territory_id
+			ORDER BY f.territory_id DESC;
 -- Outout: 19rows/312ms
 
-select * from m_town_territory_link
+SELECT * FROM m_town_territory_link
 
 # Dec_21_2013
 
-select f.territory_id,t.territory_name,pi.dispatch_id,group_concat(distinct man.id) as man_id,sd.shipped_on,sd.shipped,group_concat(distinct sd.invoice_no) as invoice_no_str
-			,count(distinct sd.invoice_no) as ttl_invs,count(distinct f.franchise_id) as ttl_franchises
-		from pnh_m_manifesto_sent_log man
-			join shipment_batch_process_invoice_link sd on sd.inv_manifesto_id = man.manifesto_id
-		    join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no and pi.invoice_status = 1 
-		    join king_transactions tr on tr.transid = pi.transid
-		    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
- 			join m_town_territory_link ttl on ttl.territory_id = f.territory_id and is_active=1
-			join m_employee_info emp on emp.employee_id = ttl.employee_id
+SELECT f.territory_id,t.territory_name,pi.dispatch_id,GROUP_CONCAT(DISTINCT man.id) AS man_id,sd.shipped_on,sd.shipped,GROUP_CONCAT(DISTINCT sd.invoice_no) AS invoice_no_str
+			,COUNT(DISTINCT sd.invoice_no) AS ttl_invs,COUNT(DISTINCT f.franchise_id) AS ttl_franchises
+		FROM pnh_m_manifesto_sent_log man
+			JOIN shipment_batch_process_invoice_link sd ON sd.inv_manifesto_id = man.manifesto_id
+		    JOIN proforma_invoices `pi` ON pi.p_invoice_no = sd.p_invoice_no AND pi.invoice_status = 1 
+		    JOIN king_transactions tr ON tr.transid = pi.transid
+		    JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+ 			JOIN m_town_territory_link ttl ON ttl.territory_id = f.territory_id AND is_active=1
+			JOIN m_employee_info emp ON emp.employee_id = ttl.employee_id
 
 
-			join pnh_m_territory_info t on t.id = f.territory_id
-                    where shipped=1 and sd.shipped_by>0 and unix_timestamp(sd.shipped_on)!=0 and unix_timestamp(sd.shipped_on) between 1383244200 and 1387477800 #and f.territory_id ='3'
-			group by f.territory_id
-			order by f.territory_id DESC;
+			JOIN pnh_m_territory_info t ON t.id = f.territory_id
+                    WHERE shipped=1 AND sd.shipped_by>0 AND UNIX_TIMESTAMP(sd.shipped_on)!=0 AND UNIX_TIMESTAMP(sd.shipped_on) BETWEEN 1383244200 AND 1387477800 #and f.territory_id ='3'
+			GROUP BY f.territory_id
+			ORDER BY f.territory_id DESC;
 
 
 #================================================================================================
-alter table king_invoice add column `paid_status` tinyint(11) DEFAULT '0' after ref_dispatch_id;
-alter table king_dealitems add column `billon_orderprice` tinyint(1) DEFAULT '0' after nyp_price;
-alter table king_orders add column `billon_orderprice` tinyint(1) DEFAULT '0' after note;
-alter table king_orders add column `is_paid` tinyint(1) DEFAULT '0' after offer_refid;
-alter table king_orders add column `partner_order_id` varchar(30) DEFAULT '0' after offer_refid;
+ALTER TABLE king_invoice ADD COLUMN `paid_status` TINYINT(11) DEFAULT '0' AFTER ref_dispatch_id;
+ALTER TABLE king_dealitems ADD COLUMN `billon_orderprice` TINYINT(1) DEFAULT '0' AFTER nyp_price;
+ALTER TABLE king_orders ADD COLUMN `billon_orderprice` TINYINT(1) DEFAULT '0' AFTER note;
+ALTER TABLE king_orders ADD COLUMN `is_paid` TINYINT(1) DEFAULT '0' AFTER offer_refid;
+ALTER TABLE king_orders ADD COLUMN `partner_order_id` VARCHAR(30) DEFAULT '0' AFTER offer_refid;
 
 CREATE TABLE `king_partner_settelment_filedata` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `partner_id` int(11) DEFAULT NULL,
-  `payment_uploaded_id` bigint(20) DEFAULT '0',
-  `file_name` varchar(255) DEFAULT NULL,
-  `orderid` bigint(20) DEFAULT '0',
-  `logged_on` bigint(20) DEFAULT '0',
-  `processed_by` tinyint(2) DEFAULT '0',
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `partner_id` INT(11) DEFAULT NULL,
+  `payment_uploaded_id` BIGINT(20) DEFAULT '0',
+  `file_name` VARCHAR(255) DEFAULT NULL,
+  `orderid` BIGINT(20) DEFAULT '0',
+  `logged_on` BIGINT(20) DEFAULT '0',
+  `processed_by` TINYINT(2) DEFAULT '0',
   PRIMARY KEY (`id`)
 );
 
-alter table king_tmp_orders change brandid `brandid` bigint(20) DEFAULT '0',change vendorid `vendorid` bigint(20) DEFAULT '0';
+ALTER TABLE king_tmp_orders CHANGE brandid `brandid` BIGINT(20) DEFAULT '0',CHANGE vendorid `vendorid` BIGINT(20) DEFAULT '0';
 
-alter table king_tmp_orders add column `partner_order_id` varchar(30) DEFAULT '0' after user_note;
-alter table king_tmp_orders add column `partner_reference_no` varchar(100) DEFAULT '0' after partner_order_id;
+ALTER TABLE king_tmp_orders ADD COLUMN `partner_order_id` VARCHAR(30) DEFAULT '0' AFTER user_note;
+ALTER TABLE king_tmp_orders ADD COLUMN `partner_reference_no` VARCHAR(100) DEFAULT '0' AFTER partner_order_id;
 
-alter table king_transactions change partner_reference_no `partner_reference_no` varchar(100) NOT NULL;
-alter table king_transactions add column `credit_days` int(11) DEFAULT '0' after trans_grp_ref_no;
-alter table king_transactions add column `credit_remarks` varchar(255) DEFAULT NULL after credit_days;
+ALTER TABLE king_transactions CHANGE partner_reference_no `partner_reference_no` VARCHAR(100) NOT NULL;
+ALTER TABLE king_transactions ADD COLUMN `credit_days` INT(11) DEFAULT '0' AFTER trans_grp_ref_no;
+ALTER TABLE king_transactions ADD COLUMN `credit_remarks` VARCHAR(255) DEFAULT NULL AFTER credit_days;
 
-alter table m_courier_info add column `ref_partner_id` int(11) DEFAULT '0' after remarks;
+ALTER TABLE m_courier_info ADD COLUMN `ref_partner_id` INT(11) DEFAULT '0' AFTER remarks;
 
 
 CREATE TABLE `m_partner_settelment_details` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `order_id` bigint(20) DEFAULT NULL,
-  `order_value` double DEFAULT NULL,
-  `shipping_charges` double DEFAULT NULL,
-  `payment_id` varchar(255) DEFAULT NULL,
-  `payment_amount` double DEFAULT NULL,
-  `payment_date` date DEFAULT NULL,
-  `updated_by` int(11) DEFAULT NULL,
-  `updated_on` bigint(20) DEFAULT NULL,
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `order_id` BIGINT(20) DEFAULT NULL,
+  `order_value` DOUBLE DEFAULT NULL,
+  `shipping_charges` DOUBLE DEFAULT NULL,
+  `payment_id` VARCHAR(255) DEFAULT NULL,
+  `payment_amount` DOUBLE DEFAULT NULL,
+  `payment_date` DATE DEFAULT NULL,
+  `updated_by` INT(11) DEFAULT NULL,
+  `updated_on` BIGINT(20) DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 
-alter table m_product_info add column `corr_status` tinyint(1) DEFAULT '0' after modified_by;
-alter table m_product_info add column `corr_updated_on` datetime DEFAULT NULL after corr_status;
+ALTER TABLE m_product_info ADD COLUMN `corr_status` TINYINT(1) DEFAULT '0' AFTER modified_by;
+ALTER TABLE m_product_info ADD COLUMN `corr_updated_on` DATETIME DEFAULT NULL AFTER corr_status;
 
 CREATE TABLE `m_product_update_log` (
-  `id` bigint(11) NOT NULL AUTO_INCREMENT,
-  `product_id` int(11) DEFAULT '0',
-  `type` varchar(255) DEFAULT NULL,
-  `message` text,
-  `logged_by` int(11) DEFAULT '0',
-  `logged_on` datetime DEFAULT NULL,
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT,
+  `product_id` INT(11) DEFAULT '0',
+  `type` VARCHAR(255) DEFAULT NULL,
+  `message` TEXT,
+  `logged_by` INT(11) DEFAULT '0',
+  `logged_on` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 
-alter table m_vendor_brand_link change applicable_from `applicable_from` bigint(20) DEFAULT NULL;
-alter table m_vendor_brand_link change applicable_till `applicable_till` bigint(20) DEFAULT NULL;
+ALTER TABLE m_vendor_brand_link CHANGE applicable_from `applicable_from` BIGINT(20) DEFAULT NULL;
+ALTER TABLE m_vendor_brand_link CHANGE applicable_till `applicable_till` BIGINT(20) DEFAULT NULL;
 
 
 CREATE TABLE `pnh_m_creditlimit_onprepaid` (
-  `id` bigint(11) NOT NULL AUTO_INCREMENT,
-  `franchise_id` bigint(12) DEFAULT NULL,
-  `book_id` bigint(12) DEFAULT NULL,
-  `book_value` bigint(12) DEFAULT NULL,
-  `receipt_id` bigint(12) DEFAULT NULL,
-  `credit_limit_on_prepaid` double DEFAULT NULL,
-  `created_on` datetime DEFAULT NULL,
-  `created_by` int(11) DEFAULT NULL,
-  `valid_till` datetime DEFAULT NULL,
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT,
+  `franchise_id` BIGINT(12) DEFAULT NULL,
+  `book_id` BIGINT(12) DEFAULT NULL,
+  `book_value` BIGINT(12) DEFAULT NULL,
+  `receipt_id` BIGINT(12) DEFAULT NULL,
+  `credit_limit_on_prepaid` DOUBLE DEFAULT NULL,
+  `created_on` DATETIME DEFAULT NULL,
+  `created_by` INT(11) DEFAULT NULL,
+  `valid_till` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 
 
 CREATE TABLE `pnh_m_fran_security_cheques` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `franchise_id` int(11) DEFAULT '0',
-  `bank_name` varchar(255) DEFAULT NULL,
-  `cheque_no` varchar(30) DEFAULT NULL,
-  `cheque_date` date DEFAULT NULL,
-  `collected_on` date DEFAULT NULL,
-  `amount` double DEFAULT NULL,
-  `returned_on` date DEFAULT NULL,
-  `created_on` datetime DEFAULT NULL,
-  `modified_on` datetime DEFAULT NULL,
-  `created_by` int(11) DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `franchise_id` INT(11) DEFAULT '0',
+  `bank_name` VARCHAR(255) DEFAULT NULL,
+  `cheque_no` VARCHAR(30) DEFAULT NULL,
+  `cheque_date` DATE DEFAULT NULL,
+  `collected_on` DATE DEFAULT NULL,
+  `amount` DOUBLE DEFAULT NULL,
+  `returned_on` DATE DEFAULT NULL,
+  `created_on` DATETIME DEFAULT NULL,
+  `modified_on` DATETIME DEFAULT NULL,
+  `created_by` INT(11) DEFAULT NULL,
+  `modified_by` INT(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 
-alter table pnh_m_franchise_info change store_open_time `store_open_time` time DEFAULT NULL;
-alter table pnh_m_franchise_info change store_close_time `store_close_time` time DEFAULT NULL;
+ALTER TABLE pnh_m_franchise_info CHANGE store_open_time `store_open_time` TIME DEFAULT NULL;
+ALTER TABLE pnh_m_franchise_info CHANGE store_close_time `store_close_time` TIME DEFAULT NULL;
 # X
-alter table pnh_m_franchise_info add column `purchase_limit` double DEFAULT '0' after reason;
-alter table pnh_m_franchise_info add column `new_credit_limit` double DEFAULT '0' after purchase_limit;
+ALTER TABLE pnh_m_franchise_info ADD COLUMN `purchase_limit` DOUBLE DEFAULT '0' AFTER reason;
+ALTER TABLE pnh_m_franchise_info ADD COLUMN `new_credit_limit` DOUBLE DEFAULT '0' AFTER purchase_limit;
 
-alter table pnh_m_manifesto_sent_log add column `lrno_update_refid` bigint(11) DEFAULT '0' after lrno;
+ALTER TABLE pnh_m_manifesto_sent_log ADD COLUMN `lrno_update_refid` BIGINT(11) DEFAULT '0' AFTER lrno;
 
 
 CREATE TABLE `pnh_m_states` (
-  `state_id` int(11) NOT NULL AUTO_INCREMENT,
-  `state_name` varchar(255) DEFAULT NULL,
-  `created_on` datetime DEFAULT NULL,
-  `created_by` int(11) DEFAULT '0',
+  `state_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `state_name` VARCHAR(255) DEFAULT NULL,
+  `created_on` DATETIME DEFAULT NULL,
+  `created_by` INT(11) DEFAULT '0',
   PRIMARY KEY (`state_id`)
 );
 
-alter table pnh_m_territory_info add column `state_id` bigint(11) DEFAULT '0' after id;
+ALTER TABLE pnh_m_territory_info ADD COLUMN `state_id` BIGINT(11) DEFAULT '0' AFTER id;
 
-alter table pnh_menu add column `voucher_credit_default_margin` double DEFAULT '0' after default_margin;
+ALTER TABLE pnh_menu ADD COLUMN `voucher_credit_default_margin` DOUBLE DEFAULT '0' AFTER default_margin;
 
 
 CREATE TABLE `pnh_menu_margin_track` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `menu_id` bigint(20) DEFAULT NULL,
-  `default_margin` double DEFAULT NULL,
-  `balance_discount` double DEFAULT NULL,
-  `balance_amount` bigint(20) DEFAULT NULL,
-  `loyality_pntvalue` double DEFAULT NULL,
-  `created_by` int(12) DEFAULT NULL,
-  `created_on` bigint(20) DEFAULT NULL,
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `menu_id` BIGINT(20) DEFAULT NULL,
+  `default_margin` DOUBLE DEFAULT NULL,
+  `balance_discount` DOUBLE DEFAULT NULL,
+  `balance_amount` BIGINT(20) DEFAULT NULL,
+  `loyality_pntvalue` DOUBLE DEFAULT NULL,
+  `created_by` INT(12) DEFAULT NULL,
+  `created_on` BIGINT(20) DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 
-alter table pnh_sms_log_sent add column `no_ofboxes` bigint(20) DEFAULT '0' after ticket_id;
+ALTER TABLE pnh_sms_log_sent ADD COLUMN `no_ofboxes` BIGINT(20) DEFAULT '0' AFTER ticket_id;
 
 CREATE TABLE `pnh_town_courier_priority_link` (
-  `id` bigint(11) NOT NULL AUTO_INCREMENT,
-  `town_id` int(11) DEFAULT '0',
-  `courier_priority_1` int(5) DEFAULT '0',
-  `courier_priority_2` int(5) DEFAULT '0',
-  `courier_priority_3` int(5) DEFAULT '0',
-  `delivery_hours_1` int(3) DEFAULT '0',
-  `delivery_hours_2` int(3) DEFAULT '0',
-  `delivery_hours_3` int(3) DEFAULT '0',
-  `delivery_type_priority1` int(3) DEFAULT '0',
-  `delivery_type_priority2` int(3) DEFAULT '0',
-  `delivery_type_priority3` int(3) DEFAULT '0',
-  `is_active` tinyint(1) DEFAULT '0',
-  `created_on` datetime DEFAULT NULL,
-  `created_by` int(11) DEFAULT '0',
-  `modified_on` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT '0',
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT,
+  `town_id` INT(11) DEFAULT '0',
+  `courier_priority_1` INT(5) DEFAULT '0',
+  `courier_priority_2` INT(5) DEFAULT '0',
+  `courier_priority_3` INT(5) DEFAULT '0',
+  `delivery_hours_1` INT(3) DEFAULT '0',
+  `delivery_hours_2` INT(3) DEFAULT '0',
+  `delivery_hours_3` INT(3) DEFAULT '0',
+  `delivery_type_priority1` INT(3) DEFAULT '0',
+  `delivery_type_priority2` INT(3) DEFAULT '0',
+  `delivery_type_priority3` INT(3) DEFAULT '0',
+  `is_active` TINYINT(1) DEFAULT '0',
+  `created_on` DATETIME DEFAULT NULL,
+  `created_by` INT(11) DEFAULT '0',
+  `modified_on` DATETIME DEFAULT NULL,
+  `modified_by` INT(11) DEFAULT '0',
   PRIMARY KEY (`id`)
 );
 
 CREATE TABLE `t_billedmrp_change_log` (
-  `id` bigint(11) NOT NULL AUTO_INCREMENT,
-  `invoice_no` bigint(11) DEFAULT '0',
-  `p_invoice_no` int(11) DEFAULT '0',
-  `packed_mrp` double DEFAULT NULL,
-  `billed_mrp` double DEFAULT NULL,
-  `remarks` text,
-  `logged_on` datetime DEFAULT NULL,
-  `logged_by` int(5) DEFAULT '0',
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT,
+  `invoice_no` BIGINT(11) DEFAULT '0',
+  `p_invoice_no` INT(11) DEFAULT '0',
+  `packed_mrp` DOUBLE DEFAULT NULL,
+  `billed_mrp` DOUBLE DEFAULT NULL,
+  `remarks` TEXT,
+  `logged_on` DATETIME DEFAULT NULL,
+  `logged_by` INT(5) DEFAULT '0',
   PRIMARY KEY (`id`)
 );
 
 CREATE TABLE `t_imei_update_log` (
-  `id` bigint(11) NOT NULL AUTO_INCREMENT,
-  `imei_no` varchar(255) DEFAULT NULL,
-  `product_id` bigint(11) DEFAULT '0',
-  `stock_id` bigint(11) DEFAULT '0',
-  `grn_id` bigint(11) DEFAULT '0',
-  `alloted_order_id` bigint(11) DEFAULT '0',
-  `alloted_on` datetime DEFAULT NULL,
-  `invoice_no` bigint(11) DEFAULT '0',
-  `return_id` bigint(11) DEFAULT '0',
-  `is_cancelled` tinyint(1) DEFAULT '0',
-  `cancelled_on` datetime DEFAULT NULL,
-  `is_active` tinyint(1) DEFAULT '0',
-  `logged_on` datetime DEFAULT NULL,
-  `logged_by` int(11) DEFAULT '0',
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT,
+  `imei_no` VARCHAR(255) DEFAULT NULL,
+  `product_id` BIGINT(11) DEFAULT '0',
+  `stock_id` BIGINT(11) DEFAULT '0',
+  `grn_id` BIGINT(11) DEFAULT '0',
+  `alloted_order_id` BIGINT(11) DEFAULT '0',
+  `alloted_on` DATETIME DEFAULT NULL,
+  `invoice_no` BIGINT(11) DEFAULT '0',
+  `return_id` BIGINT(11) DEFAULT '0',
+  `is_cancelled` TINYINT(1) DEFAULT '0',
+  `cancelled_on` DATETIME DEFAULT NULL,
+  `is_active` TINYINT(1) DEFAULT '0',
+  `logged_on` DATETIME DEFAULT NULL,
+  `logged_by` INT(11) DEFAULT '0',
   PRIMARY KEY (`id`)
 );
 
 CREATE TABLE `t_pnh_creditlimit_track` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `franchise_id` bigint(20) DEFAULT NULL,
-  `payment_modetype` tinyint(1) DEFAULT NULL COMMENT '1:postpaid,2:prepaid using vouchers,3:prepaid by holding Acounts',
-  `prepaid_credit_id` double DEFAULT NULL,
-  `reconsolation_rid` bigint(11) DEFAULT NULL,
-  `order_id` bigint(12) DEFAULT NULL,
-  `transid` varchar(255) DEFAULT NULL,
-  `amount` double DEFAULT NULL,
-  `prepaid_creditlimit` double DEFAULT NULL,
-  `purchase_limit` double DEFAULT '0',
-  `init` bigint(20) DEFAULT NULL,
-  `actiontime` bigint(20) DEFAULT NULL,
-  `paid` double DEFAULT NULL,
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `franchise_id` BIGINT(20) DEFAULT NULL,
+  `payment_modetype` TINYINT(1) DEFAULT NULL COMMENT '1:postpaid,2:prepaid using vouchers,3:prepaid by holding Acounts',
+  `prepaid_credit_id` DOUBLE DEFAULT NULL,
+  `reconsolation_rid` BIGINT(11) DEFAULT NULL,
+  `order_id` BIGINT(12) DEFAULT NULL,
+  `transid` VARCHAR(255) DEFAULT NULL,
+  `amount` DOUBLE DEFAULT NULL,
+  `prepaid_creditlimit` DOUBLE DEFAULT NULL,
+  `purchase_limit` DOUBLE DEFAULT '0',
+  `init` BIGINT(20) DEFAULT NULL,
+  `actiontime` BIGINT(20) DEFAULT NULL,
+  `paid` DOUBLE DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 
 CREATE TABLE `t_prepaid_credit_receipt_track` (
-  `id` bigint(11) NOT NULL AUTO_INCREMENT,
-  `receipt_id` bigint(11) DEFAULT NULL,
-  `receipt_amount` double DEFAULT '0',
-  `prepaid_credit` double DEFAULT '0',
-  `franchise_id` bigint(11) DEFAULT NULL,
-  `receipt_realizedon` bigint(20) DEFAULT '0',
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT,
+  `receipt_id` BIGINT(11) DEFAULT NULL,
+  `receipt_amount` DOUBLE DEFAULT '0',
+  `prepaid_credit` DOUBLE DEFAULT '0',
+  `franchise_id` BIGINT(11) DEFAULT NULL,
+  `receipt_realizedon` BIGINT(20) DEFAULT '0',
   PRIMARY KEY (`id`)
 );
 
 
 CREATE TABLE `m_batch_config` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `batch_grp_name` varchar(150) DEFAULT NULL,
-  `assigned_menuid` int(11) DEFAULT '0',
-  `batch_size` int(11) DEFAULT '0',
-  `group_assigned_uid` varchar(120) DEFAULT NULL,
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `batch_grp_name` VARCHAR(150) DEFAULT NULL,
+  `assigned_menuid` INT(11) DEFAULT '0',
+  `batch_size` INT(11) DEFAULT '0',
+  `group_assigned_uid` VARCHAR(120) DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 
-alter table shipment_batch_process add column `assigned_userid` int(11) DEFAULT '0' after status;
-alter table shipment_batch_process add column `territory_id` int(11) DEFAULT '0' after assigned_userid;
-alter table shipment_batch_process add column `batch_configid` int(11) DEFAULT '0' after territory_id;
+ALTER TABLE shipment_batch_process ADD COLUMN `assigned_userid` INT(11) DEFAULT '0' AFTER STATUS;
+ALTER TABLE shipment_batch_process ADD COLUMN `territory_id` INT(11) DEFAULT '0' AFTER assigned_userid;
+ALTER TABLE shipment_batch_process ADD COLUMN `batch_configid` INT(11) DEFAULT '0' AFTER territory_id;
 
 CREATE TABLE `t_exotel_agent_status` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `callsid` varchar(255) DEFAULT NULL,
-  `from` varchar(50) DEFAULT NULL,
-  `dialwhomno` varchar(255) DEFAULT NULL,
-  `status` varchar(255) DEFAULT NULL,
-  `created_on` datetime DEFAULT NULL,
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `callsid` VARCHAR(255) DEFAULT NULL,
+  `from` VARCHAR(50) DEFAULT NULL,
+  `dialwhomno` VARCHAR(255) DEFAULT NULL,
+  `status` VARCHAR(255) DEFAULT NULL,
+  `created_on` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 #================================================================
 
-select f.territory_id,t.territory_name,pi.dispatch_id,group_concat(distinct man.id) as man_id,sd.shipped_on,sd.shipped,group_concat(distinct sd.invoice_no) as invoice_no_str
-			,count(distinct sd.invoice_no) as ttl_invs,count(distinct f.franchise_id) as ttl_franchises
-		from pnh_m_manifesto_sent_log man
-			join shipment_batch_process_invoice_link sd on sd.inv_manifesto_id = man.manifesto_id
-		    join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no and pi.invoice_status = 1 
-		    join king_transactions tr on tr.transid = pi.transid
-		    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
- 			join m_town_territory_link ttl on ttl.territory_id = f.territory_id and is_active=1
-			join m_employee_info emp on emp.employee_id = ttl.employee_id
+SELECT f.territory_id,t.territory_name,pi.dispatch_id,GROUP_CONCAT(DISTINCT man.id) AS man_id,sd.shipped_on,sd.shipped,GROUP_CONCAT(DISTINCT sd.invoice_no) AS invoice_no_str
+			,COUNT(DISTINCT sd.invoice_no) AS ttl_invs,COUNT(DISTINCT f.franchise_id) AS ttl_franchises
+		FROM pnh_m_manifesto_sent_log man
+			JOIN shipment_batch_process_invoice_link sd ON sd.inv_manifesto_id = man.manifesto_id
+		    JOIN proforma_invoices `pi` ON pi.p_invoice_no = sd.p_invoice_no AND pi.invoice_status = 1 
+		    JOIN king_transactions tr ON tr.transid = pi.transid
+		    JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+ 			JOIN m_town_territory_link ttl ON ttl.territory_id = f.territory_id AND is_active=1
+			JOIN m_employee_info emp ON emp.employee_id = ttl.employee_id
 
 
-			join pnh_m_territory_info t on t.id = f.territory_id
-                    where shipped=1 and sd.shipped_by>0 and unix_timestamp(sd.shipped_on)!=0 and unix_timestamp(sd.shipped_on) between 1383244200 and 1387477800 #and f.territory_id ='3'
-			group by f.territory_id
-			order by f.territory_id DESC;
+			JOIN pnh_m_territory_info t ON t.id = f.territory_id
+                    WHERE shipped=1 AND sd.shipped_by>0 AND UNIX_TIMESTAMP(sd.shipped_on)!=0 AND UNIX_TIMESTAMP(sd.shipped_on) BETWEEN 1383244200 AND 1387477800 #and f.territory_id ='3'
+			GROUP BY f.territory_id
+			ORDER BY f.territory_id DESC;
 
-select f.territory_id,t.territory_name,pi.dispatch_id,group_concat(distinct man.id) as man_id,sd.shipped_on,sd.shipped,group_concat(distinct sd.invoice_no) as invoice_no_str,count(tr.franchise_id) as ttl_franchises
-			,count(distinct sd.invoice_no) as ttl_invs,count(distinct f.franchise_id) as ttl_franchises
-		from pnh_m_manifesto_sent_log man
-			join shipment_batch_process_invoice_link sd on sd.inv_manifesto_id = man.manifesto_id
-		    join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no and pi.invoice_status = 1 
-		    join king_transactions tr on tr.transid = pi.transid
-		    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
- 			join m_town_territory_link ttl on ttl.territory_id = f.territory_id and is_active=1
-			join m_employee_info emp on emp.employee_id = ttl.employee_id
-			join pnh_m_territory_info t on t.id = f.territory_id
-                    where shipped=1 and sd.shipped_by>0 and unix_timestamp(sd.shipped_on)!=0 and date(man.sent_on) between from_unixtime('1383244200') and from_unixtime('1387477800') #and f.territory_id ='3'
-			group by f.territory_id
-			order by f.territory_id DESC;
+SELECT f.territory_id,t.territory_name,pi.dispatch_id,GROUP_CONCAT(DISTINCT man.id) AS man_id,sd.shipped_on,sd.shipped,GROUP_CONCAT(DISTINCT sd.invoice_no) AS invoice_no_str,COUNT(tr.franchise_id) AS ttl_franchises
+			,COUNT(DISTINCT sd.invoice_no) AS ttl_invs,COUNT(DISTINCT f.franchise_id) AS ttl_franchises
+		FROM pnh_m_manifesto_sent_log man
+			JOIN shipment_batch_process_invoice_link sd ON sd.inv_manifesto_id = man.manifesto_id
+		    JOIN proforma_invoices `pi` ON pi.p_invoice_no = sd.p_invoice_no AND pi.invoice_status = 1 
+		    JOIN king_transactions tr ON tr.transid = pi.transid
+		    JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+ 			JOIN m_town_territory_link ttl ON ttl.territory_id = f.territory_id AND is_active=1
+			JOIN m_employee_info emp ON emp.employee_id = ttl.employee_id
+			JOIN pnh_m_territory_info t ON t.id = f.territory_id
+                    WHERE shipped=1 AND sd.shipped_by>0 AND UNIX_TIMESTAMP(sd.shipped_on)!=0 AND DATE(man.sent_on) BETWEEN FROM_UNIXTIME('1383244200') AND FROM_UNIXTIME('1387477800') #and f.territory_id ='3'
+			GROUP BY f.territory_id
+			ORDER BY f.territory_id DESC;
 
-select group_concat(man.sent_invoices) grp_invs from pnh_m_manifesto_sent_log man where date(man.sent_on) between from_unixtime('1383244200') and from_unixtime('1387477800')
+SELECT GROUP_CONCAT(man.sent_invoices) grp_invs FROM pnh_m_manifesto_sent_log man WHERE DATE(man.sent_on) BETWEEN FROM_UNIXTIME('1383244200') AND FROM_UNIXTIME('1387477800')
 
-select  from pnh_m_manifesto_sent_log man
-join shipment_batch_process_invoice_link sd on sd.inv_manifesto_id = man.manifesto_id
-where date(man.sent_on) between from_unixtime('1383244200') and from_unixtime('1387477800')
+SELECT  FROM pnh_m_manifesto_sent_log man
+JOIN shipment_batch_process_invoice_link sd ON sd.inv_manifesto_id = man.manifesto_id
+WHERE DATE(man.sent_on) BETWEEN FROM_UNIXTIME('1383244200') AND FROM_UNIXTIME('1387477800')
 
 
-select m_town_territory_link
+SELECT m_town_territory_link
 
-select f.territory_id,t.territory_name,pi.dispatch_id,group_concat(distinct man.id) as man_id,sd.shipped_on,sd.shipped
-                    ,group_concat(distinct sd.invoice_no) as invoice_no_str,count(distinct sd.invoice_no) as ttl_invs,count(distinct f.franchise_id) as ttl_franchises		    
-                                                from pnh_m_manifesto_sent_log man
-                                                        join shipment_batch_process_invoice_link sd on sd.inv_manifesto_id = man.manifesto_id
-                                                    join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no and pi.invoice_status = 1 
-                                                    join king_transactions tr on tr.transid = pi.transid
-                                                    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-                                                        join pnh_m_territory_info t on t.id = f.territory_id
-                                                    where shipped=1 and sd.shipped_by>0 and unix_timestamp(sd.shipped_on)!=0 and dispatch_id != 0 and unix_timestamp(sent_on) between 1387564200 and 1387391400 
-                                                group by f.territory_id
-                                                order by t.territory_name ASC;
-select from_unixtime('1383244200')
+SELECT f.territory_id,t.territory_name,pi.dispatch_id,GROUP_CONCAT(DISTINCT man.id) AS man_id,sd.shipped_on,sd.shipped
+                    ,GROUP_CONCAT(DISTINCT sd.invoice_no) AS invoice_no_str,COUNT(DISTINCT sd.invoice_no) AS ttl_invs,COUNT(DISTINCT f.franchise_id) AS ttl_franchises		    
+                                                FROM pnh_m_manifesto_sent_log man
+                                                        JOIN shipment_batch_process_invoice_link sd ON sd.inv_manifesto_id = man.manifesto_id
+                                                    JOIN proforma_invoices `pi` ON pi.p_invoice_no = sd.p_invoice_no AND pi.invoice_status = 1 
+                                                    JOIN king_transactions tr ON tr.transid = pi.transid
+                                                    JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+                                                        JOIN pnh_m_territory_info t ON t.id = f.territory_id
+                                                    WHERE shipped=1 AND sd.shipped_by>0 AND UNIX_TIMESTAMP(sd.shipped_on)!=0 AND dispatch_id != 0 AND UNIX_TIMESTAMP(sent_on) BETWEEN 1387564200 AND 1387391400 
+                                                GROUP BY f.territory_id
+                                                ORDER BY t.territory_name ASC;
+SELECT FROM_UNIXTIME('1383244200')
 
 #=======================================================================================================
-select unix_timestamp('2013-10-20') as utime;
-select from_unixtime(1382207400) as time;
+SELECT UNIX_TIMESTAMP('2013-10-20') AS utime;
+SELECT FROM_UNIXTIME(1382207400) AS TIME;
 #=======================================================================================================
 
-select group_concat(man.sent_invoices) grp_invs
-from pnh_m_manifesto_sent_log man 
-join shipment_batch_process_invoice_link sd on sd.inv_manifesto_id = man.manifesto_id
-join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no and pi.invoice_status = 1 
-join king_transactions tr on tr.transid = pi.transid
-join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-join pnh_m_territory_info t on t.id = f.territory_id
-where date(man.sent_on) between from_unixtime('1383244200') and from_unixtime('1387477800') and f.territory_id='3';
+SELECT GROUP_CONCAT(man.sent_invoices) grp_invs
+FROM pnh_m_manifesto_sent_log man 
+JOIN shipment_batch_process_invoice_link sd ON sd.inv_manifesto_id = man.manifesto_id
+JOIN proforma_invoices `pi` ON pi.p_invoice_no = sd.p_invoice_no AND pi.invoice_status = 1 
+JOIN king_transactions tr ON tr.transid = pi.transid
+JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+JOIN pnh_m_territory_info t ON t.id = f.territory_id
+WHERE DATE(man.sent_on) BETWEEN FROM_UNIXTIME('1383244200') AND FROM_UNIXTIME('1387477800') AND f.territory_id='3';
 
-select * from pnh_m_manifesto_sent_log
+SELECT * FROM pnh_m_manifesto_sent_log
 
-select group_concat(man.sent_invoices) grp_invs
-	    from pnh_m_manifesto_sent_log man 
-	    join shipment_batch_process_invoice_link sd on sd.inv_manifesto_id = man.manifesto_id
-	    join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no and pi.invoice_status = 1 
-	    join king_transactions tr on tr.transid = pi.transid
-	    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-	    join pnh_m_territory_info t on t.id = f.territory_id
-	    where date(man.sent_on) between from_unixtime('3') and from_unixtime(1384281000) and f.territory_id=1384453800
+SELECT GROUP_CONCAT(man.sent_invoices) grp_invs
+	    FROM pnh_m_manifesto_sent_log man 
+	    JOIN shipment_batch_process_invoice_link sd ON sd.inv_manifesto_id = man.manifesto_id
+	    JOIN proforma_invoices `pi` ON pi.p_invoice_no = sd.p_invoice_no AND pi.invoice_status = 1 
+	    JOIN king_transactions tr ON tr.transid = pi.transid
+	    JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+	    JOIN pnh_m_territory_info t ON t.id = f.territory_id
+	    WHERE DATE(man.sent_on) BETWEEN FROM_UNIXTIME('3') AND FROM_UNIXTIME(1384281000) AND f.territory_id=1384453800
 
 
 
-set @dd = '2013-12-25';
-select weekday(@dd),date_add(@dd,interval weekday(@dd) day );
+SET @dd = '2013-12-25';
+SELECT WEEKDAY(@dd),DATE_ADD(@dd,INTERVAL WEEKDAY(@dd) DAY );
 
 4,3 
-3-4 -1day 
+3-4 -1DAY 
 
 # =========================================================================================================
 
-select * from (
-	select a.transid,count(a.id) as num_order_ids,sum(a.status) as orders_status 
-		from king_orders a 
-		join king_transactions tr on tr.transid = a.transid and tr.is_pnh=1 
-		where a.status in (0,1) and tr.batch_enabled=1 
-		and a.transid in ("'PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485'"
+SELECT * FROM (
+	SELECT a.transid,COUNT(a.id) AS num_order_ids,SUM(a.status) AS orders_status 
+		FROM king_orders a 
+		JOIN king_transactions tr ON tr.transid = a.transid AND tr.is_pnh=1 
+		WHERE a.status IN (0,1) AND tr.batch_enabled=1 
+		AND a.transid IN ("'PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485','PNHZSN85485'"
 	) 
-group by a.transid) as ddd 
-where ddd.orders_status=0
+GROUP BY a.transid) AS ddd 
+WHERE ddd.orders_status=0
 
-select * from (select a.transid,count(a.id) as num_order_ids,sum(a.status) as orders_status from king_orders a join king_transactions tr on tr.transid = a.transid and tr.is_pnh=1 where a.status in (0,1) and tr.batch_enabled=1 and a.transid in ('PNHFFB52222','PNHTCI15423') group by a.transid) as ddd where ddd.orders_status=0;
+SELECT * FROM (SELECT a.transid,COUNT(a.id) AS num_order_ids,SUM(a.status) AS orders_status FROM king_orders a JOIN king_transactions tr ON tr.transid = a.transid AND tr.is_pnh=1 WHERE a.status IN (0,1) AND tr.batch_enabled=1 AND a.transid IN ('PNHFFB52222','PNHTCI15423') GROUP BY a.transid) AS ddd WHERE ddd.orders_status=0;
 
 #Dec_27_2013
 
-select * from shipment_batch_process_invoice_link;
+SELECT * FROM shipment_batch_process_invoice_link;
 
 #Dec_28_2013
 
 
 # =========================================================================================================
-alter table `shipment_batch_process_invoice_link` drop column `is_acknowlege_printed`;
+ALTER TABLE `shipment_batch_process_invoice_link` DROP COLUMN `is_acknowlege_printed`;
 
-use snapittoday_db_jan_2014;
+USE snapittoday_db_jan_2014;
 
-create table `pnh_acknowledgement_print_log` (  `sno` bigint NOT NULL AUTO_INCREMENT ,`log_id` varchar (150), `tm_emp_id` varchar (100) NULL, `be_emp_id` varchar (100) , `p_inv_no` varchar (100) NOT NULL 
-, `created_on` varchar (50) , `created_by` int (30) , `status` int (10) DEFAULT '0', `count` int (100) DEFAULT '0', PRIMARY KEY ( `sno`));
+CREATE TABLE `pnh_acknowledgement_print_log` (  `sno` BIGINT NOT NULL AUTO_INCREMENT ,`log_id` VARCHAR (150), `tm_emp_id` VARCHAR (100) NULL, `be_emp_id` VARCHAR (100) , `p_inv_no` VARCHAR (100) NOT NULL 
+, `created_on` VARCHAR (50) , `created_by` INT (30) , `status` INT (10) DEFAULT '0', `count` INT (100) DEFAULT '0', PRIMARY KEY ( `sno`));
 
 
 # =========================================================================================================
 
-select terr.territory_name,a.transid,a.createdon as invoiced_on,b.bill_person,b.bill_address,b.bill_landmark,b.bill_city,b.bill_state,b.bill_pincode,bill_phone,d.init,b.itemid,c.name,if(c.print_name,c.print_name,c.name) as print_name,c.pnh_id,group_concat(distinct a.invoice_no) as invs,
-						((a.mrp-(a.discount))) as amt,
-						sum(a.invoice_qty) as qty 
-				from king_invoice a 
-				join king_orders b on a.order_id = b.id 
-				join king_dealitems c on c.id = b.itemid
-				join king_transactions d on d.transid = a.transid
-				join pnh_m_franchise_info f on f.franchise_id = d.franchise_id
-				join pnh_m_territory_info terr on terr.id=f.territory_id
-				where a.invoice_no in (20141016108,20141016107,20141015715,20141015838,20141015885,20141015995,20141015996,20141015599,20141015598,20141015721,20141015915,20141015916,20141015917,20141015918,20141015919,20141015886,20141015887,20141015888,20141015889,20141015890,20141015891,20141015892,20141015893,20141015894) 
-				group by f.territory_id
-				order by c.name;
+SELECT terr.territory_name,a.transid,a.createdon AS invoiced_on,b.bill_person,b.bill_address,b.bill_landmark,b.bill_city,b.bill_state,b.bill_pincode,bill_phone,d.init,b.itemid,c.name,IF(c.print_name,c.print_name,c.name) AS print_name,c.pnh_id,GROUP_CONCAT(DISTINCT a.invoice_no) AS invs,
+						((a.mrp-(a.discount))) AS amt,
+						SUM(a.invoice_qty) AS qty 
+				FROM king_invoice a 
+				JOIN king_orders b ON a.order_id = b.id 
+				JOIN king_dealitems c ON c.id = b.itemid
+				JOIN king_transactions d ON d.transid = a.transid
+				JOIN pnh_m_franchise_info f ON f.franchise_id = d.franchise_id
+				JOIN pnh_m_territory_info terr ON terr.id=f.territory_id
+				WHERE a.invoice_no IN (20141016108,20141016107,20141015715,20141015838,20141015885,20141015995,20141015996,20141015599,20141015598,20141015721,20141015915,20141015916,20141015917,20141015918,20141015919,20141015886,20141015887,20141015888,20141015889,20141015890,20141015891,20141015892,20141015893,20141015894) 
+				GROUP BY f.territory_id
+				ORDER BY c.name;
 #=>67rows 94ms
 
-select f.territory_id,terr.territory_name,group_concat(distinct a.invoice_no) as invoice_no_str,b.bill_person,b.bill_address,b.bill_landmark,b.bill_city,b.bill_state,b.bill_pincode,b.bill_phone
-				from king_invoice a 
-				join king_orders b on a.order_id = b.id 
-				join king_dealitems c on c.id = b.itemid
-				join king_transactions d on d.transid = a.transid
-				join pnh_m_franchise_info f on f.franchise_id = d.franchise_id
-				join pnh_m_territory_info terr on terr.id=f.territory_id
-				where a.invoice_no in (20141016108,20141016107,20141015715,20141015838,20141015885,20141015995,20141015996,20141015599,20141015598,20141015721,20141015915,20141015916,20141015917,20141015918,20141015919,20141015886,20141015887,20141015888,20141015889,20141015890,20141015891,20141015892,20141015893,20141015894) 
-				group by f.territory_id
-				order by c.name;
+SELECT f.territory_id,terr.territory_name,GROUP_CONCAT(DISTINCT a.invoice_no) AS invoice_no_str,b.bill_person,b.bill_address,b.bill_landmark,b.bill_city,b.bill_state,b.bill_pincode,b.bill_phone
+				FROM king_invoice a 
+				JOIN king_orders b ON a.order_id = b.id 
+				JOIN king_dealitems c ON c.id = b.itemid
+				JOIN king_transactions d ON d.transid = a.transid
+				JOIN pnh_m_franchise_info f ON f.franchise_id = d.franchise_id
+				JOIN pnh_m_territory_info terr ON terr.id=f.territory_id
+				WHERE a.invoice_no IN (20141016108,20141016107,20141015715,20141015838,20141015885,20141015995,20141015996,20141015599,20141015598,20141015721,20141015915,20141015916,20141015917,20141015918,20141015919,20141015886,20141015887,20141015888,20141015889,20141015890,20141015891,20141015892,20141015893,20141015894) 
+				GROUP BY f.territory_id
+				ORDER BY c.name;
 
-select * from acknowledgement_print_log;
+SELECT * FROM acknowledgement_print_log;
 
 SELECT *
 FROM `acknowledgement_print_log`
@@ -986,651 +986,651 @@ LIMIT 1
 # Dec_30_2013
 SELECT * FROM (`acknowledgement_print_log`) WHERE `p_inv_no` = '20141016108' AND `created_by` IS NULL LIMIT 1;
 
-select * from acknowledgement_print_log where log_id='23876A5';
+SELECT * FROM acknowledgement_print_log WHERE log_id='23876A5';
 
 SELECT *FROM (`acknowledgement_print_log`) WHERE `p_inv_no`='20141016108' LIMIT 50;
 
-select * from t_imei_no
+SELECT * FROM t_imei_no
 
-select * from shipment_batch_process_invoice_link where invoice_no='20141016103'
+SELECT * FROM shipment_batch_process_invoice_link WHERE invoice_no='20141016103'
 
-select * from  m_town_territory_link
+SELECT * FROM  m_town_territory_link
 
-select * from king_admin
-select * from m_employee_info
+SELECT * FROM king_admin
+SELECT * FROM m_employee_info
 
 
-select tlink.employee_id,e.name from shipment_batch_process_invoice_link sd
-join proforma_invoices pi on pi.p_invoice_no = sd.p_invoice_no
-join king_transactions tr on tr.transid = pi.transid
-join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-join m_town_territory_link tlink on tlink.territory_id = f.territory_id and tlink.is_active=1
-left join m_employee_info e on e.employee_id = tlink.employee_id 
-where sd.invoice_no = '20141016107' and e.job_title in (4,5)
-group by tlink.employee_id;
+SELECT tlink.employee_id,e.name FROM shipment_batch_process_invoice_link sd
+JOIN proforma_invoices PI ON pi.p_invoice_no = sd.p_invoice_no
+JOIN king_transactions tr ON tr.transid = pi.transid
+JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+JOIN m_town_territory_link tlink ON tlink.territory_id = f.territory_id AND tlink.is_active=1
+LEFT JOIN m_employee_info e ON e.employee_id = tlink.employee_id 
+WHERE sd.invoice_no = '20141016107' AND e.job_title IN (4,5)
+GROUP BY tlink.employee_id;
 
 #
 
-select * from employee_info
+SELECT * FROM employee_info
 
-select f.franchise_id,f.franchise_name
-																			from t_imei_no i
-																			join king_orders b on i.order_id = b.id
-																			join king_dealitems c on c.id = b.itemid
-																			join m_product_deal_link d on d.itemid = c.id
-																			join king_transactions e on e.transid = b.transid
-																			join pnh_m_franchise_info f on f.franchise_id = e.franchise_id 
-																			where b.status in (1,2) and b.imei_scheme_id > 0  
-																			group by f.franchise_id
-																			order by franchise_name 
+SELECT f.franchise_id,f.franchise_name
+																			FROM t_imei_no i
+																			JOIN king_orders b ON i.order_id = b.id
+																			JOIN king_dealitems c ON c.id = b.itemid
+																			JOIN m_product_deal_link d ON d.itemid = c.id
+																			JOIN king_transactions e ON e.transid = b.transid
+																			JOIN pnh_m_franchise_info f ON f.franchise_id = e.franchise_id 
+																			WHERE b.status IN (1,2) AND b.imei_scheme_id > 0  
+																			GROUP BY f.franchise_id
+																			ORDER BY franchise_name 
 
 
-SELECT i.is_imei_activated,count(distinct i.id) as ttl,sum(imei_reimbursement_value_perunit) as amt 
+SELECT i.is_imei_activated,COUNT(DISTINCT i.id) AS ttl,SUM(imei_reimbursement_value_perunit) AS amt 
 							FROM t_imei_no i 
-									Join king_orders o on o.id = i.order_id 
+									JOIN king_orders o ON o.id = i.order_id 
 									JOIN king_transactions t ON t.transid=o.transid
 									JOIN m_product_deal_link p ON p.itemid=o.itemid
 									JOIN m_product_info l ON l.product_id=p.product_id
-									JOIN king_invoice inv ON inv.order_id=o.id and inv.invoice_status = 1 
+									JOIN king_invoice inv ON inv.order_id=o.id AND inv.invoice_status = 1 
 									JOIN imei_m_scheme r ON r.id=o.imei_scheme_id
 									#left join pnh_member_info b on b.pnh_member_id=i.activated_member_id 
 									#left join t_invoice_credit_notes tcr on tcr.invoice_no = inv.invoice_no 
 									JOIN shipment_batch_process_invoice_link bi ON bi.invoice_no = inv.invoice_no 
-							WHERE o.status in (1,2) and o.imei_scheme_id > 0 and t.franchise_id= 17  #and (date(imei_activated_on) >= date("2013-11-30") and date(imei_activated_on) <= date("2013-12-07")) 
-							group by i.is_imei_activated 
+							WHERE o.status IN (1,2) AND o.imei_scheme_id > 0 AND t.franchise_id= 17  #and (date(imei_activated_on) >= date("2013-11-30") and date(imei_activated_on) <= date("2013-12-07")) 
+							GROUP BY i.is_imei_activated 
 							ORDER BY l.product_name ASC
 
 
-select * from acknowledgement_print_log where p_inv_no in ('20141016108','20141016107','20141015715','20141015838,20141015885,20141015995,20141015996,20141015599,20141015598')
-select * from acknowledgement_print_log where p_inv_no in ('20141015599,20141015598')
+SELECT * FROM acknowledgement_print_log WHERE p_inv_no IN ('20141016108','20141016107','20141015715','20141015838,20141015885,20141015995,20141015996,20141015599,20141015598')
+SELECT * FROM acknowledgement_print_log WHERE p_inv_no IN ('20141015599,20141015598')
 
-select * from acknowledgement_print_log where p_inv_no in ("20141015599","20141015598")
+SELECT * FROM acknowledgement_print_log WHERE p_inv_no IN ("20141015599","20141015598")
 
-select log_id,tm_emp_id,be_emp_id,group_concat(p_inv_no) as grp_invs,created_on,created_by,status,count from acknowledgement_print_log 
-where p_inv_no in ("20141015599","20141015598")
-group by log_id;
+SELECT log_id,tm_emp_id,be_emp_id,GROUP_CONCAT(p_inv_no) AS grp_invs,created_on,created_by,STATUS,COUNT FROM acknowledgement_print_log 
+WHERE p_inv_no IN ("20141015599","20141015598")
+GROUP BY log_id;
 
-C:\Users\User\Downloads\StoreKing_Database_2014_01_01_08_00_AM
+C:\Users\USER\Downloads\StoreKing_Database_2014_01_01_08_00_AM
 
 #Jan_01_2014
-create database snapittoday_db_jan_2014;
+CREATE DATABASE snapittoday_db_jan_2014;
 
-select md5('17c4520f6cfd1ab53d8745e84681eb49'); =>superadmin
+SELECT MD5('17c4520f6cfd1ab53d8745e84681eb49'); =>superadmin
 
-select md5('9027da57d66aa309df4d13q0e6ab0d06')
+SELECT MD5('9027da57d66aa309df4d13q0e6ab0d06')
 
 uuudgs5h1d28-234234arabin445221
 
-select * from ( select transid,TRIM(BOTH ',' FROM group_concat(p_inv_nos)) as p_inv_nos,status,count(*) as t,if(count(*)>1,'partial',(if(status,'ready','pending'))) as trans_status,franchise_id 
-	from ( 
-		select o.transid,ifnull(group_concat(distinct pi.p_invoice_no),'') as p_inv_nos,o.status,count(*) as ttl_o,tr.franchise_id,tr.actiontime 
-			from king_orders o join king_transactions tr on tr.transid=o.transid 
-			left join king_invoice i on i.order_id = o.id and i.invoice_status = 1 
-			left join proforma_invoices pi on pi.order_id = o.id and o.transid = pi.transid and pi.invoice_status = 1 left join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no 
-			left join shipment_batch_process sbp on sbp.batch_id = sd.batch_id 
-			where o.status in (0,1) and i.id is null and tr.franchise_id != 0 #and sbp.assigned_userid = 37
-				and ((sd.packed=0 and sd.p_invoice_no > 0) or (sd.p_invoice_no is null and sd.packed is null )) 
-				group by o.transid,o.status ) as g group by g.transid )as g1 having g1.trans_status = 'ready';
+SELECT * FROM ( SELECT transid,TRIM(BOTH ',' FROM GROUP_CONCAT(p_inv_nos)) AS p_inv_nos,STATUS,COUNT(*) AS t,IF(COUNT(*)>1,'partial',(IF(STATUS,'ready','pending'))) AS trans_status,franchise_id 
+	FROM ( 
+		SELECT o.transid,IFNULL(GROUP_CONCAT(DISTINCT pi.p_invoice_no),'') AS p_inv_nos,o.status,COUNT(*) AS ttl_o,tr.franchise_id,tr.actiontime 
+			FROM king_orders o JOIN king_transactions tr ON tr.transid=o.transid 
+			LEFT JOIN king_invoice i ON i.order_id = o.id AND i.invoice_status = 1 
+			LEFT JOIN proforma_invoices PI ON pi.order_id = o.id AND o.transid = pi.transid AND pi.invoice_status = 1 LEFT JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no = pi.p_invoice_no 
+			LEFT JOIN shipment_batch_process sbp ON sbp.batch_id = sd.batch_id 
+			WHERE o.status IN (0,1) AND i.id IS NULL AND tr.franchise_id != 0 #and sbp.assigned_userid = 37
+				AND ((sd.packed=0 AND sd.p_invoice_no > 0) OR (sd.p_invoice_no IS NULL AND sd.packed IS NULL )) 
+				GROUP BY o.transid,o.status ) AS g GROUP BY g.transid )AS g1 HAVING g1.trans_status = 'ready';
 
 sbp.assigned_userid
 
-select * from shipment_batch_process_invoice_link;
+SELECT * FROM shipment_batch_process_invoice_link;
 
 #=============================================================================
 
-alter table `shipment_batch_process` 
-	add column `assigned_userid` int (11) DEFAULT '0' NULL  after `status`, 
-	add column `territory_id` int (11) DEFAULT '0' NULL  after `assigned_userid`, 
-	add column `batch_configid` int (11) DEFAULT '0' NULL  after `territory_id`;
+ALTER TABLE `shipment_batch_process` 
+	ADD COLUMN `assigned_userid` INT (11) DEFAULT '0' NULL  AFTER `status`, 
+	ADD COLUMN `territory_id` INT (11) DEFAULT '0' NULL  AFTER `assigned_userid`, 
+	ADD COLUMN `batch_configid` INT (11) DEFAULT '0' NULL  AFTER `territory_id`;
 
 #=============================================================================
 
-update t_imei_no set status=0 and order_id=0 where imei_no = '355842059098166';
+UPDATE t_imei_no SET STATUS=0 AND order_id=0 WHERE imei_no = '355842059098166';
 
-select * from proforma_invoices where p_invoice_no='115786';
+SELECT * FROM proforma_invoices WHERE p_invoice_no='115786';
 
-select * from t_imei_no where status=0 and product_id='8702';
+SELECT * FROM t_imei_no WHERE STATUS=0 AND product_id='8702';
 
-select * from shipment_batch_process_invoice_link;
+SELECT * FROM shipment_batch_process_invoice_link;
 
 Electronics 112,118 4 1,2,37,36
 
 Beauty      100     2 1,2,37,36
 
-select * from shipment_batch_process;
+SELECT * FROM shipment_batch_process;
 
 #======== Jan_09_2014 ======================
 
-set @global_batch_id=5000;
-select distinct o.itemid,d.menuid,mn.name as menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) from king_transactions tr
-                                join king_orders as o on o.transid=tr.transid
-                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
-                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
-                                join king_dealitems dl on dl.id = o.itemid
-                                join king_deals d on d.dealid = dl.dealid 
+SET @global_batch_id=5000;
+SELECT DISTINCT o.itemid,d.menuid,mn.name AS menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,FROM_UNIXTIME(tr.init) FROM king_transactions tr
+                                JOIN king_orders AS o ON o.transid=tr.transid
+                                JOIN proforma_invoices AS `pi` ON pi.order_id = o.id AND pi.invoice_status=1
+                                JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no =pi.p_invoice_no
+                                JOIN king_dealitems dl ON dl.id = o.itemid
+                                JOIN king_deals d ON d.dealid = dl.dealid 
                                 
-                                join pnh_menu mn on mn.id=d.menuid
-                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id #and f.is_suspended = 0
+                                JOIN pnh_menu mn ON mn.id=d.menuid
+                                JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id #and f.is_suspended = 0
                                 
-                                where sd.batch_id=@global_batch_id 
-                                order by tr.init asc;
+                                WHERE sd.batch_id=@global_batch_id 
+                                ORDER BY tr.init ASC;
 
 
-select * from shipment_batch_process;
+SELECT * FROM shipment_batch_process;
 
 
 CREATE TABLE `pnh_m_fran_security_cheques` (             
-                               `id` int(11) NOT NULL AUTO_INCREMENT,                  
-                               `franchise_id` int(11) DEFAULT '0',                    
-                               `bank_name` varchar(255) DEFAULT NULL,                 
-                               `cheque_no` varchar(30) DEFAULT NULL,                  
-                               `cheque_date` date DEFAULT NULL,                       
-                               `collected_on` date DEFAULT NULL,                      
-                               `amount` double DEFAULT NULL,                          
-                               `returned_on` date DEFAULT NULL,                       
-                               `created_on` datetime DEFAULT NULL,                    
-                               `modified_on` datetime DEFAULT NULL,                   
-                               `created_by` int(11) DEFAULT NULL,                     
-                               `modified_by` int(11) DEFAULT NULL,                    
+                               `id` INT(11) NOT NULL AUTO_INCREMENT,                  
+                               `franchise_id` INT(11) DEFAULT '0',                    
+                               `bank_name` VARCHAR(255) DEFAULT NULL,                 
+                               `cheque_no` VARCHAR(30) DEFAULT NULL,                  
+                               `cheque_date` DATE DEFAULT NULL,                       
+                               `collected_on` DATE DEFAULT NULL,                      
+                               `amount` DOUBLE DEFAULT NULL,                          
+                               `returned_on` DATE DEFAULT NULL,                       
+                               `created_on` DATETIME DEFAULT NULL,                    
+                               `modified_on` DATETIME DEFAULT NULL,                   
+                               `created_by` INT(11) DEFAULT NULL,                     
+                               `modified_by` INT(11) DEFAULT NULL,                    
                                PRIMARY KEY (`id`)                                     
                              );
 
-set @global_batch_id=5000;
-set @batch_id=5548; #5544-48
-update shipment_batch_process_invoice_link set batch_id=@global_batch_id where batch_id=@batch_id;
-delete from shipment_batch_process where batch_id = @batch_id;
+SET @global_batch_id=5000;
+SET @batch_id=5548; #5544-48
+UPDATE shipment_batch_process_invoice_link SET batch_id=@global_batch_id WHERE batch_id=@batch_id;
+DELETE FROM shipment_batch_process WHERE batch_id = @batch_id;
 
 
 
-set @global_batch_id=5000;
-select distinct o.itemid,d.menuid,mn.name as menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) from king_transactions tr
-                                join king_orders as o on o.transid=tr.transid
-                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
-                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
-                                join king_dealitems dl on dl.id = o.itemid
-                                join king_deals d on d.dealid = dl.dealid 
+SET @global_batch_id=5000;
+SELECT DISTINCT o.itemid,d.menuid,mn.name AS menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,FROM_UNIXTIME(tr.init) FROM king_transactions tr
+                                JOIN king_orders AS o ON o.transid=tr.transid
+                                JOIN proforma_invoices AS `pi` ON pi.order_id = o.id AND pi.invoice_status=1
+                                JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no =pi.p_invoice_no
+                                JOIN king_dealitems dl ON dl.id = o.itemid
+                                JOIN king_deals d ON d.dealid = dl.dealid 
                                 
-                                join pnh_menu mn on mn.id=d.menuid
-                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id #and f.is_suspended = 0
+                                JOIN pnh_menu mn ON mn.id=d.menuid
+                                JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id #and f.is_suspended = 0
                                 
-                                where sd.batch_id=@global_batch_id 
+                                WHERE sd.batch_id=@global_batch_id 
 -- 								group by d.menuid
-                                order by d.menuid,tr.init asc;
+                                ORDER BY d.menuid,tr.init ASC;
 
 
-select distinct 
+SELECT DISTINCT 
                                 o.itemid
 --                                 bc.id as menuid,bc.batch_grp_name as menuname
 								,sd.invoice_no
 								,d.menuid
 								,f.territory_id
                                 ,sd.id,sd.batch_id,sd.p_invoice_no
-                                ,from_unixtime(tr.init) as init 
-                                    from king_transactions tr
-                                    join king_orders as o on o.transid=tr.transid
-                                    join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
-                                    join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no and sd.invoice_no=0
-                                    join king_dealitems dl on dl.id = o.itemid
-                                    join king_deals d on d.dealid = dl.dealid 
-                                    join pnh_menu mn on mn.id=d.menuid
-                                    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
+                                ,FROM_UNIXTIME(tr.init) AS init 
+                                    FROM king_transactions tr
+                                    JOIN king_orders AS o ON o.transid=tr.transid
+                                    JOIN proforma_invoices AS `pi` ON pi.order_id = o.id AND pi.invoice_status=1
+                                    JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no =pi.p_invoice_no AND sd.invoice_no=0
+                                    JOIN king_dealitems dl ON dl.id = o.itemid
+                                    JOIN king_deals d ON d.dealid = dl.dealid 
+                                    JOIN pnh_menu mn ON mn.id=d.menuid
+                                    JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id AND f.is_suspended = 0
 --                                     join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
-                                    where sd.batch_id=5000  and f.territory_id = 3 
+                                    WHERE sd.batch_id=5000  AND f.territory_id = 3 
 --                                         group by  bc.id
-                                    order by tr.init asc;
+                                    ORDER BY tr.init ASC;
 
 
-select distinct 
-                            o.itemid,count(*) as ttl_orders
-                            ,bc.id as menuid,bc.batch_grp_name as menuname,f.territory_id
+SELECT DISTINCT 
+                            o.itemid,COUNT(*) AS ttl_orders
+                            ,bc.id AS menuid,bc.batch_grp_name AS menuname,f.territory_id
                             ,sd.id,sd.batch_id,sd.p_invoice_no
-                            ,from_unixtime(tr.init) as init 
-                                from king_transactions tr
-                                join king_orders as o on o.transid=tr.transid
-                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
-                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no and sd.invoice_no=0
-                                join king_dealitems dl on dl.id = o.itemid
-                                join king_deals d on d.dealid = dl.dealid 
-                                join pnh_menu mn on mn.id=d.menuid
-                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
-                                join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
-                                where sd.batch_id=5000  and f.territory_id = 00 
-                                    group by  bc.id
-                                order by tr.init;
+                            ,FROM_UNIXTIME(tr.init) AS init 
+                                FROM king_transactions tr
+                                JOIN king_orders AS o ON o.transid=tr.transid
+                                JOIN proforma_invoices AS `pi` ON pi.order_id = o.id AND pi.invoice_status=1
+                                JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no = pi.p_invoice_no AND sd.invoice_no=0
+                                JOIN king_dealitems dl ON dl.id = o.itemid
+                                JOIN king_deals d ON d.dealid = dl.dealid 
+                                JOIN pnh_menu mn ON mn.id=d.menuid
+                                JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id AND f.is_suspended = 0
+                                JOIN m_batch_config bc ON FIND_IN_SET(d.menuid,bc.assigned_menuid) 
+                                WHERE sd.batch_id=5000  AND f.territory_id = 00 
+                                    GROUP BY  bc.id
+                                ORDER BY tr.init;
 
-select distinct o.itemid,d.menuid,mn.name as menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) from king_transactions tr
-                                join king_orders as o on o.transid=tr.transid
-                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
-                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no and sd.invoice_no=0
-                                join king_dealitems dl on dl.id = o.itemid
-                                join king_deals d on d.dealid = dl.dealid 
-                                 join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) and  bc.id = 1 
+SELECT DISTINCT o.itemid,d.menuid,mn.name AS menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,FROM_UNIXTIME(tr.init) FROM king_transactions tr
+                                JOIN king_orders AS o ON o.transid=tr.transid
+                                JOIN proforma_invoices AS `pi` ON pi.order_id = o.id AND pi.invoice_status=1
+                                JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no =pi.p_invoice_no AND sd.invoice_no=0
+                                JOIN king_dealitems dl ON dl.id = o.itemid
+                                JOIN king_deals d ON d.dealid = dl.dealid 
+                                 JOIN m_batch_config bc ON FIND_IN_SET(d.menuid,bc.assigned_menuid) AND  bc.id = 1 
                                 
-                                join pnh_menu mn on mn.id=d.menuid
-                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
+                                JOIN pnh_menu mn ON mn.id=d.menuid
+                                JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id AND f.is_suspended = 0
                                 
-                                where sd.batch_id=5000 
-                                order by d.menuid,tr.init asc
+                                WHERE sd.batch_id=5000 
+                                ORDER BY d.menuid,tr.init ASC
 
 
-set @global_batch_id=5000,@batch_id=5531; #,5531,5532,5533,5534,5535';
-update shipment_batch_process_invoice_link set batch_id=@global_batch_id where batch_id in (@batch_id);
-delete from shipment_batch_process where batch_id in (@batch_id);
+SET @global_batch_id=5000,@batch_id=5531; #,5531,5532,5533,5534,5535';
+UPDATE shipment_batch_process_invoice_link SET batch_id=@global_batch_id WHERE batch_id IN (@batch_id);
+DELETE FROM shipment_batch_process WHERE batch_id IN (@batch_id);
 
-select * from shipment_batch_process_invoice_link;
+SELECT * FROM shipment_batch_process_invoice_link;
 
-desc m_batch_config
+DESC m_batch_config
 
-select 
-sb.batch_id,sum(num_orders) as ttl_trans,assigned_userid,created_on,sd.id,sd.p_invoice_no,sd.invoice_no,group_concat(sd.p_invoice_no) as grp_p_invoice_no,group_concat(sd.p_invoice_no) as grp_invoice_no
+SELECT 
+sb.batch_id,SUM(num_orders) AS ttl_trans,assigned_userid,created_on,sd.id,sd.p_invoice_no,sd.invoice_no,GROUP_CONCAT(sd.p_invoice_no) AS grp_p_invoice_no,GROUP_CONCAT(sd.p_invoice_no) AS grp_invoice_no
 ,bc.assigned_menuid,bc.batch_grp_name
- from shipment_batch_process sb
-join shipment_batch_process_invoice_link sd on sd.batch_id = sb.batch_id and sd.invoice_no=0
+ FROM shipment_batch_process sb
+JOIN shipment_batch_process_invoice_link sd ON sd.batch_id = sb.batch_id AND sd.invoice_no=0
 #join proforma_invoices `pi` on pi.id=sd.p_invoice_no and pi.invoice_status=1
 #join king_orders o on o.id = pi.order_id
-join m_batch_config bc on bc.id=sb.batch_configid
-where created_on between '2013-12-13 15:20:50' and '2014-01-10 15:20:50'
-group by sb.batch_id
-order by created_on desc
+JOIN m_batch_config bc ON bc.id=sb.batch_configid
+WHERE created_on BETWEEN '2013-12-13 15:20:50' AND '2014-01-10 15:20:50'
+GROUP BY sb.batch_id
+ORDER BY created_on DESC
 
 #=>227rows
 
-select sb.batch_id,terr.territory_name,bc.batch_grp_name,sb.num_orders,sb.status,sb.created_on,a.username as assigned_to
-from shipment_batch_process sb
-join m_batch_config bc on bc.id=sb.batch_configid
-left join pnh_m_territory_info terr on terr.id=sb.territory_id
-join king_admin a on a.id=sb.assigned_userid
-where batch_id>'5000' and assigned_userid=1
-order by batch_id desc;
+SELECT sb.batch_id,terr.territory_name,bc.batch_grp_name,sb.num_orders,sb.status,sb.created_on,a.username AS assigned_to
+FROM shipment_batch_process sb
+JOIN m_batch_config bc ON bc.id=sb.batch_configid
+LEFT JOIN pnh_m_territory_info terr ON terr.id=sb.territory_id
+JOIN king_admin a ON a.id=sb.assigned_userid
+WHERE batch_id>'5000' AND assigned_userid=1
+ORDER BY batch_id DESC;
 
 
 
 
-desc king_transactions
-desc king_orders;
-desc proforma_invoices
+DESC king_transactions
+DESC king_orders;
+DESC proforma_invoices
 
 
 
-select f.franchise_name,count(sd.p_invoice_no) as num_orders,t.territory_name,tw.town_name
-	from shipment_batch_process_invoice_link sd
-join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no
-join king_orders o on o.id=pi.order_id
-join king_transactions tr on tr.transid=o.transid
-join pnh_m_franchise_info f on f.franchise_id=tr.franchise_id
-join pnh_m_territory_info t on t.id=f.territory_id
-join pnh_towns tw on tw.id=f.town_id
-where batch_id='5577' and sd.invoice_no = 0
-group by f.franchise_id;
+SELECT f.franchise_name,COUNT(sd.p_invoice_no) AS num_orders,t.territory_name,tw.town_name
+	FROM shipment_batch_process_invoice_link sd
+JOIN proforma_invoices `pi` ON pi.p_invoice_no = sd.p_invoice_no
+JOIN king_orders o ON o.id=pi.order_id
+JOIN king_transactions tr ON tr.transid=o.transid
+JOIN pnh_m_franchise_info f ON f.franchise_id=tr.franchise_id
+JOIN pnh_m_territory_info t ON t.id=f.territory_id
+JOIN pnh_towns tw ON tw.id=f.town_id
+WHERE batch_id='5577' AND sd.invoice_no = 0
+GROUP BY f.franchise_id;
 
 
-select f.franchise_id,f.franchise_name,count(sd.p_invoice_no) as num_orders,t.territory_name,tw.town_name,sd.batch_id
-                    from shipment_batch_process_invoice_link sd
-                    join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no
-                    join king_orders o on o.id=pi.order_id
-                    join king_transactions tr on tr.transid=o.transid
-                    join pnh_m_franchise_info f on f.franchise_id=tr.franchise_id
-                    join pnh_m_territory_info t on t.id=f.territory_id
-                    join pnh_towns tw on tw.id=f.town_id
-                    where batch_id='5577' and sd.invoice_no = 0
-                    group by f.franchise_id;
+SELECT f.franchise_id,f.franchise_name,COUNT(sd.p_invoice_no) AS num_orders,t.territory_name,tw.town_name,sd.batch_id
+                    FROM shipment_batch_process_invoice_link sd
+                    JOIN proforma_invoices `pi` ON pi.p_invoice_no = sd.p_invoice_no
+                    JOIN king_orders o ON o.id=pi.order_id
+                    JOIN king_transactions tr ON tr.transid=o.transid
+                    JOIN pnh_m_franchise_info f ON f.franchise_id=tr.franchise_id
+                    JOIN pnh_m_territory_info t ON t.id=f.territory_id
+                    JOIN pnh_towns tw ON tw.id=f.town_id
+                    WHERE batch_id='5577' AND sd.invoice_no = 0
+                    GROUP BY f.franchise_id;
 
-select group_concat(distinct sd.p_invoice_no) as p_invoice_ids
-		from shipment_batch_process_invoice_link sd
-		join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no
-		join king_orders o on o.id=pi.order_id
-		join king_transactions tr on tr.transid=o.transid
-where sd.batch_id='5577' and tr.franchise_id='254';
-
-
-select group_concat(distinct sd.p_invoice_no) as p_invoice_ids from shipment_batch_process_invoice_link sd 
-join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no 
-join king_orders o on o.id=pi.order_id join king_transactions tr on tr.transid=o.transid where sd.batch_id='5578'
+SELECT GROUP_CONCAT(DISTINCT sd.p_invoice_no) AS p_invoice_ids
+		FROM shipment_batch_process_invoice_link sd
+		JOIN proforma_invoices `pi` ON pi.p_invoice_no = sd.p_invoice_no
+		JOIN king_orders o ON o.id=pi.order_id
+		JOIN king_transactions tr ON tr.transid=o.transid
+WHERE sd.batch_id='5577' AND tr.franchise_id='254';
 
 
+SELECT GROUP_CONCAT(DISTINCT sd.p_invoice_no) AS p_invoice_ids FROM shipment_batch_process_invoice_link sd 
+JOIN proforma_invoices `pi` ON pi.p_invoice_no = sd.p_invoice_no 
+JOIN king_orders o ON o.id=pi.order_id JOIN king_transactions tr ON tr.transid=o.transid WHERE sd.batch_id='5578'
 
-select menuid,menuname,p_invoice_no,product_id,product,location,sum(rqty) as qty from ( 
-                select dl.menuid,mnu.name as menuname,rbs.p_invoice_no,rbs.product_id,pi.product_name as product,concat(concat(rack_name,bin_name),'::',si.mrp) as location,rbs.qty as rqty 
-                        from t_reserved_batch_stock rbs 
-                        join t_stock_info si on rbs.stock_info_id = si.stock_id 
-                        join m_product_info pi on pi.product_id = si.product_id 
-                        join m_rack_bin_info rak on rak.id = si.rack_bin_id 
-                        join shipment_batch_process_invoice_link e on e.p_invoice_no = rbs.p_invoice_no and invoice_no = 0
+
+
+SELECT menuid,menuname,p_invoice_no,product_id,product,location,SUM(rqty) AS qty FROM ( 
+                SELECT dl.menuid,mnu.name AS menuname,rbs.p_invoice_no,rbs.product_id,pi.product_name AS product,CONCAT(CONCAT(rack_name,bin_name),'::',si.mrp) AS location,rbs.qty AS rqty 
+                        FROM t_reserved_batch_stock rbs 
+                        JOIN t_stock_info si ON rbs.stock_info_id = si.stock_id 
+                        JOIN m_product_info PI ON pi.product_id = si.product_id 
+                        JOIN m_rack_bin_info rak ON rak.id = si.rack_bin_id 
+                        JOIN shipment_batch_process_invoice_link e ON e.p_invoice_no = rbs.p_invoice_no AND invoice_no = 0
                         
-                        join king_orders o on o.id = rbs.order_id
-                        join king_dealitems dlt on dlt.id = o.itemid
-			join king_deals dl on dl.dealid = dlt.dealid
-			join pnh_menu as mnu on mnu.id = dl.menuid and mnu.status=1
+                        JOIN king_orders o ON o.id = rbs.order_id
+                        JOIN king_dealitems dlt ON dlt.id = o.itemid
+			JOIN king_deals dl ON dl.dealid = dlt.dealid
+			JOIN pnh_menu AS mnu ON mnu.id = dl.menuid AND mnu.status=1
                         
-                        where e.p_invoice_no='115640' 
-                group by rbs.id  ) as g 
-                group by product_id,location;
+                        WHERE e.p_invoice_no='115640' 
+                GROUP BY rbs.id  ) AS g 
+                GROUP BY product_id,location;
 
 
-select menuid,menuname,p_invoice_no,product_id,product,location,sum(rqty) as qty from ( 
-                select dl.menuid,mnu.name as menuname,rbs.p_invoice_no,rbs.product_id,pi.product_name as product,concat(concat(rack_name,bin_name),'::',si.mrp) as location,rbs.qty as rqty 
-                        from t_reserved_batch_stock rbs 
-                        join t_stock_info si on rbs.stock_info_id = si.stock_id 
-                        join m_product_info pi on pi.product_id = si.product_id 
-                        join m_rack_bin_info rak on rak.id = si.rack_bin_id 
-                        join shipment_batch_process_invoice_link e on e.p_invoice_no = rbs.p_invoice_no and invoice_no = 0
+SELECT menuid,menuname,p_invoice_no,product_id,product,location,SUM(rqty) AS qty FROM ( 
+                SELECT dl.menuid,mnu.name AS menuname,rbs.p_invoice_no,rbs.product_id,pi.product_name AS product,CONCAT(CONCAT(rack_name,bin_name),'::',si.mrp) AS location,rbs.qty AS rqty 
+                        FROM t_reserved_batch_stock rbs 
+                        JOIN t_stock_info si ON rbs.stock_info_id = si.stock_id 
+                        JOIN m_product_info PI ON pi.product_id = si.product_id 
+                        JOIN m_rack_bin_info rak ON rak.id = si.rack_bin_id 
+                        JOIN shipment_batch_process_invoice_link e ON e.p_invoice_no = rbs.p_invoice_no AND invoice_no = 0
                         
-                        join king_orders o on o.id = rbs.order_id
-                        join king_dealitems dlt on dlt.id = o.itemid
-			join king_deals dl on dl.dealid = dlt.dealid
-			join pnh_menu as mnu on mnu.id = dl.menuid and mnu.status=1
+                        JOIN king_orders o ON o.id = rbs.order_id
+                        JOIN king_dealitems dlt ON dlt.id = o.itemid
+			JOIN king_deals dl ON dl.dealid = dlt.dealid
+			JOIN pnh_menu AS mnu ON mnu.id = dl.menuid AND mnu.status=1
                         
-                        where  e.batch_id = '5575'
-                group by rbs.id  ) as g 
-                group by product_id,location;
+                        WHERE  e.batch_id = '5575'
+                GROUP BY rbs.id  ) AS g 
+                GROUP BY product_id,location;
 
 #### Jan_11_2014 ======================
-select * from (
-            select distinct from_unixtime(tr.init,'%D %M %Y') as str_date,from_unixtime(tr.init,'%h:%i:%s %p') as str_time, count(tr.transid) as total_trans,tr.transid
+SELECT * FROM (
+            SELECT DISTINCT FROM_UNIXTIME(tr.init,'%D %M %Y') AS str_date,FROM_UNIXTIME(tr.init,'%h:%i:%s %p') AS str_time, COUNT(tr.transid) AS total_trans,tr.transid
                     ,o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
                     ,tr.init,tr.actiontime,tr.status tr_status,tr.is_pnh,tr.batch_enabled
-                    ,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,f.created_on as f_created_on
+                    ,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,f.created_on AS f_created_on
                     ,ter.territory_name
                     ,twn.town_name
-                    ,dl.menuid,m.name as menu_name,bs.name as brand_name
+                    ,dl.menuid,m.name AS menu_name,bs.name AS brand_name
                     ,sd.batch_id
-            from king_transactions tr
-                    join king_orders o on o.transid=tr.transid
-                    join king_dealitems di on di.id=o.itemid
-                    join king_deals dl on dl.dealid=di.dealid
-                    join pnh_menu m on m.id = dl.menuid
-                    join king_brands bs on bs.id = o.brandid
-            join pnh_m_franchise_info  f on f.franchise_id=tr.franchise_id  and f.is_suspended = 0
-            join pnh_m_territory_info ter on ter.id = f.territory_id 
-            join pnh_towns twn on twn.id=f.town_id
-                    left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
-                    left join proforma_invoices pi on pi.order_id = o.id and pi.invoice_status = 1 
-                    left join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no
-            WHERE o.status in (0,1) and tr.batch_enabled=1 and i.id is null  and tr.transid in ('PNH11244','PNHAXG89881','PNHBQV35115','PNHFMK39418','PNHGJL64274','PNHGQR82517','PNHJGC19279','PNHJSM35174','PNHSCD99697','PNHWTN26375','PNHWTW35421','PNHWUI91457','PNHWUM95923','PNHXJC33559','PNHZQI66535') 
-            group by o.transid) as g  
-where  ( g.batch_id is null and g.batch_id >= 5000 ) 
-group by transid order by  g.actiontime DESC ;
+            FROM king_transactions tr
+                    JOIN king_orders o ON o.transid=tr.transid
+                    JOIN king_dealitems di ON di.id=o.itemid
+                    JOIN king_deals dl ON dl.dealid=di.dealid
+                    JOIN pnh_menu m ON m.id = dl.menuid
+                    JOIN king_brands bs ON bs.id = o.brandid
+            JOIN pnh_m_franchise_info  f ON f.franchise_id=tr.franchise_id  AND f.is_suspended = 0
+            JOIN pnh_m_territory_info ter ON ter.id = f.territory_id 
+            JOIN pnh_towns twn ON twn.id=f.town_id
+                    LEFT JOIN king_invoice i ON o.id = i.order_id AND i.invoice_status = 1
+                    LEFT JOIN proforma_invoices PI ON pi.order_id = o.id AND pi.invoice_status = 1 
+                    LEFT JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no = pi.p_invoice_no
+            WHERE o.status IN (0,1) AND tr.batch_enabled=1 AND i.id IS NULL  AND tr.transid IN ('PNH11244','PNHAXG89881','PNHBQV35115','PNHFMK39418','PNHGJL64274','PNHGQR82517','PNHJGC19279','PNHJSM35174','PNHSCD99697','PNHWTN26375','PNHWTW35421','PNHWUI91457','PNHWUM95923','PNHXJC33559','PNHZQI66535') 
+            GROUP BY o.transid) AS g  
+WHERE  ( g.batch_id IS NULL AND g.batch_id >= 5000 ) 
+GROUP BY transid ORDER BY  g.actiontime DESC ;
 
-select * from king_admin
-select md5('basava')
+SELECT * FROM king_admin
+SELECT MD5('basava')
 
-select * from t_reserved_batch_stock rbs
-join king_orders o on o.id=rbs.order_id
-where batch_id='5575'
+SELECT * FROM t_reserved_batch_stock rbs
+JOIN king_orders o ON o.id=rbs.order_id
+WHERE batch_id='5575'
 
 
-select franchise_id,franchise_name,batch_id,menuid,menuname,p_invoice_no,product_id,product,location,sum(rqty) as qty from ( 
-                select tr.franchise_id,f.franchise_name,e.batch_id,dl.menuid,mnu.name as menuname,rbs.p_invoice_no,rbs.product_id,pi.product_name as product,concat(concat(rack_name,bin_name),'::',si.mrp) as location,rbs.qty as rqty 
-                        from t_reserved_batch_stock rbs 
-                        join t_stock_info si on rbs.stock_info_id = si.stock_id 
-                        join m_product_info pi on pi.product_id = si.product_id 
-                        join m_rack_bin_info rak on rak.id = si.rack_bin_id 
-                        join shipment_batch_process_invoice_link e on e.p_invoice_no = rbs.p_invoice_no and invoice_no = 0
+SELECT franchise_id,franchise_name,batch_id,menuid,menuname,p_invoice_no,product_id,product,location,SUM(rqty) AS qty FROM ( 
+                SELECT tr.franchise_id,f.franchise_name,e.batch_id,dl.menuid,mnu.name AS menuname,rbs.p_invoice_no,rbs.product_id,pi.product_name AS product,CONCAT(CONCAT(rack_name,bin_name),'::',si.mrp) AS location,rbs.qty AS rqty 
+                        FROM t_reserved_batch_stock rbs 
+                        JOIN t_stock_info si ON rbs.stock_info_id = si.stock_id 
+                        JOIN m_product_info PI ON pi.product_id = si.product_id 
+                        JOIN m_rack_bin_info rak ON rak.id = si.rack_bin_id 
+                        JOIN shipment_batch_process_invoice_link e ON e.p_invoice_no = rbs.p_invoice_no AND invoice_no = 0
                         
-                        join king_orders o on o.id = rbs.order_id
-						join king_transactions tr on tr.transid = o.transid
-						join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-                        join king_dealitems dlt on dlt.id = o.itemid
+                        JOIN king_orders o ON o.id = rbs.order_id
+						JOIN king_transactions tr ON tr.transid = o.transid
+						JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+                        JOIN king_dealitems dlt ON dlt.id = o.itemid
 
-			join king_deals dl on dl.dealid = dlt.dealid
-			join pnh_menu as mnu on mnu.id = dl.menuid and mnu.status=1
+			JOIN king_deals dl ON dl.dealid = dlt.dealid
+			JOIN pnh_menu AS mnu ON mnu.id = dl.menuid AND mnu.status=1
                         
-                        where  e.batch_id = '5584'
-                group by rbs.id  ) as g 
-                group by product_id,location;
+                        WHERE  e.batch_id = '5584'
+                GROUP BY rbs.id  ) AS g 
+                GROUP BY product_id,location;
 
 #=>32 rows
 
-select * from shipment_batch_process sb
-join shipment_batch_process_invoice_link sd on sd.batch_id = sb.batch_id
-where sb.batch_id='5584'
-group by sd.batch_id;
+SELECT * FROM shipment_batch_process sb
+JOIN shipment_batch_process_invoice_link sd ON sd.batch_id = sb.batch_id
+WHERE sb.batch_id='5584'
+GROUP BY sd.batch_id;
 
-select f.franchise_id,f.franchise_name,count(sd.p_invoice_no) as num_orders,t.territory_name,tw.town_name,sd.batch_id
-                    from shipment_batch_process_invoice_link sd
-                    join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no
-                    join king_orders o on o.id=pi.order_id
-                    join king_transactions tr on tr.transid=o.transid
-                    join pnh_m_franchise_info f on f.franchise_id=tr.franchise_id
-                    join pnh_m_territory_info t on t.id=f.territory_id
-                    join pnh_towns tw on tw.id=f.town_id
-                    where batch_id='5584' and sd.invoice_no = 0
-                    group by f.franchise_id;
+SELECT f.franchise_id,f.franchise_name,COUNT(sd.p_invoice_no) AS num_orders,t.territory_name,tw.town_name,sd.batch_id
+                    FROM shipment_batch_process_invoice_link sd
+                    JOIN proforma_invoices `pi` ON pi.p_invoice_no = sd.p_invoice_no
+                    JOIN king_orders o ON o.id=pi.order_id
+                    JOIN king_transactions tr ON tr.transid=o.transid
+                    JOIN pnh_m_franchise_info f ON f.franchise_id=tr.franchise_id
+                    JOIN pnh_m_territory_info t ON t.id=f.territory_id
+                    JOIN pnh_towns tw ON tw.id=f.town_id
+                    WHERE batch_id='5584' AND sd.invoice_no = 0
+                    GROUP BY f.franchise_id;
 
-select * from shipment_batch_process_invoice_link
+SELECT * FROM shipment_batch_process_invoice_link
 
-select * from king_transactions
-desc king_transactions;
+SELECT * FROM king_transactions
+DESC king_transactions;
 
 
 
-            select distinct from_unixtime(tr.init,'%D %M %Y') as str_date,from_unixtime(tr.init,'%h:%i:%s %p') as str_time, count(tr.transid) as total_trans,tr.transid
+            SELECT DISTINCT FROM_UNIXTIME(tr.init,'%D %M %Y') AS str_date,FROM_UNIXTIME(tr.init,'%h:%i:%s %p') AS str_time, COUNT(tr.transid) AS total_trans,tr.transid
                     ,o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
                     ,tr.init,tr.actiontime,tr.status tr_status,tr.is_pnh,tr.batch_enabled
-                    ,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,f.created_on as f_created_on
+                    ,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,f.created_on AS f_created_on
                     ,ter.territory_name,twn.town_name
-                    ,dl.menuid,m.name as menu_name,bs.name as brand_name
+                    ,dl.menuid,m.name AS menu_name,bs.name AS brand_name
                     ,sd.batch_id
-            from king_transactions tr
-                    join king_orders o on o.transid=tr.transid
-                    join king_dealitems di on di.id=o.itemid
-                    join king_deals dl on dl.dealid=di.dealid
-                    join pnh_menu m on m.id = dl.menuid
-                    join king_brands bs on bs.id = o.brandid
-            join pnh_m_franchise_info  f on f.franchise_id=tr.franchise_id  and f.is_suspended = 0
-            join pnh_m_territory_info ter on ter.id = f.territory_id 
-            join pnh_towns twn on twn.id=f.town_id
-                    left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
-                    left join proforma_invoices pi on pi.order_id = o.id and pi.invoice_status = 1 
-                    left join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no
-            WHERE tr.status in (0,1) and i.id is null and tr.batch_enabled=0 
-            group by tr.transid order by  tr.actiontime DESC;
+            FROM king_transactions tr
+                    JOIN king_orders o ON o.transid=tr.transid
+                    JOIN king_dealitems di ON di.id=o.itemid
+                    JOIN king_deals dl ON dl.dealid=di.dealid
+                    JOIN pnh_menu m ON m.id = dl.menuid
+                    JOIN king_brands bs ON bs.id = o.brandid
+            JOIN pnh_m_franchise_info  f ON f.franchise_id=tr.franchise_id  AND f.is_suspended = 0
+            JOIN pnh_m_territory_info ter ON ter.id = f.territory_id 
+            JOIN pnh_towns twn ON twn.id=f.town_id
+                    LEFT JOIN king_invoice i ON o.id = i.order_id AND i.invoice_status = 1
+                    LEFT JOIN proforma_invoices PI ON pi.order_id = o.id AND pi.invoice_status = 1 
+                    LEFT JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no = pi.p_invoice_no
+            WHERE tr.status IN (0,1) AND i.id IS NULL AND tr.batch_enabled=0 
+            GROUP BY tr.transid ORDER BY  tr.actiontime DESC;
 
 
-select o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
+SELECT o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
                     ,di.name
                     ,tr.init,tr.actiontime,tr.status tr_status,tr.is_pnh,tr.batch_enabled
                     ,pi.p_invoice_no
-                    from king_orders o
-                    join king_transactions tr on tr.transid = o.transid 
-                    join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-                    left join king_invoice i on o.id = i.order_id 
-                    left join proforma_invoices `pi` on pi.order_id = o.id
-                    join king_dealitems di on di.id = o.itemid
-                    where i.id is null and tr.transid = 'PNHCPX81979' and tr.status in (1)
-                    order by tr.init,di.name;
+                    FROM king_orders o
+                    JOIN king_transactions tr ON tr.transid = o.transid 
+                    JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id
+                    LEFT JOIN king_invoice i ON o.id = i.order_id 
+                    LEFT JOIN proforma_invoices `pi` ON pi.order_id = o.id
+                    JOIN king_dealitems di ON di.id = o.itemid
+                    WHERE i.id IS NULL AND tr.transid = 'PNHCPX81979' AND tr.status IN (1)
+                    ORDER BY tr.init,di.name;
 
-select * from king_transactions where transid='PNH97446';
+SELECT * FROM king_transactions WHERE transid='PNH97446';
 
 
 # Jan_13_2014
-select * from proforma_invoices
+SELECT * FROM proforma_invoices
 
-select * from shipment_batch_process;
+SELECT * FROM shipment_batch_process;
 
-select * 
-from king_orders o
-join proforma_invoices pi on pi.transid=o.transid
-where o.transid='PNHKWQ67556';
+SELECT * 
+FROM king_orders o
+JOIN proforma_invoices PI ON pi.transid=o.transid
+WHERE o.transid='PNHKWQ67556';
 
 
-select unix_timestamp(now())
+SELECT UNIX_TIMESTAMP(NOW())
 
-select from_unixtime('1389609882');
+SELECT FROM_UNIXTIME('1389609882');
 
 error: PNH22377
 
-select * from king_invoice;
+SELECT * FROM king_invoice;
 
 
 # Jan_14_2014
 
 -- =============================================================================
-update t_imei_no set status=0 and order_id=0 where imei_no = '911208355656643';
+UPDATE t_imei_no SET STATUS=0 AND order_id=0 WHERE imei_no = '911208355656643';
 -- =============================================================================
 
-select (100*40)/100;
+SELECT (100*40)/100;
 
-select ceil(50/2);
+SELECT CEIL(50/2);
 
 #============================================================================================
 #========== BATCH RESET =====================================================================
-set @global_batch_id=5000;
-set @batch_id=5714; #5544-48
-update shipment_batch_process_invoice_link set batch_id=@global_batch_id where batch_id=@batch_id;
-delete from shipment_batch_process where batch_id = @batch_id;
+SET @global_batch_id=5000;
+SET @batch_id=5714; #5544-48
+UPDATE shipment_batch_process_invoice_link SET batch_id=@global_batch_id WHERE batch_id=@batch_id;
+DELETE FROM shipment_batch_process WHERE batch_id = @batch_id;
 #============================================================================================
 
-select ceil(66/20) =>4
-select 66%20 6
-select ceil(20/2) 10
+SELECT CEIL(66/20) =>4
+SELECT 66%20 6
+SELECT CEIL(20/2) 10
 6<=10
 26-26 = 0
 batches 3
 
-select * from king_deals d
-join king_dealitems di on di.dealid=d.dealid where id='9953912416';
+SELECT * FROM king_deals d
+JOIN king_dealitems di ON di.dealid=d.dealid WHERE id='9953912416';
 
-select * from king_dealitems;
+SELECT * FROM king_dealitems;
 
 deal edit:dealid=9953912416
-<div class="extra_text"> <table>  <tr>      <td>     <ul class="fk-ul-disc">      <li>14.2 Megapixels</li>      <li>Optical Zoom: 5x</li>     </ul>    </td>    <td>     <ul class="fk-ul-disc">            <li>CCD Image Sensor</li>            <li>with 
+<DIV class="extra_text"> <TABLE>  <tr>      <td>     <ul class="fk-ul-disc">      <li>14.2 Megapixels</li>      <li>Optical Zoom: 5X</li>     </ul>    </td>    <td>     <ul class="fk-ul-disc">            <li>CCD Image Sensor</li>            <li>WITH 
 
-select * from pnh_m_voucher;
+SELECT * FROM pnh_m_voucher;
 
 
-select distinct o.itemid,bc.id as menuid,bc.batch_grp_name as menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) from king_transactions tr
-                                join king_orders as o on o.transid=tr.transid
-                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
-                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
-                                join king_dealitems dl on dl.id = o.itemid
-                                join king_deals d on d.dealid = dl.dealid 
-                                join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
+SELECT DISTINCT o.itemid,bc.id AS menuid,bc.batch_grp_name AS menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,FROM_UNIXTIME(tr.init) FROM king_transactions tr
+                                JOIN king_orders AS o ON o.transid=tr.transid
+                                JOIN proforma_invoices AS `pi` ON pi.order_id = o.id AND pi.invoice_status=1
+                                JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no =pi.p_invoice_no
+                                JOIN king_dealitems dl ON dl.id = o.itemid
+                                JOIN king_deals d ON d.dealid = dl.dealid 
+                                JOIN m_batch_config bc ON FIND_IN_SET(d.menuid,bc.assigned_menuid) 
                                 
-                                join pnh_menu mn on mn.id=d.menuid
-                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id #and f.is_suspended = 0
-                                where sd.batch_id=5000  and f.territory_id = 11 
-                                group by o.transid
-                                order by menuname,tr.init asc
+                                JOIN pnh_menu mn ON mn.id=d.menuid
+                                JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id #and f.is_suspended = 0
+                                WHERE sd.batch_id=5000  AND f.territory_id = 11 
+                                GROUP BY o.transid
+                                ORDER BY menuname,tr.init ASC
 
 # Jan_16_2014 ===========
 
-select * from king_admin
+SELECT * FROM king_admin
 m_batch_config
 
-select * from king_menu;
-select * from pnh_menu
+SELECT * FROM king_menu;
+SELECT * FROM pnh_menu
 
 -- -- -- -- -- -- //===============================================
-alter table `king_orders` add index `status` (`status`);
-alter table `m_product_info` add index `product_id` (`product_id`);
+ALTER TABLE `king_orders` ADD INDEX `status` (`status`);
+ALTER TABLE `m_product_info` ADD INDEX `product_id` (`product_id`);
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 
-select distinct from_unixtime(tr.init,'%D %M %Y') as str_date,from_unixtime(tr.init,'%h:%i:%s %p') as str_time, count(tr.transid) as total_trans,tr.transid
+SELECT DISTINCT FROM_UNIXTIME(tr.init,'%D %M %Y') AS str_date,FROM_UNIXTIME(tr.init,'%h:%i:%s %p') AS str_time, COUNT(tr.transid) AS total_trans,tr.transid
                     ,o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
                     ,tr.init,tr.actiontime,tr.status tr_status,tr.is_pnh,tr.batch_enabled
-                    ,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,f.created_on as f_created_on
+                    ,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,f.created_on AS f_created_on
                     ,ter.territory_name
                     ,twn.town_name
-                    ,dl.menuid,m.name as menu_name,bs.name as brand_name
+                    ,dl.menuid,m.name AS menu_name,bs.name AS brand_name
                     ,sd.batch_id
                     ,pi.cancelled_on
-            from king_transactions tr
-                    join king_orders o on o.transid=tr.transid
-                    join king_dealitems di on di.id=o.itemid
-                    join king_deals dl on dl.dealid=di.dealid
-                    join pnh_menu m on m.id = dl.menuid
-                    join king_brands bs on bs.id = o.brandid
-            join pnh_m_franchise_info  f on f.franchise_id=tr.franchise_id  and f.is_suspended = 0
-            join pnh_m_territory_info ter on ter.id = f.territory_id 
-            join pnh_towns twn on twn.id=f.town_id
-                    left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
-                    left join proforma_invoices pi on pi.order_id = o.id and pi.invoice_status = 1 
-                    left join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no
-            WHERE o.status in (0,1) and tr.batch_enabled=1 and i.id is null  and tr.transid in ('PNH22839','PNH33295','PNH35578','PNH35818','PNH71847','PNH93611','PNHAXG89881','PNHBQV35115','PNHCXE88342'
+            FROM king_transactions tr
+                    JOIN king_orders o ON o.transid=tr.transid
+                    JOIN king_dealitems di ON di.id=o.itemid
+                    JOIN king_deals dl ON dl.dealid=di.dealid
+                    JOIN pnh_menu m ON m.id = dl.menuid
+                    JOIN king_brands bs ON bs.id = o.brandid
+            JOIN pnh_m_franchise_info  f ON f.franchise_id=tr.franchise_id  AND f.is_suspended = 0
+            JOIN pnh_m_territory_info ter ON ter.id = f.territory_id 
+            JOIN pnh_towns twn ON twn.id=f.town_id
+                    LEFT JOIN king_invoice i ON o.id = i.order_id AND i.invoice_status = 1
+                    LEFT JOIN proforma_invoices PI ON pi.order_id = o.id AND pi.invoice_status = 1 
+                    LEFT JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no = pi.p_invoice_no
+            WHERE o.status IN (0,1) AND tr.batch_enabled=1 AND i.id IS NULL  AND tr.transid IN ('PNH22839','PNH33295','PNH35578','PNH35818','PNH71847','PNH93611','PNHAXG89881','PNHBQV35115','PNHCXE88342'
 ,'PNHDJX75781','PNHEHA75287','PNHESP26174','PNHFMK39418','PNHGJL64274','PNHGQR82517','PNHHCP63831','PNHIHX16957','PNHIYC47867','PNHJGC19279','PNHJSM35174','PNHNVQ34988','PNHQQK26697','PNHQSG33417','PNHRAL44539'
 ,'PNHSCD99697','PNHSZZ72836','PNHTMP33937','PNHTRW66732','PNHTWJ53918','PNHUEA37733','PNHURC82659','PNHVSE94433','PNHVVX36284','PNHWTN26375','PNHWTW35421','PNHWUI91457','PNHWUM95923','PNHWZM23398','PNHXJC33559'
 ,'PNHZEV97667','PNHZQI66535')
-            group by o.transid asc) as g  where  and g.batch_id = 5000 and  g.batch_id >= 5000 group by transid order by  g.actiontime DESC;
+            GROUP BY o.transid ASC) AS g  WHERE  AND g.batch_id = 5000 AND  g.batch_id >= 5000 GROUP BY transid ORDER BY  g.actiontime DESC;
 
 # Jan_17_2014
 
 -- =============================================================================
-update t_imei_no set status=0 and order_id=0 where imei_no = '354619056098758';
+UPDATE t_imei_no SET STATUS=0 AND order_id=0 WHERE imei_no = '354619056098758';
 -- =============================================================================
 
-select * from t_imei_no
-select * from m_batch_config
+SELECT * FROM t_imei_no
+SELECT * FROM m_batch_config
 
-desc m_batch_config;
+DESC m_batch_config;
 
-select e.*,b.batch_id from proforma_invoices a 
-			join shipment_batch_process_invoice_link b on a.p_invoice_no = b.p_invoice_no 
-			join king_transactions c on c.transid = a.transid  
-			join pnh_m_franchise_info d on d.franchise_id = c.franchise_id  and d.is_suspended = 0
-			join pnh_m_territory_info e on e.id = d.territory_id 
-			where  a.invoice_status = 1 and batch_id = '5000'
-			group by d.territory_id 
-			order by territory_name;
+SELECT e.*,b.batch_id FROM proforma_invoices a 
+			JOIN shipment_batch_process_invoice_link b ON a.p_invoice_no = b.p_invoice_no 
+			JOIN king_transactions c ON c.transid = a.transid  
+			JOIN pnh_m_franchise_info d ON d.franchise_id = c.franchise_id  AND d.is_suspended = 0
+			JOIN pnh_m_territory_info e ON e.id = d.territory_id 
+			WHERE  a.invoice_status = 1 AND batch_id = '5000'
+			GROUP BY d.territory_id 
+			ORDER BY territory_name;
 
-select * from pnh_m_territory_info;
+SELECT * FROM pnh_m_territory_info;
 
-select distinct o.itemid,bc.id as menuid,bc.batch_grp_name as menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,from_unixtime(tr.init) from king_transactions tr
-                                join king_orders as o on o.transid=tr.transid
-                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
-                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no =pi.p_invoice_no
-                                join king_dealitems dl on dl.id = o.itemid
-                                join king_deals d on d.dealid = dl.dealid 
-                                join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
+SELECT DISTINCT o.itemid,bc.id AS menuid,bc.batch_grp_name AS menuname,f.territory_id,sd.id,sd.batch_id,sd.p_invoice_no,FROM_UNIXTIME(tr.init) FROM king_transactions tr
+                                JOIN king_orders AS o ON o.transid=tr.transid
+                                JOIN proforma_invoices AS `pi` ON pi.order_id = o.id AND pi.invoice_status=1
+                                JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no =pi.p_invoice_no
+                                JOIN king_dealitems dl ON dl.id = o.itemid
+                                JOIN king_deals d ON d.dealid = dl.dealid 
+                                JOIN m_batch_config bc ON FIND_IN_SET(d.menuid,bc.assigned_menuid) 
                                 
-                                join pnh_menu mn on mn.id=d.menuid
-                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id #and f.is_suspended = 0
-                                where sd.batch_id=5000  and f.franchise_id = 31 
-                                group by o.transid
-                                order by menuname,tr.init asc;
+                                JOIN pnh_menu mn ON mn.id=d.menuid
+                                JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id #and f.is_suspended = 0
+                                WHERE sd.batch_id=5000  AND f.franchise_id = 31 
+                                GROUP BY o.transid
+                                ORDER BY menuname,tr.init ASC;
 
 
 G1 -
 112,118,122 - Mobiles & Tablets,Computers & Peripherals,Cameras & Accessories
 
-select * from pnh_member_info where first_name = 'shivraj'
+SELECT * FROM pnh_member_info WHERE first_name = 'shivraj'
 
-select * from king_admin
-select * from m_batch_config
+SELECT * FROM king_admin
+SELECT * FROM m_batch_config
 
-select product_name from m_product_info where product_id='8583';
+SELECT product_name FROM m_product_info WHERE product_id='8583';
 
 ### Jan_18_2014 ###
-select * from shipment_batch_process
+SELECT * FROM shipment_batch_process
 
-select * from king_transactions where transid='PNH43375';
+SELECT * FROM king_transactions WHERE transid='PNH43375';
 
-select * from t_stock_info
+SELECT * FROM t_stock_info
 
 -- #================================================================
 
 #new fields added
-alter table `shipment_batch_process_invoice_link` add column `batched_on` bigint (20)  NULL  after `delivered_by`, add column `batched_by` int (11)  NULL  after `batched_on`;
+ALTER TABLE `shipment_batch_process_invoice_link` ADD COLUMN `batched_on` BIGINT (20)  NULL  AFTER `delivered_by`, ADD COLUMN `batched_by` INT (11)  NULL  AFTER `batched_on`;
 DROP TABLE IF EXISTS `picklist_log_reservation`;
 
 CREATE TABLE `picklist_log_reservation` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `batch_id` bigint(20) DEFAULT NULL,
-  `created_by` int(11) DEFAULT '0',
-  `createdon` datetime DEFAULT NULL,
-  `printcount` int(100) DEFAULT NULL,
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `batch_id` BIGINT(20) DEFAULT NULL,
+  `created_by` INT(11) DEFAULT '0',
+  `createdon` DATETIME DEFAULT NULL,
+  `printcount` INT(100) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB;
+) ENGINE=INNODB;
 
 -- #================================================================
-select * from shipment_batch_process_invoice_link
+SELECT * FROM shipment_batch_process_invoice_link
 
 B5595
 PNHWZM23398
 
-select * from proforma_invoices where transid='PNHWZM23398'
+SELECT * FROM proforma_invoices WHERE transid='PNHWZM23398'
 
-select printcount from picklist_log_reservation where p_inv_no='116095';
+SELECT printcount FROM picklist_log_reservation WHERE p_inv_no='116095';
 
 
 ##### 116 - TV, washing machine
@@ -1666,14 +1666,14 @@ Company Assets
 
 
 
-select t.* from proforma_invoices pi 
-		join shipment_batch_process_invoice_link sd on pi.p_invoice_no = sd.p_invoice_no 
-		join king_transactions tr on tr.transid = pi.transid  
-		join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
-		join pnh_m_territory_info t on t.id = f.territory_id 
-		where pi.invoice_status = 1 and sd.batch_id = '5000'
-		group by f.territory_id 
-		order by t.territory_name
+SELECT t.* FROM proforma_invoices PI 
+		JOIN shipment_batch_process_invoice_link sd ON pi.p_invoice_no = sd.p_invoice_no 
+		JOIN king_transactions tr ON tr.transid = pi.transid  
+		JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id AND f.is_suspended = 0
+		JOIN pnh_m_territory_info t ON t.id = f.territory_id 
+		WHERE pi.invoice_status = 1 AND sd.batch_id = '5000'
+		GROUP BY f.territory_id 
+		ORDER BY t.territory_name
 
 # Jan_21_2014
 
@@ -1684,82 +1684,82 @@ select t.* from proforma_invoices pi
 -- XXXXX alter table `shipment_batch_process_invoice_link` drop column `is_acknowlege_printed`;
 
 -- XXXXX create table `acknowledgement_print_log` (  `sno` bigint NOT NULL AUTO_INCREMENT ,`log_id` varchar (150), `tm_emp_id` varchar (100) NULL, `be_emp_id` varchar (100) , `p_inv_no` varchar (100) NOT NULL 
-, `created_on` varchar (50) , `created_by` int (30) , `status` int (10) DEFAULT '0', `count` int (100) DEFAULT '0', PRIMARY KEY ( `sno`));
+, `created_on` VARCHAR (50) , `created_by` INT (30) , `status` INT (10) DEFAULT '0', `count` INT (100) DEFAULT '0', PRIMARY KEY ( `sno`));
 
 -- ALTER TABLE `pnh_sch_discount_track` ADD COLUMN `dealid` BIGINT(0) NULL AFTER `catid`; 
 -- ALTER TABLE `pnh_sch_discount_brands` ADD COLUMN `dealid` BIGINT(11) DEFAULT 0 NULL AFTER `discount`;  
 
-Jan_21_2014 drop table `acknowledgement_print_log`
+Jan_21_2014 DROP TABLE `acknowledgement_print_log`
 
 
 
 
 
-select t.* from proforma_invoices pi 
-		join shipment_batch_process_invoice_link sd on pi.p_invoice_no = sd.p_invoice_no 
-		join king_transactions tr on tr.transid = pi.transid  
-		join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
-		join pnh_m_territory_info t on t.id = f.territory_id 
-		join king_orders o on o.transid=tr.transid
-		left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
-		where pi.invoice_status = 1 and sd.batch_id = '5000' and tr.batch_enabled=1 and i.id is null
-		group by f.territory_id 
-		order by t.territory_name
+SELECT t.* FROM proforma_invoices PI 
+		JOIN shipment_batch_process_invoice_link sd ON pi.p_invoice_no = sd.p_invoice_no 
+		JOIN king_transactions tr ON tr.transid = pi.transid  
+		JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id AND f.is_suspended = 0
+		JOIN pnh_m_territory_info t ON t.id = f.territory_id 
+		JOIN king_orders o ON o.transid=tr.transid
+		LEFT JOIN king_invoice i ON o.id = i.order_id AND i.invoice_status = 1
+		WHERE pi.invoice_status = 1 AND sd.batch_id = '5000' AND tr.batch_enabled=1 AND i.id IS NULL
+		GROUP BY f.territory_id 
+		ORDER BY t.territory_name
 
 
-select distinct 
-		o.itemid,count(distinct tr.transid) as ttl_trans,group_concat(distinct tr.transid) as grp_trans
-		,bc.id as menuid,bc.batch_grp_name as menuname,group_concat(distinct d.menuid) as actualmenus,f.territory_id
+SELECT DISTINCT 
+		o.itemid,COUNT(DISTINCT tr.transid) AS ttl_trans,GROUP_CONCAT(DISTINCT tr.transid) AS grp_trans
+		,bc.id AS menuid,bc.batch_grp_name AS menuname,GROUP_CONCAT(DISTINCT d.menuid) AS actualmenus,f.territory_id
 		,sd.id,sd.batch_id,sd.p_invoice_no
-		,from_unixtime(tr.init) as init,bc.batch_size,bc.group_assigned_uid as bc_group_uids
-			from king_transactions tr
-			join king_orders as o on o.transid=tr.transid
-			join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
-			join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no and sd.invoice_no=0 
-			join king_dealitems dl on dl.id = o.itemid
-			join king_deals d on d.dealid = dl.dealid 
-			join pnh_menu mn on mn.id=d.menuid
-			join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
-			join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
-			where   f.territory_id = '2' and sd.batch_id = 5000 and tr.batch_enabled=1
-				group by  bc.id
-			order by tr.init asc
+		,FROM_UNIXTIME(tr.init) AS init,bc.batch_size,bc.group_assigned_uid AS bc_group_uids
+			FROM king_transactions tr
+			JOIN king_orders AS o ON o.transid=tr.transid
+			JOIN proforma_invoices AS `pi` ON pi.order_id = o.id AND pi.invoice_status=1
+			JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no = pi.p_invoice_no AND sd.invoice_no=0 
+			JOIN king_dealitems dl ON dl.id = o.itemid
+			JOIN king_deals d ON d.dealid = dl.dealid 
+			JOIN pnh_menu mn ON mn.id=d.menuid
+			JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id AND f.is_suspended = 0
+			JOIN m_batch_config bc ON FIND_IN_SET(d.menuid,bc.assigned_menuid) 
+			WHERE   f.territory_id = '2' AND sd.batch_id = 5000 AND tr.batch_enabled=1
+				GROUP BY  bc.id
+			ORDER BY tr.init ASC
 
 #PNH55415,PNH24756
 
-select * from (
-            select distinct from_unixtime(tr.init,'%d/%m/%Y') as str_date,from_unixtime(tr.init,'%h:%i:%s %p') as str_time, count(tr.transid) as total_trans,tr.transid
+SELECT * FROM (
+            SELECT DISTINCT FROM_UNIXTIME(tr.init,'%d/%m/%Y') AS str_date,FROM_UNIXTIME(tr.init,'%h:%i:%s %p') AS str_time, COUNT(tr.transid) AS total_trans,tr.transid
                     ,o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
                     ,tr.init,tr.actiontime,tr.status tr_status,tr.is_pnh,tr.batch_enabled
-                    ,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,f.created_on as f_created_on
+                    ,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,f.created_on AS f_created_on
                     ,ter.territory_name
                     ,twn.town_name
-                    ,dl.menuid,m.name as menu_name,bs.name as brand_name
+                    ,dl.menuid,m.name AS menu_name,bs.name AS brand_name
                     ,sd.batch_id,sd.batched_on
                     ,pi.cancelled_on
-            from king_transactions tr
-                    join king_orders o on o.transid=tr.transid
-                    join king_dealitems di on di.id=o.itemid
-                    join king_deals dl on dl.dealid=di.dealid
-                    join pnh_menu m on m.id = dl.menuid
-                    join king_brands bs on bs.id = o.brandid
-            join pnh_m_franchise_info  f on f.franchise_id=tr.franchise_id  and f.is_suspended = 0
-            join pnh_m_territory_info ter on ter.id = f.territory_id 
-            join pnh_towns twn on twn.id=f.town_id
-                    left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
-                    left join proforma_invoices pi on pi.order_id = o.id and pi.invoice_status = 1 
-                    left join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no
-            WHERE o.status in (0,1) and tr.batch_enabled=1 and i.id is null  and tr.transid  = 'PNH24756' #tr.transid in ('PNH24756','PNH11768','PNH11769','PNH14153','PNH16531','PNH16758','PNH16829','PNH18499','PNH18613','PNH18694','PNH19988','PNH21379','PNH22377','PNH24756','PNH24973','PNH25135','PNH25654','PNH25842','PNH26544','PNH26765','PNH26782','PNH26895','PNH27179','PNH28758','PNH28935','PNH29347','PNH29776','PNH32855','PNH33145','PNH33191','PNH34632','PNH35578','PNH36978','PNH37124','PNH38468','PNH38666','PNH39728','PNH39841','PNH43375','PNH45122','PNH45598','PNH45771','PNH46113','PNH46474','PNH46595','PNH49892','PNH51259','PNH52451','PNH52959','PNH54347','PNH54546','PNH55285','PNH55415','PNH55963','PNH57714','PNH59216','PNH61185','PNH61811','PNH62431','PNH62792','PNH62894','PNH63543','PNH64597','PNH64835','PNH65361','PNH65422','PNH65711','PNH66479','PNH66571','PNH66924','PNH68492','PNH68863','PNH68996','PNH69272','PNH71162','PNH71171','PNH73246','PNH73648','PNH74896','PNH75579','PNH76542','PNH76553','PNH76695','PNH77194','PNH78763','PNH78771','PNH79767','PNH81262','PNH81424','PNH82245','PNH82796','PNH83136','PNH83532','PNH84494','PNH84838','PNH84978','PNH85514','PNH85534','PNH86684','PNH86879','PNH86943','PNH87251','PNH87352','PNH87866','PNH87895','PNH88261','PNH88784','PNH89294','PNH91142','PNH91414','PNH92727','PNH93167','PNH93343','PNH93391','PNH93714','PNH94121','PNH95855','PNH97158','PNH97261','PNH97446','PNH98427','PNH99546','PNH99823','PNHADS69161','PNHAED74212','PNHAGH88692','PNHAGN36664','PNHAHR92662','PNHANH58567','PNHANP18692','PNHARM33812','PNHAUT82647','PNHAVY15723','PNHAWP81139','PNHAXZ95887','PNHBCQ31955','PNHBDQ46772','PNHBIC14589','PNHBJX88262','PNHBQY95588','PNHBTY26342','PNHBUG92628','PNHBVZ88616','PNHBXL77127','PNHCBX23293','PNHCIK77141','PNHCIQ31331','PNHCMG84238','PNHCNI94123','PNHCUC68876','PNHDAC33555','PNHDAZ29396','PNHDHN67744','PNHDKQ83788','PNHDLH38581','PNHDLU22337','PNHDRB84232','PNHDRN86616','PNHDXQ59712','PNHEBM77371','PNHEDE76659','PNHEEA25773','PNHEKI99239','PNHEKN99876','PNHEKQ79585','PNHEMC36338','PNHEUC28782','PNHEVL56344','PNHEWD63196','PNHEWS63546','PNHEXJ46975','PNHFDQ39861','PNHFEP19358','PNHFGH39552','PNHFJJ89521','PNHFJW85241','PNHFMC31231','PNHFNJ93618','PNHFPD52595','PNHFQW52357','PNHFRK85831','PNHGBA81545','PNHGBW42171','PNHGCN55994','PNHGDB83273','PNHGFX26856','PNHGGV79376','PNHGIA46937','PNHGPD98365','PNHGPK52349','PNHGQW98992','PNHGRK87445','PNHGSP85927','PNHGTD69361','PNHGZG96317','PNHGZK66297','PNHGZX93525','PNHHAM59938','PNHHDV12858','PNHHFN96199','PNHHJT55225','PNHHKV17658','PNHHLJ32837','PNHHLK63918','PNHHPL57445','PNHIBP85449','PNHIEK31187','PNHIKZ84631','PNHINL91791','PNHITM15567','PNHJHY22236','PNHJIG23987','PNHJJW49978','PNHJPK79588','PNHJUB83444','PNHJUR83585','PNHJWH19378','PNHJXM54977','PNHJYI53269','PNHJYR49625','PNHKBX34595','PNHKFE84894','PNHKHA69179','PNHKHF18118','PNHKIU86986','PNHKJX49398','PNHKKW32568','PNHKMH14852','PNHKMP39512','PNHKRI73163','PNHKRJ67714','PNHKSE17358','PNHKSH76263','PNHKVE56634','PNHKVK83266','PNHKWQ67556','PNHKWT97949','PNHKWV36154','PNHKXY29712','PNHKZZ52757','PNHLCH25589','PNHLFZ38473','PNHLGE26468','PNHLGR41262','PNHLHF23981','PNHLJU53973','PNHLPT92586','PNHLUD18722','PNHLVQ28751','PNHLXS47336','PNHMCZ13697','PNHMGI67624','PNHMIQ71617','PNHMIT85823','PNHMQG96137','PNHMTK76282','PNHMUN63624','PNHMXM72843','PNHNBH61653','PNHNEF55642','PNHNES62472','PNHNFQ43361','PNHNHM42857','PNHNJW86618','PNHNLX33758','PNHNMW22688','PNHNPZ32251','PNHNQS25748','PNHNRI89691','PNHNRN27821','PNHNTL29354','PNHPJJ83597','PNHPLJ53135','PNHPLQ52878','PNHPNE57734','PNHPNV48628','PNHPWK16236','PNHPWN91691','PNHQJM28368','PNHQKF47245','PNHQMA88926','PNHQQA12834','PNHQRF86241','PNHQSN62741','PNHQVP81358','PNHQXN83166','PNHRCX12337','PNHRCX79657','PNHRGH56152','PNHRLJ44264','PNHRML93953','PNHRRA11758','PNHRRS58716','PNHRSM64458','PNHRSR33587','PNHRUV64528','PNHRUZ38876','PNHRVS63522','PNHRYS25414','PNHRZV84351','PNHSDG26737','PNHSII24313','PNHSJS19152','PNHSML27435','PNHSNN13966','PNHSQW37875','PNHSSH26593','PNHSYN46875','PNHTID81523','PNHTJC71133','PNHTRE43287','PNHTRL83653','PNHTRN68473','PNHTVC97613','PNHUCU43371','PNHUQC77913','PNHURC82659','PNHVMJ76716','PNHVPZ83614','PNHVQB23439','PNHVRS64166','PNHVXV45964','PNHWAV76894','PNHWJA56139','PNHWJW38128','PNHWWP64836','PNHWZH17882','PNHWZM23398','PNHXEN58219','PNHXFM55127','PNHXGX78951','PNHXMN52299','PNHXMS97273','PNHXQH46883','PNHXQP58382','PNHXUQ31412','PNHYAQ29515','PNHYCC44768','PNHYLV31787','PNHYMX51367','PNHYSG22114','PNHYSG25161','PNHYVR76171','PNHZFL18126','PNHZHW58257','PNHZIP31262','PNHZMD85141','PNHZQE12455','PNHZRT64433','PNHZVC56319')
-            group by o.transid) as g  where  g.batch_id >= 5000  group by transid order by  g.actiontime DESC 
+            FROM king_transactions tr
+                    JOIN king_orders o ON o.transid=tr.transid
+                    JOIN king_dealitems di ON di.id=o.itemid
+                    JOIN king_deals dl ON dl.dealid=di.dealid
+                    JOIN pnh_menu m ON m.id = dl.menuid
+                    JOIN king_brands bs ON bs.id = o.brandid
+            JOIN pnh_m_franchise_info  f ON f.franchise_id=tr.franchise_id  AND f.is_suspended = 0
+            JOIN pnh_m_territory_info ter ON ter.id = f.territory_id 
+            JOIN pnh_towns twn ON twn.id=f.town_id
+                    LEFT JOIN king_invoice i ON o.id = i.order_id AND i.invoice_status = 1
+                    LEFT JOIN proforma_invoices PI ON pi.order_id = o.id AND pi.invoice_status = 1 
+                    LEFT JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no = pi.p_invoice_no
+            WHERE o.status IN (0,1) AND tr.batch_enabled=1 AND i.id IS NULL  AND tr.transid  = 'PNH24756' #tr.transid in ('PNH24756','PNH11768','PNH11769','PNH14153','PNH16531','PNH16758','PNH16829','PNH18499','PNH18613','PNH18694','PNH19988','PNH21379','PNH22377','PNH24756','PNH24973','PNH25135','PNH25654','PNH25842','PNH26544','PNH26765','PNH26782','PNH26895','PNH27179','PNH28758','PNH28935','PNH29347','PNH29776','PNH32855','PNH33145','PNH33191','PNH34632','PNH35578','PNH36978','PNH37124','PNH38468','PNH38666','PNH39728','PNH39841','PNH43375','PNH45122','PNH45598','PNH45771','PNH46113','PNH46474','PNH46595','PNH49892','PNH51259','PNH52451','PNH52959','PNH54347','PNH54546','PNH55285','PNH55415','PNH55963','PNH57714','PNH59216','PNH61185','PNH61811','PNH62431','PNH62792','PNH62894','PNH63543','PNH64597','PNH64835','PNH65361','PNH65422','PNH65711','PNH66479','PNH66571','PNH66924','PNH68492','PNH68863','PNH68996','PNH69272','PNH71162','PNH71171','PNH73246','PNH73648','PNH74896','PNH75579','PNH76542','PNH76553','PNH76695','PNH77194','PNH78763','PNH78771','PNH79767','PNH81262','PNH81424','PNH82245','PNH82796','PNH83136','PNH83532','PNH84494','PNH84838','PNH84978','PNH85514','PNH85534','PNH86684','PNH86879','PNH86943','PNH87251','PNH87352','PNH87866','PNH87895','PNH88261','PNH88784','PNH89294','PNH91142','PNH91414','PNH92727','PNH93167','PNH93343','PNH93391','PNH93714','PNH94121','PNH95855','PNH97158','PNH97261','PNH97446','PNH98427','PNH99546','PNH99823','PNHADS69161','PNHAED74212','PNHAGH88692','PNHAGN36664','PNHAHR92662','PNHANH58567','PNHANP18692','PNHARM33812','PNHAUT82647','PNHAVY15723','PNHAWP81139','PNHAXZ95887','PNHBCQ31955','PNHBDQ46772','PNHBIC14589','PNHBJX88262','PNHBQY95588','PNHBTY26342','PNHBUG92628','PNHBVZ88616','PNHBXL77127','PNHCBX23293','PNHCIK77141','PNHCIQ31331','PNHCMG84238','PNHCNI94123','PNHCUC68876','PNHDAC33555','PNHDAZ29396','PNHDHN67744','PNHDKQ83788','PNHDLH38581','PNHDLU22337','PNHDRB84232','PNHDRN86616','PNHDXQ59712','PNHEBM77371','PNHEDE76659','PNHEEA25773','PNHEKI99239','PNHEKN99876','PNHEKQ79585','PNHEMC36338','PNHEUC28782','PNHEVL56344','PNHEWD63196','PNHEWS63546','PNHEXJ46975','PNHFDQ39861','PNHFEP19358','PNHFGH39552','PNHFJJ89521','PNHFJW85241','PNHFMC31231','PNHFNJ93618','PNHFPD52595','PNHFQW52357','PNHFRK85831','PNHGBA81545','PNHGBW42171','PNHGCN55994','PNHGDB83273','PNHGFX26856','PNHGGV79376','PNHGIA46937','PNHGPD98365','PNHGPK52349','PNHGQW98992','PNHGRK87445','PNHGSP85927','PNHGTD69361','PNHGZG96317','PNHGZK66297','PNHGZX93525','PNHHAM59938','PNHHDV12858','PNHHFN96199','PNHHJT55225','PNHHKV17658','PNHHLJ32837','PNHHLK63918','PNHHPL57445','PNHIBP85449','PNHIEK31187','PNHIKZ84631','PNHINL91791','PNHITM15567','PNHJHY22236','PNHJIG23987','PNHJJW49978','PNHJPK79588','PNHJUB83444','PNHJUR83585','PNHJWH19378','PNHJXM54977','PNHJYI53269','PNHJYR49625','PNHKBX34595','PNHKFE84894','PNHKHA69179','PNHKHF18118','PNHKIU86986','PNHKJX49398','PNHKKW32568','PNHKMH14852','PNHKMP39512','PNHKRI73163','PNHKRJ67714','PNHKSE17358','PNHKSH76263','PNHKVE56634','PNHKVK83266','PNHKWQ67556','PNHKWT97949','PNHKWV36154','PNHKXY29712','PNHKZZ52757','PNHLCH25589','PNHLFZ38473','PNHLGE26468','PNHLGR41262','PNHLHF23981','PNHLJU53973','PNHLPT92586','PNHLUD18722','PNHLVQ28751','PNHLXS47336','PNHMCZ13697','PNHMGI67624','PNHMIQ71617','PNHMIT85823','PNHMQG96137','PNHMTK76282','PNHMUN63624','PNHMXM72843','PNHNBH61653','PNHNEF55642','PNHNES62472','PNHNFQ43361','PNHNHM42857','PNHNJW86618','PNHNLX33758','PNHNMW22688','PNHNPZ32251','PNHNQS25748','PNHNRI89691','PNHNRN27821','PNHNTL29354','PNHPJJ83597','PNHPLJ53135','PNHPLQ52878','PNHPNE57734','PNHPNV48628','PNHPWK16236','PNHPWN91691','PNHQJM28368','PNHQKF47245','PNHQMA88926','PNHQQA12834','PNHQRF86241','PNHQSN62741','PNHQVP81358','PNHQXN83166','PNHRCX12337','PNHRCX79657','PNHRGH56152','PNHRLJ44264','PNHRML93953','PNHRRA11758','PNHRRS58716','PNHRSM64458','PNHRSR33587','PNHRUV64528','PNHRUZ38876','PNHRVS63522','PNHRYS25414','PNHRZV84351','PNHSDG26737','PNHSII24313','PNHSJS19152','PNHSML27435','PNHSNN13966','PNHSQW37875','PNHSSH26593','PNHSYN46875','PNHTID81523','PNHTJC71133','PNHTRE43287','PNHTRL83653','PNHTRN68473','PNHTVC97613','PNHUCU43371','PNHUQC77913','PNHURC82659','PNHVMJ76716','PNHVPZ83614','PNHVQB23439','PNHVRS64166','PNHVXV45964','PNHWAV76894','PNHWJA56139','PNHWJW38128','PNHWWP64836','PNHWZH17882','PNHWZM23398','PNHXEN58219','PNHXFM55127','PNHXGX78951','PNHXMN52299','PNHXMS97273','PNHXQH46883','PNHXQP58382','PNHXUQ31412','PNHYAQ29515','PNHYCC44768','PNHYLV31787','PNHYMX51367','PNHYSG22114','PNHYSG25161','PNHYVR76171','PNHZFL18126','PNHZHW58257','PNHZIP31262','PNHZMD85141','PNHZQE12455','PNHZRT64433','PNHZVC56319')
+            GROUP BY o.transid) AS g  WHERE  g.batch_id >= 5000  GROUP BY transid ORDER BY  g.actiontime DESC 
 
-select * from shipment_batch_process_invoice_link where batch_id='5714'
+SELECT * FROM shipment_batch_process_invoice_link WHERE batch_id='5714'
 5719
 #=================================================================================================
 #============== BATCH RESET ======================================================================
-set @global_batch_id=5000;
-set @batch_id=5760; #5544-48
-update shipment_batch_process_invoice_link set batch_id=@global_batch_id where batch_id=@batch_id;
-delete from shipment_batch_process where batch_id = @batch_id;
+SET @global_batch_id=5000;
+SET @batch_id=5760; #5544-48
+UPDATE shipment_batch_process_invoice_link SET batch_id=@global_batch_id WHERE batch_id=@batch_id;
+DELETE FROM shipment_batch_process WHERE batch_id = @batch_id;
 #=================================================================================================
 
 Beauty
@@ -1774,97 +1774,97 @@ Footwear & Clothing
 Company Assets
 124,125
 
-select printcount from picklist_log_reservation where batch_id='5730'
+SELECT printcount FROM picklist_log_reservation WHERE batch_id='5730'
 
-select status,product_id from t_imei_no where imei_no = '355681053892715'; #51084_4090_1_1_163256_4271887558_5649623681';
+SELECT STATUS,product_id FROM t_imei_no WHERE imei_no = '355681053892715'; #51084_4090_1_1_163256_4271887558_5649623681';
 
 # Jan_22_2014
 
 -- =============================================================================
-update t_imei_no set status=0 and order_id=0 where imei_no = '356519052961611';
+UPDATE t_imei_no SET STATUS=0 AND order_id=0 WHERE imei_no = '356519052961611';
 -- =============================================================================
-select * from m_product_info where product_id='132961';
+SELECT * FROM m_product_info WHERE product_id='132961';
 # Stock intake the product with product id
-set @product_id = '132961'; # frequent
-set @id='24573';
-set @imei_no = '364619056098766';
-insert into t_imei_no(id,product_id,imei_no,status,grn_id,stock_id,order_id,created_on,modified_on) values(@id,@product_id,@imei_no,0,'2235',0,0,now(),0);
+SET @product_id = '132961'; # frequent
+SET @id='24573';
+SET @imei_no = '364619056098766';
+INSERT INTO t_imei_no(id,product_id,imei_no,STATUS,grn_id,stock_id,order_id,created_on,modified_on) VALUES(@id,@product_id,@imei_no,0,'2235',0,0,NOW(),0);
 
 -- =============================================================================
-select * from t_stock_info where product_id='8702'
+SELECT * FROM t_stock_info WHERE product_id='8702'
 
-select * from t_reserved_batch_stock where  product_id='132989'
+SELECT * FROM t_reserved_batch_stock WHERE  product_id='132989'
 
-select * from t_imei_no where imei_no='354619056098765' product_id='132989'
+SELECT * FROM t_imei_no WHERE imei_no='354619056098765' product_id='132989'
 
 
 
 -- // Territory 
-select t.*,sd.batch_id,i.id from proforma_invoices pi 
-                                                        join shipment_batch_process_invoice_link sd on pi.p_invoice_no = sd.p_invoice_no 
-                                                        join king_transactions tr on tr.transid = pi.transid  
-                                                        join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
-                                                        join pnh_m_territory_info t on t.id = f.territory_id 
-                                                        join king_orders o on o.transid=tr.transid
-                                                        left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
-                                                        where pi.invoice_status = 1 and sd.batch_id = '5000' and tr.batch_enabled=1 #and i.id is null
-                                                        group by f.territory_id 
-                                                        order by t.territory_name
+SELECT t.*,sd.batch_id,i.id FROM proforma_invoices PI 
+                                                        JOIN shipment_batch_process_invoice_link sd ON pi.p_invoice_no = sd.p_invoice_no 
+                                                        JOIN king_transactions tr ON tr.transid = pi.transid  
+                                                        JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id AND f.is_suspended = 0
+                                                        JOIN pnh_m_territory_info t ON t.id = f.territory_id 
+                                                        JOIN king_orders o ON o.transid=tr.transid
+                                                        LEFT JOIN king_invoice i ON o.id = i.order_id AND i.invoice_status = 1
+                                                        WHERE pi.invoice_status = 1 AND sd.batch_id = '5000' AND tr.batch_enabled=1 #and i.id is null
+                                                        GROUP BY f.territory_id 
+                                                        ORDER BY t.territory_name
 
-select * from shipment_batch_process_invoice_link sd where batch_id='5000';
+SELECT * FROM shipment_batch_process_invoice_link sd WHERE batch_id='5000';
 
-select distinct 
-                            o.itemid,count(distinct tr.transid) as ttl_trans,group_concat(distinct tr.transid) as grp_trans
-                            ,bc.id as menuid,bc.batch_grp_name as menuname,group_concat(distinct d.menuid) as actualmenus,f.territory_id
+SELECT DISTINCT 
+                            o.itemid,COUNT(DISTINCT tr.transid) AS ttl_trans,GROUP_CONCAT(DISTINCT tr.transid) AS grp_trans
+                            ,bc.id AS menuid,bc.batch_grp_name AS menuname,GROUP_CONCAT(DISTINCT d.menuid) AS actualmenus,f.territory_id
                             ,sd.id,sd.batch_id,sd.p_invoice_no
-                            ,from_unixtime(tr.init) as init,bc.batch_size,bc.group_assigned_uid as bc_group_uids
-                                from king_transactions tr
-                                join king_orders as o on o.transid=tr.transid
-                                join proforma_invoices as `pi` on pi.order_id = o.id and pi.invoice_status=1
-                                join shipment_batch_process_invoice_link sd on sd.p_invoice_no = pi.p_invoice_no and sd.invoice_no=0
-                                join king_dealitems dl on dl.id = o.itemid
-                                join king_deals d on d.dealid = dl.dealid 
-                                join pnh_menu mn on mn.id=d.menuid
-                                join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id and f.is_suspended = 0
-                                join m_batch_config bc on find_in_set(d.menuid,bc.assigned_menuid) 
-                                where sd.batch_id = '5000' and tr.batch_enabled=1
-                                    group by  bc.id
-                                order by tr.init asc
+                            ,FROM_UNIXTIME(tr.init) AS init,bc.batch_size,bc.group_assigned_uid AS bc_group_uids
+                                FROM king_transactions tr
+                                JOIN king_orders AS o ON o.transid=tr.transid
+                                JOIN proforma_invoices AS `pi` ON pi.order_id = o.id AND pi.invoice_status=1
+                                JOIN shipment_batch_process_invoice_link sd ON sd.p_invoice_no = pi.p_invoice_no AND sd.invoice_no=0
+                                JOIN king_dealitems dl ON dl.id = o.itemid
+                                JOIN king_deals d ON d.dealid = dl.dealid 
+                                JOIN pnh_menu mn ON mn.id=d.menuid
+                                JOIN pnh_m_franchise_info f ON f.franchise_id = tr.franchise_id AND f.is_suspended = 0
+                                JOIN m_batch_config bc ON FIND_IN_SET(d.menuid,bc.assigned_menuid) 
+                                WHERE sd.batch_id = '5000' AND tr.batch_enabled=1
+                                    GROUP BY  bc.id
+                                ORDER BY tr.init ASC
 
-select * from 
+SELECT * FROM 
 
-select status,product_id from t_imei_no where imei_no = '1223334566777_7089_1_10_163421_4628351511_7719121613'
+SELECT STATUS,product_id FROM t_imei_no WHERE imei_no = '1223334566777_7089_1_10_163421_4628351511_7719121613'
 
-select * from t_imei_no  where product_id='8583';
+SELECT * FROM t_imei_no  WHERE product_id='8583';
 
-select * from shipment_batch_process_invoice_link
+SELECT * FROM shipment_batch_process_invoice_link
 
 -- =====================================================================
 # INSERT NEW IMEI FOR PRODUCT
-insert into t_imei_no(id,product_id,imei_no,status,grn_id,stock_id,order_id,created_on,modified_on)
-values(24565,29226,'354619056098767',0,'2235',0,0,now(),0);
+INSERT INTO t_imei_no(id,product_id,imei_no,STATUS,grn_id,stock_id,order_id,created_on,modified_on)
+VALUES(24565,29226,'354619056098767',0,'2235',0,0,NOW(),0);
 -- =====================================================================
 
-select * from m_product_info where product_id='29226';
+SELECT * FROM m_product_info WHERE product_id='29226';
 
 ALTER TABLE `m_vendor_info` ADD COLUMN `payment_type` INT(1) DEFAULT 0 NULL AFTER `require_payment_advance`;
 
 ALTER TABLE `pnh_t_receipt_info` ADD COLUMN `cheq_realized_on` VARCHAR(255) NULL AFTER `activated_on`;
 
 -- 1
-select r.*,m.name AS modifiedby,a.name as admin,act.name as act_by,d.remarks AS submittedremarks,sub.name AS submittedby,d.submitted_on,can.cancelled_on,can.cancel_reason 
-from pnh_t_receipt_info r 
+SELECT r.*,m.name AS modifiedby,a.name AS admin,act.name AS act_by,d.remarks AS submittedremarks,sub.name AS submittedby,d.submitted_on,can.cancelled_on,can.cancel_reason 
+FROM pnh_t_receipt_info r 
 LEFT OUTER JOIN `pnh_m_deposited_receipts`can ON can.receipt_id=r.receipt_id 
-left outer join king_admin a on a.id=r.created_by left outer join king_admin act on act.id=r.activated_by 
+LEFT OUTER JOIN king_admin a ON a.id=r.created_by LEFT OUTER JOIN king_admin act ON act.id=r.activated_by 
 LEFT OUTER JOIN `pnh_m_deposited_receipts`d ON d.receipt_id=r.receipt_id 
 LEFT OUTER JOIN king_admin sub ON sub.id=d.submitted_by 
-LEFT OUTER JOIN king_admin m ON m.id=r.modified_by where franchise_id='371' group by r.receipt_id;
+LEFT OUTER JOIN king_admin m ON m.id=r.modified_by WHERE franchise_id='371' GROUP BY r.receipt_id;
 
 -- 2
-select dm.created_on,di.id,di.device_sl_no,d.device_name 
-from pnh_m_device_info di 
-join pnh_m_device_type d on d.id=di.device_type_id 
-join pnh_t_device_movement_info dm on dm.device_id=di.id where di.issued_to='371'
+SELECT dm.created_on,di.id,di.device_sl_no,d.device_name 
+FROM pnh_m_device_info di 
+JOIN pnh_m_device_type d ON d.id=di.device_type_id 
+JOIN pnh_t_device_movement_info dm ON dm.device_id=di.id WHERE di.issued_to='371'
 
 -- 3
 SELECT m.id,m.name AS menu FROM `pnh_franchise_menu_link`a 
@@ -1873,235 +1873,235 @@ JOIN pnh_menu m ON m.id=a.menuid
 WHERE a.status=1 AND b.franchise_id='371';
 
 -- 4
-select f.*,f.franchise_id,f.sch_discount,f.sch_discount_start,f.sch_discount_end,f.credit_limit,f.security_deposit,c.class_name,c.margin,c.combo_margin,f.pnh_franchise_id,f.franchise_name,f.locality,f.city,f.current_balance,f.login_mobile1,f.login_mobile2,f.email_id,u.name as assigned_to,t.territory_name,f.is_prepaid 
-from pnh_m_franchise_info f 
-left outer join king_admin u on u.id=f.assigned_to 
-join pnh_m_territory_info t on t.id=f.territory_id 
-join pnh_m_class_info c on c.id=f.class_id 
-where f.franchise_id='371' order by f.franchise_name asc;
+SELECT f.*,f.franchise_id,f.sch_discount,f.sch_discount_start,f.sch_discount_end,f.credit_limit,f.security_deposit,c.class_name,c.margin,c.combo_margin,f.pnh_franchise_id,f.franchise_name,f.locality,f.city,f.current_balance,f.login_mobile1,f.login_mobile2,f.email_id,u.name AS assigned_to,t.territory_name,f.is_prepaid 
+FROM pnh_m_franchise_info f 
+LEFT OUTER JOIN king_admin u ON u.id=f.assigned_to 
+JOIN pnh_m_territory_info t ON t.id=f.territory_id 
+JOIN pnh_m_class_info c ON c.id=f.class_id 
+WHERE f.franchise_id='371' ORDER BY f.franchise_name ASC;
 
 -- 5 new invalid
-select i.invoice_no,i.transid,i.mrp,tr.franchise_id,from_unixtime(i.createdon)
-	from king_invoice i
-join king_transactions tr on tr.transid=i.transid
-where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id='224'
- order by i.createdon asc
+SELECT i.invoice_no,i.transid,i.mrp,tr.franchise_id,FROM_UNIXTIME(i.createdon)
+	FROM king_invoice i
+JOIN king_transactions tr ON tr.transid=i.transid
+WHERE i.invoice_status=1 AND tr.is_pnh=1 AND tr.franchise_id='224'
+ ORDER BY i.createdon ASC
 
 #invoice_status
 
 
 #Jan_24_2014
 
-select * from king_invoice
-select count(invoice_no),group_concat(mrp) from king_invoice group by invoice_no,transid
+SELECT * FROM king_invoice
+SELECT COUNT(invoice_no),GROUP_CONCAT(mrp) FROM king_invoice GROUP BY invoice_no,transid
 
 -- =============================================================================
-update t_imei_no set status=0 and order_id=0 where imei_no = '356519052961611';
+UPDATE t_imei_no SET STATUS=0 AND order_id=0 WHERE imei_no = '356519052961611';
 -- =============================================================================
-select * from m_product_info where product_id='5777';
+SELECT * FROM m_product_info WHERE product_id='5777';
 # Stock intake the product with product id
-set @product_id = '5777'; # frequent
-set @id='24575';
-set @imei_no = '364619056098768';
-insert into t_imei_no(id,product_id,imei_no,status,grn_id,stock_id,order_id,created_on,modified_on) values(@id,@product_id,@imei_no,0,'2235',0,0,now(),0);
+SET @product_id = '5777'; # frequent
+SET @id='24575';
+SET @imei_no = '364619056098768';
+INSERT INTO t_imei_no(id,product_id,imei_no,STATUS,grn_id,stock_id,order_id,created_on,modified_on) VALUES(@id,@product_id,@imei_no,0,'2235',0,0,NOW(),0);
 
 -- =============================================================================
 
 
 -- new 1 valid
-select i.invoice_no,i.transid,tr.franchise_id,from_unixtime(i.createdon),sum(i.mrp) as inv_total,count(i.invoice_no) as num_invs,group_concat(i.mrp) as grp_mrp,group_concat(distinct ref_dispatch_id) as grp_dispatch_id
-	from king_invoice i
-join king_transactions tr on tr.transid=i.transid
-where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id='224'
- group by i.invoice_no,i.transid order by i.createdon asc
+SELECT i.invoice_no,i.transid,tr.franchise_id,FROM_UNIXTIME(i.createdon),SUM(i.mrp) AS inv_total,COUNT(i.invoice_no) AS num_invs,GROUP_CONCAT(i.mrp) AS grp_mrp,GROUP_CONCAT(DISTINCT ref_dispatch_id) AS grp_dispatch_id
+	FROM king_invoice i
+JOIN king_transactions tr ON tr.transid=i.transid
+WHERE i.invoice_status=1 AND tr.is_pnh=1 AND tr.franchise_id='224'
+ GROUP BY i.invoice_no,i.transid ORDER BY i.createdon ASC
 
 #============
-select * from pnh_t_receipt_info where franchise_id = '43';
+SELECT * FROM pnh_t_receipt_info WHERE franchise_id = '43';
 
 
 -- ====================================================================================
 # Jan_24_2014
-create table `pnh_t_receipt_reconcilation` (  `id` bigint (20) NOT NULL AUTO_INCREMENT , `debit_note_id` bigint (20) DEFAULT '0', `invoice_no` bigint (20) , `dispatch_id` int (100) , `inv_amount` float (50) DEFAULT '0', `unreconciled` float (50) DEFAULT '0', `created_on` int (50) , `created_by` int (20) , `modified_on` int (50) , `modified_by` int (20) , PRIMARY KEY ( `id`))  
-create table `pnh_t_receipt_reconcilation_log` (  `logid` bigint (20) NOT NULL AUTO_INCREMENT , `credit_note_id` int (50) , `receipt_id` int (50) , `reconcile_id` int (50) , `reconcile_amount` float (50) DEFAULT '0', `is_reversed` int (11) DEFAULT '0', `created_on` int (100) , `created_by` int (20) , PRIMARY KEY ( `logid`))  
-alter table `pnh_t_receipt_info` add column `unreconciled_value` double   NULL  after `modified_on`, add column `unreconciled_status` varchar (11)  NULL  after `unreconciled_value`;
-update pnh_t_receipt_info set unreconciled_value = receipt_amount;
+CREATE TABLE `pnh_t_receipt_reconcilation` (  `id` BIGINT (20) NOT NULL AUTO_INCREMENT , `debit_note_id` BIGINT (20) DEFAULT '0', `invoice_no` BIGINT (20) , `dispatch_id` INT (100) , `inv_amount` FLOAT (50) DEFAULT '0', `unreconciled` FLOAT (50) DEFAULT '0', `created_on` INT (50) , `created_by` INT (20) , `modified_on` INT (50) , `modified_by` INT (20) , PRIMARY KEY ( `id`))  
+CREATE TABLE `pnh_t_receipt_reconcilation_log` (  `logid` BIGINT (20) NOT NULL AUTO_INCREMENT , `credit_note_id` INT (50) , `receipt_id` INT (50) , `reconcile_id` INT (50) , `reconcile_amount` FLOAT (50) DEFAULT '0', `is_reversed` INT (11) DEFAULT '0', `created_on` INT (100) , `created_by` INT (20) , PRIMARY KEY ( `logid`))  
+ALTER TABLE `pnh_t_receipt_info` ADD COLUMN `unreconciled_value` DOUBLE   NULL  AFTER `modified_on`, ADD COLUMN `unreconciled_status` VARCHAR (11)  NULL  AFTER `unreconciled_value`;
+UPDATE pnh_t_receipt_info SET unreconciled_value = receipt_amount;
 
 -- ====================================================================================
 
-select * from king_invoice
+SELECT * FROM king_invoice
 -- new 
-select ref_dispatch_id from king_invoice where invoice_no='20141019614' group by invoice_no
+SELECT ref_dispatch_id FROM king_invoice WHERE invoice_no='20141019614' GROUP BY invoice_no
 
 -- new
-insert into pnh_t_receipt_reconcilation
+INSERT INTO pnh_t_receipt_reconcilation
 
 # Jan_25_2014
 
 CREATE TABLE `king_admin_activitylog` (                  
-                          `id` int(11) NOT NULL AUTO_INCREMENT,                  
-                          `user_id` int(11) DEFAULT '0',                         
-                          `visited_url` varchar(4000) DEFAULT NULL,              
-                          `reference_method` varchar(50) DEFAULT NULL,           
-                          `ipaddress` varchar(255) DEFAULT NULL,                 
-                          `logged_on` datetime DEFAULT NULL,                     
+                          `id` INT(11) NOT NULL AUTO_INCREMENT,                  
+                          `user_id` INT(11) DEFAULT '0',                         
+                          `visited_url` VARCHAR(4000) DEFAULT NULL,              
+                          `reference_method` VARCHAR(50) DEFAULT NULL,           
+                          `ipaddress` VARCHAR(255) DEFAULT NULL,                 
+                          `logged_on` DATETIME DEFAULT NULL,                     
                           PRIMARY KEY (`id`)                                     
                         );
 
-select * from pnh_t_receipt_info where franchise_id = '43';
+SELECT * FROM pnh_t_receipt_info WHERE franchise_id = '43';
 
-update pnh_t_receipt_info set unreconciled_value='' and unreconciled_status='' where 1=1;
+UPDATE pnh_t_receipt_info SET unreconciled_value='' AND unreconciled_status='' WHERE 1=1;
 
-truncate table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation`;
-truncate table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation_log`;
+TRUNCATE TABLE `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation`;
+TRUNCATE TABLE `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation_log`;
 
 -- new 1
-select sum(unreconciled_value),count(receipt_id) as num_receipts from pnh_t_receipt_info where franchise_id = '43' and unreconciled_value != 0 and status in (1);
+SELECT SUM(unreconciled_value),COUNT(receipt_id) AS num_receipts FROM pnh_t_receipt_info WHERE franchise_id = '43' AND unreconciled_value != 0 AND STATUS IN (1);
 
 -- new 2
-select receipt_id,receipt_amount,unreconciled_value from pnh_t_receipt_info where franchise_id = '43' and status = 1;
+SELECT receipt_id,receipt_amount,unreconciled_value FROM pnh_t_receipt_info WHERE franchise_id = '43' AND STATUS = 1;
 
 # Jan_29_2014
-select * from  pnh_t_receipt_info where franchise_id = '43' and unreconciled_status !='p'
+SELECT * FROM  pnh_t_receipt_info WHERE franchise_id = '43' AND unreconciled_status !='p'
 
 -- // RESET RECONCILE TABLE
-truncate table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation`;
-truncate table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation_log`;
-update pnh_t_receipt_info set unreconciled_value = receipt_amount;
+TRUNCATE TABLE `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation`;
+TRUNCATE TABLE `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation_log`;
+UPDATE pnh_t_receipt_info SET unreconciled_value = receipt_amount;
 
 jx_manage_reservation_create_batch_form.php
 
-select * from pnh_t_receipt_info where franchise_id = '43' and status = 1 and unreconciled_value!=0;
+SELECT * FROM pnh_t_receipt_info WHERE franchise_id = '43' AND STATUS = 1 AND unreconciled_value!=0;
 
 #Jan_30_2014
 
 -- // RESET RECONCILE TABLE
-truncate table `pnh_t_receipt_reconcilation`;
-truncate table `pnh_t_receipt_reconcilation_log`;
-update pnh_t_receipt_info set unreconciled_value = receipt_amount where 1=1;
+TRUNCATE TABLE `pnh_t_receipt_reconcilation`;
+TRUNCATE TABLE `pnh_t_receipt_reconcilation_log`;
+UPDATE pnh_t_receipt_info SET unreconciled_value = receipt_amount WHERE 1=1;
 
 -- new 
-select rlog.*
+SELECT rlog.*
 		,r.franchise_id,r.receipt_amount,r.receipt_type 
-select * 
-from pnh_t_receipt_reconcilation_log rlog
-join pnh_t_receipt_info r on r.receipt_id = rlog.receipt_id
-join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-where r.franchise_id = '43' and r.status = 1;
+SELECT * 
+FROM pnh_t_receipt_reconcilation_log rlog
+JOIN pnh_t_receipt_info r ON r.receipt_id = rlog.receipt_id
+JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+WHERE r.franchise_id = '43' AND r.status = 1;
 
 -- new final
-select * 
-from pnh_t_receipt_info r 
-join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
-join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-where r.franchise_id = '43';
+SELECT * 
+FROM pnh_t_receipt_info r 
+JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.receipt_id = r.receipt_id
+JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+WHERE r.franchise_id = '43';
 
-select * from pnh_t_receipt_info where receipt_amount != 0 and franchise_id = '43';
+SELECT * FROM pnh_t_receipt_info WHERE receipt_amount != 0 AND franchise_id = '43';
 
 # and unreconciled_value!=0;
 -- new
 
-alter table `pnh_t_receipt_info` change `unreconciled_status` `unreconciled_status` varchar (50) DEFAULT 'pending' NULL COMMENT 'pending,partial,done';
+ALTER TABLE `pnh_t_receipt_info` CHANGE `unreconciled_status` `unreconciled_status` VARCHAR (50) DEFAULT 'pending' NULL COMMENT 'pending,partial,done';
 
-alter table `pnh_t_receipt_info` drop column `unreconciled_status`
-alter table `pnh_t_receipt_info` add `unreconciled_status` varchar (50) DEFAULT 'pending' NULL COMMENT 'pending,partial,done';
+ALTER TABLE `pnh_t_receipt_info` DROP COLUMN `unreconciled_status`
+ALTER TABLE `pnh_t_receipt_info` ADD `unreconciled_status` VARCHAR (50) DEFAULT 'pending' NULL COMMENT 'pending,partial,done';
 
 
 UPDATE `pnh_t_receipt_info` SET `unreconciled_value` = '254', `unreconciled_status` = 'partial' WHERE `receipt_id` = 5382 AND `franchise_id` = '43';
 
 -- new 1 reconcile info
-select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.id as reconcile_id,rcon.invoice_no,rcon.inv_amount,rcon.unreconciled,r.unreconciled_value,r.receipt_amount
-from pnh_t_receipt_info r 
-join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
-join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-where r.franchise_id = '43' and r.receipt_id = '119';
+SELECT rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.id AS reconcile_id,rcon.invoice_no,rcon.inv_amount,rcon.unreconciled,r.unreconciled_value,r.receipt_amount
+FROM pnh_t_receipt_info r 
+JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.receipt_id = r.receipt_id
+JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+WHERE r.franchise_id = '43' AND r.receipt_id = '119';
 
-select *,from_unixtime(created_on) as created_date from pnh_t_receipt_info where receipt_amount != 0 and franchise_id = '43' and receipt_id='119'
+SELECT *,FROM_UNIXTIME(created_on) AS created_date FROM pnh_t_receipt_info WHERE receipt_amount != 0 AND franchise_id = '43' AND receipt_id='119'
 
 -- new receipt info
-select r.unreconciled_value,r.receipt_amount,from_unixtime(r.created_on)  from pnh_t_receipt_info r
- where r.receipt_amount != 0 and r.franchise_id = '43' and r.receipt_id='119';
+SELECT r.unreconciled_value,r.receipt_amount,FROM_UNIXTIME(r.created_on)  FROM pnh_t_receipt_info r
+ WHERE r.receipt_amount != 0 AND r.franchise_id = '43' AND r.receipt_id='119';
 
-select * from king_admin
+SELECT * FROM king_admin
 
 # Jan_31_2014
 -- new get only unreconciled receipts
-select * from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = '43' order by created_on desc;
+SELECT * FROM pnh_t_receipt_info WHERE receipt_amount != 0 AND unreconciled_value > 0 AND franchise_id = '43' ORDER BY created_on DESC;
 
 
-select i.invoice_no,round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2) as inv_amount,group_concat(distinct i.invoice_no) as grp_invs
-                                                            from king_invoice i
-                                                            join king_transactions tr on tr.transid=i.transid
- 				left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no
-                                                            where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id='43' and rcon.invoice_no is null
-                                                            group by i.invoice_no,i.transid order by i.createdon asc
+SELECT i.invoice_no,ROUND( SUM( i.mrp - discount - credit_note_amt )  * invoice_qty , 2) AS inv_amount,GROUP_CONCAT(DISTINCT i.invoice_no) AS grp_invs
+                                                            FROM king_invoice i
+                                                            JOIN king_transactions tr ON tr.transid=i.transid
+ 				LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.invoice_no = i.invoice_no
+                                                            WHERE i.invoice_status=1 AND tr.is_pnh=1 AND tr.franchise_id='43' AND rcon.invoice_no IS NULL
+                                                            GROUP BY i.invoice_no,i.transid ORDER BY i.createdon ASC
 
 # => 200555 200696 200879 202019 => 4 70 - 4 = 66
 
 # Feb_01_2014
 -- new 
-select * from (
-select i.invoice_no,( sum( i.mrp - discount - credit_note_amt )  * invoice_qty) as invoice_val,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),rcon.unreconciled) as inv_amount,group_concat(distinct i.invoice_no) as grp_invs
-		from king_invoice i
-		join king_transactions tr on tr.transid=i.transid
-		left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
-		where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id='43' #and rcon.invoice_no is null 
+SELECT * FROM (
+SELECT i.invoice_no,( SUM( i.mrp - discount - credit_note_amt )  * invoice_qty) AS invoice_val,rcon.unreconciled AS unreconciled,IF(rcon.unreconciled IS NULL, ROUND( SUM( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),rcon.unreconciled) AS inv_amount,GROUP_CONCAT(DISTINCT i.invoice_no) AS grp_invs
+		FROM king_invoice i
+		JOIN king_transactions tr ON tr.transid=i.transid
+		LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
+		WHERE i.invoice_status=1 AND tr.is_pnh=1 AND tr.franchise_id='43' #and rcon.invoice_no is null 
 		#and rcon.unreconciled = 0 
-		and rcon.invoice_no = '20141019616' #804'
-		group by i.invoice_no,i.transid order by i.createdon asc
-) as g where g.inv_amount > 0;
+		AND rcon.invoice_no = '20141019616' #804'
+		GROUP BY i.invoice_no,i.transid ORDER BY i.createdon ASC
+) AS g WHERE g.inv_amount > 0;
 #=>70 61 63 
 
-select * from pnh_t_receipt_reconcilation;
+SELECT * FROM pnh_t_receipt_reconcilation;
 
 
 -- // RESET RECONCILE TABLE
-truncate table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation`;
-truncate table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation_log`;
-update `snapittoday_db_jan_2014`.pnh_t_receipt_info set unreconciled_value = receipt_amount where receipt_amount !=0;
-update `snapittoday_db_jan_2014`.pnh_t_receipt_info set unreconciled_status = 'pending' where receipt_amount !=0;
+TRUNCATE TABLE `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation`;
+TRUNCATE TABLE `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation_log`;
+UPDATE `snapittoday_db_jan_2014`.pnh_t_receipt_info SET unreconciled_value = receipt_amount WHERE receipt_amount !=0;
+UPDATE `snapittoday_db_jan_2014`.pnh_t_receipt_info SET unreconciled_status = 'pending' WHERE receipt_amount !=0;
 
 t_invoice_credit_notes
 pnh_t_credit_info
 
 final price => mrp - discont- creditnoteamount
 
-select * from pnh_t_receipt_info where receipt_id=5386
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id=5386
 
-select * from pnh_m_deposited_receipts where receipt_id=5386
+SELECT * FROM pnh_m_deposited_receipts WHERE receipt_id=5386
 
 # Feb_04_2014
 
 -- All new 
 
 # 1. list a reconcile ids of that receipt
-select * from pnh_t_receipt_reconcilation_log where receipt_id='5384';
-update pnh_t_receipt_reconcilation_log set is_reversed = 1 where receipt_id = '5385';
+SELECT * FROM pnh_t_receipt_reconcilation_log WHERE receipt_id='5384';
+UPDATE pnh_t_receipt_reconcilation_log SET is_reversed = 1 WHERE receipt_id = '5385';
 
 # 2. 
-select * from pnh_t_receipt_reconcilation where id = '1';
-update pnh_t_receipt_reconcilation set unreconciled = unreconciled + '.$reconcile_amount.' and modified_on = now() and modified_by = '.$userid.' where id = '2';
+SELECT * FROM pnh_t_receipt_reconcilation WHERE id = '1';
+UPDATE pnh_t_receipt_reconcilation SET unreconciled = unreconciled + '.$reconcile_amount.' AND modified_on = NOW() AND modified_by = '.$userid.' WHERE id = '2';
 
 
 # 3. update receipt table with unreconciled_amount and unreconcile status
-update `snapittoday_db_jan_2014`.pnh_t_receipt_info set `unreconciled_value` = `receipt_amount`,`unreconciled_status` = 'pending' where `receipt_id` = '5385';
+UPDATE `snapittoday_db_jan_2014`.pnh_t_receipt_info SET `unreconciled_value` = `receipt_amount`,`unreconciled_status` = 'pending' WHERE `receipt_id` = '5385';
 -- select * from pnh_t_receipt_info where receipt_id='5385';
 
 
 # => 5384 -> 9=>2168.53
 
-select * from pnh_t_receipt_reconcilation_log where receipt_id='5383';
-select * from pnh_t_receipt_reconcilation where id in ('12','13','14');
-select * from pnh_t_receipt_info where receipt_id='5383';
+SELECT * FROM pnh_t_receipt_reconcilation_log WHERE receipt_id='5383';
+SELECT * FROM pnh_t_receipt_reconcilation WHERE id IN ('12','13','14');
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id='5383';
 
-select * from pnh_t_receipt_reconcilation_log where receipt_id='5382' and is_reversed = 0;
-select * from pnh_t_receipt_reconcilation where id in ('15','16','17');
-select * from pnh_t_receipt_info where receipt_id='5382';
+SELECT * FROM pnh_t_receipt_reconcilation_log WHERE receipt_id='5382' AND is_reversed = 0;
+SELECT * FROM pnh_t_receipt_reconcilation WHERE id IN ('15','16','17');
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id='5382';
 
 --  new to unreconcile the invoice not receipt 
 #1. get reconcile_id ( id )
-select rlog.receipt_id,rcon.id as reconcile_id,rcon.invoice_no,rcon.inv_amount,rlog.reconcile_amount from pnh_t_receipt_reconcilation rcon 
-join pnh_t_receipt_reconcilation_log rlog on rlog.reconcile_id = rcon.id
-where rlog.is_reversed = 0 and rcon.invoice_no = '20141019616';
+SELECT rlog.receipt_id,rcon.id AS reconcile_id,rcon.invoice_no,rcon.inv_amount,rlog.reconcile_amount FROM pnh_t_receipt_reconcilation rcon 
+JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.reconcile_id = rcon.id
+WHERE rlog.is_reversed = 0 AND rcon.invoice_no = '20141019616';
 #=> 11 
 
 #2. update reconcile table set unreconciled = unreconciled + $reconcile_amount and modified_by and modified_on  and is_invoice_cancelled = 1 where invoice_no = '' and id = reconcile_id;
@@ -2115,371 +2115,371 @@ where rlog.is_reversed = 0 and rcon.invoice_no = '20141019616';
 -- Unreconcilation on Cancel invoice
 
 #1. reconcile table get reconcile_id ( id )
-select * from pnh_t_receipt_reconcilation where invoice_no = '20141019616';
-select * from pnh_t_receipt_reconcilation_log where reconcile_id in ('18');
-select * from pnh_t_receipt_info where receipt_id = '4939';
+SELECT * FROM pnh_t_receipt_reconcilation WHERE invoice_no = '20141019616';
+SELECT * FROM pnh_t_receipt_reconcilation_log WHERE reconcile_id IN ('18');
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id = '4939';
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 
 # ==================================================================================
-alter table `pnh_t_receipt_reconcilation` add column     `is_invoice_cancelled` int (20) DEFAULT '0' NULL  after `modified_by`,change `modified_on` `modified_on` varchar (50)  NULL;
-alter table `pnh_t_receipt_reconcilation_log` add column `is_invoice_cancelled` int (20) DEFAULT '0' NULL  after `reconcile_id`;
+ALTER TABLE `pnh_t_receipt_reconcilation` ADD COLUMN     `is_invoice_cancelled` INT (20) DEFAULT '0' NULL  AFTER `modified_by`,CHANGE `modified_on` `modified_on` VARCHAR (50)  NULL;
+ALTER TABLE `pnh_t_receipt_reconcilation_log` ADD COLUMN `is_invoice_cancelled` INT (20) DEFAULT '0' NULL  AFTER `reconcile_id`;
 # ==================================================================================
 
-select * from king_invoice where invoice_no = '20141019616';
+SELECT * FROM king_invoice WHERE invoice_no = '20141019616';
 
 -- # new
-select * from (
-select i.invoice_no,( sum( i.mrp - discount - credit_note_amt )  * invoice_qty) as invoice_val,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),rcon.unreconciled) as inv_amount,group_concat(distinct i.invoice_no) as grp_invs
-		from king_invoice i
-		join king_transactions tr on tr.transid=i.transid
-		left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
-		where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id='17' #and rcon.invoice_no is null 
+SELECT * FROM (
+SELECT i.invoice_no,( SUM( i.mrp - discount - credit_note_amt )  * invoice_qty) AS invoice_val,rcon.unreconciled AS unreconciled,IF(rcon.unreconciled IS NULL, ROUND( SUM( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),rcon.unreconciled) AS inv_amount,GROUP_CONCAT(DISTINCT i.invoice_no) AS grp_invs
+		FROM king_invoice i
+		JOIN king_transactions tr ON tr.transid=i.transid
+		LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
+		WHERE i.invoice_status=1 AND tr.is_pnh=1 AND tr.franchise_id='17' #and rcon.invoice_no is null 
 		#and rcon.unreconciled = 0 
 		#and i.invoice_no = '20141019616' #804'
-		group by i.invoice_no,i.transid order by i.invoice_no asc
-) as g where g.inv_amount > 0;
+		GROUP BY i.invoice_no,i.transid ORDER BY i.invoice_no ASC
+) AS g WHERE g.inv_amount > 0;
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 -- Unreconcilation on Cancel invoice
 
 #1. reconcile table get reconcile_id ( id )
-select * from pnh_t_receipt_reconcilation where invoice_no = '20141019617';
-select * from pnh_t_receipt_reconcilation_log where reconcile_id in ('19');
-select * from pnh_t_receipt_info where receipt_id = '4938';
+SELECT * FROM pnh_t_receipt_reconcilation WHERE invoice_no = '20141019617';
+SELECT * FROM pnh_t_receipt_reconcilation_log WHERE reconcile_id IN ('19');
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id = '4938';
 #####http://localhost/snapitto/admin/invoice/20141019617
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
-select * from shipment_batch_process_invoice_link where invoice_no = '20141019616'
+SELECT * FROM shipment_batch_process_invoice_link WHERE invoice_no = '20141019616'
 
 # Feb_05_2014
 
 
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-select * from (select i.invoice_no,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),rcon.unreconciled) as inv_amount
-                                                        from king_invoice i
-                                                        join king_transactions tr on tr.transid=i.transid
-                                                        left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
-                                                        where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id= '43' #and i.invoice_no is null 
-                                                        group by i.invoice_no,i.transid order by i.invoice_no asc) as g where g.inv_amount > 0;
+SELECT * FROM (SELECT i.invoice_no,rcon.unreconciled AS unreconciled,IF(rcon.unreconciled IS NULL, ROUND( SUM( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),rcon.unreconciled) AS inv_amount
+                                                        FROM king_invoice i
+                                                        JOIN king_transactions tr ON tr.transid=i.transid
+                                                        LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
+                                                        WHERE i.invoice_status=1 AND tr.is_pnh=1 AND tr.franchise_id= '43' #and i.invoice_no is null 
+                                                        GROUP BY i.invoice_no,i.transid ORDER BY i.invoice_no ASC) AS g WHERE g.inv_amount > 0;
 
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 # Feb_06_2014
 
-select * from pnh_franchise_account_summary
+SELECT * FROM pnh_franchise_account_summary
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 -- new get unreconciled debit notes details
-select * from (
-select fcs.id as debit_note_id,fcs.amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as inv_amount
-from pnh_franchise_account_stat fcs
-left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.id
-where fcs.type=1 and fcs.franchise_id = '43' 
-order by fcs.created_on desc) as g where g.inv_amount > 0;
+SELECT * FROM (
+SELECT fcs.id AS debit_note_id,fcs.amount,rcon.unreconciled AS unreconciled,IF(rcon.unreconciled IS NULL, ROUND( fcs.amount, 2),rcon.unreconciled) AS inv_amount
+FROM pnh_franchise_account_stat fcs
+LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.debit_note_id = fcs.id
+WHERE fcs.type=1 AND fcs.franchise_id = '43' 
+ORDER BY fcs.created_on DESC) AS g WHERE g.inv_amount > 0;
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 
-select * from pnh_t_receipt_reconcilation where debit_note_id 
+SELECT * FROM pnh_t_receipt_reconcilation WHERE debit_note_id 
 -- 
-select *,from_unixtime(created_on) as time from pnh_franchise_account_stat where franchise_id = '43' and type='1' order by created_on desc
+SELECT *,FROM_UNIXTIME(created_on) AS TIME FROM pnh_franchise_account_stat WHERE franchise_id = '43' AND TYPE='1' ORDER BY created_on DESC
 
 -- 
-select * from pnh_t_receipt_info where franchise_id = '43' and status in (0,1); 
+SELECT * FROM pnh_t_receipt_info WHERE franchise_id = '43' AND STATUS IN (0,1); 
 
 #receipt_id='119'
 
 
 -- // RESET RECONCILE TABLE
-truncate table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation`;
-truncate table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation_log`;
-update `snapittoday_db_jan_2014`.pnh_t_receipt_info set unreconciled_value = receipt_amount where receipt_amount !=0;
-update `snapittoday_db_jan_2014`.pnh_t_receipt_info set unreconciled_status = 'pending' where receipt_amount !=0;
+TRUNCATE TABLE `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation`;
+TRUNCATE TABLE `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation_log`;
+UPDATE `snapittoday_db_jan_2014`.pnh_t_receipt_info SET unreconciled_value = receipt_amount WHERE receipt_amount !=0;
+UPDATE `snapittoday_db_jan_2014`.pnh_t_receipt_info SET unreconciled_status = 'pending' WHERE receipt_amount !=0;
 
 -- new 
-SELECT a.acc_correc_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,status,a.created_on,
+SELECT a.acc_correc_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,STATUS,a.created_on,
 						FROM `pnh_franchise_account_summary` a
-						left join pnh_franchise_account_stat fcs on fcs.id = a.acc_correc_id
-						WHERE a.franchise_id='43' and (a.action_type = 5 or a.action_type = 6)
-						order by a.created_on desc
+						LEFT JOIN pnh_franchise_account_stat fcs ON fcs.id = a.acc_correc_id
+						WHERE a.franchise_id='43' AND (a.action_type = 5 OR a.action_type = 6)
+						ORDER BY a.created_on DESC
 -- 
-select * from pnh_franchise_account_summary where franchise_id = '43'
+SELECT * FROM pnh_franchise_account_summary WHERE franchise_id = '43'
 -- 
-select * from pnh_franchise_account_stat where franchise_id = '43'
+SELECT * FROM pnh_franchise_account_stat WHERE franchise_id = '43'
 
 -- new 
-SELECT a.acc_correc_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,status,a.created_on,rcon.unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as unreconciled_amount
+SELECT a.acc_correc_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,STATUS,a.created_on,rcon.unreconciled,IF(rcon.unreconciled IS NULL, ROUND( fcs.amount, 2),rcon.unreconciled) AS unreconciled_amount
 						FROM `pnh_franchise_account_summary` a
-						left join pnh_franchise_account_stat fcs on fcs.id = a.acc_correc_id
-				left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.id
-						WHERE a.franchise_id='43' and (a.action_type = 5 or a.action_type = 6)
-						order by a.created_on desc;
+						LEFT JOIN pnh_franchise_account_stat fcs ON fcs.id = a.acc_correc_id
+				LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.debit_note_id = fcs.id
+						WHERE a.franchise_id='43' AND (a.action_type = 5 OR a.action_type = 6)
+						ORDER BY a.created_on DESC;
 
 # =============================================================================================
-alter table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation` drop column `remarks`;
-alter table `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation_log` add column `remarks` varchar (100)  NULL  after `created_by`;
+ALTER TABLE `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation` DROP COLUMN `remarks`;
+ALTER TABLE `snapittoday_db_jan_2014`.`pnh_t_receipt_reconcilation_log` ADD COLUMN `remarks` VARCHAR (100)  NULL  AFTER `created_by`;
 # =============================================================================================
 
 # Feb_07_2014
 
 
 -- new 
-SELECT a.acc_correc_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,status,a.created_on,rcon.unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as unreconciled_amount
+SELECT a.acc_correc_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,STATUS,a.created_on,rcon.unreconciled,IF(rcon.unreconciled IS NULL, ROUND( fcs.amount, 2),rcon.unreconciled) AS unreconciled_amount
 						FROM `pnh_franchise_account_summary` a
-						left join pnh_franchise_account_stat fcs on fcs.id = a.acc_correc_id
-				left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-				left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id 
-						WHERE a.franchise_id='43' and (a.action_type = 5 or a.action_type = 6)
-						order by a.created_on desc;
+						LEFT JOIN pnh_franchise_account_stat fcs ON fcs.id = a.acc_correc_id
+				LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+				LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id 
+						WHERE a.franchise_id='43' AND (a.action_type = 5 OR a.action_type = 6)
+						ORDER BY a.created_on DESC;
 
-select * from pnh_t_receipt_reconcilation_log;
-select * from pnh_franchise_account_stat;
+SELECT * FROM pnh_t_receipt_reconcilation_log;
+SELECT * FROM pnh_franchise_account_stat;
 
 -- new get unreconciled receipts & credit notes
-select * from pnh_t_receipt_info 
-where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = '43' and status in (0,1) order by created_on desc
+SELECT * FROM pnh_t_receipt_info 
+WHERE receipt_amount != 0 AND unreconciled_value > 0 AND franchise_id = '43' AND STATUS IN (0,1) ORDER BY created_on DESC
 
-select * from (
-select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,rcon.unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as unreconciled_amount
-from pnh_franchise_account_stat fcs
-left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-where fcs.type = '0' and fcs.franchise_id = '43' order by fcs.created_on desc
-) as g where g.unreconciled_amount > 0;
+SELECT * FROM (
+SELECT fcs.id AS credit_note_id,fcs.type,fcs.amount,fcs.desc,FROM_UNIXTIME(fcs.created_on) AS created_on,rcon.unreconciled,IF(rcon.unreconciled IS NULL, ROUND( fcs.amount, 2),rcon.unreconciled) AS unreconciled_amount
+FROM pnh_franchise_account_stat fcs
+LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+WHERE fcs.type = '0' AND fcs.franchise_id = '43' ORDER BY fcs.created_on DESC
+) AS g WHERE g.unreconciled_amount > 0;
 
 
-select * from pnh_t_receipt_info where receipt_id = '5387';
-select * from pnh_t_receipt_reconcilation_log where receipt_id = '5387'
-select * from pnh_t_receipt_reconcilation where id in ('1','2','3','4','5','6','7');
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id = '5387';
+SELECT * FROM pnh_t_receipt_reconcilation_log WHERE receipt_id = '5387'
+SELECT * FROM pnh_t_receipt_reconcilation WHERE id IN ('1','2','3','4','5','6','7');
 
-select * from pnh_t_receipt_reconcilation_log;
-select * from pnh_t_receipt_reconcilation
+SELECT * FROM pnh_t_receipt_reconcilation_log;
+SELECT * FROM pnh_t_receipt_reconcilation
 
 #Feb_08_2014
 
  #==========================================================
 -- // RESET RECONCILE TABLE
-truncate table `pnh_t_receipt_reconcilation`;
-truncate table `pnh_t_receipt_reconcilation_log`;
-update pnh_t_receipt_info set unreconciled_value = receipt_amount,unreconciled_status = 'pending' where receipt_amount !=0;
-update pnh_franchise_account_stat set unreconciled_value = amount,unreconciled_status = 'pending' where amount !=0;
+TRUNCATE TABLE `pnh_t_receipt_reconcilation`;
+TRUNCATE TABLE `pnh_t_receipt_reconcilation_log`;
+UPDATE pnh_t_receipt_info SET unreconciled_value = receipt_amount,unreconciled_status = 'pending' WHERE receipt_amount !=0;
+UPDATE pnh_franchise_account_stat SET unreconciled_value = amount,unreconciled_status = 'pending' WHERE amount !=0;
 #==========================================================
-select * from ( select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,rcon.unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as unreconciled_amount
-                                                                from pnh_franchise_account_stat fcs
-                                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-                                                                left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-                                                                where fcs.type = '0' and fcs.franchise_id = '43' order by fcs.created_on desc ) as g where g.unreconciled_amount > 0 ;
+SELECT * FROM ( SELECT fcs.id AS credit_note_id,fcs.type,fcs.amount,fcs.desc,FROM_UNIXTIME(fcs.created_on) AS created_on,rcon.unreconciled,IF(rcon.unreconciled IS NULL, ROUND( fcs.amount, 2),rcon.unreconciled) AS unreconciled_amount
+                                                                FROM pnh_franchise_account_stat fcs
+                                                                LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+                                                                LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+                                                                WHERE fcs.type = '0' AND fcs.franchise_id = '43' ORDER BY fcs.created_on DESC ) AS g WHERE g.unreconciled_amount > 0 ;
 
 
 
-select sum(receipt_amount)  as ttl_receipts_val from pnh_t_receipt_info 
-where receipt_amount != 0 and 
-unreconciled_value > 0 and franchise_id = '43' and status in (0,1) order by created_on desc
+SELECT SUM(receipt_amount)  AS ttl_receipts_val FROM pnh_t_receipt_info 
+WHERE receipt_amount != 0 AND 
+unreconciled_value > 0 AND franchise_id = '43' AND STATUS IN (0,1) ORDER BY created_on DESC
 
 
 
 --  new to get total unreconciled credit value
-select sum(amount) ttl_cr_amount,sum(unreconciled_amount) as ttl_un_cr_amount from ( 
-select fcs.amount,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as unreconciled_amount
-                                                                from pnh_franchise_account_stat fcs
-                                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-                                                                left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-                                                                where fcs.type = '0' and fcs.franchise_id = '43' order by fcs.created_on desc ) as g where g.unreconciled_amount > 0 ;
+SELECT SUM(amount) ttl_cr_amount,SUM(unreconciled_amount) AS ttl_un_cr_amount FROM ( 
+SELECT fcs.amount,IF(rcon.unreconciled IS NULL, ROUND( fcs.amount, 2),rcon.unreconciled) AS unreconciled_amount
+                                                                FROM pnh_franchise_account_stat fcs
+                                                                LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+                                                                LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+                                                                WHERE fcs.type = '0' AND fcs.franchise_id = '43' ORDER BY fcs.created_on DESC ) AS g WHERE g.unreconciled_amount > 0 ;
 
 #=> 1289066.8400000003 1288910.6400000001
 #=> 147236.34 147236.34
 
-select * from ( 
-select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,rcon.unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as unreconciled_amount
-		from pnh_franchise_account_stat fcs
-		left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-		left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-		where fcs.type = '0'
-and fcs.franchise_id = '17' 
-order by fcs.created_on desc 
-) as g where g.unreconciled_amount > 0 ;
+SELECT * FROM ( 
+SELECT fcs.id AS credit_note_id,fcs.type,fcs.amount,fcs.desc,FROM_UNIXTIME(fcs.created_on) AS created_on,rcon.unreconciled,IF(rcon.unreconciled IS NULL, ROUND( fcs.amount, 2),rcon.unreconciled) AS unreconciled_amount
+		FROM pnh_franchise_account_stat fcs
+		LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+		LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+		WHERE fcs.type = '0'
+AND fcs.franchise_id = '17' 
+ORDER BY fcs.created_on DESC 
+) AS g WHERE g.unreconciled_amount > 0 ;
 
-select * from pnh_t_receipt_reconcilation_log where credit_note_id in ('25513')
-select * from pnh_t_receipt_reconcilation where id in ('1','2'); #reconcile_id
-select * from pnh_franchise_account_stat where id = '25513';
+SELECT * FROM pnh_t_receipt_reconcilation_log WHERE credit_note_id IN ('25513')
+SELECT * FROM pnh_t_receipt_reconcilation WHERE id IN ('1','2'); #reconcile_id
+SELECT * FROM pnh_franchise_account_stat WHERE id = '25513';
 
 # =============================================================================
-alter table `pnh_franchise_account_stat` add column `unreconciled_value` double   NULL  after `is_correction`, add column `unreconciled_status` varchar (11) DEFAULT 'pending' NULL  after `unreconciled_value`;
+ALTER TABLE `pnh_franchise_account_stat` ADD COLUMN `unreconciled_value` DOUBLE   NULL  AFTER `is_correction`, ADD COLUMN `unreconciled_status` VARCHAR (11) DEFAULT 'pending' NULL  AFTER `unreconciled_value`;
 # =============================================================================
 
 
-select * from ( 
-select * #fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,rcon.unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as unreconciled_amount
-		from pnh_franchise_account_stat fcs
-		left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-		left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-		where fcs.type = '0'
-and fcs.franchise_id = '43' #and fcs.id = '25513'
-order by fcs.created_on desc 
-) as g #where g.unreconciled_amount > 0 ;
+SELECT * FROM ( 
+SELECT * #fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,rcon.unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as unreconciled_amount
+		FROM pnh_franchise_account_stat fcs
+		LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+		LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+		WHERE fcs.type = '0'
+AND fcs.franchise_id = '43' #and fcs.id = '25513'
+ORDER BY fcs.created_on DESC 
+) AS g #where g.unreconciled_amount > 0 ;
 
 # if unreconcile val = 0  unreconcile credit amount 0 (done)
 # if unreconcile val = cr.amount pending take amount
 # if unreconcile val < cr.amount partial take unrecocncile value
 
 -- new fcs.amount
-select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,if(rlog.reconcile_amount is null,fcs.amount,if(rlog.reconcile_amount = fcs.amount,fcs.amount ,rlog.reconcile_amount)) as unreconciled_amount
+SELECT fcs.id AS credit_note_id,fcs.type,fcs.amount,fcs.desc,FROM_UNIXTIME(fcs.created_on) AS created_on,IF(rlog.reconcile_amount IS NULL,fcs.amount,IF(rlog.reconcile_amount = fcs.amount,fcs.amount ,rlog.reconcile_amount)) AS unreconciled_amount
 #rlog.reconcile_amount,fcs.amount,if(rlog.reconcile_amount is null, fcs.amount , if(rlog.reconcile_amount = fcs.amount ,fcs.amount ,rlog.reconcile_amount ) ) as unreconciled_amount
 
 #if ( rlog.reconcile_amount = 0, 0, fcs.amount ) as unreconcile_amount , fcs.*,rlog.*
-		from pnh_franchise_account_stat fcs
-		left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+		FROM pnh_franchise_account_stat fcs
+		LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
 		#left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-		where fcs.type = '0'
-and fcs.franchise_id = '17' #and fcs.id = '25513'
-order by fcs.created_on desc;
+		WHERE fcs.type = '0'
+AND fcs.franchise_id = '17' #and fcs.id = '25513'
+ORDER BY fcs.created_on DESC;
 
 -- new final to get unreconciled records
-select * from (select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on
-,rlog.reconcile_amount,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(rlog.reconcile_amount = fcs.amount,fcs.amount ,round(rlog.reconcile_amount,2)  )) as unreconciled_amount
-		from pnh_franchise_account_stat fcs
-		left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-		where fcs.type = '0'
-and fcs.franchise_id = '17'
-order by fcs.created_on desc) as g where g.unreconciled_amount > 0;
+SELECT * FROM (SELECT fcs.id AS credit_note_id,fcs.type,fcs.amount,fcs.desc,FROM_UNIXTIME(fcs.created_on) AS created_on
+,rlog.reconcile_amount,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(rlog.reconcile_amount = fcs.amount,fcs.amount ,ROUND(rlog.reconcile_amount,2)  )) AS unreconciled_amount
+		FROM pnh_franchise_account_stat fcs
+		LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+		WHERE fcs.type = '0'
+AND fcs.franchise_id = '17'
+ORDER BY fcs.created_on DESC) AS g WHERE g.unreconciled_amount > 0;
 
 
 -- new final to get unreconciled sum
-select round(sum(amount),2) ttl_cr_amount,round(sum(unreconciled_amount),2) as ttl_un_cr_amount from (select fcs.amount,if(rlog.reconcile_amount is null,fcs.amount,if(rlog.reconcile_amount = fcs.amount,fcs.amount ,rlog.reconcile_amount)) as unreconciled_amount
-		from pnh_franchise_account_stat fcs
-		left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-		where fcs.type = '0'
-and fcs.franchise_id = '17'
-order by fcs.created_on desc) as g where g.unreconciled_amount > 0;
+SELECT ROUND(SUM(amount),2) ttl_cr_amount,ROUND(SUM(unreconciled_amount),2) AS ttl_un_cr_amount FROM (SELECT fcs.amount,IF(rlog.reconcile_amount IS NULL,fcs.amount,IF(rlog.reconcile_amount = fcs.amount,fcs.amount ,rlog.reconcile_amount)) AS unreconciled_amount
+		FROM pnh_franchise_account_stat fcs
+		LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+		WHERE fcs.type = '0'
+AND fcs.franchise_id = '17'
+ORDER BY fcs.created_on DESC) AS g WHERE g.unreconciled_amount > 0;
 
 #=> 1289066.8400000003 1288910.6400000001
 #=> 147236.34 147236.34
 
  #==========================================================
 -- // RESET RECONCILE TABLE
-truncate table `pnh_t_receipt_reconcilation`;
-truncate table `pnh_t_receipt_reconcilation_log`;
-update pnh_t_receipt_info set unreconciled_value = receipt_amount,unreconciled_status = 'pending' where receipt_amount !=0;
-update pnh_franchise_account_summary set unreconciled_value = credit_amt,unreconciled_status = 'pending' where credit_amt !=0;
+TRUNCATE TABLE `pnh_t_receipt_reconcilation`;
+TRUNCATE TABLE `pnh_t_receipt_reconcilation_log`;
+UPDATE pnh_t_receipt_info SET unreconciled_value = receipt_amount,unreconciled_status = 'pending' WHERE receipt_amount !=0;
+UPDATE pnh_franchise_account_summary SET unreconciled_value = credit_amt,unreconciled_status = 'pending' WHERE credit_amt !=0;
 
 #==========================================================
-select * from pnh_t_receipt_reconcilation_log
-select * from pnh_franchise_account_stat where franchise_id = '17' and id = '25512';
+SELECT * FROM pnh_t_receipt_reconcilation_log
+SELECT * FROM pnh_franchise_account_stat WHERE franchise_id = '17' AND id = '25512';
 
 --  get unreconciled credit notes
-select * from (select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on
-,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
-		from pnh_franchise_account_stat fcs
-		left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-		where fcs.type = '0'
-and fcs.franchise_id = '17'
-order by fcs.created_on desc) as g where g.unreconciled_amount > 0;
+SELECT * FROM (SELECT fcs.id AS credit_note_id,fcs.type,fcs.amount,fcs.desc,FROM_UNIXTIME(fcs.created_on) AS created_on
+,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount
+		FROM pnh_franchise_account_stat fcs
+		LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+		WHERE fcs.type = '0'
+AND fcs.franchise_id = '17'
+ORDER BY fcs.created_on DESC) AS g WHERE g.unreconciled_amount > 0;
 
 -- 
-select round(sum(amount),2) ttl_cr_amount,round(sum(unreconciled_amount),2) as ttl_un_cr_amount from (select distinct fcs.amount,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
-		from pnh_franchise_account_stat fcs
-		left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-		where fcs.type = '0'
-and fcs.franchise_id = '17'
-order by fcs.created_on desc) as g where g.unreconciled_amount > 0;
+SELECT ROUND(SUM(amount),2) ttl_cr_amount,ROUND(SUM(unreconciled_amount),2) AS ttl_un_cr_amount FROM (SELECT DISTINCT fcs.amount,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount
+		FROM pnh_franchise_account_stat fcs
+		LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+		WHERE fcs.type = '0'
+AND fcs.franchise_id = '17'
+ORDER BY fcs.created_on DESC) AS g WHERE g.unreconciled_amount > 0;
 
 --  get unreconciled credit notes
-select * from (select distinct 
-fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on
-,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount,fcs.unreconciled_status
-		from pnh_franchise_account_stat fcs
-		left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-		where fcs.type = '0'
-and fcs.franchise_id = '17'
-order by fcs.created_on desc) as g 
-where g.unreconciled_amount > 0;
+SELECT * FROM (SELECT DISTINCT 
+fcs.id AS credit_note_id,fcs.type,fcs.amount,fcs.desc,FROM_UNIXTIME(fcs.created_on) AS created_on
+,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount,fcs.unreconciled_status
+		FROM pnh_franchise_account_stat fcs
+		LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+		WHERE fcs.type = '0'
+AND fcs.franchise_id = '17'
+ORDER BY fcs.created_on DESC) AS g 
+WHERE g.unreconciled_amount > 0;
 
 
-select * from (select fcs.id as debit_note_id,fcs.amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2),rcon.unreconciled) as inv_amount
-                                                        from pnh_franchise_account_stat fcs
-                                                        left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.id
-                                                        where fcs.type=1 and fcs.franchise_id = '17'
-                                                        order by fcs.created_on desc) as g where g.inv_amount > 0;
+SELECT * FROM (SELECT fcs.id AS debit_note_id,fcs.amount,rcon.unreconciled AS unreconciled,IF(rcon.unreconciled IS NULL, ROUND( fcs.amount, 2),rcon.unreconciled) AS inv_amount
+                                                        FROM pnh_franchise_account_stat fcs
+                                                        LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.debit_note_id = fcs.id
+                                                        WHERE fcs.type=1 AND fcs.franchise_id = '17'
+                                                        ORDER BY fcs.created_on DESC) AS g WHERE g.inv_amount > 0;
 
-select * from pnh_t_receipt_reconcilation;
+SELECT * FROM pnh_t_receipt_reconcilation;
 
 # Feb_10_2014
 
 ALTER TABLE `king_orders` ADD COLUMN `credit_days` INT(11) DEFAULT 0 NULL AFTER `is_paid`; 
 
-select md5('shivaraj');
+SELECT MD5('shivaraj');
 dshariuuudgs5h1d28-fs234234arabin445221
 
-select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.invoice_no,rcon.debit_note_id
+SELECT rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.invoice_no,rcon.debit_note_id
                     ,rcon.inv_amount,rcon.unreconciled
-                    ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date,a.username
-                from pnh_t_receipt_info r 
-                join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id and is_reversed = 0
-                join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-                join king_admin a on a.id=rcon.created_by
-                where r.franchise_id = '43' and r.receipt_id = '5382';
+                    ,DATE_FORMAT(FROM_UNIXTIME(rcon.created_on),'%e/%m/%Y') AS created_date,a.username
+                FROM pnh_t_receipt_info r 
+                JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.receipt_id = r.receipt_id AND is_reversed = 0
+                JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+                JOIN king_admin a ON a.id=rcon.created_by
+                WHERE r.franchise_id = '43' AND r.receipt_id = '5382';
 
-select * from pnh_t_receipt_info where receipt_id = '5388'
-select * from pnh_t_receipt_reconcilation_log where receipt_id = '5388'
-select * from pnh_t_receipt_reconcilation where id in ("8","9");
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id = '5388'
+SELECT * FROM pnh_t_receipt_reconcilation_log WHERE receipt_id = '5388'
+SELECT * FROM pnh_t_receipt_reconcilation WHERE id IN ("8","9");
 
-select 25000 - 56 - 399;
+SELECT 25000 - 56 - 399;
 
-select * from pnh_franchise_account_stat where type='0' and franchise_id = '43';
+SELECT * FROM pnh_franchise_account_stat WHERE TYPE='0' AND franchise_id = '43';
 
 SELECT r.*,m.name AS modifiedby,f.franchise_name,a.name AS admin
 						FROM pnh_t_receipt_info r
 						JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id
 						LEFT OUTER JOIN king_admin a ON a.id=r.created_by
 						LEFT OUTER JOIN king_admin m ON m.id=r.modified_by
-						WHERE r.status=0 AND r.is_active=1 and is_submitted=0 and r.status=0 and r.franchise_id= '43'
-						ORDER BY instrument_date asc
+						WHERE r.status=0 AND r.is_active=1 AND is_submitted=0 AND r.status=0 AND r.franchise_id= '43'
+						ORDER BY instrument_date ASC
 
-SELECT a.acc_correc_id,fcs.franchise_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,status,a.created_on,rlog.reconcile_amount
-,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value , round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+SELECT a.acc_correc_id,fcs.franchise_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,STATUS,a.created_on,rlog.reconcile_amount
+,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value , ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount
 						FROM `pnh_franchise_account_summary` a
-						left join pnh_franchise_account_stat fcs on fcs.id = a.acc_correc_id
-                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-                                                left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id 
-						WHERE a.franchise_id='43' and (a.action_type = 5 or a.action_type = 6)
-						order by a.created_on desc;
+						LEFT JOIN pnh_franchise_account_stat fcs ON fcs.id = a.acc_correc_id
+                                                LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+                                                LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id 
+						WHERE a.franchise_id='43' AND (a.action_type = 5 OR a.action_type = 6)
+						ORDER BY a.created_on DESC;
 
 
 
 #// get credit note info
-select * from pnh_t_receipt_reconcilation_log where credit_note_id = '27060'
-select * from pnh_t_receipt_reconcilation where id in ("15");
-select * from pnh_franchise_account_stat
+SELECT * FROM pnh_t_receipt_reconcilation_log WHERE credit_note_id = '27060'
+SELECT * FROM pnh_t_receipt_reconcilation WHERE id IN ("15");
+SELECT * FROM pnh_franchise_account_stat
 
 
-select * from pnh_t_receipt_info where receipt_id = '5388'
-select * from pnh_t_receipt_reconcilation_log where receipt_id = '5388'
-select * from pnh_t_receipt_reconcilation where id in ("8","9");
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id = '5388'
+SELECT * FROM pnh_t_receipt_reconcilation_log WHERE receipt_id = '5388'
+SELECT * FROM pnh_t_receipt_reconcilation WHERE id IN ("8","9");
 
 
-select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.invoice_no,rcon.debit_note_id
+SELECT rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.invoice_no,rcon.debit_note_id
                     ,rcon.inv_amount,rcon.unreconciled
-                    ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date,a.username
-                from pnh_franchise_account_stat fcs
-                join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id and rlog.is_reversed = 0
-                join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-                join king_admin a on a.id=rcon.created_by
-                where fcs.franchise_id = '43' and fcs.id = '27062'
+                    ,DATE_FORMAT(FROM_UNIXTIME(rcon.created_on),'%e/%m/%Y') AS created_date,a.username
+                FROM pnh_franchise_account_stat fcs
+                JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id AND rlog.is_reversed = 0
+                JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+                JOIN king_admin a ON a.id=rcon.created_by
+                WHERE fcs.franchise_id = '43' AND fcs.id = '27062'
 
 #pnh_franchise_account_summary
-select id as credit_note_id,franchise_id,`type`,amount,`desc`,is_correction,unreconciled_value,unreconciled_status,rlog.created_on
-from pnh_franchise_account_stat fcs
-join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-where type=0 and franchise_id='43' and id='27062' order by rlog.created_on desc;
+SELECT id AS credit_note_id,franchise_id,`type`,amount,`desc`,is_correction,unreconciled_value,unreconciled_status,rlog.created_on
+FROM pnh_franchise_account_stat fcs
+JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+WHERE TYPE=0 AND franchise_id='43' AND id='27062' ORDER BY rlog.created_on DESC;
 
-select id as credit_note_id,franchise_id,`type`,amount,`desc`,is_correction,unreconciled_value,unreconciled_status,rlog.created_on
-from pnh_franchise_account_stat fcs
-join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-where type=0 and franchise_id='43' and id='27062' order by rlog.created_on desc;
+SELECT id AS credit_note_id,franchise_id,`type`,amount,`desc`,is_correction,unreconciled_value,unreconciled_status,rlog.created_on
+FROM pnh_franchise_account_stat fcs
+JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+WHERE TYPE=0 AND franchise_id='43' AND id='27062' ORDER BY rlog.created_on DESC;
 
 # Feb_11_2014
 
-select * from king_orders;
+SELECT * FROM king_orders;
 
-select *,from_unixtime(batched_on) from shipment_batch_process_invoice_link where batch_id = '6000' and batched_by = '37' order by id desc;
+SELECT *,FROM_UNIXTIME(batched_on) FROM shipment_batch_process_invoice_link WHERE batch_id = '6000' AND batched_by = '37' ORDER BY id DESC;
 #=================================
 
 	ALTER TABLE `m_vendor_info` ADD COLUMN `payment_type` INT(1) DEFAULT 0 NULL AFTER `require_payment_advance`;
@@ -2489,7 +2489,7 @@ select *,from_unixtime(batched_on) from shipment_batch_process_invoice_link wher
 ALTER TABLE `king_orders` ADD COLUMN `is_paid` TINYINT(11) DEFAULT 0 NULL AFTER `partner_order_id`; 
 ALTER TABLE `king_transactions` ADD COLUMN `credit_days` INT(11) DEFAULT 0 NULL AFTER `trans_grp_ref_no`;
 
-alter table m_product_info add column product_cat_id int(11) default 0 after brand_id;
+ALTER TABLE m_product_info ADD COLUMN product_cat_id INT(11) DEFAULT 0 AFTER brand_id;
 
 UPDATE m_product_info a 
 	JOIN (
@@ -2515,450 +2515,450 @@ UPDATE m_product_info a
 	SET a.product_cat_id = h.catid;
 #=================================
 
-select *,from_unixtime(batched_on) from shipment_batch_process_invoice_link where batch_id = '5779' and batched_by = '37' order by id desc;
+SELECT *,FROM_UNIXTIME(batched_on) FROM shipment_batch_process_invoice_link WHERE batch_id = '5779' AND batched_by = '37' ORDER BY id DESC;
 
 -- 
-select * from (select distinct fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
+SELECT * FROM (SELECT DISTINCT fcs.id AS credit_note_id,fcs.type,fcs.amount,fcs.desc,FROM_UNIXTIME(fcs.created_on) AS created_on,fcs.franchise_id
 ,rlog.reconcile_amount                                                
-,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount
 												,fcs.unreconciled_status
 												
-                                                from pnh_franchise_account_stat fcs
-                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-                                                where fcs.type = '0'
-                                                and fcs.franchise_id = '43'
-                                                order by fcs.created_on desc) as g where g.unreconciled_amount > 0;
+                                                FROM pnh_franchise_account_stat fcs
+                                                LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+                                                WHERE fcs.type = '0'
+                                                AND fcs.franchise_id = '43'
+                                                ORDER BY fcs.created_on DESC) AS g WHERE g.unreconciled_amount > 0;
 -- 
-select * from pnh_t_receipt_reconcilation_log
+SELECT * FROM pnh_t_receipt_reconcilation_log
 
 -- get unreconciled invoices
-select * from (select distinct i.invoice_no,rcon.unreconciled,round( sum( i.mrp - i.discount - i.credit_note_amt )  * i.invoice_qty , 2) as amount
-,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),min(rcon.unreconciled) ) as inv_amount
+SELECT * FROM (SELECT DISTINCT i.invoice_no,rcon.unreconciled,ROUND( SUM( i.mrp - i.discount - i.credit_note_amt )  * i.invoice_qty , 2) AS amount
+,IF(rcon.unreconciled IS NULL, ROUND( SUM( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),MIN(rcon.unreconciled) ) AS inv_amount
 #,if(rlog.reconcile_amount is null,round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
-		from king_invoice i
-		join king_transactions tr on tr.transid=i.transid
-		left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
-		left join pnh_t_receipt_reconcilation_log rlog on rlog.reconcile_id = rcon.id #and rlog.is_reversed = 0
-		where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id= '43' #and i.invoice_no is null 
-		group by i.invoice_no,i.transid order by i.invoice_no asc) as g where g.inv_amount > 0;
+		FROM king_invoice i
+		JOIN king_transactions tr ON tr.transid=i.transid
+		LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
+		LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.reconcile_id = rcon.id #and rlog.is_reversed = 0
+		WHERE i.invoice_status=1 AND tr.is_pnh=1 AND tr.franchise_id= '43' #and i.invoice_no is null 
+		GROUP BY i.invoice_no,i.transid ORDER BY i.invoice_no ASC) AS g WHERE g.inv_amount > 0;
 
 -- view receipts
-select * from pnh_t_receipt_reconcilation_log where credit_note_id = '27060'
-select * from pnh_t_receipt_reconcilation where id in ("15");
-select * from pnh_franchise_account_stat
+SELECT * FROM pnh_t_receipt_reconcilation_log WHERE credit_note_id = '27060'
+SELECT * FROM pnh_t_receipt_reconcilation WHERE id IN ("15");
+SELECT * FROM pnh_franchise_account_stat
 
 
-select * from pnh_t_receipt_info where receipt_id = '5388'
-select * from pnh_t_receipt_reconcilation where invoice_no = '200696'
-select * from pnh_t_receipt_reconcilation_log where reconcile_id in ("8","10",'21','22');
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id = '5388'
+SELECT * FROM pnh_t_receipt_reconcilation WHERE invoice_no = '200696'
+SELECT * FROM pnh_t_receipt_reconcilation_log WHERE reconcile_id IN ("8","10",'21','22');
 
 
 -- new
 
 -- new get unreconciled invoices
-select * from (select distinct i.invoice_no,rcon.unreconciled,round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2) as amount
-,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),rcon.unreconciled) as inv_amount
-		from pnh_t_receipt_reconcilation rcon
+SELECT * FROM (SELECT DISTINCT i.invoice_no,rcon.unreconciled,ROUND( SUM( i.mrp - discount - credit_note_amt )  * invoice_qty , 2) AS amount
+,IF(rcon.unreconciled IS NULL, ROUND( SUM( i.mrp - discount - credit_note_amt )  * invoice_qty , 2),rcon.unreconciled) AS inv_amount
+		FROM pnh_t_receipt_reconcilation rcon
 
 
 
  king_invoice i
-		join king_transactions tr on tr.transid=i.transid
-		left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
-		left join pnh_t_receipt_reconcilation_log rlog on rlog.reconcile_id = rcon.id #and rlog.is_reversed = 0
-		where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id= '43' #and i.invoice_no is null 
-		group by i.invoice_no,i.transid order by i.invoice_no asc) as g where g.inv_amount > 0;
+		JOIN king_transactions tr ON tr.transid=i.transid
+		LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
+		LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.reconcile_id = rcon.id #and rlog.is_reversed = 0
+		WHERE i.invoice_status=1 AND tr.is_pnh=1 AND tr.franchise_id= '43' #and i.invoice_no is null 
+		GROUP BY i.invoice_no,i.transid ORDER BY i.invoice_no ASC) AS g WHERE g.inv_amount > 0;
 
 
 # Feb_12_2014
 
-select * from king_invoice i 
-left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no
-where i.invoice_no = '200696';
+SELECT * FROM king_invoice i 
+LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.invoice_no = i.invoice_no
+WHERE i.invoice_no = '200696';
 
-select * from pnh_t_receipt_reconcilation where invoice_no='200696' order by created_on desc limit 1;
+SELECT * FROM pnh_t_receipt_reconcilation WHERE invoice_no='200696' ORDER BY created_on DESC LIMIT 1;
 
-select distinct * from (select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
+SELECT DISTINCT * FROM (SELECT fcs.id AS credit_note_id,fcs.type,fcs.amount,fcs.desc,FROM_UNIXTIME(fcs.created_on) AS created_on,fcs.franchise_id
                                                 ,rlog.reconcile_amount
-                                                ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+                                                ,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount
                                                 ,fcs.unreconciled_status
-                                                from pnh_franchise_account_stat fcs
-                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+                                                FROM pnh_franchise_account_stat fcs
+                                                LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
 
-                                                where fcs.type = '0'
-                                                and fcs.franchise_id = '43'
-                                                order by fcs.created_on desc) as g where g.unreconciled_amount > 0
+                                                WHERE fcs.type = '0'
+                                                AND fcs.franchise_id = '43'
+                                                ORDER BY fcs.created_on DESC) AS g WHERE g.unreconciled_amount > 0
 
 -- new & final to get unique unreconculed credit notes 
-select * from (
-		select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
-			,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.amount,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
-			,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+SELECT * FROM (
+		SELECT fcs.id AS credit_note_id,fcs.type,fcs.amount,fcs.desc,FROM_UNIXTIME(fcs.created_on) AS created_on,fcs.franchise_id
+			,IF(rlog.reconcile_amount IS NULL,0,IF(rlog.reconcile_amount = fcs.amount,rlog.reconcile_amount ,ROUND( SUM(rlog.reconcile_amount),2)  )) AS ttl_reconcile_amount
+			,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount
 			,fcs.unreconciled_status
-			from pnh_franchise_account_stat fcs 
-			left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-			where fcs.type = '0' and fcs.franchise_id = '43'
-			group by fcs.id 
-			order by fcs.created_on desc
-) as g where g.unreconciled_amount > 0;
+			FROM pnh_franchise_account_stat fcs 
+			LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+			WHERE fcs.type = '0' AND fcs.franchise_id = '43'
+			GROUP BY fcs.id 
+			ORDER BY fcs.created_on DESC
+) AS g WHERE g.unreconciled_amount > 0;
 
-select distinct * from (
+SELECT DISTINCT * FROM (
 
-		select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
+		SELECT fcs.id AS credit_note_id,fcs.type,fcs.amount,fcs.desc,FROM_UNIXTIME(fcs.created_on) AS created_on,fcs.franchise_id
 			,rlog.reconcile_amount
-			,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+			,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount
 
 			,fcs.unreconciled_status
-			from pnh_franchise_account_stat fcs
-			join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
+			FROM pnh_franchise_account_stat fcs
+			JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
 
-			where fcs.type = '0'
-			and fcs.franchise_id = '43'
-			order by fcs.created_on desc
+			WHERE fcs.type = '0'
+			AND fcs.franchise_id = '43'
+			ORDER BY fcs.created_on DESC
 
-) as g where g.unreconciled_amount > 0;
+) AS g WHERE g.unreconciled_amount > 0;
 
 
-select * from (
-		select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
-			,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.amount,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
-			,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+SELECT * FROM (
+		SELECT fcs.id AS credit_note_id,fcs.type,fcs.amount,fcs.desc,FROM_UNIXTIME(fcs.created_on) AS created_on,fcs.franchise_id
+			,IF(rlog.reconcile_amount IS NULL,0,IF(rlog.reconcile_amount = fcs.amount,rlog.reconcile_amount ,ROUND( SUM(rlog.reconcile_amount),2)  )) AS ttl_reconcile_amount
+			,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount
 			,fcs.unreconciled_status
-			from pnh_franchise_account_stat fcs 
-			left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-			where fcs.type = '0' and fcs.franchise_id = '43'
-			group by fcs.id 
-			order by fcs.created_on desc
-) as g where g.unreconciled_amount > 0;
+			FROM pnh_franchise_account_stat fcs 
+			LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+			WHERE fcs.type = '0' AND fcs.franchise_id = '43'
+			GROUP BY fcs.id 
+			ORDER BY fcs.created_on DESC
+) AS g WHERE g.unreconciled_amount > 0;
 
 #=> 57
 
-select a.id
-	from pnh_sch_discount_brands a 
-	join pnh_m_franchise_info b on a.franchise_id = b.franchise_id
-	where dealid != 0 and brandid = 76916829 and b.territory_id = 22 and unix_timestamp() between valid_from and valid_to and a.is_sch_enabled = 1;
+SELECT a.id
+	FROM pnh_sch_discount_brands a 
+	JOIN pnh_m_franchise_info b ON a.franchise_id = b.franchise_id
+	WHERE dealid != 0 AND brandid = 76916829 AND b.territory_id = 22 AND UNIX_TIMESTAMP() BETWEEN valid_from AND valid_to AND a.is_sch_enabled = 1;
 
 
-update pnh_sch_discount_brands a 
-	join pnh_m_franchise_info b on a.franchise_id = b.franchise_id
-	set a.is_sch_enabled = 0 
-	where dealid != 0 and brandid = 76916829 and b.territory_id = 22 and unix_timestamp() between valid_from and valid_to and a.is_sch_enabled = 1;
+UPDATE pnh_sch_discount_brands a 
+	JOIN pnh_m_franchise_info b ON a.franchise_id = b.franchise_id
+	SET a.is_sch_enabled = 0 
+	WHERE dealid != 0 AND brandid = 76916829 AND b.territory_id = 22 AND UNIX_TIMESTAMP() BETWEEN valid_from AND valid_to AND a.is_sch_enabled = 1;
 
 # Feb_13_2014
 
-select * from pnh_t_receipt_info where receipt_id = '5392';
-select * from pnh_t_receipt_reconcilation rcon where rcon.id='29';
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id = '5392';
+SELECT * FROM pnh_t_receipt_reconcilation rcon WHERE rcon.id='29';
 
 ################### Show reconcile fields ##########################
 -- new
-select * from pnh_t_receipt_reconcilation_log rlog
-left join pnh_t_receipt_reconcilation rcon on rcon.id=rlog.reconcile_id
-where rlog.receipt_id = '5392';
+SELECT * FROM pnh_t_receipt_reconcilation_log rlog
+LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.id=rlog.reconcile_id
+WHERE rlog.receipt_id = '5392';
 ###########################################################
 
 -- 1 TOTAL UNRECONCILE AMOUNT 
-select round(sum(amount),2) ttl_cr_amount,round(sum(unreconciled_amount),2) as ttl_un_cr_amount from (select distinct fcs.amount,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
-			from pnh_franchise_account_stat fcs
-			left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-			where fcs.type = '0'
-			and fcs.franchise_id = '17'
-			order by fcs.created_on desc) as g where g.unreconciled_amount > 0;
+SELECT ROUND(SUM(amount),2) ttl_cr_amount,ROUND(SUM(unreconciled_amount),2) AS ttl_un_cr_amount FROM (SELECT DISTINCT fcs.amount,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount
+			FROM pnh_franchise_account_stat fcs
+			LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+			WHERE fcs.type = '0'
+			AND fcs.franchise_id = '17'
+			ORDER BY fcs.created_on DESC) AS g WHERE g.unreconciled_amount > 0;
 
 -- 2 UNRECONCILE LIST 
-select * from (select fcs.id as credit_note_id,fcs.type,fcs.amount,fcs.desc,from_unixtime(fcs.created_on) as created_on,fcs.franchise_id
-		,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.amount,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
-		,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+SELECT * FROM (SELECT fcs.id AS credit_note_id,fcs.type,fcs.amount,fcs.desc,FROM_UNIXTIME(fcs.created_on) AS created_on,fcs.franchise_id
+		,IF(rlog.reconcile_amount IS NULL,0,IF(rlog.reconcile_amount = fcs.amount,rlog.reconcile_amount ,ROUND( SUM(rlog.reconcile_amount),2)  )) AS ttl_reconcile_amount
+		,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount
 		,fcs.unreconciled_status
-		from pnh_franchise_account_stat fcs 
-		left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-		where fcs.type = '0' and fcs.franchise_id = '17'
-		group by fcs.id 
-		order by fcs.created_on desc
-		) as g where g.unreconciled_amount > 0;
+		FROM pnh_franchise_account_stat fcs 
+		LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+		WHERE fcs.type = '0' AND fcs.franchise_id = '17'
+		GROUP BY fcs.id 
+		ORDER BY fcs.created_on DESC
+		) AS g WHERE g.unreconciled_amount > 0;
 
 -- 2 UNRECONCILE LIST TOTAL
-select round(sum(amount),2) ttl_cr_amount,round(sum(unreconciled_amount),2) as ttl_un_cr_amount from (
+SELECT ROUND(SUM(amount),2) ttl_cr_amount,ROUND(SUM(unreconciled_amount),2) AS ttl_un_cr_amount FROM (
 
-		select fcs.amount,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.amount,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
-		,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+		SELECT fcs.amount,IF(rlog.reconcile_amount IS NULL,0,IF(rlog.reconcile_amount = fcs.amount,rlog.reconcile_amount ,ROUND( SUM(rlog.reconcile_amount),2)  )) AS ttl_reconcile_amount
+		,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value ,ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount
 		
-		from pnh_franchise_account_stat fcs 
-		left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-		where fcs.type = '0' and fcs.franchise_id = '17'
-		group by fcs.id 
-		order by fcs.created_on desc
-		) as g where g.unreconciled_amount > 0;
+		FROM pnh_franchise_account_stat fcs 
+		LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+		WHERE fcs.type = '0' AND fcs.franchise_id = '17'
+		GROUP BY fcs.id 
+		ORDER BY fcs.created_on DESC
+		) AS g WHERE g.unreconciled_amount > 0;
 
-select * from king_invoice where invoice_no = '20141019623';
+SELECT * FROM king_invoice WHERE invoice_no = '20141019623';
 
-select * from pnh_t_receipt_reconcilation_log
+SELECT * FROM pnh_t_receipt_reconcilation_log
 
-select * from pnh_t_receipt_reconcilation where invoice_no = '20141019623'
+SELECT * FROM pnh_t_receipt_reconcilation WHERE invoice_no = '20141019623'
 
-select * from pnh_t_receipt_info where receipt_id = '5394'
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id = '5394'
 
-select * from pnh_franchise_account_stat where type='0' and franchise_id = '59';
+SELECT * FROM pnh_franchise_account_stat WHERE TYPE='0' AND franchise_id = '59';
 
 #==============================================================
-alter table `pnh_franchise_account_summary` add column `unreconciled_value` double  DEFAULT '0' NULL  after `created_by`, add column `unreconciled_status` varchar (50) DEFAULT 'pending' NULL  after `unreconciled_value`;
+ALTER TABLE `pnh_franchise_account_summary` ADD COLUMN `unreconciled_value` DOUBLE  DEFAULT '0' NULL  AFTER `created_by`, ADD COLUMN `unreconciled_status` VARCHAR (50) DEFAULT 'pending' NULL  AFTER `unreconciled_value`;
 #==============================================================
 
 -- new get list of franchise summary
-select * from (
-select fcs.acc_correc_id as credit_note_id,fcs.action_type,fcs.credit_amt,fcs.remarks,DATE_FORMAT(fcs.created_on,'%e/%m/%Y') as created_on,fcs.franchise_id
-                                                ,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.credit_amt,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
-                                                ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.credit_amt,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+SELECT * FROM (
+SELECT fcs.acc_correc_id AS credit_note_id,fcs.action_type,fcs.credit_amt,fcs.remarks,DATE_FORMAT(fcs.created_on,'%e/%m/%Y') AS created_on,fcs.franchise_id
+                                                ,IF(rlog.reconcile_amount IS NULL,0,IF(rlog.reconcile_amount = fcs.credit_amt,rlog.reconcile_amount ,ROUND( SUM(rlog.reconcile_amount),2)  )) AS ttl_reconcile_amount
+                                                ,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.credit_amt,fcs.unreconciled_value ,ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount
                                                 ,fcs.unreconciled_status
-                                                from pnh_franchise_account_summary fcs 
-                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id                                                where fcs.action_type = '5' and fcs.franchise_id = '59' and credit_amt !='0'
-                                                group by fcs.acc_correc_id 
-                                                order by fcs.created_on desc
-) as g where g.unreconciled_amount > 0;
+                                                FROM pnh_franchise_account_summary fcs 
+                                                LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.acc_correc_id                                                WHERE fcs.action_type = '5' AND fcs.franchise_id = '59' AND credit_amt !='0'
+                                                GROUP BY fcs.acc_correc_id 
+                                                ORDER BY fcs.created_on DESC
+) AS g WHERE g.unreconciled_amount > 0;
 
 
 -- new get list of franchise summary SUM - TOTAL
-select round(sum(credit_amt),2) ttl_cr_amount,round(sum(unreconciled_amount),2) as ttl_un_cr_amount from ( select fcs.credit_amt
-                                                ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.credit_amt,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
-                                                from pnh_franchise_account_summary fcs 
-                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id                                                where fcs.action_type = '5' and fcs.franchise_id = '59' and credit_amt !='0'
-                                                group by fcs.acc_correc_id 
-                                                order by fcs.created_on desc
-) as g where g.unreconciled_amount > 0;
+SELECT ROUND(SUM(credit_amt),2) ttl_cr_amount,ROUND(SUM(unreconciled_amount),2) AS ttl_un_cr_amount FROM ( SELECT fcs.credit_amt
+                                                ,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.credit_amt,fcs.unreconciled_value ,ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount
+                                                FROM pnh_franchise_account_summary fcs 
+                                                LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.acc_correc_id                                                WHERE fcs.action_type = '5' AND fcs.franchise_id = '59' AND credit_amt !='0'
+                                                GROUP BY fcs.acc_correc_id 
+                                                ORDER BY fcs.created_on DESC
+) AS g WHERE g.unreconciled_amount > 0;
 
  #==========================================================
 -- // RESET RECONCILE TABLE
-truncate table `pnh_t_receipt_reconcilation`;
-truncate table `pnh_t_receipt_reconcilation_log`;
-update pnh_t_receipt_info set unreconciled_value = receipt_amount,unreconciled_status = 'pending' where receipt_amount !=0;
-update pnh_franchise_account_summary set unreconciled_value = credit_amt,unreconciled_status = 'pending' where credit_amt !=0;
+TRUNCATE TABLE `pnh_t_receipt_reconcilation`;
+TRUNCATE TABLE `pnh_t_receipt_reconcilation_log`;
+UPDATE pnh_t_receipt_info SET unreconciled_value = receipt_amount,unreconciled_status = 'pending' WHERE receipt_amount !=0;
+UPDATE pnh_franchise_account_summary SET unreconciled_value = credit_amt,unreconciled_status = 'pending' WHERE credit_amt !=0;
 
 #==========================================================
 
-select * from pnh_franchise_account_summary where action_type = '5' and franchise_id = '59' and credit_amt !='0';
+SELECT * FROM pnh_franchise_account_summary WHERE action_type = '5' AND franchise_id = '59' AND credit_amt !='0';
 
 
-select * from pnh_t_receipt_reconcilation where invoice_no = '20141019623'
+SELECT * FROM pnh_t_receipt_reconcilation WHERE invoice_no = '20141019623'
 
-select * from pnh_t_receipt_info where receipt_id = '5394'
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id = '5394'
 
-select * from pnh_franchise_account_stat where type='0' and franchise_id = '59';
+SELECT * FROM pnh_franchise_account_stat WHERE TYPE='0' AND franchise_id = '59';
 
-select * from pnh_t_receipt_reconcilation where invoice_no = '20141019623' or debit_note_id = '0';
+SELECT * FROM pnh_t_receipt_reconcilation WHERE invoice_no = '20141019623' OR debit_note_id = '0';
 
-select * from (select distinct i.invoice_no,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( sum( i.mrp - discount - credit_note_amt )  * invoice_qty , 2), rcon.unreconciled ) as inv_amount
-                                                        from king_invoice i
-                                                        join king_transactions tr on tr.transid=i.transid
-                                                        left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
-                                                        where i.invoice_status=1 and tr.is_pnh=1 and tr.franchise_id= '59' #and i.invoice_no is null 
-                                                        group by i.invoice_no,i.transid order by i.invoice_no asc) as g where g.inv_amount > 0;
+SELECT * FROM (SELECT DISTINCT i.invoice_no,rcon.unreconciled AS unreconciled,IF(rcon.unreconciled IS NULL, ROUND( SUM( i.mrp - discount - credit_note_amt )  * invoice_qty , 2), rcon.unreconciled ) AS inv_amount
+                                                        FROM king_invoice i
+                                                        JOIN king_transactions tr ON tr.transid=i.transid
+                                                        LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.invoice_no = i.invoice_no #and rcon.unreconciled = 0
+                                                        WHERE i.invoice_status=1 AND tr.is_pnh=1 AND tr.franchise_id= '59' #and i.invoice_no is null 
+                                                        GROUP BY i.invoice_no,i.transid ORDER BY i.invoice_no ASC) AS g WHERE g.inv_amount > 0;
 
-select * from (select fcs.id as debit_note_id,fcs.amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2), (rcon.unreconciled) ) as inv_amount
-                                                        from pnh_franchise_account_stat fcs
-                                                        left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.id
-                                                        where fcs.type=1 and fcs.franchise_id = '59'
-                                                        order by fcs.created_on desc) as g where g.inv_amount > 0;
+SELECT * FROM (SELECT fcs.id AS debit_note_id,fcs.amount,rcon.unreconciled AS unreconciled,IF(rcon.unreconciled IS NULL, ROUND( fcs.amount, 2), (rcon.unreconciled) ) AS inv_amount
+                                                        FROM pnh_franchise_account_stat fcs
+                                                        LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.debit_note_id = fcs.id
+                                                        WHERE fcs.type=1 AND fcs.franchise_id = '59'
+                                                        ORDER BY fcs.created_on DESC) AS g WHERE g.inv_amount > 0;
 
 # Feb_14_2014
 
-select * from m_stream_posts where id  = 
-select * from m_stream_posts 
+SELECT * FROM m_stream_posts WHERE id  = 
+SELECT * FROM m_stream_posts 
 
-select * from m_stream_post_reply where post_id='70'
+SELECT * FROM m_stream_post_reply WHERE post_id='70'
 
-select * from king_admin
+SELECT * FROM king_admin
 0487cc982f7db39c51695026e4bdc692
 ef8d47b9747e620fb3d29d17269c4c33
-select md5('suresh')
+SELECT MD5('suresh')
 
 franchise_id = '59';
 
-select * from m_stream_post_reply where post_id='740' order by replied_on desc limit 100 # and id != ?
+SELECT * FROM m_stream_post_reply WHERE post_id='740' ORDER BY replied_on DESC LIMIT 100 # and id != ?
 
-select * from  pnh_franchise_account_summary where action_type='5' and debit_amt != 0 and franchise_id = '59';
+SELECT * FROM  pnh_franchise_account_summary WHERE action_type='5' AND debit_amt != 0 AND franchise_id = '59';
 
 -- old old
-select * from (select fcs.id as debit_note_id,fcs.amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.amount, 2), (rcon.unreconciled) ) as inv_amount
-                                                        from pnh_franchise_account_stat fcs
-                                                        left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.id
-                                                        where fcs.type=1 and fcs.franchise_id = '59'
-                                                        order by fcs.created_on desc) as g where g.inv_amount > 0;
+SELECT * FROM (SELECT fcs.id AS debit_note_id,fcs.amount,rcon.unreconciled AS unreconciled,IF(rcon.unreconciled IS NULL, ROUND( fcs.amount, 2), (rcon.unreconciled) ) AS inv_amount
+                                                        FROM pnh_franchise_account_stat fcs
+                                                        LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.debit_note_id = fcs.id
+                                                        WHERE fcs.type=1 AND fcs.franchise_id = '59'
+                                                        ORDER BY fcs.created_on DESC) AS g WHERE g.inv_amount > 0;
 
 -- NEW NEW to get list of debit entries:
-select * from (select fcs.acc_correc_id as debit_note_id,fcs.debit_amt as amount,rcon.unreconciled as unreconciled,if(rcon.unreconciled is null, round( fcs.debit_amt, 2), (rcon.unreconciled) ) as inv_amount
-			from pnh_franchise_account_summary fcs
-			left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.acc_correc_id
-			where fcs.action_type='5' and fcs.franchise_id = '17' and debit_amt != 0
-			order by fcs.created_on desc
-) as g where g.inv_amount > 0
+SELECT * FROM (SELECT fcs.acc_correc_id AS debit_note_id,fcs.debit_amt AS amount,rcon.unreconciled AS unreconciled,IF(rcon.unreconciled IS NULL, ROUND( fcs.debit_amt, 2), (rcon.unreconciled) ) AS inv_amount
+			FROM pnh_franchise_account_summary fcs
+			LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.debit_note_id = fcs.acc_correc_id
+			WHERE fcs.action_type='5' AND fcs.franchise_id = '17' AND debit_amt != 0
+			ORDER BY fcs.created_on DESC
+) AS g WHERE g.inv_amount > 0
 
 ======================================
 # Feb_17_2014
 
-select * from pnh_t_receipt_reconcilation_log
+SELECT * FROM pnh_t_receipt_reconcilation_log
 
 # =============================
 -- Shariff sir
-select k.* from (
-select g.p_invoice_no,invoice_status,inv,count(*) as t from (
-		select a.p_invoice_no,b.invoice_status,sum(distinct a.invoice_no) as inv
-			from shipment_batch_process_invoice_link a 
-			join proforma_invoices b on a.p_invoice_no = b.p_invoice_no 
-		where a.p_invoice_no != 0 
-		group by p_invoice_no 
-		order by a.id desc ) as g
-join shipment_batch_process_invoice_link h on g.p_invoice_no = h.p_invoice_no 
-group by g.p_invoice_no
-having t > 1 and invoice_status = 1 and inv != 0 
-order by h.id desc ) as k
-join king_invoice i on i.invoice_no = k.inv
-group by p_invoice_no
-order by i.invoice_no desc;
+SELECT k.* FROM (
+SELECT g.p_invoice_no,invoice_status,inv,COUNT(*) AS t FROM (
+		SELECT a.p_invoice_no,b.invoice_status,SUM(DISTINCT a.invoice_no) AS inv
+			FROM shipment_batch_process_invoice_link a 
+			JOIN proforma_invoices b ON a.p_invoice_no = b.p_invoice_no 
+		WHERE a.p_invoice_no != 0 
+		GROUP BY p_invoice_no 
+		ORDER BY a.id DESC ) AS g
+JOIN shipment_batch_process_invoice_link h ON g.p_invoice_no = h.p_invoice_no 
+GROUP BY g.p_invoice_no
+HAVING t > 1 AND invoice_status = 1 AND inv != 0 
+ORDER BY h.id DESC ) AS k
+JOIN king_invoice i ON i.invoice_no = k.inv
+GROUP BY p_invoice_no
+ORDER BY i.invoice_no DESC;
 # =============================
 -- OLD
-SELECT a.acc_correc_id,fcs.franchise_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,status,a.created_on,rlog.reconcile_amount
-                        ,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value , round(fcs.unreconciled_value,2)  )) as unreconciled_amount,fcs.unreconciled_status
+SELECT a.acc_correc_id,fcs.franchise_id,fcs.type,a.debit_amt,a.credit_amt,a.remarks,STATUS,a.created_on,rlog.reconcile_amount
+                        ,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.amount,fcs.unreconciled_value , ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount,fcs.unreconciled_status
 						FROM `pnh_franchise_account_summary` a
-						left join pnh_franchise_account_stat fcs on fcs.id = a.acc_correc_id
-                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id
-                                                left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-						WHERE a.franchise_id='59' and (a.action_type = 5 or a.action_type = 6)
-						order by a.created_on desc;
+						LEFT JOIN pnh_franchise_account_stat fcs ON fcs.id = a.acc_correc_id
+                                                LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id
+                                                LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+						WHERE a.franchise_id='59' AND (a.action_type = 5 OR a.action_type = 6)
+						ORDER BY a.created_on DESC;
 
 -- old
 SELECT a.acc_correc_id,a.franchise_id,a.action_type,a.debit_amt,a.credit_amt,a.remarks,`status`,a.created_on,rlog.reconcile_amount
-                        ,if(rlog.reconcile_amount is null,a.unreconciled_value,if(a.unreconciled_value = a.credit_amt,a.unreconciled_value , round(a.unreconciled_value,2)  )) as unreconciled_amount,a.unreconciled_status
+                        ,IF(rlog.reconcile_amount IS NULL,a.unreconciled_value,IF(a.unreconciled_value = a.credit_amt,a.unreconciled_value , ROUND(a.unreconciled_value,2)  )) AS unreconciled_amount,a.unreconciled_status
 						FROM `pnh_franchise_account_summary` a
 						#left join pnh_franchise_account_stat fcs on fcs.id = a.acc_correc_id
-                                                left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = a.acc_correc_id
-                                                left join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-						WHERE a.franchise_id='59' and (a.action_type = 5 or a.action_type = 6)
-						order by a.created_on desc;
+                                                LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = a.acc_correc_id
+                                                LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+						WHERE a.franchise_id='59' AND (a.action_type = 5 OR a.action_type = 6)
+						ORDER BY a.created_on DESC;
 
 
 -- new
-select fcs.franchise_id,fcs.action_type,fcs.acc_correc_id,fcs.debit_amt,fcs.is_returned,fcs.credit_amt,fcs.remarks,fcs.status,fcs.created_on,fcs.created_by
-		,fcs.unreconciled_value,fcs.unreconciled_status,  sum(rlog.reconcile_amount) as reconcile_amount
-from pnh_franchise_account_summary fcs 
-left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id and rlog.is_reversed !=1
-where fcs.action_type in (5,6) and fcs.acc_correc_id != 0 and fcs.franchise_id='59' group by fcs.acc_correc_id,fcs.franchise_id;
+SELECT fcs.franchise_id,fcs.action_type,fcs.acc_correc_id,fcs.debit_amt,fcs.is_returned,fcs.credit_amt,fcs.remarks,fcs.status,fcs.created_on,fcs.created_by
+		,fcs.unreconciled_value,fcs.unreconciled_status,  SUM(rlog.reconcile_amount) AS reconcile_amount
+FROM pnh_franchise_account_summary fcs 
+LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.acc_correc_id AND rlog.is_reversed !=1
+WHERE fcs.action_type IN (5,6) AND fcs.acc_correc_id != 0 AND fcs.franchise_id='59' GROUP BY fcs.acc_correc_id,fcs.franchise_id;
 
 -- old
-select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.invoice_no,rcon.debit_note_id
+SELECT rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.invoice_no,rcon.debit_note_id
                     ,rcon.inv_amount,rcon.unreconciled
-                    ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date,a.username
-                from pnh_franchise_account_stat fcs
-                join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.id and rlog.is_reversed = 0
-                join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-                join king_admin a on a.id=rcon.created_by
-                where fcs.franchise_id = '59' and fcs.id = '59'
+                    ,DATE_FORMAT(FROM_UNIXTIME(rcon.created_on),'%e/%m/%Y') AS created_date,a.username
+                FROM pnh_franchise_account_stat fcs
+                JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.id AND rlog.is_reversed = 0
+                JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+                JOIN king_admin a ON a.id=rcon.created_by
+                WHERE fcs.franchise_id = '59' AND fcs.id = '59'
 -- old
-select fcs.acc_correc_id as credit_note_id,fcs.franchise_id,`action_type`,fcs.credit_amt,fcs.`remarks`,fcs.unreconciled_value,fcs.unreconciled_status,DATE_FORMAT(from_unixtime(rlog.created_on),'%e/%m/%Y') as created_date
-		from pnh_franchise_account_summary fcs
-		join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id
-		where franchise_id='59' and acc_correc_id='15317' order by rlog.created_on desc
+SELECT fcs.acc_correc_id AS credit_note_id,fcs.franchise_id,`action_type`,fcs.credit_amt,fcs.`remarks`,fcs.unreconciled_value,fcs.unreconciled_status,DATE_FORMAT(FROM_UNIXTIME(rlog.created_on),'%e/%m/%Y') AS created_date
+		FROM pnh_franchise_account_summary fcs
+		JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.acc_correc_id
+		WHERE franchise_id='59' AND acc_correc_id='15317' ORDER BY rlog.created_on DESC
 
-select * from pnh_t_receipt_reconcilation rcon;
-select * from pnh_t_receipt_reconcilation_log rlog ;
-select * from pnh_franchise_account_summary fac where acc_correc_id = '27068'
-select * from pnh_franchise_account_stat where id = '27068';
-select * from pnh_t_receipt_info where receipt_id = '5394';
+SELECT * FROM pnh_t_receipt_reconcilation rcon;
+SELECT * FROM pnh_t_receipt_reconcilation_log rlog ;
+SELECT * FROM pnh_franchise_account_summary fac WHERE acc_correc_id = '27068'
+SELECT * FROM pnh_franchise_account_stat WHERE id = '27068';
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id = '5394';
  #==========================================================
 -- // RESET RECONCILE TABLE
-truncate table `pnh_t_receipt_reconcilation`;
-truncate table `pnh_t_receipt_reconcilation_log`;
-update pnh_t_receipt_info set unreconciled_value = receipt_amount,unreconciled_status = 'pending' where receipt_amount !=0;
-update pnh_franchise_account_summary set unreconciled_value = credit_amt,unreconciled_status = 'pending' where credit_amt !=0;
+TRUNCATE TABLE `pnh_t_receipt_reconcilation`;
+TRUNCATE TABLE `pnh_t_receipt_reconcilation_log`;
+UPDATE pnh_t_receipt_info SET unreconciled_value = receipt_amount,unreconciled_status = 'pending' WHERE receipt_amount !=0;
+UPDATE pnh_franchise_account_summary SET unreconciled_value = credit_amt,unreconciled_status = 'pending' WHERE credit_amt !=0;
 
 #==========================================================
 
 -- old
-select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.invoice_no,rcon.debit_note_id
+SELECT rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed,rcon.invoice_no,rcon.debit_note_id
                     ,rcon.inv_amount,rcon.unreconciled
-                    ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date,a.username
-                from pnh_t_receipt_info r 
-                join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id and is_reversed = 0
-                join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-                join king_admin a on a.id=rcon.created_by
-                where r.franchise_id = '59' and r.receipt_id = '5394';
+                    ,DATE_FORMAT(FROM_UNIXTIME(rcon.created_on),'%e/%m/%Y') AS created_date,a.username
+                FROM pnh_t_receipt_info r 
+                JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.receipt_id = r.receipt_id AND is_reversed = 0
+                JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+                JOIN king_admin a ON a.id=rcon.created_by
+                WHERE r.franchise_id = '59' AND r.receipt_id = '5394';
 
-select * from pnh_t_receipt_info where receipt_id = '5394'
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id = '5394'
 
 -- new 1
-select rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed #,rcon.invoice_no,rcon.debit_note_id
+SELECT rlog.credit_note_id,rlog.receipt_id,rlog.reconcile_id,rlog.reconcile_amount,rlog.is_reversed #,rcon.invoice_no,rcon.debit_note_id
                     #,rcon.inv_amount,rcon.unreconciled
-                    ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date #,a.username
-                from pnh_t_receipt_info r 
-                join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id # and is_reversed = 0
+                    ,DATE_FORMAT(FROM_UNIXTIME(rcon.created_on),'%e/%m/%Y') AS created_date #,a.username
+                FROM pnh_t_receipt_info r 
+                JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.receipt_id = r.receipt_id # and is_reversed = 0
                 #join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
                 #join king_admin a on a.id=rcon.created_by
-                where r.franchise_id = '59' and r.receipt_id = '5394'
+                WHERE r.franchise_id = '59' AND r.receipt_id = '5394'
 
-select r.receipt_id,r.franchise_id,r.receipt_amount,r.remarks,r.unreconciled_value,unreconciled_status
+SELECT r.receipt_id,r.franchise_id,r.receipt_amount,r.remarks,r.unreconciled_value,unreconciled_status
 	,rlog.credit_note_id,rlog.is_invoice_cancelled,rlog.is_reversed
-	,rcon.invoice_no,rcon.debit_note_id,rcon.inv_amount,sum(rlog.reconcile_amount) as reconcile_amount,rcon.unreconciled,rcon.modified_on,rcon.modified_by
-	,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date
+	,rcon.invoice_no,rcon.debit_note_id,rcon.inv_amount,SUM(rlog.reconcile_amount) AS reconcile_amount,rcon.unreconciled,rcon.modified_on,rcon.modified_by
+	,DATE_FORMAT(FROM_UNIXTIME(rcon.created_on),'%e/%m/%Y') AS created_date
 	,a.username
-	from pnh_t_receipt_info r 
-	join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
-	join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-	join king_admin a on a.id=rcon.created_by
-	where r.franchise_id = '59' and r.receipt_id = '5387'
-	group by rcon.invoice_no,rcon.debit_note_id;
+	FROM pnh_t_receipt_info r 
+	JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.receipt_id = r.receipt_id
+	JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+	JOIN king_admin a ON a.id=rcon.created_by
+	WHERE r.franchise_id = '59' AND r.receipt_id = '5387'
+	GROUP BY rcon.invoice_no,rcon.debit_note_id;
 
 
-select r.receipt_id,r.franchise_id,r.receipt_amount,r.remarks,r.unreconciled_value,unreconciled_status ,rlog.credit_note_id,rlog.is_invoice_cancelled,sum(rlog.reconcile_amount) as reconcile_amount,rlog.is_reversed ,rcon.invoice_no,rcon.inv_amount,rcon.unreconciled,rcon.modified_on,rcon.modified_by ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date ,a.username from pnh_t_receipt_info r join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id join king_admin a on a.id=rcon.created_by where r.franchise_id = '59' and r.receipt_id = '5394'
+SELECT r.receipt_id,r.franchise_id,r.receipt_amount,r.remarks,r.unreconciled_value,unreconciled_status ,rlog.credit_note_id,rlog.is_invoice_cancelled,SUM(rlog.reconcile_amount) AS reconcile_amount,rlog.is_reversed ,rcon.invoice_no,rcon.inv_amount,rcon.unreconciled,rcon.modified_on,rcon.modified_by ,DATE_FORMAT(FROM_UNIXTIME(rcon.created_on),'%e/%m/%Y') AS created_date ,a.username FROM pnh_t_receipt_info r JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.receipt_id = r.receipt_id JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id JOIN king_admin a ON a.id=rcon.created_by WHERE r.franchise_id = '59' AND r.receipt_id = '5394'
 
-select * from (
-select fcs.acc_correc_id as credit_note_id,fcs.action_type,fcs.credit_amt,fcs.remarks,DATE_FORMAT(fcs.created_on,'%e/%m/%Y') as created_on,fcs.franchise_id
-	,if(rlog.reconcile_amount is null,0,if(rlog.reconcile_amount = fcs.credit_amt,rlog.reconcile_amount ,round( sum(rlog.reconcile_amount),2)  )) as ttl_reconcile_amount
-	,if(rlog.reconcile_amount is null,fcs.unreconciled_value,if(fcs.unreconciled_value = fcs.credit_amt,fcs.unreconciled_value ,round(fcs.unreconciled_value,2)  )) as unreconciled_amount
+SELECT * FROM (
+SELECT fcs.acc_correc_id AS credit_note_id,fcs.action_type,fcs.credit_amt,fcs.remarks,DATE_FORMAT(fcs.created_on,'%e/%m/%Y') AS created_on,fcs.franchise_id
+	,IF(rlog.reconcile_amount IS NULL,0,IF(rlog.reconcile_amount = fcs.credit_amt,rlog.reconcile_amount ,ROUND( SUM(rlog.reconcile_amount),2)  )) AS ttl_reconcile_amount
+	,IF(rlog.reconcile_amount IS NULL,fcs.unreconciled_value,IF(fcs.unreconciled_value = fcs.credit_amt,fcs.unreconciled_value ,ROUND(fcs.unreconciled_value,2)  )) AS unreconciled_amount
 	,fcs.unreconciled_status
-	from pnh_franchise_account_summary fcs 
-	left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id 
-	where fcs.action_type = '5' and fcs.franchise_id = '59' and credit_amt !='0' and acc_correc_id !=0
-	group by fcs.acc_correc_id 
-	order by fcs.created_on desc
-) as g where g.unreconciled_amount > 0
+	FROM pnh_franchise_account_summary fcs 
+	LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.acc_correc_id 
+	WHERE fcs.action_type = '5' AND fcs.franchise_id = '59' AND credit_amt !='0' AND acc_correc_id !=0
+	GROUP BY fcs.acc_correc_id 
+	ORDER BY fcs.created_on DESC
+) AS g WHERE g.unreconciled_amount > 0
 
-select * from pnh_franchise_account_summary fcs where fcs.franchise_id = '59' and fcs.action_type = '5' and credit_amt !='0' and acc_correc_id !=0;
+SELECT * FROM pnh_franchise_account_summary fcs WHERE fcs.franchise_id = '59' AND fcs.action_type = '5' AND credit_amt !='0' AND acc_correc_id !=0;
 
 #====================================================================
 -- BEST RECONCILE LOG VIEW
-select rlog.*,rcon.debit_note_id,rcon.invoice_no from pnh_t_receipt_reconcilation_log rlog
-join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-where rlog.receipt_id='5387';
+SELECT rlog.*,rcon.debit_note_id,rcon.invoice_no FROM pnh_t_receipt_reconcilation_log rlog
+JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+WHERE rlog.receipt_id='5387';
 #====================================================================
 
-select r.receipt_id,r.franchise_id,r.receipt_amount,r.remarks,r.unreconciled_value,unreconciled_status
+SELECT r.receipt_id,r.franchise_id,r.receipt_amount,r.remarks,r.unreconciled_value,unreconciled_status
 	,rlog.credit_note_id,rlog.is_invoice_cancelled,rlog.is_reversed
-	,rcon.invoice_no,rcon.debit_note_id,rcon.inv_amount,(rlog.reconcile_amount) as reconcile_amount,rcon.unreconciled,rcon.modified_on,rcon.modified_by
-	,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date
+	,rcon.invoice_no,rcon.debit_note_id,rcon.inv_amount,(rlog.reconcile_amount) AS reconcile_amount,rcon.unreconciled,rcon.modified_on,rcon.modified_by
+	,DATE_FORMAT(FROM_UNIXTIME(rcon.created_on),'%e/%m/%Y') AS created_date
 	,a.username
-	from pnh_t_receipt_info r 
-	join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
-	join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-	join king_admin a on a.id=rcon.created_by
-	where r.franchise_id = '43' and r.receipt_id = '5387'
-	group by rcon.invoice_no,rcon.debit_note_id;
+	FROM pnh_t_receipt_info r 
+	JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.receipt_id = r.receipt_id
+	JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+	JOIN king_admin a ON a.id=rcon.created_by
+	WHERE r.franchise_id = '43' AND r.receipt_id = '5387'
+	GROUP BY rcon.invoice_no,rcon.debit_note_id;
 
 
 -- #==================================
 ## LOG for RECEIPTS RECONCILATION
-select r.receipt_id,rlog.credit_note_id,r.franchise_id,rcon.debit_note_id,rcon.invoice_no,rcon.inv_amount,(rlog.reconcile_amount) as reconcile_amount,rcon.unreconciled,r.receipt_amount,r.remarks,r.unreconciled_value,unreconciled_status
+SELECT r.receipt_id,rlog.credit_note_id,r.franchise_id,rcon.debit_note_id,rcon.invoice_no,rcon.inv_amount,(rlog.reconcile_amount) AS reconcile_amount,rcon.unreconciled,r.receipt_amount,r.remarks,r.unreconciled_value,unreconciled_status
                                 ,rlog.is_invoice_cancelled,rlog.is_reversed
                                 ,rcon.modified_on,rcon.modified_by
-                                ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date
+                                ,DATE_FORMAT(FROM_UNIXTIME(rcon.created_on),'%e/%m/%Y') AS created_date
                                 ,a.username
-                                from pnh_t_receipt_info r 
-                                join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
-                                join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-                                join king_admin a on a.id=rcon.created_by
-                                where r.franchise_id = '43' and r.receipt_id = '5387';
+                                FROM pnh_t_receipt_info r 
+                                JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.receipt_id = r.receipt_id
+                                JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+                                JOIN king_admin a ON a.id=rcon.created_by
+                                WHERE r.franchise_id = '43' AND r.receipt_id = '5387';
 
 
-select * from king_deals dl
+SELECT * FROM king_deals dl
 #join m_product_deal_link pdl on
-where tmp_pnh_dealid='1739268';
+WHERE tmp_pnh_dealid='1739268';
 
 -- #==================================
 # Feb_19_2014
@@ -2969,17 +2969,17 @@ where tmp_pnh_dealid='1739268';
 //Coupon 
 
 CREATE TABLE `pnh_m_coupons` (
-  `id` bigint(11) NOT NULL AUTO_INCREMENT,
-  `coupon_slno` bigint(12) NOT NULL,
-  `coupon_code` bigint(14) NOT NULL,
-  `value` double NOT NULL,
-  `franchise_id` bigint(11) DEFAULT NULL,
-  `member_id` bigint(8) DEFAULT NULL,
-  `status` tinyint(11) DEFAULT '0' COMMENT '0:pending,1:assigned to franchse,2:alloted to member',
-  `assigned_by` tinyint(11) DEFAULT NULL,
-  `assigned_on` bigint(20) DEFAULT NULL,
-  `alloted_on` bigint(20) DEFAULT NULL,
-  `alloted_by` tinyint(11) DEFAULT NULL,
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT,
+  `coupon_slno` BIGINT(12) NOT NULL,
+  `coupon_code` BIGINT(14) NOT NULL,
+  `value` DOUBLE NOT NULL,
+  `franchise_id` BIGINT(11) DEFAULT NULL,
+  `member_id` BIGINT(8) DEFAULT NULL,
+  `status` TINYINT(11) DEFAULT '0' COMMENT '0:pending,1:assigned to franchse,2:alloted to member',
+  `assigned_by` TINYINT(11) DEFAULT NULL,
+  `assigned_on` BIGINT(20) DEFAULT NULL,
+  `alloted_on` BIGINT(20) DEFAULT NULL,
+  `alloted_by` TINYINT(11) DEFAULT NULL,
   PRIMARY KEY (`id`,`coupon_slno`,`coupon_code`)
 ) ;
 
@@ -3008,21 +3008,21 @@ ALTER TABLE `pnh_voucher_activity_log` CHANGE `order_ids` `order_ids` VARCHAR(25
 
 
 CREATE TABLE `imei_m_scheme` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `franchise_id` bigint(11) DEFAULT NULL,
-  `menuid` bigint(11) DEFAULT NULL,
-  `categoryid` bigint(20) DEFAULT NULL,
-  `brandid` bigint(20) DEFAULT NULL,
-  `scheme_type` tinyint(11) DEFAULT NULL,
-  `credit_value` double(10,2) DEFAULT NULL,
-  `scheme_from` bigint(20) DEFAULT NULL,
-  `scheme_to` bigint(20) DEFAULT NULL,
-  `sch_apply_from` bigint(20) DEFAULT NULL,
-  `created_on` bigint(20) DEFAULT NULL,
-  `created_by` int(11) DEFAULT NULL,
-  `modified_on` bigint(20) DEFAULT NULL,
-  `modified_by` tinyint(11) DEFAULT NULL,
-  `is_active` tinyint(11) DEFAULT NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `franchise_id` BIGINT(11) DEFAULT NULL,
+  `menuid` BIGINT(11) DEFAULT NULL,
+  `categoryid` BIGINT(20) DEFAULT NULL,
+  `brandid` BIGINT(20) DEFAULT NULL,
+  `scheme_type` TINYINT(11) DEFAULT NULL,
+  `credit_value` DOUBLE(10,2) DEFAULT NULL,
+  `scheme_from` BIGINT(20) DEFAULT NULL,
+  `scheme_to` BIGINT(20) DEFAULT NULL,
+  `sch_apply_from` BIGINT(20) DEFAULT NULL,
+  `created_on` BIGINT(20) DEFAULT NULL,
+  `created_by` INT(11) DEFAULT NULL,
+  `modified_on` BIGINT(20) DEFAULT NULL,
+  `modified_by` TINYINT(11) DEFAULT NULL,
+  `is_active` TINYINT(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 
@@ -3032,190 +3032,190 @@ ALTER TABLE `pnh_franchise_account_stat` CHANGE `imei_refid` `imei_refid` BIGINT
  
  //knock mmeber scheme 
 #added index for transactions table 
-alter table `king_transactions` add index `init` (`init`);
+ALTER TABLE `king_transactions` ADD INDEX `init` (`init`);
 
 /**STOREKING CART DB CHANGES**/
-//franchise price quote 
+//franchise price QUOTE 
 
 CREATE TABLE `pnh_franchise_price_quote` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `franchise_id` bigint(20) DEFAULT NULL,
-  `pid` bigint(20) DEFAULT NULL,
-  `mrp` double DEFAULT NULL,
-  `offrprice` double DEFAULT NULL,
-  `lprice` double DEFAULT NULL,
-  `quote` double DEFAULT NULL,
-  `created_on` datetime DEFAULT NULL,
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `franchise_id` BIGINT(20) DEFAULT NULL,
+  `pid` BIGINT(20) DEFAULT NULL,
+  `mrp` DOUBLE DEFAULT NULL,
+  `offrprice` DOUBLE DEFAULT NULL,
+  `lprice` DOUBLE DEFAULT NULL,
+  `quote` DOUBLE DEFAULT NULL,
+  `created_on` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ;
 
-//franchise product price enquery log table
+//franchise product price enquery LOG TABLE
 
 CREATE TABLE `pnh_franchise_pprice_enqrylog` (
-  `id` bigint(30) NOT NULL AUTO_INCREMENT,
-  `franchise_id` bigint(30) DEFAULT NULL,
-  `pid` bigint(30) DEFAULT NULL,
-  `created_on` datetime DEFAULT NULL,
+  `id` BIGINT(30) NOT NULL AUTO_INCREMENT,
+  `franchise_id` BIGINT(30) DEFAULT NULL,
+  `pid` BIGINT(30) DEFAULT NULL,
+  `created_on` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 
 -- <!--============================================<< OTHERS QUERIES >>===================================
 
-alter table `pnh_franchise_account_stat` drop column `unreconciled_status`, drop column `unreconciled_value`;
+ALTER TABLE `pnh_franchise_account_stat` DROP COLUMN `unreconciled_status`, DROP COLUMN `unreconciled_value`;
 
 
 -- new
-select distinct i.invoice_no,rcon.unreconciled as unreconciled
-		from king_invoice i
-		join king_transactions tr on tr.transid=i.transid
-		left join pnh_t_receipt_reconcilation rcon on rcon.invoice_no = i.invoice_no
-		where i.invoice_status=1 and tr.is_pnh=1 and rcon.unreconciled is null and tr.franchise_id= '415'
+SELECT DISTINCT i.invoice_no,rcon.unreconciled AS unreconciled
+		FROM king_invoice i
+		JOIN king_transactions tr ON tr.transid=i.transid
+		LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.invoice_no = i.invoice_no
+		WHERE i.invoice_status=1 AND tr.is_pnh=1 AND rcon.unreconciled IS NULL AND tr.franchise_id= '415'
 
 -- new
-select fcs.acc_correc_id as debit_note_id,fcs.debit_amt as amount,rcon.unreconciled as unreconciled
-			from pnh_franchise_account_summary fcs
-			left join pnh_t_receipt_reconcilation rcon on rcon.debit_note_id = fcs.acc_correc_id
-			where fcs.action_type='5' and debit_amt != 0 and fcs.franchise_id = '415'
+SELECT fcs.acc_correc_id AS debit_note_id,fcs.debit_amt AS amount,rcon.unreconciled AS unreconciled
+			FROM pnh_franchise_account_summary fcs
+			LEFT JOIN pnh_t_receipt_reconcilation rcon ON rcon.debit_note_id = fcs.acc_correc_id
+			WHERE fcs.action_type='5' AND debit_amt != 0 AND fcs.franchise_id = '415'
 
 #====================================================================
 
 -- <!--============================================<< BEST RECONCILE LOG VIEW >>===================================
-select rlog.*,rcon.debit_note_id,rcon.invoice_no,rcon.is_invoice_cancelled from pnh_t_receipt_reconcilation_log rlog
-join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-where rlog.receipt_id='5396';
+SELECT rlog.*,rcon.debit_note_id,rcon.invoice_no,rcon.is_invoice_cancelled FROM pnh_t_receipt_reconcilation_log rlog
+JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+WHERE rlog.receipt_id='5396';
 #====================================================================
 
 -- <!--============================================<< RESET RECONCILE TABLE >>===================================-->
-truncate table `pnh_t_receipt_reconcilation`;
-truncate table `pnh_t_receipt_reconcilation_log`;
-update pnh_t_receipt_info set unreconciled_value = receipt_amount,unreconciled_status = 'pending' where receipt_amount !=0;
-update pnh_franchise_account_summary set unreconciled_value = credit_amt,unreconciled_status = 'pending' where credit_amt !=0;
+TRUNCATE TABLE `pnh_t_receipt_reconcilation`;
+TRUNCATE TABLE `pnh_t_receipt_reconcilation_log`;
+UPDATE pnh_t_receipt_info SET unreconciled_value = receipt_amount,unreconciled_status = 'pending' WHERE receipt_amount !=0;
+UPDATE pnh_franchise_account_summary SET unreconciled_value = credit_amt,unreconciled_status = 'pending' WHERE credit_amt !=0;
 
 #==========================================================
 
 # Feb_24_2014
-select * from m_stream_post_reply 
+SELECT * FROM m_stream_post_reply 
 #where post_id=? and id != ? 
-order by replied_on desc limit 50;
+ORDER BY replied_on DESC LIMIT 50;
 
 CREATE TABLE `pnh_api_franchise_cart_info` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `user_id` bigint(20) DEFAULT NULL,
-  `franchise_id` bigint(20) DEFAULT NULL,
-  `pid` bigint(20) DEFAULT NULL,
-  `qty` varchar(275) DEFAULT NULL,
-  `attributes` text,
-  `member_id` bigint(20) DEFAULT NULL,
-  `status` int(1) DEFAULT '1' COMMENT '1:item in cart,0:item removed from cart',
-  `added_on` datetime DEFAULT NULL,
-  `updated_on` datetime DEFAULT NULL,
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT(20) DEFAULT NULL,
+  `franchise_id` BIGINT(20) DEFAULT NULL,
+  `pid` BIGINT(20) DEFAULT NULL,
+  `qty` VARCHAR(275) DEFAULT NULL,
+  `attributes` TEXT,
+  `member_id` BIGINT(20) DEFAULT NULL,
+  `status` INT(1) DEFAULT '1' COMMENT '1:item in cart,0:item removed from cart',
+  `added_on` DATETIME DEFAULT NULL,
+  `updated_on` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 
 -- new ================================================
-select * from king_dealitems where id='9758875986';
+SELECT * FROM king_dealitems WHERE id='9758875986';
 
 #m_product_group_deal_link
-select * from m_product_group_deal_link where itemid = '9758875986'
+SELECT * FROM m_product_group_deal_link WHERE itemid = '9758875986'
 
 #products_group_orders
-select * from products_group_orders where 
+SELECT * FROM products_group_orders WHERE 
 
 -- old
-select #l.product_id,p.product_name,l.qty,p.is_sourceable as src 
-* from m_product_deal_link l 
-join m_product_info p on p.product_id=l.product_id where l.itemid='7658178949'
+SELECT #l.product_id,p.product_name,l.qty,p.is_sourceable as src 
+* FROM m_product_deal_link l 
+JOIN m_product_info p ON p.product_id=l.product_id WHERE l.itemid='7658178949'
 
 -- new GET GROUP DEAL LINK
-select p.product_id,p.product_name,gpl.qty,p.is_sourceable as src from m_product_group_deal_link gpl
-join products_group_pids g on g.group_id = gpl.group_id
-join m_product_info p on p.product_id = g.product_id
-where itemid = '9758875986';
+SELECT p.product_id,p.product_name,gpl.qty,p.is_sourceable AS src FROM m_product_group_deal_link gpl
+JOIN products_group_pids g ON g.group_id = gpl.group_id
+JOIN m_product_info p ON p.product_id = g.product_id
+WHERE itemid = '9758875986';
 
 #tmp_itemid
 # product_group_pids
-select * from m_product_info
-select * from products_group_pids
-select * from m_product_group_deal_link
+SELECT * FROM m_product_info
+SELECT * FROM products_group_pids
+SELECT * FROM m_product_group_deal_link
 
 # Feb_25_2014
 
 # Feb_26_2014
-select id as menuid,name as menuname from pnh_menu order by `name`;
+SELECT id AS menuid,NAME AS menuname FROM pnh_menu ORDER BY `name`;
 
-select fid,fml.menuid,`name` as menuname from pnh_franchise_menu_link fml
-join pnh_menu m on m.id = fml.menuid
- where fml.fid='414'
-order by name asc
+SELECT fid,fml.menuid,`name` AS menuname FROM pnh_franchise_menu_link fml
+JOIN pnh_menu m ON m.id = fml.menuid
+ WHERE fml.fid='414'
+ORDER BY NAME ASC
 
-select * from pnh_m_franchise_info
+SELECT * FROM pnh_m_franchise_info
 
-select * from pnh_franchise_menu_link;
+SELECT * FROM pnh_franchise_menu_link;
 
 -- update
-select * from (
-select ifnull(group_concat(distinct fl.menuid),0) as grp_menuids,f.created_on,f.is_suspended,group_concat(a.name) as owners,tw.town_name as town,f.is_lc_store,f.franchise_id,c.class_name,c.margin,c.combo_margin,f.pnh_franchise_id,f.franchise_name,
+SELECT * FROM (
+SELECT IFNULL(GROUP_CONCAT(DISTINCT fl.menuid),0) AS grp_menuids,f.created_on,f.is_suspended,GROUP_CONCAT(a.name) AS owners,tw.town_name AS town,f.is_lc_store,f.franchise_id,c.class_name,c.margin,c.combo_margin,f.pnh_franchise_id,f.franchise_name,
 							f.locality,f.city,f.current_balance,f.login_mobile1,f.login_mobile2,
-							f.email_id,u.name as assigned_to,t.territory_name 
-						from pnh_m_franchise_info f 
-						left outer join king_admin u on u.id=f.assigned_to 
-						join pnh_m_territory_info t on t.id=f.territory_id 
-						join pnh_towns tw on tw.id=f.town_id 
-						join pnh_m_class_info c on c.id=f.class_id
-						left outer join pnh_franchise_owners ow on ow.franchise_id=f.franchise_id 
-						left outer join king_admin a on a.id=ow.admin
-                                                left join pnh_franchise_menu_link fl on fl.fid = f.franchise_id
-						where 1 group by f.franchise_id
-) as g where (106) IN (g.grp_menuids);
+							f.email_id,u.name AS assigned_to,t.territory_name 
+						FROM pnh_m_franchise_info f 
+						LEFT OUTER JOIN king_admin u ON u.id=f.assigned_to 
+						JOIN pnh_m_territory_info t ON t.id=f.territory_id 
+						JOIN pnh_towns tw ON tw.id=f.town_id 
+						JOIN pnh_m_class_info c ON c.id=f.class_id
+						LEFT OUTER JOIN pnh_franchise_owners ow ON ow.franchise_id=f.franchise_id 
+						LEFT OUTER JOIN king_admin a ON a.id=ow.admin
+                                                LEFT JOIN pnh_franchise_menu_link fl ON fl.fid = f.franchise_id
+						WHERE 1 GROUP BY f.franchise_id
+) AS g WHERE (106) IN (g.grp_menuids);
 
 #=>360 / 1061 ms
-select * from pnh_menu where id='112';
+SELECT * FROM pnh_menu WHERE id='112';
 
-select fcs.franchise_id,fcs.action_type,fcs.acc_correc_id,fcs.debit_amt,fcs.is_returned,fcs.credit_amt,fcs.remarks,fcs.status,fcs.created_on,fcs.created_by
-		,fcs.unreconciled_value,fcs.unreconciled_status,  sum(rlog.reconcile_amount) as reconcile_amount
-from pnh_franchise_account_summary fcs 
-left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id and rlog.is_reversed !=1
-where fcs.action_type in (5,6) and fcs.acc_correc_id != 0 and fcs.franchise_id='59' group by fcs.acc_correc_id,fcs.franchise_id
+SELECT fcs.franchise_id,fcs.action_type,fcs.acc_correc_id,fcs.debit_amt,fcs.is_returned,fcs.credit_amt,fcs.remarks,fcs.status,fcs.created_on,fcs.created_by
+		,fcs.unreconciled_value,fcs.unreconciled_status,  SUM(rlog.reconcile_amount) AS reconcile_amount
+FROM pnh_franchise_account_summary fcs 
+LEFT JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.credit_note_id = fcs.acc_correc_id AND rlog.is_reversed !=1
+WHERE fcs.action_type IN (5,6) AND fcs.acc_correc_id != 0 AND fcs.franchise_id='59' GROUP BY fcs.acc_correc_id,fcs.franchise_id
 
 -- update
 
-select * from ( select f.created_on,f.is_suspended,group_concat(a.name) as owners,tw.town_name as town,f.is_lc_store,f.franchise_id,c.class_name,c.margin,c.combo_margin,f.pnh_franchise_id,f.franchise_name,
+SELECT * FROM ( SELECT f.created_on,f.is_suspended,GROUP_CONCAT(a.name) AS owners,tw.town_name AS town,f.is_lc_store,f.franchise_id,c.class_name,c.margin,c.combo_margin,f.pnh_franchise_id,f.franchise_name,
 							f.locality,f.city,f.current_balance,f.login_mobile1,f.login_mobile2,
-							f.email_id,u.name as assigned_to,t.territory_name,ifnull(group_concat(distinct fl.menuid),0) as grp_menuids
-						from pnh_m_franchise_info f 
-						left outer join king_admin u on u.id=f.assigned_to 
-						join pnh_m_territory_info t on t.id=f.territory_id 
-						join pnh_towns tw on tw.id=f.town_id 
-						join pnh_m_class_info c on c.id=f.class_id
-						left outer join pnh_franchise_owners ow on ow.franchise_id=f.franchise_id 
-						left outer join king_admin a on a.id=ow.admin
-						left join pnh_franchise_menu_link fl on fl.fid = f.franchise_id
-						where 1 
-					   and f.is_suspended != 0 group by f.franchise_id  order by f.franchise_name asc limit 0,50 ) as g  where FIND_IN_SET(g.grp_menuids);
+							f.email_id,u.name AS assigned_to,t.territory_name,IFNULL(GROUP_CONCAT(DISTINCT fl.menuid),0) AS grp_menuids
+						FROM pnh_m_franchise_info f 
+						LEFT OUTER JOIN king_admin u ON u.id=f.assigned_to 
+						JOIN pnh_m_territory_info t ON t.id=f.territory_id 
+						JOIN pnh_towns tw ON tw.id=f.town_id 
+						JOIN pnh_m_class_info c ON c.id=f.class_id
+						LEFT OUTER JOIN pnh_franchise_owners ow ON ow.franchise_id=f.franchise_id 
+						LEFT OUTER JOIN king_admin a ON a.id=ow.admin
+						LEFT JOIN pnh_franchise_menu_link fl ON fl.fid = f.franchise_id
+						WHERE 1 
+					   AND f.is_suspended != 0 GROUP BY f.franchise_id  ORDER BY f.franchise_name ASC LIMIT 0,50 ) AS g  WHERE FIND_IN_SET(g.grp_menuids);
 
 # Feb_28_2014
 
-select distinct f.franchise_id from pnh_m_franchise_info f
-join pnh_franchise_menu_link fl on fl.fid = f.franchise_id
- where 1=1 and fl.menuid='106' group by f.franchise_id 
+SELECT DISTINCT f.franchise_id FROM pnh_m_franchise_info f
+JOIN pnh_franchise_menu_link fl ON fl.fid = f.franchise_id
+ WHERE 1=1 AND fl.menuid='106' GROUP BY f.franchise_id 
 
 
-desc king_dealitems
+DESC king_dealitems
 
-select * from king_categories
+SELECT * FROM king_categories
 
-select id as attr_id,attr_name from m_attributes order by attr_name asc
+SELECT id AS attr_id,attr_name FROM m_attributes ORDER BY attr_name ASC
 
-select c.*,m.name as main from king_categories c left outer join king_categories m on m.id=c.type where c.id='1037'
+SELECT c.*,m.name AS main FROM king_categories c LEFT OUTER JOIN king_categories m ON m.id=c.type WHERE c.id='1037'
 
 -- new 
-select * from m_attributes where FIND_IN_SET(id,'1,2');
+SELECT * FROM m_attributes WHERE FIND_IN_SET(id,'1,2');
 
-select * from king_categories where attribute_ids !=''
+SELECT * FROM king_categories WHERE attribute_ids !=''
 
-select id,UCASE(SUBSTRING(attr_name, 1, -1)) from m_attributes where FIND_IN_SET(id,'1,2' );
+SELECT id,UCASE(SUBSTRING(attr_name, 1, -1)) FROM m_attributes WHERE FIND_IN_SET(id,'1,2' );
 
-insert into m_product_attributes(pid,attr_id,attr_value) values( ("123495486958",1,"41") , ("123495486958",2,"maroon") )
+INSERT INTO m_product_attributes(pid,attr_id,attr_value) VALUES( ("123495486958",1,"41") , ("123495486958",2,"maroon") )
 
 =========================================< UCFIRST()  >=====================================
 DROP FUNCTION IF EXISTS UC_DELIMETER;
@@ -3249,67 +3249,67 @@ DELIMITER ;
 #	Mar_01_2014: Dealstock plugin module updates - 5 and Attributes Module ( Group Deal, Product Attributes, Category Attributes
 #==========================================================================
 # Mar_01_2014
-create table `m_attributes` (  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT , `attr_name` varchar (150) , PRIMARY KEY ( `id`))
-insert into `m_attributes`(`id`,`attr_name`) values ( '1','Size');
-insert into `m_attributes`(`id`,`attr_name`) values ( '2','Color');
-create table `m_product_attributes` (  `id` bigint NOT NULL AUTO_INCREMENT , `pid` bigint , `attr_id` int (150) , `attr_value` varchar (150) , PRIMARY KEY ( `id`));
-alter table `king_categories` add column `attribute_ids` varchar (125)  NULL  after `prior`;
-alter table `king_dealitems` add column `is_group` tinyint (1)  NULL  after `tmp_pnh_dealid`;
+CREATE TABLE `m_attributes` (  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT , `attr_name` VARCHAR (150) , PRIMARY KEY ( `id`))
+INSERT INTO `m_attributes`(`id`,`attr_name`) VALUES ( '1','Size');
+INSERT INTO `m_attributes`(`id`,`attr_name`) VALUES ( '2','Color');
+CREATE TABLE `m_product_attributes` (  `id` BIGINT NOT NULL AUTO_INCREMENT , `pid` BIGINT , `attr_id` INT (150) , `attr_value` VARCHAR (150) , PRIMARY KEY ( `id`));
+ALTER TABLE `king_categories` ADD COLUMN `attribute_ids` VARCHAR (125)  NULL  AFTER `prior`;
+ALTER TABLE `king_dealitems` ADD COLUMN `is_group` TINYINT (1)  NULL  AFTER `tmp_pnh_dealid`;
 #==========================================================================
 
-select * from m_product_info
+SELECT * FROM m_product_info
 
-select * 
-from m_product_info 
-where product_id='156140';
+SELECT * 
+FROM m_product_info 
+WHERE product_id='156140';
 -- new
-select * from m_product_attributes where pid='156140';
+SELECT * FROM m_product_attributes WHERE pid='156140';
 
-select d.*,i.*,d.description,d.keywords,d.tagline from king_dealitems i join king_deals d on d.dealid=i.dealid where i.id='637675139343';
+SELECT d.*,i.*,d.description,d.keywords,d.tagline FROM king_dealitems i JOIN king_deals d ON d.dealid=i.dealid WHERE i.id='637675139343';
 
-select * from king_dealitems;
+SELECT * FROM king_dealitems;
 
-select * from pnh_menu where id='125';
+SELECT * FROM pnh_menu WHERE id='125';
 
 # Mar_04_2014
-select * from pnh_t_receipt_reconcilation;
+SELECT * FROM pnh_t_receipt_reconcilation;
 
 #=========< 1. >==============================
-select rlog.receipt_id,rcon.id as reconcile_id,rcon.invoice_no,rcon.inv_amount,rlog.reconcile_amount from pnh_t_receipt_reconcilation rcon 
-                                            join pnh_t_receipt_reconcilation_log rlog on rlog.reconcile_id = rcon.id
-                                            where rlog.is_reversed = 0 and rcon.invoice_no = '200149';
+SELECT rlog.receipt_id,rcon.id AS reconcile_id,rcon.invoice_no,rcon.inv_amount,rlog.reconcile_amount FROM pnh_t_receipt_reconcilation rcon 
+                                            JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.reconcile_id = rcon.id
+                                            WHERE rlog.is_reversed = 0 AND rcon.invoice_no = '200149';
 
-select * from pnh_t_receipt_reconcilation where invoice_no = '200149' and id = '3';
+SELECT * FROM pnh_t_receipt_reconcilation WHERE invoice_no = '200149' AND id = '3';
 
-select * from `pnh_t_receipt_reconcilation_log` where `reconcile_id` = '3'
+SELECT * FROM `pnh_t_receipt_reconcilation_log` WHERE `reconcile_id` = '3'
 #==========< ## 2. >=================================
-select * from `pnh_t_receipt_reconcilation_log` where `is_reversed` = 0 and is_invoice_cancelled=0 and `receipt_id`='5399'
+SELECT * FROM `pnh_t_receipt_reconcilation_log` WHERE `is_reversed` = 0 AND is_invoice_cancelled=0 AND `receipt_id`='5399'
 
-select * from `pnh_t_receipt_reconcilation` where id in (3,4,5)
+SELECT * FROM `pnh_t_receipt_reconcilation` WHERE id IN (3,4,5)
 
 
 -- <!--============================================<< BEST RECONCILE LOG VIEW >>===================================
-select rlog.*,rcon.debit_note_id,rcon.invoice_no,rcon.is_invoice_cancelled from pnh_t_receipt_reconcilation_log rlog
-join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-where rlog.receipt_id='5399';
+SELECT rlog.*,rcon.debit_note_id,rcon.invoice_no,rcon.is_invoice_cancelled FROM pnh_t_receipt_reconcilation_log rlog
+JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+WHERE rlog.receipt_id='5399';
 #====================================================================
 
 -- <!--============================================<< RESET RECONCILE TABLE >>===================================-->
-truncate table `pnh_t_receipt_reconcilation`;
-truncate table `pnh_t_receipt_reconcilation_log`;
-update pnh_t_receipt_info set unreconciled_value = receipt_amount,unreconciled_status = 'pending' where receipt_amount !=0;
-update pnh_franchise_account_summary set unreconciled_value = credit_amt,unreconciled_status = 'pending' where credit_amt !=0;
+TRUNCATE TABLE `pnh_t_receipt_reconcilation`;
+TRUNCATE TABLE `pnh_t_receipt_reconcilation_log`;
+UPDATE pnh_t_receipt_info SET unreconciled_value = receipt_amount,unreconciled_status = 'pending' WHERE receipt_amount !=0;
+UPDATE pnh_franchise_account_summary SET unreconciled_value = credit_amt,unreconciled_status = 'pending' WHERE credit_amt !=0;
 
 #==========================================================
-select * from pnh_franchise_account_summary where acc_correc_id='11690';
+SELECT * FROM pnh_franchise_account_summary WHERE acc_correc_id='11690';
 
-select * from king_invoice
+SELECT * FROM king_invoice
 
-select * from t_imei_no = im
+SELECT * FROM t_imei_no = im
 
 ===================================================================
-alter table `snapittoday_db_jan_2014`.`t_imei_no` auto_increment=24580 comment='' row_format=DYNAMIC ;
-alter table `snapittoday_db_jan_2014`.`t_imei_no` change `id` `id` bigint   NOT NULL AUTO_INCREMENT;
+ALTER TABLE `snapittoday_db_jan_2014`.`t_imei_no` AUTO_INCREMENT=24580 COMMENT='' ROW_FORMAT=DYNAMIC ;
+ALTER TABLE `snapittoday_db_jan_2014`.`t_imei_no` CHANGE `id` `id` BIGINT   NOT NULL AUTO_INCREMENT;
 ===================================================================
 
 INSERT INTO `t_imei_no` (`product_id`, `imei_no`, `stock_id`, `grn_id`, `created_on`) VALUES ('152974', '6464646464', '163451', 4924, 1393923183);
@@ -3321,80 +3321,80 @@ ALTER TABLE `pnh_t_receipt_info` ADD COLUMN `cheq_realized_on` VARCHAR(255) NULL
 ALTER TABLE `pnh_m_deposited_receipts` ADD COLUMN `cheq_cancelled_on` VARCHAR(255) NULL AFTER `submitted_by`;
 
 -- old
-select order_id,mrp,inv_qty,round(mrp*a_disc_perc,2) as disc from (
-										select a.id,order_id,a.product_id,mrp,( (qty+extra_qty)-release_qty) as inv_qty,(i_discount+i_coup_discount) as a_disc,((i_discount+i_coup_discount)/i_orgprice) as a_disc_perc 
-											from t_reserved_batch_stock a
-											join t_stock_info b on a.stock_info_id = b.stock_id
-											join king_orders c on c.id = a.order_id 
-											where a.status = 1 # and p_invoice_no = ? #and a.order_id = ''
-										) as g 
+SELECT order_id,mrp,inv_qty,ROUND(mrp*a_disc_perc,2) AS disc FROM (
+										SELECT a.id,order_id,a.product_id,mrp,( (qty+extra_qty)-release_qty) AS inv_qty,(i_discount+i_coup_discount) AS a_disc,((i_discount+i_coup_discount)/i_orgprice) AS a_disc_perc 
+											FROM t_reserved_batch_stock a
+											JOIN t_stock_info b ON a.stock_info_id = b.stock_id
+											JOIN king_orders c ON c.id = a.order_id 
+											WHERE a.status = 1 # and p_invoice_no = ? #and a.order_id = ''
+										) AS g 
 
 #oid = 1272208453 Rs. 125 Qty: 2 disc: 4.20
-select 125*2
+SELECT 125*2
 -- new
-select a.id,order_id,a.product_id,mrp,( (qty+extra_qty)-release_qty) as inv_qty,(i_discount+i_coup_discount) as a_disc,((i_discount+i_coup_discount)/i_orgprice) as a_disc_perc 
-											from t_reserved_batch_stock a
-											join t_stock_info b on a.stock_info_id = b.stock_id
-											join king_orders c on c.id = a.order_id 
-											where a.status = 1 and a.order_id = '1272208453' # and p_invoice_no = ? #
+SELECT a.id,order_id,a.product_id,mrp,( (qty+extra_qty)-release_qty) AS inv_qty,(i_discount+i_coup_discount) AS a_disc,((i_discount+i_coup_discount)/i_orgprice) AS a_disc_perc 
+											FROM t_reserved_batch_stock a
+											JOIN t_stock_info b ON a.stock_info_id = b.stock_id
+											JOIN king_orders c ON c.id = a.order_id 
+											WHERE a.status = 1 AND a.order_id = '1272208453' # and p_invoice_no = ? #
 -- 
-select * #a.id,order_id,a.product_id,mrp,( (qty+extra_qty)-release_qty) as inv_qty,(i_discount+i_coup_discount) as a_disc,((i_discount+i_coup_discount)/i_orgprice) as a_disc_perc 
-											from t_reserved_batch_stock a
+SELECT * #a.id,order_id,a.product_id,mrp,( (qty+extra_qty)-release_qty) as inv_qty,(i_discount+i_coup_discount) as a_disc,((i_discount+i_coup_discount)/i_orgprice) as a_disc_perc 
+											FROM t_reserved_batch_stock a
 											#join t_stock_info b on a.stock_info_id = b.stock_id
-											join king_orders c on c.id = a.order_id 
-											where a.status = 1 and a.order_id = '1272208453'
+											JOIN king_orders c ON c.id = a.order_id 
+											WHERE a.status = 1 AND a.order_id = '1272208453'
 
-select * from shipment_batch_process_invoice_link where batch_id='5000' and p_invoice_no in ('116350','116335')
+SELECT * FROM shipment_batch_process_invoice_link WHERE batch_id='5000' AND p_invoice_no IN ('116350','116335')
 
-select * from proforma_invoices where p_invoice_no in ('116307','116304','116350','116335') and invoice_status='1';
+SELECT * FROM proforma_invoices WHERE p_invoice_no IN ('116307','116304','116350','116335') AND invoice_status='1';
 
 # Mar_06_2014
 
-select * from m_product_attributes where pid='5954';
+SELECT * FROM m_product_attributes WHERE pid='5954';
 
-select * from pnh
+SELECT * FROM pnh
 -- new 
-select distinct pa.attr_id,a.attr_name,pa.attr_value,pa.pid,c.id as pcat_id from king_categories c
-join m_attributes a on find_in_set(a.id,c.attribute_ids) 
-left join m_product_attributes pa on pa.attr_id = a.id and pa.pid='5954'
-where c.attribute_ids !='' and pa.is_active=1 and c.id= '2'; # '1037'
+SELECT DISTINCT pa.attr_id,a.attr_name,pa.attr_value,pa.pid,c.id AS pcat_id FROM king_categories c
+JOIN m_attributes a ON FIND_IN_SET(a.id,c.attribute_ids) 
+LEFT JOIN m_product_attributes pa ON pa.attr_id = a.id AND pa.pid='5954'
+WHERE c.attribute_ids !='' AND pa.is_active=1 AND c.id= '2'; # '1037'
 
-select a.id,a.attr_name,pa.attr_value,pa.pid from king_categories c join m_attributes a on find_in_set(a.id,c.attribute_ids) left join m_product_attributes pa on pa.attr_id = a.id and pa.pid= '0' where c.attribute_ids !='' and c.id='2'
+SELECT a.id,a.attr_name,pa.attr_value,pa.pid FROM king_categories c JOIN m_attributes a ON FIND_IN_SET(a.id,c.attribute_ids) LEFT JOIN m_product_attributes pa ON pa.attr_id = a.id AND pa.pid= '0' WHERE c.attribute_ids !='' AND c.id='2'
 
-select * from m_product_info where product_id='5954'
+SELECT * FROM m_product_info WHERE product_id='5954'
 
 -- ========================< DB changes >==============================
-alter table `m_product_attributes` add column `pcat_id` bigint (20)  NULL  after `pid`, add column `created_on` varchar (100)  NULL  after `attr_value`, add column `created_by` tinyint (11)  NULL  after `created_on`, add column `modified_on` varchar (100)  NULL  after `created_by`, add column `modified_by` tinyint (100)  NULL  after `modified_on`;
+ALTER TABLE `m_product_attributes` ADD COLUMN `pcat_id` BIGINT (20)  NULL  AFTER `pid`, ADD COLUMN `created_on` VARCHAR (100)  NULL  AFTER `attr_value`, ADD COLUMN `created_by` TINYINT (11)  NULL  AFTER `created_on`, ADD COLUMN `modified_on` VARCHAR (100)  NULL  AFTER `created_by`, ADD COLUMN `modified_by` TINYINT (100)  NULL  AFTER `modified_on`;
 
-alter table `m_product_attributes` add column `is_active` tinyint (11) DEFAULT '1' NULL  COMMENT '1:active,2:deactive' after `attr_value`;
-alter table `snapittoday_db_jan_2014`.`m_product_attributes` change `created_on` `created_on` varchar (100)  NULL , change `modified_on` `modified_on` varchar (100)  NULL;
-alter table `snapittoday_db_jan_2014`.`king_dealitems` change `is_group` `is_group` tinyint (1) DEFAULT '0' NULL;
+ALTER TABLE `m_product_attributes` ADD COLUMN `is_active` TINYINT (11) DEFAULT '1' NULL  COMMENT '1:active,2:deactive' AFTER `attr_value`;
+ALTER TABLE `snapittoday_db_jan_2014`.`m_product_attributes` CHANGE `created_on` `created_on` VARCHAR (100)  NULL , CHANGE `modified_on` `modified_on` VARCHAR (100)  NULL;
+ALTER TABLE `snapittoday_db_jan_2014`.`king_dealitems` CHANGE `is_group` `is_group` TINYINT (1) DEFAULT '0' NULL;
 -- ========================< DB changes >==============================
 
 -- ========================< Reset attributes column >==============================
-update king_categories set attribute_ids = '';
-truncate table m_product_attributes;
+UPDATE king_categories SET attribute_ids = '';
+TRUNCATE TABLE m_product_attributes;
 -- ========================< Reset attributes column >==============================
 
-select * from m_product_attributes;
-select * from king_categories where id='1037'; #'2';
+SELECT * FROM m_product_attributes;
+SELECT * FROM king_categories WHERE id='1037'; #'2';
 
-select a.id,a.attr_name,pa.attr_value,pa.pid,pa.id from king_categories c
-                                                join m_attributes a on find_in_set(a.id,c.attribute_ids) 
-                                                left join m_product_attributes pa on pa.attr_id = a.id and pa.is_active=1 and pa.pid= '5954' and pa.pcat_id = c.id
-                                                where c.attribute_ids !='' and c.id='2';
+SELECT a.id,a.attr_name,pa.attr_value,pa.pid,pa.id FROM king_categories c
+                                                JOIN m_attributes a ON FIND_IN_SET(a.id,c.attribute_ids) 
+                                                LEFT JOIN m_product_attributes pa ON pa.attr_id = a.id AND pa.is_active=1 AND pa.pid= '5954' AND pa.pcat_id = c.id
+                                                WHERE c.attribute_ids !='' AND c.id='2';
 
 # Mar_07_2014
-select * from king_dealitems where is_group='1'
-select * from king_dealitems where id='9517175959';#'3628923721'//'9487464373';
+SELECT * FROM king_dealitems WHERE is_group='1'
+SELECT * FROM king_dealitems WHERE id='9517175959';#'3628923721'//'9487464373';
 
-select * from m_product_deal_link where itemid='9487464373'
-select * from m_product_group_deal_link where itemid='9487464373'; #group_id:219495 #'9517175959';
-select * from products_group where group_id='219495';
-select * from products_group_pids where group_id='219495';
+SELECT * FROM m_product_deal_link WHERE itemid='9487464373'
+SELECT * FROM m_product_group_deal_link WHERE itemid='9487464373'; #group_id:219495 #'9517175959';
+SELECT * FROM products_group WHERE group_id='219495';
+SELECT * FROM products_group_pids WHERE group_id='219495';
 
-select gdl.group_id,gdl.itemid,i.is_group from m_product_group_deal_link gdl
-join king_dealitems i on i.id=gdl.itemid;
+SELECT gdl.group_id,gdl.itemid,i.is_group FROM m_product_group_deal_link gdl
+JOIN king_dealitems i ON i.id=gdl.itemid;
 #=> 19493
 
 UPDATE m_product_info a 
@@ -3409,40 +3409,40 @@ UPDATE m_product_info a
 		SET a.product_cat_id = h.catid;
 
 -- ========================< Set is groupid status start >==============================
-select gdl.group_id,gdl.itemid,i.is_group,i.pnh_id from m_product_group_deal_link gdl
-join king_dealitems i on i.id=gdl.itemid;
+SELECT gdl.group_id,gdl.itemid,i.is_group,i.pnh_id FROM m_product_group_deal_link gdl
+JOIN king_dealitems i ON i.id=gdl.itemid;
 
-update king_dealitems di
-	join (
-		select gdl.itemid as itemid from m_product_group_deal_link gdl
-		join king_dealitems i on i.id=gdl.itemid
-	) as g on di.id = g.itemid set di.is_group = 1;
+UPDATE king_dealitems di
+	JOIN (
+		SELECT gdl.itemid AS itemid FROM m_product_group_deal_link gdl
+		JOIN king_dealitems i ON i.id=gdl.itemid
+	) AS g ON di.id = g.itemid SET di.is_group = 1;
 
 #=>19485
 -- ========================< Set is groupid status end >==============================
 
-select * 
-from king_dealitems i 
-left join m_product_deal_link pd on pd.itemid = i.id
-join m_product_group_deal_link gd on gd.itemid = i.id
-join products_group_pids pg on pg.group_id = 
-where i.pnh_id='10005780';
+SELECT * 
+FROM king_dealitems i 
+LEFT JOIN m_product_deal_link pd ON pd.itemid = i.id
+JOIN m_product_group_deal_link gd ON gd.itemid = i.id
+JOIN products_group_pids pg ON pg.group_id = 
+WHERE i.pnh_id='10005780';
 
-select * from m_product_attributes;
-select * from m_product_info where product_id='10005780'
-select * from m_product_deal_link where itemid='10005780'
+SELECT * FROM m_product_attributes;
+SELECT * FROM m_product_info WHERE product_id='10005780'
+SELECT * FROM m_product_deal_link WHERE itemid='10005780'
 
 #=========================================
-select a.id as attr_id,a.attr_name,pa.attr_value,pa.pid,group_concat(pa.attr_value) as grp_attr_value,group_concat(pa.attr_id) as grp_attr_id
-from king_dealitems di
-join m_product_deal_link pd on pd.itemid = di.id
-join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
-join m_attributes a on a.id =  pa.attr_id
-where di.pnh_id='10005781' group by pa.pid,pa.attr_id order by pa.pid asc;
+SELECT a.id AS attr_id,a.attr_name,pa.attr_value,pa.pid,GROUP_CONCAT(pa.attr_value) AS grp_attr_value,GROUP_CONCAT(pa.attr_id) AS grp_attr_id
+FROM king_dealitems di
+JOIN m_product_deal_link pd ON pd.itemid = di.id
+JOIN m_product_attributes pa ON pa.pid = pd.product_id AND pa.is_active=1
+JOIN m_attributes a ON a.id =  pa.attr_id
+WHERE di.pnh_id='10005781' GROUP BY pa.pid,pa.attr_id ORDER BY pa.pid ASC;
 
 #================================================
-select * from m_product_deal_link where itemid='9487464373';
-select * from m_product_attributes where pid='156143';
+SELECT * FROM m_product_deal_link WHERE itemid='9487464373';
+SELECT * FROM m_product_attributes WHERE pid='156143';
 #=========================================
 
 ################
@@ -3450,68 +3450,68 @@ select * from m_product_attributes where pid='156143';
 pnh_order_margin_track;
 
 CREATE TABLE `pnh_menu_margin_track` (       
-                         `id` bigint(20) NOT NULL AUTO_INCREMENT,   
-                         `menu_id` bigint(20) DEFAULT NULL,         
-                         `default_margin` double DEFAULT NULL,      
-                         `balance_discount` double DEFAULT NULL,    
-                         `balance_amount` bigint(20) DEFAULT NULL,  
-                         `loyality_pntvalue` double DEFAULT NULL,   
-                         `created_by` int(12) DEFAULT NULL,         
-                         `created_on` bigint(20) DEFAULT NULL,      
+                         `id` BIGINT(20) NOT NULL AUTO_INCREMENT,   
+                         `menu_id` BIGINT(20) DEFAULT NULL,         
+                         `default_margin` DOUBLE DEFAULT NULL,      
+                         `balance_discount` DOUBLE DEFAULT NULL,    
+                         `balance_amount` BIGINT(20) DEFAULT NULL,  
+                         `loyality_pntvalue` DOUBLE DEFAULT NULL,   
+                         `created_by` INT(12) DEFAULT NULL,         
+                         `created_on` BIGINT(20) DEFAULT NULL,      
                          PRIMARY KEY (`id`)                         
                        )
 
-select * from pnh_menu where status=1 group by id order by name asc;
+SELECT * FROM pnh_menu WHERE STATUS=1 GROUP BY id ORDER BY NAME ASC;
 
-select a.id as attr_id,a.attr_name,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals,group_concat(pa.pid) as pids from king_dealitems di
-                                                                            join m_product_deal_link pd on pd.itemid = di.id
-                                                                            join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
-                                                                            join m_attributes a on a.id =  pa.attr_id
-                                                                            where di.pnh_id='10005781' group by pa.attr_id;
+SELECT a.id AS attr_id,a.attr_name,GROUP_CONCAT(CONCAT(pa.id,':',pa.attr_value)) AS attr_vals,GROUP_CONCAT(pa.pid) AS pids FROM king_dealitems di
+                                                                            JOIN m_product_deal_link pd ON pd.itemid = di.id
+                                                                            JOIN m_product_attributes pa ON pa.pid = pd.product_id AND pa.is_active=1
+                                                                            JOIN m_attributes a ON a.id =  pa.attr_id
+                                                                            WHERE di.pnh_id='10005781' GROUP BY pa.attr_id;
 
-select a.id as attr_id,a.attr_name,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals,group_concat(pa.pid) as pids from king_dealitems di
-                                                                            join m_product_deal_link pd on pd.itemid = di.id
-                                                                            join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
-                                                                            join m_attributes a on a.id =  pa.attr_id
-                                                                            where di.pnh_id='10005781' group by pa.attr_id;
+SELECT a.id AS attr_id,a.attr_name,GROUP_CONCAT(CONCAT(pa.id,':',pa.attr_value)) AS attr_vals,GROUP_CONCAT(pa.pid) AS pids FROM king_dealitems di
+                                                                            JOIN m_product_deal_link pd ON pd.itemid = di.id
+                                                                            JOIN m_product_attributes pa ON pa.pid = pd.product_id AND pa.is_active=1
+                                                                            JOIN m_attributes a ON a.id =  pa.attr_id
+                                                                            WHERE di.pnh_id='10005781' GROUP BY pa.attr_id;
 
 #=========================< new count of num of products linked to a product by itemid >=====================================
-select * from (  select itemid,count(*) as ttl_prdt from m_product_deal_link
-where itemid is not null and itemid='2711322288' 
-group by itemid ) as g where g.ttl_prdt > 4;
+SELECT * FROM (  SELECT itemid,COUNT(*) AS ttl_prdt FROM m_product_deal_link
+WHERE itemid IS NOT NULL AND itemid='2711322288' 
+GROUP BY itemid ) AS g WHERE g.ttl_prdt > 4;
 #=========================================
 -- new
 #=========================< new count of num of products linked to a product by PNH_ID >=====================================
-select pd.itemid,count(*),di.is_sourceable as ttl_prdt 
-from m_product_deal_link pd 
-join king_dealitems di on di.id=pd.itemid
-where pd.itemid is not null and di.pnh_id='10005781' group by pd.itemid
+SELECT pd.itemid,COUNT(*),di.is_sourceable AS ttl_prdt 
+FROM m_product_deal_link pd 
+JOIN king_dealitems di ON di.id=pd.itemid
+WHERE pd.itemid IS NOT NULL AND di.pnh_id='10005781' GROUP BY pd.itemid
 
 #=========================================
-select a.id as attr_id,a.attr_name,group_concat(concat(pa.id,":",pa.attr_value)) as attr_vals#,group_concat(pa.pid) as pids
- from king_dealitems di
-						join m_product_deal_link pd on pd.itemid = di.id
-						join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
-						join m_attributes a on a.id =  pa.attr_id
-						where di.pnh_id='10005781' group by pa.attr_id;
+SELECT a.id AS attr_id,a.attr_name,GROUP_CONCAT(CONCAT(pa.id,":",pa.attr_value)) AS attr_vals#,group_concat(pa.pid) as pids
+ FROM king_dealitems di
+						JOIN m_product_deal_link pd ON pd.itemid = di.id
+						JOIN m_product_attributes pa ON pa.pid = pd.product_id AND pa.is_active=1
+						JOIN m_attributes a ON a.id =  pa.attr_id
+						WHERE di.pnh_id='10005781' GROUP BY pa.attr_id;
 #=========================================
 
 -- new
-select s.* from m_product_attributes s where s.id='11' ;
+SELECT s.* FROM m_product_attributes s WHERE s.id='11' ;
 
 -- new
-select a.id as attr_id,a.attr_name,pa.pid,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals
- from m_product_attributes pa
-	join m_attributes a on a.id =  pa.attr_id
-	where pa.pid='156145' and pa.id!='11' group by pa.attr_id;
+SELECT a.id AS attr_id,a.attr_name,pa.pid,GROUP_CONCAT(CONCAT(pa.id,':',pa.attr_value)) AS attr_vals
+ FROM m_product_attributes pa
+	JOIN m_attributes a ON a.id =  pa.attr_id
+	WHERE pa.pid='156145' AND pa.id!='11' GROUP BY pa.attr_id;
 #=========================================
 
 #Mar-10_2014
 
-select 1 from pnh_member_info where pnh_member_id='21111111';
+SELECT 1 FROM pnh_member_info WHERE pnh_member_id='21111111';
 
 #====================================================================================================================================================================
-create table `pnh_member_offers` (  `sno` bigint UNSIGNED NOT NULL AUTO_INCREMENT , `member_id` varchar (120) , `offer_type` tinyint (11) DEFAULT '0', `offer_value` varchar (120) DEFAULT '0', `offer_towards` varchar (200) , `transid_ref` varchar (120) , `insurance_id` varchar (120) DEFAULT '0', `process_status` tinyint (11),`feedback_status` varchar (50) DEFAULT '0' NULL , `created_by` int (120) ,`referred_by` varchar (100) DEFAULT '0' NULL,`referred_status` tinyint (11)  DEFAULT '0' NULL , `created_on` varchar (120) , PRIMARY KEY ( `sno`));
+CREATE TABLE `pnh_member_offers` (  `sno` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT , `member_id` VARCHAR (120) , `offer_type` TINYINT (11) DEFAULT '0', `offer_value` VARCHAR (120) DEFAULT '0', `offer_towards` VARCHAR (200) , `transid_ref` VARCHAR (120) , `insurance_id` VARCHAR (120) DEFAULT '0', `process_status` TINYINT (11),`feedback_status` VARCHAR (50) DEFAULT '0' NULL , `created_by` INT (120) ,`referred_by` VARCHAR (100) DEFAULT '0' NULL,`referred_status` TINYINT (11)  DEFAULT '0' NULL , `created_on` VARCHAR (120) , PRIMARY KEY ( `sno`));
 
 #alter table `pnh_member_offers` add column `feedback_status` varchar (50) DEFAULT '0' NULL  after `status`;
 #alter table `pnh_member_offers` add column `referred_by` varchar (100) DEFAULT '0' NULL  after `feedback_status`;
@@ -3520,67 +3520,67 @@ create table `pnh_member_offers` (  `sno` bigint UNSIGNED NOT NULL AUTO_INCREMEN
 
 
 
-select * from pnh_invoice_transit_log;
+SELECT * FROM pnh_invoice_transit_log;
 
-select * from pnh_member_offers;
+SELECT * FROM pnh_member_offers;
 
-select count(*) as c from pnh_member_offers where member_id='22017123' and offer_type=0;
+SELECT COUNT(*) AS c FROM pnh_member_offers WHERE member_id='22017123' AND offer_type=0;
 
-select * from pnh_member_offers where process_status = 0 order by desc created_on limit 100;
+SELECT * FROM pnh_member_offers WHERE process_status = 0 ORDER BY DESC created_on LIMIT 100;
 
-select * from (
-	select count(*) as  from pnh_member_offers where referred_by !=0 and referred_status = 0 order by created_on desc limit 100
-) as count join pnh_member_offers a
-	join pnh_member_info b on b.id=a.referred_by;
+SELECT * FROM (
+	SELECT COUNT(*) AS  FROM pnh_member_offers WHERE referred_by !=0 AND referred_status = 0 ORDER BY created_on DESC LIMIT 100
+) AS COUNT JOIN pnh_member_offers a
+	JOIN pnh_member_info b ON b.id=a.referred_by;
 
 -- new
-select b.* from pnh_member_offers a
-	join pnh_member_info b on b.pnh_member_id=a.referred_by
-	where a.referred_by !=0 and a.referred_status = 0 
-	order by a.created_on desc limit 100;
+SELECT b.* FROM pnh_member_offers a
+	JOIN pnh_member_info b ON b.pnh_member_id=a.referred_by
+	WHERE a.referred_by !=0 AND a.referred_status = 0 
+	ORDER BY a.created_on DESC LIMIT 100;
 
 -- new 
-select num_referred,referred_by,floor(num_referred/3) as times from (
-	select count(referred_by) as num_referred,referred_by from pnh_member_offers where referred_by !=0 and referred_status = 0 group by referred_by order by created_on desc limit 100 
-) as a where a.num_referred >= 3;
+SELECT num_referred,referred_by,FLOOR(num_referred/3) AS times FROM (
+	SELECT COUNT(referred_by) AS num_referred,referred_by FROM pnh_member_offers WHERE referred_by !=0 AND referred_status = 0 GROUP BY referred_by ORDER BY created_on DESC LIMIT 100 
+) AS a WHERE a.num_referred >= 3;
 
-select * from pnh_invoice_transit_log;
+SELECT * FROM pnh_invoice_transit_log;
 #1:in-transit,2:pickup or hand-over,3:delivered,4:return
 
-select r.receipt_id,rlog.credit_note_id,r.franchise_id,rcon.debit_note_id,rcon.invoice_no,rcon.inv_amount,sum(rlog.reconcile_amount) as reconcile_amount,rcon.unreconciled,r.receipt_amount,r.remarks,			r.unreconciled_value,unreconciled_status
+SELECT r.receipt_id,rlog.credit_note_id,r.franchise_id,rcon.debit_note_id,rcon.invoice_no,rcon.inv_amount,SUM(rlog.reconcile_amount) AS reconcile_amount,rcon.unreconciled,r.receipt_amount,r.remarks,			r.unreconciled_value,unreconciled_status
                     ,rlog.is_invoice_cancelled,rlog.is_reversed
                     ,rcon.modified_on,rcon.modified_by
-                    ,DATE_FORMAT(from_unixtime(rcon.created_on),'%e/%m/%Y') as created_date
+                    ,DATE_FORMAT(FROM_UNIXTIME(rcon.created_on),'%e/%m/%Y') AS created_date
                     ,a.username
-                    from pnh_t_receipt_info r 
-                    join pnh_t_receipt_reconcilation_log rlog on rlog.receipt_id = r.receipt_id
-                    join pnh_t_receipt_reconcilation rcon on rcon.id = rlog.reconcile_id
-                    join king_admin a on a.id=rcon.created_by
-                    where r.franchise_id = '408' and r.receipt_id = '5415' group by rcon.invoice_no,rcon.debit_note_id;
+                    FROM pnh_t_receipt_info r 
+                    JOIN pnh_t_receipt_reconcilation_log rlog ON rlog.receipt_id = r.receipt_id
+                    JOIN pnh_t_receipt_reconcilation rcon ON rcon.id = rlog.reconcile_id
+                    JOIN king_admin a ON a.id=rcon.created_by
+                    WHERE r.franchise_id = '408' AND r.receipt_id = '5415' GROUP BY rcon.invoice_no,rcon.debit_note_id;
 
 
 #================================
-select * from process_insurance_details;
+SELECT * FROM process_insurance_details;
 
 #===============================================================================
 #Mar_11_2014
-create table `pnh_member_insurance` (  `sno` bigint UNSIGNED NOT NULL AUTO_INCREMENT , `fid` varchar (120) , `mid` varchar (120) , `insurance_id` varchar (120) , `insurance_type` varchar (100) , `mem_address` varchar (150) , PRIMARY KEY ( `sno`));
+CREATE TABLE `pnh_member_insurance` (  `sno` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT , `fid` VARCHAR (120) , `mid` VARCHAR (120) , `insurance_id` VARCHAR (120) , `insurance_type` VARCHAR (100) , `mem_address` VARCHAR (150) , PRIMARY KEY ( `sno`));
 #===============================================================================
 
 # Mar_12_2014
 # ====================< RESET MEMBER OFFERS TABLES START >=====================================
-truncate table `pnh_member_insurance`;
-truncate table `pnh_member_offers`;
+TRUNCATE TABLE `pnh_member_insurance`;
+TRUNCATE TABLE `pnh_member_offers`;
 #truncate table `pnh_member_offers_referral`;
 # ====================< RESET MEMBER OFFERS TABLES END >=====================================
 se
 
-select count(*) as m from pnh_member_info mi
-join pnh_member_offers mo on mo.member_id != mi.id
- where member_id=
+SELECT COUNT(*) AS m FROM pnh_member_info mi
+JOIN pnh_member_offers mo ON mo.member_id != mi.id
+ WHERE member_id=
 
-select * from pnh_member_offers where process_status = 0  and offer_type=1 order by created_on desc limit 100
-select * from pnh_member_offers where process_status = 0  and offer_type=2 order by created_on desc limit 100;
+SELECT * FROM pnh_member_offers WHERE process_status = 0  AND offer_type=1 ORDER BY created_on DESC LIMIT 100
+SELECT * FROM pnh_member_offers WHERE process_status = 0  AND offer_type=2 ORDER BY created_on DESC LIMIT 100;
 
 /*[11:36:52 AM][51 ms]*/ CREATE TABLE `insurance_m_types`( `id` BIGINT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(255), PRIMARY KEY (`id`) ); 
  /*[11:37:05 AM][0 ms]*/INSERT INTO `insurance_m_types`(`id`,`name`) VALUES ( '1',NULL); 
@@ -3588,80 +3588,80 @@ select * from pnh_member_offers where process_status = 0  and offer_type=2 order
 /*[11:38:22 AM][0 ms]*/ INSERT INTO `insurance_m_types`(`id`,`name`) VALUES ( '2','Driving Licence'); 
 /*[11:38:37 AM][0 ms]*/ INSERT INTO `insurance_m_types`(`id`,`name`) VALUES ( NULL,'Voter ID');  
 CREATE TABLE `pnh_member_insurance` (                    
-                        `sno` bigint(20) unsigned NOT NULL AUTO_INCREMENT,     
-                        `fid` varchar(120) DEFAULT NULL,                       
-                        `mid` varchar(120) DEFAULT NULL,                       
-                        `offer_type` tinyint(11) DEFAULT NULL,                 
-                        `insurance_id` varchar(120) DEFAULT NULL,              
-                        `insurance_type` varchar(100) DEFAULT NULL,            
-                        `mem_address` varchar(150) DEFAULT NULL,               
-                        `offer_status` tinyint(11) DEFAULT NULL,               
+                        `sno` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,     
+                        `fid` VARCHAR(120) DEFAULT NULL,                       
+                        `mid` VARCHAR(120) DEFAULT NULL,                       
+                        `offer_type` TINYINT(11) DEFAULT NULL,                 
+                        `insurance_id` VARCHAR(120) DEFAULT NULL,              
+                        `insurance_type` VARCHAR(100) DEFAULT NULL,            
+                        `mem_address` VARCHAR(150) DEFAULT NULL,               
+                        `offer_status` TINYINT(11) DEFAULT NULL,               
                         PRIMARY KEY (`sno`)                                    
                       );
 
 #===============================================================================
 
-alter table `pnh_member_insurance` add column `opted_insurance` tinyint (11) DEFAULT '0' NULL  after `proof_address`,change `offer_type` `offer_type` tinyint (11)  NULL , change `insurance_id` `proof_id` varchar (120)  NULL  COLLATE latin1_swedish_ci , change `insurance_type` `proof_type` varchar (100)  NULL  COLLATE latin1_swedish_ci , change `mem_address` `proof_address` varchar (150)  NULL  COLLATE latin1_swedish_ci;
+ALTER TABLE `pnh_member_insurance` ADD COLUMN `opted_insurance` TINYINT (11) DEFAULT '0' NULL  AFTER `proof_address`,CHANGE `offer_type` `offer_type` TINYINT (11)  NULL , CHANGE `insurance_id` `proof_id` VARCHAR (120)  NULL  COLLATE latin1_swedish_ci , CHANGE `insurance_type` `proof_type` VARCHAR (100)  NULL  COLLATE latin1_swedish_ci , CHANGE `mem_address` `proof_address` VARCHAR (150)  NULL  COLLATE latin1_swedish_ci;
 
-alter table `pnh_member_offers` change `insurance_id` `proof_id` varchar (120) DEFAULT '0' NULL  COLLATE latin1_swedish_ci;
+ALTER TABLE `pnh_member_offers` CHANGE `insurance_id` `proof_id` VARCHAR (120) DEFAULT '0' NULL  COLLATE latin1_swedish_ci;
 
-alter table `pnh_member_offers` add column `delivery_status` varchar (11) DEFAULT '0' NULL  COMMENT '0:not delivered,1:delivered' after `feedback_status`,change `process_status` `process_status` tinyint (11)  NULL  COMMENT '0:Not Processed,1:Ready Process,2:Processed,', change `feedback_status` `feedback_status` varchar (50) DEFAULT '0' NULL  COLLATE latin1_swedish_ci  COMMENT '0:not given,1:given';
+ALTER TABLE `pnh_member_offers` ADD COLUMN `delivery_status` VARCHAR (11) DEFAULT '0' NULL  COMMENT '0:not delivered,1:delivered' AFTER `feedback_status`,CHANGE `process_status` `process_status` TINYINT (11)  NULL  COMMENT '0:Not Processed,1:Ready Process,2:Processed,', CHANGE `feedback_status` `feedback_status` VARCHAR (50) DEFAULT '0' NULL  COLLATE latin1_swedish_ci  COMMENT '0:not given,1:given';
 
 #===============================================================================
 -- 
-select * from pnh_member_offers where transid_ref='PNH38292';
+SELECT * FROM pnh_member_offers WHERE transid_ref='PNH38292';
 -- 
-update pnh_member_offers set delivery_status = 1 where transid_ref='PNH22337';
+UPDATE pnh_member_offers SET delivery_status = 1 WHERE transid_ref='PNH22337';
 -- 
-select u.*,count(o.transid) as orders,f.franchise_name as fran from pnh_member_info u left outer join king_orders o on o.userid=u.user_id left outer join pnh_m_franchise_info f on f.franchise_id=u.franchise_id where u.user_id='103440';
+SELECT u.*,COUNT(o.transid) AS orders,f.franchise_name AS fran FROM pnh_member_info u LEFT OUTER JOIN king_orders o ON o.userid=u.user_id LEFT OUTER JOIN pnh_m_franchise_info f ON f.franchise_id=u.franchise_id WHERE u.user_id='103440';
 
 -- 
-select a.*,b.user_id,b.first_name,f.franchise_name from pnh_member_offers a 
-join pnh_member_info b on b.pnh_member_id=a.member_id  
-join pnh_m_franchise_info f on f.franchise_id= a.franchise_id
-where a.offer_type=2 order by a.created_on desc limit 100;
+SELECT a.*,b.user_id,b.first_name,f.franchise_name FROM pnh_member_offers a 
+JOIN pnh_member_info b ON b.pnh_member_id=a.member_id  
+JOIN pnh_m_franchise_info f ON f.franchise_id= a.franchise_id
+WHERE a.offer_type=2 ORDER BY a.created_on DESC LIMIT 100;
 
 # Mar_14_2014
 has_insurance
 insurance_logid
 insurance_amount
 #===============================================================================
-alter table `king_orders` add column `has_insurance` tinyint (11) DEFAULT '0' NULL  after `is_paid`, add column `insurance_logid` bigint   NULL  after `has_insurance`, add column `insurance_amount` double   NULL  after `insurance_logid`;
+ALTER TABLE `king_orders` ADD COLUMN `has_insurance` TINYINT (11) DEFAULT '0' NULL  AFTER `is_paid`, ADD COLUMN `insurance_logid` BIGINT   NULL  AFTER `has_insurance`, ADD COLUMN `insurance_amount` DOUBLE   NULL  AFTER `insurance_logid`;
 
 #drop table `insurance_m_type`;
-alter table `pnh_member_offers` add column `pnh_pid` varchar (120)  NULL  after `offer_towards`;
+ALTER TABLE `pnh_member_offers` ADD COLUMN `pnh_pid` VARCHAR (120)  NULL  AFTER `offer_towards`;
 
 #===============================================================================
 
-select * from king_dealitems where pnh_id='12759871' #=>9884254185
-select * from king_deals where dealid='5172296214';
+SELECT * FROM king_dealitems WHERE pnh_id='12759871' #=>9884254185
+SELECT * FROM king_deals WHERE dealid='5172296214';
 
 -- -- -- -- -- -- -- -- -- new ----=------------------------
-select *,d.menuid from king_orders o
-join king_dealitems di on di.id=o.itemid
-join king_deals d on d.dealid=di.dealid
-where o.transid='PNH64833' and di.pnh_id='12759871';
+SELECT *,d.menuid FROM king_orders o
+JOIN king_dealitems di ON di.id=o.itemid
+JOIN king_deals d ON d.dealid=di.dealid
+WHERE o.transid='PNH64833' AND di.pnh_id='12759871';
 #==========================================================================================
-alter table `pnh_member_insurance` add column `insurance_id` varchar (150)  NULL  after `sno`, add column `insurance_value` double   NULL  after `offer_status`, add column `insurance_margin` varchar (50) DEFAULT '0' NULL  after `insurance_value`, add column `order_value` double   NULL  after `insurance_margin`, add column `first_name` varchar (60)  NULL  after `order_value`, add column `last_name` varchar (60)  NULL  after `first_name`, add column `mob_no` varchar (50)  NULL  after `last_name`, add column `address` text   NULL  after `mob_no`, add column `city` varchar (50)  NULL  after `address`, add column `pincode` varchar (50)  NULL  after `city`, add column `created_by` varchar (20)  NULL  after `pincode`, add column `created_on` varchar (60)  NULL  
-after `created_by`,change `offer_status` `offer_status` tinyint (11) DEFAULT '0' NULL;
+ALTER TABLE `pnh_member_insurance` ADD COLUMN `insurance_id` VARCHAR (150)  NULL  AFTER `sno`, ADD COLUMN `insurance_value` DOUBLE   NULL  AFTER `offer_status`, ADD COLUMN `insurance_margin` VARCHAR (50) DEFAULT '0' NULL  AFTER `insurance_value`, ADD COLUMN `order_value` DOUBLE   NULL  AFTER `insurance_margin`, ADD COLUMN `first_name` VARCHAR (60)  NULL  AFTER `order_value`, ADD COLUMN `last_name` VARCHAR (60)  NULL  AFTER `first_name`, ADD COLUMN `mob_no` VARCHAR (50)  NULL  AFTER `last_name`, ADD COLUMN `address` TEXT   NULL  AFTER `mob_no`, ADD COLUMN `city` VARCHAR (50)  NULL  AFTER `address`, ADD COLUMN `pincode` VARCHAR (50)  NULL  AFTER `city`, ADD COLUMN `created_by` VARCHAR (20)  NULL  AFTER `pincode`, ADD COLUMN `created_on` VARCHAR (60)  NULL  
+AFTER `created_by`,CHANGE `offer_status` `offer_status` TINYINT (11) DEFAULT '0' NULL;
 
-alter table `pnh_member_insurance` add column `itemid` varchar (25)  NULL  after `order_value`;
-alter table `pnh_member_offers` change `proof_id` `insurance_id` varchar (120) DEFAULT '0' NULL  COLLATE latin1_swedish_ci;
-alter table `pnh_member_insurance` drop column `address`;
+ALTER TABLE `pnh_member_insurance` ADD COLUMN `itemid` VARCHAR (25)  NULL  AFTER `order_value`;
+ALTER TABLE `pnh_member_offers` CHANGE `proof_id` `insurance_id` VARCHAR (120) DEFAULT '0' NULL  COLLATE latin1_swedish_ci;
+ALTER TABLE `pnh_member_insurance` DROP COLUMN `address`;
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 #==========================================================================================
 CREATE TABLE `pnh_member_insurance_menu` (
-  `id` bigint(11) NOT NULL AUTO_INCREMENT,
-  `menu_id` bigint(11) NOT NULL,
-  `greater_than` double DEFAULT NULL,
-  `less_than` double DEFAULT NULL,
-  `insurance_value` double DEFAULT NULL,
-  `insurance_margin` double NOT NULL DEFAULT '0',
-  `is_active` tinyint(1) DEFAULT '1',
-  `created_by` bigint(11) DEFAULT NULL,
-  `created_on` datetime DEFAULT NULL,
-  `updated_by` bigint(11) DEFAULT NULL,
-  `updated_on` datetime DEFAULT NULL,
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT,
+  `menu_id` BIGINT(11) NOT NULL,
+  `greater_than` DOUBLE DEFAULT NULL,
+  `less_than` DOUBLE DEFAULT NULL,
+  `insurance_value` DOUBLE DEFAULT NULL,
+  `insurance_margin` DOUBLE NOT NULL DEFAULT '0',
+  `is_active` TINYINT(1) DEFAULT '1',
+  `created_by` BIGINT(11) DEFAULT NULL,
+  `created_on` DATETIME DEFAULT NULL,
+  `updated_by` BIGINT(11) DEFAULT NULL,
+  `updated_on` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 
@@ -3677,51 +3677,51 @@ created_on
 updated_by        
 updated_on      
 ===============
-is_group           tinyint(11)          (NULL)             YES             0                        select,insert,update,references         
+is_group           TINYINT(11)          (NULL)             YES             0                        SELECT,INSERT,UPDATE,REFERENCES         
 has_insurance  
 
 -- old
-select a.*,b.user_id,b.first_name,f.*, date(from_unixtime(a.created_on)) as date from pnh_member_offers a 
-join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  
-where a.offer_type=2 order by a.created_on desc limit 100;
+SELECT a.*,b.user_id,b.first_name,f.*, DATE(FROM_UNIXTIME(a.created_on)) AS DATE FROM pnh_member_offers a 
+JOIN pnh_member_info b ON b.pnh_member_id=a.member_id JOIN pnh_m_franchise_info f ON f.franchise_id= a.franchise_id  
+WHERE a.offer_type=2 ORDER BY a.created_on DESC LIMIT 100;
 
-select insurance_value,insurance_margin from pnh_member_insurance_menu im where menu_id='112' and is_active = 1
+SELECT insurance_value,insurance_margin FROM pnh_member_insurance_menu im WHERE menu_id='112' AND is_active = 1
 
-select insurance_value,insurance_margin from pnh_member_insurance_menu im where is_active = 1 and menu_id='112'
+SELECT insurance_value,insurance_margin FROM pnh_member_insurance_menu im WHERE is_active = 1 AND menu_id='112'
 
-select d.menuid from king_orders o
-                                    join king_dealitems di on di.id=o.itemid
-                                    join king_deals d on d.dealid=di.dealid
-                                    where o.transid='PNH33729' and di.pnh_id='12759871';
+SELECT d.menuid FROM king_orders o
+                                    JOIN king_dealitems di ON di.id=o.itemid
+                                    JOIN king_deals d ON d.dealid=di.dealid
+                                    WHERE o.transid='PNH33729' AND di.pnh_id='12759871';
 
-select o.itemid,o.transid from king_orders o
-join king_dealitems di on di.id=o.itemid
-where o.transid='PNH64833' and di.pnh_id='12759871'; # => 5172296214
+SELECT o.itemid,o.transid FROM king_orders o
+JOIN king_dealitems di ON di.id=o.itemid
+WHERE o.transid='PNH64833' AND di.pnh_id='12759871'; # => 5172296214
 
 # Mar_15_2014
-select *,o.itemid,o.transid from king_orders o where o.transid='PNH64833' and o.itemid='5172296214'
+SELECT *,o.itemid,o.transid FROM king_orders o WHERE o.transid='PNH64833' AND o.itemid='5172296214'
 -- old
-select o.itemid from king_orders o join king_dealitems di on di.id=o.itemid
-                                                where o.transid='PNH45641' and di.pnh_id='12759871';
+SELECT o.itemid FROM king_orders o JOIN king_dealitems di ON di.id=o.itemid
+                                                WHERE o.transid='PNH45641' AND di.pnh_id='12759871';
 
 # ====================< RESET MEMBER OFFERS TABLES START >=====================================
-truncate table `pnh_member_insurance`;
-truncate table `pnh_member_offers`;
-truncate table `pnh_member_offers_log`;
-update king_orders set has_insurance='',insurance_logid='',insurance_amount='' where 1=1;
+TRUNCATE TABLE `pnh_member_insurance`;
+TRUNCATE TABLE `pnh_member_offers`;
+TRUNCATE TABLE `pnh_member_offers_log`;
+UPDATE king_orders SET has_insurance='',insurance_logid='',insurance_amount='' WHERE 1=1;
 #truncate table `pnh_member_offers_referral`;
 # ====================< RESET MEMBER OFFERS TABLES END >=====================================
 
 -- old
-select a.*,b.user_id,b.first_name,f.*, date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  
-where a.offer_type in (0,2)
-order by a.created_on desc limit 100;
+SELECT a.*,b.user_id,b.first_name,f.*, DATE(FROM_UNIXTIME(a.created_on)) AS DATE FROM pnh_member_offers a JOIN pnh_member_info b ON b.pnh_member_id=a.member_id JOIN pnh_m_franchise_info f ON f.franchise_id= a.franchise_id  
+WHERE a.offer_type IN (0,2)
+ORDER BY a.created_on DESC LIMIT 100;
 
-select a.*,b.first_name,b.user_id from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id  where a.transid_ref='PNH16326';
+SELECT a.*,b.first_name,b.user_id FROM pnh_member_offers a JOIN pnh_member_info b ON b.pnh_member_id=a.member_id  WHERE a.transid_ref='PNH16326';
 
-select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100;
+SELECT a.*,b.user_id,b.first_name,f.*,DATE(FROM_UNIXTIME(a.created_on)) AS DATE FROM pnh_member_offers a JOIN pnh_member_info b ON b.pnh_member_id=a.member_id JOIN pnh_m_franchise_info f ON f.franchise_id= a.franchise_id WHERE a.offer_type=1 ORDER BY a.created_on DESC LIMIT 100;
 
-select * from pnh_member_info where pnh_member_id='22017148';
+SELECT * FROM pnh_member_info WHERE pnh_member_id='22017148';
 # 7962767596  4922585172  1797426333
 3854235621
 7338377355
@@ -3730,125 +3730,125 @@ select * from pnh_member_info where pnh_member_id='22017148';
 6612136114
 
 #,mi.insurance_id,mi.fid,mi.mid
-select *,a.username,mf.member_id,mf.transid_ref as transid from pnh_member_insurance mi
-                        join pnh_member_offers mf on mf.insurance_id = mi.insurance_id
-                        join king_admin a on a.id = mi.created_by
-                        where mi.insurance_id = '2971433743';
+SELECT *,a.username,mf.member_id,mf.transid_ref AS transid FROM pnh_member_insurance mi
+                        JOIN pnh_member_offers mf ON mf.insurance_id = mi.insurance_id
+                        JOIN king_admin a ON a.id = mi.created_by
+                        WHERE mi.insurance_id = '2971433743';
 
-select name as dealname,pnh_id from king_dealitems where id='5172296214';
+SELECT NAME AS dealname,pnh_id FROM king_dealitems WHERE id='5172296214';
 
-select mi.*,a.username,mf.transid_ref as transid from pnh_member_insurance mi
-                        join pnh_member_offers mf on mf.insurance_id = mi.insurance_id
-                        join king_admin a on a.id = mi.created_by
-                        where mi.insurance_id = '2971433743'
+SELECT mi.*,a.username,mf.transid_ref AS transid FROM pnh_member_insurance mi
+                        JOIN pnh_member_offers mf ON mf.insurance_id = mi.insurance_id
+                        JOIN king_admin a ON a.id = mi.created_by
+                        WHERE mi.insurance_id = '2971433743'
 
-select di.name as dealname,di.pnh_id,d.menuid,mn.name as menuname,d.brandid from king_dealitems di
-                                                    join king_deals d on d.dealid=di.dealid
-                                                    join pnh_menu mn on mn.id=d.menuid
-                                                    where di.id='2971433743';
+SELECT di.name AS dealname,di.pnh_id,d.menuid,mn.name AS menuname,d.brandid FROM king_dealitems di
+                                                    JOIN king_deals d ON d.dealid=di.dealid
+                                                    JOIN pnh_menu mn ON mn.id=d.menuid
+                                                    WHERE di.id='2971433743';
 # Mar_17_2014
 
-update pnh_member_offers set feedback_status = 1 where 1=0; sno in ( select sno from pnh_member_offers where feedback_status=0 and delivery_status=1 and member_id='21111111'  );
+UPDATE pnh_member_offers SET feedback_status = 1 WHERE 1=0; sno IN ( SELECT sno FROM pnh_member_offers WHERE feedback_status=0 AND delivery_status=1 AND member_id='21111111'  );
 
-select sno from pnh_member_offers where feedback_status=0 and delivery_status=1 and member_id= '21111111';
+SELECT sno FROM pnh_member_offers WHERE feedback_status=0 AND delivery_status=1 AND member_id= '21111111';
 
 -- new 
-select count(*) as t from pnh_member_offers where delivery_status = '0' and process_status='0' and feedback_status='0' and transid_ref='PNH16326';
+SELECT COUNT(*) AS t FROM pnh_member_offers WHERE delivery_status = '0' AND process_status='0' AND feedback_status='0' AND transid_ref='PNH16326';
 
-select * from pnh_member_info where pnh_member_id='22012596';
+SELECT * FROM pnh_member_info WHERE pnh_member_id='22012596';
 #=========================================================================
 # Mar_18_2014
 
-select * from king_invoice where transid='PNH55553'
-select * from king_orders where transid='PNH55553'
+SELECT * FROM king_invoice WHERE transid='PNH55553'
+SELECT * FROM king_orders WHERE transid='PNH55553'
 5=>3854235621
 6=>7338377355
 
 #=========================================================================
-alter table `king_orders` change `insurance_logid` `insurance_id` varchar (100)  NULL;
+ALTER TABLE `king_orders` CHANGE `insurance_logid` `insurance_id` VARCHAR (100)  NULL;
 #=========================================================================
 
-select a.*,b.first_name,b.user_id,di.name product_name from pnh_member_offers a 
-                                                        join pnh_member_info b on b.pnh_member_id=a.member_id
-                                                        join pnh_member_insurance mi on mi.insurance_id=a.insurance_id
-                                                        left join king_dealitems di on di.id = mi.itemid
-                                                        where a.transid_ref='PNH55553' and mi.itemid='7682578652';
+SELECT a.*,b.first_name,b.user_id,di.name product_name FROM pnh_member_offers a 
+                                                        JOIN pnh_member_info b ON b.pnh_member_id=a.member_id
+                                                        JOIN pnh_member_insurance mi ON mi.insurance_id=a.insurance_id
+                                                        LEFT JOIN king_dealitems di ON di.id = mi.itemid
+                                                        WHERE a.transid_ref='PNH55553' AND mi.itemid='7682578652';
 #PNH98587 
 
-select a.*,di.name,di.id as itemid,pdl.product_id,b.user_id,b.first_name,f.franchise_name,f.address,f.territory_id,f.town_id
-from pnh_member_offers a
-join pnh_member_info b on b.pnh_member_id=a.member_id
-join pnh_m_franchise_info f on f.franchise_id= a.franchise_id
-join king_dealitems di on di.pnh_id = a.pnh_pid
-join m_product_deal_link pdl on pdl.itemid=di.id
-where a.offer_type in (0,2) order by a.created_on desc limit 100;
+SELECT a.*,di.name,di.id AS itemid,pdl.product_id,b.user_id,b.first_name,f.franchise_name,f.address,f.territory_id,f.town_id
+FROM pnh_member_offers a
+JOIN pnh_member_info b ON b.pnh_member_id=a.member_id
+JOIN pnh_m_franchise_info f ON f.franchise_id= a.franchise_id
+JOIN king_dealitems di ON di.pnh_id = a.pnh_pid
+JOIN m_product_deal_link pdl ON pdl.itemid=di.id
+WHERE a.offer_type IN (0,2) ORDER BY a.created_on DESC LIMIT 100;
 
-select * from king_dealitems where id='7682578652'
-select * from m_product_info where product_id='28089'
-select * from m_product_deal_link where product_id='28089';
+SELECT * FROM king_dealitems WHERE id='7682578652'
+SELECT * FROM m_product_info WHERE product_id='28089'
+SELECT * FROM m_product_deal_link WHERE product_id='28089';
 
 #Mar_19_2014
 
-select ifnull(sum(s.available_qty),0) as stock,group_concat(s.available_qty) as stocks,p.*,b.name as brand,b.id as bid,c.id as cid,c.name as category from m_product_info p 
-left outer join t_stock_info s on s.product_id=p.product_id 
-join king_brands b on b.id=p.brand_id 
-join king_categories c on c.id=p.product_cat_id 
-where p.product_id= '155921'; #'155926';
+SELECT IFNULL(SUM(s.available_qty),0) AS stock,GROUP_CONCAT(s.available_qty) AS stocks,p.*,b.name AS brand,b.id AS bid,c.id AS cid,c.name AS category FROM m_product_info p 
+LEFT OUTER JOIN t_stock_info s ON s.product_id=p.product_id 
+JOIN king_brands b ON b.id=p.brand_id 
+JOIN king_categories c ON c.id=p.product_cat_id 
+WHERE p.product_id= '155921'; #'155926';
 
-select p.product_id,p.mrp,r.default_location_id as loc,r.default_rack_bin_id as rack from m_product_info p left outer join m_brand_location_link r on r.brand_id=p.brand_id left outer join t_stock_info s on s.product_id=p.product_id 
-where p.product_id='155921'
-group by p.product_id having count(s.product_id)=0;
+SELECT p.product_id,p.mrp,r.default_location_id AS loc,r.default_rack_bin_id AS rack FROM m_product_info p LEFT OUTER JOIN m_brand_location_link r ON r.brand_id=p.brand_id LEFT OUTER JOIN t_stock_info s ON s.product_id=p.product_id 
+WHERE p.product_id='155921'
+GROUP BY p.product_id HAVING COUNT(s.product_id)=0;
 
 #Mar_20_2014
 
-alter table `pnh_member_insurance` add column `menu_log_id` varchar (100)  NULL  after `mid`;
+ALTER TABLE `pnh_member_insurance` ADD COLUMN `menu_log_id` VARCHAR (100)  NULL  AFTER `mid`;
 
-select * from t_reserved_batch_stock where product_id='3115';
-select * from t_stock_info where available_qty < 0;
-
-
-select product_barcode,stock_id,product_id,available_qty,location_id,rack_bin_id,mrp,if((mrp-'0'),1,0) as mrp_diff 
-                                            from t_stock_info where mrp > 0  and product_id = '155921' and available_qty > 0 
-                                            order by product_id desc,mrp_diff,mrp;
+SELECT * FROM t_reserved_batch_stock WHERE product_id='3115';
+SELECT * FROM t_stock_info WHERE available_qty < 0;
 
 
-select * from (
+SELECT product_barcode,stock_id,product_id,available_qty,location_id,rack_bin_id,mrp,IF((mrp-'0'),1,0) AS mrp_diff 
+                                            FROM t_stock_info WHERE mrp > 0  AND product_id = '155921' AND available_qty > 0 
+                                            ORDER BY product_id DESC,mrp_diff,mrp;
+
+
+SELECT * FROM (
 (
-select i.itemid,di.dealid,d.publish,!sum(stat) as new_deal_stat from (
-select itemid,product_id,psrc,stk,if(sum(psrc+if(ifnull(stk,0),1,0)),0,1) as stat from (
-select a.itemid,b.product_id,a.qty,a.is_active,c.is_sourceable as psrc,sum(available_qty) as stk 
-from m_product_group_deal_link a
-join products_group_pids b on a.group_id = b.group_id 
-join (select itemid 
-from m_product_group_deal_link a 
-join products_group_pids b on a.group_id = b.group_id 
-where product_id = '28089' and is_active = 1) as b on b.itemid = a.itemid 
-join m_product_info c on c.product_id = b.product_id
-left join t_stock_info d on d.product_id = b.product_id 
-group by a.itemid,b.product_id )as h
-group by itemid,product_id ) as i 
-join king_dealitems di on di.id = i.itemid
-join king_deals d on d.dealid = di.dealid
-group by itemid 
-having publish != new_deal_stat 
+SELECT i.itemid,di.dealid,d.publish,!SUM(stat) AS new_deal_stat FROM (
+SELECT itemid,product_id,psrc,stk,IF(SUM(psrc+IF(IFNULL(stk,0),1,0)),0,1) AS stat FROM (
+SELECT a.itemid,b.product_id,a.qty,a.is_active,c.is_sourceable AS psrc,SUM(available_qty) AS stk 
+FROM m_product_group_deal_link a
+JOIN products_group_pids b ON a.group_id = b.group_id 
+JOIN (SELECT itemid 
+FROM m_product_group_deal_link a 
+JOIN products_group_pids b ON a.group_id = b.group_id 
+WHERE product_id = '28089' AND is_active = 1) AS b ON b.itemid = a.itemid 
+JOIN m_product_info c ON c.product_id = b.product_id
+LEFT JOIN t_stock_info d ON d.product_id = b.product_id 
+GROUP BY a.itemid,b.product_id )AS h
+GROUP BY itemid,product_id ) AS i 
+JOIN king_dealitems di ON di.id = i.itemid
+JOIN king_deals d ON d.dealid = di.dealid
+GROUP BY itemid 
+HAVING publish != new_deal_stat 
 )
-union(
-select i.itemid,di.dealid,d.publish,!sum(stat) as new_deal_stat 
-from (
-select itemid,product_id,psrc,stk,if(sum(psrc+if(stk,1,0)),0,1) as stat from (
-select a.itemid,a.product_id,a.qty,a.is_active,c.is_sourceable as psrc,sum(available_qty) as stk 
-from m_product_deal_link a
-join (select itemid from m_product_deal_link where product_id = '28089' and is_active = 1) as b on b.itemid = a.itemid 
-join m_product_info c on c.product_id = a.product_id
-left join t_stock_info d on d.product_id = a.product_id 
-group by a.itemid,a.product_id 
-)as h
-group by itemid,product_id ) as i 
-join king_dealitems di on di.id = i.itemid
-join king_deals d on d.dealid = di.dealid
-group by itemid 
-having publish != new_deal_stat 
-) ) as g;
+UNION(
+SELECT i.itemid,di.dealid,d.publish,!SUM(stat) AS new_deal_stat 
+FROM (
+SELECT itemid,product_id,psrc,stk,IF(SUM(psrc+IF(stk,1,0)),0,1) AS stat FROM (
+SELECT a.itemid,a.product_id,a.qty,a.is_active,c.is_sourceable AS psrc,SUM(available_qty) AS stk 
+FROM m_product_deal_link a
+JOIN (SELECT itemid FROM m_product_deal_link WHERE product_id = '28089' AND is_active = 1) AS b ON b.itemid = a.itemid 
+JOIN m_product_info c ON c.product_id = a.product_id
+LEFT JOIN t_stock_info d ON d.product_id = a.product_id 
+GROUP BY a.itemid,a.product_id 
+)AS h
+GROUP BY itemid,product_id ) AS i 
+JOIN king_dealitems di ON di.id = i.itemid
+JOIN king_deals d ON d.dealid = di.dealid
+GROUP BY itemid 
+HAVING publish != new_deal_stat 
+) ) AS g;
 
 #================================================================================================
 # Mar_21_2014
@@ -3856,8 +3856,196 @@ having publish != new_deal_stat
 block_ip_addr;
 
 -- new 
-select si.*,pi.product_name,pi.mrp,pi.is_sourceable from t_stock_info si
-join m_product_info pi on pi.product_id =  si.product_id
-where si.available_qty < 0;
+SELECT si.*,pi.product_name,pi.mrp,pi.is_sourceable FROM t_stock_info si
+JOIN m_product_info PI ON pi.product_id =  si.product_id
+WHERE si.available_qty < 0;
 
-select * from 
+SELECT * FROM 
+
+Mar_22_2014
+
+//MANAGE LOYALITY POINTS
+
+/*[1:58:19 PM][2077 ms]*/ ALTER TABLE `king_orders` ADD COLUMN `lpoint_valid_days` DOUBLE NULL AFTER `member_id`; 
+
+/*[5:24:49 PM][98 ms]*/ ALTER TABLE `pnh_member_points_track` ADD COLUMN `valid_till` BIGINT(20) NULL AFTER `created_on`; 
+
+/*[12:32:00 PM][30 ms]*/ ALTER TABLE `pnh_loyalty_points` ADD COLUMN `created_on` DATETIME NULL AFTER `valid_days`, ADD COLUMN `updated_on` DATETIME NULL AFTER `created_on`, ADD COLUMN `created_by` INT(11) NULL AFTER `updated_on`;
+
+/*[6:02:58 PM][99 ms]*/ ALTER TABLE `pnh_member_points_track` ADD COLUMN `is_active` TINYINT(1) DEFAULT 1 NULL AFTER `valid_till`; 
+
+
+/*[1:29:02 PM][3501 ms]*/ ALTER TABLE `snapitto_dbexisting`.`king_dealitems` ADD COLUMN `has_insurance` TINYINT(1) NULL AFTER `is_group`; 
+/*[2:49:13 PM][63 ms]*/ ALTER TABLE `king_dealitems` CHANGE `has_insurance` `has_insurance` TINYINT(1) DEFAULT 0 NULL; 
+/*[3:19:55 PM][3392 ms]*/ ALTER TABLE `king_dealitems` CHANGE `has_insurance` `has_insurance` TINYINT(1) DEFAULT 0 NOT NULL; 
+
+ /*[11:36:52 AM][51 ms]*/ CREATE TABLE `insurance_m_types`( `id` BIGINT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(255), PRIMARY KEY (`id`) ); 
+ /*[11:37:05 AM][0 ms]*/INSERT INTO `insurance_m_types`(`id`,`name`) VALUES ( '1',NULL); 
+/*[11:37:53 AM][0 ms]*/ UPDATE `insurance_m_types` SET `name`='Aadhar ' WHERE `id`='1'; 
+/*[11:38:22 AM][0 ms]*/ INSERT INTO `insurance_m_types`(`id`,`name`) VALUES ( '2','Driving Licence'); 
+/*[11:38:37 AM][0 ms]*/ INSERT INTO `insurance_m_types`(`id`,`name`) VALUES ( NULL,'Voter ID'); 
+
+/*[1:10:01 PM][61 ms]*/ CREATE TABLE `pnh_m_insurance_menu`( `id` BIGINT(11) NOT NULL AUTO_INCREMENT, `menu_id` BIGINT(11) NOT NULL, `greater_than` DOUBLE, `less_than` DOUBLE, `insurance_value` DOUBLE, `created_by` BIGINT(11), `created_on` DATETIME, `updated_by` BIGINT(11), `updated_on` DATETIME, PRIMARY KEY (`id`) ); 
+
+
+=============================================
+CREATE TABLE `pnh_member_insurance_menu` (
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT,
+  `menu_id` BIGINT(11) NOT NULL,
+  `greater_than` DOUBLE DEFAULT NULL,
+  `less_than` DOUBLE DEFAULT NULL,
+  `insurance_value` DOUBLE DEFAULT NULL,
+  `insurance_margin` DOUBLE NOT NULL DEFAULT '0',
+  `is_active` TINYINT(1) DEFAULT '1',
+  `created_by` BIGINT(11) DEFAULT NULL,
+  `created_on` DATETIME DEFAULT NULL,
+  `updated_by` BIGINT(11) DEFAULT NULL,
+  `updated_on` DATETIME DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ;
+CREATE TABLE `user_order_transactions` (
+  `id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `transid` CHAR(18) NOT NULL,
+  `orderid` BIGINT(20) UNSIGNED NOT NULL,
+  `amount` DOUBLE UNSIGNED NOT NULL,
+  `paid` DOUBLE UNSIGNED NOT NULL,
+  `mode` TINYINT(3) UNSIGNED NOT NULL,
+  `voucher_payment` TINYINT(3) DEFAULT '0',
+  `cod` DOUBLE UNSIGNED NOT NULL,
+  `ship` DOUBLE UNSIGNED NOT NULL,
+  `giftwrap_charge` DOUBLE DEFAULT '0',
+  `response_code` INT(10) UNSIGNED NOT NULL,
+  `msg` TEXT NOT NULL,
+  `payment_id` VARCHAR(50) NOT NULL,
+  `pg_transaction_id` VARCHAR(50) NOT NULL,
+  `is_flagged` VARCHAR(10) NOT NULL,
+  `init` BIGINT(20) UNSIGNED NOT NULL,
+  `actiontime` INT(10) UNSIGNED NOT NULL,
+  `status` TINYINT(3) UNSIGNED NOT NULL,
+  `is_pnh` TINYINT(1) NOT NULL,
+  `franchise_id` INT(10) UNSIGNED NOT NULL,
+  `batch_enabled` TINYINT(1) NOT NULL DEFAULT '1',
+  `admin_trans_status` TINYINT(3) DEFAULT '0',
+  `priority` TINYINT(1) NOT NULL,
+  `priority_note` VARCHAR(200) NOT NULL,
+  `note` TEXT NOT NULL,
+  `offline` TINYINT(1) NOT NULL,
+  `status_backup` TINYINT(1) DEFAULT NULL,
+  `trans_created_by` INT(11) DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `transid` (`transid`),
+  KEY `franchise_id` (`franchise_id`),
+  KEY `trans_created_by` (`trans_created_by`)
+);
+
+CREATE TABLE `user_order_margin_track` (
+  `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `transid` VARCHAR(20) NOT NULL,
+  `itemid` BIGINT(20) UNSIGNED NOT NULL,
+  `mrp` DECIMAL(10,2) NOT NULL,
+  `price` DECIMAL(10,2) NOT NULL,
+  `base_margin` DECIMAL(10,2) NOT NULL,
+  `sch_margin` DECIMAL(10,2) NOT NULL,
+  `bal_discount` DOUBLE DEFAULT NULL,
+  `qty` INT(10) UNSIGNED NOT NULL,
+  `final_price` INT(10) UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `transid` (`transid`)
+);
+
+CREATE TABLE `king_user_orders` (
+  `sno` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id` BIGINT(20) UNSIGNED NOT NULL,
+  `transid` CHAR(18) NOT NULL,
+  `userid` INT(11) UNSIGNED NOT NULL,
+  `itemid` BIGINT(20) UNSIGNED NOT NULL,
+  `brandid` BIGINT(20) UNSIGNED NOT NULL,
+  `vendorid` BIGINT(20) UNSIGNED NOT NULL,
+  `bill_person` VARCHAR(100) NOT NULL,
+  `bill_address` TEXT NOT NULL,
+  `bill_city` TEXT NOT NULL,
+  `bill_pincode` VARCHAR(20) NOT NULL,
+  `ship_person` VARCHAR(100) NOT NULL,
+  `ship_address` TEXT NOT NULL,
+  `ship_city` TEXT NOT NULL,
+  `ship_pincode` VARCHAR(20) NOT NULL,
+  `bill_phone` VARCHAR(50) NOT NULL,
+  `ship_phone` VARCHAR(50) NOT NULL,
+  `bill_state` VARCHAR(100) NOT NULL,
+  `ship_state` VARCHAR(100) NOT NULL,
+  `ship_email` VARCHAR(150) NOT NULL,
+  `bill_email` VARCHAR(150) NOT NULL,
+  `quantity` INT(10) UNSIGNED NOT NULL,
+  `paid` INT(10) UNSIGNED NOT NULL,
+  `mode` TINYINT(3) UNSIGNED NOT NULL COMMENT '0 - PG (cc,netbanking), 1 - cod',
+  `status` TINYINT(4) NOT NULL DEFAULT '0',
+  `admin_order_status` TINYINT(3) DEFAULT '0',
+  `shipped` TINYINT(1) NOT NULL,
+  `buyer_options` TEXT NOT NULL,
+  `time` BIGINT(20) NOT NULL,
+  `actiontime` BIGINT(20) UNSIGNED NOT NULL,
+  `shiptime` BIGINT(20) UNSIGNED NOT NULL,
+  `shipid` VARCHAR(50) NOT NULL,
+  `medium` VARCHAR(100) NOT NULL,
+  `bpid` BIGINT(20) UNSIGNED NOT NULL,
+  `email` VARCHAR(100) NOT NULL,
+  `ship_landmark` TEXT NOT NULL,
+  `bill_landmark` TEXT NOT NULL,
+  `ship_telephone` VARCHAR(50) NOT NULL,
+  `ship_country` VARCHAR(255) DEFAULT NULL,
+  `bill_country` VARCHAR(255) DEFAULT NULL,
+  `bill_telephone` VARCHAR(50) NOT NULL,
+  `invoice_no` BIGINT(20) UNSIGNED NOT NULL,
+  `priority` TINYINT(1) NOT NULL,
+  `priority_note` VARCHAR(200) NOT NULL,
+  `note` TEXT NOT NULL,
+  `billon_orderprice` TINYINT(1) DEFAULT '0',
+  `i_orgprice` DOUBLE DEFAULT '0',
+  `i_price` DOUBLE DEFAULT '0',
+  `i_nlc` DOUBLE DEFAULT '0',
+  `i_phc` DOUBLE DEFAULT '0',
+  `i_tax` DOUBLE DEFAULT '0',
+  `i_discount` DOUBLE DEFAULT '0',
+  `i_coup_discount` DOUBLE DEFAULT '0',
+  `member_id` BIGINT(11) DEFAULT '0',
+  PRIMARY KEY (`sno`),
+  KEY `transid` (`transid`),
+  KEY `itemid` (`itemid`),
+  KEY `userid` (`userid`),
+  KEY `id` (`id`),
+  KEY `status` (`status`)
+); ENGINE=MYISAM AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
+
+SELECT * FROM pnh_member_info WHERE mobile='9611748183';
+
+ALTER TABLE `pnh_member_offers` ADD COLUMN `mem_fee_applicable` TINYINT(11) DEFAULT NULL AFTER `offer_type`;
+
+SELECT * FROM pnh_member_offers;
+#=====================================================
+ALTER TABLE `pnh_member_offers` ADD COLUMN `feedback_value` INT(50) NULL COMMENT 'customer feedback value' AFTER `feedback_status`;
+#=====================================================
+
+SELECT COUNT(*) AS t FROM pnh_member_info WHERE CONCAT('0',mobile) ='5646456456';
+
+SELECT COUNT(*) AS t FROM pnh_member_info WHERE CONCAT('0',mobile)= '5646456456';
+
+-- new -- 
+SELECT GROUP_CONCAT('\'',mo.sno,'\'') AS snos 
+FROM pnh_member_offers mo
+JOIN pnh_member_info mi ON mi.pnh_member_id = mo.member_id
+WHERE mo.feedback_status=0 AND mo.delivery_status=1 AND mi.mobile='5646456456'; 
+
+-- new-- 
+UPDATE pnh_member_offers SET feedback_status = 1,feedback_value='4' WHERE sno IN ('25');
+
+SELECT mi.*,a.username,mf.transid_ref AS transid,mf.process_status,mf.delivery_status,f.franchise_name,i.invoice_no FROM pnh_member_insurance mi
+                        JOIN pnh_member_offers mf ON mf.insurance_id = mi.insurance_id
+                        JOIN king_admin a ON a.id = mi.created_by
+                        JOIN pnh_m_franchise_info f ON f.franchise_id = mi.fid
+                        JOIN king_invoice i ON i.`transid` = mf.`transid_ref` 
+                        WHERE mi.insurance_id = '691395657133';
+                        
+
+#=================================================
+# Mar_26_2014
+

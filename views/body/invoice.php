@@ -14,7 +14,7 @@ $credit_days=$this->db->query("select credit_days from king_transactions where t
 
 ?>
 <div class="container" style="background:#fff;">
-<div style="width: 100%;margin: 0px auto">	
+    <div style="width: 100%;margin: 0px auto">	
 	<?php if($this->session->userdata("admin_user")){?>
 	<div style="margin:10px;" class="hideinprint">
 	<table width="100%">
@@ -495,14 +495,14 @@ table{
 					
 				?>
 				<td align="right">
-                        <?php
+					<?php
                         if($order['has_insurance'] == 1)
                         {
                         	$ttl_insu_val += $order['insurance_amount'];
                         ?>
                         	 Rs. <?=formatInIndianStyle($order['insurance_amount']);?>
                         <?php
-                        }
+						}
                         ?>
 				</td>
 				<?php 
@@ -511,7 +511,7 @@ table{
 				?>
 				<td align="right"><?php echo ($order['status'] == 4)?'<strike>':'';?><?=$ttl_amt; ?><?php echo ($order['status'] == 4)?'</strike>':'';?></td>
 			</tr>
-
+                        
 <?php
 			if($order['status'] != 4)
 			{
@@ -659,7 +659,7 @@ table{
 						?>
 						<?php
 							$mem_reg_fee = 0;
-							$num_recharge_offer = $this->db->query("select * from pnh_member_offers where offer_type='1' and process_status='0' and transid_ref = ? ",$order['transid'])->num_rows();
+							$num_recharge_offer = $this->db->query("select * from pnh_member_offers where offer_type != 2  and mem_fee_applicable = 1 and process_status='0' and transid_ref = ? ",$order['transid'])->num_rows();
 							if($num_recharge_offer) {
 								$mem_reg_fee = PNH_MEMBER_FEE;
 						?>

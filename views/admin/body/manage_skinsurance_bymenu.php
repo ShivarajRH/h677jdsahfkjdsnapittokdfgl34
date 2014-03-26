@@ -30,7 +30,7 @@
 				 	</table>
 				 </div>
 			 	<?php }else{?>
-			 	<?php echo '<span style="font-weight: normal;font-size: 11px;">No Data Found</span>'?>
+			 	<?php echo '<b>No Data Found</b>'?>
 			 	<?php }?>
 	 	</td>
 	 	
@@ -79,11 +79,11 @@ function remove_newpstockdet(ele)
 $("#update_imenu_bloc").dialog({
 	modal:true,
 	autoOpen:false,
-	width:'600',
+	width:'500',
 	height:'auto',
 	open:function(){
 		$('.imenu_div').html("");
-		$("#upd_imenu_tbl").html(" ");
+		//$("#upd_imenu_tbl").html(" ");
 		var dlg=$(this);
 		$.post(site_url+'admin/jx_load_menu_insurance_info',{menuid:dlg.data('imenuid')},function(resp){
 			$("#menuname").html('Menu : <b>'+resp.menuname+'</b>');
@@ -103,9 +103,8 @@ $("#update_imenu_bloc").dialog({
 					tbl_cont+='  </tr></tbody>';
 				});
 					
-					tbl_cont+='  </table>';
-                                        var insur_margin = (resp.insurance_margin == null)? 0 : resp.insurance_margin;
-					tbl_cont+='<div style="margin-top:15px;"> Default Margin : <input type="text" name="insurance_margn" value="'+insur_margin+'"></div></form>'
+					tbl_cont+='  </table><br>';
+					tbl_cont+='<div> <b>Default Margin : </b><input type="text" name="insurance_margn" value="'+resp.insurance_margin+'"></div></form>'
 					$("#update_insurance_div ").html(tbl_cont);	
 			}
 			else

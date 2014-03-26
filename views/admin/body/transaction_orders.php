@@ -258,7 +258,7 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
 </form>
 </div>
 
- <?php $offers_q = $this->db->query("select a.*,b.first_name,b.user_id from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id  where a.transid_ref=?",$order['transid']);
+ <?php $offers_q = $this->db->query("select a.*,b.first_name,b.user_id from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id  where a.transid_ref=? and a.offer_type not in (0,3) ;",$order['transid']);
     if($offers_q->num_rows())
     { ?>
 <div style="margin:5px 0px;padding:5px;border:1px solid #f7f7f7;">
@@ -272,7 +272,6 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
                 <th>Type</th>
                 <th>Value</th>
                 <th>Status</th>
-                <th>Action</th>
             </tr>
             
             <?php
@@ -288,13 +287,11 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
                 <td><a href="<?=site_url("/admin/pnh_viewmember/".$offer['user_id']);?>" target="_blank"><?=$offer['first_name'];?></a></td>
                 <td><?=$arr_offer_type[$offer['offer_type']];?></td>
                 <td>Rs. <?=formatInIndianStyle($offer['offer_value']);?></td>
-                <td><?=$arr_offer_status[$offer['process_status']];?></td>
-                <td><?php
-                if($offer['insurance_id'] != '') {?>
-                    <a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank">View</a>
-                <?php }
-                    else echo '--';
-                ?></td>
+                <td><?=$arr_offer_status[$offer['process_status']];?>
+                	<?php if($offer['process_status'] == '1'){ ?>
+                    	<a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank">View</a>
+                    <?php } ?>
+                </td>
             </tr>
             <!--<div style="padding:4px 5px;border-bottom:1px solid #DDDDDD;">Rs. <?=formatInIndianStyle($offer['offer_value']);?> worth of <?=$arr_offer_type[$offer['offer_type']];?> given</div>-->
     <?php   }?>

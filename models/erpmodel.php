@@ -6993,22 +6993,18 @@ order by p.product_name asc
 			$required[$pid]=$this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_deal_link l join king_orders o on o.itemid=l.itemid and o.status=0 where l.product_id=?",$pid)->row()->s;
 		}
 		
-		
-		
-		
 		$i=0;
 		foreach($payload as $iid=>$pay)
 		{
 			// Check if stock available for required and requested qty of product 
 			foreach($pay as $ip=>$item)
+			{
 				if($available[$item['pid']]>=$required[$item['pid']]+($item['qty']*$qty[$iid]))
 				{
 					$payload[$iid][$ip]['status']=1; // yes stock available
 					$payload[$iid][$ip]['stk']=$available[$item['pid']];
 				}
-					
-			 
-					
+			}
 			// check if deal items having stock  		
 			$all_avail=true;
 			foreach($pay as $item)
@@ -7424,13 +7420,13 @@ order by p.product_name asc
 		else if($catid ==0 && $brandid ==0)	
 			$cond ="and 1";
 		if($type==0)
-			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() $join_cond where i.is_pnh=1 $cond group by i.id order by i.name asc limit 50")->result_array();
+			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category,l.is_active,p.is_sourceable from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() $join_cond JOIN `m_product_deal_link` l ON l.itemid=i.id JOIN m_product_info p ON p.product_id=l.product_id where i.is_pnh=1 $cond group by i.id order by i.name asc limit 50")->result_array();
 		else if($type==1)
-			$ret=$this->db->query("select * from (select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,i.id,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp()  $join_cond  where i.is_pnh=1 $cond group by i.id ) as dd group by dd.id  limit 30")->result_array();
+			$ret=$this->db->query("select * from (select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,i.id,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category,l.is_active,p.is_sourceable from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp()  $join_cond JOIN `m_product_deal_link` l ON l.itemid=i.id JOIN m_product_info p ON p.product_id=l.product_id where i.is_pnh=1 $cond group by i.id ) as dd group by dd.id  limit 30")->result_array();
 		else if($type==2)
-			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,o.quantity as qty,ifnull(sum(o.quantity),0) as sold,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join king_orders o on o.itemid=i.id left outer join king_transactions t on t.transid=o.transid and t.is_pnh=1 left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() $join_cond where i.is_pnh=1 $cond group by i.id order by count(o.id) desc limit 30")->result_array();;
+			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,o.quantity as qty,ifnull(sum(o.quantity),0) as sold,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category,l.is_active,p.is_sourceable from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join king_orders o on o.itemid=i.id left outer join king_transactions t on t.transid=o.transid and t.is_pnh=1 left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() $join_cond JOIN `m_product_deal_link` l ON l.itemid=i.id JOIN m_product_info p ON p.product_id=l.product_id where i.is_pnh=1 $cond group by i.id order by count(o.id) desc limit 30")->result_array();
 		
-		//echo $this->db->last_query();
+	//	echo $this->db->last_query();die;
 		return $ret;
 	}
 	
@@ -7898,6 +7894,8 @@ order by p.product_name asc
 		return $total_value;
 	}*/
 	
+
+	
 	function pnh_getdealsbybrand($brandid,$type=0)
 	{
 		if($type==0)
@@ -7935,7 +7933,7 @@ order by p.product_name asc
 			$this->db->insert("pnh_sms_log_sent",$inp);
 			$sms_log_id = $this->db->insert_id();
 		}
-		if($_SERVER['HTTP_HOST']!="snapittoday.com")
+		if($_SERVER['HTTP_HOST'] == "localhost")
 			return;
 		$exotel_sid="snapittoday";
 		$exotel_token="491140e9fbe5c507177228cf26cf2f09356e042c";
@@ -8262,7 +8260,7 @@ order by p.product_name asc
 		{
 			if(empty($bmargin))
 			{
-				if($fran1['valid_from']<time() && $fran1['valid_to']>time() && $fran1['is_sch_enabled'])
+				if(isset($fran1['valid_from']) && isset($fran1['valid_to']) && $fran1['valid_from']<time() && $fran1['valid_to']>time() && $fran1['is_sch_enabled'])
 				{
 						$margin['margin']+=$fran1['discount'];
 						$margin['sch_margin']=$fran1['discount'];
@@ -8354,12 +8352,12 @@ order by p.product_name asc
 		$fran_status_arr[2]="Payment Suspension";
 		$fran_status_arr[3]="Temporary Suspension";
 		$admin = $this->auth(false);
-		foreach(array("fid","pid","qty","mid","redeem","redeem_points","mid_entrytype","local_distributor_mrgn","creditdays","frannote","offr_sel_type","insurance") as $i)
+		foreach(array("fid","pid","qty","mid","redeem","redeem_points","mid_entrytype","local_distributor_mrgn","creditdays","frannote","offr_sel_type","insurance","new_member") as $i)
 			$$i=$this->input->post($i);
                 
                 $updated_by=$admin["userid"];
 
-		//echo "<pre>"; print_r($_POST); die();
+//		echo "<pre>"; print_r($_POST); die();
 		
 		if($redeem)
 			$redeem_points = 150;
@@ -8463,6 +8461,7 @@ order by p.product_name asc
 			@$this->db->query("update pnh_api_franchise_cart_info set status=0 ,updated_on=now() where franchise_id=? and pid=? and member_id=?",array($fran['franchise_id'],$item['pid'],$mid));
 			//	echo $this->db->last_query();exit;
 		}
+	
 		$avail=$this->erpm->do_stock_check($itemids);
 		foreach($itemids as $i=>$itemid)
 		 if(!in_array($itemid,$avail))
@@ -8767,6 +8766,29 @@ order by p.product_name asc
 		$inp=array("bill_no"=>$billno,"franchise_id"=>$franid,"transid"=>$transid,"user_id"=>$userid,"status"=>1);
 		$this->db->insert("pnh_cash_bill",$inp);
 	
+	//Alotting Loyalty Points
+		$trans_order_det_res = $this->db->query("SELECT o.id AS order_id,o.itemid,d.menuid,o.i_price,o.quantity
+													FROM king_dealitems i 
+													JOIN king_deals d ON d.dealid=i.dealid 
+													JOIN king_orders o ON o.itemid = i.id 
+													WHERE o.transid=? 
+											",$transid);
+		if($trans_order_det_res->num_rows())
+		{
+			foreach($trans_order_det_res->result_array() as $trans_ord_det)
+			{
+				$menuid = $trans_ord_det['menuid'];
+				$ord_loyal_pnt = (($trans_ord_det['i_price']*$trans_ord_det['quantity'])*$l_points[$menuid])/$menu_ttlval[$menuid];
+				
+				//$l_points[$menuid] = $l_points[$menuid]-$ord_loyal_pnt;
+				
+				$this->db->query("update king_orders set loyality_point_value=? where  transid=? and id=? ",array($ord_loyal_pnt,$transid,$trans_ord_det['order_id']));
+			}	
+		}
+		
+		
+		
+	
 		// Process to batch this transaction
 		$ttl_num_orders=count($items);
 		$batch_remarks='Created by pnh offline order system';
@@ -8776,31 +8798,82 @@ order by p.product_name asc
             
 				
                 //===================< Implement the member offers START>============================
-        
+
                 $insurance['mid'] =$mid;
                 $insurance['fid'] =$fid;
                 $insurance['offer_type'] =$offr_sel_type;
                 $insurance['transid'] = $transid;
                 $insurance['created_by'] = $updated_by;
-                if($offr_sel_type == 2 || $insurance['opted_insurance'] === 1 )
+                $insurance['mem_fee_applicable'] = 1;
+                
+                if($offr_sel_type == 2 )
                 {
                     //process insurance document and address details & get insurance process id
                     $insu_id = $this->process_insurance_details($insurance);
                     //echo '<pre>';print_r($insurance);die();
+		}elseif($offr_sel_type == 3)
+		{
+			$insurance['mem_fee_applicable'] = 1;
+			$insurance['offer_type'] = 3;
+			$insu_id = $this->process_insurance_details($insurance);	
                 }
-                elseif($offr_sel_type === 1 )
+		elseif($insurance['opted_insurance'] == 1 )
+                {
+                    $insurance['mem_fee_applicable'] = 0;
+			$insurance['offer_type'] = 3;
+                    //process insurance document and address details & get insurance process id
+                    $insu_id = $this->process_insurance_details($insurance);
+                    //echo '<pre>';print_r($insurance);die();
+                }
+                elseif($offr_sel_type == 1 && $d_total >= MEM_MIN_ORDER_VAL)
                 {
                     // Recharge
                     $offer_ret = $this->pnh_member_recharge($d_total,$insurance);
                     //print_r($_POST);
+
                 }
-            
+                elseif($new_member == 1 && $d_total < MEM_MIN_ORDER_VAL )
+                {
+                    $insurance['offer_type'] = 0;
+        	
+                    $offer_ret = $this->pnh_member_fee($d_total,$insurance);
+                    //print_r($_POST);
+                }
+                else {
+                    echo "Error:Offer condition mismatch";
+                }
                 //===================< Implement the member offers END>============================
                 //die();
                 
 
 		$this->session->set_flashdata("erp_pop_info"," PNH Order Placed");
 		redirect("admin/trans/$transid",'refresh');
+	}
+	
+	function pnh_member_fee($d_total=0,$insurance)
+	{
+		
+			// insert to member offers table
+            $time = date("Y-m-d H:i:s",time());
+            $offer_towards = $d_total;
+            $in_array = array(
+                            'member_id'=>$insurance['mid']
+                            ,'franchise_id'=>$insurance['fid']
+                            ,'offer_type'=>$insurance['offer_type']
+                            ,'mem_fee_applicable'=>$insurance['mem_fee_applicable']
+                            ,'offer_value'=>''
+                            ,'offer_towards' => $offer_towards
+                            ,'pnh_pid' => ''
+                            ,'transid_ref' => $insurance['transid']
+                            ,'insurance_id'=>''
+                            ,'process_status'=>0 //(waiting feedback) // 0=> Not Processed, 1=>Ready to Process 2=>Processed //Offer is assigned not yet activated
+                            ,'referred_by'=> ''
+                            ,'created_by'=>$insurance['created_by']
+                            ,'created_on' => $time
+                        );
+                //echo '<pre>'; print_r($in_array); die();
+                $this->db->insert("pnh_member_offers",$in_array);
+		
 	}
 	
         function pnh_member_recharge($d_total=0,$insurance)
@@ -8813,6 +8886,7 @@ order by p.product_name asc
                             'member_id'=>$insurance['mid']
                             ,'franchise_id'=>$insurance['fid']
                             ,'offer_type'=>$insurance['offer_type']
+                            ,'mem_fee_applicable'=>$insurance['mem_fee_applicable']
                             ,'offer_value'=>$offer_value
                             ,'offer_towards' => $offer_towards
                             ,'pnh_pid' => ''
@@ -8864,7 +8938,7 @@ order by p.product_name asc
                     {
                     	$menu_log_id = $margin['id'];
                     	
-                        if($insurance['opted_insurance'] == 1 && $insurance['offer_type'] == 0 )
+                        if($insurance['opted_insurance'] == 1 && $insurance['offer_type'] == 3 )
                         {
                             $insurance_margin = $margin['insurance_margin'];
                             $insurance_value = ($order_val/100) * $insurance_margin; // percentage of offer value
@@ -8927,6 +9001,7 @@ order by p.product_name asc
                                 'member_id'=>$insurance['mid']
                                 ,'franchise_id'=>$insurance['fid']
                                 ,'offer_type'=>$insurance['offer_type']
+                                ,'mem_fee_applicable'=>$insurance['mem_fee_applicable']
                                 ,'offer_value'=>$insurance_value
                                 ,'offer_towards' => $order_val
                                 ,'pnh_pid' => $pnhid
@@ -11916,7 +11991,7 @@ order by action_date";
 	}
 	//-------------------coupon module end--------------
 	
-	function update_inv_status_in_order_tbl($manifesto_id)
+        function update_inv_status_in_order_tbl($manifesto_id)
 	{
 		$inv_order_list = $this->db->query(" select order_id
 				from shipment_batch_process_invoice_link a
@@ -11928,8 +12003,41 @@ order by action_date";
 		if($inv_order_list->num_rows())
 		{
 			foreach($inv_order_list->result_array() as $row)
+			{
 				$this->db->query("update king_orders set status = 2,actiontime = unix_timestamp() where id = ? ",$row['order_id']);
+			}
+
+			$inv_trans_list = $this->db->query(" SELECT b.transid
+					FROM shipment_batch_process_invoice_link a
+					JOIN king_invoice b ON a.invoice_no = b.invoice_no
+					JOIN king_orders o ON o.transid=b.transid AND o.status=2
+					WHERE a.inv_manifesto_id = ?
+					GROUP BY o.transid
+					",$manifesto_id);
+			//Credit Loyality points to member on invoice shipped
+			if($inv_trans_list->num_rows())
+			{
+				foreach($inv_trans_list->result_array() as $t)
+				{
+
+					$l_mem_info=@$this->db->query("select userid,member_id,transid,sum(loyality_point_value) as loyality_point_value from king_orders where transid=? and status=2",$t)->row_array();
+					$userid=$l_mem_info['userid'];
+					$transid=$l_mem_info['transid'];
+					$points=$l_mem_info['loyality_point_value'];
+						
+					//$valid_till=$this->db->query("SELECT UNIX_TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL ? DAY)) as valid_till",$l_mem_info['lpoints_valid_days'])->row()->valid_till;
+
+					$as_mem_mobno=$this->db->query("select mobile from pnh_member_info where user_id=? limit 1",$userid)->row()->mobile;
+					if($as_mem_mobno!=0 ||$as_mem_mobno!='')
+					{
+						$apoints=$this->db->query("select points from pnh_member_info where user_id=?",$userid)->row()->points+$points;
+						$this->db->query("update pnh_member_info set points=points+? where user_id=? limit 1",array($points,$userid));
+						$this->db->query("insert into pnh_member_points_track(user_id,transid,points,points_after,created_on,is_active) values(?,?,?,?,?,1)",array($userid,$transid,$points,$apoints,time()));
+					}
+				}
+			}
 		}
+
 	}
 	
 	function update_return_inv_shipped_status($manifesto_id)
@@ -12710,9 +12818,8 @@ order by action_date";
 			}
 			else
 			{
-				
 				return  $this->db->query("SELECT m.menuid,m.fid,c.id,c.name FROM `pnh_franchise_menu_link`m JOIN `king_deals`d ON d.menuid=m.menuid  JOIN king_dealitems i ON i.dealid=d.dealid  JOIN king_categories c ON c.id=d.catid   JOIN king_orders o ON o.itemid=i.id  JOIN king_transactions t ON t.transid=o.transid AND t.is_pnh=1  WHERE m.status=1 AND fid=? AND i.is_pnh=1  GROUP BY d.catid  ORDER BY c.name ASC LIMIT 20",$fid);
-			//	echo $this->db->last_query();die;
+			
 			}
 			
 		}
@@ -13261,6 +13368,34 @@ order by action_date";
     	}
     }
     
+	/**
+	 * Function to get products list by catid and brandid
+	 * 
+	 */
+	function pnh_getproducts($brandid=false,$catid=false,$limit=600)
+	{
+		if($brandid == 0 && $catid == 0)
+			$cond=" group by p.product_id order by p.product_name asc limit ".$limit;//i.name asc
+		else if($catid != 0 && $brandid == 0)
+			$cond=" where d.catid='".$catid."' group by p.product_id order by p.product_name desc limit ".$limit;
+		else if($catid == 0 && $brandid != 0)
+			$cond=" where d.brandid='".$brandid."' group by p.product_id order by p.product_name desc limit ".$limit;
+		else if($catid != 0 && $brandid != 0)
+			$cond=" where d.catid='".$catid."' and d.brandid='".$brandid."' group by p.product_id order by p.product_name desc limit ".$limit;
+		
+		$sql = "select d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category,p.product_id,
+				p.product_name,p.barcode,p.is_sourceable,p.mrp
+				from king_deals d 
+				join king_dealitems i on i.dealid=d.dealid 
+				join king_brands b on b.id=d.brandid 
+				join king_categories c on c.id=d.catid
+				join m_product_deal_link pd on pd.itemid=i.id
+				join m_product_info p on p.product_id=pd.product_id
+				$cond";
+	 
+		return $this->db->query($sql)->result_array();
+	}
+	
 }
 
 

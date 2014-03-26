@@ -43,12 +43,27 @@ $db['default']['password'] = "";
 $db['default']['database'] = "snapittoday_db_jan_2014";//"snapittoday_db_nov";//"snapittoday_db_oct"; //snapitto_live_august,snapitto_livedb
 $db['default']['dbdriver'] = "mysql";
 $db['default']['dbprefix'] = "";
-$db['default']['pconnect'] = false;
-$db['default']['db_debug'] = true;
+$db['default']['pconnect'] = TRUE;
+$db['default']['db_debug'] = false;
 $db['default']['cache_on'] = FALSE;
 $db['default']['cachedir'] = "";
 $db['default']['char_set'] = "utf8";
 $db['default']['dbcollat'] = "utf8_general_ci";  
  
+$db['viadb']['hostname'] = "localhost";
+$db['viadb']['username'] = "hoteltour";
+$db['viadb']['password'] = "tourhotel";
+$db['viadb']['database'] = "viadb";
+$db['viadb']['dbdriver'] = "mysql";
+$db['viadb']['dbprefix'] = "";
+$db['viadb']['pconnect'] = TRUE;
+$db['viadb']['db_debug'] = TRUE;
+$db['viadb']['cache_on'] = FALSE;
+$db['viadb']['cachedir'] = "";
+$db['viadb']['char_set'] = "utf8";
+$db['viadb']['dbcollat'] = "utf8_general_ci";
+
+
+
 /* End of file database.php */
 /* Location: ./system/application/config/database.php */

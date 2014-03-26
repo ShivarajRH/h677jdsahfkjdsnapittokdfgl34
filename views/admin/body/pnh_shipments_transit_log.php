@@ -311,3 +311,12 @@ $("#sms_manual_dlg").dialog({
 	
 });
 </script>
+<style>
+.page_action_buttonss
+{
+width:100%;
+padding:6px 0px;
+background: #F6F6F6;
+}
+
+</style>

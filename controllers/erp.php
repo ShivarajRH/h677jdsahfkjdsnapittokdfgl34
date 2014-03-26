@@ -1854,6 +1854,7 @@ class Erp extends Stream
 	
 	function order_summary($s=false,$e=false)
 	{
+		$user=$this->erpm->auth(true);
 		$user=$this->auth(CALLCENTER_ROLE);
 		if(!$s)
 			$e=$s=date("Y-m-d");
@@ -1950,7 +1951,7 @@ class Erp extends Stream
             $data['limit']=$limit;
             
             
-//          print_r($data);die();
+
             $this->load->view("admin/body/jx_orderstatus_summary",$data);
 
         }
@@ -2087,6 +2088,8 @@ class Erp extends Stream
         
 	function orders($status=0,$s=false,$e=false,$orders_by='all',$limit=50,$pg=0)
 	{
+		$user=$this->erpm->auth(true);
+		
 		$user=$this->auth(CALLCENTER_ROLE|PARTNER_ORDERS_ROLE);
 		if($s!=false && $e!=false && (strtotime($s)<=0 || strtotime($e)<=0))
 			show_404();
@@ -2741,9 +2744,20 @@ class Erp extends Stream
 		
 		$prod=$this->db->query("select name from king_dealitems where id=?",$order['itemid'])->row_array();
 		$n_qty=$order['quantity']-$qty;
-		$inp=array($n_oid,$transid,$order['userid'],$order['itemid'],$order['vendorid'],$order['brandid'],$n_qty,3,$order['i_orgprice'],$order['i_price'],$order['i_nlc'],$order['i_phc'],$order['i_tax'],$order['i_discount'],$order['i_coup_discount'],$order['i_discount_applied_on'],$order['time'],time());
 		
-		$this->db->query("insert into king_orders(id,transid,userid,itemid,vendorid,brandid,quantity,status,i_orgprice,i_price,i_nlc,i_phc,i_tax,i_discount,i_coup_discount,i_discount_applied_on,time,actiontime) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",$inp);
+		$norder = $order;
+		$norder['id'] = $n_oid;
+		$norder['quantity'] = $n_qty;
+		$norder['status'] = 3;
+		$norder['actiontime'] = time();
+		
+		unset($norder['sno']);
+		
+		$this->db->insert('king_orders',$norder);
+		
+		//$inp=array($n_oid,$transid,$order['userid'],$order['itemid'],$order['vendorid'],$order['brandid'],$n_qty,3,$order['i_orgprice'],$order['i_price'],$order['i_nlc'],$order['i_phc'],$order['i_tax'],$order['i_discount'],$order['i_coup_discount'],$order['i_discount_applied_on'],$order['time'],time());
+		//$this->db->query("insert into king_orders(id,transid,userid,itemid,vendorid,brandid,quantity,status,i_orgprice,i_price,i_nlc,i_phc,i_tax,i_discount,i_coup_discount,i_discount_applied_on,time,actiontime) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",$inp);
+		
 		$this->db->query("update king_orders set quantity=? where id=? limit 1",array($qty,$oid));
 		$this->erpm->do_trans_changelog($transid,"Order '{$prod['name']}' quantity changed from {$order['quantity']} to {$qty}");
 		
@@ -4562,7 +4576,7 @@ group by g.product_id order by product_name");
 	{
 		$user=$this->auth(PRODUCT_MANAGER_ROLE);
 		$instk=0;
-		$data['product']=$this->db->query("select ifnull(sum(s.available_qty),0) as stock,p.*,b.name as brand,b.id as bid,c.id as cid,c.name as category from m_product_info p left outer join t_stock_info s on s.product_id=p.product_id join king_brands b on b.id=p.brand_id join king_categories c on c.id=p.product_cat_id where p.product_id=?",$pid)->row_array();
+		$data['product']=$this->db->query("select ifnull(sum(s.available_qty),0) as stock,p.*,b.name as brand,b.id as bid,c.id as cid,c.name as category from m_product_info p left outer join t_stock_info s on s.product_id=p.product_id join king_brands b on b.id=p.brand_id left join king_categories c on c.id=p.product_cat_id where p.product_id=?",$pid)->row_array();
 		
 		$data['ttl_purchased']=$this->db->query('select sum(received_qty) as pqty from t_grn_product_link where product_id=?',$prodid)->row()->pqty;
 		$data['ttl_stk_sold']=$this->db->query('select g.itemid,g.qty,o.quantity,sum(g.qty*i.invoice_qty) as sqty from
@@ -4846,6 +4860,8 @@ group by g.product_id order by product_name");
 			$t_inp=array("product_id"=>$pid,"is_sourceable"=>$this->input->post("pissrc"),"created_on"=>time(),"created_by"=>$user['userid']);
 			$this->db->insert("products_src_changelog",$t_inp);
 			
+			$this->erpm->_upd_product_deal_statusbyproduct($pid,$user['userid']);
+
 			// Update product attributes
 			$attr = $this->input->post("attr");
 			$pcat = $this->input->post("pcat");
@@ -6986,7 +7002,9 @@ group by g.product_id order by product_name");
 			$this->db->query("update pnh_member_info set first_name=?,mobile = ? where pnh_member_id = ? limit 1",array($mem_name,$mobno,$member_id));
 			if($this->db->affected_rows()>=1)
 			{
-				$this->erpm->pnh_sendsms($mobno,"Congratulation & Welcome to StoreKing Family,Your Member id is:$member_id",$franid,$member_id,0);
+				//SMS to member newly registered
+				$msg = "Congratulation & Welcome to StoreKing Family,Your Member id is:$member_id";
+				$this->erpm->pnh_sendsms($mobno,$msg,$franid,$member_id,0);
 			}
 		}
 		
@@ -7039,22 +7057,22 @@ group by g.product_id order by product_name");
 		redirect('admin/pnh_franchise_activate_imei','refresh');
 	}
 	
-	/**
- 	* function to process new member registeration form 
- 	*/	
+		/**
+	 * function to process new member registeration form
+	 */
 	function pnh_process_franchise_memreg()
 	{
 		$user=$this->erpm->auth(CALLCENTER_ROLE);
-		
+
 		$this->load->library('form_validation');
-		
+
 		$this->form_validation->set_rules('mobno','Mobileno','trim|required|integer|exact_length[10]|callback__validate_mobnofor_registration');
-		
+
 		//$this->form_validation->set_rules('unique_no','Mobileno','required');
 		$this->form_validation->set_rules('fran_id','Franchise','trim|required');
 		$this->form_validation->set_rules('member_name','Name','trim|required');
 		$this->form_validation->set_rules('gender','Gender','trim|required');
-		
+
 		if($this->form_validation->run() == FALSE)
 		{
 			$this->pnh_activation("mem_reg");
@@ -7070,9 +7088,9 @@ group by g.product_id order by product_name");
 			$memid=$this->erpm->_gen_uniquememberid();
 			if(!$mem_name)
 				$mem_name='Store King Member:'.$memid;
-			else 
+			else
 				$mem_name;
-			
+
 			$this->db->query("insert into king_users(name,createdon)values(?,?)",array($mem_name,time()));
 			$userid=$this->db->insert_id();
 			$this->db->query("insert into pnh_member_info(user_id,franchise_id,pnh_member_id,mobile,created_on,created_by,first_name,gender)values(?,?,?,?,?,?,?,?)",array($userid,$fid,$memid,$mob_no,time(),$user['userid'],$mem_name,$gender));
@@ -7085,8 +7103,8 @@ group by g.product_id order by product_name");
 				$this->erpm->pnh_sendsms($mob_no,"Congratulation & Welcome to StoreKing Family,Your Member id is $memid",$fid,$memid,0);
 				$this->erpm->flash_msg("Member Registered Successfully");
 				redirect($_SERVER['HTTP_REFERER']);
-			}	
-			
+			}
+
 		}
 	}
 
@@ -23990,6 +24008,12 @@ die; */
 		$fid=$this->input->post('franchise_id');
 		$mem_name=$this->input->post('memreg_name');
 		$mem_mobno=$this->input->post('memreg_mobno');
+		$dob=$this->input->post('mem_dob');
+		$address=$this->input->post('mem_address');
+		$gender=$this->input->post('gender');
+		$marital=$this->input->post('marital');
+		$pincode=$this->input->post('pincode');
+		
                 $fran_det = $this->erpm->fran_det_byid($fid);
                 
 		if($this->db->query("select * from pnh_member_info where mobile=?",$mem_mobno)->num_rows()==0)
@@ -23997,7 +24021,7 @@ die; */
 			$membr_id=$this->erpm->_gen_uniquememberid();
 			$this->db->query("insert into king_users(name,is_pnh,createdon) values(?,1,?)",array("PNH Member: $membr_id",time()));
 			$userid=$this->db->insert_id();
-			$this->db->query("insert into pnh_member_info(pnh_member_id,user_id,first_name,last_name,mobile,franchise_id,created_by,created_on)values(?,?,?,?,?,?,?,?)",array($membr_id,$userid,$mem_name,'',$mem_mobno,$fid,$admin['userid'],time()));
+			$this->db->query("insert into pnh_member_info(pnh_member_id,user_id,first_name,last_name,mobile,gender,dob,address,pincode,marital_status,franchise_id,created_by,created_on)values(?,?,?,?,?,?,?,?,?,?,?,?,?)",array($membr_id,$userid,$mem_name,'',$mem_mobno,$gender,$dob,$address,$pincode,$marital,$fid,$admin['userid'],time()));
                         $fran_msg="Dear ".$fran_det['franchise_name']." Member registered successfully.Alloted member id:$membr_id";
                         $mem_msg ="Congratulation & Welcome to StoreKing Family,Your Member id is $membr_id";
 				
@@ -25026,14 +25050,10 @@ die; */
 			echo json_encode($output);
 	}
 	
-	/**
-	 * Franchise Payment Mode Module START
-	 */
-	
 	//Interface to menu Margin - start	
 	function list_allmenumargin()
 	{
-		$user=$this->auth(PRODUCT_MANAGER_ROLE);
+		$user=$this->auth(true,true);
 		$menu_list_res=$this->db->query("select * from pnh_menu where status=1 group by id order by name asc");
 		$data['menu_list_res']=$menu_list_res;
 		$data['page']='menumargin_list';
@@ -27807,9 +27827,9 @@ die; */
 		}
 
 		$output['ttl_cart_item']=$this->db->query("select count(*) as ttl_cart_itm from pnh_api_franchise_cart_info where franchise_id=? and status=1 and member_id=?",array($fid,$mid))->row()->ttl_cart_itm;
+		$output['has_insurance']=$has_insurance;
 		echo json_encode($output);
 	}
-
 
     /**
      * Ajax function to Update deal to cart
@@ -27901,10 +27921,21 @@ die; */
 							    			JOIN king_dealitems i ON i.pnh_id=c.pid
 							    			JOIN king_deals d ON d.dealid=i.dealid
 							    			WHERE franchise_id=? AND STATUS=1 and member_id=?",array($fid,$mid));
+    	//check if mid's first order
+    	
+    	$m_userid=$this->db->query("select user_id from pnh_member_info where pnh_member_id=?",$mid)->row()->user_id;
+    	$ttl_orders=$this->db->query("SELECT COUNT(DISTINCT(transid)) AS l FROM king_orders WHERE userid=? AND STATUS NOT IN (0,3,5,6)",$m_userid)->row()->l;
+    	
+    	if($ttl_orders==0)
+    		$is_new_mem=1;
+    	else 
+    		$is_new_mem=0;
+
     	if($saved_cart_res->num_rows())
     	{
     		$output['status']='success';
     		$output['saved_cart_itms']=$saved_cart_res->result_array();
+    		$output['new_mem']=$is_new_mem;
     		$output['saved_cart_itms']['items']=array();
     		foreach($saved_cart_res->result_array() as $i=>$cart_prod)
     		{
@@ -28074,7 +28105,6 @@ die; */
 		}
 		echo json_encode($output);
 	}
-
 	/**
 	 * function to save franchise requested price
 	 */
@@ -28238,9 +28268,10 @@ die; */
                             //$arr_stk['prod_stk_det'][$id]['sourceable'] = $pstk['status'];
                             $ttl_source_sts += $pstk['status'];
                             $ttl_stk += $pstk['stk'];
+							//$src += $pstk['src'];
                         }
                         // out of stock =  ttl_stk == 0
-                        if($ttl_stk == 0 && $ttl_source_sts == 0) {
+                        if($ttl_stk == 0 && $ttl_source_sts == 0 ) {
                             $arr_stk[$itemid]['deal_status'] = 'Out of Stock';
                                         }
                         else {// in stock = ttl_stk != 0
@@ -28279,7 +28310,70 @@ die; */
         echo json_encode($arr_stk);
     }
     
+	/**
+     * Function to return product stock details
+     * @param type $prodid int
+     */
+    function jx_pnh_product_stock_status($itemid=0)
+    {
+        $this->auth(true);
+            
+        if( isset($_POST["itemids"] ) )  {
+            $arr_itemids = explode(',', trim($_POST["itemids"],"'") );
+            
+            $arr_stk = array();
+            foreach($arr_itemids as $itemid) {
+                
+                $deal_stock = $this->erpm->do_stock_check(array($itemid),array(1),true);
+                
+                        $arr_stk[$itemid]['status'] = 'success';
+                        $ttl_stk = $ttl_source_sts = 0;
+                        foreach($deal_stock[$itemid] as $pstk) {
+                            //$id = $pstk['pid'];
+                            //$arr_stk['prod_stk_det'][$id]['product_name'] = $pstk['product_name'];
+                            //$arr_stk['prod_stk_det'][$id]['sourceable'] = $pstk['status'];
+                            $ttl_source_sts += $pstk['status'];
+                            $ttl_stk += $pstk['stk'];
+                        }
+                        // out of stock =  ttl_stk == 0
+                        if($ttl_stk == 0 && $ttl_source_sts == 0) {
+                            $arr_stk[$itemid]['deal_status'] = 'Out of Stock';
+                                        }
+                        else {// in stock = ttl_stk != 0
+                            $arr_stk[$itemid]['deal_status'] = 'In Stock';
+                        }
+                
+                
+            }
 	
+        }
+        elseif($itemid != 0) {
+            $deal_stock = $this->erpm->do_stock_check(array($itemid),array(1),true);
+            $arr_stk = array();
+            
+                        $arr_stk[$itemid]['status'] = 'success';
+                        $ttl_stk = $ttl_source_sts = 0;
+                        foreach($deal_stock[$itemid] as $pstk) {
+                            //$id = $pstk['pid'];
+                            //$arr_stk['prod_stk_det'][$id]['product_name'] = $pstk['product_name'];
+                            $ttl_source_sts += $pstk['status'];
+                            $ttl_stk += $pstk['stk'];
+                        }
+                        // out of stock =  ttl_stk == 0 && is all products are not sourceable
+                        if($ttl_stk == 0 && $ttl_source_sts == 0 ) {
+                            $arr_stk[$itemid]['deal_status'] = 'Out of Stock';
+                        }
+                        else {// in stock = ttl_stk != 0
+                            $arr_stk[$itemid]['deal_status'] = 'In Stock';
+                        }
+            
+        }
+        else 
+            $this->print_error("Item id doesnot exists!");
+        
+        
+        echo json_encode($arr_stk);
+    }
 	
 	/*
 	 * author Suresh 
@@ -28640,17 +28734,14 @@ die; */
             $recharge_territory_arr=array();
 			$recharge_town_arr=array();
             
-            define("MAX_REFERAL_COUNT",3);
-            $offers_insurance = $this->db->query("select a.*,di.name as product_name,di.id as itemid,pdl.product_id,b.user_id,b.first_name,f.franchise_name,f.address,f.territory_id,f.town_id
-                                                    from pnh_member_offers a
-                                                    join pnh_member_info b on b.pnh_member_id=a.member_id
-                                                    join pnh_m_franchise_info f on f.franchise_id= a.franchise_id
-                                                    join king_dealitems di on di.pnh_id = a.pnh_pid
-                                                    join m_product_deal_link pdl on pdl.itemid=di.id
-                                                    where a.offer_type in (0,2) order by a.created_on desc limit 100")->result_array();
-            $offers_talktime = $this->db->query("select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100")->result_array();
             
-            /*$data['referral_offers'] = $this->db->query("select num_referred,referred_by,offer_value,floor(num_referred/?) as times from (
+            
+            $offers_insurance = $this->db->query("select a.*,b.user_id,b.first_name,f.*, date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  where a.offer_type in (0,2) order by a.created_on desc limit 100")->result_array();
+            $offers_talktime = $this->db->query("select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100")->result_array();
+            $member_fee_list = $this->db->query("select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=3 order by a.created_on desc limit 100")->result_array(); 
+            /*
+			//define("MAX_REFERAL_COUNT",3);
+			$data['referral_offers'] = $this->db->query("select num_referred,referred_by,offer_value,floor(num_referred/?) as times from (
                                                                 select count(referred_by) as num_referred,offer_value,referred_by from pnh_member_offers where referred_by !=0 and referred_status = 0 group by referred_by order by created_on desc limit 100 
                                                                 ) as a where a.num_referred >= ?",array(MAX_REFERAL_COUNT,MAX_REFERAL_COUNT))->result_array();*/
             
@@ -28677,6 +28768,7 @@ die; */
             $data['recharge_town_arr']=implode(",",$recharge_town_arr);
             $data['offers_insurance']=$offers_insurance;
             $data['offers_talktime']=$offers_talktime;
+			$data['member_fee_list']=$member_fee_list;
             $data['page']="manage_offers";
             $this->load->view("admin",$data);
         }
@@ -28692,7 +28784,7 @@ die; */
             $fid=$this->input->post('fid');
             $offer_type=$this->input->post('offer_type');
            
-            $this->db->query("update pnh_member_offers set process_status=1 where member_id=? and transid_ref=?",array($member_id,$transid));
+            $this->db->query("update pnh_member_offers set process_status=1 where member_id=? and transid_ref=? and delivery_status=1 and feedback_status=1;",array($member_id,$transid));
             $this->db->query("insert  pnh_member_offers_log(fid,mid,offer_type,status) values(?,?,?,?)",array($fid,$member_id,$offer_type,'Processed'));
 
             if($this->db->affected_rows())
@@ -28839,8 +28931,54 @@ die; */
 		echo json_encode($output);		
 	}
 
+	function jx_load_menu_loyalty_point()
+	{
+		$menuid=$this->input->post('menuid');
+		$output=array();
+		$menu_name=$this->db->query("select name from pnh_menu where id=?",$menuid)->row()->name;
+		$l_pnts_res=$this->db->query("SELECT * FROM pnh_loyalty_points where menu_id=? and is_active=1 ORDER BY amount ASC",$menuid);
+		$output['menuname']=$menu_name;
+		if($l_pnts_res->num_rows())
+		{
+			$output['status']='success';
+			$output['l_pnts_det']=$l_pnts_res->result_array();
+		}
+		else
+		{
+			$output['status']='error';
+		}
+			echo json_encode($output);
+	}
+	
+	function jx_updmenulylpnts()
+	{
+		$output=array();
+		$user=$this->auth(true);
+		$menuid=$this->input->post('upd_menuid');
+		foreach(array("amount","points","valid_days") as $i)
+			$$i=$this->input->post("$i");
+		
+		//check for duplicate menuid insert
+		if($this->db->query("select * from pnh_loyalty_points where menu_id=?",$menuid)->num_rows()==0)
+		{
+			foreach($amount as $i=>$a)
+				if(!empty($a))
+					$this->db->query("insert into pnh_loyalty_points(menu_id,amount,points,valid_days,created_on,created_by) values(?,?,?,?,now(),?)",array($menuid,$a,$points[$i],$valid_days[$i],$user['userid']));
+			$output['status']=='success';
+		}
+		else 
+		{
+			$this->db->query("update pnh_loyalty_points set is_active=0 where menu_id=? and is_active=1",$menuid);
+			foreach($amount as $i=>$a)
+				if(!empty($a))
+					$this->db->query("insert into pnh_loyalty_points(menu_id,amount,points,valid_days,created_on,created_by,is_active) values(?,?,?,?,now(),?,1)",array($menuid,$a,$points[$i],$valid_days[$i],$user['userid']));
+			$output['status']=='success';
+		}
+		echo json_encode($output);
+	}
+	 
 	/***
-	 * Ajax function to check is Menber first Order
+	 * Ajax function to check is Member first Order
 	 */
 	function jx_check_is_member_firstorder()
 	{
@@ -28888,7 +29026,41 @@ die; */
 		echo json_encode($output);
 	}
 	
-	function jx_load_all_towns_byterrid($terrid=FALSE,$offer_type='')
+	/**
+	 * @author Roopa
+	 * Manage Store King Insurance applicable Menu--- START 
+	 */
+	function manage_skinsurance_bymenu()
+	{
+		$data['pnh_menu']=$this->db->query("select id,name from pnh_menu where status=1 order by name  asc")->result_array();
+		$data['page']='manage_skinsurance_bymenu';
+		$this->load->view('admin',$data);
+	}
+	/**
+	 * Ajax function to load Insurance menu details
+	 */
+	function jx_load_menu_insurance_info()
+	{
+		$menuid=$this->input->post('menuid');
+		$output=array();
+		$menu_name=$this->db->query("select name from pnh_menu where id=?",$menuid)->row()->name;
+		$menu_imargin=$this->db->query("SELECT insurance_margin FROM pnh_member_insurance_menu where menu_id=? and is_active=1",$menuid)->row()->insurance_margin;
+		$i_menu_res=$this->db->query("SELECT * FROM pnh_member_insurance_menu where menu_id=? and is_active=1 ORDER BY less_than ASC",$menuid);
+		$output['menuname']=$menu_name;
+		$output['insurance_margin']=$menu_imargin?$menu_imargin:'';
+		if($i_menu_res)
+		{
+			$output['status']='success';
+			$output['i_menu_det']=$i_menu_res->result_array();
+		}
+		else
+		{
+			$output['status']='error';
+		}
+	
+		echo json_encode($output);
+	}
+    function jx_load_all_towns_byterrid($terrid=FALSE,$offer_type='')
     {
     	if($terrid != 0)
 		{
@@ -28955,76 +29127,85 @@ die; */
     	echo json_encode($output);
     }
     
-    function manage_skinsurance_bymenu()
-    {
-            $data['pnh_menu']=$this->db->query("select id,name from pnh_menu where status=1 order by name  asc")->result_array();
-            $data['page']='manage_skinsurance_bymenu';
-            $this->load->view('admin',$data);
-    }
-
-    function jx_load_menu_insurance_info()
-    {
-            $menuid=$this->input->post('menuid');
-            $output=array();
-            $menu_name=$this->db->query("select name from pnh_menu where id=?",$menuid)->row()->name;
-            $menu_imargin=$this->db->query("SELECT insurance_margin FROM pnh_member_insurance_menu where menu_id=?",$menuid)->row()->insurance_margin;
-            $i_menu_res=$this->db->query("SELECT * FROM pnh_member_insurance_menu where menu_id=? ORDER BY less_than ASC",$menuid);
-            $output['menuname']=$menu_name;
-            $output['insurance_margin']=$menu_imargin;
-            if($i_menu_res)
-            {
-                    $output['status']='success';
-                    $output['i_menu_det']=$i_menu_res->result_array();
-
-            }
-            else
-            {
-
-                    $output['status']='error';
-
-            }
-
-            echo json_encode($output);
-    }
-
-    function jx_upd_insurancemenu()
-    {
-            $output=array();
-            $user=$this->auth(true);
-            $menuid=$this->input->post('upd_menuid');
-            foreach(array("less_than","greater_than","insurance_value","insurance_margn") as $i)
-                    $$i=$this->input->post("$i");
-
-            //check for duplicate menuid insert
-            if($this->db->query("select * from pnh_member_insurance_menu where menu_id=?",$menuid)->num_rows()==0)
-            {
-                    foreach($less_than as $i=>$a)
+	/**
+	 * Ajax function to update Insurance Menu
+	 */
+	function jx_upd_insurancemenu()
+	{
+		$output=array();
+		$user=$this->auth(true);
+		$menuid=$this->input->post('upd_menuid');
+		foreach(array("less_than","greater_than","insurance_value","insurance_margn") as $i)
+			$$i=$this->input->post("$i");
+                   
+		//check for duplicate menuid insert
+		if($this->db->query("select * from pnh_member_insurance_menu where menu_id=?",$menuid)->num_rows()==0)
+		{
+			foreach($less_than as $i=>$a) {
                             if(!empty($a))
-                            $this->db->query("insert into pnh_member_insurance_menu(menu_id,less_than,greater_than,insurance_value,insurance_margin,created_on,created_by,is_active) values(?,?,?,?,?,now(),?,1)",array($menuid,$a,$greater_than[$i],$insurance_value[$i],$insurance_margn,$user['userid']));
-                            $output['status']=='success';
-            }
-            else
-            {
-                    $this->db->query("update pnh_member_insurance_menu set is_active=0,updated_by=?,updated_on=now() where menu_id=?",array($user['userid'],$menuid,));
-                    foreach($less_than as $i=>$a)
-                            if(!empty($a))
-                    $this->db->query("insert into pnh_member_insurance_menu(menu_id,less_than,greater_than,insurance_value,insurance_margin,created_on,created_by,is_active) values(?,?,?,?,?,now(),?,1)",array($menuid,$a,$greater_than[$i],$insurance_value[$i],$insurance_margn,$user['userid']));
-                    $output['status']=='success';
-            }
-            echo json_encode($output);
+				$this->db->query("insert into pnh_member_insurance_menu(menu_id,less_than,greater_than,insurance_value,insurance_margin,created_on,created_by,is_active) values(?,?,?,?,?,now(),?,1)",array($menuid,$a,$greater_than[$i],$insurance_value[$i],$insurance_margn,$user['userid']));
+			}
+                        $output['status']=='success';
+		}
+		else
+		{
+			$this->db->query("update pnh_member_insurance_menu set is_active=0,updated_by=?,updated_on=now() where menu_id=? and is_active=1",array($user['userid'],$menuid,));
+			foreach($less_than as $i=>$a)
+				if(!empty($a))
+			$this->db->query("insert into pnh_member_insurance_menu(menu_id,less_than,greater_than,insurance_value,insurance_margin,created_on,created_by,is_active) values(?,?,?,?,?,now(),?,1)",array($menuid,$a,$greater_than[$i],$insurance_value[$i],$insurance_margn,$user['userid']));
+			$output['status']=='success';
+		}
+		echo json_encode($output);
+	}
+	/**
+	 * Ajax function to get member details
+	 */
+	function jx_get_member_det()
+	{
+		$mid=$this->input->post('mid');
+		$mem_det=$this->db->query("select * from pnh_member_info where pnh_member_id=?",$mid);
+		$output=array();
+		if($mem_det)
+		{
+			$output['status']='success';
+			$output['i_memdet']=$mem_det->row_array();
+		}
+		else
+    {
+			$output['status']='error';
+			$output['msg']='Invalid Member ID';
+		}
+		echo json_encode($output);
     }
+
+	function users_ordr_list()
+	{
+		$data['user_orders']=$this->erpm->get_usrsorders_bytransactiondate_range();
+		$data['page']=users_order_list;
+		$this->load->view("admin",$data);
+	}
+
+
     
     function insurance_print_view($insuranceid='')
     {
             if($insuranceid=='')
-                show_error ("No insurance id found.");
-            $data['insurance_det'] = $this->db->query("select mi.*,a.username,mf.transid_ref as transid,mf.process_status,mf.delivery_status,f.franchise_name from pnh_member_insurance mi
-                        join pnh_member_offers mf on mf.insurance_id = mi.insurance_id
-                        join king_admin a on a.id = mi.created_by
-                        join pnh_m_franchise_info f on f.franchise_id = mi.fid
-                        where mi.insurance_id = ? ",$insuranceid)->result_array();
+                show_error ("Insurance ID not found.");
+            
+            $insurance_det = $this->db->query("SELECT mi.*,a.username,mf.transid_ref AS transid,mf.process_status,mf.delivery_status,f.franchise_name,i.invoice_no FROM pnh_member_insurance mi
+                        JOIN pnh_member_offers mf ON mf.insurance_id = mi.insurance_id
+                        JOIN king_admin a ON a.id = mi.created_by
+                        JOIN pnh_m_franchise_info f ON f.franchise_id = mi.fid
+                        JOIN king_invoice i ON i.`transid` = mf.`transid_ref` 
+                        WHERE mi.insurance_id = ?",$insuranceid);
+            if($insurance_det->num_rows()==0)
+            {
+                show_error("Insurance id does not exists  or Insurance not yet processed.");
+            }
+            $data['insurance_det'] = $insurance_det->result_array();
             $data['insuranceid']=$insuranceid;
             $data['page']="insurance_print_view";
+//            $data['page']="template_insurance";
             $this->load->view("admin",$data);
     }
     
@@ -29196,7 +29377,7 @@ die; */
                             $required_credit=$d_total-$fran['current_balance'];
                             $e=1;$un="Balance in your account Rs {$fran['current_balance']}\n\nTotal order amount : Rs $d_total\n\n Required Credit : Rs.$required_credit";
                     }
-                    if($ttl_orders==0 && $d_total>=500 )
+                    if($ttl_orders==0 ) // && $d_total>=500 
                             $new_mem=1;
                     else 
                             $new_mem=0;
@@ -29215,23 +29396,52 @@ die; */
             die(json_encode(array("e"=>$e,"msg"=>$un,"total"=>$total,"d_total"=>$d_total,"com"=>$total-$d_total,"bal"=>$bal,"abal"=>$abal,"pc"=>$pc,"has_insurance"=>$has_insurance,"new_mem"=>$new_mem,"items"=>$items)));
     }
 
-    function jx_get_member_det()
+    /**
+     *  Function to generate PDF file of insurance copy
+     * @author Shivaraj
+     * @support DOMPDF helper plugin & dompdf_helper file
+     * @param type $insuranceid int
+     */
+    function insurance_aggreement_copy($insuranceid='')
     {
-            $mid=$this->input->post('mid');
-            $mem_det=$this->db->query("select * from pnh_member_info where pnh_member_id=?",$mid);
-            $output=array();
-            if($mem_det)
+            $user=$this->auth(true);
+
+            if($insuranceid=='')
+                show_error ("Insurance ID not found.");
+            
+            $insurance_det = $this->db->query("SELECT mi.*,a.username,mf.transid_ref AS transid,mf.process_status,mf.delivery_status,f.franchise_name,i.invoice_no FROM pnh_member_insurance mi
+                        JOIN pnh_member_offers mf ON mf.insurance_id = mi.insurance_id
+                        JOIN king_admin a ON a.id = mi.created_by
+                        JOIN pnh_m_franchise_info f ON f.franchise_id = mi.fid
+                        JOIN king_invoice i ON i.`transid` = mf.`transid_ref` 
+                        WHERE mi.insurance_id = ?",$insuranceid);
+            if($insurance_det->num_rows()==0)
             {
-                    $output['status']='success';
-                    $output['i_memdet']=$mem_det->row_array();
+                show_error("Insurance id does not exists  or Insurance not yet processed.");
             }
-            else
-            {
-                    $output['status']='error';
-                    $output['msg']='Invalid Member ID';
-            }
-            echo json_encode($output);
+            
+            $insurance_det = $insurance_det->result_array();
+            $ins = $insurance_det[0];
+            
+            $filename=base_url()."resources/templates/template_insurance.php";
+            $data =  file_get_contents($filename);
+            $data = str_replace("%%invoice_no%%", $ins['invoice_no'], $data);
+            $data = str_replace("%%created_on%%", date("d/m/Y",strtotime($ins['created_on'])), $data);
+            
+            $name="insurance_aggreement_copy_".date("d-m-y").".pdf";
+            
+            #===============================
+            // disable DOMPDF's internal autoloader if you are using Composer
+//            define('DOMPDF_ENABLE_AUTOLOAD', false);
+            define('DOMPDF_ENABLE_HTML5PARSER', true);
+            define('DOMPDF_ENABLE_CSS_FLOAT', true);
+
+            $this->load->helper(array('dompdf', 'file'));
+            //$html = $this->load->view('controller/viewfile', $data, true);
+            pdf_create($data, $name,true);
+            //or
+//            $data = pdf_create($data, '', false);
+//            write_file('name', $data);
+            //if you want to write it to disk and/or send it as an attachment    
     }
-        
-    
 }

@@ -337,7 +337,7 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 			</div>
 			<div class="mod_widget_content ">
                 <?php 
-	                $offers_q = $this->db->query("select * from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id where member_id=?",$u['pnh_member_id']);
+	                $offers_q = $this->db->query("select * from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id where member_id=?  and a.offer_type != 0 ",$u['pnh_member_id']);
                 if($offers_q->num_rows())
                		 {
                	?>

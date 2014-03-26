@@ -117,6 +117,7 @@
 		{
 			$fran_pricequote_res="SELECT p.*,d.name,d.id as itemid FROM pnh_franchise_price_quote p JOIN king_dealitems d ON d.pnh_id=p.pid WHERE franchise_id=$fid AND UNIX_TIMESTAMP(p.created_on) BETWEEN $st_ts and $en_ts";
 			$fran_pricequotes=$this->db->query($fran_pricequote_res)->result_array();
+			
 			if($fran_pricequotes){
 			
 		echo '<div align="left"><h3 id="ttl_orders_listed">Showing <b></b> Franchise Price Quote from '.format_date(date('Y-m-d',$st_ts)).' to '.format_date(date('Y-m-d',$en_ts)).' </h3></div>';

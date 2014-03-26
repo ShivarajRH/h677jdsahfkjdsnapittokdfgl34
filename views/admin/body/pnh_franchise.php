@@ -3740,9 +3740,9 @@ $("#pnh_membersch").dialog({
 			}
 			},'json');
 			$('#fr_det_popup').bPopup({
-			easing: 'easeOutBack', //uses jQuery easing plugin
-			    speed: 450,
-			    transition: 'slideDown'
+                            easing: 'easeOutBack', //uses jQuery easing plugin
+                                speed: 450,
+                                transition: 'slideDown'
 			});
 		}
 		

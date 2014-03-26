@@ -703,4 +703,5 @@ fieldset legend{
 	background: #FFF;
 	margin-left: -10px;
 }
+.leftcont{display:none;}
 </style>

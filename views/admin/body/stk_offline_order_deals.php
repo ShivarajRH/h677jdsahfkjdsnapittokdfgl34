@@ -2,8 +2,10 @@
 <link type="text/css" rel="stylesheet" href="<?=base_url()?>/css/plot.css">
 <link type="text/css" rel="stylesheet" href="<?=base_url()?>/css/deals.css">
 <link type="text/css" rel="stylesheet" href="<?=base_url()?>/css/stk_offline_order.css">
+<link rel='stylesheet' type='text/css' href="<?php echo base_url().'css/jquery.tooltip.css'?>">
 <link rel='stylesheet' type='text/css' href="<?php echo base_url().'css/fullcalendar.css'?>">
 <script type='text/javascript' src="<?php echo base_url().'js/fullcalendar.min.js'?>"></script>
+<script type='text/javascript' src="<?php echo base_url().'js/jquery.tooltip.js'?>"></script>
 <link rel='stylesheet' type='text/css' href="<?php echo base_url().'css/sk_franchise.css'?>">
 
 
@@ -62,6 +64,10 @@ $fran_status_arr[3]="Temporary Suspension";
 		</span>
 		<div class="filters_wrap"><img class="search_img_wrap" src="<?php echo base_url().'images/search_icon.png'?>">
 			<input type="text" name="srch_deals" class="deal_prd_blk inp" placeholder="Search by Deal Name" >
+		</div>
+		<div class="legends_outer_wrap">
+			<span class="legends_color_notsrc_wrap">&nbsp;</span> - Not Available &nbsp; &nbsp; &nbsp;
+			<span class="legends_color_src_wrap">&nbsp;</span> - Available &nbsp; &nbsp; &nbsp;
 		</div>
 		
 		<div class="fran_credit_detwrap">
@@ -162,6 +168,7 @@ $fran_status_arr[3]="Temporary Suspension";
 				<input type="hidden" id="redeem_p" name="redeem_points" value="0" style="display:none;">
 				<input type="hidden" name="frannote" value="" style="display:none;">
 				<input type="hidden"  name="offr_sel_type"  class="offr_sel_type" value="" style="display:none;">
+				<input type="hidden"  name="new_member"  class="new_member" value="" style="display:none;">
 				<input type="hidden" name="insurance[proof_type]"  class="proof_type" value="" style="display:none;">
 				<input type="hidden" name="insurance[proof_id]"  class="proof_id" value="" style="display:none;">
 				<input type="hidden" name="insurance[proof_address]" class="proof_address" value="" style="display:none;">
@@ -358,7 +365,36 @@ $fran_status_arr[3]="Temporary Suspension";
 					<div class="sch_wrap">
 						<div>%super_sch%</div>
 						<div class="blue">%has_insurance%</div>
-						<div>%opt_insurance%</div>
+						<div class="opt_wrap">%opt_insurance%
+							 <div class="tooltip_description" style="display:none" title="Insurance Details">
+									<b>New Customer :</b> 
+									<table border='1' width="100%" style="margin-bottom:10px">
+										<tr>
+											<th width="50%">Price Range</th>
+											<th width="50%">Insurance Cost</th>
+										</tr>
+										<tr>
+											<td><b>Rs 500 -- Rs 10000 </b></td>
+											<td align="center"><b>Free</b></td>
+										</tr>
+										<tr>
+											<td><b>Rs 10000 -- Rs 20000 </b></td>
+											<td align="center"><b>Rs 100\</b></td>
+										</tr>
+									</table>
+									<b>Existing Customer :</b> 
+									<table border='1' width="100%">
+										<tr>
+											<th width="50%">Price Range</th>
+											<th width="50%">Insurance Cost</th>
+										</tr>
+										<tr>
+											<td><b>Any Price </b></td>
+											<td align="center"><b>2% on bill</b></td>
+										</tr>
+									</table>						      
+						    </div>	
+						</div>
 					</div>
 				</td>
 				<td style="text-align: center;" valign="top" class="cart_background_wrap1">
@@ -531,6 +567,7 @@ $fran_status_arr[3]="Temporary Suspension";
 	</div>
 </div>
 	
+
 </div>
 <style>
     .attributes_block {
@@ -644,7 +681,6 @@ else
 	$('.show_insurance').show();
 	
 function tooltip_popup(){
-
  	Tipped.create('.tip_popup',{
  	 skin: 'black',
  	  hook: 'topleft',
@@ -855,7 +891,15 @@ $(function(){
 	$('.jq_alpha_sort_alphalist_vend_head').html('<div class="alphabet_header_wrap"><span><a id="cat_lab" class="cat_lst_tab">Category List</a></span><span><a id="brand_lab" style="margin-right:0px !important" class="brand_lst_tab">Brand List</a></span> <input type="text" name="search_name" class="search_blk inp" placeholder="Search by Name" ><img style="margin-top: 7px;" src="<?php echo base_url().'images/search_icon.png'?>"></div>');
 	deallist_bycat(0,0,2,pre_selected_fid,0);
 	$('.brand_lst_tab').addClass('selected_alpha_list');
+	
 });
+
+$(".opt_wrap").live('mouseover',function(){
+	
+	$(".opt_wrap").tooltip();
+});
+
+  
 
 $(".sel_all").live('click',function(){
 		if($(".sel_all").attr("checked"))
@@ -899,7 +943,7 @@ $('.all').live('click',function(){
 		deallist_bycat(0,0,0,pre_selected_fid,0);
 });
 
-$('.latest').live('click',function(){
+$('.latest_sold').live('click',function(){
 	var catid =$(this).attr('catid')*1;
 	var brandid =$(this).attr('brandid')*1;
 	if(catid !=0 && brandid == 0)
@@ -910,6 +954,19 @@ $('.latest').live('click',function(){
 	deallist_bycat(brandid,catid,1,pre_selected_fid,0);
 	$('.latest').addClass("selected_type");
 });
+
+$('.latest_added').live('click',function(){
+	var catid =$(this).attr('catid')*1;
+	var brandid =$(this).attr('brandid')*1;
+	if(catid !=0 && brandid == 0)
+		deallist_bycat(0,catid,3,pre_selected_fid,0);
+	else if(catid ==0 && brandid != 0)
+		deallist_bycat(brandid,0,3,pre_selected_fid,0);
+	else	
+	deallist_bycat(brandid,catid,3,pre_selected_fid,0);
+	$('.latest').addClass("selected_type");
+});
+
 
 $('.most').live('click',function(){
 	var catid =$(this).attr('catid')*1;
@@ -951,28 +1008,37 @@ $('select[name="publish_wrap"]').live('change',function(){
 
 function published_deals(v)
 {
-	filter_deallist('','all');
-	return ;
+	//filter_deallist('','all');
 	if(v != 'all')
 	{
 		var i=1;
 		$('.sk_deal_blk_wrap thead').show();
-		$(".sk_deal_filter_wrap").each(function(){
-			publish=parseInt($(this).attr('publish')*1);
-			if(publish == v)
+		$(".jq_alpha_sort_overview_content .deal_stock").each(function(){
+			var trele=$(this).parents('tr:first');
+			publish=$(this).html();
+			if(publish == 'In Stock')
+				var s=1;
+			else
+				var s=0;
+			
+			if(s == v)
 			{
 				$('.total_wrap').html("Total Deals : "+(i++));
-				$(this).show();
+				trele.show();
 			}
 			else 
 			{
-				$(this).hide();
+				trele.hide();
 			}
 		});
 	}
 	else
 	{
-		return;
+		$(".jq_alpha_sort_overview_content .deal_stock").each(function(){
+			var trele=$(this).parents('tr:first');
+			publish=$(this).html();
+			trele.show();
+		});
 	}
 }
 
@@ -1151,10 +1217,10 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 				
 				d_lst+='</span>';
 				d_lst+='<span class="left_filter_mrp_wrap">DP Filter : <input type="text" class="inp" id="f_from" size=4> to <input type="text" class="inp" id="f_to" size=4> <button type="button" style="margin-top:-5px" class="button button-rounded button-action button-tiny" onclick="filter_deals_bymrp()">Filter</button></span>';
-				d_lst+='<span class="publish_wrap"><b>Published :</b> <select name="publish_wrap"><option value="all">Choose</option><option value="1">Yes</option><option value="0">No</option></select></span>';
-				d_lst+='<span class="left_filter_wrap"><span class="filter_opts"><a class="most" href="javascript:void(0)" val="2"  brandid="'+brandid+'" catid="'+catid+'">Most</a></span><span><a href="javascript:void(0)" class="latest" val="1" brandid="'+brandid+'" catid="'+catid+'" >Latest</a></span><span><a href="javascript:void(0)" val="0" class="all" brandid="'+brandid+'" catid="'+catid+'" style="border-right:none !important;width:34.4%">Clear</a></span></span>';
+				d_lst+='<span class="publish_wrap"><b>Available :</b> <select name="publish_wrap"><option value="all">Choose</option><option value="1">Yes</option><option value="0">No</option></select></span>';
+				d_lst+='<span class="left_filter_wrap"><span class="filter_opts"><a class="most" href="javascript:void(0)" val="2"  brandid="'+brandid+'" catid="'+catid+'">Most Sold</a></span><span><a href="javascript:void(0)" class="latest_sold" val="1" brandid="'+brandid+'" catid="'+catid+'" >Latest Sold</a></span><span><a href="javascript:void(0)" class="latest_added" val="3" brandid="'+brandid+'" catid="'+catid+'" >Latest Added</a></span><span><a href="javascript:void(0)" val="0" class="all" brandid="'+brandid+'" catid="'+catid+'" style="border-right:none !important;width:24.2%">Clear</a></span></span>';
 				d_lst+='<span class="total_wrap">Total Deals : '+resp.ttl_deals+'</span>';
-				d_lst+='<span class="legends_outer_wrap"><span class="legends_color_notsrc_wrap">&nbsp;</span> - Out Of Stock &nbsp; &nbsp; &nbsp;<span class="legends_color_src_wrap">&nbsp;</span> - In Stock &nbsp; &nbsp; &nbsp;</span></div>';
+				d_lst+='</div>';
 				d_lst+='<div class="sk_deal_container">';
 				d_lst+='<table class="sk_deal_blk_wrap" cellpadding="0" cellspacing="0" width="99%">'
 				d_lst+='<thead><tr>';
@@ -1196,16 +1262,25 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 				if(resp.type == 1)
 				{
 					$('.most').removeClass('selected_type');
-					$('.latest').addClass('selected_type');
+					$('.latest_added').removeClass('selected_type');
+					$('.latest_sold').addClass('selected_type');
 				}else if(resp.type == 0)
 				{
-					$('.latest').removeClass('selected_type');
+					$('.latest_sold').removeClass('selected_type');
+					$('.latest_added').removeClass('selected_type');
 					$('.most').removeClass('selected_type');
 				}
 				else if(resp.type == 2)
 				{
 					$('.most').addClass('selected_type');
-					$('.latest').removeClass('selected_type');
+					$('.latest_sold').removeClass('selected_type');
+					$('.latest_added').removeClass('selected_type');
+				}
+				else if(resp.type == 3)
+				{
+					$('.most').removeClass('selected_type');
+					$('.latest_sold').removeClass('selected_type');
+					$('.latest_added').addClass('selected_type');
 				}
 			}
 	},'json');	
@@ -1650,6 +1725,7 @@ function change_total_subtotal()
     $("#cart_totl").html(format_number(ttl_subtotal));
 }
 
+
 $("#cart_prod_temp .qty").live("change",function(){
 
 	p=$(this).parents("tr").get(0);
@@ -1813,11 +1889,7 @@ $("#order_form").submit(function(){
 			alert("Please verify whether stock for the footwear is available?");
 			return false;
 		}
-		if($('.opt_insurance').length>=1 && $('input[name="opt_insurance[]"]:checked').length==0)
-		{
-			alert("Is Insurance Option communicated to franchise?");
-			return false;
-		}
+		
 		
 		if(submit_order==0)
 		{
@@ -1826,6 +1898,7 @@ $("#order_form").submit(function(){
 				attr=$(".attr").serialize();
 				$.post(site_url+"/admin/pnh_jx_checkstock_order",{attr:attr,pids:ppids.join(","),qty:qty.join(","),fid:pre_selected_fid,mid:selected_mid}, function(resp){
 					
+					$(".new_member").val(resp.new_mem);
 
 					var insuranceids=[];
 					$(".opt_insurance:checked").each(function(){
@@ -1840,7 +1913,34 @@ $("#order_form").submit(function(){
 					return false;
 				}
 		
-				 if(resp.new_mem==1 && resp.has_insurance==1)
+				if($('.opt_insurance').length>=1 && $('input[name="opt_insurance[]"]:checked').length==0 && resp.new_mem==1)
+				{
+					if(confirm("NO Insurance... Continue?"))
+					{
+							$('.offr_sel_type').val(3);
+							$(".new_member").val(1);
+							submit_order++;
+							$("#order_form").submit();
+					}else
+					{
+						return false;
+					}
+				}
+				if($('.opt_insurance').length>=1 && $('input[name="opt_insurance[]"]:checked').length==0 && resp.new_mem==0)
+				{
+					if(!confirm("Is Insurance Option communicated to franchise?"))
+					{
+							$('.offr_sel_type').val(0);
+							$(".new_member").val(0);
+							submit_order++;
+							$("#order_form").submit();
+					}else
+					{
+						return false;
+					}
+				}
+				
+				 if(resp.new_mem==1 && resp.has_insurance==1 && $('.opt_insurance').length <= 1 && $('input[name="opt_insurance[]"]:checked').length !=0)
 				{
 						$('.offr_sel_type').val('2');
 						$('.offerd_type').val('2');
@@ -1848,9 +1948,10 @@ $("#order_form").submit(function(){
 					 return false;	
 				}
 
-			 	if(resp.new_mem==0 && resp.has_insurance==1)
+			 	if(resp.new_mem==0 && resp.has_insurance==1 && $('.opt_insurance').length<=1 && $('input[name="opt_insurance[]"]:checked').length!=0)
 				{
 			 		$('.offr_sel_type').val('0');
+			 		
 				 		$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 				 	 return false;	
 				}
@@ -1862,6 +1963,7 @@ $("#order_form").submit(function(){
 					}
 				if(resp.new_mem==0 && resp.has_insurance==0 )	
 					{
+						
 						submit_order++;
 						$("#order_form").submit();
 					}
@@ -1871,6 +1973,8 @@ $("#order_form").submit(function(){
 						submit_order>=1;	
 						$("#order_form").submit();
 					}
+				
+					
 				
 				},'json');
 			}
