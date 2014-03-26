@@ -8421,6 +8421,93 @@ group by g.product_id order by product_name");
 		
 	}
 	
+	/**
+	 * function to download franchiase accoount statement
+	 */
+	function dwn_franchise_accountstat_csv()
+	{
+		$user=$this->auth(FINANCE_ROLE);
+	
+		set_time_limit(0);
+		ini_set('memory_limit','1024M');
+	
+		$fids = $this->input->post('fids');
+		$frm_dt = $this->input->post('from');
+		$to_dt = $this->input->post('to');
+	
+		$fid = implode(',',array_filter($fids));
+	
+		$receipts_types=array("Deposit","Topup");
+		$invoice_status=array("Invoice Cancelled","Invoice");
+		$receipt_status=array("Processed","Topup","Receipt Bounced"," Receipt Reversed");
+		$action_types=array(" ","Invoice","Deposit","Topup","Member Ship","Account Correction");
+	
+		$frm_dt = $frm_dt.' 00:00:00';
+		$to_dt = $to_dt.' 23:59:59';
+	
+		$sql="SELECT a.statement_id,a.franchise_id,f.franchise_name,action_type,a.invoice_no,r.receipt_id,r.receipt_type,cheque_no,debit_amt,credit_amt,a.created_on,a.status,inv.invoice_status,r.instrument_no,r.status AS receipt_status,a.remarks
+		FROM pnh_franchise_account_summary a
+		JOIN pnh_m_franchise_info f ON f.franchise_id=a.franchise_id
+		LEFT JOIN king_invoice inv ON inv.invoice_no=a.invoice_no
+		LEFT JOIN pnh_t_receipt_info r ON r.receipt_id=a.receipt_id
+		WHERE ".($fid?' a.franchise_id in ('.$fid.') ':' 1 ')." and a.created_on between ? and ?
+		GROUP BY statement_id
+		ORDER BY a.created_on asc
+		";
+	
+		$fran_acc_stat_details=$this->db->query($sql,array($frm_dt,$to_dt))->result_array();
+	
+	
+		$csv_data = '"Franchise ID","Franchise Name","Date","Document Type","Document refno","Value (Rs)","Remarks"'."\r\n";
+	
+		foreach($fran_acc_stat_details as $i=>$Trs)
+		{
+			if($Trs['receipt_type'] == 0 && $Trs['action_type'] == 2)
+				continue ;
+			$doc_status = '';
+			$doc_refno=$Trs['invoice_no']!=0?$Trs['invoice_no']:$Trs['receipt_id'] ;
+	
+			$value = $Trs['credit_amt']!=0 ? $Trs['credit_amt']:$Trs['debit_amt']*-1 ;
+	
+	
+			switch($Trs['action_type'])
+			{
+				case 1 :
+					if($Trs['credit_amt'] > 0)
+						$doc_status = 'Invoice Cancelled';
+					else
+						$doc_status = 'Invoice';
+					break;
+				case 2:
+				case 3:
+					if($Trs['receipt_type'] == 0)
+						$doc_status = 'Deposit';
+					else
+						$doc_status = 'Topup';
+					break;
+				case 4 :
+					$doc_status = 'Member Registration';
+					break;
+				case 5 :
+					$doc_status = 'Account Correction';
+					break;
+				case 7 :
+					$doc_status = 'CreditNote';
+					break;
+			}
+	
+			$det =array($Trs['franchise_id'],$Trs['franchise_name'],format_datetime($Trs['created_on']),$doc_status,$doc_refno,$value,$Trs['remarks']);
+			$csv_data .= '"'.implode('","',$det).'"'."\r\n";
+		}
+	
+		$today_date=$this->db->query("SELECT DATE_FORMAT(CURDATE(),'%d %b %Y') AS today_dt")->row()->today_dt;
+		header('Content-Type: application/csv');
+		header('Content-Disposition: attachment;filename="Franchise_account_stat.csv"');
+		header('Cache-Control: max-age=0');
+		echo $csv_data;
+		exit;
+	}
+	
 	function pnh_sch_discounts($fid=0,$s=0,$e=0)
 	{
 		$user=$this->auth(true);
