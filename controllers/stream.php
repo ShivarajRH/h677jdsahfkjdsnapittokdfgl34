@@ -153,7 +153,8 @@ class Stream extends Analytics
 	    $arr_replies = $this->db->query('select spr.*,ka.id,ka.username,ka.email,ka.img_url from m_stream_post_reply spr
 	                                        join king_admin ka on ka.id=spr.replied_by
 	                                        where status=1 and post_id = ? and account_blocked!=1 
-	                                        order by replied_on desc limit 0,10',$post_id)->result_array(); 
+	                                        order by replied_on desc limit 0,10',$post_id)->result_array();
+	     
 	    if($arr_replies['img_url']=='' || $arr_replies['img_url']==null) 
 	    { 
 	        $divimgurl='<img src="'.base_url().'images/icon_comment.gif" alt="Reply"/>'; 
@@ -162,6 +163,7 @@ class Stream extends Analytics
 	    { 
 	        $divimgurl='<img src="'.$post['img_url'].'" alt="Image"/>'; 
 	    }
+	    
 	    $outdata='';
 	    foreach($arr_replies as $replydata) {
 	        $outdata.='<div class="subreply">

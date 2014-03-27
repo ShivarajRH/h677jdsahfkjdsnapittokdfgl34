@@ -892,7 +892,7 @@ $(function(){
 														if(!$s['is_sch_enabled'])
 																continue;
 													?>
-													<?php// foreach($this->db->query("select h.*,a.name as admin,m.name AS menu  from pnh_sch_discount_track h left outer join king_admin a on a.id=h.created_by LEFT JOIN pnh_menu m ON m.id=h.sch_menu where franchise_id=? and ? between valid_from and valid_to and sch_type=1 order by h.id desc",array($fran['franchise_id'],time()))->result_array()  as $s){?>
+													<?php // foreach($this->db->query("select h.*,a.name as admin,m.name AS menu  from pnh_sch_discount_track h left outer join king_admin a on a.id=h.created_by LEFT JOIN pnh_menu m ON m.id=h.sch_menu where franchise_id=? and ? between valid_from and valid_to and sch_type=1 order by h.id desc",array($fran['franchise_id'],time()))->result_array()  as $s){?>
 													<tr>
 														<td><?=$s['menu']?></td>
 														<td><?=empty($s['brand'])?"All brands":$s['brand']?></td>
@@ -930,7 +930,7 @@ $(function(){
 															if($s['is_sch_enabled'])
 																continue;
 													?>
-													<?php// foreach($this->db->query("select h.*,a.name as admin,m.name AS menu  from pnh_sch_discount_track h left outer join king_admin a on a.id=h.created_by LEFT JOIN pnh_menu m ON m.id=h.sch_menu where franchise_id=? and ? between valid_from and valid_to and sch_type=1 order by h.id desc",array($fran['franchise_id'],time()))->result_array()  as $s){?>
+													<?php // foreach($this->db->query("select h.*,a.name as admin,m.name AS menu  from pnh_sch_discount_track h left outer join king_admin a on a.id=h.created_by LEFT JOIN pnh_menu m ON m.id=h.sch_menu where franchise_id=? and ? between valid_from and valid_to and sch_type=1 order by h.id desc",array($fran['franchise_id'],time()))->result_array()  as $s){?>
 													<tr>
 														<td><?=$s['menu']?></td>
 														<td><?=empty($s['brand'])?"All brands":$s['brand']?></td>
@@ -2039,7 +2039,7 @@ $(function(){
                                         </td>
                                     </tr>
                             </tbody>
-                            <tfoot class="nofooter">
+                            <tfoot>
                                 <tr>
                                     <td colspan="4">
                                         <span style="float:right;">Total reconciled (Rs.):</span><br>
@@ -2091,7 +2091,7 @@ $(function(){
                                         </td>
                                     </tr>
                             </tbody>
-                            <tfoot class="nofooter">
+                            <tfoot>
                                 <tr>
                                     <td colspan="4">
                                         <span style="float:right;">Total reconciled (Rs.):</span><br>

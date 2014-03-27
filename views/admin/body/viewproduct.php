@@ -191,7 +191,7 @@
 		<select name="dest_prodid" data-placeholder="Choose Transfer To" style="width: 300px;">
 			<option value="">Choose</option>
 			<?php
-			
+				/*
 				$prod_item_det_res = $this->db->query("select * from (
 													(select itemid,c.brandid,c.catid,c.menuid 
 														from m_product_deal_link a 
@@ -237,6 +237,15 @@
 				{
 					$similar_prods_res = $this->db->query('select * from m_product_info where brand_id = ? and product_id != ? ',array($p['brand_id'],$p['product_id']));
 				}
+				*/
+					$similar_prods_res = $this->db->query('select a.product_id,a.product_name 
+															from m_product_info a
+															join (select product_id,brand_id,product_cat_id from m_product_info where product_id = ? ) as b 
+															on a.brand_id = b.brand_id and a.product_cat_id = b.product_cat_id and a.product_id != b.product_id
+															where a.is_active = 1  
+														order by a.product_id',array($p['product_id']));
+			
+			
 					if($similar_prods_res->num_rows())
 					{
 						foreach($similar_prods_res->result_array() as $similar_prod)

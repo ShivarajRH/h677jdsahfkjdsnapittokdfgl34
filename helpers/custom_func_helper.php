@@ -13,8 +13,11 @@ if(!function_exists('date_diff_days')){
 if(!function_exists('format_price')){
 	function format_price($num,$d=2)
 	{
-		$num = round($num,$d); 
-		list($no,$dec) = explode('.',$num);
+		$num = round($num,$d);
+		$pts = explode('.',$num);
+		
+		$no = isset($pts[0])?$pts[0]:0;
+		$dec = isset($pts[1])?$pts[1]:0;
 		
 		$n = formatInIndianStyle($no);
 		$n .= $d?'.'.str_pad($dec,$d,'0'):'';

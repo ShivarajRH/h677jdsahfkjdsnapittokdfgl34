@@ -54,9 +54,11 @@ define("ORDER_MONTH_COUPON","MyValentine");
 
 define("PAGED_LIMIT",12);
 
+define("THUMBS_UP_POINTS",3);
 
+define("MIN_COUPON_VAL_FOR_NOSHIPCHARGE",400);
 
-
+define("VOUCHERMENU",124);
 
 define("PNH_MEMBER_FEE",50);
 

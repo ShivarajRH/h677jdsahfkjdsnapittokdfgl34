@@ -301,7 +301,7 @@ if(error_msgs.length)
                                     <tr><td>Receipt Amount</td><th>Rs. "+format_number(resp.receipt_det.receipt_amount)+"</th></tr>\n\
                                     <tr><td>Un reconciled Amount</td><th>Rs. "+format_number(resp.receipt_det.unreconciled_value)+" </th></tr>\n\
                                     <tr><td>Created On</td><th>"+resp.receipt_det.created_date+"</th></tr></table>";
-                recon_list += "<br><table width='100%' class='datagrid'><tr><th>#</th><th>Invoice No</th><th>Debitnote Id</th><th>Document Amount (Rs.)</th><th>Reconciled (Rs.)</th><th>Unreconciled (Rs.)</th><th>Created By</th><th>Created On</th></tr>";
+                recon_list += "<br><table width='100%' class='datagrid nofooter'><tr><th>#</th><th>Invoice No</th><th>Debitnote Id</th><th>Document Amount (Rs.)</th><th>Reconciled (Rs.)</th><th>Unreconciled (Rs.)</th><th>Created By</th><th>Created On</th></tr>";
                 $.each(resp.reconcile_list,function(i,recon) {
                     var invno = '--';
                     var drid = '--';
@@ -699,7 +699,7 @@ if(error_msgs.length)
                                     <tr><td>Credit Amount</td><th>Rs. "+format_number(resp.credit_note_det.credit_amt)+"</th></tr>\n\
                                     <tr><td>Un-reconciled Amount</td><th>Rs. "+format_number(resp.credit_note_det.unreconciled_value)+" </th></tr>\n\
                                     <tr><td>Created On</td><th>"+resp.credit_note_det.created_date+"</th></tr></table>";
-                recon_list += "<br><table width='100%' class='datagrid'><tr><th>#</th><th>Invoice No</th><th>Debitnote Id</th><th>Invoice (Rs.)</th><th>Reconciled (Rs.)</th><th>Unreconciled (Rs.)</th><th>Created By</th><th>Created On</th></tr>";
+                recon_list += "<br><table width='100%' class='datagrid nofooter'><tr><th>#</th><th>Invoice No</th><th>Debitnote Id</th><th>Invoice (Rs.)</th><th>Reconciled (Rs.)</th><th>Unreconciled (Rs.)</th><th>Created By</th><th>Created On</th></tr>";
                 $.each(resp.reconcile_list,function(i,recon) {
                     recon_list += "<tr><td>"+(++i)+"</td><td>"+recon.invoice_no+"</td><td>"+((!recon.debit_note_id)?'--':recon.debit_note_id)+"</td><td>"+recon.inv_amount+"</td><td>"+recon.reconcile_amount+"</td><td>"+((!recon.unreconciled)?'Nill':recon.unreconciled)+"</td><td>"+recon.username+"</td><td>"+recon.created_date+"</td>";
                 });

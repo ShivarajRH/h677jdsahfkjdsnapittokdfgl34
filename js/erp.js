@@ -454,7 +454,7 @@ Array.prototype.remove = function(x) {
  * 5.386823 => 5.39
  */
 function format_number(num,decimal) { //decimal is optional
-    var deci = (decimal === undefined || decimal === null ) ? 2 : decimal;
+    var deci = (decimal === undefined || decimal === null ) ? 0 : decimal;
     num = parseFloat(num);
     
     var final_num = ( num.toString().indexOf(".") !== -1) ? num.toFixed(deci) : num;

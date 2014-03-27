@@ -4255,7 +4255,7 @@ group by g.product_id order by product_name");
 	function product($pid=false)
 	{
 		$user=$this->auth(PRODUCT_MANAGER_ROLE);
-		$data['product']=$this->db->query("select ifnull(sum(s.available_qty),0) as stock,p.*,b.name as brand from m_product_info p left outer join t_stock_info s on s.product_id=p.product_id join king_brands b on b.id=p.brand_id where p.product_id=?",$pid)->row_array();
+		$data['product']=$p=$this->db->query("select ifnull(sum(s.available_qty),0) as stock,p.*,b.name as brand from m_product_info p left outer join t_stock_info s on s.product_id=p.product_id join king_brands b on b.id=p.brand_id where p.product_id=?",$pid)->row_array();
 
 		$data['prdct_lst'] = $this->db->query("select *,concat(product_name,'-',product_id) as product_name from m_product_info where is_serial_required=? and brand_id = ? and product_id != ? order by product_name ",array($p['is_serial_required'],$p['brand_id'],$p['product_id']));
 		
@@ -4395,6 +4395,7 @@ group by g.product_id order by product_name");
 	 */
 	function _update_product_mrp($prods)
 	{
+		error_reporting(E_ALL);
 		$user = $this->erpm->auth();
 		$c=0;
 		foreach($prods as $i=>$pdet_arr)
@@ -23651,7 +23652,7 @@ die; */
 					LEFT OUTER JOIN king_admin d ON d.id=r.activated_by
 					LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id
 					LEFT JOIN king_admin s ON s.id=c.submitted_by
-					WHERE r.status=1 AND r.is_active=1 AND f.is_suspended=0 AND (r.is_submitted=1 OR r.activated_on!=0) AND r.is_active=1 AND r.franchise_id=?
+					WHERE r.status=1 AND r.is_active=1 AND (r.is_submitted=1 OR r.activated_on!=0) AND r.is_active=1 AND r.franchise_id=?
 					ORDER BY activated_on DESC";
 			$total_records=$this->db->query($sql,$fid)->num_rows();
 	
@@ -23690,7 +23691,8 @@ die; */
                         ,fcs.unreconciled_value,fcs.unreconciled_status,  sum(rlog.reconcile_amount) as reconcile_amount
                         from pnh_franchise_account_summary fcs 
                         left join pnh_t_receipt_reconcilation_log rlog on rlog.credit_note_id = fcs.acc_correc_id and rlog.is_reversed !=1
-                        where fcs.action_type in (5,6) and fcs.acc_correc_id != 0 and fcs.franchise_id=? group by fcs.acc_correc_id,fcs.franchise_id ";
+                        where fcs.action_type in (5,6) and fcs.acc_correc_id != 0 and fcs.franchise_id=? 
+						group by fcs.acc_correc_id,fcs.franchise_id ";
 
 			$total_records=$this->db->query($sql,$fid)->num_rows;
 	
@@ -24875,11 +24877,11 @@ die; */
 				JOIN pnh_m_franchise_info f ON f.franchise_id=a.franchise_id
 				LEFT JOIN king_invoice inv ON inv.invoice_no=a.invoice_no
 				LEFT JOIN pnh_t_receipt_info r ON r.receipt_id=a.receipt_id  
-				WHERE a.franchise_id=? and a.created_on between ? and ?
+				WHERE ".($fid?' a.franchise_id='.$fid.' and ':' ')." a.created_on between ? and ?
 				GROUP BY statement_id
 				ORDER BY a.created_on asc
 			";
-		$fran_acc_stat_details=$this->db->query($sql,array($fid,$frm_dt,$to_dt))->result_array();
+		$fran_acc_stat_details=$this->db->query($sql,array($frm_dt,$to_dt))->result_array();
 
 		$objPHPExcel = new PHPExcel();
 		$F=$objPHPExcel->getActiveSheet();
