@@ -578,8 +578,8 @@ class reservation_model extends Model
                             $s = $b*$num;
                             $ttl_inbatch = ((($s+$num) > $ttl_invoices)?$ttl_invoices-$s:$num);
 
-                            //$this->db->query("insert into shipment_batch_process(num_orders,batch_remarks,created_on) values(?,?,?)",array($ttl_inbatch,$batch_remarks,date('Y-m-d H:i:s')));$batch_id = $this->db->insert_id();
-                            $batch_id = GLOBAL_BATCH_ID;
+                            $this->db->query("insert into shipment_batch_process(num_orders,batch_remarks,created_on) values(?,?,?)",array($ttl_inbatch,$batch_remarks,date('Y-m-d H:i:s')));$batch_id = $this->db->insert_id();
+//                            $batch_id = GLOBAL_BATCH_ID;
                             
                             for($k=$s;$k<$s+$ttl_inbatch;$k++)
                             {

@@ -7933,16 +7933,19 @@ order by p.product_name asc
 			$this->db->insert("pnh_sms_log_sent",$inp);
 			$sms_log_id = $this->db->insert_id();
 		}
+
 		if($_SERVER['HTTP_HOST'] == "localhost")
 			return;
-		$exotel_sid="snapittoday";
-		$exotel_token="491140e9fbe5c507177228cf26cf2f09356e042c";
-		$post = array(
-		    'From'   => '9243404342',
-		    'To'    => $to,
-		    'Body'  => $msg
-		);
-		$url = "https://".$exotel_sid.":".$exotel_token."@twilix.exotel.in/v1/Accounts/".$exotel_sid."/Sms/send";
+
+		$exotel_sid=EXOTEL_UID;
+		$exotel_token=EXOTEL_AUTHKEY;
+
+                $post = array(
+                    'From'   => EXOTEL_MOBILE_NO,
+                    'To'    => $to,
+                    'Body'  => $msg
+                );
+                $url = "https://".$exotel_sid.":".$exotel_token."@twilix.exotel.in/v1/Accounts/".$exotel_sid."/Sms/send";
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_POST, 1);
@@ -8356,8 +8359,8 @@ order by p.product_name asc
 			$$i=$this->input->post($i);
                 
                 $updated_by=$admin["userid"];
-
-//		echo "<pre>"; print_r($_POST); die();
+                
+                //echo "<pre>"; print_r($_POST); die();
 		
 		if($redeem)
 			$redeem_points = 150;
@@ -8414,7 +8417,7 @@ order by p.product_name asc
 		//compute redeem val per item : total_items
 		$ordered_menus_list=array();
 		$item_pnt =  $redeem_points/count($items);
-		$redeem_value = 0;
+		$redeem_value = 0;  
 		foreach($items as $i=>$item)
 		{
 			$prod=$this->db->query("select i.*,d.publish,c.loyality_pntvalue,d.menuid from king_dealitems i join king_deals d on d.dealid=i.dealid JOIN pnh_menu c ON c.id = d.menuid where i.is_pnh=1 and  i.pnh_id=? and i.pnh_id!=0",$item['pid'])->row_array();
@@ -8798,7 +8801,7 @@ order by p.product_name asc
             
 				
                 //===================< Implement the member offers START>============================
-
+				$menu_list=array_unique($ordered_menus_list);
                 $insurance['mid'] =$mid;
                 $insurance['fid'] =$fid;
                 $insurance['offer_type'] =$offr_sel_type;
@@ -8806,7 +8809,13 @@ order by p.product_name asc
                 $insurance['created_by'] = $updated_by;
                 $insurance['mem_fee_applicable'] = 1;
                 
-                if($offr_sel_type == 2 )
+                if($new_member == 1 && $d_total < MEM_MIN_ORDER_VAL )
+                {
+                    $insurance['offer_type'] = 3;
+                    $offer_ret = $this->pnh_member_fee($d_total,$insurance);
+                    //print_r($_POST);
+                }
+                elseif($offr_sel_type == 2 )
                 {
                     //process insurance document and address details & get insurance process id
                     $insu_id = $this->process_insurance_details($insurance);
@@ -8819,25 +8828,26 @@ order by p.product_name asc
                 }
 		elseif($insurance['opted_insurance'] == 1 )
                 {
-                    $insurance['mem_fee_applicable'] = 0;
+                        $insurance['mem_fee_applicable'] = 0;
 			$insurance['offer_type'] = 3;
                     //process insurance document and address details & get insurance process id
                     $insu_id = $this->process_insurance_details($insurance);
                     //echo '<pre>';print_r($insurance);die();
                 }
-                elseif($offr_sel_type == 1 && $d_total >= MEM_MIN_ORDER_VAL)
+                elseif($offr_sel_type == 1 ) //&& $d_total >= MEM_MIN_ORDER_VAL
                 {
-                    // Recharge
-                    $offer_ret = $this->pnh_member_recharge($d_total,$insurance);
-                    //print_r($_POST);
+                    // is cart items belongs to any of 100 menus
+                    if(in_array('112',$menu_list))
+                    {
+                        //$insu_id = $this->process_insurance_details($insurance);
+                    }
+                    else
+                    {
+                        // Recharge
+                        $offer_ret = $this->pnh_member_recharge($d_total,$insurance);
+                        //print_r($_POST);
+                    }
 
-                }
-                elseif($new_member == 1 && $d_total < MEM_MIN_ORDER_VAL )
-                {
-                    $insurance['offer_type'] = 0;
-        	
-                    $offer_ret = $this->pnh_member_fee($d_total,$insurance);
-                    //print_r($_POST);
                 }
                 else {
                     echo "Error:Offer condition mismatch";
@@ -9020,7 +9030,7 @@ order by p.product_name asc
 	
 	function sendsms_franchise_order($transid = '',$d_total=0)
 	{
-		$d_total = $d_total*-1;
+		$d_total = $d_total * 1;
 		$pnh_beauty_menu = array(100,102,104);
 		 
 		$sql_trans = "select a.id,a.itemid,b.name as itemname,concat(b.print_name,'-',b.pnh_id) as print_name,i_orgprice,login_mobile1,
@@ -11997,8 +12007,7 @@ order by action_date";
 				from shipment_batch_process_invoice_link a
 				join king_invoice b on a.invoice_no = b.invoice_no
 				where a.inv_manifesto_id = ?
-				group by order_id
-				",$manifesto_id);
+				group by order_id",$manifesto_id);
 		
 		if($inv_order_list->num_rows())
 		{
@@ -12012,8 +12021,7 @@ order by action_date";
 					JOIN king_invoice b ON a.invoice_no = b.invoice_no
 					JOIN king_orders o ON o.transid=b.transid AND o.status=2
 					WHERE a.inv_manifesto_id = ?
-					GROUP BY o.transid
-					",$manifesto_id);
+					GROUP BY o.transid",$manifesto_id);
 			//Credit Loyality points to member on invoice shipped
 			if($inv_trans_list->num_rows())
 			{
@@ -13238,18 +13246,17 @@ order by action_date";
     		if($notify_mem==1) //strlen($inv_det['mobile']) == 10 &&
     		{
     			// Delivery sms
-                        $cus_sms = 'Dear '.$inv_det['first_name'].', Your '.$inv_det['ttl_items'].' products of order '.$inv_det['transid'].' are delivered today to '.ucwords($inv_det['franchise_name']).', Please collect at your convenient time, Happy Shopping with StoreKing.';
+                        $cus_sms = 'Your '.$inv_det['ttl_items'].' products of order '.$inv_det['transid'].'  is delivered today to ('.ucwords($inv_det['franchise_name']).'-'.ucwords($inv_det['login_mobile1']).')]. Please collect it ,we are open from [10:00AM to 8:00PM].';
     			$this->erpm->pnh_sendsms($inv_det['mobile'],$cus_sms,$inv_det['franchise_id'],0,'MEM_DELIVERY_SMS');
                         
-                        //Update offers table
                         //if( $this->is_transid_have_member_offer($inv_det['transid']) )
-                        //{
-                            // Feedback SMS
-	                        $feedback_sms = 'Dear '.$inv_det['first_name'].', Please reply your feedback of order received from our store with any number between 1 to '.MAX_RATE_VAL.'. Your feedback is important to process your further offers, StoreKing.';
-	                        $this->erpm->pnh_sendsms($inv_det['mobile'],$feedback_sms,$inv_det['franchise_id'],0,'MEM_FEEDBACK');
-                            
-                            //Set member offers status
-	                        $this->erpm->update_offer_order_status($inv_det['transid']);
+                        // Feedback SMS
+                        $member_id=$inv_det['pnh_member_id'];
+                        $feedback_sms = $inv_det['first_name'].'!!, What are you waiting for!! To avail your  Insurance or Talk Time, Just reply &  complete the Feedback process  by  rating our service between 1 to '.MAX_RATE_VAL.'.';
+                        $this->erpm->pnh_sendsms($inv_det['mobile'],$feedback_sms,$inv_det['franchise_id'],0,'MEM_FEEDBACK');
+
+                        //Set member offers status
+                        $this->erpm->update_offer_order_status($inv_det['transid']);
                         
     		}
     

@@ -10,15 +10,15 @@
 {
     float: right;
     margin-bottom: 4px;
-    margin-right: 7%;
-    width: 26%;
+    width: 24%;
 }
 .legends_outer_wrap
 {
 	float: right;
     height: 18px;
-    padding-top: 10px;
     width: 25%;
+    padding-top:3px;
+    text-align: right;
 }
 .legends_outer_wrap span.legends_color_notsrc_wrap
 {
@@ -52,7 +52,7 @@
 	border: 1px solid #AAAAAA;
     float: right;
     margin: 7px 10px;
-    width: 16%;
+    width: 34%;
 }
 .left_filter_wrap span a
 {
@@ -67,7 +67,7 @@
     padding-top: 5px;
     text-align: center;
     text-decoration: none;
-    width: 32%;
+    width: 25%;
 }
 .total_wrap
 {
@@ -372,7 +372,7 @@
 {
 	background:#ff0000;
 }
-.publish_wrap
+.publish_wrap,.sourceable_wrap
 {
 	background: none repeat scroll 0 0 #FAFAFA;
     float: right;

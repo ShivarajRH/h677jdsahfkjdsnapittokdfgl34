@@ -1,7 +1,7 @@
 <div class="container">
-	<h2>Generate Franchise Account Statement</h2>
+	<h2>Generate Franchise Account Statement - CSV</h2>
 	<div style="clear:both">
-		<form target="hndl_acc_statement_frm" action="<?php echo site_url('admin/pnh_process_gen_statment');?>" id="gen_stat_frm" method="post">
+		<form target="hndl_acc_statement_frm" action="<?php echo site_url('admin/dwn_franchise_accountstat_csv');?>" id="gen_stat_frm" method="post">
 			<table>
 				<tr>
 					<td colspan="2">
@@ -16,15 +16,6 @@
 						<b>Statement Date Range</b> : <br />
 						<input type="text" id="from_date" size="10" name="from" value="<?php echo date('Y-m-01')?>" />
 						<input type="text" id="to_date" size="10" name="to" value="<?php echo date('Y-m-d')?>" />
-					</td>
-				</tr>
-				<tr>
-					<td colspan="2">
-						<b>Format</b> : <br />
-						<select name="stat_type">
-							<option value="1">New</option>
-							<option value="0">Old</option>
-						</select>
 					</td>
 				</tr>
 				<tr>

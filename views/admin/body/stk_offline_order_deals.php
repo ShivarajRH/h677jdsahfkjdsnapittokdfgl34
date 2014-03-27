@@ -1915,7 +1915,7 @@ $("#order_form").submit(function(){
 		
 				if($('.opt_insurance').length>=1 && $('input[name="opt_insurance[]"]:checked').length==0 && resp.new_mem==1)
 				{
-					if(confirm("NO Insurance... Continue?"))
+					if(confirm("No Insurance selected. Do you want to Continue?"))
 					{
 							$('.offr_sel_type').val(3);
 							$(".new_member").val(1);
@@ -1940,7 +1940,7 @@ $("#order_form").submit(function(){
 					}
 				}
 				
-				 if(resp.new_mem==1 && resp.has_insurance==1 && $('.opt_insurance').length <= 1 && $('input[name="opt_insurance[]"]:checked').length !=0)
+                                if(resp.new_mem==1 && $('.opt_insurance').length <= 1 && $('input[name="opt_insurance[]"]:checked').length !=0)
 				{
 						$('.offr_sel_type').val('2');
 						$('.offerd_type').val('2');
@@ -1948,12 +1948,19 @@ $("#order_form").submit(function(){
 					 return false;	
 				}
 
-			 	if(resp.new_mem==0 && resp.has_insurance==1 && $('.opt_insurance').length<=1 && $('input[name="opt_insurance[]"]:checked').length!=0)
+			 	if(resp.new_mem==0 && $('.opt_insurance').length<=1 && $('input[name="opt_insurance[]"]:checked').length!=0)
 				{
 			 		$('.offr_sel_type').val('0');
 			 		
 				 		$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 				 	 return false;	
+				}
+                                if(resp.new_mem==0 && $('.opt_insurance').length > 1 && $('input[name="opt_insurance[]"]:checked').length == 0)
+				{
+			 		$('.offr_sel_type').val(0);
+			 		
+				 		$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
+				 	 return false;
 				}
 			 	 	if(resp.new_mem==1 && resp.has_insurance==0 )
 					{
@@ -1962,17 +1969,17 @@ $("#order_form").submit(function(){
 			 	 			submit_order++;
 					}
 				if(resp.new_mem==0 && resp.has_insurance==0 )	
-					{
-						
-						submit_order++;
-						$("#order_form").submit();
-					}
-					
+                                {
+
+                                        submit_order++;
+                                        $("#order_form").submit();
+                                }
+				
 			 	else
-					{
-						submit_order>=1;	
-						$("#order_form").submit();
-					}
+                                {
+                                        submit_order>=1;
+                                        $("#order_form").submit();
+                                }
 				
 					
 				
@@ -2330,6 +2337,11 @@ $("#franlogin_div").dialog({
 		$('.mid_entrytype').val('0').trigger('liszt:updated');
 		
 	},
+        buttons:{
+            'Authenticate':function(){
+                $(this).dialog('close');
+            }
+        }
 });
 
 $("#sel_state").change(function(){
@@ -2465,6 +2477,11 @@ $( "#authentiacte_blk" ).dialog({
 		$("#franchise_det").html(data).show();
 		});
 	},
+        buttons:{
+            'Authenticate':function(){
+                $(this).dialog('close');
+            }
+        }
 	
 });
 

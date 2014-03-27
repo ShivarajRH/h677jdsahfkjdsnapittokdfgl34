@@ -4048,4 +4048,24 @@ SELECT mi.*,a.username,mf.transid_ref AS transid,mf.process_status,mf.delivery_s
 
 #=================================================
 # Mar_26_2014
+SELECT * FROM pnh_member_offers;
 
+#=================================================
+UPDATE pnh_t_receipt_info SET unreconciled_value = receipt_amount,unreconciled_status = 'pending' WHERE receipt_amount !=0 AND unreconciled_value IS NULL;
+
+UPDATE pnh_franchise_account_summary SET unreconciled_value = IF(credit_amt=0,debit_amt,credit_amt) WHERE unreconciled_status <> 'done' AND unreconciled_value = 0;
+#
+
+SELECT g.short_name AS dest_shortname,IFNULL(e.role_name,'Other') AS role_type,b.name,a.id,a.is_printed,a.sent_invoices,a.manifesto_id,a.remark,
+						c.name AS driver_name,a.hndleby_name,a.sent_on,d.name AS sent_by,c.contact_no,a.hndlby_roleid,a.hndleby_contactno,
+						a.hndleby_empid,f.name AS pick_up_by,f.contact_no AS pick_up_by_contact,a.status,a.bus_id,a.bus_destination,
+						a.hndleby_vehicle_num,a.start_meter_rate,a.amount,a.office_pickup_empid,a.pickup_empid,c.job_title2,a.lrno,a.hndlby_type,h.courier_name,a.hndleby_courier_id,a.modified_on,a.modified_by
+				FROM pnh_m_manifesto_sent_log a
+				JOIN pnh_manifesto_log b ON a.manifesto_id=b.id
+				LEFT JOIN m_employee_info c ON a.hndleby_empid=c.employee_id
+				LEFT JOIN king_admin d ON a.created_by=d.id
+				LEFT JOIN m_employee_roles e ON a.hndlby_roleid = e.role_id
+				LEFT JOIN m_employee_info f ON f.employee_id=a.pickup_empid
+				LEFT JOIN pnh_transporter_dest_address g ON g.id = a.bus_destination
+				LEFT JOIN m_courier_info h ON h.courier_id = a.hndleby_courier_id
+				WHERE 1

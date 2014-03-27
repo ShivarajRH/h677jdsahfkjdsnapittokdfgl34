@@ -143,7 +143,7 @@
 								$("#actions").html('Actions <input type="checkbox" name="select_all">');
 							</script>
 							<?php }
-							$mobile=($sent_det['hndlby_roleid']==0)?0:'('.$sent_det['contact_no'].')';
+							$mobile=($sent_det['hndlby_roleid']===0)? 0 : $sent_det['contact_no'];
 							
 							$emp_id=$sent_det['hndleby_empid'];
 							
@@ -179,7 +179,7 @@
 								<td><?php echo $sent_det['sent_by'];?></td>
 								<td width="200">
 									<?php echo $tranporter_link;?><br>
-									<span><?php echo ($mobile)?$mobile.'<br>':'';?></span>
+									<span><?php echo $mobile ? "(".$mobile.")".'<br>' : '""';?></span>
 									<?php echo $sent_det['hndlby_roleid']?$sent_det['role_type'].'<br>':'';?>
 									<?php echo $sent_det['hndlby_roleid']?'<a href="javascript:void(0)" class="show_vehicle_det" m_id="'.$sent_det['id'].'">Vehicle details</a><br>':'';?>
 								</td>
@@ -265,7 +265,7 @@
 										
 										<!-- update vehicle details button and lr number update button-->
 										<?php if($sent_det['status']!=1 && $sent_det['bus_id']==0 && $sent_det['hndlby_roleid']){ ?>
-												<input type="button" value="Update vehicle details" onclick="show_driver_details(<?php echo $sent_det['id'].','.$mobile.",'".strip_tags($tranporter_link)."'".','.$sent_det['job_title2']; ?>)" <?php echo ($sent_det['status']==3)?'class="hide"' :'""'; ?>>
+												<input type="button" value="Update vehicle details" onclick="show_driver_details(<?php echo $sent_det['id'].',\''.$mobile.'\',\''.strip_tags($tranporter_link).'\','.$sent_det['job_title2']; ?>)" <?php echo ($sent_det['status']==3)?'class="hide"' :'""'; ?>>
 										<?php }else if($sent_det['status']==2 && ($sent_det['bus_id']!=0 || $sent_det['hndlby_type']==4 ) && ($sent_det['office_pickup_empid'] || $sent_det['hndleby_courier_id'] )  ){
 												echo '<br><b>LR number needed</b>';?>
 												<br>

@@ -314,13 +314,13 @@ class Pnh extends Controller{
                 
 		if(count($frags) < 2)
                 {
-                    $this->pdie("Rate value is not found.");
+                    $this->pdie("Invalid entry Please enter a number in the following format  R<SPACE><1-".MAX_RATE_VAL.">.Ex:R 2");
                 }
                 
                 $rate_value = $frags[1];
                 
                 if(!is_numeric($rate_value))
-                    $this->pdie("Invalid rate value entered please enter - R<SPACE><1-".MAX_RATE_VAL."> any 1 number.");
+                    $this->pdie("Invalid entry Please enter a number in the following format  R<SPACE><1-".MAX_RATE_VAL.">.Ex:R 2");
                 
                 if($rate_value > MAX_RATE_VAL)
                     $rate_value = MAX_RATE_VAL;

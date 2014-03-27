@@ -65,7 +65,9 @@ define('IMAGES_URL',"http://static.snapittoday.com/");
 define('ERP_IMAGES_URL',"http://".$_SERVER['HTTP_HOST']."/images/erp_images/");
 define('ERP_PHYSICAL_IMAGES',"images/erp_images/");
 
-
+define("EXOTEL_UID","snapittoday");
+define("EXOTEL_AUTHKEY","491140e9fbe5c507177228cf26cf2f09356e042c-test");
+define("EXOTEL_MOBILE_NO",'9243404342');
 
 define('HTTP_IS_AJAX', isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
 

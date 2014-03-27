@@ -268,7 +268,7 @@
 							<th width="10%">Franchise_name</th>
 							<th width="4%">TransID</th>
 							<th width="4%">Offer towards</th>
-							<th width="4%">Insurance Amount</th>
+							<!--<th width="4%">Insurance Amount</th>-->
 							<th width="4%">Status</th>
 							<th width="4%">Actions <br><label for="chk_all_insurances">Check All</label><input type="checkbox" name="chk_all_insurances" id="chk_all_insurances" class="chk_all_insurances"/></th>									
 					   </tr>	
@@ -283,14 +283,11 @@
 							<td><a href="<?=site_url("admin/pnh_franchise/".$offer['franchise_id']);?>" target="_blank"><?=$offer['franchise_name'];?></a></td>
 							<td><a href="<?=site_url("admin/trans/".$offer['transid_ref'])?>" target="_blank"><?=$offer['transid_ref'];?></a></td>
 							<td>Rs. <?=$offer['offer_towards'];?></td>
-							<td> Rs. <?php echo $offer['offer_value']."&nbsp;&nbsp;&nbsp;";
-                                                
-                                                    if($offer['process_status'] == '1') {?>
-                                                           <a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank" style="float:right; margin-right: 25px;">View</a>
-                                                    <?php }
-                                                    //else echo '--';?>
-                                                
-                            </td>
+<!--							<td> Rs. <?php /*echo $offer['offer_value']."&nbsp;&nbsp;&nbsp;";
+                                                                        if($offer['process_status'] == '1') {?>
+                                                                               <a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank" style="float:right; margin-right: 25px;">View</a>
+                                                                        <?php } //else echo '--'; */?>
+                                                        </td>-->
                             <td><?php
                                     $arr_offer_type = array(1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
                                     $arr_delivery_status = array(0=>"Not delivered",1=>"Order Delivered");
