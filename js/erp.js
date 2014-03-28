@@ -26,8 +26,8 @@ $(function(){
 //	$(".datagrid thead").html("<tr>"+$("#temp_dg tr:first").html()+"</tr>");
 //	$("#temp_dg tr:first").remove();
 //	$(".datagrid tbody").html($("#temp_dg").html());
-	//$(".datagrid").append("<tfoot></tfoot>");
-	//$(".datagrid:not(.nofooter) tfoot").html("<tr><td colspan='100'><a href='javascript:void(0)' class='dg_print'>print</a></td></tr>");
+	$(".datagrid").append("<tfoot></tfoot>");
+	$(".datagrid:not(.nofooter) tfoot").html("<tr><td colspan='100'><a href='javascript:void(0)' class='dg_print'>print</a></td></tr>");
 	if(typeof submenu == "undefined")
 	{
 		$("#content .leftcont").html("<ul>"+$(".menu").html()+"<ul>");
@@ -454,7 +454,7 @@ Array.prototype.remove = function(x) {
  * 5.386823 => 5.39
  */
 function format_number(num,decimal) { //decimal is optional
-    var deci = (decimal === undefined || decimal === null ) ? 2 : decimal;
+    var deci = (decimal === undefined || decimal === null ) ? 0 : decimal;
     num = parseFloat(num);
     
     var final_num = ( num.toString().indexOf(".") !== -1) ? num.toFixed(deci) : num;

@@ -3247,7 +3247,7 @@ DELIMITER ;
 # Mar_01_2014
 
 #	Mar_01_2014: Dealstock plugin module updates - 5 and Attributes Module ( Group Deal, Product Attributes, Category Attributes
-#==========================================================================
+#===========================< Attributes Related Tables >===============================================
 # Mar_01_2014
 CREATE TABLE `m_attributes` (  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT , `attr_name` VARCHAR (150) , PRIMARY KEY ( `id`))
 INSERT INTO `m_attributes`(`id`,`attr_name`) VALUES ( '1','Size');
@@ -4052,8 +4052,8 @@ SELECT * FROM pnh_member_offers;
 
 #=================================================
 UPDATE pnh_t_receipt_info SET unreconciled_value = receipt_amount,unreconciled_status = 'pending' WHERE receipt_amount !=0 AND unreconciled_value IS NULL;
-
 UPDATE pnh_franchise_account_summary SET unreconciled_value = IF(credit_amt=0,debit_amt,credit_amt) WHERE unreconciled_status <> 'done' AND unreconciled_value = 0;
+#=================================================
 #
 
 SELECT g.short_name AS dest_shortname,IFNULL(e.role_name,'Other') AS role_type,b.name,a.id,a.is_printed,a.sent_invoices,a.manifesto_id,a.remark,
@@ -4068,4 +4068,79 @@ SELECT g.short_name AS dest_shortname,IFNULL(e.role_name,'Other') AS role_type,b
 				LEFT JOIN m_employee_info f ON f.employee_id=a.pickup_empid
 				LEFT JOIN pnh_transporter_dest_address g ON g.id = a.bus_destination
 				LEFT JOIN m_courier_info h ON h.courier_id = a.hndleby_courier_id
-				WHERE 1
+				WHERE 1;
+# Mar_27_2014		
+
+SELECT * FROM  pnh_member_offers 
+WHERE transid_ref='PNH53444'
+member_id = '22017216';
+
+SELECT r.*,f.franchise_name,a.name AS admin FROM pnh_t_receipt_info r JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
+WHERE r.status=0 AND r.is_active=1 AND DATE(FROM_UNIXTIME(instrument_date)) <= CURDATE()  AND is_submitted=0 AND f.franchise_id=? ORDER BY instrument_date ASC;
+
+SELECT * FROM `snapittoday_db_jan_2014`.`pnh_t_receipt_info` WHERE franchise_id='59';
+
+SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by,b.bank_name AS submit_bankname,c.submitted_on,s.name AS submitted_by,c.remarks AS submittedremarks
+					FROM pnh_t_receipt_info r
+					JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
+					LEFT JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
+					LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
+					LEFT OUTER JOIN king_admin d ON d.id=r.activated_by 
+					LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id
+					LEFT JOIN king_admin s ON s.id=c.submitted_by
+					WHERE r.status=1 AND r.is_active=1 AND f.is_suspended=0 AND (r.is_submitted=1 OR r.activated_on!=0) AND r.is_active=1 
+					ORDER BY activated_on DESC;
+					
+#============================================================================
+ALTER TABLE `pnh_m_deposited_receipts` ADD INDEX (`receipt_id`);
+#============================================================================
+
+SELECT * FROM `pnh_m_deposited_receipts` WHERE receipt_id='5454';
+
+-- OLD-- old
+
+SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on,c.cheq_cancelled_on,c.cancel_status,
+b.bank_name AS submit_bankname,c.submitted_on,s.name AS submitted_by,c.remarks AS submittedremarks,m.name AS reversed_by 
+FROM pnh_t_receipt_info r
+ JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
+ JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id 
+ LEFT OUTER JOIN king_admin a ON a.id=r.created_by LEFT OUTER JOIN king_admin d ON d.id=r.activated_by 
+ LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id LEFT JOIN king_admin s ON s.id=c.submitted_by 
+ LEFT JOIN king_admin m ON m.id=r.modified_by WHERE r.status IN (2,3) AND r.is_active=1 
+ GROUP BY r.receipt_id ORDER BY activated_on DESC;
+ 
+ SELECT a.*,b.user_id,b.first_name,f.*,DATE(FROM_UNIXTIME(a.created_on)) AS DATE FROM pnh_member_offers a 
+ JOIN pnh_member_info b ON b.pnh_member_id=a.member_id 
+ JOIN pnh_m_franchise_info f ON f.franchise_id= a.franchise_id WHERE a.offer_type=3 ORDER BY a.created_on DESC LIMIT 100
+ 
+ 
+ SELECT a.*,b.user_id,b.first_name,f.franchise_name, DATE(FROM_UNIXTIME(a.created_on)) AS `date` FROM pnh_member_offers a JOIN pnh_member_info b ON b.pnh_member_id=a.member_id 
+ JOIN pnh_m_franchise_info f ON f.franchise_id= a.franchise_id  WHERE a.offer_type IN (0,2) ORDER BY a.created_on DESC LIMIT 100;
+ 
+ #Mar_28_2014
+ 
+--  new 
+ SELECT SUM(r.receipt_amount) AS ttl_receipts_val FROM pnh_t_receipt_info r
+                        JOIN pnh_m_franchise_info f ON f.franchise_id = r.franchise_id
+                        WHERE r.receipt_amount != 0 AND r.unreconciled_value > 0 AND r.status IN (0,1) AND f.territory_id = '16' 
+                        ORDER BY r.created_on DESC
+                        
+-- new
+SELECT * FROM pnh_t_receipt_info 
+WHERE receipt_amount != 0 AND unreconciled_value > 0 AND franchise_id = ? AND STATUS IN (0,1) AND receipt_type != 0 ORDER BY created_on DESC
+
+SELECT r.*,f.franchise_name,a.name AS admin FROM pnh_t_receipt_info r
+LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
+JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
+WHERE r.receipt_amount != 0 AND r.unreconciled_value > 0 #and r.franchise_id = ? 
+AND r.status IN (0,1) AND r.receipt_type != 0 ORDER BY r.created_on DESC;
+
+SELECT FROM_UNIXTIME(1394562600);
+SELECT FROM_UNIXTIME(1394616906);
+SELECT UNIX_TIMESTAMP("2014-03-12 15:05:06");
+
+-- new-- 
+SELECT r.*,f.franchise_name,a.name AS admin FROM pnh_t_receipt_info r 
+LEFT OUTER JOIN king_admin a ON a.id=r.created_by JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
+WHERE r.receipt_amount != 0 AND r.unreconciled_value > 0 AND r.status IN (0,1) AND r.receipt_type != 0 AND FROM_UNIXTIME(r.instrument_date) BETWEEN '1395513000' AND '1396031399'
+ ORDER BY r.created_on DESC;

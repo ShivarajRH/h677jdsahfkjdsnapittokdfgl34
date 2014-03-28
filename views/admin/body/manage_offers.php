@@ -100,7 +100,7 @@
                                     <?php foreach($offers_insurance as $i=>$offer){ ?>
                                         <tr class="insurance_table"  member_id="<?=$offer['member_id'];?>" date=<?=$offer['date'];?> territory_id="<?=$offer['territory_id'];?>" town_id="<?=$offer['town_id'];?>" franchise_id="<?=$offer['franchise_id'];?>" transid="<?=$offer['transid_ref'];?>" offer_type="<?=$offer['offer_type'];?>" offer_value="<?=$offer['offer_value'];?>">
 						<td><?=++$i?></td>
-                                                <td><?=format_datetime_ts($offer['created_on']);?></td>
+                                                <td><?=format_datetime($offer['created_on']);?></td>
 						<td><a href="<?=site_url("admin/pnh_viewmember/".$offer['user_id']);?>" target="_blank"><?=$offer['first_name'];?></a></td>
 						<td><a href="<?=site_url("admin/pnh_franchise/".$offer['franchise_id']);?>" target="_blank"><?=$offer['franchise_name'];?></a></td>
 						<td><a href="<?=site_url("admin/trans/".$offer['transid_ref'])?>" target="_blank"><?=$offer['transid_ref'];?></a></td>
@@ -214,7 +214,7 @@
                                         <?php foreach($offers_talktime as $i=>$offer){ ?>
                                                 <tr class="recharge_table" territory_id="<?=$offer['territory_id'];?>" date=<?=$offer['date'];?> town_id="<?=$offer['town_id'];?>" member_id="<?=$offer['member_id'];?>" franchise_id="<?=$offer['franchise_id'];?>" transid="<?=$offer['transid_ref'];?>" offer_type="<?=$offer['offer_type'];?>" offer_value="<?=$offer['offer_value'];?>">
                                                         <td><?=++$i?></td>
-                                                        <td><?=format_datetime_ts($offer['created_on']);?></td>
+                                                        <td><?=format_datetime($offer['created_on']);?></td>
                                                         <td><a href="<?=site_url("admin/pnh_viewmember/".$offer['user_id'])?>" target="_blank"><?=$offer['first_name'];?></a></td>
                                                         <td><a href="<?=site_url("admin/pnh_franchise/".$offer['franchise_id']);?>" target="_blank"><?=$offer['franchise_name'];?></a></td>
                                                         <td><a href="<?=site_url("admin/trans/".$offer['transid_ref'])?>" target="_blank"><?=$offer['transid_ref'];?></a></td>
@@ -267,7 +267,7 @@
 							<th width="6%">Member Name</th>
 							<th width="10%">Franchise_name</th>
 							<th width="4%">TransID</th>
-							<th width="4%">Offer towards</th>
+							<th width="4%">Order Total</th>
 							<!--<th width="4%">Insurance Amount</th>-->
 							<th width="4%">Status</th>
 							<th width="4%">Actions <br><label for="chk_all_insurances">Check All</label><input type="checkbox" name="chk_all_insurances" id="chk_all_insurances" class="chk_all_insurances"/></th>									
@@ -278,7 +278,7 @@
 						<?php foreach($member_fee_list as $i=>$offer){ ?>
 						<tr class="insurance_table"  member_id="<?=$offer['member_id'];?>" date=<?=$offer['date'];?> territory_id="<?=$offer['territory_id'];?>" town_id="<?=$offer['town_id'];?>" franchise_id="<?=$offer['franchise_id'];?>" transid="<?=$offer['transid_ref'];?>" offer_type="<?=$offer['offer_type'];?>" offer_value="<?=$offer['offer_value'];?>">
 							<td><?=++$i?></td>
-	                        <td><?=format_datetime_ts($offer['created_on']);?></td>
+	                        <td><?=format_datetime($offer['created_on']);?></td>
 							<td><a href="<?=site_url("admin/pnh_viewmember/".$offer['user_id']);?>" target="_blank"><?=$offer['first_name'];?></a></td>
 							<td><a href="<?=site_url("admin/pnh_franchise/".$offer['franchise_id']);?>" target="_blank"><?=$offer['franchise_name'];?></a></td>
 							<td><a href="<?=site_url("admin/trans/".$offer['transid_ref'])?>" target="_blank"><?=$offer['transid_ref'];?></a></td>

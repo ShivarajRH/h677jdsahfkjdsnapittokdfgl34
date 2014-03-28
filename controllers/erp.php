@@ -8300,15 +8300,17 @@ group by g.product_id order by product_name");
 	
 	function pnh_receiptsbytype($type=0,$st_date=false,$en_date=false,$pg=0,$export_rtype=false)
 	{	
-		$user=$this->auth(FINANCE_ROLE);
-		if($st_date!=false && $en_date!=false && (strtotime($st_date)<=0 || strtotime($en_date)<=0))
-			show_404();
+                error_reporting(E_ALL);
+                $user=$this->auth(FINANCE_ROLE);
+		/*if($st_date!=false && $en_date!=false && (strtotime($st_date)<=0 || strtotime($en_date)<=0))
+			show_404();*/
 		$export_rtype=$this->input->post('export_receiptdet');
 		if($export_rtype)
 			$this->erpm->do_gen_receiptsreport($export_rtype);
 				
 		$receipt_list =$this->erpm->pnh_getreceiptbytype($type,$st_date,$en_date,false,$pg);
-		
+//		echo '<pre>'; print_r($receipt_list); die();
+                
 		$data['total_rows']=$receipt_list[0];
 		$data['receipts'] = $receipt_list[1];
 		$data['total_value']=$total_rows=$this->erpm->pnh_getreceiptttl_valuebytype($type);
@@ -8342,9 +8344,10 @@ group by g.product_id order by product_name");
 		//$data['receipts']=$this->erpm->pnh_getreceiptbytypeterry($type,$tid,$pg);
 		$data['total_value']=$this->erpm->pnh_getreceiptttl_valuebytypeterry($type,$tid);
 		$receipt_list=$this->erpm->pnh_getreceiptbytypeterry($type,$tid,$pg);
-		$data['total_rows']=$receipt_list[0];
+                $data['total_rows']=$receipt_list[0];
 		$data['receipts'] = $receipt_list[1];
-		$data['pagetitle']="Cheque's available for Territory:".$this->db->query("select territory_name as n from pnh_m_territory_info where id=?",$tid)->row()->n;
+//		echo '<pre>'; print_r($data); die();
+                $data['pagetitle']="Cheque's available for Territory:".$this->db->query("select territory_name as n from pnh_m_territory_info where id=?",$tid)->row()->n;
 		$data['page']="pnh_pending_receipts";
 		
 		$data['pagination'] = $this->_prepare_pagination(site_url('admin/pnh_receiptsbyterritory/'.$type.'/'.$tid),$receipt_list[0],50,5);
@@ -24424,7 +24427,7 @@ die; */
 	
 			$data['credit_log']=$this->db->query($sql,$fid)->result_array();
 		}
-        else if($type=="unreconcile")
+                else if($type=="unreconcile")
 		{
                         // receipts
 			$sql="select * from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) and receipt_type != 0 order by created_on desc";
@@ -28760,9 +28763,9 @@ die; */
             
             
             
-            $offers_insurance = $this->db->query("select a.*,b.user_id,b.first_name,f.*, date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  where a.offer_type in (0,2) order by a.created_on desc limit 100")->result_array();
-            $offers_talktime = $this->db->query("select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100")->result_array();
-            $member_fee_list = $this->db->query("select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=3 order by a.created_on desc limit 100")->result_array(); 
+            $offers_insurance = $this->db->query("select a.*,b.user_id,b.first_name,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  where a.offer_type in (0,2) order by a.created_on desc limit 100")->result_array();
+            $offers_talktime = $this->db->query("select a.*,b.user_id,b.first_name,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100")->result_array();
+            $member_fee_list = $this->db->query("select a.*,b.user_id,b.first_name,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=3 order by a.created_on desc limit 100")->result_array(); 
             /*
 			//define("MAX_REFERAL_COUNT",3);
 			$data['referral_offers'] = $this->db->query("select num_referred,referred_by,offer_value,floor(num_referred/?) as times from (

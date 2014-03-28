@@ -306,6 +306,7 @@ h4
     width: 57%;
 }
 .datagrid1 th { float: left; padding: 2px 5px 2px 2px }
+/*==================< RECONCILATION STYLE STARTS >==================*/
 .button-tiny_wrap {
     font-size: 11px;
     height: 16.4px;
@@ -330,5 +331,6 @@ h4
 .center {
     text-align: center;
 }
+/*==================< RECONCILATION STYLE ENDS >==================*/
 .ui-widget-content a { color: #313022; }
 #dg_i_receipt_id,#dg_i_credit_note_id,#dg_i_receipt_amount,#dg_i_credit_amount,#dg_i_unreconciled_value,.dg_l_total_adjusted_val,.dg_ttl_unreconciled_after { background: none !important; border: none !important; box-shadow:none;text-align:left; }

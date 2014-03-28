@@ -2095,7 +2095,7 @@ $(function(){
                                         </td>
                                     </tr>
                             </tbody>
-                            <tfoot class="nofooter">
+                            <tfoot>
                                 <tr>
                                     <td colspan="4">
                                         <span style="float:right;">Total reconciled (Rs.):</span><br>
@@ -2147,7 +2147,7 @@ $(function(){
                                         </td>
                                     </tr>
                             </tbody>
-                            <tfoot class="nofooter">
+                            <tfoot>
                                 <tr>
                                     <td colspan="4">
                                         <span style="float:right;">Total reconciled (Rs.):</span><br>

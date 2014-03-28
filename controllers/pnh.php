@@ -314,13 +314,13 @@ class Pnh extends Controller{
                 
 		if(count($frags) < 2)
                 {
-                    $this->pdie("Invalid entry Please enter a number in the following format  R<SPACE><1-".MAX_RATE_VAL.">.Ex:R 2");
+                    $this->pdie("Invalid entry Please enter a number in the following format  R&lt;SPACE&gt;<1-".MAX_RATE_VAL.">.Ex:R 2");
                 }
                 
                 $rate_value = $frags[1];
                 
                 if(!is_numeric($rate_value))
-                    $this->pdie("Invalid entry Please enter a number in the following format  R<SPACE><1-".MAX_RATE_VAL.">.Ex:R 2");
+                    $this->pdie("Invalid entry Please enter a number in the following format  R&lt;SPACE&gt;1-".MAX_RATE_VAL.".Ex:R 4");
                 
                 if($rate_value > MAX_RATE_VAL)
                     $rate_value = MAX_RATE_VAL;
@@ -336,7 +336,7 @@ class Pnh extends Controller{
                                                     WHERE mo.feedback_status=0 AND mo.delivery_status=1 AND mi.mobile=? ",$from);
                 if($mem_set->row()->snos == null)
                 {
-                    $this->pdie("Offer is waiting for delivery.");
+                    $this->pdie("Your order not yet Offer is waiting for delivery.");
                 }
                 else
                 {
