@@ -11594,6 +11594,116 @@ order by action_date";
         }
         return $output;
     }
+	/**
+     * Get territory manager and town executives info
+     * @param type $invoice_no string
+     * @param type $job_name string
+     * @return type array
+     */
+    function get_terry_employee_byinvoiceno($invoice_no,$job_name='tm') {
+        if($job_name == 'be') {
+            $job_title = 5;
+        }
+        else {
+            $job_title = 4;
+        }
+        $result_arr = $this->db->query("select tlink.employee_id from shipment_batch_process_invoice_link sd
+                                            join proforma_invoices pi on pi.p_invoice_no = sd.p_invoice_no
+                                            join king_transactions tr on tr.transid = pi.transid
+                                            join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
+                                            join m_town_territory_link tlink on tlink.territory_id = f.territory_id and tlink.is_active=1
+                                            left join m_employee_info e on e.employee_id = tlink.employee_id 
+                                            where sd.invoice_no = ? and e.job_title=?
+                                            group by tlink.employee_id",array($invoice_no,$job_title))->result_array();
+        
+        foreach($result_arr as $i=>$row) {
+            $data_arr[$i]['employee_id']=$row['employee_id'];
+        }
+        $output = $data_arr;
+        return $data_arr;
+    }
+    /**
+     * Check is acknowledgement printed and printed count info
+     * @param type $invoice_no_str string
+     * @param type $created_by int
+     * @return type array 
+     */
+    function is_acknowledgement_printed($invoice_no_str,$created_by) {
+        $all_inv_list_arr=explode(',',$invoice_no_str);
+        if($all_inv_list_arr != '') {
+                foreach($all_inv_list_arr as $invno) {
+                    $field_arr = array(
+                        'p_inv_no'=>$invno
+                        //,'created_by'=>$created_by
+                    );
+
+                    $limit=1; $offset=1;
+                    $this->db->select('count');
+                    $result = $this->db->get_where("pnh_acknowledgement_print_log",$field_arr,$limit);
+        //            echo ''.$this->db->last_query();die();
+
+                    if($result->num_rows()==0) {
+                        $arr_print_log['count'] = $result->num_rows();
+                    }
+                    else {
+                        $arr_print_log['count'] = $result->row()->count;
+                    }
+                }
+        }
+        else {
+            $arr_print_log['count'] = '--';
+        }
+        return $arr_print_log;
+    }
+    
+    /**
+     * Funnction to get all territory managers of the territory
+     * @param type $territory_id int
+     * @return type array
+     */
+    function get_territory_managers($territory_id) {
+        $rdata = $this->db->query("select distinct emp.employee_id,emp.name,emp.email,emp.gender,emp.city,emp.contact_no,if(emp.job_title=4,'TM','BE') as job_role 
+                    from m_employee_info emp
+                    join m_town_territory_link ttl on ttl.employee_id = emp.employee_id and ttl.is_active=1
+                    join pnh_m_territory_info t on t.id = ttl.territory_id
+                    where job_title = 4 and is_suspended=0 and t.id=?
+                    order by job_title ASC",$territory_id)->result_array();## and ttl.is_active=1 group by emp.employee_id
+//                echo ''.  json_encode($rdata);
+            return $rdata;
+    }
+    
+    /**
+     * Funnction to get all town executives of the territory
+     * @param type $territory_id int
+     * @return type array
+     */
+    function get_town_executives($territory_id) { //,$employee_id
+        $rdata = $this->db->query("select distinct emp.employee_id,emp.name,emp.email,emp.gender,emp.city,emp.contact_no,if(emp.job_title=4,'TM','BE') as job_role 
+                    from m_employee_info emp
+                    join m_town_territory_link ttl on ttl.employee_id = emp.employee_id and ttl.is_active=1
+                    join pnh_m_territory_info t on t.id = ttl.territory_id
+                    where job_title = 5 and is_suspended=0 and t.id=?
+                    order by job_title ASC",array($territory_id))->result_array();// #group by emp.employee_id # and ttl.is_active=1and ttl.parent_emp_id=? ,$employee_id
+//             $rdata['result'] = echo ''.  json_encode($rdata);
+        return $rdata;
+    }
+    /**
+     * Get the territory details
+     * @param type $territory_id int
+     * @return type array
+     */
+    function get_territory_info($territory_id) {
+        return $this->db->query("select * from pnh_m_territory_info where id=?",$territory_id)->row_array();
+    }
+	
+	 /**
+     * Get Username by id
+     * @param type $userid int
+     * @return type string
+     */
+    function get_username_byid($userid) {
+        return $this->db->query("select username from king_admin where id=?",$userid)->row()->username;
+    }
 
 	function vendor_alpha_list($ch)
 	{

@@ -51,3 +51,15 @@ alter table `pnh_franchise_account_summary` add column `unreconciled_value` doub
 alter table pnh_t_receipt_info add column cheq_realized_on varchar(255) after activated_on; 
 alter table pnh_m_deposited_receipts add column cheq_cancelled_on datetime after dbt_amt;
 
+CREATE TABLE `pnh_acknowledgement_print_log` (
+`sno` bigint(20) NOT NULL AUTO_INCREMENT,
+`log_id` varchar(150) DEFAULT NULL,
+`tm_emp_id` varchar(100) DEFAULT NULL,
+`be_emp_id` varchar(100) DEFAULT NULL,
+`p_inv_no` varchar(100) NOT NULL,
+`created_on` varchar(50) DEFAULT NULL,
+`created_by` int(30) DEFAULT NULL,
+`status` int(10) DEFAULT '0',
+`count` int(100) DEFAULT '0',
+PRIMARY KEY (`sno`)
+);

@@ -25499,6 +25499,368 @@ die; */
     }
 
 	/**
+        * Updating the acknowledgement printed log into invoices
+        */
+        function jx_update_acknowledge_print_log()
+        {
+                $this->erpm->auth(PNH_SHIPMENT_MANAGER);
+                $all_inv_list = $this->input->post('all_inv_list');
+                $created_by = $this->input->post('created_by');
+                $status = $this->input->post('status');
+                if($all_inv_list) {
+                    $all_inv_list_arr=explode(',',$all_inv_list);
+                    
+                        $log_id =  substr(time(),4,-1).'A'.rand(1, 5);
+                        
+                        foreach($all_inv_list_arr as $invno) {
+
+                                $field_arr = array(
+                                    'p_inv_no'=>$invno
+                                    ,'created_by'=>$created_by
+                                );
+                                
+                                $limit=1; $offset=1;
+                                $result = $this->db->get_where("pnh_acknowledgement_print_log",$field_arr,$limit);
+
+                                if($result->num_rows()==0) {
+                                    
+                                    $tm_id=$be_id='';
+                                    $tm_arr = $this->erpm->get_terry_employee_byinvoiceno($invno,'tm');
+                                    if(!empty($tm_arr)) {
+                                        foreach($tm_arr as $tm) 
+                                            $tm_id .= $tm['employee_id'].' ';
+                                    }
+                                    $be_arr = $this->erpm->get_terry_employee_byinvoiceno($invno,'be');
+                                    if(!empty($be_arr)) {
+                                        foreach($be_arr as $be) 
+                                            $be_id .= $be['employee_id'].' ';
+                                    }
+                                    
+                                    $field_arr['log_id'] = $log_id;
+                                    $field_arr['tm_emp_id'] = $tm_id;
+                                    $field_arr['be_emp_id'] = $be_id;
+                                    $field_arr['created_on'] = time();
+                                    $field_arr['status'] = $status;
+                                    $field_arr['count'] = 1;
+                                    
+                                    //Insert
+                                    $this->db->insert("pnh_acknowledgement_print_log",$field_arr);
+                                    //$this->db->query('update pnh_acknowledgement_print_log set count = `count` + 1 where invoice_no = ? limit 1',$invno);
+                                    if(!$this->db->_error_number()) {
+                                        $data = array("status"=>"success","response"=>"Log Created.","log_id"=>  $log_id);
+                                    }
+                                    else {
+                                        $data = array("status"=>"fail","response"=>$this->db->_error_message());
+                                    }
+                                }
+                                else {
+                                    
+                                    $row = $result->row_array();
+                                    $this->db->query('update pnh_acknowledgement_print_log set count = `count` + 1 where sno = ? limit 1',$row['sno']);
+                                    $data = array("status"=>"success","response"=>"Log Updated.","log_id"=>  $row['log_id']);
+                                    
+                                }
+                    }
+                    
+                }
+                else {
+                    $data = array("status"=>"fail","response"=>"No Invoices found.");
+                }
+                echo json_encode($data);
+                
+        }
+        
+        
+        /**
+         * Ajax function to Print Acknowledgements list
+         */
+        function jx_get_acknowledgement_list() {
+            $user = $this->erpm->auth(PNH_SHIPMENT_MANAGER);
+            if(isset($_POST)) {
+                $tm_id = $this->input->post('tm_id');
+                $be_id = $this->input->post('be_id');
+                
+                $data['dispatch_det'] = array(
+//                    "territory_id" => $this->input->post('territory_id')
+//                    ,"tm_id" => $tm_id
+//                    ,"be_id" => $be_id
+                    "invs" =>$this->input->post('pinv_list')
+                );
+                $data['dispatch_det'] = array('invs' => $this->input->post('p_invoice_ids_str') );
+                $data['sdate'] = date("Y-m-d",strtotime($this->input->post('date_from')) );
+                $data['edate'] = date("Y-m-d",strtotime($this->input->post('date_to')) );
+                $data['user'] =$user;
+                $this->load->view("admin/body/print_invoice_acknowledgement",$data);
+                //$output = array("status"=>"fail","");
+            }
+            else {
+                $output = array("status"=>"fail","response"=>"No input data.");
+				echo json_encode($output);
+            }
+            
+        }
+        
+        /**
+        * Updating the acknowledgement printed log into invoices
+        */
+        function jx_show_acknowledgement_log()
+        {
+                $this->erpm->auth(PNH_SHIPMENT_MANAGER);
+                $all_inv_list = $this->input->post('p_invoice_ids_str');
+                
+//                $created_by = $this->input->post('created_by');
+//                $status = $this->input->post('status');
+                
+                if($all_inv_list) {
+                    $all_inv_list_arr=explode(',',$all_inv_list);
+                    
+                    $show_by_each_invs=0; // 1 => show individual invoice 0 => Group invoices by log_id
+                                
+                    if($show_by_each_invs == 1) {
+                        //=====================================
+                        // Individual invoice view
+                        //=====================================
+                        foreach($all_inv_list_arr as $i=>$invno) {
+                                        $field_arr = array('p_inv_no'=>$invno);
+
+                                        $limit=50; $offset=1;
+                                        $result = $this->db->get_where("pnh_acknowledgement_print_log",$field_arr,$limit);
+
+                                        if($result->num_rows()==0) {
+                                            if(!$this->db->_error_number()) {
+                                                $data = array("status"=>"fail","response"=>"No records found.");
+                                            }
+                                            else {
+                                                $data = array("status"=>"fail","response"=>$this->db->_error_message());
+                                            }
+                                        }
+                                        else {
+                                                $rows_arr = $result->result_array();
+                                                foreach($rows_arr as $row) {
+                                                    $data_arr[$i]['log_id']=$row['log_id'];
+                                                    $data_arr[$i]['p_inv_no']=$row['p_inv_no'];
+                                                    $data_arr[$i]['created_on']= format_datetime_ts($row['created_on']);
+                                                    $data_arr[$i]['created_by']= ucfirst( $this->erpm->get_username_byid($row['created_by']) );
+                                                    $data_arr[$i]['status']= $row['status'];
+                                                    $data_arr[$i]['count']= $row['count'];
+                                                    if($row['tm_emp_id']!='') {
+                                                        $emp_details=$this->erpm->get_empinfo($row['tm_emp_id']);
+                                                        $tm_name=ucfirst( $emp_details['name'] );
+                                                    }
+                                                    else {
+                                                        $tm_name='--';
+                                                    }
+                                                    if($row['be_emp_id']!='') {
+                                                        $emp_details=$this->erpm->get_empinfo($row['be_emp_id']);
+                                                        $be_name=ucfirst( $emp_details['name'] );
+                                                    }
+                                                    else {
+                                                        $be_name='--';
+                                                    }
+                                                    $data_arr[$i]['tm_name']= $tm_name;
+                                                    $data_arr[$i]['be_name']= $be_name;
+                                                }
+                                        }
+                            }
+                    }
+                    else {
+                        //=====================================
+                        // Gouped invoice view
+                        //=====================================
+                            foreach($all_inv_list_arr as $i=>$invno) 
+                                $tmp_arr[$i] = '"'.$invno.'"';
+                    
+                            $all_inv_list_str=implode(',',$tmp_arr);
+
+                            $sql = "select log_id,tm_emp_id,be_emp_id,group_concat(p_inv_no) as grp_invs,created_on,created_by,status,count from pnh_acknowledgement_print_log 
+                                        where p_inv_no in ($all_inv_list_str)
+                                        group by log_id";
+
+                            $result = $this->db->query($sql,$all_inv_list_str);
+                            $data_arr=array();
+
+                                        if($result->num_rows()==0) {
+                                            if(!$this->db->_error_number()) {
+                                                $data = array("status"=>"fail","response"=>"No records found.");
+                                            }
+                                            else {
+                                                $data = array("status"=>"fail","response"=>$this->db->_error_message());
+                                            }
+                                        }
+                                        else {
+                                                $rows_arr = $result->result_array();
+                                                foreach($rows_arr as $row) {
+                                                    $data_arr[$i]['log_id']=$row['log_id'];
+                                                    $data_arr[$i]['p_inv_no']=trim($row['grp_invs']);
+                                                    $data_arr[$i]['created_on']= format_datetime_ts($row['created_on']);
+                                                    $data_arr[$i]['created_by']= ucfirst( $this->erpm->get_username_byid($row['created_by']) );
+                                                    $data_arr[$i]['status']= $row['status'];
+                                                    $data_arr[$i]['count']= $row['count'];
+                                                    if($row['tm_emp_id']!='') {
+                                                        $emp_details=$this->erpm->get_empinfo($row['tm_emp_id']);
+                                                        $tm_name=ucfirst( $emp_details['name'] );
+                                                    }
+                                                    else 
+                                                        $tm_name='--';
+
+                                                    if($row['be_emp_id']!='') {
+                                                        $emp_details=$this->erpm->get_empinfo($row['be_emp_id']);
+                                                        $be_name=ucfirst( $emp_details['name'] );
+                                                    }
+                                                    else 
+                                                        $be_name='--';
+
+                                                    $data_arr[$i]['tm_name']= $tm_name;
+                                                    $data_arr[$i]['be_name']= $be_name;
+                                                }
+                                        }
+                    }
+                    
+                    $data = array("status"=>"success","response"=>"Data found.","result"=>$data_arr,'lastqry'=> $this->db->last_query());
+                }
+                else {
+                    $data = array("status"=>"fail","response"=>"No Invoices found.");
+                }
+                echo json_encode($data);
+        }
+
+        /**
+        * function to generate bulk invoice acknowledgement by date range 
+        */
+        function print_invoice_acknowledgementbydate($get_date_from='',$territory_id='') {
+                $user = $this->erpm->auth(PNH_SHIPMENT_MANAGER);
+                if(isset($_POST['date_from'])) {
+                    $date_from = $this->input->post('date_from');
+                }
+                elseif($get_date_from != '') {
+                    $date_from = $get_date_from;
+                }
+
+                if($date_from == '' ) {
+                        $today = time()-(60*60*24*7);
+                        $date_from = date('Y-m-d',$today);
+                }
+                else {
+                        $today = strtotime($date_from);
+                }
+                $data['territory_id'] = $territory_id;
+                $data['date_from'] = $date_from;
+                $data['date_to'] = date("Y-m-d",strtotime($date_from)+60*60*24*7);
+
+                $get_slab_det = $this->sugg_slabs($date_from);
+                $cond='';
+                
+                $data['terr_info'] = $terr_info = $this->db->query("select * from pnh_m_territory_info order by territory_name")->result_array();
+                
+                if($territory_id != '') {
+                    //$cond .= ' and f.territory_id = '.$territory_id;
+                }
+                foreach($terr_info as $terr) {
+//                    if($territory_id != '' and $territory_id == $terr['id'] ) {
+//                         $cond .= ' and f.territory_id = '.$territory_id;
+                         
+                            foreach($get_slab_det as $slan_no => $slab) {
+
+                                    $arr_rdata[$slan_no]['date_from']=$slab['date_from'];
+                                    $arr_rdata[$slan_no]['date_to']=$slab['date_to'];
+
+                                    $rslt = $this->db->query("select f.territory_id,t.territory_name,pi.dispatch_id,group_concat(distinct man.id) as man_id,sd.shipped_on,sd.shipped,count(tr.franchise_id) as ttl_franchises
+                                                                        ,group_concat(distinct sd.invoice_no) as invoice_no_str,count(distinct sd.invoice_no) as ttl_invs,count(distinct f.franchise_id) as ttl_franchises		    
+                                                                        from pnh_m_manifesto_sent_log man
+                                                                                    join shipment_batch_process_invoice_link sd on sd.inv_manifesto_id = man.manifesto_id
+                                                                            join proforma_invoices `pi` on pi.p_invoice_no = sd.p_invoice_no and pi.invoice_status = 1 
+                                                                            join king_transactions tr on tr.transid = pi.transid
+                                                                            join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
+                                                                                join pnh_m_territory_info t on t.id = f.territory_id
+                                                                            where shipped=1 and sd.shipped_by>0 and unix_timestamp(sd.shipped_on)!=0 and dispatch_id != 0 and date(sent_on) between ? and ?  and f.`territory_id` = ?
+                                                                        group by f.territory_id
+                                                                        order by t.territory_name ASC",array($slab['date_from'],$slab['date_to'],$terr['id']))->result_array();
+                                    
+                                        $arr_rdata[$slan_no]['result'][$terr['id']] = $rslt;
+                            }
+//                    }
+                }
+                $data['slabs_data'] = $arr_rdata;
+                $data['user'] = $user;
+//                echo '<pre>';print_r($arr_rdata);exit("");
+                $data['page']="gen_invoice_acknowledgement";
+                $this->load->view("admin",$data);
+    }
+    
+    /**
+     * Function to divide the weeks based on number of slabs
+     * @param type $d date
+     * @param type $consider_cur_slab int
+     * @return type array
+     */
+    function sugg_slabs($d='',$consider_cur_slab=0)
+    {
+		if($d=='') $d=date("Y-m-d",time());
+		$week_slabs = array();
+		$week_slabs[1] = 1;
+		$week_slabs[2] = 1;
+		$week_slabs[3] = 2;
+		$week_slabs[4] = 2;
+		$week_slabs[5] = 2;
+		$week_slabs[6] = 3;
+		$week_slabs[0] = 3;
+		
+		$slab_days = array();
+		foreach($week_slabs as $dno=>$slabno)
+		{
+			if(!isset($slab_days[$slabno]))
+				$slab_days[$slabno] = array();
+			array_push($slab_days[$slabno],$dno);
+		}
+		
+		$ttl_slabs = count($slab_days);
+		
+		$cur_week_day = date('w',strtotime($d)); 
+		
+		$cur_day_slab = $week_slabs[$cur_week_day];
+		
+		if($consider_cur_slab)
+		{
+			$ttl_slab_days = count($slab_days[$cur_day_slab]);
+			$d = date('Y-m-d',strtotime($d)+$ttl_slab_days*24*60*60);
+			return $this->sugg_slabs($d,0); 
+		}
+			
+		
+		//reset cur_slab_date to slab start index  
+		$cur_slab_st_indx = array_search($cur_week_day, $slab_days[$cur_day_slab]);
+		$slab_start_date = date('Y-m-d',(strtotime($d)-$cur_slab_st_indx*24*60*60));
+		
+		/*echo "Current Week Day :".$cur_week_day.'<br>';
+		echo "Current Day Slab :".$cur_day_slab.'<br>';echo '<pre>';
+		print_r($slab_days[$cur_day_slab]);echo '</pre>';
+		echo "Slab Start Date : ".$slab_start_date.'<br>';*/
+		
+		$slab_date = $slab_start_date;
+		$slab_dates = array();
+		for($k=1;$k<=$ttl_slabs;$k++)
+		{
+			$cur_day_slab--;
+			if($cur_day_slab == 0)
+				$cur_day_slab = $ttl_slabs;
+			$ttl_slab_days = count($slab_days[$cur_day_slab]);
+			$t_slab_dates = array();
+			for($j=1;$j<=$ttl_slab_days;$j++)
+			{
+				$slab_date = date('Y-m-d',strtotime($slab_date)-1*24*60*60);
+				$t_slab_dates[] = $slab_date;
+			}
+			
+			$t_slab_dates = array_reverse($t_slab_dates);//array($t_slab_dates[0],$t_slab_dates[$ttl_slab_days-1]); //full date range
+			$slab_dates['slab'.$k] = array('date_from'=>$t_slab_dates[0],'date_to'=>$t_slab_dates[$ttl_slab_days-1]); //full date range
+
+		}
+//		echo '<pre>';print_r($slab_dates);die();
+		return 	$slab_dates;
+    }
+
+
+	/**
      * Function to get list of reconciled invoices or dr data of given receipt id
      * @param type $receipt_id int 
      * @param type $franchise_id int
