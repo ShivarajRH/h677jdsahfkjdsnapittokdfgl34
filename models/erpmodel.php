@@ -930,14 +930,33 @@ class Erpmodel extends Model
 		return 0;
 	}
 	
+	function getcourier_details($cid)
+	{
+		$cs=$this->db->query("select ci.courier_id,ci.courier_name,ci.is_active,ci.cod_available,ci.ref_partner_id
+                    from m_courier_info ci where courier_id=? order by courier_name asc",$cid)->result_array();
+		foreach($cs as $i=>$c)
+		{
+			$cs['pincodes']=$this->db->query("select pincode,status from m_courier_pincodes where courier_id=?",$c['courier_id'])->result_array();
+			
+                        
+                        $awb=$this->db->query("select * from m_courier_awb_series where courier_id=?",$c['courier_id'])->row_array();
+			$cs['awb']['awb_no_prefix']=$awb['awb_no_prefix'];
+			$cs['awb']['awb_current_no']=$awb['awb_current_no'];
+			$cs['awb']['awb_no_suffix']=$awb['awb_no_suffix'];
+                        $cs['awb']['awb_end_no']=$awb['awb_end_no'];
+			$cs['awb']['awb_current_no']=$awb['awb_current_no'];
+		}
+		return $cs;
+	}
+	
 	function getcouriers()
 	{
 		$cs=$this->db->query("select ci.*
-										,if(ci.is_active=1,'PNH',if(ref_partner_id=0,'SIT',pt.name)) as used_for
-										,if(ci.is_active=1,'PNH',if(ref_partner_id=0,'SIT',pt.trans_prefix)) as trans_prefix
-										,trans_mode from m_courier_info ci
-								left join `partner_info` as pt on pt.id = ci.ref_partner_id
-							order by courier_name asc")->result_array();
+					,if(ci.is_active=1,'PNH',if(ref_partner_id=0,'SIT',pt.name)) as used_for
+					,if(ci.is_active=1,'PNH',if(ref_partner_id=0,'SIT',pt.trans_prefix)) as trans_prefix
+					,trans_mode from m_courier_info ci
+					left join `partner_info` as pt on pt.id = ci.ref_partner_id
+					order by courier_name asc")->result_array();
 		foreach($cs as $i=>$c)
 		{
 			$cs[$i]['pincodes']=$this->db->query("select count(1) as l from m_courier_pincodes where courier_id=?",$c['courier_id'])->row()->l;
@@ -951,14 +970,24 @@ class Erpmodel extends Model
 	function getcouriers_used_for()
 	{
 		$cs=$this->db->query("select distinct ci.ref_partner_id,is_active
-									,if(ci.is_active=1,'PNH',if(ref_partner_id=0,'SIT',pt.name)) as used_for
-									,if(ci.is_active=1,'PNH',if(ref_partner_id=0,'SIT',pt.trans_prefix)) as trans_prefix,trans_mode 
-								from m_courier_info ci
-								left join `partner_info` as pt on pt.id = ci.ref_partner_id
-							order by courier_name asc")->result_array();
+					,if(ci.is_active=1,'PNH',if(ref_partner_id=0,'SIT',pt.name)) as used_for
+					,if(ci.is_active=1,'PNH',if(ref_partner_id=0,'SIT',pt.trans_prefix)) as trans_prefix,trans_mode 
+					from m_courier_info ci
+					left join `partner_info` as pt on pt.id = ci.ref_partner_id
+					order by courier_name asc")->result_array();
 		return $cs;
 	}
 	
+    function getpartners() 
+	{
+            $pts_rslt = $this->db->query("select pt.* from partner_info pt order by name;")->result_array();
+            $pts_arr = array();
+            foreach($pts_rslt as $key=>$pts) {
+                    $pts_arr[$key] =$pts; 
+            }
+            return $pts_arr;
+    }
+    
 	function getpincodesforcourier($cid)
 	{
 		$raw=$this->db->query("select pincode from m_courier_pincodes where courier_id=? and status=1 order by pincode asc",$cid)->result_array();
@@ -974,8 +1003,10 @@ class Erpmodel extends Model
 			$pincodes=explode(",",$pincodes);
 		$pincodes=array_unique($pincodes);
 		$this->db->query("delete from m_courier_pincodes where courier_id=?",$courier_id);
-		foreach($pincodes as $p)
+		foreach($pincodes as $p) {
+                        if($p=='') continue;
 			$this->db->query("insert into m_courier_pincodes(courier_id,pincode,status) values(?,?,1)",array($courier_id,$p));
+                }
 	}
 	
 	function do_updateawb($cid)
@@ -987,16 +1018,66 @@ class Erpmodel extends Model
 		$this->db->query("insert into m_courier_awb_series(courier_id,awb_no_prefix,awb_no_suffix,awb_start_no,awb_end_no,awb_current_no,is_active) values(?,?,?,?,?,?,1)",array($courier,$awb_prefix,$awb_suffix,$awb_start,$awb_end,$awb_start));
 	}
 	
-	function do_addcourier()
+	function do_updatecourier()
 	{
-		foreach(array("name","awb_prefix","awb_suffix","awb_start","awb_end","pincodes") as $inp)
+		$user = $this->erpm->auth();
+		
+		foreach(array("courier_id","name","awb_prefix","awb_suffix","awb_start","awb_end","pincodes","used_for","cod") as $inp)
 			$$inp=$_POST[$inp];
-		$sql="insert into m_courier_info(courier_name) values(?)";
-		$this->db->query($sql,$name);
-		$courier_id=$this->db->insert_id();
+                
+		if($used_for=='00') 
+		{ 
+			echo 'Please select Courier used for option.'; 
+			die(); 
+		}
+                
+		$is_active = 0; 
+		$ref_partner_id=0;
+        if($used_for=='pnh')
+        	$is_active = 1;
+        elseif($used_for == 'sit')
+        	$ref_partner_id = 0;
+        else 
+        	$ref_partner_id = $used_for;
+        
+		$sql="update m_courier_info set courier_name =?,ref_partner_id=?,is_active=?,cod_available=? where courier_id=?";
+		$this->db->query($sql,array($name,$ref_partner_id,$is_active,$cod,$courier_id));
+		
 		$pincodes=explode(",",$pincodes);
 		$this->erpm->do_updatepincodesforcourier($courier_id,$pincodes);
-		$this->db->query("insert into m_courier_awb_series(courier_id,awb_no_prefix,awb_no_suffix,awb_start_no,awb_end_no,awb_current_no,is_active) values(?,?,?,?,?,?,1)",array($courier_id,$awb_prefix,$awb_suffix,$awb_start,$awb_end,$awb_start));
+		
+		if($this->db->query('select count(*) as t from m_courier_awb_series where courier_id = ? ',$courier_id)->row()->t)
+		{
+			$this->db->query("update m_courier_awb_series set awb_no_prefix=?,awb_no_suffix=?,awb_start_no=?,awb_end_no=?,awb_current_no=?,is_active=?,modified_on=now(),modified_by=? where courier_id=  ? ",array($awb_prefix,$awb_suffix,$awb_start,$awb_end,$awb_start,1,$user['userid'],$courier_id));
+		}else
+		{
+			$this->db->query("insert into m_courier_awb_series (awb_no_prefix,awb_no_suffix,awb_start_no,awb_end_no,awb_current_no,is_active,courier_id,created_on,created_by) values (?,?,?,?,?,?,?,now(),?)",array($awb_prefix,$awb_suffix,$awb_start,$awb_end,$awb_start,1,$courier_id,$user['userid']));
+		}
+		
+		$this->session->set_flashdata("erp_pop_info","Courier info updated");
+		redirect("admin/courier");
+	}
+	
+	function do_addcourier()
+	{
+        foreach(array("name","awb_prefix","awb_suffix","awb_start","awb_end","pincodes","used_for","cod") as $inp)
+			$$inp=$_POST[$inp];
+                
+		$is_active = ''; 
+		$ref_partner_id=0;
+        if($used_for=='pnh')
+        	$is_active = 1;
+		elseif($used_for == 'sit')
+ 			$ref_partner_id = 0;
+		else
+        	$ref_partner_id = $used_for;
+                
+		$this->db->query("insert into `m_courier_info`(`courier_name`,`ref_partner_id`,`is_active`,`cod_available`,created_on,created_by) values(?,?,?,?,now(),?) ",array($name,$ref_partner_id,$is_active,$cod,$user['userid']));
+		$courier_id=$this->db->insert_id();
+                
+		$pincodes=explode(",",$pincodes);
+		$this->erpm->do_updatepincodesforcourier($courier_id,$pincodes);
+		$this->db->query("insert into m_courier_awb_series(courier_id,awb_no_prefix,awb_no_suffix,awb_start_no,awb_end_no,awb_current_no,is_active,created_on,created_by) values(?,?,?,?,?,?,1,now(),?)",array($courier_id,$awb_prefix,$awb_suffix,$awb_start,$awb_end,$awb_start,$user['userid']));
 		$this->session->set_flashdata("erp_pop_info","New courier added");
 		redirect("admin/courier");
 	}
