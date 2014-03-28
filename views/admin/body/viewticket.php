@@ -94,6 +94,12 @@ else if($ticket['type']==5)
 	echo 'PNH Returns';
 else if($ticket['type']==6)
 	echo 'Courier Followups';
+else if($ticket['type']==7)
+	echo 'In Transit';
+else if($ticket['type']==8)
+	echo 'Received';
+else if($ticket['type']==9)
+	echo 'Not Received';
 	
 ?>
 
@@ -102,9 +108,15 @@ else if($ticket['type']==6)
 <form method="post">
 <input type="hidden" name="action" value="2">
 <select name="type">
+
+<?php if($ticket['type']>=5 || $ticket['type']>6){ $statuss=array();$statuss[7]="In Transit";$statuss[8]="Received";$statuss[9]="Not Received"; foreach($statuss as $i=>$s){?>
+<option value="<?=$i?>"><?=$s?></option>
+<?php }}else{?>
+
 <?php $statuss=array("Query","Order Issue","Bug","Suggestion","Common",'PNH Returns','Courier Followups'); foreach($statuss as $i=>$s){?>
 <option value="<?=$i?>"><?=$s?></option>
-<?php }?>
+<?php }}?>
+
 </select><input type="submit" value="Ok">
 </form>
 </div>
@@ -146,7 +158,7 @@ assign
 <input type="hidden" name="type" value="1">
 <table cellpadding=5>
 <tr><td>Message</td><td><textarea name="msg" style="width:500px;height:170px;"></textarea></td></tr>
-<tr><td>Medium</td><td><select name="medium"><option value="0">Email</option><option value="1">Phone</option><option value="2">Others</option></select></td></tr>
+<tr><td>Medium</td><td><select name="medium"><option value="0">Email</option><option value="1">Phone</option><option value="2">Others</option><?php if($ticket['type']>=5 || $ticket['type']!=6 ){?><option value="3">SMS</option><?php }?></select></td></tr>
 <tr><td colspan=2>Note that, if email is selected as medium, the reply will be sent to the customer</td></tr>
 <tr><td></td><td><input type="submit" value="Add Reply"></td></tr>
 </table>
@@ -165,7 +177,7 @@ assign
 <div style="font-size:90%;">
 <br>
 <?php if($m['msg_type']==1){?>
-Medium : <?php if($m['medium']==0) echo 'email'; else if($m['medium']==1) echo 'phone'; else echo 'other';?>
+Medium : <?php if($m['medium']==0) echo 'email'; else if($m['medium']==1) echo 'phone';else if($m['medium']==3) echo 'SMS'; else echo 'other';?>
 <br><b>Message</b>
 <?php }elseif($m['msg_type']==2){?>
 <b>Assignment</b>

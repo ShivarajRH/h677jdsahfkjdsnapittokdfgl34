@@ -257,6 +257,50 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
 	<input type="submit" value="Order confirmation"  name="order"></div>
 </form>
 </div>
+
+ <?php $offers_q = $this->db->query("select a.*,b.first_name,b.user_id from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id  where a.transid_ref=? and a.offer_type not in (0,3) ;",$order['transid']);
+    if($offers_q->num_rows())
+    { ?>
+<div style="margin:5px 0px;padding:5px;border:1px solid #f7f7f7;">
+   
+        <h4>Offers</h4>
+        <table class="datagrid smallheader" width="100%">
+            <tr>
+                <th>#</th>
+                <th>Created on</th>
+                <th>Member Name</th>
+                <th>Type</th>
+                <th>Value</th>
+                <th>Status</th>
+            </tr>
+            
+            <?php
+            $offers = $offers_q->result_array();
+            $arr_offer_type = array(0=>"Insurance Opted",1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
+            $arr_offer_status = array(0=>"Not Processed",1=>"Ready to Process",2=>"Processed");
+            $arr_feedback_status = array(0=>"No Feedback",1=>"Feedback received");
+            
+            foreach($offers as $i=>$offer) { ?>
+            <tr>
+                <td><?=++$i;?></td>
+                <td><?=format_datetime($offer['created_on']);?></td>
+                <td><a href="<?=site_url("/admin/pnh_viewmember/".$offer['user_id']);?>" target="_blank"><?=$offer['first_name'];?></a></td>
+                <td><?=$arr_offer_type[$offer['offer_type']];?></td>
+                <td>Rs. <?=formatInIndianStyle($offer['offer_value']);?></td>
+                <td><?=$arr_offer_status[$offer['process_status']];?>
+                	<?php if($offer['process_status'] == '1'){ ?>
+                    	<a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank">View</a>
+                    <?php } ?>
+                </td>
+            </tr>
+            <!--<div style="padding:4px 5px;border-bottom:1px solid #DDDDDD;">Rs. <?=formatInIndianStyle($offer['offer_value']);?> worth of <?=$arr_offer_type[$offer['offer_type']];?> given</div>-->
+    <?php   }?>
+            
+        </table>
+</div>
+<?php
+        } ?>
+
 </div>
 </td>
 <td width="10%" align="center">

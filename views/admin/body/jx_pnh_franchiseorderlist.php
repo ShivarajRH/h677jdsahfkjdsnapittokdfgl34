@@ -5,7 +5,8 @@
 			$order_status_arr[0]='Pending';
 			$order_status_arr[1]='Unshipped';
 			$order_status_arr[2]='Shipped';
-			$order_status_arr[3]='Returned';
+			$order_status_arr[3]='Cancelled';
+			$order_status_arr[4]='Returned';
 			
 			
 		//Order status with totals--END
@@ -92,9 +93,49 @@
 			$order_cond = " and 1 ";
 			
 		}
-		
-	  
+		else if($type == 'product_enquired')
+		{
+			$pid_enquird_res="SELECT l.*,d.name FROM pnh_franchise_pprice_enqrylog l JOIN king_dealitems d ON d.pnh_id=l.pid WHERE franchise_id=$fid and unix_timestamp(l.created_on) between $st_ts and $en_ts";
+			$pids_enquired=$this->db->query($pid_enquird_res)->result_array();
+			 if($pids_enquired){
+			 	echo '<div align="left"><h3 id="ttl_orders_listed">Showing <b></b> Enquired Products from '.format_date(date('Y-m-d',$st_ts)).' to '.format_date(date('Y-m-d',$en_ts)).' </h3></div>';
+			 	?>
+					<table class="datagrid" width="100%" style="clear:both">
+						<thead><th>Time</th><th>Product</th></thead>
+						<tbody>
+						<?php foreach($pids_enquired  as  $p){?>
+						<tr>
+							<td><?=format_datetime($p['created_on'])?></td>
+							<td><?=$p['name']?></td>
+						</tr>
+						<?php }?>
+						</tbody>
+					</table>
+				<?php }
+		}
+		else if($type="fran_prodpricequote")
+		{
+			$fran_pricequote_res="SELECT p.*,d.name,d.id as itemid FROM pnh_franchise_price_quote p JOIN king_dealitems d ON d.pnh_id=p.pid WHERE franchise_id=$fid AND UNIX_TIMESTAMP(p.created_on) BETWEEN $st_ts and $en_ts";
+			$fran_pricequotes=$this->db->query($fran_pricequote_res)->result_array();
+			
+			if($fran_pricequotes){
+			
+			echo '<div align="left"><h3 id="ttl_orders_listed">Showing <b></b> Franchise Price Quote from '.format_date(date('Y-m-d',$st_ts)).' to '.format_date(date('Y-m-d',$en_ts)).' </h3></div>';
+
+			?>
+			<table class="datagrid" width="100%" style="clear:both">
+				<thead><th>Time</th><th>Product</th><th>MRP(Rs)</th><th>Offer Price(Rs)</th><th>Landing cost(Rs)</th><th>Franchise Request price(Rs)</th></thead>
+				<tbody>
+				<?php foreach($fran_pricequotes as $q){?>
+				<tr><td><?= format_datetime($q['created_on'])?></td><td><?=$q['name']?></td><td><?= $q['mrp']?></td><td><?= $q['offrprice']?></td><td><?= $q['lprice']?></td><td><?=$q['quote']?></td></tr>
+				<?php }?>
+				</tbody>
+			</table>
+		<?php } }?>
+	<?php if($type!='product_enquired' && $type!='fran_prodpricequote')
+		{
 		$res = $this->db->query($sql,array($fid));
+	
 		$order_stat=array("Confirmed","Invoiced","Shipped","Cancelled");
 		
 		if(!$res->num_rows())
@@ -309,7 +350,7 @@
 	</tbody>
 	</table>
 	 <?php }?>
-	 
+<?php }?>	 
 	 <script>
 	 	$('#ttl_orders_listed b').html(<?php echo $k;?>);
 	 	<?php if($is_part_ship) { ?>
@@ -333,5 +374,5 @@
 	margin: 7px 0;
 	padding: 5px 7px;
 	text-align: center;
-}
+
 	 </style>

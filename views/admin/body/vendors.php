@@ -59,4 +59,7 @@ Vendors</div>
 </div>
 </div>
 </div>
+<style>
+.leftcont{display:none;}
+</style>
 <?php

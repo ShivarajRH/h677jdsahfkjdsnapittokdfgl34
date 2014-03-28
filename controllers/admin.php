@@ -22,6 +22,7 @@ class Admin extends Erp {
 		$this->load->model ( 'adminmodel' ,"dbm");
 		$this->load->model('viakingmodel',"vkm");
 		$this->load->model("erpmodel","erpm");
+		$this->load->model("reservation_model","reservations");
 		$this->load->library("email");
 		$this->erpm->loadroles();
 

@@ -9,33 +9,38 @@
 Showing <span><?=count($products)?></span> products
 </div>
 
-<div class="dash_bar">
-view by brand : <select id="prod_disp_brand">
-<option value="0">select</option>
-<?php foreach($this->db->query("select id,name from king_brands order by name asc")->result_array() as $b){?>
-<option value="<?=$b['id']?>" <?=$b['id']==$this->uri->segment(3)?"selected":""?>><?=$b['name']?></option>
-<?php }?>
-</select>
+
+
+
+
+
+<div class="clear" style="padding:5px 0px;">
+	
+	<div style="float:right">
+		<span style="background:#faa;height:15px;width:15px;display:inline-block;">&nbsp;</span>-Not sourceable &nbsp; &nbsp; &nbsp;
+		<span style="background:#afa;height:15px;width:15px;display:inline-block;">&nbsp;</span>-sourceable &nbsp; &nbsp; &nbsp;
+		<a class="button button-tiny button-action button-rounded" href="<?=site_url("admin/addproduct")?>">Add new product</a>
+	</div>
+	<div style="float:right;margin-right: 10px;">
+		Filter by Tax : 
+		<select id="prod_disp_tax">
+		<option value="select">select</option>
+		<?php foreach($this->db->query("select vat as tax from m_product_info group by tax")->result_array() as $b){?>
+		<option value="<?=$b['tax']?>" <?=$b['tax']==$this->uri->segment(3)?"selected":""?>><?=$b['tax']?></option>
+		<?php }?>
+		</select>
+	</div>
+	<div style="float:right;margin-right: 10px;">
+		Filter by Brand : <select id="prod_disp_brand">
+		<option value="0">select</option>
+		<?php foreach($this->db->query("select id,name from king_brands order by name asc")->result_array() as $b){?>
+		<option value="<?=$b['id']?>" <?=$b['id']==$this->uri->segment(3)?"selected":""?>><?=$b['name']?></option>
+		<?php }?>
+		</select>
+	</div>
+	<h2 style="margin-top: 0px;margin-bottom: 0px;"><?=!isset($brand)&&!isset($tax)?"New ":""?>Products <?=isset($brand)?" of $brand brand":(isset($tax)?" with $tax% tax":"")?></h2>
 </div>
 
-<div class="dash_bar">
-view by Tax : <select id="prod_disp_tax">
-<option value="select">select</option>
-<?php foreach($this->db->query("select vat as tax from m_product_info group by tax")->result_array() as $b){?>
-<option value="<?=$b['tax']?>" <?=$b['tax']==$this->uri->segment(3)?"selected":""?>><?=$b['tax']?></option>
-<?php }?>
-</select>
-</div>
-
-<div class="clear"></div>
-
-<h2><?=!isset($brand)&&!isset($tax)?"New ":""?>Products <?=isset($brand)?" of $brand brand":(isset($tax)?" with $tax% tax":"")?></h2>
-<div style="float:right">
-<span style="background:#faa;height:15px;width:15px;display:inline-block;">&nbsp;</span>-Not sourceable &nbsp; &nbsp; &nbsp;
-<span style="background:#afa;height:15px;width:15px;display:inline-block;">&nbsp;</span>-sourceable &nbsp; &nbsp; &nbsp;
-</div>
-
-<a href="<?=site_url("admin/addproduct")?>">Add new product</a>
 <table class="datagrid" width="100%">
 <thead>
 <tr>
@@ -48,6 +53,7 @@ view by Tax : <select id="prod_disp_tax">
 <th ></th>
 </tr>
 </thead>
+<?php if($products){?>
 <?php foreach($products as $p){?>
 <tr style="background:<?=$p['is_sourceable']?'rgba(170, 255, 170, 0.80)':'rgba(255, 170, 170, 0.80)'?>;">
 <td ><input type="checkbox" value="<?=$p['product_id']?>" class="p_check"></td>
@@ -83,8 +89,16 @@ view by Tax : <select id="prod_disp_tax">
 </tr>
 <?php }?>
 <tr>
-	<td colspan="8" align="left" class="pagination"><?php echo $pagination;?></td>
+	<td colspan="8" align="right" class="pagination"><?php echo $pagination;?></td>
 </tr>
+<?php }else
+{
+	?>
+		<tr>
+			<td colspan="8" align="center"><b>No products found</b></td>
+		</tr>
+	<?php 
+}?>
 </table>
 <div>With Selected : <input type="button" value="Mark it as Sourcable" onclick='mark_src("1")'> <input type="button" value="Mark it as Not-Sourcable" onclick='mark_src("0")'></div>
 </div>

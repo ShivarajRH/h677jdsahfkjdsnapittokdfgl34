@@ -741,6 +741,7 @@ $(function(){
 							<ul>
 								<li><a href="#recent_call_log">Recent Call Log</a></li>
 								<li><a href="#account_statement_summ">Recent Account statement</a></li>		
+								<li><a href="#member_offers_log">Member Offers Log</a></li>		
 							</ul>	
 							<div id="recent_call_log">
 								<table class="datagrid smallheader noprint" width="100%">
@@ -812,7 +813,51 @@ $(function(){
 									</form>
 								</div>
 							</div>
-						</div>	
+                                                        <div id="member_offers_log">
+                                                                <div style="margin:5px 0px;padding:5px;border:1px solid #f7f7f7;">
+                                                                        <?php $offers_q = $this->db->query("select a.*,b.first_name,b.user_id from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id where a.franchise_id=?",$f['franchise_id']);
+                                                                        if($offers_q->num_rows())
+                                                                        {?>
+                                                                            <table class="datagrid smallheader" width="100%">
+                                                                                    <tr>
+                                                                                        <th>#</th>
+                                                                                        <th>Created on</th>
+                                                                                        <th>Member Name</th>
+                                                                                        <th>Transid</th>
+                                                                                        <th>Type</th>
+                                                                                        <th>Value</th>
+                                                                                        <th>Status</th>
+                                                                                        <th>Actions</th>
+                                                                                    </tr>
+
+                                                                                    <?php
+                                                                                    $offers = $offers_q->result_array();
+                                                                                    $arr_offer_type = array(0=>"Insurance Opted",1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
+                                                                                    $arr_offer_status = array(0=>"Not Processed",1=>"Ready to Process",2=>"Processed");
+                                                                                    foreach($offers as $i=>$offer) { ?>
+                                                                                    <tr>
+                                                                                        <td><?=++$i;?></td>
+                                                                                        <td><?=format_datetime($offer['created_on']);?></td>
+                                                                                        <td><a href="<?=site_url("/admin/pnh_viewmember/".$offer['user_id']);?>" target="_blank"><?=$offer['first_name'];?></a></td>
+                                                                                        <td><a href="<?=site_url("/admin/trans/".$offer['transid_ref']);?>" target="_blank"><?=$offer['transid_ref'];?></a></td>
+                                                                                        <td><?=$arr_offer_type[$offer['offer_type']];?></td>
+                                                                                        <td>Rs. <?=formatInIndianStyle($offer['offer_value']);?></td>
+                                                                                        <td><?=$arr_offer_status[$offer['process_status']];?></td>
+                                                                                        <td><?php
+                                                                                            if($offer['insurance_id'] != '') {?>
+                                                                                                <a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank">View</a>
+                                                                                            <?php }
+                                                                                                else echo '--';
+                                                                                            ?></td>
+                                                                                    </tr>
+                                                                                    <!--<div style="padding:4px 5px;border-bottom:1px solid #DDDDDD;">Rs. <?=formatInIndianStyle($offer['offer_value']);?> worth of <?=$arr_offer_type[$offer['offer_type']];?> given</div>-->
+                                                                        <?php   }
+                                                                            } ?>
+                                                                            </table>
+                                                                    </div>
+                                                        </div>
+                                                    
+						</div>
 					</td>
 				</tr>
 			</table>
@@ -1801,6 +1846,9 @@ $(function(){
 								<li><a class="cancelled" href="javascript:void(0)" onclick="load_franchise_orders('cancelled')">Cancelled</a></li>
 								<li><a class="part_ship" href="javascript:void(0)" onclick="load_franchise_orders('part_ship')">Partially Shipped</a></li>
 								<li><a class="batch_closed" href="javascript:void(0)" onclick="load_franchise_orders('batch_closed')">Disabled from Batch</a></li>
+								<li><a class="product_enquired" href="javascript:void(0)" onclick="load_franchise_orders('product_enquired')">Product Enquired</a></li>
+								<li><a class="fran_prodpricequote" href="javascript:void(0)" onclick="load_franchise_orders('fran_prodpricequote')">Franchise Price Quote</a></li>
+								
 							</ol>
 						</div>
 					</div>

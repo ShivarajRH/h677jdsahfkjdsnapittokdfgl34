@@ -8,16 +8,17 @@
 }
 .filters_wrap
 {
-   float: right;
-   margin-bottom:4px;
-   width:24%;
+    float: right;
+    margin-bottom: 4px;
+    width: 24%;
 }
 .legends_outer_wrap
 {
 	float: right;
     height: 18px;
-    padding-top: 5px;
-    width: 19%;
+    width: 25%;
+    padding-top:3px;
+    text-align: right;
 }
 .legends_outer_wrap span.legends_color_notsrc_wrap
 {
@@ -51,7 +52,7 @@
 	border: 1px solid #AAAAAA;
     float: right;
     margin: 7px 10px;
-    width: 16%;
+    width: 34%;
 }
 .left_filter_wrap span a
 {
@@ -66,7 +67,7 @@
     padding-top: 5px;
     text-align: center;
     text-decoration: none;
-    width: 32%;
+    width: 25%;
 }
 .total_wrap
 {
@@ -93,7 +94,7 @@
     height: 18px;
     margin-right: -1px;
     margin-top: 0;
-    width: 265px;
+    width: 266px;
 }
 .search_blk
 {
@@ -102,7 +103,7 @@
     margin: 7px -22px 4px 15px;
     width: 175px;
 }
-.ui-widget-content 
+/*.ui-widget-content 
 {
 	 background: none repeat scroll 0 0 #F9F9F9;
     border: medium none !important;
@@ -118,7 +119,7 @@
 	border-bottom: 1px solid #ccc;
 	border-left:1px solid #ccc;
 	border-right:1px solid #ccc;
-}
+}*/
 .sk_deal_blk_wrap
 {
 	float: left;
@@ -270,11 +271,11 @@
 	background: none repeat scroll 0 0 #F1F1F1;	
 }
 
-.Brands_bychar_list_head .close_btn
+.Brands_bychar_list_head .close_btn_dlpg
 {
 	 float: right;
     margin: 8px;
-    text-align: right;
+    text-align: center;
     width: 8%;
     cursor:pointer;
 }
@@ -321,7 +322,7 @@
 	font-weight: bold;
 	text-align: center;
 }
-.close_btn
+.close_btn_dlpg
 {
 	float:right;
 }
@@ -371,7 +372,7 @@
 {
 	background:#ff0000;
 }
-.publish_wrap
+.publish_wrap,.sourceable_wrap
 {
 	background: none repeat scroll 0 0 #FAFAFA;
     float: right;

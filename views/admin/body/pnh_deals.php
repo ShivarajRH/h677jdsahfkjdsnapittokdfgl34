@@ -9,8 +9,8 @@
 			<input type="text" name="srch_deals" class="deal_prd_blk inp" placeholder="Search by Deal Name" >
 		</div>
 		<div class="legends_outer_wrap">
-			<span class="legends_color_notsrc_wrap">&nbsp;</span> - Out Of Stock &nbsp; &nbsp; &nbsp;
-			<span class="legends_color_src_wrap">&nbsp;</span> - In Stock &nbsp; &nbsp; &nbsp;
+			<span class="legends_color_notsrc_wrap">&nbsp;</span> - Not Available &nbsp; &nbsp; &nbsp;
+			<span class="legends_color_src_wrap">&nbsp;</span> - Available &nbsp; &nbsp; &nbsp;
 		</div>
 		<div id="cus_jq_alpha_sort_wrap" >
 		</div>
@@ -18,7 +18,7 @@
 		
 </div>
 
-<SCRIPT>
+<script>
 function endisable_sel(act,brandid,catid)
 {
 	//alert(brandid);
@@ -111,12 +111,13 @@ $(function(){
 	
 	 $(".jq_alpha_sort_alphalist_char a:eq(0)").trigger('click');
    	$('.jq_alpha_sort_alphalist_itemlist').slimScroll({
-	    height: '100px',
+	    height: '100px'
 	});
 	$('.jq_alpha_sort_alphalist_vend_head').html('<div class="alphabet_header_wrap"><span><a id="cat_lab" class="cat_lst_tab">Category List</a></span><span><a id="brand_lab" style="margin-right:0px !important" class="brand_lst_tab">Brand List</a></span> <input type="text" name="search_name" class="search_blk inp" placeholder="Search by Name" ><img style="margin-top: 7px;" src="<?php echo base_url().'images/search_icon.png'?>"></div>');
 	deallist_bycat(0,0,2);
 	$('.brand_lst_tab').addClass('selected_alpha_list');
 	
+	//$('select[name="publish_wrap"]:eq(1)').trigger('click');
 	//$(".sel_all, .sel").attr("checked",false);
 	
 });
@@ -164,7 +165,7 @@ $('.all').live('click',function(){
 		deallist_bycat(0,0,0);
 });
 
-$('.latest').live('click',function(){
+$('.latest_sold').live('click',function(){
 	var catid =$(this).attr('catid')*1;
 	var brandid =$(this).attr('brandid')*1;
 	if(catid !=0 && brandid == 0)
@@ -173,6 +174,18 @@ $('.latest').live('click',function(){
 		deallist_bycat(brandid,0,1);
 	else	
 	deallist_bycat(brandid,catid,1);
+	$('.latest').addClass("selected_type");
+});
+
+$('.latest_added').live('click',function(){
+	var catid =$(this).attr('catid')*1;
+	var brandid =$(this).attr('brandid')*1;
+	if(catid !=0 && brandid == 0)
+		deallist_bycat(0,catid,3);
+	else if(catid ==0 && brandid != 0)
+		deallist_bycat(brandid,0,3);
+	else	
+	deallist_bycat(brandid,catid,3);
 	$('.latest').addClass("selected_type");
 });
 
@@ -217,62 +230,40 @@ $('select[name="publish_wrap"]').live('change',function(){
 
 function published_deals(v)
 {
-	filter_deallist('','all');
-	return ;
+	//filter_deallist('','all');
 	if(v != 'all')
 	{
 		var i=1;
 		$('.sk_deal_blk_wrap thead').show();
-		$(".sk_deal_filter_wrap").each(function(){
-			publish=parseInt($(this).attr('publish')*1);
-			if(publish == v)
+		$(".jq_alpha_sort_overview_content .deal_stock").each(function(){
+			var trele=$(this).parents('tr:first');
+			publish=$(this).html();
+			if(publish == 'In Stock')
+				var s=1;
+			else
+				var s=0;
+			
+				
+			if(s == v)
 			{
 				$('.total_wrap').html("Total Deals : "+(i++));
-				$(this).show();
+				trele.show();
 			}
 			else 
 			{
-				$(this).hide();
+				trele.hide();
 			}
 		});
 	}
 	else
 	{
-		return;
+		$(".jq_alpha_sort_overview_content .deal_stock").each(function(){
+			var trele=$(this).parents('tr:first');
+			publish=$(this).html();
+			trele.show();
+		});
 	}
 }
-
-
-$('.tgl_stock_combo').live('click',function(){
-	var trele=$(this).parents('tr:first');
-	var ref_id  = $(this).attr('ref_id');
-	
-	$.post(site_url+'/admin/pnh_jx_dealstock_det',{refid:ref_id,is_pnh:1},function(resp){
-			if(resp.status == 'error')
-			{
-				$('.stock_det_'+ref_id).html("No Details found");
-			}
-			else
-			{
-				
-				var qcktiphtml = '<span style="float:right;color:red;cursor:pointer" refid="'+ref_id+'" class="stock_det_close">X</span> <div style="float:left;width:100%">';
-					qcktiphtml += '<table width="100%" border=1 class="datagrid" cellpadding=3 cellspacing=0>';
-					qcktiphtml += '<thead><tr><th>Product Name</th><th>Stock</th></tr></thead><tbody>';
-					$.each(resp.itm_stk_det,function(a,b){
-						qcktiphtml+='<tr>';
-						qcktiphtml+='	<td width="80%" style="font-size:10px">'+b.product_name+'</td>';
-						qcktiphtml+='	<td width="20%" style="font-size:10px">'+b.stk+'</td>';
-						qcktiphtml+='</tr>';
-					});
-					qcktiphtml += '</tbody></table></div>';
-					$('.stock_det_'+ref_id).html(qcktiphtml);
-					$('.stock_det_'+ref_id).show();
-			}
-			
-		},'json');
-		//$('.stock_det',ele.parent().parent()).html("Loading...").show(); 
-	
-});
 
 $('input[name="check_status"]').live("click",function(){
 	if(confirm("Are you sure want to change published status"))
@@ -386,7 +377,7 @@ function deallist_bycat(brandid,catid,type)
 				brand_linkedcat_html+='';
 				$.each(resp.brand_list,function(i,b){
 					brand_linkedcat_html+='<a class="Brands_bychar_list_content_listdata" cid="'+b.catid+'" bid="'+b.brandid+'">'+b.brand_name+'</a>';
-					$('.Brands_bychar_list_head').html('<span class="close_btn button button-tiny button-rounded ">Hide</span><h4>List of Brand for <i>'+b.category_name+'</i></h4>');
+					$('.Brands_bychar_list_head').html('<span class="close_btn_dlpg button button-tiny button-rounded ">Hide</span><h4>List of Brand for <i>'+b.category_name+'</i></h4>');
 				});
 			}
 			$('.Brands_bychar_list_content').html(brand_linkedcat_html);
@@ -405,7 +396,7 @@ function deallist_bycat(brandid,catid,type)
 				cat_linkedcat_html+='';
 				$.each(resp.cat_list,function(i,b){
 					cat_linkedcat_html+='<a class="Brands_bychar_list_content_listdata" cid="'+b.catid+'" bid="'+b.brandid+'">'+b.category_name+'</a>';
-					$('.Brands_bychar_list_head').html('<span class="close_btn button button-tiny button-rounded ">Hide</span><h4>List of Categories for <i>'+b.brand_name+'</i></h4>');
+					$('.Brands_bychar_list_head').html('<span class="close_btn_dlpg button button-tiny button-rounded ">Hide</span><h4>List of Categories for <i>'+b.brand_name+'</i></h4>');
 				});
 			}
 			$('.Brands_bychar_list_content').html(cat_linkedcat_html);
@@ -437,8 +428,8 @@ function deallist_bycat(brandid,catid,type)
 				d_lst+='</span>';
 				d_lst+='<span class="left_filter_mrp_wrap">MRP Filter : <input type="text" class="inp" id="f_from" size=4> to <input type="text" class="inp" id="f_to" size=4> <button type="button" style="margin-top:-5px" class="button button-rounded button-action button-tiny" onclick="filter_deals_bymrp()">Filter</button></span>';
 				//d_lst+='<span class="ttl_deals_wrap">Total Deals : '+resp.ttl_deals+'</span>';
-				d_lst+='<span class="publish_wrap"><b>Published :</b> <select name="publish_wrap"><option value="all">Choose</option><option value="1" selected >Yes</option><option value="0">No</option></select></span>';
-				d_lst+='<span class="left_filter_wrap"><span class="filter_opts"><a class="most" href="javascript:void(0)" val="2"  brandid="'+brandid+'" catid="'+catid+'">Most</a></span><span><a href="javascript:void(0)" class="latest" val="1" brandid="'+brandid+'" catid="'+catid+'" >Latest</a></span><span><a href="javascript:void(0)" val="0" class="all" brandid="'+brandid+'" catid="'+catid+'" style="border-right:none !important;width:34.4%">Clear</a></span></span>';
+				d_lst+='<span class="publish_wrap"><b>Available :</b> <select name="publish_wrap"><option value="all" selected>Choose</option><option value="1">Yes</option><option value="0">No</option></select></span>';
+				d_lst+='<span class="left_filter_wrap"><span class="filter_opts"><a class="most" href="javascript:void(0)" val="2"  brandid="'+brandid+'" catid="'+catid+'">Most Sold</a></span><span><a href="javascript:void(0)" class="latest_sold" val="1" brandid="'+brandid+'" catid="'+catid+'" >Latest Sold</a></span><span><a href="javascript:void(0)" class="latest_added" val="3" brandid="'+brandid+'" catid="'+catid+'" >Latest Added</a></span><span><a href="javascript:void(0)" val="0" class="all" brandid="'+brandid+'" catid="'+catid+'" style="border-right:none !important;width:24.2%">Clear</a></span></span>';
 				d_lst+='<span class="total_wrap">Total Deals : '+resp.ttl_deals+'</span></div>';
 				d_lst+='<div class="sk_deal_container">';
 				d_lst+='<table class="sk_deal_blk_wrap" cellpadding="0" cellspacing="0" width="99%">'
@@ -451,16 +442,7 @@ function deallist_bycat(brandid,catid,type)
 				
 				d_lst+='</th></tr></thead>';
 			 	$.each(resp.deals_lst,function(i,d){
-					if(d.allow_order.length)
-					{
-						dstock = 'In Stock';
-						var background='background:none repeat scroll 0 0 rgba(170, 255, 170, 0.8) !important'/*#40FC36*/;
-						console.log(d.allow_order);
-					}else
-					{
-						dstock = 'Out of Stock';
-						var background='background:none repeat scroll 0 0 #FFAAAA !important';
-					}
+					
 					if(d.publish==1)
 					{
 						var enable='checked="checked"';
@@ -469,12 +451,12 @@ function deallist_bycat(brandid,catid,type)
 					{
 						var enable='';
 						
-					}
-						d_lst+='<tr style="'+background+'" class="sk_deal_filter_wrap deals_'+d.catid+'" publish="'+d.publish+'" mrp="'+d.orgprice+'" name="'+d.name+'" brand="'+d.brand+'" category="'+d.category+'" ref_id="'+d.itemid+'">';
+					} // style="'+background+'"
+						d_lst+='<tr class="sk_deal_filter_wrap deals_'+d.catid+'" publish="'+d.publish+'" mrp="'+d.orgprice+'" name="'+d.name+'" brand="'+d.brand+'" category="'+d.category+'" ref_id="'+d.itemid+'">';
 				 			//d_lst+='<img src="'+images_url+'/items/small/'+d.pic+'.jpg'+'">';
 		 					d_lst+='<td><span>'+d.pnh_id+'</span></td>';
 		 					d_lst+='<td><span class="title"><a target="_blank" href="'+site_url+'/admin/pnh_deal/'+d.itemid+'">'+d.name+'</a><div class="stock_det_'+d.itemid+'"></div></td>';
-							d_lst+='<td><a href="javascript:void(0)" ref_id="'+d.itemid+'" class="tgl_stock_combo">'+(dstock)+'</a></td>';
+							d_lst+='<td><a href="javascript:void(0)" dealid="'+d.itemid+'" class="tgl_stock_combo deal_stock "></a></td>';
 		 					d_lst+='<td><span><a target="_blank" href="'+site_url+'/admin/viewbrand/'+d.brandid+'">'+d.brand+'</a></span></td>';
 		 					d_lst+='<td><span><a target="_blank" href="'+site_url+'/admin/viewcat/'+d.catid+'">'+d.category+'</a></span></td>';
 		 					d_lst+='<td><span class="mrp">'+d.orgprice+'</span></td>';
@@ -498,24 +480,33 @@ function deallist_bycat(brandid,catid,type)
 				
 				//polist_byvendor(vids[0]);
 				$('.jq_alpha_sort_overview_content').html(d_lst);
-			
+
+				// Call the plugin
+				$(".jq_alpha_sort_overview_content .deal_stock").dealstock();
+                        
 				$("#sel_cat").chosen();
 				if(resp.type == 1)
 				{
-					//$('.all').removeClass('selected_type');
 					$('.most').removeClass('selected_type');
-					$('.latest').addClass('selected_type');
+					$('.latest_added').removeClass('selected_type');
+					$('.latest_sold').addClass('selected_type');
 				}else if(resp.type == 0)
 				{
-					//$('.all').addClass('selected_type');
-					$('.latest').removeClass('selected_type');
+					$('.latest_sold').removeClass('selected_type');
+					$('.latest_added').removeClass('selected_type');
 					$('.most').removeClass('selected_type');
 				}
 				else if(resp.type == 2)
 				{
-					//$('.all').removeClass('selected_type');
 					$('.most').addClass('selected_type');
-					$('.latest').removeClass('selected_type');
+					$('.latest_sold').removeClass('selected_type');
+					$('.latest_added').removeClass('selected_type');
+				}
+				else if(resp.type == 3)
+				{
+					$('.most').removeClass('selected_type');
+					$('.latest_sold').removeClass('selected_type');
+					$('.latest_added').addClass('selected_type');
 				}
 
 				$('select[name="publish_wrap"]').trigger('change');

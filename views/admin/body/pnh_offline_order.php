@@ -1,75 +1,59 @@
 <style>.contenttable .leftcont{display:none;}.security_details td{padding:5px 10px !important;} .security_details .datagrid td{padding:2px !important;}</style>
 <div class="container" style="padding:5px;">
-<div style="position:absolute;top:0px;right:60px;"><a href="javascript:void(0)" style="background:#ffaa00;border:1px solid #aaa;border-top:0px;text-decoration:none;display:block;padding:0px 5px 1px 5px;border-radius:0px 0px 5px 5px;color:#555;" onclick='$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"})'>show menu</a></div>
-<div style="clear: both;overflow: hidden;">
-	<h2 style="margin:5px 0px;float: left;">PNH Offline Order <span id="fran_name_disp" style="font-size: 80%"></span></h2>
+	<div style="position:absolute;top:0px;right:60px;"><a href="javascript:void(0)" style="background:#ffaa00;border:1px solid #aaa;border-top:0px;text-decoration:none;display:block;padding:0px 5px 1px 5px;border-radius:0px 0px 5px 5px;color:#555;" onclick='$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"})'>show menu</a></div>
+	<div style="clear: both;overflow: hidden;">
+		<h2 style="margin:5px 0px;float: left;">PNH Offline Order <span id="fran_name_disp" style="font-size: 80%"></span></h2>
         <div class="offn_courier_detail"></div>
-</div>
-<div id="fran_select_cont">
-	<select class="chzn-select" data-placeholder="Choose Franchise "  name="sel_fid" style="width:250px;" ></select>
-	&nbsp;&nbsp; Or &nbsp;&nbsp;Enter Franchise ID : 
-	<input maxlength="8" type="text" class="inp" id="fid_inp" size=20>
-	<input type="button" value="Select" onclick='load_franchisebyid()'> &nbsp; &nbsp; &nbsp;Or &nbsp; &nbsp; &nbsp; Enter Franchise Login Mobile : <input type="text" class="inp" id="fmobile_inp" size=20><input maxlength="10" type="button" value="Select" onclick='load_franchisebymobile()'>
-</div>
-<div id="franchise_det">
-</div>
-<?php /*?>
-<div id="frans_list" style="margin-top:20px;height:400px;overflow:auto;float:left;">
-<table class="datagrid">
-<thead><tr><th>Franchise Name</th><th>FID</th><th>Town</th><th>City</th><th>Territory</th><th>Login Mobile1</th><th>Login Mobile2</th></tr></thead>
-<tbody>
-<?php foreach($this->db->query("select f.franchise_id,f.pnh_franchise_id,f.login_mobile1,f.login_mobile2,f.franchise_name,f.city,t.town_name,tr.territory_name from pnh_m_franchise_info f join pnh_towns t on t.id=f.town_id join pnh_m_territory_info tr on tr.id=f.territory_id order by f.franchise_name asc")->result_array() as $f){?>
-<tr onclick='$("#fid_inp").val("<?=$f['pnh_franchise_id']?>");load_franchisebyid();' style="cursor:pointer;">
-<td><?=$f['franchise_name']?></td><td><a target="_blank" loc="<?=$f['town_name'].','.$f['territory_name'];?>" href="<?=site_url("admin/pnh_franchise/{$f['franchise_id']}")?>"><?=$f['pnh_franchise_id']?></a></td><td><?=$f['town_name']?></td><td><?=$f['city']?></td><td><?=$f['territory_name']?></td><td><?=$f['login_mobile1']?></td><td><?=$f['login_mobile2']?></td>
-</tr>
-<?php }?>
-</tbody>
-</table>
-</div>
-<?php */?>
-
+	</div>
+	<div id="fran_select_cont">
+		<select class="chzn-select" data-placeholder="Choose Franchise "  name="sel_fid" style="width:250px;" ></select>
+		&nbsp;&nbsp; Or &nbsp;&nbsp;Enter Franchise ID : 
+		<input maxlength="8" type="text" class="inp" id="fid_inp" size=20>
+		<input type="button" value="Select" onclick='load_franchisebyid()'> &nbsp; &nbsp; &nbsp;Or &nbsp; &nbsp; &nbsp; Enter Franchise Login Mobile : <input type="text" class="inp" id="fmobile_inp" size=20><input maxlength="10" type="button" value="Select" onclick='load_franchisebymobile()'>
+	</div>
+<div id="franchise_det"></div>
 <div class="clear"></div>
 
 <div id="showafter">
-<div id="show_scheme_details" title="Scheme Details">
-<fieldset>
-<legend><b>Active Scheme Discounts</b></legend>
-<table class="datagrid  noprint" id="active_scheme_discount">
-<thead><th>Menu</th><th>Brand</th><th>Category</th><th>Discount(%)</th><th>Valid From</th><th>Valid To</th></thead>
-<tbody></tbody>
-</table>
-</fieldset>
-<br><br><br>
-<fieldset>
-<legend><b>Active Super Scheme</b></legend>
-<table class="datagrid  noprint" id="active_super_scheme">
-<thead><th>Menu</th><th>Brand</th><th>Category</th><th>Target Sales</th><th>Credit(%)</th><th>Valid From</th><th>Valid To</th></thead>
-<tbody></tbody>
-</table>
-</fieldset>
-<br><br><br>
-<fieldset>
-<legend><b>Active IMEI Scheme</b></legend>
-<table class="datagrid  noprint" id="active_imei_scheme">
-<thead><th>Menu</th><th>Brand</th><th>Category</th><th>Scheme Type</th><th>Credit value</th><th>Valid From</th><th>Applied From</th><th>Valid To</th></thead>
-<tbody></tbody>
-</table>
-</fieldset>
-<br><br><br>
-<fieldset>
-<legend><b>Alloted Menu</b></legend>
-<table class="datagrid  noprint" id="menu">
-<tbody></tbody>
-</table>
-</fieldset>
-</div>
+	<div id="show_scheme_details" title="Scheme Details">
+		<fieldset>
+			<legend><b>Active Scheme Discounts</b></legend>
+			<table class="datagrid  noprint" id="active_scheme_discount">
+				<thead><th>Menu</th><th>Brand</th><th>Category</th><th>Discount(%)</th><th>Valid From</th><th>Valid To</th></thead>
+				<tbody></tbody>
+			</table>
+		</fieldset>
+		<br><br><br>
+		<fieldset>
+			<legend><b>Active Super Scheme</b></legend>
+			<table class="datagrid  noprint" id="active_super_scheme">
+				<thead><th>Menu</th><th>Brand</th><th>Category</th><th>Target Sales</th><th>Credit(%)</th><th>Valid From</th><th>Valid To</th></thead>
+				<tbody></tbody>
+			</table>
+		</fieldset>
+	<br><br><br>
+		<fieldset>
+			<legend><b>Active IMEI Scheme</b></legend>
+			<table class="datagrid  noprint" id="active_imei_scheme">
+				<thead><th>Menu</th><th>Brand</th><th>Category</th><th>Scheme Type</th><th>Credit value</th><th>Valid From</th><th>Applied From</th><th>Valid To</th></thead>
+				<tbody></tbody>
+			</table>
+		</fieldset>
+	<br><br><br>
+		<fieldset>
+			<legend><b>Alloted Menu</b></legend>
+			<table class="datagrid  noprint" id="menu">
+			<tbody></tbody>
+		</table>
+	</fieldset>
+	</div>
 
-<b style="float: right;margin-right:398px;margin-top:-44px;margin-bottom:25px;font-size: 11px;background-color:<?php echo $fr_status_color?>;color:#fff;padding:2px 3px;border-radius:3px;"><?php echo $fran_status_arr[$fran_status];?></b>
-<a href="javascript:void(0)" onclick="load_scheme_details()" style="float: right;margin-top: -39px;margin-right:156px;" class="button">Scheme &amp; Menu Details</a>
-<a href="<?php echo site_url('/admin/pnh_deals')?>" target="_blank" style="float:left;margin-top: -38px;margin-left:1171px;" class="button">GoTo Deals</a>
-<div class="fixed_bottom" id="srch_deals_cont">Search Deal : <div id="srch_results"></div><input type="text" class="inp" style="width:320px;" id="p_srch" autocomplete="off" ></div>
-<div class="fixed_bottom" style="left:480px;">PNH PRODUCT ID : <input type="text" class="inp" maxlength="8" size=30 id="p_pid" autocomplete="off" ><input type="button" value="Add" class="add_product"></div>
-<div class="fixed_bottom" style="left:935px;">Barcode : <input type="text" class="inp" size=20 id="p_barcode" autocomplete="off" ><input type="button" value="Add" class="add_b_product"></div>
+	<b style="float: right;margin-right:398px;margin-top:-44px;margin-bottom:25px;font-size: 11px;background-color:<?php echo $fr_status_color?>;color:#fff;padding:2px 3px;border-radius:3px;"><?php echo $fran_status_arr[$fran_status];?></b>
+	<a href="javascript:void(0)" onclick="load_scheme_details()" style="float: right;margin-top: -39px;margin-right:156px;" class="button">Scheme &amp; Menu Details</a>
+	<a href="<?php echo site_url('/admin/pnh_deals')?>" target="_blank" style="float:left;margin-top: -38px;margin-left:1171px;" class="button">GoTo Deals</a>
+	<div class="fixed_bottom" id="srch_deals_cont">Search Deal : <div id="srch_results"></div><input type="text" class="inp" style="width:320px;" id="p_srch" autocomplete="off" ></div>
+	<div class="fixed_bottom" style="left:480px;">PNH PRODUCT ID : <input type="text" class="inp" maxlength="8" size=30 id="p_pid" autocomplete="off" ><input type="button" value="Add" class="add_product"></div>
+	<div class="fixed_bottom" style="left:935px;">Barcode : <input type="text" class="inp" size=20 id="p_barcode" autocomplete="off" ><input type="button" value="Add" class="add_b_product"></div>
 
 <div style="padding:5px;">
 
@@ -78,15 +62,13 @@
 <input type="hidden" id="redeem_p" name="redeem_points" value="0" style="display:none;">
 <input type="hidden"  name="creditdays" value="" style="display:none;">
 <div id="prod_suggest_list">
-<fieldset>
-<legend><b>Product Data</b></legend>
-<table class="datagrid smallheader noprint" id="prevorderd_prod">
-<thead><th>Product name</th><th>Total Orderd</th><th>Total Shipped</th></thead>
-<tbody>
-
-</tbody>
-</table>
-</fieldset>
+	<fieldset>
+		<legend><b>Product Data</b></legend>
+		<table class="datagrid smallheader noprint" id="prevorderd_prod">
+			<thead><th>Product name</th><th>Total Orderd</th><th>Total Shipped</th></thead>
+			<tbody></tbody>
+		</table>
+	</fieldset>
 
 <br><br>
 <fieldset>
@@ -114,7 +96,7 @@
 </div>-->
 
 
-<div style="margin:5px 0px;background:#fcfcfc;border:1px solid #f1f1f1;padding:10px;width:68% !important;">
+<div style="margin:5px 0px;background:#fcfcfc;border:1px solid #f1f1f1;padding:10px;">
 <div style="clear: both">
 		<div id="display_fr_totals" style="float: right">
 			<table width="500" cellpadding="4" cellspacing="0" style="border-collapse: collapse;">
@@ -154,28 +136,29 @@
 
 <input type="hidden" name="fid" id="i_fid">
 
-<table class="datagrid nofooter" width="100%" id="prods_order" border="0">
-<thead><tr><th>Sno</th><th>Product Image-PID</th><th>Product Name</th><th>MRP</th><th>Offer price / <br> DP price</th>
-			<th>MemberShip Fee</th>
-			<th>Qty</th>
-			<th>Sub Total</th><th>Quote</th><th>Actions</th></tr></thead>
+<table class="datagrid nofooter" id="prods_order">
+<thead><tr><th width="3%">Sno</th><th>Product Name</th><th width="3%">MRP<br>(Rs)</th><th width="6%">Offer price/<br>DP price<br>(Rs)</th>
+			<th width="8%">Discount <br>(Rs)</th><th width="12%">Landing Price<br>(Rs)</th>
+			<th width="7%" align="right">Qty</th>
+			<th width="7%">Sub Total <br> (Rs)</th> <th width="5%">Quote</th><th width="3%">Actions</th></tr></thead>
 <tbody>
 </tbody>
 <tfoot>
     <tr>
         <td colspan="7" style="text-align:right;">Sub Total Amount :</td>
-        <td><span style="font-weight: bold;" class="ttl_subtotal">0</span></td>
-        <td colspan="2"></td>
+        
+        <td colspan="3"><div style="font-weight: bold;text-align: left;" class="ttl_subtotal">0</div></td>
+        
     </tr>
 </tfoot>
 </table>
 
 <div style="padding:5px 0px 0px 0px;">
-    <div style="float:right;"><input type="submit" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;background: #68a54b;color: #FFF;cursor: pointer" id="pnh_ordeR_submit" value="Place order"  class="myButton_placeorder1"></div>
-    <div><input type="button" value="Request From Franchisee" id="reqq_but" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;cursor: pointer;background: #68a54b;color: #FFF" onclick='request_quote()' class="myButton_reqfran1" style="font-size:12px;">
+<div style="float:right;"><input type="submit" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;background: #68a54b;color: #FFF;cursor: pointer" id="pnh_ordeR_submit" value="Place order"  class="myButton_placeorder1"></div>
+<div><input type="button" value="Request From Franchisee" id="reqq_but" style="font-size:120%;border: 0px;border: 1px solid #FFF;font-size: 115%;padding: 5px 10px;border-radius: 3px;font-weight: normal;cursor: pointer;background: #68a54b;color: #FFF" onclick='request_quote()' class="myButton_reqfran1" style="font-size:12px;">
 </div>
 
-<div class="clear"></div>
+<!-- <div class="clear"></div> -->
 </form>
 </div>
 </div>
@@ -210,16 +193,23 @@
 <tbody>
 <tr pid="%pid%"  pimage="%pimage% %pid%" pname="%pname%" mrp="%mrp%" price="%price%" lcost="%lcost%" margin="%margin%" >
 <td>%sno%</td>
-<td style="text-align: center;padding:10px 0px 0px;width: 100px;background: #FFF;"><img alt="" height="100" src="<?=IMAGES_URL?>items/%pimage%.jpg"><b style="display: block;background: #f7f7f7;padding:2px;;text-align: center">%pid%</b></td>
-<td><input class="pids" type="hidden" name="pid[]" value="%pid%"><span class="title"><a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">%pname%</a></span>
+<td  style="padding:10px 0px 0px;background: #FFF;">
+<div  class="img_wrap">
+<img alt="" height="100" src="<?=IMAGES_URL?>items/%pimage%.jpg"><b style="display: block;background: #f7f7f7;padding:2px;width:95px;text-align: center;">%pid%</b>
+<input class="pids" type="hidden" name="pid[]" value="%pid%">
+</div>
+
+<div  class="prod_detwrap" >
 <input type="hidden" name="menu[]" value="%menuid%" class="menuids">
-<div style="margin-top: 5px;font-size: 12px;">
+<span class="title"><a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">%pname%</a></span>
 	<div class="p_extra"><b>Category :</b> %cat%</div>
 	<div class="p_extra"><b>Brand:</b> %brand%</div>
 	
 	<div class="p_stk">Stock Suggestion: %stock%</div>
 	<div class="p_attr">%attr%</div>
 	<div class="p_attr">%confirm_stock%</div>
+	<div>%super_sch%</div>
+
 </div>
 </td>
 
@@ -235,27 +225,47 @@ background: wheat !important;
 text-align: center;width: 60px;"><b>OldMRP:</b> <span style="color: #cd0000;font-size: 13px;">%oldmrp%</span></div>
 </td>
 <td><span class="price">%price%</span></td>
+<td><span class="price tip_popup" title="Discount">%margin_amt% &nbsp;(%margin%%)</span>
+						
+						
+					
+</td>
 <td>
-	<span style="display:none" class="lcost"><b>%lcost%</b></span>
-	Rs %margin_amt% <br><br>
-	(%margin%%) <br>
-	<b>Rs %lcost%</b>
-	%imei_sch_disc%  
+	<span  class="lcost"><b>%lcost%</b><br>%imei_sch_disc% </span>
+	
 </td>
 <!--<td>%src%</td>-->
-<td>
+<td style="text-align: center;">
+	
 	<input type="text" class="qty" pmax_ord_qty="%max_oqty%" size=2 name="qty[]" value="1">
 	%max_ord_qty%
 </td>
-<td><span class="stotal">%lcost%</span></td>
+<td style="text-align:left;"><span class="stotal">%lcost%</span></td>
+<!-- <td><input type="text" name="local_distributor_mrgn[]" class="local_dist_mrgn" size="4" local_dist_mrgn="%lcl_distribtor_mrgn%" value="%lcl_distribtor_mrgn%">%</td> -->
+<!-- <td class="has_distrbtor_margin"><span>%has_lcl_distributor_margin%</span>%</td> -->
 <td><input type="text" name="quote[]" size=4></td>
-<td><a href="javascript:void(0)" onclick='remove_psel(this)'>remove</a><br>
-<a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">view</a>
+<td style="text-align: center;"><a onclick="remove_psel(this)" title="Remove Product"><img src=<?php echo base_url().'images/remove-roll-gray.png';?> style="cursor:pointer;"></a><br>
+<!--<a href="<?=site_url("admin/pnh_deal")?>/%pid%" target="_blank">view</a>-->
 </td>
 </tr>
 </tbody> 
 </table>
 
+<script>
+	function remove_psel(ele)
+	{
+		var sel_pid = $(ele).parents("tr:first").attr('pid');
+			$($(ele).parents("tr").get(0)).remove();
+                remove_pid(sel_pid);
+                
+		$('#prods_order tbody tr').each(function(i,itm){
+			$('td:first',this).text(i+1);
+		});
+		
+	}
+	
+			
+</script>
 <style>
 
 #display_fr_totals{
@@ -277,7 +287,7 @@ text-align: center;width: 60px;"><b>OldMRP:</b> <span style="color: #cd0000;font
 .p_stk{
 	color:maroon;
 	font-weight: bold;
-	padding:3px 0px;
+	padding: 11px 0;
 }
 #showafter{
 display:none;
@@ -507,7 +517,9 @@ function get_pnh_franchises(){
 		}
 		$('select[name="sel_fid"]').html(f_sel_html);
 		$('select[name="sel_fid"]').trigger("liszt:updated");
-	});	
+		
+	});
+	
 }
 $(function(){
 	$('#fid_inp').change(function(){
@@ -519,106 +531,104 @@ $(function(){
 		$('#fid_inp').val($(this).val());
 
 		load_franchisebyid();
+		
+		
 	});
 });
 </script>
-<div style="display:none">
-	<div id="req_quote_dlg" title="Franchise Request/Quotes ">
-		<form id='fr_req_quote_frm' method="post" action="<?=site_url('admin/pnh_place_quote') ?>">
-			<input type="hidden" name="fid" value="0" >
-			<div>
-				<h4 style="margin:5px 0px !important;" id="req_frname"></h4>
-				<div id="req_prodlist" style="margin: 5px 0px;">
-					<table width="100%" cellpadding="3" cellspacing="0" class="datagrid">
-						<thead>
-							<tr>
-								<th><b>Slno</b></th>
-								<th><b>PID</b></th>
-								<th><b>Deal</b></th>
-								<th><b>MRP</b></th>
-								<th><b>Offer</b></th>
-								<th><b>Landing</b></th>
-								<th><b>Qty</b></th>
-								<th><b>Quote</b></th>
-								<th>&nbsp;</th>
-							</tr>
-						</thead>
-						<tbody>
-							
-						</tbody>
-					</table>
-				</div>
-				<span style="float:right;" class="dash_bar_right"><b>Add New Product:</b><input type="checkbox" name="add_newprod" id="add_newprod"></span>
-				<br><br><br>
-				<div id="fran_reqlist" style="margin: 5px 0px;">
-					<table width="100%" cellpadding="3" cellspacing="0" class="datagrid">
-						<thead>
-							<tr>
-								<th><b>Product Name</b></th>
-								<th><b>Price Range</b></th>
-								<th><b>Qty</b></th>
-								<th><b>Quote</b></th>
-								<th>&nbsp;</th>
-							</tr>
-						</thead>
-						<tbody>
-							
-						</tbody>
-					</table>
-				</div>
-				
-				<div style="margin:5px 0px;">
-					<b>Respond To Request In:</b><br />
-					<select name="req_respond_time" >
-						<option value="5">5 Min</option>
-						<option value="10">10 Min</option>
-						<option value="15">15 Min</option>
-						<option value="30">30 Min</option>
-						<option value="45">45 Min</option>
-						<option value="60">1 Hour</option>
-					</select>
-				</div>
-				<div style="margin:5px 0px;">
-					<b>Have you asked for options, so we can fulfill franchise needs ?</b>
-							: <input type="checkbox" value="1" name="cnfrm_req_opts" /> 
-				</div>
-				
-				<div style="margin:5px 0px;">
-					<b>Remarks/notes on request</b><br />
-					 <textarea name="req_remark" style="width: 98%;height: 80px;"></textarea>
-				</div>
-			</div>
-			<input type="hidden" name="product_name" id="product_name">
-			<input type="hidden" name="mrp" id="mrp">
-		</form>
-		
-	</div>
-	
-	<div id="reg_mem_dlg" title="Instant Member Registration">
-		<form id="reg_mem_frm" action="<?php echo site_url('admin/jx_reg_newmem')?>" method="post">
-			<input type="hidden" name="franchise_id" value="" id="memreg_fid">
-			<table>
-				<tr><td>Member Name</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_name" id="memreg_name" ></td></tr>
-				<tr><td>Mobile Number</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_mobno" id="memreg_mobno" data-required="true" maxlength="10"></td></tr>
-			</table>
-		</form>
-	</div>
-	
-	<div id="newbie_confirm_dlg" title="New franchisee note" >
-		<h4>New franchisee note</h4>
-		<div class="hexa">
-			<div><b>Please take a note, this is a new franchisee and we should treat them very well</b></div>
-			<div><input type="checkbox" class="nb_cond" value="1" ><b>Dont say no to products</b></div>
-			<div><input type="checkbox" class="nb_cond" value="1" ><b>Contact TM or executive in office for any information</b></div>
-			<div><input type="checkbox" class="nb_cond" value="1" ><b>Dont commit shipment date (post dated)</b></div>
-			<div><input type="checkbox" class="nb_cond" value="1" ><b>Be gentle with policy and treat them as a child</b></div>
-		</div>
-	</div>
 
+<div id="req_quote_dlg" title="Franchise Request/Quotes ">
+	<form id='fr_req_quote_frm' method="post" action="<?=site_url('admin/pnh_place_quote') ?>">
+		<input type="hidden" name="fid" value="0" >
+		<div>
+			<h4 style="margin:5px 0px !important;" id="req_frname"></h4>
+			<div id="req_prodlist" style="margin: 5px 0px;">
+				<table width="100%" cellpadding="3" cellspacing="0" class="datagrid">
+					<thead>
+						<tr>
+							<th><b>Slno</b></th>
+							<th><b>PID</b></th>
+							<th><b>Deal</b></th>
+							<th><b>MRP</b></th>
+							<th><b>Offer</b></th>
+							<th><b>Landing</b></th>
+							<th><b>Qty</b></th>
+							<th><b>Quote</b></th>
+							<th>&nbsp;</th>
+						</tr>
+					</thead>
+					<tbody>
+						
+					</tbody>
+				</table>
+			</div>
+			<span style="float:right;" class="dash_bar_right"><b>Add New Product:</b><input type="checkbox" name="add_newprod" id="add_newprod"></span>
+			<br><br><br>
+			<div id="fran_reqlist" style="margin: 5px 0px;">
+				<table width="100%" cellpadding="3" cellspacing="0" class="datagrid">
+					<thead>
+						<tr>
+							<th><b>Product Name</b></th>
+							<th><b>Price Range</b></th>
+							<th><b>Qty</b></th>
+							<th><b>Quote</b></th>
+							<th>&nbsp;</th>
+						</tr>
+					</thead>
+					<tbody>
+						
+					</tbody>
+				</table>
+			</div>
+			
+			<div style="margin:5px 0px;">
+				<b>Respond To Request In:</b><br />
+				<select name="req_respond_time" >
+					<option value="5">5 Min</option>
+					<option value="10">10 Min</option>
+					<option value="15">15 Min</option>
+					<option value="30">30 Min</option>
+					<option value="45">45 Min</option>
+					<option value="60">1 Hour</option>
+				</select>
+			</div>
+			<div style="margin:5px 0px;">
+				<b>Have you asked for options, so we can fulfill franchise needs ?</b>
+						: <input type="checkbox" value="1" name="cnfrm_req_opts" /> 
+			</div>
+			
+			<div style="margin:5px 0px;">
+				<b>Remarks/notes on request</b><br />
+				 <textarea name="req_remark" style="width: 98%;height: 80px;"></textarea>
+			</div>
+		</div>
+		<input type="hidden" name="product_name" id="product_name">
+		<input type="hidden" name="mrp" id="mrp">
+	</form>
+	
+</div>
+
+<div id="reg_mem_dlg" title="Instant Member Registration">
+	<form id="reg_mem_frm" action="<?php echo site_url('admin/jx_reg_newmem')?>" method="post">
+		<input type="hidden" name="franchise_id" value="" id="memreg_fid">
+		<table>
+			<tr><td>Member Name</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_name" id="memreg_name" ></td></tr>
+			<tr><td>Mobile Number</td><td>:<span class="red_star">*</span></td><td><input type="text" name="memreg_mobno" id="memreg_mobno" data-required="true" maxlength="10"></td></tr>
+		</table>
+	</form>
 </div>
 
 <script>
-
+function tooltip(){
+ 	Tipped.create('.tip_popup',{
+ 	 skin: 'black',
+ 	  hook: 'topleft',
+ 	  hideOn: false,
+ 	  closeButton: true,
+ 	 	opacity: .5,
+ 	 	hideAfter: 200,
+	 });
+ }
 $('#req_quote_dlg').dialog({
 								autoOpen:false,
 								width:1000,
@@ -951,37 +961,39 @@ $('#reg_mem_dlg').dialog({
 						// register member 
 						var mem_regname = $.trim($('input[name="memreg_name"]').val());
 						var mem_mobno = $.trim($('input[name="memreg_mobno"]').val());
-                        	if(mem_regname.length == 0)
-                                error_list.push("Please Enter Member name.");
-
+							if(mem_regname.length == 0)
+								error_list.push("Please Enter name.");
+							
 							if(mem_mobno.length == 0)
-                                error_list.push("Please Enter Mobile Number.");
-	                        else
-	                        {
-	                                mem_mobno = mem_mobno*1	
-	                                if(isNaN(mem_mobno))
-	                                        error_list.push("Please Enter valid Mobile number.");	
-	                        }	
-
-                        if(error_list.length)
-                        {
-                                alert(error_list.join("\r\n"));
-                        }else
-                        {
-                                $.post(site_url+'/admin/jx_reg_newmem',$('#reg_mem_frm').serialize(),function(resp){
-                                        if(resp.status == 'success')
-                                        {
-                                                $('input[name="mid"]').val(resp.mid);
-                                                $('#mid_entrytype').val(0);
-                                                $('.mid').trigger('change');
-                                                $('#reg_mem_dlg').dialog('close');
-                                        }else
-                                        {
-                                                $('input[name="mid"]').val('');
-                                                alert(resp.error);
-                                        }
-                                },'json');
-                        }
+								error_list.push("Please Enter Mobile Number.");
+							else
+							{
+								mem_mobno = mem_mobno*1	
+								if(isNaN(mem_mobno))
+									error_list.push("Enter valid Mobile number.");	
+							}	
+							
+							if(error_list.length)
+							{
+								alert(error_list.join("\r\n"));
+							}else
+							{
+								$.post(site_url+'/admin/jx_reg_newmem',$('#reg_mem_frm').serialize(),function(resp){
+									if(resp.status == 'success')
+									{
+										$('input[name="mid"]').val(resp.mid);
+										$('#mid_entrytype').val(0);
+										$('.mid').trigger('change');
+										$('#reg_mem_dlg').dialog('close');
+									}else
+									{
+										$('input[name="mid"]').val('');
+										alert(resp.error);
+									}
+								},'json');
+							}
+							
+						
 					},
 					'Cancel':function(){
 						$(this).dialog('close');
@@ -1011,7 +1023,7 @@ function final_confirm()
 	}
 	if($(".credit_days").val() =='' || $(".credit_days").val() == 0)
 	{
-		$(".credit_days").addClass('error_inp');
+		$('input[name="credit_days"]').addClass('error_inp');
 		alert("Please Enter Credit Days");
 		return false;
 	}
@@ -1025,7 +1037,7 @@ function final_confirm()
 		alert("Is price change communicated to franchise?");
 		return false;
 	}
-	$(".credit_days").removeClass('error_inp');
+	$('input[name="credit_days"]').removeClass('error_inp');
 	$("input[name='creditdays']").val($('.credit_days').val());	
 	$("#redeem_p").val($(".redeem_points").val());
 	$("#order_form").submit();
@@ -1119,7 +1131,7 @@ $(function(){
 		menuids=[];
 		
 		$("#prods_order .stotal").each(function(){
-			total+=parseFloat($(this).html());
+			total+= format_number( $(this).html() );
 		});
 		total = format_number(total);
 		
@@ -1163,15 +1175,14 @@ $(function(){
 			alert("Please verify whether stock for the footwear is available?");
 			return false;
 		}
-			
 		
 		if(confirm("Total order value : Rs "+total+"\nAre you sure want to place the order?"))
 		{
 			
 			$("#order_form").hide();
 			attr=$(".attr").serialize();
-			
-			$.post("<?=site_url("admin/pnh_jx_checkstock_order")?>",{attr:attr,pids:ppids.join(","),qty:qty.join(","),fid:$('#i_fid').val(),mid:$("input[name='mid']",$(this)).val(),credit_days:$('.credit_days').val()},function(data){
+			distribtor_mrgn = 0;
+			$.post(site_url+"/admin/pnh_jx_checkstock_order",{attr:attr,pids:ppids.join(","),qty:qty.join(","),fid:$('#i_fid').val(),mid:$("input[name='mid']",$(this)).val(),credit_days:$('.credit_days').val()}, function(data){
 				obj=$.parseJSON(data);
 				if(obj.e==0)
 				{
@@ -1203,7 +1214,7 @@ $(function(){
         
 	$("#prods_order .qty").live("change",function(){
 		p=$(this).parents("tr").get(0);
-		
+	
 		var qty_e = $(".qty",p).val()*1;
 		
 			if(isNaN(qty_e*1))
@@ -1236,6 +1247,7 @@ $(function(){
                 var sub_total = parseFloat( $(".lcost",p).text())*parseInt($(".qty",p).val() ) ;
 		$(".stotal",p).html( format_number( sub_total ) );
                 change_total_subtotal();
+       
 	});
         
 	$("#p_srch").keyup(function(){
@@ -1330,7 +1342,6 @@ $(function(){
 			template=template.replace(/%confirm_stock%/g,p.confirm_stock);
 			template=template.replace(/%margin_amt%/g,Math.ceil(p.price-p.lcost));
 			
-			//template=template.replace(/%lcost%/g,p.imei_actv_schem);
 			
 			if(p.max_allowed_qty*1 == 0)
 			{
@@ -1339,20 +1350,36 @@ $(function(){
 			}else
 			{
 				template=template.replace(/%max_oqty%/g,p.max_ord_qty);
-				template=template.replace(/%max_ord_qty%/g,"<br><span style='font-size:10px;color:#cd0000'>Allowed: <br>("+p.max_ord_qty+" Qty)</span>");
+				
+				template=template.replace(/%max_ord_qty%/g,"<span class='tip_popup' title='Maximum Allowed Quantity'>/&nbsp;("+p.max_ord_qty+"&nbsp;Qty)</span>");
 			}
 			
-			if(p.imei_disc*1 != 0)
+			if(p.imei_disc!= 0)
 			{
-				template=template.replace(/%imei_sch_disc%/g,"<br><br><span style='font-size:11px;'>IMEI Scheme: <br>("+p.imei_disc+") </span> ");
+				if(p.imei_disc.scheme_type==0)
+					var imei=p.imei_disc.credit_value;
+				else
+					var imei= (p.lcost*p.imei_disc.credit_value)/100 ;
+					
+				template=template.replace(/%imei_sch_disc%/g,"<span style='font-size:11px;' class='tip_popup imei_wrap' title='On IMEI Activation'><b>IMEI Activation per Qty: </b>(Rs."+imei+") </span> ");
 			}else
 			{
 				template=template.replace(/%imei_sch_disc%/g,"");
 			}
 			
-//			template=template.replace(/%src%/g,p.src);
+			if(p.super_sch!=0)
+			{
+				var super_sch_det="<b>Credit : </b>"+p.super_sch.credit_prc+"%"+"<br> "+"<b>Target value :</b>"+p.super_sch.target_value+"<br>"+"<b>Valid Till :</b>"+p.super_sch.valid_to;
+				template=template.replace(/%super_sch%/g,"<span style='font-size:11px;'><b>Super Scheme : </b> <span class='tip_popup' title='"+super_sch_det+"' style='cursor:pointer;'>Available </span></span> ");
+			}else
+			{
+				template=template.replace(/%super_sch%/g,"<span style='font-size:11px;'><b>Super Scheme : </b> No </span> ");
+			}
+
 			template=template.replace(/%mrp%/g,p.mrp);
 			$("#prods_order tbody").append(template);
+			
+			 tooltip();
 			pids.push(p.pid);
 			
 			show_prev_orderd();
@@ -1636,20 +1663,19 @@ function format_number(num,decimal) {
     return parseFloat(final_num);
 }
 
-function remove_psel(ele)
-{
-	var sel_pid = $(ele).parents("tr:first").attr('pid');
-		$($(ele).parents("tr").get(0)).remove();
-            remove_pid(sel_pid);
-            
-	$('#prods_order tbody tr').each(function(i,itm){
-		$('td:first',this).text(i+1);
-	});
-	
-}
+
 </script>
 
-
+<div id="newbie_confirm_dlg" title="New franchisee note" >
+	<h4>New franchisee note</h4>
+	<div class="hexa">
+		<div><b>Please take a note, this is a new franchisee and we should treat them very well</b></div>
+		<div><input type="checkbox" class="nb_cond" value="1" ><b>Dont say no to products</b></div>
+		<div><input type="checkbox" class="nb_cond" value="1" ><b>Contact TM or executive in office for any information</b></div>
+		<div><input type="checkbox" class="nb_cond" value="1" ><b>Dont commit shipment date (post dated)</b></div>
+		<div><input type="checkbox" class="nb_cond" value="1" ><b>Be gentle with policy and treat them as a child</b></div>
+	</div>
+</div>
 
 <style>
 
@@ -1706,7 +1732,9 @@ left:20px;background:#C97033;border-radius:5px 5px 0px 0px;
 .footerlinks{
 display:none;
 }
-
+.contenttable .leftcont{
+display:none;
+}
 #srch_results{
 	margin-left: 85px;
 	position: absolute;
@@ -1834,9 +1862,37 @@ background-color:#89c403;display:block;padding:12px 15px;
 .offn_courier_detail span {
     margin:0 10px;
 }
-.title a { text-decoration: none; color: #161EE7; }
+.title a { text-decoration: none; color: #161EE7; font-weight: bold;}
 .error_inp{border:1px solid #cd0000 !important;}
+#prod_suggest_list{display:none;}
+
+.img_wrap 
+{
+float: left;
+
+}
+.prod_detwrap 
+{
+text-align:left;
+float: left;
+width:45%;
+padding: 5px 0px 0px 7px;
+
+}
+.price span
+{text-align: justify;}
+#prods_order
+{
+width: 100% !important;}
+
+.tip_popup
+{cursor:pointer;}
+.imei_wrap
+{
+display: block;
+background: #f7f7f7;
+margin-top: 9px;
+padding: 5px;
+}
 </style>
-
-
 <?php

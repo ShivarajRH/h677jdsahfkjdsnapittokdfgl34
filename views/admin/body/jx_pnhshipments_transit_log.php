@@ -54,6 +54,8 @@ $inv_transit_status = array('','In-Transit','Handed-over','Delivered','Return','
 			
 			$inv_list = explode(',',implode(',',$inv_list));
 			
+			$total_invoice=sizeof($inv_list);
+			
 			$fr_list_res = $this->db->query("select distinct invoice_no,
 															franchise_name 
 													from pnh_m_franchise_info a 

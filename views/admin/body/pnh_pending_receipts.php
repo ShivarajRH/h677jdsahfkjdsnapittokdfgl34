@@ -1448,7 +1448,7 @@ function dg_add_invoice_row(elt,row_name,rowparent,dlgname)
         var dg_i_unreconciled_value = format_number( $("#dg_i_unreconciled_value",dlg).val() );
         var dg_l_total_adjusted_val= format_number( $(".dg_l_total_adjusted_val",dlg).val() );
         var franchise_id = $("#franchise_id",dlg).val();
-        alert(franchise_id);
+        
         if( dg_i_unreconciled_value == dg_l_total_adjusted_val ) { // if unredconciled and adjusted amount is same no more adjustments
             alert("All amount adjusted."); return false;
         }

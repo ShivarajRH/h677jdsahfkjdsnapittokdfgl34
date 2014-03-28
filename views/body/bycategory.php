@@ -274,12 +274,15 @@ var prices=[],cats=[];
 prices[<?=$p?>]=[<?=implode(",",$price)?>];
 <?php }?>
 
-<?php foreach($cats as $c=>$cat){?>
+<?php if(isset($brands))
+		foreach($cats as $c=>$cat){?>
 cats[<?=$c?>]=[<?=implode(",",$cat)?>];
 <?php }?>
 
-<?php foreach($brands as $p=>$brand){?>
-brands[<?=$p?>]=[<?=implode(",",$brand)?>];
+<?php if(isset($brands))
+		foreach($brands as $p=>$brand){
+?>
+	brands[<?=$p?>]=[<?=implode(",",$brand)?>];
 <?php }?>
 			
 

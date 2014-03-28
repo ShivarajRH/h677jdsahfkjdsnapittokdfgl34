@@ -20,7 +20,9 @@ $d=$deal;
 <tr><td>Gender Attribute : </td><td><input type="text" name="gender_attr" class="inp" size=15 value="<?=$d?$d['gender_attr']:""?>"></td></tr>
 <tr><td>Tax : </td><td><input type="text" class="inp" name="tax" size=2 value="<?=$d?($d['tax']/100):""?>"> %</td></tr>
 <tr><td>Is Combo : </td><td><input type="checkbox" name="is_combo" value="1" <?=$d&&$d['is_combo']?"checked":""?>></td></tr>
+<tr><td>Is Grouped : </td><td><input type="checkbox" name="is_group" id="is_group" value="1" <?=$d&&$d['is_group']?"checked":""?> /></td></tr>
 <tr><td>Max Allowed Qty <br> (for franchise per day) : </td><td><input type="text" name="max_allowed_qty" class="inp" size=4 value="<?=$d?$d['max_allowed_qty']:""?>"></td></tr>
+<tr><td><b>Has Insurance</b> : </td><td><input type="checkbox" name="has_insurance" value="1" <?=$d&&$d['has_insurance']?"checked":""?>></td></tr>
 <tr><td>Image : </td><td><input type="file" name="pic" class="inp">
 <?php if($d){?>To replace, upload a image<?php }?>
 </td></tr>
@@ -58,7 +60,7 @@ $d=$deal;
 </tr>
 </table>
 
-<?php $superadmin=$this->erpm->auth(DEAL_MANAGER_ROLE,TRUE);?>
+<?php $superadmin=$this->erpm->auth(TRUE,TRUE);?>
 
 <fieldset style="width:600px;">
 <legend><h4>Link Products</h4></legend>
@@ -123,10 +125,10 @@ Search : <input type="text" class="inp" size=60 id="po_g_search">
 	where itemid = ? ",$d['id'])->result_array() as $p)
 			{
 	?>
-<tR>
+<tr>
 <td><input type="hidden" name="pid_g[]" value="<?=$p['group_id']?>"><?=$p['group_name']?></td>
 <td><input type="hidden" class="inp al_pids" size=3 name="qty_g[]" value="<?=$p['qty']?>"><?=$p['qty']?></td>
-</tR>
+</tr>
 <?php $pids[]=$p['group_id']; 
 			} 
 	}?>
@@ -276,6 +278,12 @@ $(function(){
 				return false;
 			}
 		}
+
+		/*if( $("#is_group").is(":checked") && $(".p_pids",$("#pprods_g")).length == 0  ) {
+		    alert("Is group is checked please add some some products for deal");
+		    $("#po_g_search",this).focus();
+		    return false;
+		}*/
 		
 		return true;
 	});

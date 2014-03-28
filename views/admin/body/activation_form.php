@@ -52,12 +52,44 @@
 													<td><b>Name</b><span class="red_star">*</span></td>
 													<td><input type="text" name="member_name" value="<?php echo set_value('member_name');?>"><?php echo form_error('member_name','<span class="error_msg">','</span>');?></td> 
 												</tr>
+												<tr>
+													<td><b>DOB</b></td>
+													<td><input type="text" name="mem_dob" value=""></td>
+												</tr>
+												<tr>
+													<td><b>Marital Status</b></td>
+													<td><input type="radio" value="1" name="marital" checked="checked">
+														Married
+														<input type="radio" checked="checked" value="0" name="marital">
+														Single
+														<input type="radio" value="2" name="marital">Other</td>
+														
+												</tr>
+												<tr>
+													<td><b>Address</b></td>
+													<td><textarea name="mem_address" value=""></textarea></td>
+												</tr>
+												<tr>
+													<td><b>PinCode</b></td>
+													<td><input type="text" name="pin_code" value="" size="18px"></td>
+												</tr>
+												<tr>
+													<td><b style="font-style: 9px;">Monthy Shopping Expense</b></td>
+													<td>
+														<ul>
+															<li><input type="radio" checked="checked" value="0" name="expense">&lt; Rs. 2000</li>
+															<li><input type="radio" value="1" name="expense">Rs 2001 - Rs 5000</li>
+															<li><input type="radio" value="1" name="expense">Rs 5001 - Rs 10000</li>
+															<li><input type="radio" value="1" name="expense"> &lt; Rs. 10000</li>		
+														</ul>					
+													</td>
+												</tr>
 												<tr><td><b>Gender</b><span class="red_star">*</span></td><td><input  type="radio" name="gender" value="0">Male <input type="radio" name="gender" value="1">Female  <?php echo form_error('gender','<span class="error_msg">','</span>');?></td></tr>
 												<tr>
 													<td colspan="2" align="left"><input type="submit" class="button button-flat-royal button-small button-rounded" value="Register Member">
 													</td>
 												</tr>
-
+												
 											</table>
 										</form>
 									</div>
@@ -802,4 +834,11 @@ $( ".fran_tabs a" ).click(function(){
 	window.scrollTo(0,0); 
 });
 
+$('input[name="mem_dob"]').datepicker();
 </script>
+<style>
+ul
+{
+    list-style-type: none;
+}
+</style>

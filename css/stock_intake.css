@@ -41,6 +41,9 @@
 {
 	width:89%;
 	float:right;
+	 max-height: 700px;
+    overflow-x: auto;
+    overflow-y: auto;
 }
 
 .jq_alpha_sort_alphalist_itemlist
@@ -49,11 +52,11 @@
 }
 .jq_alpha_sort_alphalist_itemlist_divwrap 
 {
-	  border-bottom: 1px dotted #CCCCCC;
+	border-bottom: 1px dotted #CCCCCC;
     color: #000000;
     display: block;
     font-size: 12px;
-    padding: 10px;
+    padding: 5px;
 }
 .jq_alpha_sort_alphalist_itemlist_divwrap a
 {
@@ -254,7 +257,7 @@ are defined individually in color classes */
 {
 	float: left;
     text-align: right;
-    width: 65px;
+    width: 78px;
     margin-right:3px;
 }
 .po_qty_wrap2 b
@@ -319,18 +322,26 @@ are defined individually in color classes */
 {
 	background: #808000 !important;
 }
+/*
 .bcode_scanned
 {
 	background: rgb(149, 238, 195) !important;
 }
+*/
 .lastScanned
 {
 	background:none repeat scroll 0 0 #FF9600 !important; 
 }
-
+.button-tiny_wrap 
+{
+    font-size: 11px;
+	padding: 5px;
+	width: 18px;
+	line-height: 18px;
+	height: 18px;
+}
 #grn
 {
-	
 	padding:5px;
 }
 .grn_po
@@ -361,13 +372,13 @@ are defined individually in color classes */
 }
 .barcode_fixed_wrap
 {
-	background: none repeat scroll 0 0 #EBEAE8;
+	background: none repeat scroll 0 0 #fafafa;
 	border: 1px solid #AAAAAA;
 	margin: 5px 0;
 	padding: 9px 0px;
 	position: fixed;
 	right: 0;
-	top: 182px;
+	top: 148px;
 	width: 182px;
 }
 .barcode_fixed_wrap span,.barcode_fixed_wrap input
@@ -376,14 +387,14 @@ are defined individually in color classes */
 }
 #grn_color_legends
 {
-	 background: none repeat scroll 0 0 #EBEAE8;
+	 background: none repeat scroll 0 0 #fafafa;
     border: 1px solid #CCCCCC;
     float: right;
     font-size: 10px;
     font-weight: bold;
     position: fixed;
     right: 0;
-    top: 260px;
+    top: 230px;
     color:#000;
     width: 182px;
 }
@@ -407,6 +418,12 @@ are defined individually in color classes */
     border: 1px solid #000000;
    	padding: 0 38px;
 }
+#grn_color_legends .row_hg td
+{
+	background: none repeat scroll 0 0 #ff9900;
+    border: 1px solid #000000;
+   	padding: 0 38px;
+}
 #grn_color_legends .last_sc
 {
 	background: #FF9600;
@@ -419,6 +436,16 @@ are defined individually in color classes */
     border: 1px solid #000000;
     padding: 0 38px;
 }
+#grn_color_legends  .processed_mode_color{
+	background:none repeat scroll 0 0 #80F111;
+	border: 1px solid #000000;
+    padding: 0 38px;
+  }
+#grn_color_legends  .edit_mode_color{
+	background:none repeat scroll 0 0 #b4defe;
+	border: 1px solid #000000;
+    padding: 0 38px;
+    }
 #srch_barcode
 {
 	margin-top:10px;
@@ -575,6 +602,12 @@ dl
     font-size: 10px;
     width: 87px;
 }
+.inv_inp_datepick_blk
+{
+	 border: 1px solid #000000 !important;
+    font-size: 10px;
+    width: 87px;
+}
 .inv_inp_amount
 {
 	width:60px;
@@ -630,7 +663,7 @@ dl
 	 background: none repeat scroll 0 0 #FFFFD0;
   	 color: #FF0000;
     font-size: 14px;
-    margin-top: 420px;
+    margin-top: 360px;
     position: fixed;
     right: 0;
     top: 0;
@@ -642,6 +675,10 @@ dl
     font-size: 14px;
     font-weight: bold;
     text-align: center;
+}
+.ven_title_wrap
+{
+	color: #921A1A;
 }
 #scanned_summ h4{
 	margin-bottom: 10px;
@@ -666,50 +703,96 @@ dl
 	 float: left;
     margin-left: 10px;
     vertical-align: top;
-    width: 46%;
+    width: 35%;
+}
+.bcode_scanned_div
+{
+	font-size: 11px;
+}
+.imei_scanned_div
+{
+	font-size: 11px;
+	margin-top:10px;
+	float:left;
 }
 .bcode_scanned_status
 {
-	background: none repeat scroll 0 0 #F5B987;
-    border: 1px solid #F19E58;
+	background: none repeat scroll 0 0 #F1F1F1;
     border-radius: 2px;
-    color: #D26911;
-    font-size: 9px;
+    color: #FD0303;
+    font-size: 10px;
     font-weight: bold;
-    padding: 0;
+    margin-top: 15px;
+    padding: 3px;
     text-transform: uppercase;
     width: 20%;
-    float: left;
-    margin-top: 15px;
 }
-
+.po_alert_wrap
+{
+	padding:100px;
+	font-size: 13px;
+	color:red;
+	font-weight: bold;
+	text-align: center;
+}
 .imei_scanned_status {
-    background: none repeat scroll 0 0 #F5B987;
-    border: 1px solid #F19E58;
+    background: none repeat scroll 0 0 #F1F1F1;
     border-radius: 2px;
-    color: #D26911;
-    float: left;
-    font-size: 9px;
+    color: #FD0303;
+    font-size: 10px;
     font-weight: bold;
-    margin-left: 10px;
-    padding: 0;
     margin-top: 15px;
+    padding: 3px;
     text-transform: uppercase;
-    width: 14%;
-    float: left;
+    width: 20%;
 }
 .cancel_stock
 {
 	  float: left;
-    margin-top: 16px;
+    margin-top: 22px;
 }
 .pb_blk
 {
-	 background: none repeat scroll 0 0 #CCCCCC;
+	background: none repeat scroll 0 0 #FFFFA0;
     border: 1px solid #CCCCCC;
-    padding: 1px;
+    padding: 1px 3px;
 }
+.bcode_upd{padding:2px 4px;}
+.bcode_scanned_status.active
+{
+	background: rgb(242, 245, 180);
+	color: green;
+	border:1px solid #F1F1F1
+}
+.imei_scanned_status.active{background: rgb(242, 245, 180);
+color: green;
+border:1px solid #F1F1F1}
 #grn .datagrid td{font-size: 10px}
 #grn .datagrid td a{font-size: 11px;}
 #grn .datagrid td select,#grn .datagrid td input[type="text"]{font-size: 11px;min-width: 60px}
+.name a:focus{font-size: 14px;}
+#grn_ttl_value
+{
+	margin-left:58%;
+}
+#invoice_ttl_value
+{
+	 color: #008000;
+    font-size: 13px;
+}
+#grn_ttl
+{
+	display:none;
+}
+#invoice_ttl_value
+{
+	float:left;margin-left:5px;
+}
 
+.processed_mode td{background:none repeat scroll 0 0 #80F111 !important;}
+.edit_mode td{background:none repeat scroll 0 0 #b4defe !important;}
+
+span.name {font-size: 12px !important;}
+
+#grn a:focus{font-weight: bold;font-size: 14px;}
+#grn .iqty,#grn .rqty{min-width: 30px !important;border: 2px solid #000 !important}
