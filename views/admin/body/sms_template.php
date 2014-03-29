@@ -8,7 +8,7 @@
 				<table>
 					<tr>
 						<td><b>From</b></td>
-						<td><input type="text" name="From" value=""></td>
+						<td><input type="text" name="From" value="" maxlength="11"></td>
 					</tr>
 					<tr>
 						<td><b>SMS Text</b></td>

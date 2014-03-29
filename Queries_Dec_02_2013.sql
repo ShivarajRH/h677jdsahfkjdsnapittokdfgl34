@@ -4144,3 +4144,11 @@ SELECT r.*,f.franchise_name,a.name AS admin FROM pnh_t_receipt_info r
 LEFT OUTER JOIN king_admin a ON a.id=r.created_by JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
 WHERE r.receipt_amount != 0 AND r.unreconciled_value > 0 AND r.status IN (0,1) AND r.receipt_type != 0 AND FROM_UNIXTIME(r.instrument_date) BETWEEN '1395513000' AND '1396031399'
  ORDER BY r.created_on DESC;
+
+Mar_29_2014
+
+/*[11:18:32 AM][46 ms]*/ INSERT INTO `user_access_roles`(`id`,`user_role`,`const_name`,`value`)VALUES(NULL,'ORDER_CONFIRMATION',NULL,'0'); 
+/*[11:18:49 AM][37 ms]*/ INSERT INTO `user_access_roles`(`id`,`user_role`,`const_name`,`value`)VALUES(NULL,'ORDER_CONFIRMATION','ORDER_CONFIRMATION','0'); 
+/*[11:19:17 AM][29 ms]*/ UPDATE `user_access_roles` SET `value`='68719476736' WHERE `id`='37'; 
+
+SELECT * FROM pnh_member_offers;

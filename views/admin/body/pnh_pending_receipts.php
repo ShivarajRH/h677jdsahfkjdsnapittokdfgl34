@@ -449,8 +449,6 @@ if($no_days >=4 && $r['activated_on'] == 0)
 </table>
 <?php } elseif($type == 6)
 {
-//    echo '<pre>'; print_r($receipts); die();
-    
     if($receipts){ ?>
 <table class="datagrid" width="100%">
     
@@ -542,7 +540,7 @@ if($no_days >=4 && $r['activated_on'] == 0)
 ?>
 
 &nbsp;&nbsp;
-<?php if($type==1){ ?>
+<?php if($type==1){?>
 <div id="submit_bank">With Selected:<input type="button" value="Submit To Bank" onclick="load_bankdetails()"></div>
 <?php }?>
 <div id="submit_tobank"title="Submit To Bank"  data-placeholder="Select Bank" style="display:none;">

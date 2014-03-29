@@ -7415,18 +7415,20 @@ order by p.product_name asc
 		}
 		else if($catid ==0 && $brandid !=0)
 			$cond ="and d.brandid='".$brandid."'";	
-		else if($catid !=0 && $brandid !=0)	
+		else if($catid !=0 && $brandid !=0)
 			$cond ="and d.catid='".$catid."' and d.brandid='".$brandid."'";
 		else if($catid ==0 && $brandid ==0)	
 			$cond ="and 1";
 		if($type==0)
 			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category,l.is_active,p.is_sourceable from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() $join_cond JOIN `m_product_deal_link` l ON l.itemid=i.id JOIN m_product_info p ON p.product_id=l.product_id where i.is_pnh=1 $cond group by i.id order by i.name asc limit 50")->result_array();
-		else if($type==1)
+		else if($type==1)// Latest Sold Deals
 			$ret=$this->db->query("select * from (select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,i.id,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category,l.is_active,p.is_sourceable from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp()  $join_cond JOIN `m_product_deal_link` l ON l.itemid=i.id JOIN m_product_info p ON p.product_id=l.product_id where i.is_pnh=1 $cond group by i.id ) as dd group by dd.id  limit 30")->result_array();
-		else if($type==2)
+		else if($type==2)// Most Sold Deals
 			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,o.quantity as qty,ifnull(sum(o.quantity),0) as sold,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category,l.is_active,p.is_sourceable from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join king_orders o on o.itemid=i.id left outer join king_transactions t on t.transid=o.transid and t.is_pnh=1 left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp() $join_cond JOIN `m_product_deal_link` l ON l.itemid=i.id JOIN m_product_info p ON p.product_id=l.product_id where i.is_pnh=1 $cond group by i.id order by count(o.id) desc limit 30")->result_array();
-		
-	//	echo $this->db->last_query();die;
+		else if($type==3)// Latest Added Deals 
+			$ret=$this->db->query("select ifnull(group_concat(smd.special_margin),0) as sm,0 as stock,i.id,d.publish,d.brandid,d.catid,i.orgprice,i.price,i.name,i.pic,i.pnh_id,i.id as itemid,b.name as brand,c.name as category,l.is_active,p.is_sourceable from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left join pnh_special_margin_deals smd on i.id = smd.itemid and smd.from <= unix_timestamp() and smd.to >=unix_timestamp()  $join_cond JOIN `m_product_deal_link` l ON l.itemid=i.id JOIN m_product_info p ON p.product_id=l.product_id where i.is_pnh=1 $cond group by i.id order by i.created_on desc limit 30")->result_array();
+
+        //	echo $this->db->last_query();die;
 		return $ret;
 	}
 	
@@ -7506,7 +7508,7 @@ order by p.product_name asc
 			$sql = "SELECT r.*,f.franchise_name,a.name AS admin,d.username AS activated_by ,c.cancel_reason,c.cancelled_on,c.cheq_cancelled_on,c.cancel_status,b.bank_name AS submit_bankname,c.submitted_on,s.name as submitted_by,c.remarks AS submittedremarks,m.name AS reversed_by
                                         FROM pnh_t_receipt_info r 
                                         JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
-                                         JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
+                                        LEFT JOIN `pnh_m_deposited_receipts`c ON c.receipt_id=r.receipt_id
                                         LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
                                         LEFT OUTER JOIN king_admin d ON d.id=r.activated_by 
                                         LEFT JOIN `pnh_m_bank_info` b ON b.id=c.bank_id
@@ -7530,13 +7532,12 @@ order by p.product_name asc
                                         JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
                                         WHERE r.receipt_amount != 0 AND r.unreconciled_value > 0 AND r.status IN (0,1) AND r.receipt_type != 0 $cond
                                         ORDER BY r.created_on DESC";
-//			$total_records=$this->db->query($sql,$fid)->num_rows;#and r.franchise_id = ? 
-//                        $data['receipt_log']=$this->db->query($sql,$fid)->result_array();
-//                        $data['ttl_receipts_val']=$this->db->query("select sum(receipt_amount) as ttl_receipts_val from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) order by created_on desc",$fid)->row()->ttl_receipts_val;-->
+//							$total_records=$this->db->query($sql,$fid)->num_rows;#and r.franchise_id = ? 
+//                        	$data['ttl_receipts_val']=$this->db->query("select sum(receipt_amount) as ttl_receipts_val from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and franchise_id = ? and status in (0,1) order by created_on desc",$fid)->row()->ttl_receipts_val;-->
 
 		}
 		$total_rows = $this->db->query($sql,array($st_date,$en_date))->num_rows();
-//		die($this->db->last_query());
+
 		$sql = $sql.' limit '.$pg.',50';
 		$receipts=$this->db->query($sql,array($st_date,$en_date))->result_array();
 		
@@ -7643,12 +7644,12 @@ order by p.product_name asc
 						ORDER BY cancelled_on DESC";
 			$total_value=$this->db->query($sql,$tid)->row_array();
 		}
-                if($type==6) { // and franchise_id = ? ,$fid
-                    $total_value = $this->db->query(" SELECT SUM(r.receipt_amount) AS ttl_receipts_val FROM pnh_t_receipt_info r
-                        JOIN pnh_m_franchise_info f ON f.franchise_id = r.franchise_id
-                        WHERE r.receipt_amount != 0 AND r.unreconciled_value > 0 AND r.status IN (0,1) AND f.territory_id = ?
-                        ORDER BY r.created_on DESC",$tid)->row()->ttl_receipts_val;
-                }
+        if($type==6) { // and franchise_id = ? ,$fid
+            $total_value = $this->db->query(" SELECT SUM(r.receipt_amount) AS ttl_receipts_val FROM pnh_t_receipt_info r
+                JOIN pnh_m_franchise_info f ON f.franchise_id = r.franchise_id
+                WHERE r.receipt_amount != 0 AND r.unreconciled_value > 0 AND r.status IN (0,1) AND f.territory_id = ?
+                ORDER BY r.created_on DESC",$tid)->row()->ttl_receipts_val;
+        }
 		return $total_value;
 	}
 	
@@ -7699,11 +7700,11 @@ order by p.product_name asc
 						GROUP BY r.receipt_id
 						ORDER BY cancelled_on DESC";
 		if($type==6) { // and franchise_id = ? ,$fid
-                    $sql="select r.*,f.franchise_name,a.name as admin from pnh_t_receipt_info r
-                                LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
-                                JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
-                                where r.receipt_amount != 0 and r.unreconciled_value > 0 and r.franchise_id = ? and r.status in (0,1) and r.receipt_type != 0 order by r.created_on desc";
-                }
+            $sql="select r.*,f.franchise_name,a.name as admin from pnh_t_receipt_info r
+                        LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
+                        JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
+                        where r.receipt_amount != 0 and r.unreconciled_value > 0 and r.franchise_id = ? and r.status in (0,1) and r.receipt_type != 0 order by r.created_on desc";
+        }
                 
 		
 		$total_rows = $this->db->query($sql,$r_type)->num_rows();
@@ -7753,11 +7754,11 @@ order by p.product_name asc
 						GROUP BY r.receipt_id
 						ORDER BY activated_on DESC";
 		if($type==6) { // and franchise_id = ? ,$fid
-                    $sql="select r.*,f.franchise_name,a.name as admin from pnh_t_receipt_info r
-                                LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
-                                JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
-                                where r.receipt_amount != 0 and r.unreconciled_value > 0 and r.franchise_id = ? and r.status in (0,1) and r.receipt_type != 0 order by r.created_on desc";
-                }
+            $sql="select r.*,f.franchise_name,a.name as admin from pnh_t_receipt_info r
+                        LEFT OUTER JOIN king_admin a ON a.id=r.created_by 
+                        JOIN pnh_m_franchise_info f ON f.franchise_id=r.franchise_id 
+                        where r.receipt_amount != 0 and r.unreconciled_value > 0 and r.franchise_id = ? and r.status in (0,1) and r.receipt_type != 0 order by r.created_on desc";
+        }
                 
 		$total_rows = $this->db->query($sql,$fid)->num_rows();
 		$sql = $sql.' limit '.$pg.',50';
@@ -7806,9 +7807,10 @@ order by p.product_name asc
 						ORDER BY cancelled_on DESC";
 			$total_value=$this->db->query($sql)->row_array();
 		}
-                if($type==6) {// and franchise_id = ? ,$fid
-                    $total_value=$this->db->query("select sum(receipt_amount) as ttl_receipts_val from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and status in (0,1) order by created_on desc")->row()->ttl_receipts_val;
-                }
+
+		if($type==6) {// and franchise_id = ? ,$fid
+		    $total_value=$this->db->query("select sum(receipt_amount) as ttl_receipts_val from pnh_t_receipt_info where receipt_amount != 0 and unreconciled_value > 0 and status in (0,1) order by created_on desc")->row()->ttl_receipts_val;
+		}
 		return $total_value;
 	}
 	
@@ -8251,6 +8253,17 @@ order by p.product_name asc
 	
 	
 		$menuid=$this->db->query("select d.menuid,m.default_margin as margin from king_dealitems i join king_deals d on d.dealid=i.dealid JOIN pnh_menu m ON m.id=d.menuid where i.is_pnh=1 and i.pnh_id=?",$pid)->row_array();
+		//check whether menu belong to franchise
+		$menu_id=$menuid['menuid'];
+	//	echo '<pre>';print_r($menuid);exit;
+		$primary_menu=''; 
+
+		$secondary_menu='';
+
+		if($this->db->query("select count(*) as ttl from pnh_franchise_menu_link where `status`=1 and fid=? and menuid=?",array($fid,$menu_id))->row()->ttl==0)
+			$secondary_menu=1;
+		else
+			$primary_menu=1;
 		
 	
 		$brandid=$this->db->query("select d.brandid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.is_pnh=1 and i.pnh_id=?",$pid)->row()->brandid;
@@ -8260,12 +8273,24 @@ order by p.product_name asc
 		$fran=$this->db->query("select * from pnh_m_franchise_info where franchise_id=?",$fid)->row_array();
 		
 		
-		$fran1=$this->db->query("select * from pnh_sch_discount_brands where franchise_id=? and menuid=? and brandid=? and is_sch_enabled = 1 ",array($fid,$menuid['menuid'],$brandid))->row_array();
+		$fran1=@$this->db->query("select * from pnh_sch_discount_brands where franchise_id=? and menuid=? and brandid=? and is_sch_enabled = 1 ",array($fid,$menuid['menuid'],$brandid))->row_array();
 		 
 		$margin=$this->db->query("select margin,combo_margin,less_margin_brands from pnh_m_class_info where id=?",$fran['class_id'])->row_array();
-
-		$margin['base_margin']=$menuid['margin'];
-		$margin['margin']=$menuid['margin'];
+                
+                if($secondary_menu==0)
+		{
+			$margin['base_margin']=$menuid['margin'];
+			$margin['margin']=$menuid['margin'];
+			
+		}
+		else
+		{
+			// 50% of menu margin for the menu not alloted to franchisee(Secondary Menu)
+			
+			$margin['base_margin']=($menuid['margin']*50)/100;
+			$margin['margin']=($menuid['margin']*50)/100;
+		}
+                
 		$has_special_margin = 0;
 		$has_super_scheme=0;
 		 
@@ -8465,7 +8490,10 @@ order by p.product_name asc
 		$itemnames=$itemids=array();
 		
 		//compute redeem val per item : total_items
+                $menu_ofr_pricevalue=array();
+		$ordered_menus_ttl=array();
 		$ordered_menus_list=array();
+                $commision=0;
 		$item_pnt =  $redeem_points/count($items);
 		$redeem_value = 0;  
 		foreach($items as $i=>$item)
@@ -8496,7 +8524,14 @@ order by p.product_name asc
 			$total+=$items[$i]['price']*$items[$i]['qty'];
 			$d_total+=($items[$i]['price']-$items[$i]['discount'])*$items[$i]['qty'];
                         
-       
+                        $menu_ofr_pricevalue[$prod['menuid']][]=$items[$i]['price']*$items[$i]['qty'];
+				
+                        $d_total+=($items[$i]['price']-$items[$i]['discount'])*$items[$i]['qty'];
+                        $commision+=$items[$i]['discount']*$items[$i]['qty'];
+                        $itemids[]=$prod['id'];
+                        $itemnames[]=$prod['name'];
+                        $loyalty_pntvalue=$prod['loyality_pntvalue'];
+
 			// offers check
 			if($offr_sel_type == 2 || $insurance['opted_insurance'] == 1 )
 			{
@@ -8898,9 +8933,6 @@ order by p.product_name asc
                         //print_r($_POST);
                     }
 
-                }
-                else {
-                    echo "Error:Offer condition mismatch";
                 }
                 //===================< Implement the member offers END>============================
                 //die();
@@ -13451,7 +13483,59 @@ order by action_date";
 
             return $this->db->query($sql)->result_array();
     }
-	
+    
+    function getuserorders_bytransaction_date_range($status,$s=false,$e=false,$pg=0,$limit=50)
+    {
+    	if($s)
+    	{
+    		$s=strtotime($s.' 00:00:00');
+    		$e=strtotime($e.' 23:59:59');
+    	}
+    	$cond = '';
+    	
+    	
+		if($pg == -1)
+		{
+			$sql="select count(1) as t  
+							from user_order_transactions t join king_user_orders o on o.transid=t.transid left outer join king_users u on o.userid=u.userid 
+							where 1";
+			if($s)
+				$sql.="	and o.time between ? and ?";
+			if($status==1)
+				$sql.=" and o.status=0";
+				
+			$sql .= $cond; 	
+			$sql.=" group by t.transid ";
+			
+			return $this->db->query("$sql",array($s,$e))->num_rows();
+			
+		}else
+		{
+		 
+			$sql="select t.franchise_id,t.is_pnh,t.priority,t.batch_enabled,t.transid,o.ship_phone,o.ship_city,o.status,t.amount,o.actiontime,count(o.itemid) as items,u.name,u.userid,t.init,t.amount,t.priority 
+							from user_order_transactions t join king_user_orders o on o.transid=t.transid left outer join king_users u on o.userid=u.userid 
+							where 1";
+			
+			if($s)
+				$sql.="	and o.time between ? and ?";
+			if($status==1)
+				$sql.=" and o.status=0";
+				
+			$sql .= $cond;
+				
+			$sql.=" group by t.transid order by";
+			if($status==0)
+				$sql.=" t.id desc,o.status desc";
+			else
+				$sql.=" t.id asc";
+			$sql.=" limit 0,50";
+			
+		
+			 return $this->db->query("$sql",array($s,$e))->result_array();
+			 
+		}
+			
+    }
 }
 
 

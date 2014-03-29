@@ -2337,11 +2337,6 @@ $("#franlogin_div").dialog({
 		$('.mid_entrytype').val('0').trigger('liszt:updated');
 		
 	},
-        buttons:{
-            'Authenticate':function(){
-                $(this).dialog('close');
-            }
-        }
 });
 
 $("#sel_state").change(function(){
@@ -2477,11 +2472,6 @@ $( "#authentiacte_blk" ).dialog({
 		$("#franchise_det").html(data).show();
 		});
 	},
-        buttons:{
-            'Authenticate':function(){
-                $(this).dialog('close');
-            }
-        }
 	
 });
 

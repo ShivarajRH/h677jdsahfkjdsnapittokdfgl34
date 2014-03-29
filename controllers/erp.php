@@ -6086,8 +6086,8 @@ group by g.product_id order by product_name");
 		echo "<td>{$f['receipt_date']}</td><td>{$modes[$f['receipt_type']]}</td><td>{$f['receipt_amount']}</td><td>{$r_status[$f['status']]}</td></tr></tbody>";}
 		echo "</table></td></tr>";
 		echo "</table>";
-		//echo '<br>';
-		//echo "<div id='auth_cont'style='float:right;margin-top: 11px;'><input type='button' class='auth_cont_btn button button-flat-royal button-small button-rounded' value='Authenticate' ></div>";
+		echo '<br>';
+		echo "<div id='auth_cont'style='float:right;margin-top: 11px;'><input type='button' class='auth_cont_btn button button-flat-royal button-small button-rounded' value='Authenticate' ></div>";
 		
 		
 	}
@@ -29470,4 +29470,180 @@ die; */
 //            write_file('name', $data);
             //if you want to write it to disk and/or send it as an attachment    
     }
+    
+    function userend_orders($status=0,$s=false,$e=false,$orders_by='all',$limit=50,$pg=0)
+    {
+    	$user=$this->auth(ORDER_CONFIRMATION);
+    	if($s!=false && $e!=false && (strtotime($s)<=0 || strtotime($e)<=0))
+    		show_404();
+    		
+    	$data['pagetitle']="";
+    	$data['cur_pg']=$pg;
+    	$data['perpage_limit']=$limit;
+    	
+    	$data['total_orders']=$this->erpm->getuserorders_bytransaction_date_range($status,$s,$e,-1,$limit);
+    	$data['user_orders']=$this->erpm->getuserorders_bytransaction_date_range($status,$s,$e,$pg,$limit);
+
+    	
+    	$this->load->library('pagination');
+    	
+    	$s = $s?$s:0;
+    	$e = $e?$e:0;
+    	
+    	$config['base_url'] = site_url("admin/userend_orders/$status/$s/$e/$orders_by/$limit");
+    	$config['total_rows'] = $data['total_orders'];
+    	$config['per_page'] = $limit;
+    	$config['uri_segment'] = 8;
+    	$config['num_links'] = 5;
+    	
+    	$this->config->set_item('enable_query_strings',false);
+    	$this->pagination->initialize($config);
+    	
+    	$data['orders_pagination'] = $this->pagination->create_links();
+    	$this->config->set_item('enable_query_strings',true);
+    	
+    	if($status==1)
+    	{
+    		$data['pagetitle']="Pending ";
+    		$data['pending']=true;
+    	}
+    	if($e)
+    		$data['pagetitle'].="between $s and $e";
+    		
+    		
+    	$data['page']="orders_byusrend";
+    	$this->load->view("admin",$data);
+    }
+    
+    function jx_upd_ordrstatus()
+    {	
+    	$user=$this->auth(ORDER_CONFIRMATION);
+        $transid=$this->input->post('confrmd_transid');
+        $status=$this->input->post('order_status');
+        $remarks=$this->input->post('ordr_confrm_remarks');
+        $confirm_oid=str_ireplace("PNH", '', $transid);
+        $confirm_oid=trim($confirm_oid);
+        $output=array();
+
+        $fran_det=$this->db->query("select t.franchise_id,franchise_name,login_mobile1,login_mobile2,current_balance from user_order_transactions t join pnh_m_franchise_info f on f.franchise_id=t.franchise_id where transid=?",$transid)->row_array();
+        $fran_mob=$fran_det['login_mobile1'];
+        $fran_name=$fran_det['franchise_name'];
+        $franid=$fran_det['franchise_id'];
+
+        $mem_det=$this->db->query("SELECT o.userid,i.first_name,i.last_name,i.mobile FROM king_user_orders o  JOIN pnh_member_info i ON i.user_id=o.userid WHERE transid=? AND STATUS=0",$transid)->row_array();
+        $mem_name=$mem_det['first_name'].''.$mem_det['last_name'];
+        $mem_mob=$mem_det['mobile'];
+        $userid=$mem_det['userid'];
+        $d_total=0;
+        if($transid && $status==1)
+        {
+               $this->db->query("update king_user_orders set status=1 where transid=? and userid=?",array($transid,$userid));
+
+               $trans_det=$this->db->query("select * from king_user_orders where transid=? and status=1 and userid=?",array($transid,$userid));
+               if($trans_det->num_rows())
+               {
+                       foreach($trans_det->result_array() as $o)
+                       {
+                               $inp['id']=$o['id'];
+                               $inp['transid']=$o['transid'];
+                               $inp['userid']=$o['userid'];
+                               $inp['brandid']=$o['brandid'];
+                               $inp['itemid']=$o['itemid'];
+                               $inp["bill_person"]=$inp['ship_person']=$o['bill_person'];
+                               $inp["bill_address"]=$inp['ship_address']=$o['bill_address'];
+                               $inp["bill_city"]=$inp['ship_city']=$o['bill_city'];
+                               $inp['bill_pincode']=$inp['ship_pincode']=$o['ship_pincode'];
+                               $inp['bill_phone']=$inp['ship_phone']=$o['bill_phone'];
+                               $inp['bill_email']=$inp['ship_email']=$o['bill_email'];
+                               $inp['bill_state']=$inp['ship_state']=$o['bill_state'];
+                               $inp['quantity']=$o['quantity'];
+                               $inp['time']=time();
+                               $inp['ship_landmark']=$inp['bill_landmark']=$o['ship_landmark'];
+                               $inp['bill_country']=$inp['ship_country']="India";
+                               $inp['i_orgprice']=$o['i_orgprice'];
+                               $inp['i_price']=$o['i_price'];
+                               $inp['i_discount']=$o['i_discount'];
+                               $inp['i_coup_discount']=$o['i_coup_discount'];
+                               $d_total+=($o['i_price']-$o['i_discount'])*$o['quantity'];
+                               //$inp['franchise_id']=$o['franchise_id'];
+                               $inp['i_tax']=$o['i_tax'];
+                               $inp['vendorid']=0;
+                               $inp['loyality_point_value']=$o['loyality_point_value'];
+
+                               $this->db->insert("king_orders",$inp);
+
+                       }
+
+                       $usr_ordr_mrgn_track_det=$this->db->query("select * from user_order_margin_track where transid=?",$transid);
+                       if($usr_ordr_mrgn_track_det)
+                       {
+                               foreach($usr_ordr_mrgn_track_det->result_array() as $ordr_mrgn_det)
+                               {
+                                       $m_inp=array("transid"=>$transid,"itemid"=>$ordr_mrgn_det['itemid'],"mrp"=>$ordr_mrgn_det['mrp'],"price"=>$ordr_mrgn_det['price'],"base_margin"=>$ordr_mrgn_det['base_margin'],"sch_margin"=>$ordr_mrgn_det['sch_margin'],"bal_discount"=>$ordr_mrgn_det['bal_discount'],"qty"=>$ordr_mrgn_det['qty'],"final_price"=>$ordr_mrgn_det['final_price']);
+                                       $this->db->insert("pnh_order_margin_track",$m_inp);
+                               }
+                       }
+                       $fran_crdet = $this->erpm->get_fran_availcreditlimit($franid);
+                       $fran_det['balance'] = $fran_crdet[3];
+                       $batch_status=0;
+                       if($fran_det['balance']<$d_total)
+                       {
+                               $batch_status=1;
+                               $this->erpm->pnh_sendsms($fran_mob,"Member placed an order of Rs $d_total We wont be able to process your order further since your account balance is Rs {$fran_det['current_balance']} Total order amount : Rs $d_total,Please TopUp your account to proceed",$franid,0,0);
+                       }
+
+                       $this->db->query("update user_order_transactions set batch_enabled=1 where transid=? and batch_enabled=0",$transid);
+
+                       $usr_trans_det=$this->db->query("select * from user_order_transactions where transid=? and batch_enabled=1",$transid)->row_array();
+
+                       if($usr_trans_det)
+                       {
+
+                               $transid=$usr_trans_det['transid'];
+                               $d_total=$usr_trans_det['amount'];
+                               $d_total=$usr_trans_det['paid'];
+                               $fran_id=$usr_trans_det['franchise_id'];
+                               if($batch_status==0)
+                                       $batch_enabled = 1;
+                               else
+                                       $batch_enabled = 0;
+                               $this->db->query("insert into king_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,batch_enabled) values(?,?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$franid,$batch_enabled));
+                       }
+
+                       $this->erpm->pnh_sendsms($mem_mob,"$mem_name,Congrats!Your order [$confirm_oid] has been sucessfully recieved,Please contact your ($fran_name,$from) for update. StoreKing Team",$franid,$mid,0);
+                       $this->erpm->pnh_sendsms($fran_mob,"Thanks for your reply. With Reference to [$mem_name,$mem_mob], Order [$confirm_oid] has been sucessfully placed.",$franid,0,0);
+               }
+
+
+                       $billno=10001;
+                       $nbill=$this->db->query("select bill_no from pnh_cash_bill where franchise_id=? order by bill_no desc limit 1",$franid)->row_array();
+                       if(!empty($nbill))
+                               $billno=$nbill['bill_no']+1;
+                               $inp=array("bill_no"=>$billno,"franchise_id"=>$franid,"transid"=>$transid,"user_id"=>$userid,"status"=>1);
+                                       $this->db->insert("pnh_cash_bill",$inp);
+
+                               //do packing process
+                               $ttl_num_orders=sizeof($trans_det);
+                               $batch_remarks="StoreKing Order placed through SMS by $mem_mob";
+                               $updated_by='';
+
+                               // Process to batch this transaction
+                               $this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
+
+                               $this->erpm->do_trans_changelog($transid,$batch_remarks);
+
+                               $output['status']='success';
+
+               }
+                elseif($transid && $status==3)
+               {
+                       $this->db->query("update king_user_orders set status=3 where transid=?",$transid);
+
+                       $this->erpm->pnh_sendsms($mem_mob,"$mem_name Sorry to inform you ! your order[$confirm_oid] has been Cancelled. Please contact your ($fran_name-$fran_mob) for any queries.",$franid,$membr_id,0);
+                       $this->erpm->pnh_sendsms($fran_mob,"Thanks for your reply.  With Reference to[$mem_name,$mem_mob] order[$confirm_oid] has been Cancelled.",$franid,0,0);
+                       $output['status']='success';
+               }
+
+               echo json_encode($output);
+        }
 }

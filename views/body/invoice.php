@@ -301,15 +301,22 @@ table{
 							<?php } ?>
 							</td>
 							</tr>
-                                    <tr><th>Offers :</th>
-                                        <td>
-                                            <?php 
-                                            $arr_offer_type = array(0=>"Insurance Opted",1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
-                                            echo $arr_offer_type[$order['offer_type']];
+                                                        <?php 
+                                                        if( isset($arr_offer_type[$order['offer_type']]) ) {
+                                                            ?>
+                                                        
+                                                            <tr><th>Offers :</th>
+                                                                <td>
+                                                                    <?php 
+                                                                    $arr_offer_type = array(0=>"Insurance Opted",1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
+                                                                    echo $arr_offer_type[$order['offer_type']];
 
-                                            ?>
-                                        </td>
-                                    </tr>
+                                                                    ?>
+                                                                </td>
+                                                            </tr>
+                                                    <?php
+                                                        }
+                                                    ?>
 						</table>
 					</td>
 				</tr>
