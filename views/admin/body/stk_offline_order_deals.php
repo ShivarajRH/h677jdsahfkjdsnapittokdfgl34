@@ -1949,7 +1949,6 @@ $("#order_form").submit(function(){
 
 			 	if(resp.new_mem==0 && $('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length!=0)
 				{
-					
 						$('.offr_sel_type').val('0');
 			 			$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 			 			return false;

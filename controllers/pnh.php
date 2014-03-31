@@ -2731,7 +2731,8 @@ class Pnh extends Controller{
 			{
 				$this->db->query("update king_user_orders set status=3 where transid=?",$transid);
 
-				$this->erpm->pnh_sendsms($mem_mob,"$mem_name Sorry to inform you ! your order[$confirm_oid] has been Cancelled. Please contact your ($fran_name-$from) for any queries.",$fran_id,$membr_id,0);
+				$this->erpm->pnh_sendsms($mem_mob,"$mem_name Sorry to inform you ! your order[$confirm_oid] has been Cancelled. Please contact your ($fran_name-$from) for any queries.",$fran_id,$mid,0);
+				
 					echo "$mem_name Sorry to inform you ! your order[$confirm_oid] has been Cancelled. Please contact your ($fran_name-$from) for any queries.";
 				$this->erpm->pnh_sendsms($from,"Thanks for your reply.  With Reference to[$mem_name,$mem_mob] order[$confirm_oid] has been Cancelled.",$fran_id,0,0);
 					echo "Thanks for your reply.  With Reference to[$mem_name,$mem_mob] order[$confirm_oid] has been Cancelled.";

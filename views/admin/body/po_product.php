@@ -91,7 +91,7 @@
 		<h3 id="ttl_res"></h3>
 		<table class="datagrid datagridsort" width="100%">
 			<thead>
-				<tr><th><input type="checkbox" class="chk_all"></th><th>Source</th><th>Product ID</th><th>Product</th><th>Mrp</th><th style="display: none;">Margin</th><th>Stock</th><th>PO Qty</th><th>Orders[90 Days]</th></tr>
+				<tr><th class="not-sortable"><input type="checkbox" class="chk_all"></th><th>Source</th><th>Product ID</th><th>Product</th><th>Mrp</th><th style="display: none;">Margin</th><th>Stock</th><th>PO Qty</th><th>Orders[90 Days]</th></tr>
 			</thead>
 			<tbody></tbody>
 		</table>
@@ -1416,11 +1416,11 @@ $("#sl_products").dialog({
 					{
 						$('#ttl_res').html('Total Products:'+data.length);
 					$.each(data,function(i,p){
-						if(!$('select[name="cat_prod_disp"] option#cat_'+p.product_cat_id).length){
-							if(p.product_cat_id != undefined){
-							$('select[name="cat_prod_disp"]').append('<option id="cat_'+p.product_cat_id+'" value="'+p.product_cat_id+'">'+p.p_category_name+'</option>');
+							if(!$('select[name="cat_prod_disp"] option#cat_'+p.product_cat_id).length){
+								if(p.product_cat_id != undefined){
+									$('select[name="cat_prod_disp"]').append('<option id="cat_'+p.product_cat_id+'" value="'+p.product_cat_id+'">'+p.p_category_name+'</option>');
+								}
 							}
-						}
 							template=$("#sl_prod_template tbody").html();
 							template=template.replace(/%id%/g,i);
 							template=template.replace(/%pid%/g,p.id);
@@ -1469,7 +1469,7 @@ $("#sl_products").dialog({
 					{
 						$("#sl_products .datagrid tbody").html("<tr><td colspan='8' align='left'>No products found</td></tr>");
 					}
-					
+					$('select[name="cat_prod_disp"]').trigger('change');
 				});
 	},
 	buttons:{
@@ -1560,9 +1560,9 @@ function upd_prdsourceablestat(ele)
 }
 $(".chk_all").click(function(){
 	if($(this).attr("checked"))
-		$(".sl_sel_prod").attr("checked",true);
+		$(".sl_sel_prod:visible").attr("checked",true);
 	else
-		$(".sl_sel_prod").attr("checked",false);
+		$(".sl_sel_prod:visible").attr("checked",false);
 });
 
 

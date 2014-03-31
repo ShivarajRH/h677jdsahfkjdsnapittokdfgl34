@@ -7635,6 +7635,7 @@ order by p.product_name asc
 		return $total_value;
 	}
 
+
 	
 	//function to get total value by bank
 	function pnh_getreceiptttl_valuebytypebank ($type=4,$bid=false)
@@ -8136,9 +8137,8 @@ order by p.product_name asc
 		$margin['bal_discount']=0;
 		
 		$bmargin=@$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=?  and ? between valid_from and valid_to and catid=? and brandid=? and menuid=? and is_sch_enabled = 1 and dealid=? order by id desc limit 1",array($fid,time(),$catid,$brandid,$menuid['menuid'],$itemid))->row()->discount;
-			if(empty($bmargin))
-		$bmargin=@$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=? and ? between valid_from and valid_to and brandid=? and catid=? and menuid=? and is_sch_enabled = 1 and dealid=0 order by id desc limit 1",array($fid,time(),$brandid,$catid,$menuid['menuid']))->row()->discount;
-		
+		if(empty($bmargin))
+			$bmargin=@$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=? and ? between valid_from and valid_to and brandid=? and catid=? and menuid=? and is_sch_enabled = 1 and dealid=0 order by id desc limit 1",array($fid,time(),$brandid,$catid,$menuid['menuid']))->row()->discount;
 		if(empty($bmargin))
 			$bmargin=@$this->db->query("select discount from pnh_sch_discount_brands where franchise_id=?  and ? between valid_from and valid_to and brandid=? and catid=0 and menuid=? and is_sch_enabled = 1 and dealid=0 order by id desc limit 1",array($fid,time(),$brandid,$menuid['menuid']))->row()->discount;
 		if(empty($bmargin))
@@ -8237,13 +8237,14 @@ order by p.product_name asc
 	
 	function do_pnh_offline_order()
 	{
+		$user=$this->auth();
 		$fran_status_arr=array();
 		$fran_status_arr[0]="Live";
 		$fran_status_arr[1]="Permanent Suspension";
 		$fran_status_arr[2]="Payment Suspension";
 		$fran_status_arr[3]="Temporary Suspension";
 		$admin = $this->auth(false);
-		foreach(array("fid","pid","qty","mid","redeem","redeem_points","mid_entrytype","local_distributor_mrgn","creditdays","frannote","offr_sel_type","insurance") as $i)
+		foreach(array("fid","pid","qty","mid","redeem","redeem_points","mid_entrytype","local_distributor_mrgn","creditdays","frannote","offr_sel_type","insurance","new_member") as $i)
 			$$i=$this->input->post($i);
 		
         $updated_by=$admin["userid"];
@@ -8600,7 +8601,7 @@ order by p.product_name asc
 				}
 
 				$this->db->insert("king_orders",$inp);
-
+								
 				
 				foreach($this->db->query("select group_id from m_product_group_deal_link where itemid=?",$inp['itemid'])->result_array() as $g)
 				{
@@ -8650,11 +8651,11 @@ order by p.product_name asc
 		$this->sendsms_franchise_order($transid,$d_total);
 		
 		$mem_msg ="Thank you for ordering with StoreKing.";
-        $this->erpm->pnh_sendsms($mem_info['mobile'],$mem_msg,0,$mid,'MEM_ORDER');
+		$this->erpm->pnh_sendsms($mem_info['mobile'],$mem_msg,0,$mid,'MEM_ORDER');
 		$points=0;
 		if(!$redeem)
 		{
-			$rpoints=$this->db->query("select points from pnh_loyalty_points where amount<? order by amount desc limit 1",$total)->row_array();
+			$rpoints=$this->db->query("select points from pnh_loyalty_points where amount < ? order by amount desc limit 1",$total)->row_array();
 			if(!empty($rpoints))
 				$points=$rpoints['points'];
 		}
@@ -8703,57 +8704,57 @@ order by p.product_name asc
             
 				
 		//===================< Implement the member offers START>============================
-				$menu_list=array_unique($ordered_menus_list);
+		$menu_list=array_unique($ordered_menus_list);
         $insurance['mid'] =$mid;
         $insurance['fid'] =$fid;
         $insurance['offer_type'] =$offr_sel_type;
         $insurance['transid'] = $transid;
         $insurance['created_by'] = $updated_by;
 		$insurance['mem_fee_applicable'] = 1;
+		$insurance['new_member']=$new_member;
                 
-                if($new_member == 1 && $d_total < MEM_MIN_ORDER_VAL )
-                {
-                    $insurance['offer_type'] = 3;
-                    $offer_ret = $this->pnh_member_fee($d_total,$insurance);
-                    //print_r($_POST);
-                }
-                elseif($offr_sel_type == 2 )
+        if($new_member == 1 && $d_total < MEM_MIN_ORDER_VAL )
+        {
+        	$insurance['offer_type'] = 3;
+            $offer_ret = $this->pnh_member_fee($d_total,$insurance);
+            //print_r($_POST);
+        }
+        elseif($offr_sel_type == 2 && $insurance['opted_insurance'] == 1 && $new_member == 1)
 		{
+			
 			//process insurance document and address details & get insurance process id
             $insu_id = $this->process_insurance_details($insurance);
             //echo '<pre>';print_r($insurance);die();
-		}elseif($offr_sel_type == 3)
+		}elseif($offr_sel_type == 3 && $new_member == 1)
 		{
 			$insurance['mem_fee_applicable'] = 1;
 			$insurance['offer_type'] = 3;
 			$insu_id = $this->process_insurance_details($insurance);	
 		}
-		elseif($insurance['opted_insurance'] == 1 )
-        {
-        	$insurance['mem_fee_applicable'] = 0;
-			$insurance['offer_type'] = 3;
-            //process insurance document and address details & get insurance process id
+		elseif($offr_sel_type == 0 && $insurance['opted_insurance'] == 1 && $new_member == 0)
+		{
+			$insurance['mem_fee_applicable'] = 0;
+			//process insurance document and address details & get insurance process id
             $insu_id = $this->process_insurance_details($insurance);
             //echo '<pre>';print_r($insurance);die();
-        }
-                elseif($offr_sel_type == 1 ) //&& $d_total >= MEM_MIN_ORDER_VAL
-                {
-                    // is cart items belongs to any of 100 menus
-                    if(in_array('112',$menu_list))
-                    {
-                        //$insu_id = $this->process_insurance_details($insurance);
-                    }
-                    else
+		}
+        elseif($offr_sel_type == 1 && $d_total >= MEM_MIN_ORDER_VAL && $new_member == 1) 
         {
-        	// Recharge
-            $offer_ret = $this->pnh_member_recharge($d_total,$insurance);
-            //print_r($_POST);
-                    }
+        	
+            // is cart items belongs to any of 100 menus
+           // if(in_array('112',$menu_list))
+           // {
+                //$insu_id = $this->process_insurance_details($insurance);
+           // }
+           // else
+	       // {
+	        	// Recharge
+	            $offer_ret = $this->pnh_member_recharge($d_total,$insurance);
+	            //print_r($_POST);
+	        // }
             
         }
-		else {
-			echo "Error:Offer condition mismatch";
-		}
+		
         //===================< Implement the member offers END>============================
         //die();
             
@@ -8818,7 +8819,7 @@ order by p.product_name asc
         }
             
          
-        function process_insurance_details($insurance)
+		function process_insurance_details($insurance)
         {
             
             $arr_ins_ords = explode(",",$insurance['insurance_deals']);
@@ -8850,7 +8851,7 @@ order by p.product_name asc
                     {
                     	$menu_log_id = $margin['id'];
                     	
-                        if($insurance['opted_insurance'] == 1 && $insurance['offer_type'] == 3 )
+                        if($insurance['opted_insurance'] == 1 && $insurance['new_member'] == 0)
                         {
                             $insurance_margin = $margin['insurance_margin'];
                             $insurance_value = ($order_val/100) * $insurance_margin; // percentage of offer value
@@ -12496,18 +12497,14 @@ order by action_date";
 		}
 		if($ch == '20')
 		{
-			
 			if($has_fid==0)
 			{
-				
-				return $this->db->query("select c.id,c.name from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid join king_orders o on o.itemid=i.id join king_transactions t on t.transid=o.transid and t.is_pnh=1 where i.is_pnh=1 group by c.name order by c.name  limit 20");
+				return $this->db->query("select c.id,c.name from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid join king_orders o on o.itemid=i.id join king_transactions t on t.transid=o.transid and t.is_pnh=1 where i.is_pnh=1 group by c.name order by count(o.id) desc limit 20");
 			}
 			else
 			{
-				return $this->db->query("SELECT m.menuid,m.fid,c.id,c.name FROM `pnh_franchise_menu_link`m JOIN `king_deals`d ON d.menuid=m.menuid  JOIN king_dealitems i ON i.dealid=d.dealid  JOIN king_categories c ON c.id=d.catid   JOIN king_orders o ON o.itemid=i.id  JOIN king_transactions t ON t.transid=o.transid AND t.is_pnh=1  WHERE m.status=1 AND fid=? AND i.is_pnh=1  GROUP BY d.catid  ORDER BY c.name ASC LIMIT 20",$fid);
-				
+				return $this->db->query("SELECT m.menuid,m.fid,c.id,c.name FROM `pnh_franchise_menu_link`m JOIN `king_deals`d ON d.menuid=m.menuid JOIN king_dealitems i ON i.dealid=d.dealid JOIN king_categories c ON c.id=d.catid JOIN king_orders o ON o.itemid=i.id JOIN king_transactions t ON t.transid=o.transid AND t.is_pnh=1 WHERE m.status=1 AND fid=? AND i.is_pnh=1 GROUP BY d.catid ORDER BY COUNT(o.id) DESC LIMIT 20",$fid);
 			}
-			
 		}
 		else
 		{

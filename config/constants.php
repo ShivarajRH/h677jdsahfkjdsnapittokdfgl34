@@ -65,10 +65,20 @@ define("CRON_IMAGES_LOC","/home/snapitto/cron_images_updater/imgs/subfolder/imag
 
 
 define("EXOTEL_UID","snapittoday");
-define("EXOTEL_AUTHKEY","491140e9fbe5c507177228cf26cf2f09356e042c-test");
+define("EXOTEL_AUTHKEY","491140e9fbe5c507177228cf26cf2f09356e042c");
 define("EXOTEL_MOBILE_NO",'9243404342');
 
 define('HTTP_IS_AJAX', isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+
+// Default member recharge value
+define('PNH_MEMBER_FREE_RECHARGE',100);
+// Max feedback range value
+define("MAX_RATE_VAL",5);
+// member minimum order value
+define("MEM_MIN_ORDER_VAL",500);
+
+
+
 
 /* End of file constants.php */
 /* Location: ./system/application/config/constants.php */

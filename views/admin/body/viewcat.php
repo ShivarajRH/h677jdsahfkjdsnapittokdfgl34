@@ -51,19 +51,21 @@
 .mod_widget_small .mod_widget_content li
 {
 	margin: 0 2%;
-    padding: 2%;
+    padding: 1.5% 0.6%;
 }
 .mod_widget_large .mod_widget_content li
 {
 	margin: 0 1%;
-    padding: 1.2%;
+    padding: 0.7% 0.2%;
 }
 .mod_widget_title div.heading_wrap
 {
-	font-size: 15px;
-	font-weight: bold;
 	color: #606060;
-	height:37px;
+    display: block;
+    font-size: 15px;
+    font-weight: bold;
+    padding: 10px 0 0 10px;
+     height: 29px;
 }
 .mod_widget_title img
 {
@@ -81,8 +83,8 @@
     font-size: 12px;
     font-weight: bold;
     height: 28px;
-    margin: 4% 4% 0;
-    padding: 0 7%;
+    margin: 2% 0 0;
+    padding: 0 0 0 4%;
 }
 .mod_widget_small .mod_widget_sub .mod_widget_content span
 {
@@ -128,7 +130,7 @@
 {
 	 color: #000000;
     font-size: 12px;
-    padding: 12px 6px 6px 8px;
+    padding: 4px 6px 6px 8px;
 }
 </style>
 <script>
@@ -151,7 +153,7 @@ $(function()
 		<div class="mod_widget_sub">
 			<div class="mod_widget_title">
 				<div class="heading_wrap">
-					<img class="sub_blk_img" src="<?php echo base_url().'images/home2.png'?>">Brands
+					Brands
 					<?php
 						$brands_res=$this->db->query("select d.brandid,d.catid,b.name as brandname
 													from king_deals d 
@@ -178,7 +180,7 @@ $(function()
 		<div class="mod_widget_sub">
 			<div class="mod_widget_title">
 				<div class="heading_wrap">
-					<img class="sub_blk_img" src="<?php echo base_url().'images/home2.png'?>">Attributes
+					Attributes
 					<span class="fl_right ttl_count">Total : <?=count($categories)?></span>
 				</div>
 			</div>
@@ -215,7 +217,7 @@ $(function()
 	<div class="mod_widget_large">
 		<div class="mod_widget_title">
 			<div class="heading_wrap">
-				<img src="<?php echo base_url().'images/home2.png'?>">Deals
+				Deals
 				<span class="fl_right ttl_count">Total : <?=count($deals)?></span>
 			</div>
 		</div>
@@ -236,7 +238,7 @@ $(function()
 		<!----------------------------------Vendors information block--------------------------->
 		<div class="mod_widget_small">
 			<div class="mod_widget_title">
-				<div class="heading_wrap"><img src="<?php echo base_url().'images/home2.png'?>">Vendors
+				<div class="heading_wrap">Vendors
 					<span class="fl_right ttl_count">Total : <?=count($vendors)?></span>
 				</div>
 			</div>
@@ -255,7 +257,7 @@ $(function()
 		<div class="mod_widget_large">
 			<div class="mod_widget_title">
 				<div class="heading_wrap">
-					<img src="<?php echo base_url().'images/home2.png'?>">Products
+					Products
 					<span class="fl_right ttl_count">Total : <?=count($products)?></span>
 				</div>
 			</div>

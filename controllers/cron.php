@@ -1416,5 +1416,4 @@ class Cron extends Controller{
 		}
 		
 	}
-
 }

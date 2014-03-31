@@ -1,4 +1,5 @@
 <?php
+
 include APPPATH.'/controllers/erp.php';
 /**
  * Admin file
@@ -206,7 +207,6 @@ class Admin extends Erp {
 	
 		echo json_encode($output);
 	}
-
 	/**
 	 * function to validate the user and redirect him to respective forms.
 	 *

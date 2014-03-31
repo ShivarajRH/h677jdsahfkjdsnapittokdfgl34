@@ -281,7 +281,6 @@ Loading...
 	
 </div>
 
-
 <div id="sl_products" title="Choose and Add Products to Purchase List">
 	<span style="float: left">
 			<b>Show</b> :
@@ -303,7 +302,7 @@ Loading...
 	<h3 id="ttl_res"></h3>
 		<table class="datagrid datagridsort" width="100%">
 			<thead>
-				<tr brandid="%brandid%"><th><input type="checkbox" class="chk_all"></th><th>Source</th><th>Product ID</th><th>Product</th><th>Mrp</th><th style="display: none;">Margin</th><th>Stock</th><th>PO Qty</th><th>Orders[90 Days]</th></tr>
+				<tr brandid="%brandid%"><th class="not-sortable"><input type="checkbox" class="chk_all"></th><th>Source</th><th>Product ID</th><th>Product</th><th>Mrp</th><th style="display: none;">Margin</th><th>Stock</th><th>PO Qty</th><th>Orders[90 Days]</th></tr>
 			</thead>
 			<tbody></tbody>
 		</table>
@@ -478,9 +477,9 @@ $("#dlg_openpolist .datagrid").tablesorter({sortList: [[2,0]]});
 
 $(".chk_all").click(function(){
 	if($(this).attr("checked"))
-		$(".sl_sel_prod").attr("checked",true);
+		$(".sl_sel_prod:visible").attr("checked",true);
 	else
-		$(".sl_sel_prod").attr("checked",false);
+		$(".sl_sel_prod:visible").attr("checked",false);
 });
 
 
@@ -1184,6 +1183,8 @@ $("#sl_products").dialog({
 											{
 												$("#sl_products .datagrid tbody").html("<tr><td colspan='8' align='left'>No products found</td></tr>");
 											}
+
+											$('select[name="cat_prod_disp"]').trigger('change');
 											
 										});
 							},

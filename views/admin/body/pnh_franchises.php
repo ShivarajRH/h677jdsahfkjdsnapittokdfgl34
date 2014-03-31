@@ -130,6 +130,8 @@ function load_franchisesbysel(type,alpha,terr_id,town_id,menuid,pg)
 	else
 		tab_ele.html('<div align="center" style="padding:10px;"><img src="'+base_url+'/images/loading.gif'+'"></div>');
 	
+	pg = pg*1;
+	
 	disp_config_params = {'type':type,'alpha':alpha,'terr_id':terr_id,'town_id':town_id,'menuid':menuid,'pg':pg}
 	
 	$.post(site_url+'/admin/jx_getfranchiseslist',disp_config_params,function(resp){
