@@ -353,6 +353,7 @@ class Pnh extends Controller{
 	 */
 	function process_memrating($from,$msg,$fran)
 	{
+                
                 //E.g: rate {memberid} 5
 		$frags=explode(" ",trim($msg) );
                 
@@ -380,14 +381,13 @@ class Pnh extends Controller{
                                                     WHERE mo.feedback_status=0 AND mo.delivery_status=1 AND mi.mobile=? ",$from);
                 if($mem_set->row()->snos == null)
                 {
-                    $this->pdie("Your order not yet Offer is waiting for delivery.");
+                    $this->pdie("No Offers found or Order is waiting for delivery - StoreKing.");
                 }
                 else
                 {
                     //found
                     $snos = $mem_set->row()->snos;
                     
-                    //echo "update pnh_member_offers set feedback_status = 1 where sno in = (".$snos.")";
                     $this->db->query("UPDATE pnh_member_offers SET feedback_status = 1,feedback_value=? WHERE sno IN (".$snos.") ",$rate_value);
                     $this->pdie("Thank you for your valuable feedback.");
                 }

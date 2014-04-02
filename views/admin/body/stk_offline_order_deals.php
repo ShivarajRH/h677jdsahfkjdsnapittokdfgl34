@@ -364,9 +364,11 @@ $fran_status_arr[3]="Temporary Suspension";
 					<span></span>
 					<div class="sch_wrap">
 						<div>%super_sch%</div>
-						<div class="blue">%has_insurance%</div>
-						<div class="opt_wrap">%opt_insurance%
-							 <div class="tooltip_description" style="display:none" title="Insurance Details">
+						<!--<div class="blue">%has_insurance%</div>-->
+                                                <div class="">%opt_insurance%</div>
+						<div class="opt_wrap">
+                                                        <div class="blue">%has_insurance%</div>
+                                                        <div class="tooltip_description" style="display:none" title="Insurance Details">
 									<b>New Customer :</b> 
 									<table border='1' width="100%" style="margin-bottom:10px">
 										<tr>
@@ -392,9 +394,9 @@ $fran_status_arr[3]="Temporary Suspension";
 											<td><b>Any Price </b></td>
 											<td align="center"><b>2% on bill</b></td>
 										</tr>
-									</table>						      
-						    </div>	
-						</div>
+                                                                            </table>						      
+                                                        </div>	
+                                                </div>
 					</div>
 				</td>
 				<td style="text-align: center;" valign="top" class="cart_background_wrap1">
@@ -567,7 +569,6 @@ $fran_status_arr[3]="Temporary Suspension";
 	</div>
 </div>
 	
-
 </div>
 <style>
     .attributes_block {
@@ -681,6 +682,7 @@ else
 	$('.show_insurance').show();
 	
 function tooltip_popup(){
+
  	Tipped.create('.tip_popup',{
  	 skin: 'black',
  	  hook: 'topleft',
@@ -894,12 +896,12 @@ $(function(){
 	
 });
 
-$(".opt_wrap").live('mouseover',function(){
-	
-	$(".opt_wrap").tooltip();
-});
+//$(".view_insu_details").live('mouseover',function(){	$(".opt_wrap").tooltip();});
+function view_insu_details(elt)
+{
+	$(".opt_wrap").tooltip({'dialog_content_selector' : 'div.tooltip_description'});
+}
 
-  
 
 $(".sel_all").live('click',function(){
 		if($(".sel_all").attr("checked"))
@@ -1635,9 +1637,9 @@ var ppids=[];
 								if(p.has_insurance==1)
 								{
 									has_insurance_dl++;
-										template=template.replace(/%has_insurance%/g,"Insurance : <span style='font-size:11px;color:#000;'>Yes</span> ");
+										template=template.replace(/%has_insurance%/g,"Insurance : <span style='font-size:11px;color:#000;' onmouseover='view_insu_details(this);'>Yes</span> ");
 									if(p.insurance_value!=0 && p.insurance_margin!=0)
-											template=template.replace(/%opt_insurance%/g,"<input type='checkbox' style='margin-top:-1px' name='opt_insurance[]' class='opt_insurance' value='"+p.pid+"'> <span style='font-size:11px;color:#000;float:right;'>: Opting Insurance</span> ");
+											template=template.replace(/%opt_insurance%/g,"<input type='checkbox' style='margin-top:-1px' name='opt_insurance[]' class='opt_insurance' value='"+p.pid+"'><span style='font-size:11px;color:#000;float:right;'>:Opting Insurance</span>");
 									else
 											template=template.replace(/%opt_insurance%/g," ");	
 								
@@ -1724,7 +1726,6 @@ function change_total_subtotal()
     }
     $("#cart_totl").html(format_number(ttl_subtotal));
 }
-
 
 $("#cart_prod_temp .qty").live("change",function(){
 
@@ -1913,7 +1914,7 @@ $("#order_form").submit(function(){
 					return false;
 				}
 		
-				if($('.opt_insurance').length>=1 && $('input[name="opt_insurance[]"]:checked').length==0 && resp.new_mem==1)
+				if($('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length==0 && resp.new_mem==1)
 				{
 					if(confirm("No Insurance selected. Do you want to Continue?"))
 					{
@@ -1926,9 +1927,9 @@ $("#order_form").submit(function(){
 						return false;
 					}
 				}
-				if($('.opt_insurance').length>=1 && $('input[name="opt_insurance[]"]:checked').length==0 && resp.new_mem==0)
+				if($('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length==0 && resp.new_mem==0)
 				{
-					if(!confirm("Is Insurance Option communicated to franchise?"))
+					if(confirm("Is Insurance Option communicated to franchise?"))
 					{
 							$('.offr_sel_type').val(0);
 							$(".new_member").val(0);
@@ -1940,7 +1941,7 @@ $("#order_form").submit(function(){
 					}
 				}
 				
-                                if(resp.new_mem==1 && $('.opt_insurance').length <= 1 && $('input[name="opt_insurance[]"]:checked').length !=0)
+               if(resp.new_mem==1 && $('.opt_insurance').length !=0 && $('input[name="opt_insurance[]"]:checked').length !=0)
 				{
 						$('.offr_sel_type').val('2');
 						$('.offerd_type').val('2');
@@ -1948,10 +1949,10 @@ $("#order_form").submit(function(){
 					 return false;	
 				}
 
-			 	if(resp.new_mem==0 && $('.opt_insurance').length<=1 && $('input[name="opt_insurance[]"]:checked').length!=0)
+			 	if(resp.new_mem==0 && $('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length!=0)
 				{
+					
 			 		$('.offr_sel_type').val('0');
-			 		
 				 		$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 				 	 return false;	
 				}

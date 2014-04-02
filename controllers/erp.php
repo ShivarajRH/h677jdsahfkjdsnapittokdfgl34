@@ -10257,7 +10257,7 @@ group by g.product_id order by product_name");
 		$user=$this->auth();
 		$sql="select i.max_allowed_qty,i.billon_orderprice,i.gender_attr,d.catid,d.brandid,d.tagline,i.nyp_price,i.pnh_id,i.id,b.name as brand,c.name as category,
 			  i.name,i.pic,i.orgprice,i.price,i.store_price,d.description,d.publish,e.name as created_by,f.name as mod_name,i.created_on,i.modified_on,
-			  d.menuid,m.name as menu_name
+			  d.menuid,m.name as menu_name,i.has_insurance
 			  		from king_dealitems i 
 			  		join king_deals d on d.dealid=i.dealid 
 			  		left join king_brands b on b.id=d.brandid 
@@ -10267,7 +10267,7 @@ group by g.product_id order by product_name");
 			  		left join king_admin f on f.id=i.modified_by
 			  		where i.id=? or i.pnh_id=?";
 		$data['deal']=$this->db->query($sql,array($id,$id))->row_array();
-		
+//		echo $this->db->last_query();die();
 		if($id != $data['deal']['id'])
 			redirect('admin/pnh_deal/'.$data['deal']['id'],'refresh');
 		

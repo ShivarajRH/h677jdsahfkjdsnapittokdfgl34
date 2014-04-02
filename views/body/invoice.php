@@ -341,7 +341,7 @@ table{
 					<td align="right"><b>Sub Total</b></td>
 					<td align="right"><b>Discount</b></td>
 					<?php } ?>
-					<td align="right"><b>Insurance value</b></td>
+					<td align="right"><b>Insurance Cost</b></td>
 					<?php 
 						if($inv_type =='auditing'){
 					?>
@@ -400,7 +400,14 @@ table{
 			$thc += $handling_cost = round((($order['phc']*$qty*100)/(100+$pstax)),2);
 			$thc_tax += $handling_cost_tax = round((($order['phc']*$qty)-$handling_cost),2); 
 			$tphc += $handling_cost;
-			$item_total_amount =  ($product_rate+$product_rate_tax+$handling_cost+$handling_cost_tax);
+                        
+                        $ttl_insu_val=0;
+                        if($order['has_insurance'] == 1 && $order['insurance_amount'] != 0 && $order['insurance_amount'] !='' ) {
+                            $ttl_insu_val = round($order['insurance_amount'],2);
+                        }
+
+                        $item_total_amount =  ($product_rate+$product_rate_tax+$handling_cost+$handling_cost_tax + $ttl_insu_val);
+                        
 			$total_item_amount += $item_total_amount; 
 			
 			if($order['status'] == 4)
@@ -503,17 +510,15 @@ table{
 				?>
 				<td align="right">
 					<?php
-                        if($order['has_insurance'] == 1)
-                        {
-                        	$ttl_insu_val += $order['insurance_amount'];
-                        ?>
-                        	 Rs. <?=formatInIndianStyle($order['insurance_amount']);?>
-                        <?php
-						}
-                        ?>
+                                            if($order['has_insurance'] == 1)
+                                            {
+                                        ?>
+                                                 Rs. <?=formatInIndianStyle($order['insurance_amount']);?>
+                                        <?php
+                                            }
+                                        ?>
 				</td>
 				<?php 
-				$item_total_amount = $item_total_amount + $ttl_insu_val;
 				$ttl_amt = number_format(round($item_total_amount));
 				?>
 				<td align="right"><?php echo ($order['status'] == 4)?'<strike>':'';?><?=$ttl_amt; ?><?php echo ($order['status'] == 4)?'</strike>':'';?></td>
@@ -661,13 +666,11 @@ table{
 							<td><b>COD/Handling/Packaging Charges</b></td>
 							<td align="right"><?=number_format($cod_ship_charges,2)?></td>
 						</tr>
-						<?php }
-						
-						?>
-						<?php
-							$mem_reg_fee = 0;
-							$num_recharge_offer = $this->db->query("select * from pnh_member_offers where offer_type != 2  and mem_fee_applicable = 1 and process_status='0' and transid_ref = ? ",$order['transid'])->num_rows();
-							if($num_recharge_offer) {
+<?php                                           } 
+                                                    $mem_reg_fee = 0;
+                                                    $num_recharge_offer = $this->db->query("select * from pnh_member_offers where offer_type != 2  and mem_fee_applicable = 1 and process_status='0' and transid_ref = ? ",$order['transid'])->num_rows();
+                                                    if($num_recharge_offer)
+                                                    {
 								$mem_reg_fee = PNH_MEMBER_FEE;
 						?>
 						<tr>
@@ -677,7 +680,7 @@ table{
 						<?php }  ?>
 						<tr>
 							<td width="180"><b>Total Amount </b></td>
-							<?php $ttl_invoice_amt = number_format( ($cod_ship_charges + $ttl_insu_val + $total_item_amount + $mem_reg_fee) - $returned_item_amt,0); ?>
+							<?php $ttl_invoice_amt = number_format( ($cod_ship_charges +  $total_item_amount + $mem_reg_fee) - $returned_item_amt,0); ?>
 							<td align="right" ><b>Rs. <?=$ttl_invoice_amt?></b></td>
 						</tr>
 					</table>

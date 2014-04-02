@@ -4151,4 +4151,12 @@ Mar_29_2014
 /*[11:18:49 AM][37 ms]*/ INSERT INTO `user_access_roles`(`id`,`user_role`,`const_name`,`value`)VALUES(NULL,'ORDER_CONFIRMATION','ORDER_CONFIRMATION','0'); 
 /*[11:19:17 AM][29 ms]*/ UPDATE `user_access_roles` SET `value`='68719476736' WHERE `id`='37'; 
 
+/*[2:49:13 PM][63 ms]*/ ALTER TABLE `king_dealitems` CHANGE `has_insurance` `has_insurance` TINYINT(1) DEFAULT 0 NULL; 
+/*[3:19:55 PM][3392 ms]*/ ALTER TABLE `king_dealitems` CHANGE `has_insurance` `has_insurance` TINYINT(1) DEFAULT 0 NOT NULL;
+
 SELECT * FROM pnh_member_offers;
+SELECT * FROM king_orders;
+
+SELECT * FROM pnh_member_info m WHERE m.mobile=''; pnh_member_id='21111111';
+
+REPAIR TABLE pnh_sms_log
