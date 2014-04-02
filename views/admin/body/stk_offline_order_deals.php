@@ -449,7 +449,7 @@ $fran_status_arr[3]="Temporary Suspension";
 		<div class="stk_ordr_inpwrap"><b>Franchise : <span class="red_star">*</span></b> <select class=" chzn-select" data-placeholder="Choose Franchise "  name="fid" id="fid" style="width:250px;" ></select></div>
 		<div class="stk_ordr_inpwrap"><b>Order For : <span class="red_star">*</span></b><select name="mid_entrytype" class="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
 		<div class="stk_ordr_inpwrap mid_blk"><b>Member Id : <span class="red_star">*</span></b><input style="font-size:120%" maxlength="9"  type="text" class="membrid" name="mid" size=18 ></div>
-		<div class="signin" style="display:none;float:right;"><input type="button" value="Proceed" onclick='load_franchisebyid()' class="button button-rounded button-action"></div>
+		<div class="signin" style="display:none;float:right;"><input type="button" value="Proceed" onclick='load_franchise_cart_page()' class="button button-rounded button-action"></div>
 	</div>
 
 	<div id="mid_det" title="Member Details"><div id="mem_det"></div></div>
@@ -1883,13 +1883,6 @@ $("#order_form").submit(function(){
 		}
 	
 		
-		if(stk_confirm_prods != stk_confirm_prods_checked && stk_confirm_prods > 0)
-		{
-			alert("Please verify whether stock for the footwear is available?");
-			return false;
-		}
-		
-		
 		if(submit_order==0)
 		{
 			if(confirm("Total order value : Rs "+total+"\nAre you sure want to place the order?") )
@@ -1949,6 +1942,7 @@ $("#order_form").submit(function(){
 
 			 	if(resp.new_mem==0 && $('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length!=0)
 				{
+					
 						$('.offr_sel_type').val('0');
 			 			$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 			 			return false;
@@ -2458,6 +2452,16 @@ function load_franchisebyid()
 	$("#authentiacte_blk").dialog('open');
 }
 
+function load_franchise_cart_page()
+{
+	fid=$("#fid").val();
+	mid=$(".membrid").val();
+	if($(".mid_entrytype").val() == 1)
+	{ mid=0; }
+	$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"});
+	location="<?=site_url("admin/stk_offline_order_deals") ?>/"+fid+'/'+mid;
+	
+}
 $( "#authentiacte_blk" ).dialog({
 	modal:true,
 	autoOpen:false,

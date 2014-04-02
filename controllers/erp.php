@@ -6113,7 +6113,17 @@ group by g.product_id order by product_name");
 
 		//$prod=$this->db->query("select d.menuid,b.name as brand,c.name as cat,i.id,i.is_combo,i.pnh_id as pid,i.live,i.orgprice as mrp,i.price,i.name,i.pic,d.publish from king_dealitems i join king_deals d on d.dealid=i.dealid $publish_cond left join king_brands b on b.id = d.brandid join king_categories c on c.id = d.catid where pnh_id=? and is_pnh=1",$pid)->row_array();
 
-		$prod=$this->db->query("select d.menuid,b.name as brand,c.name as cat,i.id,i.is_combo,i.pnh_id as pid,i.live,i.orgprice as mrp,i.price,i.name,i.pic,d.publish,p.is_sourceable,i.has_insurance  from king_dealitems i join king_deals d on d.dealid=i.dealid $publish_cond left join king_brands b on b.id = d.brandid join king_categories c on c.id = d.catid JOIN `m_product_deal_link` l ON l.itemid=i.id JOIN m_product_info p ON p.product_id=l.product_id where pnh_id=? and is_pnh=1",$pid)->row_array();
+		$prod=$this->db->query("SELECT d.menuid,b.name AS brand,c.name AS cat,i.id,i.is_combo,i.pnh_id AS pid,i.live,i.orgprice AS mrp,i.price,i.name,i.pic,d.publish,p.is_sourceable,i.has_insurance
+				FROM king_dealitems i
+				JOIN king_deals d ON d.dealid=i.dealid AND 1
+				JOIN king_brands b ON b.id = d.brandid
+				JOIN king_categories c ON c.id = d.catid
+				LEFT JOIN `m_product_deal_link` l ON l.itemid=i.id
+				LEFT JOIN m_product_info p ON p.product_id=l.product_id
+				LEFT JOIN `m_product_group_deal_link` g ON g.itemid=i.id
+				LEFT JOIN `products_group_pids` q ON q.product_id=l.product_id
+				WHERE pnh_id=? AND is_pnh=1",$pid)->row_array();
+
 		if(!empty($prod))
 		{
 
@@ -27702,10 +27712,12 @@ die; */
 	 */
     function jx_check_forvalid_mid()
     {
+		error_reporting(E_ALL);
+		$this->erpm->auth();
     	$mid_entrytype=$this->input->post('mid_entrytype');
     	$mid=$this->input->post('mid');
     	$output=array();
-    	$mem_det=$this->db->query("select * from pnh_member_info where (pnh_member_id=? or mobile=?)",array($mid,$mid));
+		$mem_det=$this->db->query("select * from pnh_member_info where (pnh_member_id=? or mobile=? ) and length(?) > 0 ",array($mid,$mid,$mid));
     	if($mem_det->num_rows())
     	{
     		$output['status']='success';
@@ -27941,7 +27953,7 @@ die; */
      */
     function jx_pnh_deal_stock_status($itemid=0,$is_pnh=1)
     {
-        $this->auth(true);
+        $this->auth();
             
         if( isset($_POST["itemids"] ) )  {
             $arr_itemids = explode(',', trim($_POST["itemids"],"'") );
@@ -29071,7 +29083,7 @@ die; */
     }
     function userend_orders($status=0,$s=false,$e=false,$orders_by='all',$limit=50,$pg=0)
     {
-    	$user=$this->auth(ORDER_CONFIRMATION);
+    	$user=$this->auth(CALLCENTER_ROLE);
     	if($s!=false && $e!=false && (strtotime($s)<=0 || strtotime($e)<=0))
     		show_404();
     		
@@ -29112,9 +29124,10 @@ die; */
     	$data['page']="orders_byusrend";
     	$this->load->view("admin",$data);
     }
+    
     function jx_upd_ordrstatus()
     {	
-    	$user=$this->auth(ORDER_CONFIRMATION);
+    	$user=$this->auth(CALLCENTER_ROLE);
     	 $transid=$this->input->post('confrmd_transid');
     	 $status=$this->input->post('order_status');
     	 $remarks=$this->input->post('ordr_confrm_remarks');

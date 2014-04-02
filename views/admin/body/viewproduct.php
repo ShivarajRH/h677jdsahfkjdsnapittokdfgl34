@@ -481,6 +481,10 @@
 			<div class="prd_inner_wrap2">	
 				<div class="prd_inner_sub_wrap2"  style="width:100%">
 					<div class="ttl_wrap1">Purchase Log</div>
+					<?php 
+						if($this->erpm->auth(PURCHASE_ORDER,true))
+						{
+					?>
 					<table id="ven_po_log" class="datagrid" width="100%">
 						<thead>
 							<tr>
@@ -498,6 +502,7 @@
 						</tbody>
 					</table>
 					<div id="ven_log_pagination"></div>
+					<?php } ?>
 				</div>
 			</div>
 		</div>

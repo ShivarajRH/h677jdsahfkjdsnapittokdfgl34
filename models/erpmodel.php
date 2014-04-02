@@ -6444,7 +6444,8 @@ order by p.product_name asc
 			$cond.='and  l.vendor_id='.$id;
 		if($id && $catid)
 			$cond.='and  l.vendor_id='.$id.' and  l.cat_id='.$catid;
-		return $this->db->query("SELECT DATE_FORMAT(FROM_UNIXTIME(l.applicable_from),'%Y-%m-%d') AS applicable_from,DATE_FORMAT(FROM_UNIXTIME(l.applicable_till),'%Y-%m-%d') AS applicable_till,b.id AS brand_id,b.name AS brand_name,c.id AS cat_id,c.name AS category_name,l.brand_margin 
+		return $this->db->query("SELECT DATE_FORMAT(FROM_UNIXTIME(l.applicable_from),'%Y-%m-%d') AS applicable_from,DATE_FORMAT(FROM_UNIXTIME(l.applicable_till),'%Y-%m-%d') AS applicable_till,b.id AS brand_id,b.name AS brand_name,
+			ifnull(c.id,0) AS cat_id,ifnull(c.name,'') AS category_name,l.brand_margin 
 									FROM `m_vendor_brand_link`l
 									JOIN `king_brands` b ON b.id=l.brand_id 
 									left JOIN `king_categories` c ON c.id=l.cat_id 
@@ -6469,7 +6470,8 @@ order by p.product_name asc
 		
 		
 		
-		return $this->db->query("SELECT DATE_FORMAT(FROM_UNIXTIME(l.applicable_from),'%d/%m/%Y') AS applicable_from,DATE_FORMAT(FROM_UNIXTIME(l.applicable_till),'%d/%m/%Y') AS applicable_till,b.id AS brand_id,b.name AS brand_name,c.id AS cat_id,c.name AS category_name,l.brand_margin 
+		return $this->db->query("SELECT DATE_FORMAT(FROM_UNIXTIME(l.applicable_from),'%d/%m/%Y') AS applicable_from,DATE_FORMAT(FROM_UNIXTIME(l.applicable_till),'%d/%m/%Y') AS applicable_till,b.id AS brand_id,b.name AS brand_name,
+			ifnull(c.id,0) AS cat_id,ifnull(c.name,'All') AS category_name,l.brand_margin 
 									FROM `m_vendor_brand_link`l
 									JOIN `king_brands` b ON b.id=l.brand_id 
 									left JOIN `king_categories` c ON c.id=l.cat_id 
@@ -12572,8 +12574,10 @@ order by action_date";
      */
     function log_admin_activity()
     {
-    	$user = $this->erpm->auth();
-    	
+    	$user = $this->erpm->auth(false,true);
+    	if(!$user)
+			return ;
+
     	if(isset($_SERVER['HTTP_X_REQUESTED_WITH']))
     		if($_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest')
     			return ;

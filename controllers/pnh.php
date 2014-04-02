@@ -324,7 +324,7 @@ class Pnh extends Controller{
 			if($avail_det[0][0]['stk']==0 && $deal['is_sourceable']==0 &&  $allow_for_fran==0 && !empty($fran))
 				$this->pdie("Product not alloted to you,{$name} - Not Available");
 		
-		if(!empty($fran) && $allow_for_fran!=0 && empty($mid))
+		if(!empty($fran) && $allow_for_fran!=0 )
 		{
 			
 			$sms_msg= "{$name} - {$avail_stat}\n {$cost},Landing Cost:Rs {$lcost}";
@@ -2788,9 +2788,10 @@ class Pnh extends Controller{
 			}
 			else
 			{
-				$this->pdie("Already  Registered");
+				$this->pdie("Dear Customer you have already registered with StoreKing please proceed to place order");
 			}
 		}
+		
 	}
 
 	function createOrder($from,$msg)

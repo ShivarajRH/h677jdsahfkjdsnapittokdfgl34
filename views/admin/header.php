@@ -105,7 +105,7 @@
 	$submenu['menu']=array("addmenu"=>"Add Menu");
 	$submenu['deals']=array("adddeal"=>"Add Deal","pnh_catalogue"=>"Products Catalogue","deal_product_link_update_log"=>"Deal product link updates log");
 	
-	$submenu['orders']=array('orders/1'=>'Pending Orders','partial_shipment'=>'Partial Shipment Orders','disabled_but_possible_shipment'=>'Disabled But Possible','product_order_summary'=>'Product Order Summ Last 90 Days','userend_orders'=>'Userend Orders');
+	$submenu['orders']=array('orders/1'=>'Pending Orders','partial_shipment'=>'Partial Shipment Orders','disabled_but_possible_shipment'=>'Disabled But Possible','product_order_summary'=>'Product Order Summ Last 90 Days','userend_orders'=>'DIY - User Generated Orders');
 	
 	$submenu['stock_unavail_report']=array('stock_unavail_report/0/0/0/0'=>'Show All Orders','stock_unavail_report/0/0/0/2'=>'Show Snapittoday Orders','stock_unavail_report/0/0/0/1'=>'Show PNH Orders','pnh_stock_unavail_report'=>'Advanced PNH Unavailable Report');
 	

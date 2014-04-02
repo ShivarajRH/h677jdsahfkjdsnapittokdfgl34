@@ -316,12 +316,15 @@ $('#reg_mem_dlg').dialog({
 						var gender = $.trim($('input[name="gender"]').val());
 						var marital = $.trim($('input[name="marital"]').val());
 					
-                    		if(mem_regname.length == 0 || mem_mobno.length == 0 || mem_mobno =='' || isNaN(mem_mobno) || mem_dob == '' || gender == '' || marital == '')
+                    		if(mem_regname.length == 0 || mem_mobno.length == 0 || mem_mobno =='' || isNaN(mem_mobno) || gender == '' || marital == '')
+                    		{
                              	error_list.push("Please Enter Valid Data.");
+                    		}
 
 							if(error_list.length)
 	                        {
 	                                alert(error_list.join("\r\n"));
+	                                return false;
 	                        }else
 	                        {
                                 $.post(site_url+'/admin/jx_reg_newmem',$('#reg_mem_frm').serialize(),function(resp){
