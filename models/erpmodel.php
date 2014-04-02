@@ -8652,8 +8652,12 @@ order by p.product_name asc
 		
 		$this->sendsms_franchise_order($transid,$d_total);
 		
-		$mem_msg ="Thank you for ordering with StoreKing.";
-		$this->erpm->pnh_sendsms($mem_info['mobile'],$mem_msg,0,$mid,'MEM_ORDER');
+                if($mem_info['mobile'] != '' && strlen($mem_info['mobile'])>=10)
+                {
+                    $mem_msg ="Thank you for ordering with StoreKing.";
+                    $this->erpm->pnh_sendsms($mem_info['mobile'],$mem_msg,0,$mid,'MEM_ORDER');
+                }
+
 		$points=0;
 		if(!$redeem)
 		{
@@ -8990,28 +8994,22 @@ order by p.product_name asc
 			if(count($order_product_list) == 0)
 			{
 				$sms_msg = 'Dear '.$fran_det['name'].', your '.$transid.' with '.$total_products.' products and '.$total_product_qty.' qty and order value of Rs '.$d_total.' is placed successfully';
-				
-				$mem_sms_msg = 'Dear '.$mem_name.', your '.$transid.' with '.$total_products.' products and '.$total_product_qty.' qty and order value of Rs '.$d_total.' is placed successfully';
-				
 			}else if(count($order_product_list) == $total_products)
 			{
 				$sms_msg = 'Dear '.$fran_det['name'].', your '.$transid.' with products : '.implode(',',$order_product_list).' is placed successfully';
-				$mem_sms_msg = 'Dear '.$mem_name.', your '.$transid.' with products : '.implode(',',$order_product_list).' is placed successfully';
-				
 			}else if(count($order_product_list) < $total_products)
 			{
 				$sms_msg = 'Dear '.$fran_det['name'].', your '.$transid.' with '.$total_products.' products and '.$total_product_qty.' qty and order value of Rs '.$d_total.', contains products : '.implode(',',$order_product_list).' ,Happy Franchising';
-				
-				$mem_sms_msg = 'Dear '.$mem_name.', your '.$transid.' with '.$total_products.' products and '.$total_product_qty.' qty and order value of Rs '.$d_total.', contains products : '.implode(',',$order_product_list).' ,Happy shopping';
 			}
 			
 			$this->erpm->pnh_sendsms($fran_det['mob'],$sms_msg,$fran_det['id'],0,"MEM_ORDER_CONFIRM");
 			
-			$this->erpm->pnh_sendsms($mem_mobile,$mem_sms_msg,$fran_det['id'],$mem_id,"MEM_ORDER_CONFIRM");
-			//echo $mem_det['mem_mobile'],$mem_sms_msg,$mem_det['mem_id'];die;
+			if($mem_mobile != '' && strlen($mem_mobile) >= 10 ) 
+            {
+            	$mem_sms_msg = 'Dear '.$mem_name.', your '.$transid.' with '.$total_products.' products and '.$total_product_qty.' qty is placed successfully';
+            	$this->erpm->pnh_sendsms($mem_mobile,$mem_sms_msg,$fran_det['id'],$mem_id,"MEM_ORDER_CONFIRM");
+            }
 		}
-			
-			
 			
 	}
 
@@ -11528,8 +11526,8 @@ order by action_date";
 							join king_deals c on b.dealid = c.dealid 
 							join pnh_menu d on d.id = c.menuid 
 							join king_transactions e on e.transid = a.transid
-							join pnh_m_franchise_info f on f.franchise_id = e.franchise_id
-							join pnh_member_info mi on mi.user_id = a.userid
+							join pnh_m_franchise_info f on f.franchise_id = e.franchise_id 
+							left join pnh_member_info mi on mi.user_id = a.userid
 							where inv.invoice_no in ($invoices)
 							group by inv.invoice_no";
 		
@@ -12929,14 +12927,16 @@ order by action_date";
     			$this->erpm->pnh_sendsms($inv_det['mobile'],$cus_sms,$inv_det['franchise_id'],0,'MEM_DELIVERY_SMS');
                         
                         //if( $this->is_transid_have_member_offer($inv_det['transid']) )
+                        if($inv_det['mobile']!='' && strlen($inv_det['mobile']) >= 10) //Is member mobile number exists & is valid?
+                        {
                             // Feedback SMS
-                        $member_id=$inv_det['pnh_member_id'];
-                        $feedback_sms = $inv_det['first_name'].'!!, What are you waiting for!! To avail your further offers, Just reply & complete the Feedback process by rating our service with any number from 1 to '.MAX_RATE_VAL.'. FORMAT: R<space>5.';
-	                        $this->erpm->pnh_sendsms($inv_det['mobile'],$feedback_sms,$inv_det['franchise_id'],0,'MEM_FEEDBACK');
-	                        
-	                        //Set member offers status
-	                        $this->erpm->update_offer_order_status($inv_det['transid']);
-                            
+                            $member_id=$inv_det['pnh_member_id'];
+                            $feedback_sms = $inv_det['first_name'].'!!, What are you waiting for!! To avail your further offers, Just reply & complete the Feedback process by rating our service with any number from 1 to '.MAX_RATE_VAL.'. FORMAT: R&lt;space&gt;5.';
+                            $this->erpm->pnh_sendsms($inv_det['mobile'],$feedback_sms,$inv_det['franchise_id'],0,'MEM_FEEDBACK');
+                        }
+                        //Set member offers status
+                        $this->erpm->update_offer_order_status($inv_det['transid']);
+                        
     		}
     
     	}
