@@ -2097,9 +2097,9 @@ class Erp extends Stream
 		$data['cur_pg']=$pg;
 		$data['perpage_limit']=$limit;
 		
+		
 		$data['total_orders']=$this->erpm->getordersbytransaction_date_range($status,$s,$e,-1,$limit,$orders_by);
 		$data['orders']=$this->erpm->getordersbytransaction_date_range($status,$s,$e,$pg,$limit,$orders_by);
-		
 		
 		$this->load->library('pagination');
 
@@ -6169,77 +6169,121 @@ group by g.product_id order by product_name");
 					}
 
 
-					
-					//get insurance range details by menu and deal mrp 
-					
-					$insurance_det=$this->erpm->get_insurance_value_det($prod['menuid'],$prod['mrp']);
-						
-						$prod['insurance_value']=$insurance_det['insurance_value'];
-						$prod['insurance_margin']=$insurance_det['insurance_margin'];
+
+				//get insurance range details by menu and deal mrp
+				$insurance_det=$this->erpm->get_insurance_value_det($prod['menuid'],$prod['mrp']);
+
+				$prod['insurance_value']=$insurance_det['insurance_value'];
+				$prod['insurance_margin']=$insurance_det['insurance_margin'];
+				$margin=$this->erpm->get_pnh_margin($fid,$pid);
+
+				if ($prod['is_combo'])
+					$prod['margin'] = $margin['combo_margin'];
+				else
+					$prod['margin'] = $margin['margin'];
+				$attr = "";
+				foreach ($this->db->query("select group_id from m_product_group_deal_link where itemid=?", $prod['id'])->result_array() as $g)
+				{
+					$group = $this->db->query("select group_id,group_name from products_group where group_id=?", $g['group_id'])->row_array();
+					$attr.="";
+					$anames = $this->db->query("select attribute_name_id,attribute_name from products_group_attributes where group_id=?", $g['group_id'])->result_array();
+					foreach ($anames as $a) {
+						$attr.="<b>{$a['attribute_name']} :</b><span><select class='attr' name='{$pid}_{$a['attribute_name_id']}'>";
+						$avalues = $this->db->query("select * from products_group_attribute_values where attribute_name_id=?", $a['attribute_name_id'])->result_array();
+						foreach ($avalues as $v)
+							$attr.="<option value='{$v['attribute_value_id']}'>{$v['attribute_value']}</option>";
+						$attr.='</select></span>';
+					}
+				}
+				$prod['lcost'] = round($prod['price'] - ($prod['price'] / 100 * $prod['margin']), 2);
+				$prod['attr'] = $attr;
+
+				$prod['confirm_stock'] = '';
+
+				//confirmation for prod stock check for shoes
+				if ($prod['menuid'] == 123)
+					$prod['confirm_stock'] = '<b><input type="checkbox" name="confirm_stock" value="1" > : </b><span>Footwear Stock Available</span>';
+
+				$prod['stock'] = (($stock_tmp[0][0]['stk'] > 0) ? $stock_tmp[0][0]['stk'] : 0);
+
+				$prod['max_allowed_qty'] = $this->db->query("select max_allowed_qty from king_dealitems where pnh_id = ? ", $pid)->row()->max_allowed_qty;
+				$prod['imei_disc'] = $this->erpm->get_franimeischdisc_pid($fid, $pid);
+
+				//to save the updated cart quantity
+				$prod['svd_cartqty'] = $this->db->query("select qty as cart_qty from pnh_api_franchise_cart_info where pid=? and franchise_id=? and status=1", array($pid, $fid))->row()->cart_qty;
+
+				// get pid super scheme
+				$prod['super_sch']=$this->erpm->get_fransuperschdisc_pid($fid, $pid);
+
+				// get pid ordered total for today.
+				$prod['max_ord_qty']=$this->erpm->get_maxordqty_pid($fid, $pid);
+
+				$prod['allow_order']=$this->erpm->do_stock_check(array($prod['id']));
+
+				$prod['is_publish']=$prod['publish'];
 			
-					$margin=$this->erpm->get_pnh_margin($fid,$pid);
-						
-					if($prod['is_combo'])
-						$prod['margin']=$margin['combo_margin'];
-					else
-						$prod['margin']=$margin['margin'];
-					$attr="";
-					foreach($this->db->query("select group_id from m_product_group_deal_link where itemid=?",$prod['id'])->result_array() as $g)
+				$prod['is_sourceable']=$prod['is_sourceable'];
+
+				$prod['has_insurance'] = $prod['has_insurance'];
+				if($prod['is_group'])
+				{
+					$num_link_prdts = $this->db->query("select pd.itemid,count(*) as ttl_prdt from m_product_deal_link pd join king_dealitems di on di.id=pd.itemid where pd.itemid is not null and di.pnh_id=? group by pd.itemid",$pid)->row()->ttl_prdt;
+					if($num_link_prdts > 0)
 					{
-						$group=$this->db->query("select group_id,group_name from products_group where group_id=?",$g['group_id'])->row_array();
-						$attr.="";
-						$anames=$this->db->query("select attribute_name_id,attribute_name from products_group_attributes where group_id=?",$g['group_id'])->result_array();
-						foreach($anames as $a)
+						//,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals
+						$att_arry_set = $this->db->query("select a.id as attr_id,a.attr_name,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals,group_concat(pa.pid) as pids from king_dealitems di
+								join m_product_deal_link pd on pd.itemid = di.id
+								join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
+								join m_attributes a on a.id =  pa.attr_id
+								where di.pnh_id=? group by pa.attr_id",$pid)->result_array();
+
+						$att_arry='<div class="attributes_block"> <br>  <h4>There are '.$num_link_prdts.' linked products</h4>';
+						//$ttl_attrs = count($att_arry_set);
+
+						$att_arry.=' <h3>Select attributes:</h3> <div>';
+
+						foreach($att_arry_set as $m=>$attr)
 						{
-							$attr.="<b>{$a['attribute_name']} :</b><span><select class='attr' name='{$pid}_{$a['attribute_name_id']}'>";
-							$avalues=$this->db->query("select * from products_group_attribute_values where attribute_name_id=?",$a['attribute_name_id'])->result_array();
-							foreach($avalues as $v)
-								$attr.="<option value='{$v['attribute_value_id']}'>{$v['attribute_value']}</option>";
-							$attr.='</select></span>';
+							$att_arry .= '<lable><input type="hidden" name="attr['.$attr['attr_id'].']" value="'.$attr['attr_id'].'"/>'.$attr['attr_name'].'</lable> : ';
+							$arr_vals=explode(",",$attr['attr_vals']);
+							$arr_pids=explode(",",$attr['pids']);
+
+							/* Logic 1
+							 $att_arry .= '<select id="selattr_'.$m.'" name="attribute['.$attr['attr_id'].'][]" onchange="change_attributes(this,\''.$m.'\',\''.$attr['attr_vals'].'\',\''.$attr['pids'].'\','.$ttl_attrs.');"><option value="0">Choose</option>';
+							foreach($arr_vals as $i=>$aval) {
+							//$val = explode(":",$aval);
+							$att_arry .= '<option value="'.$arr_pids[$i].'_'.$attr['attr_id'].'">'.$arr_pids[$i].'-'.$aval.'</option>';
+							}
+							$att_arry .= '</select> <br/>';
+							*/
+
+							//new login 2
+							//attr name
+							$att_arry .= '<select id="" onchange="get_attributes(this)"><option value="0">Choose</option>';
+							foreach($arr_vals as $i=>$aval)
+							{
+								$val = explode(":",$aval);
+
+								$att_arry .= '<option class="attr_'.$aval.'_'.lcfirst($attr['attr_name']).'" linked="attr_'.$arr_vals[$i].'_'.$attr['attr_name'].'" value="'.$val[0].'">'.$val[1].'</option>';
+							}
+							$att_arry .= '</select><br/></div>';
+
 						}
 
 					}
-					$prod['lcost']=round($prod['price']-($prod['price']/100*$prod['margin']),2);
-					$prod['attr']=$attr;
+					 
+					$prod['attr_list']=$att_arry."</div>";
+				}
 
-					$prod['confirm_stock'] = '';
-
-					//confirmation for prod stock check for shoes
-					if($prod['menuid'] == 123)
-						$prod['confirm_stock'] = '<b><input type="checkbox" name="confirm_stock" value="1" > : </b><span>Footwear Stock Available</span>';
-
-					$prod['stock']=(($stock_tmp[0][0]['stk']>0)?$stock_tmp[0][0]['stk']:0);
-
-					$prod['max_allowed_qty'] = $this->db->query("select max_allowed_qty from king_dealitems where pnh_id = ? ",$pid)->row()->max_allowed_qty;
-					$prod['imei_disc'] = $this->erpm->get_franimeischdisc_pid($fid,$pid);
-
-					//to save the updated cart quantity
-					$prod['svd_cartqty']=$this->db->query("select qty as cart_qty from pnh_api_franchise_cart_info where pid=? and franchise_id=? and status=1",array($pid,$fid))->row()->cart_qty;
-
-					// get pid super scheme
-					$prod['super_sch']= $this->erpm->get_fransuperschdisc_pid($fid,$pid);
-
-					// get pid ordered total for today.
-					$prod['max_ord_qty'] = $this->erpm->get_maxordqty_pid($fid,$pid);
-
-					$prod['allow_order'] = $this->erpm->do_stock_check(array($prod['id']));
-
-					$prod['is_publish']=$prod['publish'];
-					
-					$prod['is_sourceable']=$prod['is_sourceable'];
-					
-					$prod['has_insurance']=$prod['has_insurance'];
-					
-					unset($prod['is_combo']);
-			}else
-			{
+				unset($prod['is_combo']);
+			}else {
 				$menu = $this->db->query("select c.name
 						from king_dealitems a
 						join king_deals b on a.dealid = b.dealid
 						join pnh_menu c on c.id = b.menuid
-						where pnh_id = ? ",$pid)->row()->name;
+						where pnh_id = ? ", $pid)->row()->name;
 
-				$prod = array('error'=>$menu." Menu not linked to franchise");
+				$prod = array('error' => $menu . " Menu not linked to franchise");
 			}
 		}
 
@@ -6256,9 +6300,14 @@ group by g.product_id order by product_name");
 		$pid=$_POST['pid'];
 		$mem_mobno=$_POST['mmob'];
 		$vcode=$_POST['vcode'];
+		$is_vcode_int=ctype_alpha($vcode);
 		$vcode=explode(',',$vcode);
 		
-		
+		if($is_vcode_int==1)
+		{
+			$vcode=$this->db->query("select group_concat(voucher_code) as voucher_code from pnh_t_voucher_details where status=5")->row_array();
+			$vcode=explode(',',$vcode['voucher_code']);
+		}
 		 //-----voucher validation-------
 		//serach deal for voucher slno
 		$vcode=array_filter($vcode);
@@ -6304,7 +6353,7 @@ group by g.product_id order by product_name");
 				from pnh_t_voucher_details a
 				join pnh_t_book_voucher_link b on b.voucher_slno_id = a.id
 				join pnh_t_book_allotment d on d.book_id=b.book_id
-				where voucher_code=? and is_activated=1 and a.status in (3) and member_id=?
+				where voucher_code=? and is_activated=1 and a.status in (3,5) and member_id=?
 				group by b.book_id",array($v,$mid))->row_array();
 		
 		if(empty($vdet) && !isset($prod['error1']))
@@ -6820,6 +6869,7 @@ group by g.product_id order by product_name");
 				$this->db->query("insert into pnh_member_points_track(user_id,transid,points,points_after,created_on) values(?,?,?,?,?)",array($userid,$transid,$points,$apoints,time()));
 				
 				$this->erpm->pnh_sendsms($mobno,"Congratulation & Welcome to StoreKing Family,Your Member id is:$member_id,Loyality Point:$apoints valid for $lpoints_valid_days days",$franid,$member_id,0);
+				
 			}
 		}
 		
@@ -7066,8 +7116,17 @@ group by g.product_id order by product_name");
 		
 		foreach(array("pid","qty","voucher_code","mem_mobno") as $i)
 			$$i=$this->input->post($i);
+		$is_vcode_int=ctype_alpha($voucher_code);
 		$voucher_codes=explode(',',$voucher_code);
+		
+		if($is_vcode_int==1)
+		{
+			$voucher_codes=$this->db->query("select group_concat(voucher_code) as voucher_code from pnh_t_voucher_details where status=5")->row_array();
+			$voucher_codes=explode(',',$voucher_codes['voucher_code']);
+		}
+		
 		$is_strkng_membr=$this->db->query("select * from pnh_member_info where mobile=?",$mem_mobno)->row_array();
+		$mem_det=$this->db->query("select mobile,first_name,last_name from pnh_member_info where pnh_member_id=?",$is_strkng_membr['pnh_member_id'])->row_array();
 		
 		$items=array();
 		$pnh_ids=array();
@@ -7100,15 +7159,15 @@ group by g.product_id order by product_name");
 				foreach($voucher_codes as $v=> $vscode)
 				{
 					
-					if($this->db->query("select count(1) as ttl from pnh_t_voucher_details where voucher_code=? and status=3",$vscode)->row()->ttl==0)
+					/* if($this->db->query("select count(1) as ttl from pnh_t_voucher_details where voucher_code=? and status=3",$vscode)->row()->ttl==0)
 							show_error("Partially redeemed voucher cannot be processed using voucher secret code");
-					
+					 */
 					
 					$vdet=$this->db->query("select b.book_id,d.franchise_id
 															from pnh_t_voucher_details a
 															join pnh_t_book_voucher_link b on b.voucher_slno_id = a.id
 															join pnh_t_book_allotment d on d.book_id=b.book_id
-															where voucher_code=? and member_id=?  and is_activated=1 and a.status=3
+															where voucher_code=? and member_id=?  and is_activated=1 and a.status in(3,5)
 															group by b.book_id",array($vscode,$is_strkng_membr['pnh_member_id']))->row_array();
 					
 					//get the book menus
@@ -7121,7 +7180,7 @@ group by g.product_id order by product_name");
 						   $this->pdie("Sorry not able to use the different menu vouchers at time");
 						   exit;
 				   }
-					/*
+					
 					foreach($vmenus as $m)
 					{
 						//check used multiple voucher same menu
@@ -7147,7 +7206,6 @@ group by g.product_id order by product_name");
 						if(count(array_unique($dealmenu))>1)
 							show_error("Voucher ".$vscode." only for ".$m['name']." products");
 					}
-					*/
 					
 					foreach($dealmenu as $mk=>$dm)
 					{
@@ -7156,11 +7214,11 @@ group by g.product_id order by product_name");
 						if(empty($fmenu))
 							show_error("Sorry not able to  place a order product menu not assined for voucher franchise ");
 						
-							/*						
+						
 						//check ordered deal menus are same
 						if(count(array_unique($dealmenu))>1)
 							show_error("Sorry not able to place the different menu orders at time");
-							*/
+							
 						
 						//check if the deal is voucher book
 						if($dm==VOUCHERMENU)
@@ -7192,7 +7250,7 @@ group by g.product_id order by product_name");
 					
 					$voucher_margin=$this->db->query("select voucher_margin from pnh_t_voucher_details where voucher_code=?",$v_code);
 	
-					$is_voucher_activated=$this->db->query("select * from pnh_t_voucher_details where voucher_code=? and member_id=?  and is_activated=1 and status=3",array($v_code,$is_strkng_membr['pnh_member_id']))->row_array();
+					$is_voucher_activated=$this->db->query("select * from pnh_t_voucher_details where voucher_code=? and member_id=?  and is_activated=1 and status in (3,5)",array($v_code,$is_strkng_membr['pnh_member_id']))->row_array();
 							if(!empty($is_voucher_activated))
 						{
 							
@@ -7204,7 +7262,7 @@ group by g.product_id order by product_name");
 						}
 					
 				}
-				foreach($items as $i=>$item) 
+				foreach($items as $i=>$item)
 				{
 					//check the order product menu is linked to coupon assigned franchise
 					$prod=$this->db->query("select i.*,d.publish,m.menu_margin from king_dealitems i join king_deals d on d.dealid=i.dealid JOIN `pnh_prepaid_menu_config`m ON m.menu_id=d.menuid where i.is_pnh=1 and i.pnh_id=? and i.pnh_id!=0 AND 1",$item['pid'])->row_array();
@@ -7384,6 +7442,9 @@ group by g.product_id order by product_name");
 			
 			if($voucher_codes)
 			{
+				$voucher_code_used['gven_secretcode']=array();
+				$voucher_code_used['othr_secretcode']=array();
+				
 				
 				foreach($voucher_codes as $v_code)
 				{
@@ -7394,7 +7455,7 @@ group by g.product_id order by product_name");
 					if($is_partially_redeemed)
 						break;
 						
-					$is_alloted=$this->db->query("select * from pnh_t_voucher_details where franchise_id=? and voucher_code=? and is_alloted=1 and is_activated=1 and status=3 ",array($fran['franchise_id'],$v_code))->row_array();
+					$is_alloted=$this->db->query("select * from pnh_t_voucher_details where franchise_id=? and voucher_code=? and is_alloted=1 and is_activated=1 and status in (3,5) ",array($fran['franchise_id'],$v_code))->row_array();
 					
 					$cus_value = $is_alloted['customer_value'];
 					$new_cus_value=($is_alloted['customer_value']-$ttl_voucher_amt_req);
@@ -7418,6 +7479,7 @@ group by g.product_id order by product_name");
 						
 					$this->db->query("update pnh_t_voucher_details set customer_value=?,franchise_value=?,status=?,redeemed_on=now() where voucher_code=?",array($new_cus_value,$fran_value,($is_fully_redeemed?4:5),$v_code));
 					$this->db->query("insert into pnh_voucher_activity_log(voucher_slno,franchise_id,member_id,transid,debit,credit,order_ids,status)values(?,?,?,?,?,?,?,?)",array($is_alloted['voucher_serial_no'],$fran['franchise_id'],$is_strkng_membr['pnh_member_id'],$transid,$cus_value-$new_cus_value,0,$order_ids,1));
+					array_push($voucher_code_used['gven_secretcode'],$is_alloted['voucher_serial_no']);
 					
 					$ttl_voucher_amt_req = $ttl_voucher_amt_req-($cus_value-$new_cus_value);
 				}
@@ -7452,7 +7514,6 @@ group by g.product_id order by product_name");
 										$v_slno=$v['voucher_serial_no'];
 										$v_margin=$v['voucher_margin'];
 										$v_cusvalue=$required_amt-$v['customer_value'];//500-300
-										//108-300 = -192
 										$is_fully_redeemed=0;
 										$is_partially_redeemed=0;
 										
@@ -7461,8 +7522,6 @@ group by g.product_id order by product_name");
 										if($v_cusvalue < 0)
 										{
 											$v_cusvalue=$required_amt;
-											//$v_cusvalue=$v['customer_value'];
-											//$used_vouchval = 
 											$is_partially_redeemed = 1;
 										}
 										else
@@ -7474,17 +7533,10 @@ group by g.product_id order by product_name");
 										 
 										
 										$fran_value=($v['customer_value']-$v_cusvalue)-(($v['customer_value']-$v_cusvalue)*$v['voucher_margin']/100);
-										
-										//echo $v_cusvalue;
-										
-										
 										$this->db->query("update pnh_t_voucher_details set customer_value=?,franchise_value=?,status=?,redeemed_on=now() where voucher_serial_no=?",array(($v['customer_value']-$v_cusvalue),$fran_value,($is_fully_redeemed?4:5),$v_slno));
-										
 										$this->db->query("insert into pnh_voucher_activity_log(voucher_slno,franchise_id,member_id,transid,debit,credit,order_ids,status)values(?,?,?,?,?,?,?,?)",array($v_slno,$fran['franchise_id'],$is_strkng_membr['pnh_member_id'],$transid,$v_cusvalue,0,$order_ids,1));
-										
-										
 										$required_amt=$required_amt-$v_cusvalue;
-										
+										array_push($voucher_code_used['othr_secretcode'],$v['voucher_serial_no']);
 									}
 								}
 									
@@ -7546,22 +7598,17 @@ group by g.product_id order by product_name");
 				$billno=$nbill['bill_no']+1;
 			$inp=array("bill_no"=>$billno,"franchise_id"=>$franid,"transid"=>$transid,"user_id"=>$userid,"status"=>1);
 			$this->db->insert("pnh_cash_bill",$inp);
-			$this->erpm->do_trans_changelog($transid,"PNH Order placed through SMS by $from",$userid);
-			if($part_redeemed_vouch_amt)
-				$v_bal=$part_redeemed_vouch_amt;
-			else
-				$v_bal=0;
+			$this->erpm->do_trans_changelog($transid,"PNH offline Order placed using vouchers ",$userid);
+
+			$v_balamt=$this->db->query("SELECT SUM(customer_value) AS voucher_bal FROM pnh_t_voucher_details WHERE STATUS in(3,5) AND member_id=?",$is_strkng_membr['pnh_member_id'])->row()->voucher_bal;
+			$from=trim($mem_det['mobile']);
+			if( $voucher_code_used['othr_secretcode'])
+				$given_vslnos=implode(',',$voucher_code_used['gven_secretcode']);
+				$othr_vslnos=implode(',',$voucher_code_used['othr_secretcode']);
+					
+			$this->erpm->pnh_sendsms($from,"your balance after purchase is Rs $v_balamt,redeemed vouchers for rs $c_total are $given_vslnos,$othr_vslnos .Happy Shopping",$from,0,1);
 			
-			if($vcode==1)
-			{
-				//$this->erpm->pnh_sendsms($from,"your balance after purchase is Rs $cus_value,previous redeemed balance $v_bal .Happy Shopping",$from,0,0,1);
-				$this->erpm->pnh_sendsms($from,"your balance after purchase is Rs $cus_value,previous redeemed balance $v_bal .Happy Shopping",$from,0,1);
-				//echo "your balance after purchase is Rs $cus_value,previous redeemed balance $v_bal .Happy Shopping";
-			}
-			else 
-			{
-				$this->erpm->pnh_sendsms($from,"your balance after purchase is Rs $v_cusvalue.Happy Shopping",$from,0,1);
-			}
+			
 			redirect("admin/trans/$transid");
 	}
 	
@@ -7808,10 +7855,22 @@ group by g.product_id order by product_name");
 		$fid=$this->input->post('fid');
 		$q=$this->input->post('q');
 		$vcode=$this->input->post('vcode');
+		$is_vcode_int = ctype_alpha($vcode);
 		$mem_mobno=$this->input->post('mem_mobno');
 		$srch_type=$this->input->post('type');
 		$vcode=explode(',',$vcode);
+	
 		
+		if($is_vcode_int==1)
+		{
+			$vcode=$this->db->query("select group_concat(voucher_code) as voucher_code from pnh_t_voucher_details where status=5")->row_array();
+			$vcode=explode(',',$vcode['voucher_code']);
+		}
+		else
+		 {
+		 	$vcode=$this->input->post('vcode');
+		 	$vcode=explode(',',$vcode);
+		 }
 		if($fid)
 		{
 			$deal_list = $this->db->query("SELECT i.name,i.pnh_id,i.orgprice AS mrp,i.price,i.store_price,d.menuid
@@ -7829,6 +7888,7 @@ group by g.product_id order by product_name");
 				{
 					$voucher_prd=1;
 					unset($deal_list[$k]);
+					
 				}
 			}
 			
@@ -7855,6 +7915,7 @@ group by g.product_id order by product_name");
 		}else
 		{	
 			$deal_list = $this->db->query("select i.name,i.pnh_id,i.orgprice as mrp,i.price,i.store_price from king_dealitems i where i.is_pnh=1 and i.name like ?","%$q%")->result_array();
+			
 		}
 		
 		//serach deal for voucher slno
@@ -7867,6 +7928,7 @@ group by g.product_id order by product_name");
 			
 			foreach($vcode as $v)
 			{
+				
 				if($mem_mobno)
 				{
 					$mem_det=$this->db->query("select * from pnh_member_info where mobile=?",$mem_mobno)->row_array();
@@ -7881,15 +7943,19 @@ group by g.product_id order by product_name");
 				$mid=$mem_det['pnh_member_id'];
 				
 				$v_exist_res=$this->db->query("select customer_value from pnh_t_voucher_details where voucher_code=?",$v);
+				
 				if($v_exist_res->num_rows())
-				{
+				{ 
 					$v_val=$v_exist_res->row_array();
 					if($v_val['customer_value']==0)
 					{
 						echo '<script>alert("Error!!!\n Voucher '.$v.'dot not have balance")</script>';
 						return false;
 					}
-				}else{
+				}
+				else
+				{
+					
 					echo '<script>alert("Error!!!\n voucher '.$v.' not found")</script>';
 					return false;
 				}
@@ -7898,9 +7964,9 @@ group by g.product_id order by product_name");
 															from pnh_t_voucher_details a
 															join pnh_t_book_voucher_link b on b.voucher_slno_id = a.id
 															join pnh_t_book_allotment d on d.book_id=b.book_id
-															where voucher_code=? and is_activated=1 and a.status in (3) and member_id=?
+															where voucher_code=? and is_activated=1 and a.status in (3,5) and member_id=?
 															group by b.book_id",array($v,$mid))->row_array();
-					
+				
 				if(empty($vdet))
 				{
 					echo '<script>alert("Error!!!\n Please check voucher slno.")</script>';
@@ -9502,7 +9568,7 @@ group by g.product_id order by product_name");
 			$data['page']="prod_mrp_update";
 			$this->load->view("admin",$data);
 		}
-
+	
 	function pnh_pub_deal($itemid,$pub,$redirect=1)
 	{
 			$user=$this->erpm->auth(DEAL_MANAGER_ROLE);
@@ -9570,7 +9636,7 @@ group by g.product_id order by product_name");
 		$user=$this->auth();
 		$mid=$this->input->post('mid');
 		$more=$this->input->post('more');
-		$mem=$this->db->query("select * from pnh_member_info  WHERE (pnh_member_id=? OR mobile=?)",array($mid,$mid))->row_array();
+		$mem=$this->db->query("select * from pnh_member_info WHERE (pnh_member_id=? OR mobile=?)",array($mid,$mid))->row_array();
 
 		if(empty($mem))
 		{
@@ -9634,23 +9700,39 @@ group by g.product_id order by product_name");
 	function jx_pnh_getmemvoucherdet()
 	{
 		$vcode=$this->input->post("vcode");
-		$vcodes=explode(',',$vcode);
+		
 		$mem_mobno=$this->input->post("mem_mobno");
 		$voucher_value=0;
+		$is_codenumber=ctype_alpha($vcode);
+		
 		$mem=$this->db->query("select * from pnh_member_info where mobile=?",$mem_mobno)->row_array();
-		$v_details=$this->db->query("select * from pnh_t_voucher_details where member_id=? and voucher_code=?",array($mem['pnh_member_id'],$vcode))->row_array();
+		if(!$is_codenumber)
+		{
+			$entered_int=1;
+			$v_details=$this->db->query("select * from pnh_t_voucher_details where member_id=? and voucher_code=?",array($mem['pnh_member_id'],$vcode))->row_array();
+			$vcodes=explode(',',$vcode);
+		}
+		else 
+		{
+			$entered_int=0;
+			$v_details=$this->db->query("select * from pnh_t_voucher_details where member_id=? and status=5?",$mem['pnh_member_id'])->result_array();
+			$vcodes=$this->db->query("select group_concat(voucher_code) as voucher_code from pnh_t_voucher_details where member_id=? and status=5",$mem['pnh_member_id'])->row_array();
+			$vcodes=explode(',',$vcodes['voucher_code']);
+			
+		}
 		if($v_details)
 		{
 			foreach($vcodes as $vcode)
-			{
+			{	
+				 
 				$vdet=$this->db->query("select b.book_id,d.franchise_id,a.voucher_serial_no,a.customer_value,a.status as voucher_status
 																from pnh_t_voucher_details a
 																join pnh_t_book_voucher_link b on b.voucher_slno_id = a.id
 																join pnh_t_book_allotment d on d.book_id=b.book_id
 																where voucher_code=? and member_id=?  and is_activated=1 
 																group by voucher_serial_no",array($vcode,$mem['pnh_member_id']))->row_array();
-
-					if($vdet['voucher_status']>3)
+						
+					if($vdet['voucher_status']>3 && $entered_int==1)
 					{
 						$fmsg="<div style='font-size:120%;color:red;'>";
 						if($vdet['voucher_status']==4)
@@ -9664,10 +9746,13 @@ group by g.product_id order by product_name");
 						$fmsg.="</div>";
 					die($fmsg) ;
 				}
-			 if($vdet['voucher_status']==3)
+
+			 if($vdet['voucher_status']==3 && $entered_int==1)
 				{
 					//get the book menus
 					$vmenus=$this->db->query("select id,name from  pnh_menu where id in (select menu_ids from pnh_t_book_details a join pnh_m_book_template b on b.book_template_id=a.book_template_id where a.book_id=?)",$vdet['book_id'])->row_array();
+						
+						
 					$prev_voucher_bal=$this->db->query("SELECT SUM(customer_value) AS loyal_pnts FROM pnh_t_voucher_details WHERE STATUS in(5) AND member_id=?",$mem['pnh_member_id'])->row()->loyal_pnts;
 					if(!$prev_voucher_bal)
 						$prev_voucher_bal=0;
@@ -9679,7 +9764,22 @@ group by g.product_id order by product_name");
 					echo $smsg;
 				}
 				
+				if($vdet['voucher_status']==5 && $entered_int==0)
+				{
+					//get the book menus
+					$vmenus=$this->db->query("select id,name from  pnh_menu where id in (select menu_ids from pnh_t_book_details a join pnh_m_book_template b on b.book_template_id=a.book_template_id where a.book_id=?)",$vdet['book_id'])->row_array();
+				
+				
+					$voucher_value+=$vdet['customer_value'];
+					$ttl_value=$voucher_value;
+					$smsg="<div style='font-size:120%;'>";
+					$smsg.="Serial no: {$vdet['voucher_serial_no']}&nbsp&nbsp&nbspMenu :{$vmenus['name']}&nbsp&nbsp&nbspvalue Rs {$vdet['customer_value']}";
+					$smsg.="<div class='clear'></div></div>";
+					echo $smsg;
+				}
 			}
+		
+			
 			$nr_value=0;
 			$non_redeemed_vdetails=$this->db->query("select a.*,b.book_id,d.franchise_id,a.voucher_serial_no as vslno,a.customer_value,a.status as voucher_status
 																from pnh_t_voucher_details a
@@ -27717,7 +27817,7 @@ die; */
     	$mid_entrytype=$this->input->post('mid_entrytype');
     	$mid=$this->input->post('mid');
     	$output=array();
-		$mem_det=$this->db->query("select * from pnh_member_info where (pnh_member_id=? or mobile=? ) and length(?) > 0 ",array($mid,$mid,$mid));
+    	$mem_det=$this->db->query("select * from pnh_member_info where (pnh_member_id=? or mobile=? ) and length(?) > 0 ",array($mid,$mid,$mid));
     	if($mem_det->num_rows())
     	{
     		$output['status']='success';
@@ -28374,9 +28474,9 @@ die; */
             
 			
             
-            $offers_insurance = $this->db->query("select a.*,b.user_id,b.first_name,f.*, date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  where a.offer_type in (0,2) order by a.created_on desc limit 100")->result_array();
-            $offers_talktime = $this->db->query("select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100")->result_array();
-            $member_fee_list = $this->db->query("select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=3 order by a.created_on desc limit 100")->result_array(); 
+            $offers_insurance = $this->db->query("select a.*,b.user_id,b.first_name,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  where a.offer_type in (0,2) order by a.created_on desc limit 100")->result_array();
+            $offers_talktime = $this->db->query("select a.*,b.user_id,b.first_name,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100")->result_array();
+            $member_fee_list = $this->db->query("select a.*,b.user_id,b.first_name,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=3 order by a.created_on desc limit 100")->result_array(); 
             /*
 			//define("MAX_REFERAL_COUNT",3);
 			$data['referral_offers'] = $this->db->query("select num_referred,referred_by,offer_value,floor(num_referred/?) as times from (
@@ -28859,15 +28959,18 @@ die; */
             $mem_addres=$this->input->post("mem_address");
             $iids=$this->db->query("select id,pnh_id from king_dealitems where is_pnh=1 and pnh_id in('".implode("','",$pids)."')")->result_array();
             $m_userid=$this->db->query("select user_id from pnh_member_info where pnh_member_id=?",$mid)->row()->user_id;
-            $ttl_orders=$this->db->query("SELECT COUNT(DISTINCT(transid)) AS l FROM king_orders WHERE userid=? AND STATUS NOT IN (0,3,5,6)",$m_userid)->row()->l;
+            $ttl_orders=$this->db->query("SELECT COUNT(transid) as l
+											FROM king_orders 
+											WHERE userid=?   AND STATUS NOT IN (3) 
+											having SUM(i_price*quantity) >?",array($m_userid,MEM_MIN_ORDER_VAL))->row()->l;
 
             $itemids=array();
             $order_det=array();
             $e=0;
             foreach($pids as $pid)
-                    foreach($iids as $id)
+				foreach($iids as $id)
                     if($id['pnh_id']==$pid)
-                    $itemids[]=$id['id'];
+                	    $itemids[]=$id['id'];
             $avail=$this->erpm->do_stock_check($itemids,$qty);
             $un="";
             $attr=$this->input->post('attr');
@@ -29014,10 +29117,11 @@ die; */
                             $required_credit=$d_total-$fran['current_balance'];
                             $e=1;$un="Balance in your account Rs {$fran['current_balance']}\n\nTotal order amount : Rs $d_total\n\n Required Credit : Rs.$required_credit";
                     }
-                    if($ttl_orders==0 ) // && $d_total>=500 
-                            $new_mem=1;
-                    else 
+                    if($ttl_orders > 1 ) // && $d_total>=500 
                             $new_mem=0;
+                    else 
+                            $new_mem=1;
+					
                     $pc_data['deals']=$this->erpm->pnh_getdealpricechanges($fran['app_version'],$iids);
                     $pc_data['total']=$total;
                     $pc_data['mid']=$mid;
@@ -29148,7 +29252,6 @@ die; */
     	 if($transid && $status==1)
     	 {
     	 	$this->db->query("update king_user_orders set status=1 where transid=? and userid=?",array($transid,$userid));
-    	 	
     	 	$trans_det=$this->db->query("select * from king_user_orders where transid=? and status=1 and userid=?",array($transid,$userid));
     	 	if($trans_det->num_rows())
     	 	{
@@ -29222,6 +29325,7 @@ die; */
     	 		
     	 		$this->erpm->pnh_sendsms($mem_mob,"$mem_name,Congrats!Your order [$confirm_oid] has been sucessfully recieved,Please contact your ($fran_name,$from) for update. StoreKing Team",$franid,$mid,0);
     	 		$this->erpm->pnh_sendsms($fran_mob,"Thanks for your reply. With Reference to [$mem_name,$mem_mob], Order [$confirm_oid] has been sucessfully placed.",$franid,0,0);
+    	 		
     	 	}
     	 			
     	 		
@@ -29251,6 +29355,7 @@ die; */
     	 	
     	 		$this->erpm->pnh_sendsms($mem_mob,"$mem_name Sorry to inform you ! your order[$confirm_oid] has been Cancelled. Please contact your ($fran_name-$fran_mob) for any queries.",$franid,$membr_id,0);
     	 		$this->erpm->pnh_sendsms($fran_mob,"Thanks for your reply.  With Reference to[$mem_name,$mem_mob] order[$confirm_oid] has been Cancelled.",$franid,0,0);
+    	 		
     	 		$output['status']='success';
     	 	}
     	 	

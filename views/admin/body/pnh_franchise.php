@@ -852,8 +852,9 @@ $(function(){
                                                                                     </tr>
                                                                                     <!--<div style="padding:4px 5px;border-bottom:1px solid #DDDDDD;">Rs. <?=formatInIndianStyle($offer['offer_value']);?> worth of <?=$arr_offer_type[$offer['offer_type']];?> given</div>-->
                                                                         <?php   }
+                                                                        		echo ' </table>';
                                                                             } ?>
-                                                                            </table>
+                                                                           
                                                                     </div>
                                                         </div>
                                                     
@@ -1503,7 +1504,9 @@ $(function(){
 					</td>
 				</tr>
 				
-				<tr></tr>
+				<tr>
+					<td>&nbsp;</td>
+				</tr>
 				
 				<tr>
 					<td>
@@ -1623,7 +1626,6 @@ $(function(){
 											<td>Category </td><td>:</td>
 												<td>
 													<select name="cat" class="select_cat"  data-placeholder="Select Category" style="width:250px;" data-required="true" ></select>
-													</select>
 												</td>
 										</tr>
 											

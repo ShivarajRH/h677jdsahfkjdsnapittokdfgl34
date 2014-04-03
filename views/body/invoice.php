@@ -15,7 +15,7 @@ $credit_days=$this->db->query("select credit_days from king_transactions where t
 
 ?>
 <div class="container" style="background:#fff;">
-<div style="width: 100%;margin: 0px auto">	
+    <div style="width: 100%;margin: 0px auto">	
 	<?php if($this->session->userdata("admin_user")){?>
 	<div style="margin:10px;" class="hideinprint">
 	<table width="100%">
@@ -99,15 +99,15 @@ table{
 							in.service_tax,
 							item.pnh_id,f.offer_text,f.immediate_payment,
 							in.invoice_qty as quantity,
-							ordert.member_id  as alloted_mem_id 
+							ordert.member_id  as alloted_mem_id,ordert.has_insurance,ordert.insurance_amount
 						from king_orders as ordert
 						join king_dealitems as item on item.id=ordert.itemid 
 						join king_deals as deal on deal.dealid=item.dealid 
 						left join king_brands as brand on brand.id=deal.brandid 
 						left join pnh_m_offers f on f.id= ordert.offer_refid
+						#left join pnh_member_offers mo on mo.transid_ref = ordert.transid 
 						join king_invoice `in` on in.transid=ordert.transid and in.order_id=ordert.id  
 						where in.invoice_no=? or split_inv_grpno = ?
-						
 				";
 		$q=$this->db->query($sql,array($invoice_no,$invoice_no));
 		$orders=$q->result_array();
@@ -170,7 +170,9 @@ table{
 	
 
 
-
+		$inv_has_insurance = $this->db->query("select count(*) as t from king_invoice a join king_orders b on a.order_id = b.id where a.invoice_no = ? and insurance_id > 0 ",$order['invoice_no'])->row()->t;
+		
+		$inv_has_insurance = $inv_has_insurance?1:0;
 		
 
 ?>
@@ -301,6 +303,22 @@ table{
 							<?php } ?>
 							</td>
 							</tr>
+                                                        <?php 
+                                                        if( isset($arr_offer_type[$order['offer_type']]) ) {
+                                                            ?>
+                                                        
+                                                            <tr><th>Offers :</th>
+                                                                <td>
+                                                                    <?php 
+                                                                    $arr_offer_type = array(0=>"Insurance Opted",1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
+                                                                    echo $arr_offer_type[$order['offer_type']];
+
+                                                                    ?>
+                                                                </td>
+                                                            </tr>
+                                                    <?php
+                                                        }
+                                                    ?>
 						</table>
 					</td>
 				</tr>
@@ -324,8 +342,11 @@ table{
 					<td align="right" width="80" ><b>MRP</b></td>
 					<td align="right"><b>Sub Total</b></td>
 					<td align="right"><b>Discount</b></td>
-					<?php }?>
+					<?php } ?>
+					<?php if($is_pnh && $inv_has_insurance){ ?>
+					<td align="right"><b>Insurance Cost</b></td>
 					<?php 
+						}
 						if($inv_type =='auditing'){
 					?>
 					<td align="right"><b>Product Rate</b></td>
@@ -345,6 +366,9 @@ table{
 		$s_tax_on = 0; 
 		
 		$col_span_fix = $orders[0]['alloted_mem_id']?1:0; 
+		
+		
+		$col_span_fix = $col_span_fix+$inv_has_insurance;
 		
 		
 		$p_tax_list = array();
@@ -383,7 +407,12 @@ table{
 			$thc += $handling_cost = round((($order['phc']*$qty*100)/(100+$pstax)),2);
 			$thc_tax += $handling_cost_tax = round((($order['phc']*$qty)-$handling_cost),2); 
 			$tphc += $handling_cost;
-			$item_total_amount =  ($product_rate+$product_rate_tax+$handling_cost+$handling_cost_tax);
+            $ttl_insu_val=0;
+            if($order['has_insurance'] == 1 && $order['insurance_amount'] != 0 && $order['insurance_amount'] !='' && $is_pnh) {
+                $ttl_insu_val = round($order['insurance_amount'],2);
+            }
+			$item_total_amount =  ($product_rate+$product_rate_tax+$handling_cost+$handling_cost_tax + $ttl_insu_val);
+
 			$total_item_amount += $item_total_amount; 
 			
 			if($order['status'] == 4)
@@ -463,7 +492,6 @@ table{
 					<?php 
 						if($inv_type =='auditing'){
 					?>
-						
 						<td align="right"><?=number_format($order['discount'],2)?></td>
 					<?php } ?>
 				<td align="right"><?=number_format($product_rate/$order['quantity'],2)?></td>
@@ -482,11 +510,27 @@ table{
 				<td align="right"><?=number_format($product_rate_tax,2)?></td>
 				<?php 
 					}
-					$ttl_amt = number_format(round($item_total_amount));
+					
+					if($is_pnh && $inv_has_insurance)
+					{
 				?>
-				<td align="right"><?php echo ($order['status'] == 4)?'<strike>':'';?><?=$ttl_amt?><?php echo ($order['status'] == 4)?'</strike>':'';?></td>
+				<td align="right">
+					<?php
+                        if($order['has_insurance'] == 1)
+                        {
+                    ?>
+                             Rs. <?=formatInIndianStyle($order['insurance_amount']);?>
+                    <?php
+                        }
+                    ?>
+				</td>
+				<?php
+					}  
+				$ttl_amt = number_format(round($item_total_amount));
+				?>
+				<td align="right"><?php echo ($order['status'] == 4)?'<strike>':'';?><?=$ttl_amt; ?><?php echo ($order['status'] == 4)?'</strike>':'';?></td>
 			</tr>
-
+                        
 <?php
 			if($order['status'] != 4)
 			{
@@ -554,7 +598,9 @@ table{
 				}
 			}
 			$stax_tot = ($sship+$ccod+$sgc); 
-		 	$s_tax_apl = ($stax_tot*$pstax/100); 
+		 	$s_tax_apl = ($stax_tot*$pstax/100);
+
+		 	$col_span_fix 
 ?>
 
 
@@ -629,10 +675,22 @@ table{
 							<td><b>COD/Handling/Packaging Charges</b></td>
 							<td align="right"><?=number_format($cod_ship_charges,2)?></td>
 						</tr>
-						<?php }?>
+<?php                                           } 
+                                                    $mem_reg_fee = 0;
+                                                    $num_recharge_offer = $this->db->query("select * from pnh_member_offers where offer_type != 2  and mem_fee_applicable = 1 and process_status='0' and transid_ref = ? ",$order['transid'])->num_rows();
+                                                    if($num_recharge_offer)
+                                                    {
+								$mem_reg_fee = PNH_MEMBER_FEE;
+						?>
+						<tr>
+							<td>Member Registration Fee</td>
+							<td>Rs. <?=$mem_reg_fee;?></td>
+						</tr>
+						<?php }  ?>
 						<tr>
 							<td width="180"><b>Total Amount </b></td>
-							<td align="right" ><b>Rs. <?=number_format($cod_ship_charges+$total_item_amount-$returned_item_amt,0)?></b></td>
+							<?php $ttl_invoice_amt = number_format( ($cod_ship_charges +  $total_item_amount + $mem_reg_fee) - $returned_item_amt,0); ?>
+							<td align="right" ><b>Rs. <?=$ttl_invoice_amt?></b></td>
 						</tr>
 					</table>
 				</td>

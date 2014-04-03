@@ -589,15 +589,20 @@ $('#ven_log_pagination .log_pagination a').live('click',function(e){
 
 function print_warehouse_summary()
 {
-	var brandid = $('.selected_class').attr('bid');
-	var catid = $('.selected_class').attr('cid');
-	//var catid = $('.sk_deal_blk_wrap .prod_filter_wrap').attr('cid');
+	var brandid =0;
+	var catid =0;
+	var selType = $('.jq_alpha_sort_alphalist_itemlist_divwrap.selected');
+		if($('a',selType).attr('brandid') != undefined)
+			brandid = $('a',selType).attr('brandid')*1;
+		else if($('a',selType).attr('catid') != undefined)
+			catid = $('a',selType).attr('catid')*1;
+	if($('.brands_bychar_list .selected_class').length)
+	{
+		brandid = $('.brands_bychar_list .selected_class').attr('bid');
+		catid = $('.brands_bychar_list .selected_class').attr('cid');
+	}
 	
-	if($('.Brands_bychar_list_content_listdata').hasClass('selected_class'))
-		brandid=$('.selected_class').attr('bid');
-	
-	var print_url = site_url+'/admin/print_brands_summary/'+brandid+'/'+catid;
-	window.open(print_url);
+	window.open(site_url+'/admin/print_brands_summary/'+brandid+'/'+catid);
 }
 </script>
 

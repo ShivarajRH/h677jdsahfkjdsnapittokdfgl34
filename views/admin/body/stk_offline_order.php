@@ -226,7 +226,7 @@ $( "#authentiacte_blk" ).dialog({
 	open:function(){
 	dlg = $(this);
 	$.post("<?=site_url("admin/pnh_jx_loadfranchisebyid")?>",{fid:$("#sel_fid").val()},function(data){
-		$("#franchise_det").html(data).show();
+			$("#franchise_det").html(data).show();
 		});
 		$(".stk_offlinecard").show();
 	},

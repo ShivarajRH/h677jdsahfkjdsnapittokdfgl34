@@ -12,7 +12,7 @@
     $data = str_replace("%%invoice_no%%", $ins['invoice_no'], $data);
     $data = str_replace("%%created_on%%", date("d/m/Y",strtotime($ins['created_on'])), $data);
     echo $data;
-                    ?>
+    ?>
 <!-- %%invoice_no%% %%created_on%%-->
 </div>
 <script>

@@ -180,7 +180,7 @@ $fran_status_arr[3]="Temporary Suspension";
 				<input type="hidden" name="insurance[address]" class="member_address" value="" style="display:none;">
 				<input type="hidden" name="insurance[city]" class="member_city" value="" style="display:none;">
 				<input type="hidden" name="insurance[pincode]" class="member_pincode" value="" style="display:none;">
-				
+				<input type="hidden" name="insurance[proofname]" class="othrs_proofname" value="" style="display:none;">
 				
 				
 				<div style="clear:both;overflow: hidden;background: #fcfcfc">
@@ -510,6 +510,7 @@ $fran_status_arr[3]="Temporary Suspension";
 	</div>
 	<div id="franchise_quickview"  title="Franchisee Info"><div id="fran_qvkview"></div></div>
 	<div id="insurance_option" title="Payable Insurance" >
+		
 		<p><b>Would you like to have insurance?</b>
 			<span><input type="radio" value="1"   name="insurance_srn" class="insurance_srn">Yes</span>
 			<span><input type="radio" value="0" checked name="insurance_srn" class="insurance_srn">No</span>
@@ -550,7 +551,9 @@ $fran_status_arr[3]="Temporary Suspension";
 									<?php }}?>
 					</select>
 				</span>
-				
+				<span class="othrs_proofname form_label_wrap">Proof Name <span class="othrs_proofname red_star">*</span>:</span>
+				<span class="othrs_proofname form_input_wrap"><input class="max_width" type="text" name="proof_name" value="" ></span>
+			
 				<span class="form_label_wrap">Proof Id<span class="red_star">*</span>:</span>
 				<span class="form_input_wrap"><input class="max_width" type="text" name="crd_insurence_id" value="" data-required="true"></span>
 				
@@ -583,6 +586,19 @@ $fran_status_arr[3]="Temporary Suspension";
     }
 </style>
 <script>
+$('.othrs_proofname').hide();
+$("#crd_insurence_type").live('change',function(){
+	
+	if($(this).val()==4)
+	{
+		$('.othrs_proofname').show();
+	}
+	else
+	{
+		$('.othrs_proofname').hide();
+	}
+	
+});
     function get_attributes(e) {
          var attribute_id = $(e).find(":selected").val();
          $.post(site_url+"jx_get_attributes/"+attribute_id,{},function(resp){
@@ -1155,7 +1171,7 @@ $('.stock_det_close').live("click",function(){
 
 function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 {
-	$('.jq_alpha_sort_overview_content').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
+//	$('.jq_alpha_sort_overview_content').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
 	
 	$('.sk_deal_container').css('opacity','0.5');
 	if(catid != 0 && brandid==0)
@@ -1199,8 +1215,11 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 		});
 	}
 
-	if(!dealid)
-		{$('.sk_deal_container').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');}
+		if(dealid*1)
+			$('.jq_alpha_sort_overview_content .sk_deal_container tbody').prepend('<tr class="loading_data"></tr>');
+		else
+			$('.sk_deal_container').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
+	
 
 	$.post(site_url+'/admin/jx_deallist_bycat',{brandid:brandid,catid:catid,type:type,pre_selected_fid:pre_selected_fid,dealid:dealid},function(resp){
 		$('.sk_deal_container').css('opacity','1');
@@ -1636,7 +1655,7 @@ var ppids=[];
 								{
 									has_insurance_dl++;
 										template=template.replace(/%has_insurance%/g,"Insurance : <span style='font-size:11px;color:#000;'>Yes</span> ");
-									if(p.insurance_value!=0 && p.insurance_margin!=0)
+									if(p.insurance_value!=null && p.insurance_margin!=null)
 											template=template.replace(/%opt_insurance%/g,"<input type='checkbox' style='margin-top:-1px' name='opt_insurance[]' class='opt_insurance' value='"+p.pid+"'> <span style='font-size:11px;color:#000;float:right;'>: Opting Insurance</span> ");
 									else
 											template=template.replace(/%opt_insurance%/g," ");	
@@ -1838,6 +1857,7 @@ $("#order_form").submit(function(){
 	
 		var menu_qty=qty;
 		var menuid=menuids;
+		var min_ord=500;
 	//	var mid = $("input[name='mid']",$(this)).val();
 	    var mid = selected_mid;
 		var fran_note=$("#fran_note").val();
@@ -1907,12 +1927,21 @@ $("#order_form").submit(function(){
 		
 				if($('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length==0 && resp.new_mem==1)
 				{
-					if(confirm("No Insurance selected. Do you want to Continue?"))
+					if(confirm("No Insurance selected. Do you want to Continue ? "))
 					{
-							$('.offr_sel_type').val(3);
-							$(".new_member").val(1);
+						$(".new_member").val(1);
+						if(total>=10000)
+							{
+							$('.offr_sel_type').val(1);
 							submit_order++;
 							$("#order_form").submit();
+							}
+							else
+							{
+							$('.offr_sel_type').val(3);
+							submit_order++;
+							$("#order_form").submit();
+							}
 					}else
 					{
 						return false;
@@ -1922,8 +1951,8 @@ $("#order_form").submit(function(){
 				{
 					if(confirm("Is Insurance Option communicated to franchise?"))
 					{
-							$('.offr_sel_type').val(0);
-							$(".new_member").val(0);
+							$('.offr_sel_type').val();
+							$(".new_member").val();
 							submit_order++;
 							$("#order_form").submit();
 					}else
@@ -1937,12 +1966,11 @@ $("#order_form").submit(function(){
 						$('.offr_sel_type').val('2');
 						$('.offerd_type').val('2');
 						$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
-					 	return false;	
+					 return false;	
 				}
 
 			 	if(resp.new_mem==0 && $('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length!=0)
 				{
-					
 						$('.offr_sel_type').val('0');
 			 			$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 			 			return false;
@@ -1950,31 +1978,35 @@ $("#order_form").submit(function(){
                if(resp.new_mem==0 && $('.opt_insurance').length > 1 && $('input[name="opt_insurance[]"]:checked').length == 0)
 				{
 			 		$('.offr_sel_type').val(0);
-			 		
-				 		$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
+			 		$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 				 	 return false;
 				}
-			 	 	if(resp.new_mem==1 && resp.has_insurance==0 )
-					{
-			 	 		
-			 	 		$('.offr_sel_type').val('1');
-		 	 				submit_order++;
-					}
+		 	 	if(resp.new_mem==1 && resp.has_insurance==0 && total > min_ord )
+				{
+					$('.offr_sel_type').val('1');
+					$(".new_member").val('1');
+					submit_order++;	
+				}
+				if(resp.new_mem==1 && resp.has_insurance==0 && total < min_ord)
+				{
+					$('.offr_sel_type').val('3');
+					$(".new_member").val('1');
+					submit_order++;
+					$("#order_form").submit();
+				}
 				if(resp.new_mem==0 && resp.has_insurance==0 )	
-					{
-						
-						submit_order++;
-						$("#order_form").submit();
-					}
-					
-				 else
-					{
-						submit_order>=1;	
-						$("#order_form").submit();
-					}
-					
-					
+				{
+					$('.offr_sel_type').val();
+					$(".new_member").val('0');
+					submit_order++;
+					$("#order_form").submit();
+				}
 				
+				else
+				{
+					submit_order++;	
+					$("#order_form").submit();
+				}
 				},'json');
 			}
 		
@@ -3004,6 +3036,7 @@ $("#franchise_quickview").dialog({
 				$("select[name='crd_insurence_type']").val("");
 				$("input[name='crd_insurence_id']").val("");
 				$("#crd_insurance_mem_address").val("");
+				$('input[name="proof_name"]').val("");
 				$(".opted_insurance_deal").val(dlg.data('insuranceids'));
 				var order_det = $(this).data('order_det');
 				var insuranceid =[];
@@ -3049,6 +3082,7 @@ $("#franchise_quickview").dialog({
 					var mem_address=$('#i_member_add').val();
 					var mem_city=$('#i_member_city').val();
 					var mem_pincode=$('#i_member_pcode').val();
+					var proof_name=$('input[name="proof_name"]').val();
 					$(".opted_insurance_deal").val(dlg.data('insuranceids'));
 					$('.opted_insurance').val(opted_insurence);
 					$('.proof_type').val(proof_type);
@@ -3061,6 +3095,7 @@ $("#franchise_quickview").dialog({
 				  	$('.member_address').val(mem_address);
 				  	$('.member_city').val(mem_city);
 				  	$('.member_pincode').val(mem_pincode);
+				  	$('.othrs_proofname').val(proof_name);
 				  	if(opted_insurence==1)
 				  	{
 				  		if(credit_insurence_blk.parsley('validate'))
