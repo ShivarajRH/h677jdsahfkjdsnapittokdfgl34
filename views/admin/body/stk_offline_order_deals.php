@@ -1995,7 +1995,7 @@ $("#order_form").submit(function(){
 					submit_order++;
 					$("#order_form").submit();
 				}
-				if(resp.new_mem==0 && resp.has_insurance==0 && resp.total >= min_ord)	
+				if(resp.new_mem==0 && resp.has_insurance==0 && resp.total > min_ord)	
 				{
 					$('.offr_sel_type').val();
 					$(".new_member").val('0');
