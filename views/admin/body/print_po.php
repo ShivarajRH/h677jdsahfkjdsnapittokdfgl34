@@ -11,6 +11,7 @@
 			p{margin:4px 0px}
 			.fl_left{float:left;}
 			.fl_right{float:right;}
+			.clear{clear:both}
 		</style>
 	</head>
 	<body onload="window.print()">
@@ -36,7 +37,7 @@
 			</div>
 			<div class="clear">&nbsp;</div>
 			
-			<div align="center">
+			<div align="center" >
 				<table class="print_tbl" border="0" cellspacing="0" cellpadding="4" width="100%" >
 					<thead><tr><th>Slno</th><th style="text-align: left">Product name</th><th style="text-align: right">Mrp</th><th style="text-align: right">Unit price</th><th style="text-align: right">Qty</th><th style="text-align: right">Sub Total </th></tr></thead>
 					<tbody>
@@ -74,6 +75,7 @@
 					</tbody>
 				</table>
 			</div>
+			
 			<div class="clear" style="margin-top:10px;">
 				<div align="right"  class="fl_right">
 					Total Purchase Order Value : <b> Rs <?=format_price($ttl_order_price,2) ?></b>
@@ -86,6 +88,7 @@
 					Please note : Tax already included in price.  
 				</div>
 			</div>
+			<br>
 		</div>
 	</body>
 </html>

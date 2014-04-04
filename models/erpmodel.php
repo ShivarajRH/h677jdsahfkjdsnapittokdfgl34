@@ -5490,8 +5490,6 @@ order by p.product_name asc
 
 		foreach(array("name","addr1","addr2","locality","landmark","city","state","country","postcode","ledger","credit_limit","credit_days","advance","cst","pan","vat","stax","tat","rpolicy","payterms","remarks","cnt_name","cnt_desgn","cnt_mob1","cnt_mob2","cnt_telephone","cnt_fax","cnt_email1","cnt_email2","l_catid","l_brand","l_margin","l_from","l_until","payment_type") as $i)
 			$$i=$this->input->post("$i");
-
-		
 		
 		$inp=array($name,$addr1,$addr2,$locality,$landmark,$postcode,$city,$state,$country,$ledger,$credit_limit,$credit_days,$advance,$cst,$pan,$vat,$stax,$tat,$rpolicy,$payterms,$remarks,$admin['userid'],$payment_type,$vid);
 			
@@ -5521,7 +5519,7 @@ order by p.product_name asc
 					else
 					{
 
-						$this->db->query("insert into m_vendor_brand_link(brand_id,cat_id,vendor_id,brand_margin,applicable_from,applicable_till,created_on) values(?,?,?,?,UNIX_TIMESTAMP(?),UNIX_TIMESTAMP(?),now())",array($b,$l_catid[$i],$vid,$l_margin[$i],$l_from[$i],$l_until[$i]));
+						$this->db->query("insert into m_vendor_brand_link(brand_id,cat_id,vendor_id,brand_margin,applicable_from,applicable_till,created_on,is_active) values(?,?,?,?,UNIX_TIMESTAMP(?),UNIX_TIMESTAMP(?),now(),1)",array($b,$l_catid[$i],$vid,$l_margin[$i],$l_from[$i],$l_until[$i]));
 					}
 			}
 		}
@@ -5535,12 +5533,14 @@ order by p.product_name asc
 				}
 				else
 				{
-					$this->db->query("insert into m_vendor_brand_link(brand_id,vendor_id,brand_margin,applicable_from,applicable_till,created_on) values(?,?,?,UNIX_TIMESTAMP(?),UNIX_TIMESTAMP(?),now())",array($b,$vid,$l_margin[$i],$l_from[$i],$l_until[$i]));
+					$this->db->query("insert into m_vendor_brand_link(brand_id,vendor_id,brand_margin,applicable_from,applicable_till,created_on,is_active) values(?,?,?,UNIX_TIMESTAMP(?),UNIX_TIMESTAMP(?),now(),1)",array($b,$vid,$l_margin[$i],$l_from[$i],$l_until[$i]));
 					
 				}
 
 			}
 		}
+		
+		
 		$this->erpm->flash_msg("Vendor details updated");
 		redirect("admin/vendor/{$vid}");
 	}
