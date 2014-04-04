@@ -25563,7 +25563,7 @@ die; */
 			$output['error'] = 'Duplicate IMEI nos entered';
 		}else
 		{		
-			$resp = $this->db->query("select * from t_imei_no t join m_product_info p on p.product_id=t.product_id where p.brand_id=".$brandid." and imei_no in ($imei_nos)");
+			$resp = $this->db->query("select * from t_imei_no t join m_product_info p on p.product_id=t.product_id where p.brand_id=".$brandid." and imei_no in ('$imei_nos')");
 			if(!$resp->num_rows())
 			{
 				$output['status'] = 'success';
@@ -28966,8 +28966,7 @@ die; */
 											FROM king_orders 
 											WHERE userid=?   AND STATUS NOT IN (3) 
 											having SUM(i_price*quantity) >?",array($m_userid,MEM_MIN_ORDER_VAL))->row()->l;
-
-            $itemids=array();
+			$itemids=array();
             $order_det=array();
             $e=0;
             foreach($pids as $pid)
