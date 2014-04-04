@@ -70,14 +70,14 @@
 }
 .mod_widget_title div.heading_wrap
 {
-	font-size: 15px;
+	font-size: 13px;
 	font-weight: bold;
 	color: #606060;
-	height:37px;
+	padding:5px;
 }
 .mod_widget_title img
 {
-	margin:8px 8px -1px 11px;
+	display: none;
 }
 .mod_widget_small .mod_widget_sub .mod_widget_content ul
 {
@@ -436,12 +436,12 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 								<table class="datagrid">
 									<tbody>
 										<tr>
-											<td><b>Slno</b></td>
-											<td><b>Voucher slno</b></td>
-											<td><b>Menu</b></td>
-											<td><b>Franchise Name</b></td>
-											<td><b>Voucher Value</b></td>
-											<td><b>Activated On</b></td>
+											<th><b>Slno</b></th>
+											<th><b>Voucher slno</b></th>
+											<th><b>Menu</b></th>
+											<th><b>Franchise Name</b></th>
+											<th><b>Voucher Value</b></th>
+											<th><b>Activated On</b></th>
 										</tr>
 										<?php $i=1;
 											foreach($ac_v->result_array() as $ac ){
@@ -467,15 +467,15 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 								<table class="datagrid">
 									<tbody>
 										<tr>
-											<td><b>Slno</b></td>
-											<td><b>Voucher Slno</b></td>
-											<td><b>Menu</b></td>
-											<td><b>Franchise Name</b></td>
-											<td><b>Voucher Value</b></td>
-											<td><b>Transaction Id</b></td>
-											<td><b>Redeemed Value</b></td>
-											<td><b>Voucher Balance</b></td>
-											<td><b>Redeemed On</b></td>
+											<th><b>Slno</b></td>
+											<th><b>Voucher Slno</b></th>
+											<th><b>Menu</b></th>
+											<th><b>Franchise Name</b></th>
+											<th><b>Voucher Value</b></th>
+											<th><b>Transaction Id</b></th>
+											<th><b>Redeemed Value</b></th>
+											<th><b>Voucher Balance</b></th>
+											<th><b>Redeemed On</b></th>
 										</tr>
 										<?php $i=1;
 											foreach($ac_v->result_array() as $ac ){
@@ -504,15 +504,15 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 								<table class="datagrid">
 									<tbody>
 										<tr>
-											<td><b>Slno</b></td>
-											<td><b>Voucher Slno</b></td>
-											<td><b>Menu</b></td>
-											<td><b>Franchise Name</b></td>
-											<td><b>Voucher Value</b></td>
-											<td><b>Transaction Id</b></td>
-											<td><b>Redeemed Value</b></td>
-											<td><b>Voucher Balance</b></td>
-											<td><b>Redeemed On</b></td>
+											<th><b>Slno</b></th>
+											<th><b>Voucher Slno</b></th>
+											<th><b>Menu</b></th>
+											<th><b>Franchise Name</b></th>
+											<th><b>Voucher Value</b></th>
+											<th><b>Transaction Id</b></th>
+											<th><b>Redeemed Value</b></th>
+											<th><b>Voucher Balance</b></th>
+											<th><b>Redeemed On</b></th>
 										</tr>													
 										<?php $i=1;
 											foreach($ac_v->result_array() as $ac ){
@@ -566,6 +566,40 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 		</div>
 	</div>
 </div>
+
+<style>
+.mod_widget_small .mod_widget_content li {
+	margin: 0px;
+	padding: 6px;
+	clear: both;
+	overflow: hidden;
+	background: #FFF;
+	margin: 2px 0px;
+	height: auto;
+}
+.content_head span.row_label {
+float: left;
+font-size: 12px;
+text-align: right;
+width: 26%;
+color: #444;
+display: block;
+text-align: left;
+}
+.content_head span.value {
+color: #444;
+font-size: 12px;
+font-weight: bold;
+display: block;
+float: left;
+width: 70%;
+}
+.mod_widget_content,.mod_widget_title{border-color: #f1f1f1;border:none;}
+.mod_widget_content{height: 220px;background: #FaFaFa}
+.mod_widget_content li{border:none;border-top:1px dotted #f7f7f7;background: #fcfcfc;}
+.mod_widget_title{background: #D2B48C;}
+.mod_widget_title div.heading_wrap{color: #fff;}
+</style>
 
 <script>
 $('.tab_view').tabs();

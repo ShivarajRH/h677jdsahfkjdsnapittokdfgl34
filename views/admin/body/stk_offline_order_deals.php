@@ -1878,12 +1878,13 @@ $("#order_form").submit(function(){
 		 {
 			var menu_id=menuids[i];
 			var menu_qty=qty[i];
-			if(menu_qty>1 && mid!=0 && menu_id  == 112)
+			/*
+			if(menu_qty>1 && menu_id  == 112)
 			{
 				alert("More than 1 qty of Electronics Item for 1 member can't be processed");
 				return false;
 			}
-
+*/
 			if(mid==0 && menu_id != 112)
 			{
 				if(confirm("Instant Registration is required because Other than Electronic items are there in the Cart"))
@@ -1981,20 +1982,20 @@ $("#order_form").submit(function(){
 			 		$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 				 	 return false;
 				}
-		 	 	if(resp.new_mem==1 && resp.has_insurance==0 && total > min_ord )
+		 	 	if(resp.new_mem==1 && resp.has_insurance==0 && resp.total >= min_ord )
 				{
 					$('.offr_sel_type').val('1');
 					$(".new_member").val('1');
 					submit_order++;	
 				}
-				if(resp.new_mem==1 && resp.has_insurance==0 && total < min_ord)
+				if(resp.new_mem==1 && resp.has_insurance==0 && resp.total < min_ord)
 				{
 					$('.offr_sel_type').val('3');
 					$(".new_member").val('1');
 					submit_order++;
 					$("#order_form").submit();
 				}
-				if(resp.new_mem==0 && resp.has_insurance==0 )	
+				if(resp.new_mem==0 && resp.has_insurance==0 && resp.total >= min_ord)	
 				{
 					$('.offr_sel_type').val();
 					$(".new_member").val('0');

@@ -352,7 +352,7 @@
 													join m_rack_bin_info c on c.id = a.rack_bin_id  
 													where product_id=? 
 													group by mrp,pbarcode,a.location_id,a.rack_bin_id 
-													having sum(available_qty)>0 
+													having sum(available_qty)>=0 
 													order by mrp asc ";
 								?>
 								

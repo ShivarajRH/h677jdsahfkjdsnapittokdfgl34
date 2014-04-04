@@ -59,6 +59,8 @@ $route['data_api']="data/index";
 $route['pnh/(:any)']="pnh/$1";
 $route['pnh']="pnh";
 
+$route['vendor/(:any)']="vendor/$1";
+$route['vendor']="vendor";
 
 
 $urs=array("claim_points","destroybodp","productsforwholebody","live","history","startinviting","jx_checkoutstat","jx_checkoutcond","weeklysavings","loadfavs","shoppingcart","favs","opsearch","brands","getverifiedbymob","editqty","yourcart","checkout_inter","getverified","inviteforbp","inviteforbp_nonc","updatecrp","dashboard","spotlight","processPayment","myorders","jx_subscribe","jx_fdback","jx_alert","jx_request","recent","loginpanel","joinhands","jxcoupon","whatru","emailsignup","emailsignin","nomobile","gomobile","profile","changepwd","changeaddr","jxforpass");

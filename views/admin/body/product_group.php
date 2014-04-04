@@ -18,11 +18,12 @@
 <h4 style="margin:0px;margin-top:20px;">Products Linked</h4>
 
 <table class="datagrid">
-<thead><tr><th>Product Name</th><?php foreach($as as $a){?><th><?=$a['name']?></th><?php }?></tr></thead>
+<thead><tr><th>Product Name</th><th>Sourceable</th><?php foreach($as as $a){?><th><?=$a['name']?></th><?php }?></tr></thead>
 <tbody>
 <?php foreach($prods as $prod){?>
 <tr>
 <td><a href="<?=site_url("admin/product/{$prod['product_id']}")?>" class="link"><?=$prod['product_name']?></a></td>
+<td><?=$a['is_sourceable']?'Yes':'No'?></td>
 <?php foreach($this->db->query("select av.attribute_value as value from products_group_pids p join products_group_attribute_values av on av.attribute_value_id=p.attribute_value_id where p.group_id=? and p.product_id=?",array($group['group_id'],$prod['product_id']))->result_array() as $a){?>
 <td><?=$a['value']?></td>
 <?php }?>

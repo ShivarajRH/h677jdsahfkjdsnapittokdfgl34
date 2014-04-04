@@ -28,6 +28,11 @@ h2
 	width: auto;
 	height: auto;
 }
+.row_error_inp
+{
+	color:red;
+	font-weight:bold;
+}
 </style>
 
 <div class="container">
@@ -155,7 +160,7 @@ h2
 								<span class="imei_scanned_status">NO</span>
 								<a href="javascript:void(0)" class="view_imei" brandid="%brandid%" prodid="%prodid%">View</a>
 							</div>
-							<div class="row_error_inp"></div>
+							
 						</td>
 						
 						<td class="po_det_wrap_blk">
@@ -182,7 +187,7 @@ h2
 							<div class="po_qty_wrap">
 								<b>MRP(Rs.) <span class="red_star">*</span> : </b>
 										<input type="text" class="inp prod_mrp mrp_%prodid% readonly" readonly="readonly" name="mrp%pid%[]" size=5 pmrp="%mrp%" placeholder="%po_mrp%" po_mrp="%po_mrp%" dp_price="%dp_price%" prodid="%prodid%" value="">
-										
+										<div class="row_error_inp"></div>
 										<div class="upd_pmrp_blk" align="center">
 											<input type="checkbox" prodid="%prodid%" value="1" class="upd_pmrp upd_mrp_chk%prodid% fl_right" name="upd_pmrp%pid%[]" >
 											<input type="hidden" name="upd_pmrp_flag%pid%[]"  value="0" class="upd_pmrp_flag">
@@ -1312,7 +1317,14 @@ $('#add_barcode_dialog form').submit(function(){
 	var ttl_qty=$('.rqty',ref_trele).val();
 		//var product_name=$('.name',trele).text();
 		
-		if(isNaN(inp_barcode))
+	if(inp_barcode.length == 0)
+	{
+		inp_barcode='NOBARCODE';
+		$('#abd_barcode').val(inp_barcode);
+	}
+		
+		
+		if(!inp_barcode)
 		{
 			$('.error_inp',dlgEle).html("<div style='color:red !important;'>Please enter valid Barcode</div>");
 			return false;

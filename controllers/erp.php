@@ -2097,9 +2097,9 @@ class Erp extends Stream
 		$data['cur_pg']=$pg;
 		$data['perpage_limit']=$limit;
 		
-		
 		$data['total_orders']=$this->erpm->getordersbytransaction_date_range($status,$s,$e,-1,$limit,$orders_by);
 		$data['orders']=$this->erpm->getordersbytransaction_date_range($status,$s,$e,$pg,$limit,$orders_by);
+		
 		
 		$this->load->library('pagination');
 
@@ -6170,75 +6170,79 @@ group by g.product_id order by product_name");
 
 
 
-				//get insurance range details by menu and deal mrp
-				$insurance_det=$this->erpm->get_insurance_value_det($prod['menuid'],$prod['mrp']);
+					//get insurance range details by menu and deal mrp
+					$insurance_det=$this->erpm->get_insurance_value_det($prod['menuid'],$prod['mrp']);
 
-				$prod['insurance_value']=$insurance_det['insurance_value'];
-				$prod['insurance_margin']=$insurance_det['insurance_margin'];
-				$margin=$this->erpm->get_pnh_margin($fid,$pid);
+					$prod['insurance_value']=$insurance_det['insurance_value'];
+					$prod['insurance_margin']=$insurance_det['insurance_margin'];
+					$margin=$this->erpm->get_pnh_margin($fid,$pid);
 
-				if ($prod['is_combo'])
-					$prod['margin'] = $margin['combo_margin'];
-				else
-					$prod['margin'] = $margin['margin'];
-				$attr = "";
-				foreach ($this->db->query("select group_id from m_product_group_deal_link where itemid=?", $prod['id'])->result_array() as $g)
-				{
-					$group = $this->db->query("select group_id,group_name from products_group where group_id=?", $g['group_id'])->row_array();
-					$attr.="";
-					$anames = $this->db->query("select attribute_name_id,attribute_name from products_group_attributes where group_id=?", $g['group_id'])->result_array();
-					foreach ($anames as $a) {
-						$attr.="<b>{$a['attribute_name']} :</b><span><select class='attr' name='{$pid}_{$a['attribute_name_id']}'>";
-						$avalues = $this->db->query("select * from products_group_attribute_values where attribute_name_id=?", $a['attribute_name_id'])->result_array();
-						foreach ($avalues as $v)
-							$attr.="<option value='{$v['attribute_value_id']}'>{$v['attribute_value']}</option>";
-						$attr.='</select></span>';
-					}
-				}
-				$prod['lcost'] = round($prod['price'] - ($prod['price'] / 100 * $prod['margin']), 2);
-				$prod['attr'] = $attr;
-
-				$prod['confirm_stock'] = '';
-
-				//confirmation for prod stock check for shoes
-				if ($prod['menuid'] == 123)
-					$prod['confirm_stock'] = '<b><input type="checkbox" name="confirm_stock" value="1" > : </b><span>Footwear Stock Available</span>';
-
-				$prod['stock'] = (($stock_tmp[0][0]['stk'] > 0) ? $stock_tmp[0][0]['stk'] : 0);
-
-				$prod['max_allowed_qty'] = $this->db->query("select max_allowed_qty from king_dealitems where pnh_id = ? ", $pid)->row()->max_allowed_qty;
-				$prod['imei_disc'] = $this->erpm->get_franimeischdisc_pid($fid, $pid);
-
-				//to save the updated cart quantity
-				$prod['svd_cartqty'] = $this->db->query("select qty as cart_qty from pnh_api_franchise_cart_info where pid=? and franchise_id=? and status=1", array($pid, $fid))->row()->cart_qty;
-
-				// get pid super scheme
-				$prod['super_sch']=$this->erpm->get_fransuperschdisc_pid($fid, $pid);
-
-				// get pid ordered total for today.
-				$prod['max_ord_qty']=$this->erpm->get_maxordqty_pid($fid, $pid);
-
-				$prod['allow_order']=$this->erpm->do_stock_check(array($prod['id']));
-
-				$prod['is_publish']=$prod['publish'];
-			
-				$prod['is_sourceable']=$prod['is_sourceable'];
-
-				$prod['has_insurance'] = $prod['has_insurance'];
-				if($prod['is_group'])
-				{
-					$num_link_prdts = $this->db->query("select pd.itemid,count(*) as ttl_prdt from m_product_deal_link pd join king_dealitems di on di.id=pd.itemid where pd.itemid is not null and di.pnh_id=? group by pd.itemid",$pid)->row()->ttl_prdt;
-					if($num_link_prdts > 0)
+					if ($prod['is_combo'])
+						$prod['margin'] = $margin['combo_margin'];
+					else
+						$prod['margin'] = $margin['margin'];
+					$attr = "";
+					foreach ($this->db->query("select group_id from m_product_group_deal_link where itemid=?", $prod['id'])->result_array() as $g)
 					{
-						//,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals
-						$att_arry_set = $this->db->query("select a.id as attr_id,a.attr_name,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals,group_concat(pa.pid) as pids from king_dealitems di
-								join m_product_deal_link pd on pd.itemid = di.id
-								join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
-								join m_attributes a on a.id =  pa.attr_id
-								where di.pnh_id=? group by pa.attr_id",$pid)->result_array();
+						$group = $this->db->query("select group_id,group_name from products_group where group_id=?", $g['group_id'])->row_array();
+						$attr.="";
+						$anames = $this->db->query("select attribute_name_id,attribute_name from products_group_attributes where group_id=?", $g['group_id'])->result_array();
+						foreach ($anames as $a) {
+							$attr.="<b>{$a['attribute_name']} :</b><span><select class='attr' name='{$pid}_{$a['attribute_name_id']}'>";
+							$avalues = $this->db->query("select * from products_group_attribute_values where attribute_name_id=?", $a['attribute_name_id'])->result_array();
+							foreach ($avalues as $v)
+								$attr.="<option value='{$v['attribute_value_id']}'>{$v['attribute_value']}</option>";
+							$attr.='</select></span>';
+						}
+	
+					}
+					$prod['lcost'] = round($prod['price'] - ($prod['price'] / 100 * $prod['margin']), 2);
+					$prod['attr'] = $attr;
+	
+					$prod['confirm_stock'] = '';
+	
+					//confirmation for prod stock check for shoes
+					if ($prod['menuid'] == 123)
+						$prod['confirm_stock'] = '<b><input type="checkbox" name="confirm_stock" value="1" > : </b><span>Footwear Stock Available</span>';
+	
+					$prod['stock'] = (($stock_tmp[0][0]['stk'] > 0) ? $stock_tmp[0][0]['stk'] : 0);
+	
+					$prod['max_allowed_qty'] = $this->db->query("select max_allowed_qty from king_dealitems where pnh_id = ? ", $pid)->row()->max_allowed_qty;
+					$prod['imei_disc'] = $this->erpm->get_franimeischdisc_pid($fid, $pid);
+	
+					//to save the updated cart quantity
+					$prod['svd_cartqty'] = $this->db->query("select qty as cart_qty from pnh_api_franchise_cart_info where pid=? and franchise_id=? and status=1", array($pid, $fid))->row()->cart_qty;
+	
+					// get pid super scheme
+					$prod['super_sch']=$this->erpm->get_fransuperschdisc_pid($fid, $pid);
 
-						$att_arry='<div class="attributes_block"> <br>  <h4>There are '.$num_link_prdts.' linked products</h4>';
-						//$ttl_attrs = count($att_arry_set);
+					// get pid ordered total for today.
+					$prod['max_ord_qty']=$this->erpm->get_maxordqty_pid($fid, $pid);
+	
+	
+					$prod['allow_order']=$this->erpm->do_stock_check(array($prod['id']));
+	
+	
+					$prod['is_publish']=$prod['publish'];
+			
+					$prod['is_sourceable']=$prod['is_sourceable'];
+	
+	
+					$prod['has_insurance'] = $prod['has_insurance'];
+					if($prod['is_group'])
+					{
+						$num_link_prdts = $this->db->query("select pd.itemid,count(*) as ttl_prdt from m_product_deal_link pd join king_dealitems di on di.id=pd.itemid where pd.itemid is not null and di.pnh_id=? group by pd.itemid",$pid)->row()->ttl_prdt;
+						if($num_link_prdts > 0)
+						{
+							//,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals
+							$att_arry_set = $this->db->query("select a.id as attr_id,a.attr_name,group_concat(concat(pa.id,':',pa.attr_value)) as attr_vals,group_concat(pa.pid) as pids from king_dealitems di
+									join m_product_deal_link pd on pd.itemid = di.id
+									join m_product_attributes pa on pa.pid = pd.product_id and pa.is_active=1
+									join m_attributes a on a.id =  pa.attr_id
+									where di.pnh_id=? group by pa.attr_id",$pid)->result_array();
+	
+							$att_arry='<div class="attributes_block"> <br>  <h4>There are '.$num_link_prdts.' linked products</h4>';
+							//$ttl_attrs = count($att_arry_set);
 
 						$att_arry.=' <h3>Select attributes:</h3> <div>';
 
@@ -19385,13 +19389,13 @@ order by action_date";
 			if(	$catid)
 					$cond.='and catid= '.$catid;			
 			$brandlist_res=$this->db->query("SELECT DISTINCT menuid,brandid,b.name,catid
-												FROM `king_deals`a
-												JOIN  king_categories c ON c.id=a.catid
+												FROM king_deals a
+												JOIN king_categories c ON c.id=a.catid
 												JOIN king_brands b ON b.id=a.brandid
 												WHERE menuid2=0 $cond
 												GROUP BY brandid
 												order by  b.name 
-												");
+											");
 			if($brandlist_res->num_rows())
 			{
 				$output['brand_list']=$brandlist_res->result_array();
@@ -27812,7 +27816,6 @@ die; */
 	 */
     function jx_check_forvalid_mid()
     {
-		error_reporting(E_ALL);
 		$this->erpm->auth();
     	$mid_entrytype=$this->input->post('mid_entrytype');
     	$mid=$this->input->post('mid');
@@ -28474,9 +28477,9 @@ die; */
             
 			
             
-            $offers_insurance = $this->db->query("select a.*,b.user_id,b.first_name,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  where a.offer_type in (0,2) order by a.created_on desc limit 100")->result_array();
-            $offers_talktime = $this->db->query("select a.*,b.user_id,b.first_name,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100")->result_array();
-            $member_fee_list = $this->db->query("select a.*,b.user_id,b.first_name,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=3 order by a.created_on desc limit 100")->result_array(); 
+            $offers_insurance = $this->db->query("select a.*,b.user_id,b.first_name,f.*, date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  where a.offer_type in (0,2) order by a.created_on desc limit 100")->result_array();
+            $offers_talktime = $this->db->query("select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100")->result_array();
+            $member_fee_list = $this->db->query("select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=3 order by a.created_on desc limit 100")->result_array(); 
             /*
 			//define("MAX_REFERAL_COUNT",3);
 			$data['referral_offers'] = $this->db->query("select num_referred,referred_by,offer_value,floor(num_referred/?) as times from (
