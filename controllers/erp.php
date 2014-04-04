@@ -29120,7 +29120,7 @@ die; */
                             $required_credit=$d_total-$fran['current_balance'];
                             $e=1;$un="Balance in your account Rs {$fran['current_balance']}\n\nTotal order amount : Rs $d_total\n\n Required Credit : Rs.$required_credit";
                     }
-                    if($ttl_orders > 1 ) // && $d_total>=500 
+                    if($ttl_orders) // && $d_total>=500 
                             $new_mem=0;
                     else 
                             $new_mem=1;
