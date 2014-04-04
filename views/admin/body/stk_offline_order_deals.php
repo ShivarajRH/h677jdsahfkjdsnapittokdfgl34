@@ -1982,7 +1982,13 @@ $("#order_form").submit(function(){
 			 		$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 				 	 return false;
 				}
-		 	 	if(resp.new_mem==1 && resp.has_insurance==0 && resp.total >= min_ord )
+		 	 	if(resp.new_mem==1 && resp.has_insurance==0 && resp.total > min_ord )
+				{
+					$('.offr_sel_type').val('1');
+					$(".new_member").val('1');
+					submit_order++;	
+				}
+				if(resp.new_mem==1 && resp.has_insurance==0 && resp.total == min_ord )
 				{
 					$('.offr_sel_type').val('1');
 					$(".new_member").val('1');
@@ -1995,7 +2001,7 @@ $("#order_form").submit(function(){
 					submit_order++;
 					$("#order_form").submit();
 				}
-				if(resp.new_mem==0 && resp.has_insurance==0 && resp.total > min_ord)	
+				if(resp.new_mem==0 && resp.has_insurance==0)	
 				{
 					$('.offr_sel_type').val();
 					$(".new_member").val('0');
