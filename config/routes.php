@@ -52,8 +52,9 @@ $route['scaffolding_trigger'] = "oeifj8493utr8934j98t3ut89f34h89h3498t83ehfgwet8
 //$route['health']="deals/menu/Health-m2u";
 
 
-
 $route['data_api/(:any)']="data/index/$1";
+
+
 $route['data_api']="data/index";
 
 $route['pnh/(:any)']="pnh/$1";

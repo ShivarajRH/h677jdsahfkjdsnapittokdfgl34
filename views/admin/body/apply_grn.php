@@ -181,12 +181,13 @@ h2
 							<input type="text" class="inp iqty"  name="oqty%pid%[]" id="oqty_%prodid%" size=3 value="0">
 						</td>
 						<td>
-							<input type="text" class="inp vat_prc" placeholder="%vat%"  name="vat%pid%[]" id="vat_%prodid%" size=3 value="">
+							<input type="text" class="inp vat_prc" placeholder=""  name="vat%pid%[]" id="vat_%prodid%" size=3 value="%vat%">
 						</td>
                         <td style="text-align: center">
 							<div class="po_qty_wrap">
 								<b>MRP(Rs.) <span class="red_star">*</span> : </b>
-										<input type="text" class="inp prod_mrp mrp_%prodid% readonly" readonly="readonly" name="mrp%pid%[]" size=5 pmrp="%mrp%" placeholder="%po_mrp%" po_mrp="%po_mrp%" dp_price="%dp_price%" prodid="%prodid%" value="">
+										<input type="text" class="inp prod_mrp mrp_%prodid% readonly" readonly="readonly" name="mrp%pid%[]" size=5 pmrp="%mrp%" placeholder="" po_mrp="%po_mrp%" dp_price="%dp_price%" prodid="%prodid%" value="">
+								<b>Old MRP(Rs.) </b>%po_mrp%		
 										<div class="row_error_inp"></div>
 										<div class="upd_pmrp_blk" align="center">
 											<input type="checkbox" prodid="%prodid%" value="1" class="upd_pmrp upd_mrp_chk%prodid% fl_right" name="upd_pmrp%pid%[]" >
@@ -609,6 +610,8 @@ function reset_tabindex(row,cb)
 		tabindex_cnt++;
 		$('.validate_edit_mode',this).attr('tabindex',tabindex_cnt);
 		tabindex_cnt++;
+		$('#srch_barcode',this).attr('tabindex',tabindex_cnt);
+		tabindex_cnt++;
 	});
 	
 	$('.recv_qty_wrapper').attr('tabindex',tabindex_cnt);
@@ -912,10 +915,15 @@ $(function(){
 			$(".barcode"+scan_bc).addClass("bcode_scanned");
 		},500);
 		$(".barcode"+$(this).val()+' .scan_pbarcode').val($(this).val());
+		
+		$('#abd_barcode').val($(this).val());
+		
 		$(document).scrollTop($(".barcode"+$(this).val()).offset().top);
 		
 	}
 });
+
+
 
 $(".static_pos a").click(function(){
 		$($(this).parents("td").get(0)).show();
@@ -1315,6 +1323,7 @@ $('#add_barcode_dialog form').submit(function(){
 	var b_code=$("#add_barcode_dialog",this);
 	var inp_barcode=$("#abd_barcode").val();
 	var ttl_qty=$('.rqty',ref_trele).val();
+	var chk_prodid = $('#abd_pid').data('prodid');
 		//var product_name=$('.name',trele).text();
 		
 	if(inp_barcode.length == 0)
@@ -1322,8 +1331,7 @@ $('#add_barcode_dialog form').submit(function(){
 		inp_barcode='NOBARCODE';
 		$('#abd_barcode').val(inp_barcode);
 	}
-		
-		
+	
 		if(!inp_barcode)
 		{
 			$('.error_inp',dlgEle).html("<div style='color:red !important;'>Please enter valid Barcode</div>");
@@ -1496,6 +1504,7 @@ function process_edit_validation(cb) {
 		            if (ivat) {
 		                if (imrp) {
 		                	edt_trele.addClass('processed_mode');
+		                	$('#srch_barcode').select();
 		                } else {
 		                    $('.prod_mrp', edt_trele).addClass('error_inp');
 		                }

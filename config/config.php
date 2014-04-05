@@ -311,6 +311,18 @@ $config['time_reference'] = 'local';
 $config['rewrite_short_tags'] = FALSE;
 
 
+
+/**
+ * Application specific Config
+ */
+$config['po_status'] = array();
+$config['po_status'][0]='Open';
+$config['po_status'][1]='Partially Received';
+$config['po_status'][2]='Complete';
+$config['po_status'][3]='Cancelled';
+
+
+
 /*
 |--------------------------------------------------------------------------
 | Reverse Proxy IPs

@@ -6219,7 +6219,10 @@ group by g.product_id order by product_name");
 					// get pid ordered total for today.
 					$prod['max_ord_qty']=$this->erpm->get_maxordqty_pid($fid, $pid);
 	
+	
 					$prod['allow_order']=$this->erpm->do_stock_check(array($prod['id']));
+	
+	
 					$prod['is_publish']=$prod['publish'];
 			
 					$prod['is_sourceable']=$prod['is_sourceable'];
@@ -25548,12 +25551,12 @@ die; */
 		$prodid = $this->input->post('prodid');
 		$brandid = $this->input->post('brandid');
 		$imei_nos = $this->input->post('imeino');
-		
 		$imei_no_arr = explode(',',$imei_nos);
 		
 		$ttl_imei_entered = count($imei_no_arr);
 		
 		$imei_no_arr = array_filter(array_unique($imei_no_arr));
+		
 		
 		if(count($imei_no_arr) != $ttl_imei_entered)
 		{
@@ -28976,9 +28979,8 @@ die; */
             $ttl_orders=$this->db->query("SELECT COUNT(transid) as l
 											FROM king_orders 
 											WHERE userid=?   AND STATUS NOT IN (3) 
-											having SUM(i_price*quantity) >?",array($m_userid,MEM_MIN_ORDER_VAL))->row()->l;
-
-            $itemids=array();
+											having SUM(i_price*quantity) >= ?",array($m_userid,MEM_MIN_ORDER_VAL))->row()->l;
+			$itemids=array();
             $order_det=array();
             $e=0;
             foreach($pids as $pid)
@@ -29463,7 +29465,8 @@ die; */
                 
 	}
     	 
-     * Ajax function to get insurance details in update insurance block
+    /*
+	 * * Ajax function to get insurance details in update insurance block
      * @param type $insuranceid int
      */
     function jx_get_insurance_det($insuranceid='')
