@@ -516,16 +516,15 @@ table{
 				?>
 				<td align="right">
 					<?php
-                        if($order['has_insurance'] == 1)
-                        {
-                    ?>
-                             Rs. <?=formatInIndianStyle($order['insurance_amount']);?>
-                    <?php
-                        }
-                    ?>
+                                            if($order['has_insurance'] == 1)
+                                            {
+                                        ?>
+                                                <?=($order['insurance_amount']==0)?'Free':formatInIndianStyle($order['insurance_amount']);?>
+                                        <?php
+                                            }
+                                        ?>
 				</td>
-				<?php
-					}  
+				<?php 
 				$ttl_amt = number_format(round($item_total_amount));
 				?>
 				<td align="right"><?php echo ($order['status'] == 4)?'<strike>':'';?><?=$ttl_amt; ?><?php echo ($order['status'] == 4)?'</strike>':'';?></td>
@@ -675,11 +674,11 @@ table{
 							<td><b>COD/Handling/Packaging Charges</b></td>
 							<td align="right"><?=number_format($cod_ship_charges,2)?></td>
 						</tr>
-<?php                                           } 
-                                                    $mem_reg_fee = 0;
-                                                    $num_recharge_offer = $this->db->query("select * from pnh_member_offers where offer_type != 2  and mem_fee_applicable = 1 and process_status='0' and transid_ref = ? ",$order['transid'])->num_rows();
-                                                    if($num_recharge_offer)
-                                                    {
+						<?php        } 
+                            $mem_reg_fee = 0;
+                            $num_recharge_offer = $this->db->query("select * from pnh_member_offers where mem_fee_applicable = 1 and process_status='0' and transid_ref = ? ",$order['transid'])->num_rows();
+                            if($num_recharge_offer)
+                            {
 								$mem_reg_fee = PNH_MEMBER_FEE;
 						?>
 						<tr>
