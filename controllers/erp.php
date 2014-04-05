@@ -28965,7 +28965,7 @@ die; */
             $ttl_orders=$this->db->query("SELECT COUNT(transid) as l
 											FROM king_orders 
 											WHERE userid=?   AND STATUS NOT IN (3) 
-											having SUM(i_price*quantity) >?",array($m_userid,MEM_MIN_ORDER_VAL))->row()->l;
+											having SUM(i_price*quantity) >= ?",array($m_userid,MEM_MIN_ORDER_VAL))->row()->l;
 			$itemids=array();
             $order_det=array();
             $e=0;
