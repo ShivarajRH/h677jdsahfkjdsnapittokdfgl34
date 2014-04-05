@@ -7,10 +7,23 @@
      //echo '<pre>';print_r($insurance_det); die();
     $ins = $insurance_det[0];
     
+    //
+    
+    $item_det = $this->db->query("select di.name as dealname,di.pnh_id,d.menuid,mn.name as menuname,d.brandid,b.name as brandname,d.catid,c.name as catname from king_dealitems di
+                                    join king_deals d on d.dealid=di.dealid
+                                    join pnh_menu mn on mn.id=d.menuid
+                                    join king_brands b on b.id = d.brandid
+                                    join king_categories c on c.id = d.catid
+                                    where di.id=?",$ins['itemid'])->row_array();
+    
+
+    //$ins['transid']
     $filename=base_url()."resources/templates/template_insurance.php";
     $data =  file_get_contents($filename);
-    $data = str_replace("%%invoice_no%%", $ins['invoice_no'], $data);
+    $data = str_replace("%%itemid%%", $ins['orderid'], $data);
     $data = str_replace("%%created_on%%", date("d/m/Y",strtotime($ins['created_on'])), $data);
+    $data = str_replace("%%insured_product%%", $item_det['dealname'], $data);
+    $data = str_replace("%%product_type%%", $item_det['catname'], $data);
     echo $data;
     ?>
 <!-- %%invoice_no%% %%created_on%%-->

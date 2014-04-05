@@ -1709,13 +1709,14 @@ class Api_model extends Model
 			*/
 
 			$sql="select *,max(new_stat) as is_new from (
-									select b.id,a.version,b.item_id,b.mrp,b.price,b.is_publish,b.is_new as new_stat
-											from m_apk_version a
-											join m_apk_version_deal_link b on a.id=b.version_id
-											where b.version_id in (".implode(",",$version_ids).") 
-									order by b.id desc 
-								) as g
-								group by g.item_id ";
+						select b.id,a.version,b.item_id,b.mrp,b.price,b.is_publish,b.is_new as new_stat
+								from m_apk_version a
+								join m_apk_version_deal_link b on a.id=b.version_id
+								where b.version_id in (".implode(",",$version_ids).") 
+						order by b.id desc 
+					) as g
+					group by g.item_id,g.id
+					order by id asc";
 
 								
 			
@@ -1739,7 +1740,7 @@ class Api_model extends Model
 															cp.id as parent_cat_id,cp.name as parent_cat,brandid as pbrand_id,d.name as pbrand,
 															b.orgprice as pmrp,b.price as pprice,publish as is_sourceable,
 															b.gender_attr,b.url,b.is_combo,a.description as pdesc,a.keywords as kwds,
-															a.pic as pimg,b.pic as pimages,menuid as pimg_path,'' as attributes,
+															a.pic as pimg,a.pic as pimages,menuid as pimg_path,'' as attributes,
 															b.shipsin as shipin
 														from king_deals a
 														join king_dealitems b on a.dealid = b.dealid 

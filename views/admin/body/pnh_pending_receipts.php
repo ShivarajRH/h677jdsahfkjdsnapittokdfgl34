@@ -86,6 +86,8 @@ text-decoration: none;
 <div class="dash_bar<?=$type==4?" dash_bar_red":""?>"><a href="<?=site_url("admin/pnh_receiptsbytype/4")?>"></a>Processed Receipts</div>
 <div class="dash_bar<?=$type==3?" dash_bar_red":""?>"><a href="<?=site_url("admin/pnh_receiptsbytype/3")?>"></a>Realized Receipts</div>
 <div class="dash_bar<?=$type==5?" dash_bar_red":""?>"><a href="<?=site_url("admin/pnh_receiptsbytype/5")?>"></a>Bounced Cheques</div>
+<div class="dash_bar<?=$type==6?" dash_bar_red":""?>"><a href="<?=site_url("admin/pnh_receiptsbytype/6")?>"></a>Un-Reconciled Receipts</div>
+
 <?php }?>
 </br>
 <form action="<?php echo site_url('admin/pnh_receiptsbytype')?>" method="post">
@@ -109,7 +111,7 @@ text-decoration: none;
 		</div>
 </form>
 <div class="clear"></div>
-<?php $types=array("Total Receipts available with us","Today's Receipts for submission","Post Dated Cheques","Realized Receipts","Processed Receipts","Bounced Cheques");?><h2><?=$types[$type].' :: '.$total_rows .'  '.'Total Value of Rs '.formatInIndianStyle($total_value['total'])?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<?php $types=array("Total Receipts available with us","Today's Receipts for submission","Post Dated Cheques","Realized Receipts","Processed Receipts","Bounced Cheques","Un-Reconciled Receipts");?><h2><?=$types[$type].' :: '.$total_rows .'  '.'Total Value of Rs '.formatInIndianStyle($total_value['total'])?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <?=isset($pagetitle)?$pagetitle: ''?></h2>
 	<?php if($type==1){?>
 	<div id="submit_bank" style="float:right;margin-top:-40px;">
@@ -117,28 +119,50 @@ text-decoration: none;
 	</div>
 <?php }?>
 								<!-- Filter Block -->
+<?php
+    $terr_det_set = $this->db->query("SELECT a.franchise_id,b.territory_id,c.territory_name FROM pnh_t_receipt_info a JOIN `pnh_m_franchise_info`b ON b.franchise_id=a.franchise_id JOIN `pnh_m_territory_info`c ON c.id=b.territory_id WHERE b.is_suspended=0 GROUP BY territory_id order by territory_name asc")->result_array();
+//    echo '<pre>';print_r($terr_det_set);die();
+?>                                                  
 <div class="dash_bar_right">
-Territory :<select	id="disp_terry" name="disp_terry">
+Territory : 
+    
+    <select id="disp_terry" name="disp_terry">
 						<option value="0">All</option>
-						<?php foreach ($this->db->query("SELECT a.franchise_id,b.territory_id,c.territory_name FROM pnh_t_receipt_info a JOIN `pnh_m_franchise_info`b ON b.franchise_id=a.franchise_id JOIN `pnh_m_territory_info`c ON c.id=b.territory_id WHERE b.is_suspended=0 GROUP BY territory_id order by territory_name asc")->result_array() as $terr_det){?>
-		            	<option  value="<?php echo set_value('disp_terry',$terr_det['territory_id']);?>"
-		            	<?php echo $terr_det['territory_id']==$territory_id?>>
-		            	<?php echo $terr_det['territory_name']?>
-		            	</option>
-						<?php }?>
+                <?php foreach ($terr_det_set as $terr_det){
+                    if(isset($territory_id))
+                    {
+                    ?>
+                        <option  value="<?php echo set_value('disp_terry',$terr_det['territory_id']);?>" <?php echo ($terr_det['territory_id']==$territory_id)?"selected":""; ?>><?php echo $terr_det['territory_name']?></option>
+                <?php
+                    }
+                    else
+                    {?>
+                        <option  value="<?php echo set_value('disp_terry',$terr_det['territory_id']);?>"><?php echo $terr_det['territory_name']?></option>
+                <?php }
+                
+                }?>
        				</select>
 </div>
-     	
 <div class="dash_bar" style="max-width:495px;">
 Franchisee:<select id="disp_fran" style="width: 250px;">
 				<option value="0" >All</option>
-				<?php foreach ($this->db->query("SELECT a.franchise_id,b.franchise_name FROM pnh_t_receipt_info a JOIN `pnh_m_franchise_info`b ON b.franchise_id=a.franchise_id GROUP BY franchise_id
-												 order by franchise_name asc")->result_array() as $fran_det){?>
-            	<option id="fil_opt_fr_<?php echo $fran_det['franchise_id']; ?>"  value="<?php echo $fran_det['franchise_id'];?>"
-            	<?php echo $fran_det['franchise_id']==$this->uri->segment(4)?"selected":""?>>
-            	<?php echo $fran_det['franchise_name']?>
-            	</option>
-				<?php }?>
+                    <?php 
+                        foreach ($this->db->query("SELECT a.franchise_id,b.franchise_name FROM pnh_t_receipt_info a JOIN `pnh_m_franchise_info`b ON b.franchise_id=a.franchise_id GROUP BY franchise_id order by franchise_name asc")->result_array() as $fran_det)
+                        {
+                            if($fran_det['franchise_id'] == $seg_franid )
+                            {
+                            ?>
+                                <option id="fil_opt_fr_<?php echo $fran_det['franchise_id']; ?>"  value="<?php echo $fran_det['franchise_id'];?>" <?php echo ($fran_det['franchise_id'] == $seg_franid ) ? "selected":""; ?>><?php echo $fran_det['franchise_name']?></option>
+                        <?php
+                            }
+                            else
+                            {
+                        ?>
+                                <option id="fil_opt_fr_<?php echo $fran_det['franchise_id']; ?>"  value="<?php echo $fran_det['franchise_id'];?>"><?php echo $fran_det['franchise_name']?></option>
+                        <?php }
+
+                        }
+                    ?>
        	</select>
 </div>
 
@@ -493,7 +517,98 @@ if($no_days >=4 && $r['activated_on'] == 0)
 <?php }?>
 <?php }?>
 </table>
-<?php }?>
+<?php } elseif($type == 6)
+{
+    if($receipts){ ?>
+<table class="datagrid" width="100%">
+    
+    <thead><th>Receipt Details</th><th>Franchisee Name</th><th>Payment Details</th><!--<th>Processed Details</th><th>Cancelled Details</th> <th>Cancelled On</th><th>Cancelled By</th> --></thead>
+    <tbody>
+    <?php foreach($receipts as $r){?>
+    <tr class="fr_receipt_det" fr_id="<?php echo $r['franchise_id']?>">
+    <td class="receipt_det">
+    <div>
+    <table class="datagrid1" cellpadding="0" cellspacing="0">
+    <tr><td width="65"><b>Receipt Id</b></td><td><b>:</b></td><td><?=$r['receipt_id']?></td></tr>
+    <tr><td><b>Added on</b></td><td><b>:</b></td><td><?=format_datetime_ts($r['created_on'])?></td></tr>
+    <tr><td><b>Added by</b></td><td><b>:<b></td><td><?=$r['admin']?></td></tr>
+    </table>
+    </div>
+    </td>
+    <td><a href="<?=site_url("admin/pnh_franchise/{$r['franchise_id']}")?>"><?=$r['franchise_name']?></a></td>
+    <td>
+            <div>
+                    <table class="datagrid1" cellpadding="0" cellspacing="0">
+                            <tr><td width="80"><b>Mode</b></td><td><b>:</b></td><td><?php $modes=array("cash","Cheque","DD","Transfer");?><?=$modes[$r['payment_mode']]?></td></tr>
+                            <tr><td><b>Type</b></td><td><b>:</b></td><td><?=$r['receipt_type']==0?"Security Deposit":"Topup"?></td>
+                            <tr><td><b>Amount</b></td><td><b>:</b></td><td>Rs <?=$r['receipt_amount']?></td></tr> 
+                            <tr><td><b>Payment Date</b></td><td><b>:</b></td><td><?=date("d/m/Y",$r['instrument_date'])?></td></tr>
+                            <?php if($r['payment_mode']==1){?><tr><td><b>Cheque no</b></td><td><b>:</b></td><td><?=$r['instrument_no']?></td></tr><?php }?>
+                            <?php if($r['bank_name']){?><tr><td><b>Bank</b></td><td><b>:</b></td><td><?=$r['bank_name']?></td></tr><?php }?>
+                            <!--Reconcile Start block-->
+                                <?php if($r['receipt_type'] != 0 ) { ?>
+                                        <tr><td><b>Un-Reconciled Status</b></td><td><b>:</b></td><td><?php 
+                                            $franchise_id = $r['franchise_id'];
+                                            $receipt_id = $r['receipt_id'];
+                                            $receipt_amount = $r['receipt_amount'];
+                                            $unreconciled_status = $r['unreconciled_status'];
+                                            $unreconciled_value = $r['unreconciled_value'];
+
+                                               echo $unreconciled_status; 
+                                               echo " ( ".$unreconciled_value." )";?>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>Actions</b></td>
+                                            <td><b>:</b></td>
+                                            <td><?php 
+                                                if($unreconciled_value>0) { ?>
+                                                        <a href="javascript:void(0)" onclick="clk_reconcile_action(this,'<?=$receipt_id;?>','<?=$franchise_id;?>','<?=$receipt_amount;?>','<?=$unreconciled_value;?>')" class="button button-tiny button-action">Reconcile</a>
+                                                <?php } ?>
+                                                 &nbsp;
+                                                 <?php if($unreconciled_value != $receipt_amount) { ?>
+                                                    <a href="javascript:void(0)" onclick="clk_view_reconciled(this,'<?=$receipt_id;?>','<?=$franchise_id;?>')" class="button button-tiny button-primary">View Reconciled</a>
+                                                 <?php } ?></td>
+                                        </tr>
+                                <?php } ?>
+                            <!--Reconcile End block-->
+                    </table>
+            </div>
+    </td>
+
+<!--    <td>
+            <div>
+                    <table class="datagrid1" cellpadding="0" cellspacing="0">
+                    <tr><td><b>Bank</b></td><td>:</td><td><?=$r['submit_bankname']?></td></tr>
+                    <tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['submittedremarks']?></td></tr>
+                    <tr><td><b>Deposited On</b></td><td>:</td><td><?=format_date($r['submitted_on'])?></td></tr>
+                    <tr><td><b>Deposited By</b></td><td>:</td><td><?=$r['submitted_by']?></td></tr>
+                    </table>
+            </div>
+
+    </td>-->
+<!--    <td>
+            <div>
+                    <table class="datagrid1" cellpadding="0" cellspacing="0">
+                    <tr><td width="80"><b>Cancel Status</b></td><td><b>:</b></td><td><?php $cstatus=array("Reversed","Return","Bounce");?><?=$cstatus[$r['cancel_status']];?></td></tr>
+                    <tr><td><b>Cheque Cancelled On</b></td><td><b>:</b></td><td><?=$r['cheq_cancelled_on']!=null?format_date($r['cheq_cancelled_on']):format_datetime($r['modified_on'])?></td></tr>
+                    <tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$r['cancel_reason']?$r['cancel_reason']:$r['reason']?></td></tr>
+                    <tr><td><b>Updated By</b></td><td><b>:</b></td><td><?= $r['activated_by']?$r['activated_by']:$r['reversed_by']?> </td></tr>
+                    <tr><td><b>Updated On</b></td><td><b>:</b></td><td><?=$r['cancelled_on']!=null?format_datetime($r['cancelled_on']):format_datetime_ts($r['modified_on'])?></td></tr>
+                    </table>
+            </div>
+    </td>-->
+    </tr>
+    </tbody>
+    
+<?php } ?>
+</table>
+<?php } else {?>
+        <h4 align="center">No Data found</h4>
+<?php }
+}
+?>
+
 &nbsp;&nbsp;
 <?php if($type==1){?>
 <div id="submit_bank">With Selected:<input type="button" value="Submit To Bank" onclick="load_bankdetails()"></div>

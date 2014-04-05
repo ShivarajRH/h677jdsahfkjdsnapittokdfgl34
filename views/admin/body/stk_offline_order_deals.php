@@ -180,7 +180,8 @@ $fran_status_arr[3]="Temporary Suspension";
 				<input type="hidden" name="insurance[address]" class="member_address" value="" style="display:none;">
 				<input type="hidden" name="insurance[city]" class="member_city" value="" style="display:none;">
 				<input type="hidden" name="insurance[pincode]" class="member_pincode" value="" style="display:none;">
-				<input type="hidden" name="insurance[proofname]" class="othrs_proofname" value="" style="display:none;">
+				<input type="hidden" name="insurance[proof_name]" class="othrs_proofname" value="" style="display:none;">
+				
 				
 				
 				<div style="clear:both;overflow: hidden;background: #fcfcfc">
@@ -364,8 +365,13 @@ $fran_status_arr[3]="Temporary Suspension";
 					<span></span>
 					<div class="sch_wrap">
 						<div>%super_sch%</div>
+						<!--<div class="blue">%has_insurance%</div>-->
+						<?php
+							$menus_range=$this->db->query('select * from pnh_member_insurance_menu order by id asc');
+						?>
+						<div class="">%opt_insurance%</div>
+						<div class="opt_wrap">
 						<div class="blue">%has_insurance%</div>
-						<div class="opt_wrap">%opt_insurance%
 							 <div class="tooltip_description" style="display:none" title="Insurance Details">
 									<b>New Customer :</b> 
 									<table border='1' width="100%" style="margin-bottom:10px">
@@ -373,14 +379,15 @@ $fran_status_arr[3]="Temporary Suspension";
 											<th width="50%">Price Range</th>
 											<th width="50%">Insurance Cost</th>
 										</tr>
+									<?php foreach($menus_range as $m){ ?>
 										<tr>
-											<td><b>Rs 500 -- Rs 10000 </b></td>
-											<td align="center"><b>Free</b></td>
+										<td><b>Rs. <?=$m['greater_than']?> -- Rs <?=$m['less_than']?> </b></td>
+										<td align="center"><b><?=$m['insurance_value']?></b></td>
 										</tr>
-										<tr>
-											<td><b>Rs 10000 -- Rs 20000 </b></td>
-											<td align="center"><b>Rs 100\</b></td>
-										</tr>
+									<?php
+									}
+									?>
+									
 									</table>
 									<b>Existing Customer :</b> 
 									<table border='1' width="100%">
@@ -533,32 +540,32 @@ $fran_status_arr[3]="Temporary Suspension";
 				<span class="form_label_wrap">Last Name :</span>
 				<span class="form_input_wrap"><input class="max_width" type="text" name="i_memberlname" id="i_memberlname" value="" ></span>
 				
-				<span class="form_label_wrap">Mobile :</span>
+				<span class="form_label_wrap">Mobile <span class="red_star">*</span>:</span>
 				<span class="form_input_wrap"><input class="max_width" type="text" name="i_membermob" id="i_membermob" value="" data-required="true"></span>
 				
-				<span class="form_label_wrap" style="height:63px !important">Address <span class="red_star">*</span>: </span>
-				<span class="form_input_wrap" style="height:63px !important"><textarea class="max_width"  name="i_member_add" id="i_member_add" value="" data-required="true"></textarea></span>
+<!--				<span class="form_label_wrap" style="height:63px !important">Address : </span>
+				<span class="form_input_wrap" style="height:63px !important"><textarea class="max_width"  name="i_member_add" id="i_member_add"></textarea></span>-->
 				
-				<span class="form_label_wrap">Proof Type<span class="red_star">*</span>:</span>
+				<span class="form_label_wrap">Proof Type:</span>
 				<span class="form_input_wrap">
-					<select name="crd_insurence_type" class="max_width"  data-required="true" id="crd_insurence_type">
-							<option value="">Select</option>
-									<?php $insurance_types=$this->db->query("select * from insurance_m_types order by name asc")->result_array();
-										if($insurance_types){
-										foreach($insurance_types as $i_type){
-									?>
-										<option value="<?php echo $i_type['id']?>"><?php echo $i_type['name']?></option>
-									<?php }}?>
+					<select name="crd_insurence_type" class="max_width" id="crd_insurence_type">
+                                                    <option value="">Select</option>
+                                                    <?php $insurance_types=$this->db->query("select * from insurance_m_types order by name asc")->result_array();
+                                                            if($insurance_types){
+                                                            foreach($insurance_types as $i_type){
+                                                    ?>
+                                                            <option value="<?php echo $i_type['id']?>"><?php echo $i_type['name']?></option>
+                                                    <?php }}?>
 					</select>
 				</span>
-				<span class="othrs_proofname form_label_wrap">Proof Name <span class="othrs_proofname red_star">*</span>:</span>
-				<span class="othrs_proofname form_input_wrap"><input class="max_width" type="text" name="proof_name" value="" ></span>
-			
-				<span class="form_label_wrap">Proof Id<span class="red_star">*</span>:</span>
-				<span class="form_input_wrap"><input class="max_width" type="text" name="crd_insurence_id" value="" data-required="true"></span>
+		 		<span class="othrs_proofname form_label_wrap">Proof Name :</span>
+				<span class="othrs_proofname form_input_wrap"><input class="max_width" type="text" name="proof_name" id="proof_name" value=""></span>
 				
-				<span class="form_label_wrap" style="height:63px !important">Proof Address<span class="red_star">*</span>:</span>
-				<span class="form_input_wrap" style="height:63px !important"><textarea class="max_width" name="crd_insurance_mem_address" value="" data-required="true" id="crd_insurance_mem_address"></textarea></span>
+				<span class="form_label_wrap">Proof Id:</span>
+				<span class="form_input_wrap"><input class="max_width" type="text" name="crd_insurence_id" value=""></span>
+				
+				<span class="form_label_wrap" style="height:63px !important">Proof Address:</span>
+				<span class="form_input_wrap" style="height:63px !important"><textarea class="max_width" name="crd_insurance_mem_address" id="crd_insurance_mem_address"></textarea></span>
 				
 				<span class="form_label_wrap">City :</span>
 				<span class="form_input_wrap"><input class="max_width" type="text" name="i_member_city" id="i_member_city" value=""></span>
@@ -587,8 +594,9 @@ $fran_status_arr[3]="Temporary Suspension";
 </style>
 <script>
 $('.othrs_proofname').hide();
-$("#crd_insurence_type").live('change',function(){
-	
+
+$("#crd_insurence_type").live('change',function()
+{
 	if($(this).val()==4)
 	{
 		$('.othrs_proofname').show();
@@ -597,7 +605,7 @@ $("#crd_insurence_type").live('change',function(){
 	{
 		$('.othrs_proofname').hide();
 	}
-	
+
 });
     function get_attributes(e) {
          var attribute_id = $(e).find(":selected").val();
@@ -675,7 +683,7 @@ $('.insurance_srn').change(function(){
 					$("#i_memberfname").val(resp.i_memdet.first_name);
 					$("#i_memberlname").val(resp.i_memdet.last_name);
 					$("#i_membermob").val(resp.i_memdet.mobile);
-					$("#i_member_add").val(resp.i_memdet.address);
+//					$("#i_member_add").val(resp.i_memdet.address);
 					$("#i_member_city").val(resp.i_memdet.city);
 					$("#i_member_pcode").val(resp.i_memdet.pincode);
 				}
@@ -910,11 +918,11 @@ $(function(){
 	
 });
 
-$(".opt_wrap").live('mouseover',function(){
-	
-	$(".opt_wrap").tooltip();
-});
-
+//$(".view_insu_details").live('mouseover',function(){	$(".opt_wrap").tooltip();});
+function view_insu_details(elt)
+{
+	$(".opt_wrap").tooltip({'dialog_content_selector' : 'div.tooltip_description'});
+}
   
 
 $(".sel_all").live('click',function(){
@@ -1171,7 +1179,7 @@ $('.stock_det_close').live("click",function(){
 
 function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 {
-//	$('.jq_alpha_sort_overview_content').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
+	//$('.jq_alpha_sort_overview_content').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
 	
 	$('.sk_deal_container').css('opacity','0.5');
 	if(catid != 0 && brandid==0)
@@ -1219,7 +1227,6 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 			$('.jq_alpha_sort_overview_content .sk_deal_container tbody').prepend('<tr class="loading_data"></tr>');
 		else
 			$('.sk_deal_container').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
-	
 
 	$.post(site_url+'/admin/jx_deallist_bycat',{brandid:brandid,catid:catid,type:type,pre_selected_fid:pre_selected_fid,dealid:dealid},function(resp){
 		$('.sk_deal_container').css('opacity','1');
@@ -1654,11 +1661,11 @@ var ppids=[];
 								if(p.has_insurance==1)
 								{
 									has_insurance_dl++;
-										template=template.replace(/%has_insurance%/g,"Insurance : <span style='font-size:11px;color:#000;'>Yes</span> ");
+        								template=template.replace(/%has_insurance%/g,"Insurance : <span style='font-size:11px;color:#000;' onmouseover='view_insu_details(this);'>Yes</span> ");
 									if(p.insurance_value!=null && p.insurance_margin!=null)
-											template=template.replace(/%opt_insurance%/g,"<input type='checkbox' style='margin-top:-1px' name='opt_insurance[]' class='opt_insurance' value='"+p.pid+"'> <span style='font-size:11px;color:#000;float:right;'>: Opting Insurance</span> ");
-									else
-											template=template.replace(/%opt_insurance%/g," ");	
+                                                                                template=template.replace(/%opt_insurance%/g,"<input type='checkbox' style='margin-top:-1px' name='opt_insurance[]' class='opt_insurance' value='"+p.pid+"'><span style='font-size:11px;color:#000;float:right;'>:Opting Insurance</span>");
+                                                                        else
+                                                                                template=template.replace(/%opt_insurance%/g," ");	
 								
 								}
 								else
@@ -3043,7 +3050,7 @@ $("#franchise_quickview").dialog({
 				$("select[name='crd_insurence_type']").val("");
 				$("input[name='crd_insurence_id']").val("");
 				$("#crd_insurance_mem_address").val("");
-				$('input[name="proof_name"]').val("");
+				$('#proof_name').val("");
 				$(".opted_insurance_deal").val(dlg.data('insuranceids'));
 				var order_det = $(this).data('order_det');
 				var insuranceid =[];
@@ -3086,15 +3093,16 @@ $("#franchise_quickview").dialog({
 					var mem_fname=$('#i_memberfname').val();
 					var mem_lname=$('#i_memberlname').val();
 					var mem_mobno=$('#i_membermob').val();
-					var mem_address=$('#i_member_add').val();
+//					var mem_address=$('#i_member_add').val();
 					var mem_city=$('#i_member_city').val();
 					var mem_pincode=$('#i_member_pcode').val();
-					var proof_name=$('input[name="proof_name"]').val();
+					var proof_name=$('#proof_name').val();
 					$(".opted_insurance_deal").val(dlg.data('insuranceids'));
 					$('.opted_insurance').val(opted_insurence);
 					$('.proof_type').val(proof_type);
 				  	$('.proof_id').val(proof_id);
 				  	$('.proof_address').val(proof_address);
+				  	$('.othrs_proofname').val(proof_name);
 
 				  	$('.member_fname').val(mem_fname);
 				  	$('.member_lname').val(mem_lname);

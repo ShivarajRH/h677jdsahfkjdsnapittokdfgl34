@@ -8947,17 +8947,31 @@ order by p.product_name asc
                     }
                 
                 }
+                
+                $proof_type_id = $insurance['proof_type'];
+                if($proof_type_id == 'others')
+                {
+                    $proof_type_id = $this->db->query("select id from `insurance_m_types` where `name` = ?",$insurance['proof_name'])->row()->id;
+                    //is proof already exists in proof table?
+                    if( $proof_type_id === null)
+                    {
+                        //insert into
+                        $this->db->query("INSERT INTO `insurance_m_types` (`name`) VALUES (?);",$insurance['proof_type']);
+                        $proof_type_id = $this->db->insert_id();
+                    }
+                }
+                
                 //die($order_val."-".$insurance_value);
                 $time = date("Y-m-d H:i:s",time());
-                $insurance_id = random_string("nozero", $len=2).time(); //random_string("alnum", $len=2).random_string("nozero", $len=10); //alnum,numeric;
+                //$insurance_id = random_string("nozero", $len=2).time(); //random_string("alnum", $len=2).random_string("nozero", $len=10); //alnum,numeric;
                 $in_data = array(
-                    'insurance_id'=> $insurance_id
-                    ,'fid'=>$insurance['fid']
+                    #'insurance_id'=> $insurance_id
+                    'fid'=>$insurance['fid']
                     ,'mid'=>$insurance['mid']
                     ,'menu_log_id'=> $menu_log_id
                     ,'offer_type'=>$insurance['offer_type']
                     ,'proof_id' => $insurance['proof_id']
-                    ,'proof_type'=>$insurance['proof_type']
+                    ,'proof_type'=>$proof_type_id
                     ,'proof_address'=> $insurance['proof_address']
                     ,'opted_insurance'=> $insurance['opted_insurance']
                     ,'offer_status'=> 0
@@ -8975,7 +8989,7 @@ order by p.product_name asc
                 );
                 //echo '<pre>';print_r($in_data);die();
                 $this->db->insert("pnh_member_insurance",$in_data);
-                $insu_log_id = $this->db->insert_id();
+                $insurance_id = $this->db->insert_id();
                 
                 // Update to king_orders of insurance value & id
                 $up_in=array(
@@ -11597,7 +11611,7 @@ order by action_date";
 	function sendsms_franchise_shipments($invoices='',$d_total=0)
 	{
 		
-		$sql_trans = "select inv.invoice_no,a.id,e.franchise_id,a.itemid,group_concat(b.name) as itemname,concat(b.print_name,'-',b.pnh_id) as print_name,i_orgprice,login_mobile1,i_price,i_coup_discount,i_discount,group_concat(a.quantity) as qty,c.menuid,a.transid,f.franchise_id,f.franchise_name
+		$sql_trans = "select inv.invoice_no,a.id as orderid,e.franchise_id,a.itemid,group_concat(b.name) as itemname,concat(b.print_name,'-',b.pnh_id) as print_name,i_orgprice,login_mobile1,i_price,i_coup_discount,i_discount,group_concat(a.quantity) as qty,c.menuid,a.transid,f.franchise_id,f.franchise_name
 							,mi.first_name,mi.pnh_member_id,mi.mobile
 							from king_invoice inv
 							join king_orders a on a.id=inv.order_id
@@ -11624,15 +11638,12 @@ order by action_date";
 			
 			foreach($res_trans->result_array() as $row_trans)
 			{
-				
 				if(!isset($fran_shipment_sms[$row_trans['franchise_id']]))
 				{
 					$fran_shipment_sms[$row_trans['franchise_id']] = array();
 					$fran_det[$row_trans['franchise_id']] = array($row_trans['franchise_name'],$row_trans['login_mobile1']);
 					$mem_det[$row_trans['franchise_id']] = array($row_trans['first_name'],$row_trans['mobile'],$row_trans['pnh_member_id']);
 				}
-					
-				
 				$fran_shipment_sms[$row_trans['franchise_id']][] = " invoice no(".$row_trans['invoice_no'].") with ".$row_trans['print_name']." products and ".$row_trans['qty']." qty ";
 			}
 			
@@ -11644,10 +11655,13 @@ order by action_date";
 				$mem_name = $mem_det[$fr_id][0];
 				$mem_mobile = $mem_det[$fr_id][1];
 				$pnh_member_id = $mem_det[$fr_id][2];
-				
-				$mem_msg="Dear ".$mem_name.", your ".implode(',',$fr_sms_list)." is shipped successfully, please expect delivery in 48 hours";
+                // Check if is registered member 
+                if($mem_mobile != '' && strlen($mem_mobile)>=10)
+                {
+                    $mem_msg="Hello ".$mem_name.", Your ".$row_trans['qty']." products of order ".$row_trans['orderid']." is shipped today, Please expect delivery shortly.";
 
-				$this->erpm->pnh_sendsms($mem_mobile,$mem_msg,$fr_id,$pnh_member_id,'MEM_SHIP_SMS');
+                    $this->erpm->pnh_sendsms($mem_mobile,$mem_msg,$fr_id,$pnh_member_id,'MEM_SHIP_SMS');
+                }
 				
 			}
 
@@ -13001,7 +13015,7 @@ order by action_date";
     		if($notify_mem==1) //strlen($inv_det['mobile']) == 10 &&
     		{
     			// Delivery sms
-                        $cus_sms = 'Your '.$inv_det['ttl_items'].' products of order '.$inv_det['transid'].'  is delivered today to ('.ucwords($inv_det['franchise_name']).'-'.ucwords($inv_det['login_mobile1']).')]. Please collect it ,we are open from [10:00AM to 8:00PM].';
+                        $cus_sms = 'Your '.$inv_det['ttl_items'].' products of order '.$inv_det['transid'].'  is delivered today to ('.ucwords($inv_det['franchise_name']).'-'.ucwords($inv_det['login_mobile1']).') Please collect it ,we are open from [10:00AM to 8:00PM].';
     			$this->erpm->pnh_sendsms($inv_det['mobile'],$cus_sms,$inv_det['franchise_id'],0,'MEM_DELIVERY_SMS');
                         
                         //if( $this->is_transid_have_member_offer($inv_det['transid']) )
@@ -13011,9 +13025,11 @@ order by action_date";
                             $member_id=$inv_det['pnh_member_id'];
                             $feedback_sms = $inv_det['first_name'].'!!, What are you waiting for!! To avail your further offers, Just reply & complete the Feedback process by rating our service with any number from 1 to '.MAX_RATE_VAL.'. FORMAT: R&lt;space&gt;5.';
                             $this->erpm->pnh_sendsms($inv_det['mobile'],$feedback_sms,$inv_det['franchise_id'],0,'MEM_FEEDBACK');
+                            
+                            //Set member offers status
+                            $this->erpm->update_offer_order_status($inv_det['transid']);
+                        
                         }
-                        //Set member offers status
-                        $this->erpm->update_offer_order_status($inv_det['transid']);
                         
     		}
     

@@ -272,6 +272,7 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
                 <th>Type</th>
                 <th>Value</th>
                 <th>Status</th>
+                <th>Action</th>
             </tr>
             
             <?php
@@ -287,10 +288,10 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
                 <td><a href="<?=site_url("/admin/pnh_viewmember/".$offer['user_id']);?>" target="_blank"><?=$offer['first_name'];?></a></td>
                 <td><?=$arr_offer_type[$offer['offer_type']];?></td>
                 <td>Rs. <?=formatInIndianStyle($offer['offer_value']);?></td>
-                <td><?=$arr_offer_status[$offer['process_status']];?>
-                	<?php if($offer['process_status'] == '1'){ ?>
+                <td><?=$arr_offer_status[$offer['process_status']];?></td>
+                <td><?php if($offer['process_status'] == '1' ){ ?>
                     	<a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank">View</a>
-                    <?php } ?>
+                    <?php } else echo '--'; ?>
                 </td>
             </tr>
             <!--<div style="padding:4px 5px;border-bottom:1px solid #DDDDDD;">Rs. <?=formatInIndianStyle($offer['offer_value']);?> worth of <?=$arr_offer_type[$offer['offer_type']];?> given</div>-->
@@ -724,7 +725,7 @@ $allow_qty_chng = 0;
 	<td><?=$ticket['updated_on']?></td>
 	</tr>
 	<?php } if(empty($tickets)){?>
-	<tR><td colspan="100%">no tickets raised</td></tR>
+	<tr><td colspan="100%">no tickets raised</td></tr>
 	<?php }?>
 	</tbody>
 	</table>

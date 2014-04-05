@@ -29,27 +29,28 @@ if(!function_exists('format_price')){
 * Function to display json error output and stop the execution
 * @param type $msg String / Array
 * @param type $rtype string
-* @example if(!$itemid) $this->print_error("Item id doesnot exists!");
-* @example if(!$itemid) $this->print_error(array("status"=>"fail","message"=>"Item id doesnot exists!" ));
+* @example if(!$itemid) output_error("Item id doesnot exists!");
+* @example if(!$itemid) output_error(array("status"=>"fail","message"=>"Item id doesnot exists!" ));
 */
-if(!function_exists('print_error')) {
-    function print_error($msg,$rtype='json') {
+if(!function_exists('output_error')) {
+    function output_error($msg,$rtype='json',$status='error') {
         if(is_array($msg)) {
+            $msg['status'] = $status;
             $rdata = $msg;
         }
         else {
-            $rdata = array("status"=>"fail","message"=>$msg);
+            $rdata = array("status"=>$status,"message"=>$msg);
         }
         echo json_encode($rdata);
         die();
     }
 }
 /**
- * Same as print_error() helper function
+ * Same as output_error() helper function ,input array or string
  */
-if(!function_exists('print_msg')) {
-    function print_msg($msg,$rtype='json') {
-        print_error($msg,$rtype); // redirect to print_error();
+if(!function_exists('output_data')) {
+    function output_data($msg,$rtype='json') {
+        output_error($msg,$rtype,"success"); // redirect to output_error();
     }
 }
 ?>

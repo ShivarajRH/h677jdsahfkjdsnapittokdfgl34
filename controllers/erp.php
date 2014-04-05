@@ -6219,10 +6219,7 @@ group by g.product_id order by product_name");
 					// get pid ordered total for today.
 					$prod['max_ord_qty']=$this->erpm->get_maxordqty_pid($fid, $pid);
 	
-	
 					$prod['allow_order']=$this->erpm->do_stock_check(array($prod['id']));
-	
-	
 					$prod['is_publish']=$prod['publish'];
 			
 					$prod['is_sourceable']=$prod['is_sourceable'];
@@ -25551,6 +25548,7 @@ die; */
 		$prodid = $this->input->post('prodid');
 		$brandid = $this->input->post('brandid');
 		$imei_nos = $this->input->post('imeino');
+		
 		$imei_no_arr = explode(',',$imei_nos);
 		
 		$ttl_imei_entered = count($imei_no_arr);
@@ -25563,7 +25561,8 @@ die; */
 			$output['error'] = 'Duplicate IMEI nos entered';
 		}else
 		{		
-			$resp = $this->db->query("select * from t_imei_no t join m_product_info p on p.product_id=t.product_id where p.brand_id=".$brandid." and imei_no in ('$imei_nos')");
+			$imei_nos_fmt = '"'.implode('","',$imei_no_arr).'"';
+			$resp = $this->db->query("select * from t_imei_no t join m_product_info p on p.product_id=t.product_id where p.brand_id=".$brandid." and imei_no in (".$imei_nos_fmt.")");
 			if(!$resp->num_rows())
 			{
 				$output['status'] = 'success';
@@ -27816,6 +27815,7 @@ die; */
 	 */
     function jx_check_forvalid_mid()
     {
+		error_reporting(E_ALL);
 		$this->erpm->auth();
     	$mid_entrytype=$this->input->post('mid_entrytype');
     	$mid=$this->input->post('mid');
@@ -28012,7 +28012,7 @@ die; */
     {
         $this->auth(true);
         
-        if(!$itemid) $this->print_error("Item id doesnot exists!");
+        if(!$itemid) output_error("Item id doesnot exists!");
         
         $arr_stk = array();
         $deal_pstk = $this->erpm->do_stock_check(array($itemid),array(1),true);
@@ -28110,7 +28110,7 @@ die; */
             
         }
         else 
-            $this->print_error("Item id doesnot exists!");
+            output_error("Item id doesnot exists!");
         
         
         echo json_encode($arr_stk);
@@ -28423,7 +28423,7 @@ die; */
         function jx_get_cat_attributes($cat_id='',$pid='')
         {
             $this->erpm->auth(true);
-            if($cat_id == '') print_error("Categoryid not found");
+            if($cat_id == '') output_error("Categoryid not found");
             
             $rdata = array();
             $ar_cat_list = $this->db->query("select a.id,a.attr_name,pa.attr_value,pa.pid from king_categories c
@@ -28431,7 +28431,7 @@ die; */
                                                 left join m_product_attributes pa on pa.attr_id = a.id and pa.is_active=1 and pa.pid= ? and pa.pcat_id = c.id
                                                 where c.attribute_ids !='' and c.id= ? ",array($pid,$cat_id) );
             if($ar_cat_list->num_rows() == 0)
-                print_msg("No Categories found");
+                output_data("No Categories found");
             else
             {
                 $rdata['status'] = 'success';
@@ -28467,19 +28467,23 @@ die; */
         
         function manage_offers()
         {
-            $this->erpm->auth();
+            $user = $this->erpm->auth();
             $insu_franchisee_arr=array();
             $insu_territory_arr=array();
             $insu_town_arr=array();
             $recharge_franchisee_arr=array();
             $recharge_territory_arr=array();
-			$recharge_town_arr=array();
+            $recharge_town_arr=array();
             
 			
             
-            $offers_insurance = $this->db->query("select a.*,b.user_id,b.first_name,f.*, date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id  where a.offer_type in (0,2) order by a.created_on desc limit 100")->result_array();
-            $offers_talktime = $this->db->query("select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100")->result_array();
-            $member_fee_list = $this->db->query("select a.*,b.user_id,b.first_name,f.*,date(from_unixtime(a.created_on)) as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=3 order by a.created_on desc limit 100")->result_array(); 
+            $offers_insurance = $this->db->query("select a.*,b.user_id,b.first_name,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,a.created_on as date 
+                from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id 
+                join pnh_m_franchise_info f on f.franchise_id= a.franchise_id 
+                where a.offer_type in (0,2) order by a.created_on desc limit 100")->result_array();
+            
+            $offers_talktime = $this->db->query("select a.*,b.user_id,b.first_name,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,a.created_on as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=1 order by a.created_on desc limit 100")->result_array();
+            $member_fee_list = $this->db->query("select a.*,b.user_id,b.first_name,f.franchise_id,f.franchise_name,f.territory_id,f.town_id,a.created_on as date from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id join pnh_m_franchise_info f on f.franchise_id= a.franchise_id where a.offer_type=3 order by a.created_on desc limit 100")->result_array(); 
             /*
 			//define("MAX_REFERAL_COUNT",3);
 			$data['referral_offers'] = $this->db->query("select num_referred,referred_by,offer_value,floor(num_referred/?) as times from (
@@ -28514,19 +28518,20 @@ die; */
             $this->load->view("admin",$data);
         }
 		
-		/*Ajax function to discard member details 
+        /* Ajax function to discard member details 
          * unknown type @transid,@member id
          * 
          */
         function process_member_offer()
         {
+            $user = $this->erpm->auth();
             $member_id=$this->input->post('member_id');
             $transid=$this->input->post('transid_ref');
             $fid=$this->input->post('fid');
             $offer_type=$this->input->post('offer_type');
            
             $this->db->query("update pnh_member_offers set process_status=1 where member_id=? and transid_ref=? and delivery_status=1 and feedback_status=1;",array($member_id,$transid));
-            $this->db->query("insert pnh_member_offers_log(fid,mid,offer_type,status) values(?,?,?,?)",array($fid,$member_id,$offer_type,'Processed'));
+            $this->db->query("insert pnh_member_offers_log(fid,mid,offer_type,status,now(),created_by) values(?,?,?,?,?)",array($fid,$member_id,$offer_type,'Processed',$user['userid']));
 
             if($this->db->affected_rows())
             {
@@ -28927,16 +28932,21 @@ die; */
 	}
 
 
-   
+    /**
+     * View Member Insurance Form
+     * @param type $insuranceid
+     */
     function insurance_print_view($insuranceid='')
     {
+            $this->erpm->auth();
             if($insuranceid=='')
                 show_error ("Insurance ID not found.");
             
-            $insurance_det = $this->db->query("SELECT mi.*,a.username,mf.transid_ref AS transid,mf.process_status,mf.delivery_status,f.franchise_name,i.invoice_no FROM pnh_member_insurance mi
+            $insurance_det = $this->db->query("SELECT mi.*,a.username,mf.transid_ref AS transid,mf.process_status,mf.delivery_status,o.id as orderid,f.franchise_name,i.invoice_no FROM pnh_member_insurance mi
                         JOIN pnh_member_offers mf ON mf.insurance_id = mi.insurance_id
                         JOIN king_admin a ON a.id = mi.created_by
                         JOIN pnh_m_franchise_info f ON f.franchise_id = mi.fid
+                        JOIN king_orders o ON o.itemid = mi.itemid
                         JOIN king_invoice i ON i.`transid` = mf.`transid_ref` 
                         WHERE mi.insurance_id = ?",$insuranceid);
             if($insurance_det->num_rows()==0)
@@ -28949,8 +28959,9 @@ die; */
             $this->load->view("admin",$data);
     }
     
-	function pnh_jx_checkstock_order()
+    function pnh_jx_checkstock_order()
     {
+            $this->erpm->auth();
             $fid=$this->input->post("fid");
             $mid=$this->input->post("mid");
             $pids=explode(",",$this->input->post("pids"));
@@ -28965,8 +28976,9 @@ die; */
             $ttl_orders=$this->db->query("SELECT COUNT(transid) as l
 											FROM king_orders 
 											WHERE userid=?   AND STATUS NOT IN (3) 
-											having SUM(i_price*quantity) >= ?",array($m_userid,MEM_MIN_ORDER_VAL))->row()->l;
-			$itemids=array();
+											having SUM(i_price*quantity) >?",array($m_userid,MEM_MIN_ORDER_VAL))->row()->l;
+
+            $itemids=array();
             $order_det=array();
             $e=0;
             foreach($pids as $pid)
@@ -29166,12 +29178,25 @@ die; */
             $insurance_det = $insurance_det->result_array();
             $ins = $insurance_det[0];
             
+            //
+    
+            $item_det = $this->db->query("select di.name as dealname,di.pnh_id,d.menuid,mn.name as menuname,d.brandid,b.name as brandname,d.catid,c.name as catname from king_dealitems di
+                                    join king_deals d on d.dealid=di.dealid
+                                    join pnh_menu mn on mn.id=d.menuid
+                                    join king_brands b on b.id = d.brandid
+                                    join king_categories c on c.id = d.catid
+                                    where di.id=?",$ins['itemid'])->row_array();
+    
+
+    
             $filename=base_url()."resources/templates/template_insurance.php";
             $data =  file_get_contents($filename);
-            $data = str_replace("%%invoice_no%%", $ins['invoice_no'], $data);
+            $data = str_replace("%%itemid%%", $ins['itemid'], $data);
             $data = str_replace("%%created_on%%", date("d/m/Y",strtotime($ins['created_on'])), $data);
+            $data = str_replace("%%insured_product%%", $item_det['dealname'], $data);
+            $data = str_replace("%%product_type%%", $item_det['catname'], $data);
             
-            $name="insurance_aggreement_copy_".date("d-m-y").".pdf";
+            $name="Insurance_aggreement_copy_".date("d-m-y")."";
             
             #===============================
             // disable DOMPDF's internal autoloader if you are using Composer
@@ -29187,6 +29212,7 @@ die; */
 //            write_file('name', $data);
             //if you want to write it to disk and/or send it as an attachment    
     }
+    
     function userend_orders($status=0,$s=false,$e=false,$orders_by='all',$limit=50,$pg=0)
     {
     	$user=$this->auth(CALLCENTER_ROLE);
@@ -29391,18 +29417,127 @@ die; */
 									left outer join t_stock_info s on s.product_id=p.product_id
 									where '.$cond.'
 									')->result_array();
-
-			if($prds)
-			{
-				$output['status'] = 'success';
-				$output['prds_lst'] = $prds;
-				$output['ttl_prds'] = count($prds);
-			}else
-			{
-				$output['status'] = 'error';
-				$output['error'] = 'Products not found';
-			}
-			echo json_encode($output);
+		if($prds)
+		{
+			$output['status'] = 'success';
+			$output['prds_lst'] = $prds;
+			$output['ttl_prds'] = count($prds);
+		}else
+		{
+			$output['status'] = 'error';
+			$output['error'] = 'Products not found';
 		}
+		echo json_encode($output);
+	}
+        
+     /**
+	 * Process the Feedback Rating with direct method from manage offers page
+	 */
+	function jx_confirm_feedback($member_id,$rate_value)
+	{
+                $user = $this->erpm->auth(true,true);
+                // Direct method of updating feedback
+                
+                //from member id
+                if( $this->db->query("SELECT COUNT(*) AS t FROM pnh_member_info WHERE pnh_member_id= ?",$member_id)->row()->t == 0 )
+                {
+                    print_error("Unregistered Member, please register with storeking.");
+                }
+                
+                $mem_set = $this->db->query("SELECT GROUP_CONCAT('\'',mo.sno,'\'') AS snos 
+                                                    FROM pnh_member_offers mo
+                                                    JOIN pnh_member_info mi ON mi.pnh_member_id = mo.member_id
+                                                    WHERE mo.feedback_status=0 AND mo.delivery_status=1 AND mo.member_id=? ",$member_id);
+                if($mem_set->row()->snos == null)
+                {
+                    print_error("No Offers found or Order is waiting for delivery - StoreKing.");
+                }
+                else
+                {
+                    //found
+                    $snos = $mem_set->row()->snos;
+                    
+                    $this->db->query("UPDATE pnh_member_offers SET feedback_status = 1,feedback_value=? WHERE sno IN (".$snos.") ",$rate_value);
+                    print_msg("Feedback has been updated.");
+                }
+                
+	}
     	 
+     * Ajax function to get insurance details in update insurance block
+     * @param type $insuranceid int
+     */
+    function jx_get_insurance_det($insuranceid='')
+    {
+            $user = $this->erpm->auth();
+            if($insuranceid=='')
+                output_error("Insurance ID not found.");
+            /*SELECT mi.*,a.username,mf.transid_ref AS transid,mf.process_status,mf.delivery_status,o.id as orderid,f.franchise_name,i.invoice_no FROM pnh_member_insurance mi
+                        JOIN pnh_member_offers mf ON mf.insurance_id = mi.insurance_id
+                        JOIN king_admin a ON a.id = mi.created_by
+                        JOIN pnh_m_franchise_info f ON f.franchise_id = mi.fid
+                        JOIN king_orders o ON o.itemid = mi.itemid
+                        JOIN king_invoice i ON i.`transid` = mf.`transid_ref` 
+                        WHERE mi.insurance_id = ?*/
+            
+            $insurance_det = $this->db->query("SELECT mi.* FROM pnh_member_insurance mi 
+                    left join insurance_m_types mit on
+                    WHERE mi.sno = ?",$insuranceid);
+            if($insurance_det->num_rows()==0)
+            {
+                output_error("Insurance id does not exists  or Insurance not yet processed.");
+            }
+            else
+            {
+                $data['insurance_det'] = $insurance_det->row_array();
+            }
+            output_data($data);
+    }
+    
+    /**
+     * Ajax function to Update the insurance details in manage offers page
+     */
+    function jx_put_insurance_det_update()
+    {
+        $user = $this->erpm->auth();
+        foreach(array("i_member_insu_id","i_memberfname","i_memberlname","i_membermob","crd_insurence_type","proof_name","crd_proof_val"
+            ,"crd_insurance_mem_address","i_member_city","i_member_pcode","i_member_receipt_no","i_member_receipt_amount","i_member_receipt_date") as $i)
+                $$i=$this->input->post($i);
+        // process $proof_name
+        if($crd_insurence_type == 'others')
+        {
+            $insu_type_id = $this->db->query("select id from `insurance_m_types` where `name` = ?",$proof_name)->row()->id;
+            //is proof already exists in proof table?
+            if($insu_type_id === null)
+            {
+                //insert into
+                $this->db->query("INSERT INTO `insurance_m_types` (`name`) VALUES (?)",$proof_name);
+                $crd_insurence_type = $this->db->insert_id();
+            }
+            else
+            {
+                $crd_insurence_type = $insu_type_id;
+            }
+        }
+        $input_arr = array(
+                      "proof_type"=> $crd_insurence_type
+                      ,"proof_id"=> $crd_proof_val
+                      ,"proof_address"=> $crd_insurance_mem_address
+                      ,"first_name"=> $i_memberfname
+                      ,"last_name"=> $i_memberlname
+                      ,"mob_no"=> $i_membermob
+                      ,"city"=> $i_member_city
+                      ,"pincode"=> $i_member_pcode
+                      ,"mem_receipt_no"=> $i_member_receipt_no
+                      ,"mem_receipt_date"=> $i_member_receipt_date
+                      ,"mem_receipt_amount"=> $i_member_receipt_amount
+                      ,"modified_by"=> $user['userid']
+                      ,"modified_on"=> "now()"
+            );
+        $where_arr = array(
+                "sno"=>$i_member_insu_id
+            );
+        $this->db->update("pnh_member_insurance",$input_arr,$where_arr);
+        output_data("Successfully updated");
+    }
+    
 }
