@@ -13785,7 +13785,7 @@ $.widget( "ui.tabs", {
 	delay: 300,
 	options: {
 		active: null,
-		collapsible: false,
+		collapsible: true,
 		event: "click",
 		heightStyle: "content",
 		hide: null,

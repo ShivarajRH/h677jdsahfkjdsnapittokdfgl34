@@ -355,7 +355,7 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 						<?php
 	                        
 	                        $offers = $offers_q->result_array();
-							$arr_offer_type = array(1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
+                                $arr_offer_type = array(1=>"Recharge",2=>"Insurance",3=>"N/A or Not Opted");
 	                        $arr_offer_status = array(0=>"Not Processed",1=>"Processed");
 	                        
 	                        foreach($offers as $i=>$offer) {
@@ -369,7 +369,7 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
                             <td><?=$offer['transid_ref'];?></td>
                             <td><a href="<?=site_url("/admin/pnh_franchise/".$franch['franchise_id']);?>" target="_blank"><?=$franch['franchise_name'];?></a></td>
                             <td><?=$arr_offer_type[$offer['offer_type']];?></td>
-                            <td><?=formatInIndianStyle($offer['offer_value']);?></td>
+                            <td><?= ( $offer['offer_value'] == 0 ) ? 'Free' : "Rs. ".formatInIndianStyle($offer['offer_value']);?></td>
                             <td><?=$arr_offer_status[$offer['process_status']];?></td>
                         </tr>
 	                        <!--<div style="padding:4px 5px;border-bottom:1px solid #DDDDDD;">Rs. <?=formatInIndianStyle($offer['offer_value']);?> worth of <?=$arr_offer_type[$offer['offer_type']];?> given</div>-->

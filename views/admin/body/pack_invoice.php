@@ -347,6 +347,7 @@
 </table>
 
 <script type="text/javascript">
+		
 	$('.scan_proditems').each(function(){
 		var ttl_stkgrp_items = $('.scan_proditem',this).length;
 		var ttl_scanbybc= $('.scan_bybc',this).length;
@@ -357,6 +358,7 @@
 				{
 					$('.prod_stkselprev',this).attr('disabled',false).removeClass('disabled');
 				}
+		$('.scan_proditem',this).val("0");
 	});
 </script>
 

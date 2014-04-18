@@ -131,17 +131,13 @@ class Api_model extends Model
 	}
 	
 	/**
-	 * function for get the franchise menu list
+	 * function for get  menu list
 	 */
-	function get_menus_by_franchise($fid)
+	function get_menulist()
 	{
-		$sql="SELECT m.id,m.name AS menu FROM `pnh_franchise_menu_link`a
-					JOIN pnh_m_franchise_info b ON b.franchise_id=a.fid
-					join pnh_api_users c on c.franchise_id=b.franchise_id
-					JOIN pnh_menu m ON m.id=a.menuid
-					WHERE a.status=1 AND b.franchise_id=? and m.id not in(124,125) and a.status=1";
+		$sql="SELECT id,name as menu from pnh_menu order by name asc";
 	
-		$menu_res=$this->db->query($sql,$fid);
+		$menu_res=$this->db->query($sql);
 	
 		if($menu_res->num_rows())
 			return $menu_res->result_array();
@@ -149,7 +145,50 @@ class Api_model extends Model
 			return false;
 	}
 	
+	/**
+	 * function for get the franchise menu list
+	 */
+	function get_menus_by_franchise($franchise_id)
+	{
+		$sql="SELECT id,name as menu from pnh_menu order by name asc";
 	
+		$menu_res=$this->db->query($sql);
+	
+		if($menu_res->num_rows())
+			return $menu_res->result_array();
+		else
+			return false;
+	}
+	
+	/**
+	 * function for get  menu list
+	 */
+	function get_menus($franchise_id)
+	{
+		$sql="SELECT id,name as menu from pnh_menu order by name asc";
+	
+		$menu_res=$this->db->query($sql);
+	
+		if($menu_res->num_rows())
+			return $menu_res->result_array();
+		else
+			return false;
+	}
+	
+	/**
+	 * function for get the categories list
+	 */
+	function get_categories_by_menuid($menuid)
+	{
+		$sql="SELECT b.id,b.name as menu from king_deals a join king_categories b on b.id=a.catid where a.menuid=? group by name order by name asc";
+	
+		$cat_res=$this->db->query($sql,$menuid);
+	
+		if($cat_res->num_rows())
+			return $cat_res->result_array();
+		else
+			return false;
+	}
 	
 	/**
 	 * function for get the brands by menu id
@@ -297,7 +336,7 @@ class Api_model extends Model
 		{
 			$cat_det['ttl_cat']=$cate_res->num_rows();
 			
-			$sql.=" limit $start,$limit";
+			//$sql.=" limit $start,$limit";
 			
 			$cat_det['cat_list']=$this->db->query($sql)->result_array();
 		}
@@ -312,7 +351,7 @@ class Api_model extends Model
 	 * @param unknown_type $limit
 	 * @return multitype:string NULL
 	 */
-	function get_categories_by_menu($menuid,$start,$limit)
+	function get_categories_by_menu($menuid)
 	{
 		$cat_det=array();
 		$cat_det['ttl_cat']='';
@@ -342,7 +381,7 @@ class Api_model extends Model
 			{
 				$cat_det['ttl_cat']=$cate_res->num_rows();
 			
-				$sql.=" limit $start,$limit";
+				//$sql.=" limit $start,$limit";
 			
 				$cat_det['cat_list']=$this->db->query($sql)->result_array();
 			}
@@ -519,14 +558,15 @@ class Api_model extends Model
 		$sql="select pnh_id as pid,i.id as itemid,i.name,m.name as menu,m.id as menu_id,
 				i.gender_attr,c.name as category,d.catid as category_id,mc.name as main_category,
 				c.type as main_category_id,b.name as brand,d.brandid as brand_id,i.orgprice as mrp,i.price as price,i.store_price,
-				i.is_combo, concat('".IMAGES_URL."items/',d.pic,'.jpg') as image_url,concat('".IMAGES_URL."items/small/',d.pic,'.jpg') as small_image_url,d.description,i.shipsin as ships_in,d.keywords 
+				i.is_combo, concat('".IMAGES_URL."items/',d.pic,'.jpg') as image_url,concat('http://snapittoday.com/images/items/small/',d.pic,'.jpg') as small_image_url,d.description,i.shipsin as ships_in,d.keywords 
 			from king_deals d 
 			join king_dealitems i on i.dealid=d.dealid 
 			join king_brands b on b.id=d.brandid 
 			join king_categories c on c.id=d.catid 
 			left outer join pnh_menu m on m.id=d.menuid 
 			left outer join king_categories mc on mc.id=c.type 
-			where d.publish=1 and is_pnh=1 $cond order by d.sno asc";
+			where d.publish=1 and is_pnh=1 $cond order by d.sno asc ";
+		
 		
 		$deal_list_res=$this->db->query($sql,$param);
 		
@@ -542,23 +582,27 @@ class Api_model extends Model
 			{
 				$itemid=$d['itemid'];
 				$prods=$this->db->query("select p.product_name as name,l.qty from m_product_deal_link l join m_product_info p on p.product_id=l.product_id where l.itemid=?",$d['itemid'])->result_array();
+				
 				$deal_det[$i]['products']=array("product"=>$prods);
 				$deal_det[$i]['images']=$this->db->query("select CONCAT('".IMAGES_URL."items/',id,'.jpg') as url from king_resources where itemid=? and type=0",$d['itemid'])->result_array();
+				
 				$deal_det[$i]['attributes']=array();
 				foreach($this->db->query("select group_concat(concat(a.attribute_name,':',v.attribute_value)) as a from m_product_group_deal_link l join products_group_pids p on p.group_id=l.group_id join products_group_attributes a on a.attribute_name_id=p.attribute_name_id join products_group_attribute_values v on v.attribute_value_id=p.attribute_value_id where l.itemid=? group by p.product_id",$itemid)->result_array() as $i2=>$p)
 					$deal_det[$i]['attributes']['attr'.($i2+1)]=$p['a'];
 				
-				$min_max_price_det=$this->get_min_max_price($brand_id,$cat_id,$menu_id,$start,$limit,$pids,$srch_data,$gender);
-				$deal_det[$i]['min_price']=$min_max_price_det['min_price'];
-				$deal_det[$i]['max_price']=$min_max_price_det['max_price'];
+				//$min_max_price_det=$this->get_min_max_price($brand_id,$cat_id,$menu_id,$start,$limit,$pids,$srch_data,$gender);
+				//echo 1;exit;
+				//$deal_det[$i]['min_price']=$min_max_price_det['min_price'];
+				//$deal_det[$i]['max_price']=$min_max_price_det['max_price'];
 			}
 			
-			$min_max_price_det=$this->get_min_max_price($brand_id,$cat_id,$menu_id,$start,$limit,$pids,$srch_data,$gender);
+			//$min_max_price_det=$this->get_min_max_price($brand_id,$cat_id,$menu_id,$start,$limit,$pids,$srch_data,$gender);
 			
 			$deal_list['deals_list']=$deal_det;
 		}
 		
 		return $deal_list; 
+		 
 	}
 	
 	/**
@@ -1823,6 +1867,16 @@ class Api_model extends Model
 
 	}
 
+	function get_menudet($mid)
+	{
+		return $this->db->query("select * from pnh_menu where id=?",$mid)->row_array();
+		
+	}
+	
+	function get_catdet($mid)
+	{
+		return $this->db->query("select * from king_categories a join king_deals b on b.catid=a.id where a.id=?",$mid)->row_array();
+	}
 } 
 
 ?>

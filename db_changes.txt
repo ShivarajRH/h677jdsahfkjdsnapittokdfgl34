@@ -1,65 +1,233 @@
 ALTER TABLE `pnh_sch_discount_track` ADD COLUMN `dealid` BIGINT(0) NULL AFTER `catid`; 
 ALTER TABLE `pnh_sch_discount_brands` ADD COLUMN `dealid` BIGINT(11) DEFAULT 0 NULL AFTER `discount`;  
 
-
+ 
 ## Reconcilation and Reciept status date updates 
 CREATE TABLE `t_deal_publish_changelog` (                
-                            `id` int(10) unsigned NOT NULL AUTO_INCREMENT,         
-                            `item_id` bigint(20) unsigned NOT NULL,                
-                            `is_publish` tinyint(1) DEFAULT '0',                   
-                            `remarks` text,                                        
-                            `created_by` int(10) DEFAULT '0',                      
-                            `created_on` datetime NOT NULL,                        
-                            PRIMARY KEY (`id`)                                     
+                            `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,         
+                            `item_id` BIGINT(20) UNSIGNED NOT NULL,                
+                            `is_publish` TINYINT(1) DEFAULT '0',                   
+                            `remarks` TEXT,                                        
+                            `created_by` INT(10) DEFAULT '0',                      
+                            `created_on` DATETIME NOT NULL,                        
+  PRIMARY KEY (`id`)
+                     );
+
+                         
+CREATE TABLE `pnh_t_receipt_reconcilation` (   
+                               `id` BIGINT(20) NOT NULL AUTO_INCREMENT,     
+                               `debit_note_id` BIGINT(20) DEFAULT '0',      
+                               `invoice_no` BIGINT(20) DEFAULT NULL,        
+                               `dispatch_id` INT(100) DEFAULT NULL,         
+                               `inv_amount` DOUBLE DEFAULT '0',             
+                               `unreconciled` DOUBLE DEFAULT '0',           
+                               `created_on` INT(50) DEFAULT NULL,           
+                               `created_by` INT(20) DEFAULT NULL,           
+                               `modified_on` VARCHAR(50) DEFAULT NULL,      
+                               `modified_by` INT(20) DEFAULT NULL,          
+                               `is_invoice_cancelled` INT(20) DEFAULT '0',  
+                            PRIMARY KEY (`id`)                                      
                           );
 
-
-CREATE TABLE `pnh_t_receipt_reconcilation` (   
-                               `id` bigint(20) NOT NULL AUTO_INCREMENT,     
-                               `debit_note_id` bigint(20) DEFAULT '0',      
-                               `invoice_no` bigint(20) DEFAULT NULL,        
-                               `dispatch_id` int(100) DEFAULT NULL,         
-                               `inv_amount` double DEFAULT '0',             
-                               `unreconciled` double DEFAULT '0',           
-                               `created_on` int(50) DEFAULT NULL,           
-                               `created_by` int(20) DEFAULT NULL,           
-                               `modified_on` varchar(50) DEFAULT NULL,      
-                               `modified_by` int(20) DEFAULT NULL,          
-                               `is_invoice_cancelled` int(20) DEFAULT '0',  
-                               PRIMARY KEY (`id`)                           
-                             );
-
 CREATE TABLE `pnh_t_receipt_reconcilation_log` (  
-                                   `logid` bigint(20) NOT NULL AUTO_INCREMENT,     
-                                   `credit_note_id` int(50) DEFAULT NULL,          
-                                   `receipt_id` int(50) DEFAULT NULL,              
-                                   `reconcile_id` int(50) DEFAULT NULL,            
-                                   `is_invoice_cancelled` int(20) DEFAULT '0',     
-                                   `reconcile_amount` double DEFAULT '0',          
-                                   `is_reversed` int(11) DEFAULT '0',              
-                                   `created_on` int(100) DEFAULT NULL,             
-                                   `created_by` int(20) DEFAULT NULL,              
-                                   `remarks` varchar(100) DEFAULT NULL,            
+                                   `logid` BIGINT(20) NOT NULL AUTO_INCREMENT,     
+                                   `credit_note_id` INT(50) DEFAULT NULL,          
+                                   `receipt_id` INT(50) DEFAULT NULL,              
+                                   `reconcile_id` INT(50) DEFAULT NULL,            
+                                   `is_invoice_cancelled` INT(20) DEFAULT '0',     
+                                   `reconcile_amount` DOUBLE DEFAULT '0',          
+                                   `is_reversed` INT(11) DEFAULT '0',              
+                                   `created_on` INT(100) DEFAULT NULL,             
+                                   `created_by` INT(20) DEFAULT NULL,              
+                                   `remarks` VARCHAR(100) DEFAULT NULL,            
                                    PRIMARY KEY (`logid`)                           
-                                 ) ;
-alter table `pnh_t_receipt_info` add column `unreconciliation_amount` double  DEFAULT '0' NULL  after `receipt_amount`;
-alter table `pnh_franchise_account_stat` add column `unreconciled_value` double   NULL  after `is_correction`, add column `unreconciled_status` varchar (11) DEFAULT 'pending' NULL  after `unreconciled_value`;
+                          ) ;
+ALTER TABLE `pnh_t_receipt_info` ADD COLUMN `unreconciliation_amount` DOUBLE  DEFAULT '0' NULL  AFTER `receipt_amount`;
+ALTER TABLE `pnh_franchise_account_stat` ADD COLUMN `unreconciled_value` DOUBLE   NULL  AFTER `is_correction`, ADD COLUMN `unreconciled_status` VARCHAR (11) DEFAULT 'pending' NULL  AFTER `unreconciled_value`;
 #update pnh_t_receipt_info set unreconciliation_amount = receipt_amount;
-alter table `pnh_franchise_account_summary` add column `unreconciled_value` double  DEFAULT '0' NULL  after `created_by`, add column `unreconciled_status` varchar (50) DEFAULT 'pending' NULL  after `unreconciled_value`;
+ALTER TABLE `pnh_franchise_account_summary` ADD COLUMN `unreconciled_value` DOUBLE  DEFAULT '0' NULL  AFTER `created_by`, ADD COLUMN `unreconciled_status` VARCHAR (50) DEFAULT 'pending' NULL  AFTER `unreconciled_value`;
  
 
-alter table pnh_t_receipt_info add column cheq_realized_on varchar(255) after activated_on; 
-alter table pnh_m_deposited_receipts add column cheq_cancelled_on datetime after dbt_amt;
+ALTER TABLE pnh_t_receipt_info ADD COLUMN cheq_realized_on VARCHAR(255) AFTER activated_on; 
+ALTER TABLE pnh_m_deposited_receipts ADD COLUMN cheq_cancelled_on DATETIME AFTER dbt_amt;
 
 CREATE TABLE `pnh_acknowledgement_print_log` (
-`sno` bigint(20) NOT NULL AUTO_INCREMENT,
-`log_id` varchar(150) DEFAULT NULL,
-`tm_emp_id` varchar(100) DEFAULT NULL,
-`be_emp_id` varchar(100) DEFAULT NULL,
-`p_inv_no` varchar(100) NOT NULL,
-`created_on` varchar(50) DEFAULT NULL,
-`created_by` int(30) DEFAULT NULL,
-`status` int(10) DEFAULT '0',
-`count` int(100) DEFAULT '0',
+`sno` BIGINT(20) NOT NULL AUTO_INCREMENT,
+`log_id` VARCHAR(150) DEFAULT NULL,
+`tm_emp_id` VARCHAR(100) DEFAULT NULL,
+`be_emp_id` VARCHAR(100) DEFAULT NULL,
+`p_inv_no` VARCHAR(100) NOT NULL,
+`created_on` VARCHAR(50) DEFAULT NULL,
+`created_by` INT(30) DEFAULT NULL,
+`status` INT(10) DEFAULT '0',
+`count` INT(100) DEFAULT '0',
 PRIMARY KEY (`sno`)
 );
+
+# Apr_04_2014
+ALTER TABLE `pnh_member_insurance` ADD COLUMN `mem_receipt_no` BIGINT NULL AFTER `pincode`,
+ ADD COLUMN `mem_receipt_date` DATE NULL AFTER `mem_receipt_no`,
+  ADD COLUMN `mem_receipt_amount` DOUBLE NULL AFTER `mem_receipt_date`, CHANGE `created_by` `created_by` TINYINT(20) NULL,
+   CHANGE `created_on` `created_on` DATETIME NULL, ADD COLUMN `modified_by` TINYINT(20) NULL AFTER `created_on`,
+    ADD COLUMN `modified_on` DATETIME NULL AFTER `modified_by`;
+
+ALTER TABLE `pnh_member_offers` CHANGE `created_on` `created_on` DATETIME NULL, ADD COLUMN `modified_by` TINYINT(20) NULL AFTER `created_on`, ADD COLUMN `modified_on` DATETIME NULL AFTER `modified_by`;
+ALTER TABLE `pnh_member_offers_log` ADD COLUMN `created_on` DATETIME NULL AFTER `status`, ADD COLUMN `created_by` TINYINT(20) NULL AFTER `created_on`;
+ALTER TABLE `pnh_member_insurance` ADD INDEX (`fid`, `mid`, `opted_insurance`, `offer_status`, `itemid`, `mob_no`); 
+ALTER TABLE `pnh_member_offers` ADD INDEX (`member_id`, `franchise_id`, `offer_type`, `pnh_pid`, `transid_ref`, `insurance_id`, `process_status`);
+ALTER TABLE `pnh_member_insurance_menu` ADD INDEX (`menu_id`, `greater_than`, `less_than`, `is_active`);
+
+# =========================================================================
+#Apr_05_2014
+UPDATE pnh_member_offers mo 
+JOIN pnh_member_insurance mi ON mi.insurance_id = mo.insurance_id
+SET mo.insurance_id=mi.sno;
+
+# =========================================================================
+#Apr_07_2014
+#order_id field added
+ALTER TABLE `pnh_member_insurance` ADD COLUMN `order_id` BIGINT NULL AFTER `itemid`;
+ALTER TABLE `pnh_member_offers` ADD COLUMN `order_id` BIGINT NULL AFTER `pnh_pid`;
+
+# To insert order id in member offers table
+UPDATE pnh_member_offers mo 
+JOIN king_dealitems di ON `pnh_id` = mo.`pnh_pid`
+JOIN king_orders o ON o.itemid = di.id AND o.transid=mo.`transid_ref`
+SET mo.`order_id` = o.`id`;
+
+# To insert order id in member insurance table
+UPDATE pnh_member_offers mo 
+JOIN pnh_member_insurance mi ON mi.sno = mo.`insurance_id`
+JOIN king_dealitems di ON `pnh_id` = mo.`pnh_pid`
+JOIN king_orders o ON o.itemid = di.id AND o.transid=mo.`transid_ref`
+SET mi.`order_id` = o.`id`;
+# =========================================================================
+
+/*---Vendor deal import throug api db changes--*/
+CREATE TABLE `m_vendor_api_info` (                       
+                     `id` BIGINT(20) NOT NULL AUTO_INCREMENT,               
+                     `vendor_id` BIGINT(20) DEFAULT NULL,                   
+                     `api_link` VARCHAR(255) DEFAULT NULL,                  
+                     `type` VARCHAR(255) DEFAULT NULL,                      
+                     PRIMARY KEY (`id`)                                     
+                   );
+
+CREATE TABLE `m_client_brand_link` (                     
+                       `id` BIGINT(20) NOT NULL AUTO_INCREMENT,               
+                       `brand_id` BIGINT(20) DEFAULT NULL,                    
+                       `client_brand` VARCHAR(255) DEFAULT NULL,              
+                       `created_on` DATETIME DEFAULT NULL,                    
+                       `created_by` INT(11) DEFAULT NULL,                     
+                       PRIMARY KEY (`id`)                                     
+                     );
+CREATE TABLE `m_client_category_link` (                  
+                          `id` BIGINT(20) NOT NULL AUTO_INCREMENT,               
+                          `category_id` BIGINT(20) DEFAULT NULL,                 
+                          `client_category` VARCHAR(255) DEFAULT NULL,           
+                          `created_on` DATETIME DEFAULT NULL,                    
+                          `created_by` INT(11) DEFAULT NULL,                     
+                          PRIMARY KEY (`id`)                                     
+                        );
+CREATE TABLE `t_vendor_product_import_log` (                       
+                               `id` BIGINT(20) NOT NULL AUTO_INCREMENT,                         
+                               `vendor_id` BIGINT(20) DEFAULT NULL,                             
+                               `type` VARCHAR(255) DEFAULT NULL,                                
+                               `data` TEXT,                                                     
+                               `status` INT(1) DEFAULT NULL COMMENT '1:updated,2:not updated',  
+                               `msg` TEXT,                                                      
+                               `created_on` DATETIME DEFAULT NULL,                              
+                               `created_by` INT(11) DEFAULT NULL,                               
+                               `modified_on` DATETIME DEFAULT NULL,                             
+                               `modified_by` INT(11) DEFAULT NULL,                              
+                               PRIMARY KEY (`id`)                                               
+                             );
+CREATE TABLE `m_client_menu_link` (                      
+                      `id` BIGINT(20) NOT NULL AUTO_INCREMENT,               
+                      `menu_id` BIGINT(20) DEFAULT NULL,                     
+                      `client_menu` VARCHAR(255) DEFAULT NULL,               
+                      `created_on` DATETIME DEFAULT NULL,                    
+                      `created_by` INT(11) DEFAULT NULL,                     
+                      PRIMARY KEY (`id`)                                     
+                    );
+
+ALTER TABLE `king_orders` ADD COLUMN `order_from_vendor` INT (11)  NULL  AFTER `insurance_amount`, ADD COLUMN `vendor_order_refe_id` VARCHAR (255)  NULL  AFTER `order_from_vendor`
+ALTER TABLE `king_orders` DROP COLUMN `product_id`,ADD COLUMN `order_product_id` BIGINT (20)  NULL  AFTER `itemid`
+ALTER TABLE `t_vendor_deal_import_log` ADD COLUMN `vendor_id` BIGINT (20)  NULL  AFTER `id`
+
+/*---Vendor deal import throug api db changes--*/
+
+# Apr_08_2014
+#DROP TABLE IF EXISTS pnh_loyalty_points;
+CREATE TABLE `pnh_loyalty_points` (
+  `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `menu_id` BIGINT(15) DEFAULT NULL,
+  `amount` INT(10) UNSIGNED NOT NULL,
+  `points` INT(10) UNSIGNED NOT NULL,
+  `is_active` TINYINT(11) DEFAULT '1',
+  `valid_days` BIGINT(11) DEFAULT NULL,
+  `created_on` DATETIME DEFAULT NULL,
+  `updated_on` DATETIME DEFAULT NULL,
+  `created_by` INT(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
+ALTER TABLE `pnh_member_insurance` ADD COLUMN `status_ship` TINYINT(11) DEFAULT 0 NULL AFTER `mem_receipt_amount`, ADD COLUMN `status_deliver` TINYINT(11) DEFAULT 0 NULL AFTER `status_ship`;
+#=====================================================================
+
+# Apr_10_2014
+ALTER TABLE `king_orders` ADD COLUMN `pnh_member_fee` DOUBLE NULL AFTER `vendor_order_refe_id`;
+
+CREATE TABLE `m_vendor_product_images` (    
+                           `id` BIGINT(20) NOT NULL AUTO_INCREMENT,  
+                           `vendor_id` BIGINT(20) DEFAULT NULL,      
+                           `item_id` BIGINT(20) DEFAULT NULL,        
+                           `main_image` MEDIUMTEXT,                  
+                           `other_images` TEXT,                      
+                           `created_by` INT(11) DEFAULT NULL,        
+                           `created_on` DATETIME DEFAULT NULL,       
+                           PRIMARY KEY (`id`)                        
+                         );
+ALTER TABLE `m_vendor_info` ADD COLUMN `api_access_key` VARCHAR (255)  NULL  AFTER `vendor_code`;
+ALTER TABLE `t_vendor_product_import_log` ADD COLUMN `group_id` BIGINT (20)  NULL  AFTER `vendor_id`;
+ALTER TABLE `m_product_info` CHANGE `product_name` `product_name` VARCHAR (200)  NULL  COLLATE utf8_general_ci;
+
+#=====================================================================
+# Apr_12_2014
+ALTER TABLE `king_orders` ADD COLUMN `loyality_point_value` DOUBLE NULL AFTER `pnh_member_fee`;
+
+# Added pnh_member_fee field
+ALTER TABLE `pnh_member_offers` ADD COLUMN `pnh_member_fee` FLOAT(25) NULL AFTER `mem_fee_applicable`; 
+
+# set member fee in offers table
+UPDATE pnh_member_offers mo SET mo.pnh_member_fee = 50 WHERE mem_fee_applicable = 1;
+#=====================================================================
+#Apr_15_2014
+CREATE TABLE `pnh_member_fee`( `id` BIGINT(11) NOT NULL AUTO_INCREMENT, `member_id` INT(10) DEFAULT 0, `transid` VARCHAR(25), `invoice_no` BIGINT(11) DEFAULT 0, `amount` DOUBLE, `status` TINYINT(1) DEFAULT 0, `created_on` DATETIME, `created_by` INT(5) DEFAULT 0, `modified_on` DATETIME, `modified_by` INT(5) DEFAULT 0, PRIMARY KEY (`id`) );
+#===============================================
+
+// NON SK IMEI Process DB Changes
+
+CREATE TABLE `non_sk_imei_insurance_orders` (
+  `id` bigint(11) NOT NULL AUTO_INCREMENT,
+  `franchise_id` bigint(11) DEFAULT NULL,
+  `order_id` bigint(15) DEFAULT NULL,
+  `transid` varchar(255) DEFAULT NULL,
+  `userid` bigint(11) DEFAULT NULL,
+  `member_id` bigint(11) DEFAULT NULL,
+  `nonsk_imei_no` varchar(255) DEFAULT NULL,
+  `model_no` varchar(255) DEFAULT NULL,
+  `model_value` double(10,2) DEFAULT '0.00',
+  `insurance_id` bigint(11) DEFAULT NULL,
+  `insurance_amount` double(10,2) NOT NULL DEFAULT '0.00',
+  `pnh_member_fee` double(10,2) NOT NULL DEFAULT '0.00',
+  `created_on` datetime DEFAULT NULL,
+  `created_by` int(12) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) 
+
+ALTER TABLE `king_orders` CHANGE `insurance_amount` `insurance_amount` DOUBLE(10,2) DEFAULT 0.00 NOT NULL, CHANGE `pnh_member_fee` `pnh_member_fee` DOUBLE(10,2) DEFAULT 0.00 NOT NULL; 
+
+#================================================================================================
+#Apr_16_2014
+ALTER TABLE `king_transactions` ADD COLUMN `order_for` INT(11) DEFAULT 0 NOT NULL AFTER `credit_days`;
+#================================================================================================

@@ -16,7 +16,8 @@ $po_status_arr[3]="Cancelled";?>
 			<a onclick='closepo( )' href="javascript:void(0)" class="button button-tiny button-caution button-rounded" >Close PO</a>
 		<?php } ?>
 		<?php if($po['po_status']!="3"){?>
-		<a class="button button-tiny" onclick="print_po(<?=$po['po_id']?>)" style="cursor: pointer;">Print po</a>
+		<a class="button button-tiny" onclick="print_po(<?=$po['po_id']?>,'acct')" style="cursor: pointer;">Print Accounts Copy</a>
+		<a class="button button-tiny" onclick="print_po(<?=$po['po_id']?>,'sour')" style="cursor: pointer;">Print Sourcing Copy</a>
 		<?php }?>
 	</span>
 	<h2>Purchase Order : <?=$po['po_id']?></h2>
@@ -347,9 +348,9 @@ function updateexpected_podeliverydate()
 		location="<?=site_url("admin/updatedeliverydate/{$po['po_id']}")?>";
 }
 
-function print_po(poid)
+function print_po(poid,type)
 {
-	var print_url = site_url+'/admin/print_po/'+poid;
+	var print_url = site_url+'/admin/print_po/'+poid+'/'+type;
 		window.open(print_url);
 }
 

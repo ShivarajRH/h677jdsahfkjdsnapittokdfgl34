@@ -190,7 +190,7 @@
 				<td>
 					<div>
 						<div>
-							<input type="text" class="inp pprice readonly" readonly="readonly"  name="price[]" value="%pprice%" >
+							<input type="text" class="inp pprice pur_unitprice"  name="price[]" value="%pprice%" >
 						</div>
 					</div>
 				</td>
@@ -318,6 +318,46 @@
 </div>
 
 <script>
+
+
+
+$('.pur_unitprice').live('change',function(){
+	var unitprc = $(this).val();
+	var trele = $(this).parents('tr:first');
+	var mrp = $('input[name="mrp[]"]',trele).val();
+	var dp_price = $('input[name="dp_price[]"]',trele).val();
+	var margin = $('input[name="margin[]"]',trele).val();
+	var margin_type = $('input[type="radio"]:checked',trele).val();
+	var sdisc = 0;
+		if(dp_price == "")
+		{
+			if(unitprc > mrp)
+			{
+				alert("Purchase price cannot be more than MRP");
+				return false;
+			}
+			if(margin_type*1 == 1)
+				sdisc = (100-((unitprc/mrp)*100))-margin;
+			else
+				sdisc = ((mrp-(mrp*margin/100))-unitprc);
+		}else
+		{
+			if(unitprc > dp_price)
+			{
+				alert("Purchase price cannot be more than DP Price");
+				return false;
+			}
+			
+			if(margin_type*1 == 1)
+				sdisc = (100-((unitprc/dp_price)*100))-margin;
+			else
+				sdisc = ((dp_price-(dp_price*margin/100))-unitprc);
+		}
+
+		$('input[name="sch_discount[]"]',trele).val(sdisc).trigger('change');
+	
+});
+
 $('#show_submit').hide();
 $('select[name="cat_prod_disp"]').live( "change",function(){
 	var sel_cat_id = $(this).val();

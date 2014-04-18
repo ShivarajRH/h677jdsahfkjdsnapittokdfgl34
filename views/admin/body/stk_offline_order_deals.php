@@ -27,7 +27,7 @@ $ttl_cart_items_saved=$this->db->query("select count(*) as ttl from pnh_api_fran
 if($mid!=0)
 	$mid_entrytype=0;
 else 
-	$mid_entrytype=1;
+	$mid_entrytype=2;
 }
 $fran_status=$fdetails['is_suspended'];
 
@@ -181,6 +181,7 @@ $fran_status_arr[3]="Temporary Suspension";
 				<input type="hidden" name="insurance[city]" class="member_city" value="" style="display:none;">
 				<input type="hidden" name="insurance[pincode]" class="member_pincode" value="" style="display:none;">
 				<input type="hidden" name="insurance[proof_name]" class="othrs_proofname" value="" style="display:none;">
+				<input type="hidden" name="insurance[key_mem]" class="key_mem" value="" style="display:none;">
 				
 				
 				
@@ -213,7 +214,7 @@ $fran_status_arr[3]="Temporary Suspension";
 					<div class="clear"></div>
 					<div  style="<?php echo $mid?'':'display:none';'background-color:none repeat scroll 0 0 #E5F2FF';'width:100%'?>"> 
 					<h4 class="module_title">Redeem loyalty points</h4> 
-					<?php $mpointsr=$this->db->query("select points,concat(first_name,' ',last_name) as m_name from pnh_member_info where pnh_member_id = ?",$mid)->row_array(); $mpoints=0; if(!empty($mpointsr)) $mpoints=$mpointsr['points'];?>
+					<?php $mpointsr=@$this->db->query("select points,concat(first_name,' ',last_name) as m_name from pnh_member_info where pnh_member_id = ?",$mid)->row_array(); $mpoints=0; if(!empty($mpointsr)) $mpoints=$mpointsr['points'];?>
 							<table class="datagrid noprint" width="100%">
 							
 							<thead>
@@ -224,7 +225,7 @@ $fran_status_arr[3]="Temporary Suspension";
 							<tbody>
 								<tr>
 									<td><?php echo $mid ?></td>
-									<td><b><?=$mpointsr['m_name']?></b></td>
+									<td><b><?=@$mpointsr['m_name']?></b></td>
 									<td>
 										<div style="padding:5px;background: #FFF">
 										<b><?=$mpoints?></b> Available 
@@ -346,7 +347,7 @@ $fran_status_arr[3]="Temporary Suspension";
 
 	<table id="template" style="display:none">
 		<tbody>
-			<tr style="border-bottom:2px solid #000;" pid="%pid%"  pimage="%pimage% %pid%" pname="%pname%" mrp="%mrp%" price="%price%" lcost="%lcost%" margin="%margin%" >
+			<tr style="border-bottom:2px solid #000;" pid="%pid%"  pimage="%pimage% %pid%" pname="%pname%" mrp="%mrp%" price="%price%" lcost="%lcost%" margin="%margin%" insufee="%insufee%" memfee="%memfee%">
 				<td>%sno%</td>
 				<td style="padding:10px 0px 0px;background: #FFF;">
 					<div  class="img_wrap">
@@ -379,7 +380,7 @@ $fran_status_arr[3]="Temporary Suspension";
 											<th width="50%">Price Range</th>
 											<th width="50%">Insurance Cost</th>
 										</tr>
-									<?php foreach($menus_range as $m){ ?>
+									<?php foreach($menus_range->result_array() as $m){ ?>
 										<tr>
 										<td><b>Rs. <?=$m['greater_than']?> -- Rs <?=$m['less_than']?> </b></td>
 										<td align="center"><b><?=$m['insurance_value']?></b></td>
@@ -416,11 +417,21 @@ $fran_status_arr[3]="Temporary Suspension";
 				<td style="text-align: center;" valign="top"  class="cart_background_wrap2_lprice">
 					<div class="lcost p_top"><b>%lcost%</b><br>%imei_sch_disc% </div>
 				</td>
-				<td style="text-align: center;" valign="top"  class="cart_background_wrap1">
+				<td  valign="top"  class="cart_background_wrap1" width="12%">
 					<div class="p_top"><input type="text" class="qty" pmax_ord_qty="%max_oqty%" size=2 name="qty[]" value="%cart_qty%"> %max_ord_qty%</div>
+					<div style="padding-top:10px;color: blue;font-size: 11px;display: %key_mem%;"><b class="key_mem_det">Mem fee :</b> %mem_fee% <br><b class="key_mem_det">Insu fee :</b> %insu_fee%</div>
 				</td>
 				<td  style="text-align:center;"  class="cart_background_wrap2_subtotal" valign="top">
 					<div class="stotal p_top" style="font-color:white;">%ttllcost%</div>
+					<?php if($mid==0){?>
+					<span>+</span>
+					<div class="mfeetotal p_top" style="font-color:white;" >%memfee%</div>
+					<span class="mfee" style="display:none;">%mfee%</span>
+					
+					<span>+</span>
+					<div class="insfeetotal p_top" style="font-color:white;">%insufee%</div>
+					<span class="ifee" style="display:none;">%ifee%</span>
+					<?php }?>
 				</td>
 			
 				<td style="text-align: center;"  class="cart_background_wrap1" valign="top">
@@ -454,7 +465,7 @@ $fran_status_arr[3]="Temporary Suspension";
 		</div>
 		<div  class="stk_ordr_inpwrap"><b>Territory : </b><select class="fran_det chzn-select" data-placeholder="Choose Territory" name="sel_terr" id="sel_terr" style="width: 250px;"></select></div>
 		<div class="stk_ordr_inpwrap"><b>Franchise : <span class="red_star">*</span></b> <select class=" chzn-select" data-placeholder="Choose Franchise "  name="fid" id="fid" style="width:250px;" ></select></div>
-		<div class="stk_ordr_inpwrap"><b>Order For : <span class="red_star">*</span></b><select name="mid_entrytype" class="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
+		<div class="stk_ordr_inpwrap"><b>Order For : <span class="red_star">*</span></b><select name="mid_entrytype" class="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option></select></div>
 		<div class="stk_ordr_inpwrap mid_blk"><b>Member Id : <span class="red_star">*</span></b><input style="font-size:120%" maxlength="9"  type="text" class="membrid" name="mid" size=18 ></div>
 		<div class="signin" style="display:none;float:right;"><input type="button" value="Proceed" onclick='load_franchise_cart_page()' class="button button-rounded button-action"></div>
 	</div>
@@ -466,7 +477,7 @@ $fran_status_arr[3]="Temporary Suspension";
 	<div id="change_member_blk" title="Member Details" style="display:none;">
 		<div width="100%">
 			<form id="change_mem_frm" method="post" action="<?php echo site_url('admin/jx_check_forvalid_mid')?>">
-				<div class="stk_ordr_inpwrap"><b>Order For : </b><select name="mid_entrytype" class="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
+				<div class="stk_ordr_inpwrap"><b>Order For : </b><select name="mid_entrytype" class="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option></select></div>
 				<div class="stk_ordr_inpwrap mid_blk" style="display:block;"><b>Member Id <span class="red_star">*</span> : </b><input style="font-size:120%" maxlength="8"  type="text" class="chngd_membrid" name="mid" size=18 ></div>
 			</form>
 		</div>
@@ -493,9 +504,10 @@ $fran_status_arr[3]="Temporary Suspension";
 						<img alt="" height="100" src="<?=IMAGES_URL?>items/small/%qvk_image%.jpg">
 						<h4>PNH ID : %qvk_pid%</h4>
 						<input class="pids" type="hidden" name="pid[]" value="%qvk_pid%">
-					</div>
+					</div> 
 					  <div class="qvk_productguide_wrap" >
 					  		<h3><a href="<?=site_url("admin/pnh_deal")?>/%qvk_pid%" target="_blank">%qvk_pname%</a></h3>
+                            %blink_last_avail_qty%
 						  	<h5>Stock : %qvk_stk%</h5>
 						  	<span class="mrp_bkgrnd_wrap">MRP : <b>Rs. %qvk_mrp%</b></span>
 						  	<span class="ofrp_bkgrnd_wrap">Offer Price : <b>Rs. %qvk_price%</b></span>
@@ -729,14 +741,14 @@ $("#quick_viewdiv").dialog({
         .position({ my: 'center', at: 'center', of: window });
 		$("#qvk_prod_temp tbody").html("");
 		$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"none"});
-        $('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
+                $('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 		$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').addClass('add_to_cartbtn');
 		$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({"float":"right","background":"tomato","color":"white"});
 		$('.ui-dialog-buttonpane').find('button:contains("Price Query")').css({"float":"left"});
 	
 		var dlg=$(this);
 		
-		$.post("<?=site_url("admin/pnh_jx_loadpnhprod")?>",{pid:dlg.data('qvk_pid'),fid:pre_selected_fid,cartdeal:1},function(data){
+		$.post("<?=site_url("admin/pnh_jx_loadpnhprod")?>",{pid:dlg.data('qvk_pid'),fid:pre_selected_fid,cartdeal:1,mid:selected_mid},function(data){
 			obj=p=$.parseJSON(data);
                         
                         var attr_det = '';
@@ -744,6 +756,9 @@ $("#quick_viewdiv").dialog({
                         {
                             attr_det += p.attr_list;
                         }
+                        var last_avail_qty = '';
+						//var last_avail_qty = '<a class="make_blink" href="javascript:void(0);">Last '+p.pid+'</a>';
+                        
 			template=$("#qvkview_template tbody").html();
 			template=template.replace(/%qvk_image%/g,p.pic);
 			template=template.replace(/%qvk_pid%/g,p.pid);
@@ -757,6 +772,7 @@ $("#quick_viewdiv").dialog({
 			template=template.replace(/%qvk_stk%/g,p.stock);
 			template=template.replace(/%qvk_margin_amt%/g,Math.ceil(p.price-p.lcost));
 			template=template.replace(/%attr_list%/g,attr_det);
+			template=template.replace(/%blink_last_avail_qty%/g,last_avail_qty);
 			$("#qvk_prod_temp tbody").html(template);
 			if(!p.allow_order.length && p.is_sourceable==0 )
 			{
@@ -807,7 +823,7 @@ $("#quick_viewdiv").dialog({
 		});
 	}else
 	{
-		$("#mem_fran").html("Not Registered Member").addClass('ordr_prefixtext ').show();
+		$("#mem_fran").html("Key Member").addClass('ordr_prefixtext ').show();
 	}
 
 /** jQuery  Custom Alpha sort pluin 
@@ -870,6 +886,12 @@ $("#quick_viewdiv").dialog({
 
 var pre_selected_fid = "<?php echo $franid?>";
 var selected_mid="<?php echo $mid?>";
+
+if(selected_mid==0)
+	$('.key_mem').val('1');
+else
+	$('.key_mem').val('0');
+	
 if(pre_selected_fid!='' || pre_selected_fid!=0)
 {
 	$("#hd").hide();
@@ -943,12 +965,12 @@ $('.Brands_bychar_list_content_listdata').live("click",function(){
 	  {
 	  	$('.selected_class').removeClass('selected_class');
 	  	$(this).addClass('selected_class');
-	  	filter_deallist($(this).text(),'brand');
+	  	deallist_bycat(brandid,catid,0,pre_selected_fid,0);
 	  	
 	  }
 	  else
 	  { 
-	  	filter_deallist('','all');
+	  	deallist_bycat(0,catid,0,pre_selected_fid,0);
 	  }
 		 $('.left_filter_wrap').show();
 });
@@ -1091,8 +1113,8 @@ function filter_deallist(tag,by)
 {
 	var srch_inp =  $('input[name="srch_deals"]').val();
 	var publish_status = $('select[name="publish_wrap"]').val();
-	var bc_sel = ($('.Brands_bychar_list_content_listdata.selected_class').length?($('.Brands_bychar_list_content_listdata.selected_class').text()):0);
 	$(".sk_deal_filter_wrap").each(function(){
+	var bc_sel = '';//($('.Brands_bychar_list_content_listdata.selected_class').length?($('.Brands_bychar_list_content_listdata.selected_class').text()):0);
 			
 			search_text=$(this).attr('pnh_id')+' '+$(this).attr('name')+' '+$(this).attr('brand')+' '+$(this).attr('category');
 			var row_stat = 1;
@@ -1635,6 +1657,46 @@ var ppids=[];
 								else
 									template=template.replace(/%dspmrp%/g,'block');
 								
+								if(p.key_member==0)
+									template=template.replace(/%key_mem%/g,'none');
+								else
+									template=template.replace(/%key_mem%/g,'block');
+
+								template=template.replace(/%mfee%/g,p.mem_fee);
+								template=template.replace(/%ifee%/g,p.insurance_fee);
+								
+								if(p.mem_fee==0)
+								{
+									template=template.replace(/%memfee%/g,0);
+									
+									template=template.replace(/%mem_fee%/g,"<span style='font-size:11px;color:#000;'>No</span>");
+								}
+								else
+								{
+									template=template.replace(/%memfee%/g,format_number(p.svd_cartqty*p.mem_fee));
+									template=template.replace(/%mem_fee%/g,"<span style='font-size:11px;color:#000;'>Rs "+p.mem_fee+" / qty</span>");
+
+								}
+								if(p.insurance_fee==0)
+								{
+									template=template.replace(/%insufee%/g,format_number(p.svd_cartqty*p.insurance_fee));
+								
+									template=template.replace(/%insu_fee%/g,"<span style='font-size:11px;color:#000;'>Free</span>");
+								}
+								if(p.insurance_fee==null)
+								{
+									p.insurance_fee=0;
+									template=template.replace(/%insufee%/g,format_number(p.svd_cartqty*p.insurance_fee));
+								
+									template=template.replace(/%insu_fee%/g,"<span style='font-size:11px;color:#000;'>No</span>");
+								}
+						
+								else
+								{
+									template=template.replace(/%insufee%/g,format_number(p.svd_cartqty*p.insurance_fee));
+									
+									template=template.replace(/%insu_fee%/g,"<span style='font-size:11px;color:#000;'>Rs"+p.insurance_fee +" / qty</span>");
+								}
 								template=template.replace(/%oldmrp%/g,p.oldmrp);
 								template=template.replace(/%newmrp%/g,p.mrp);
 								template=template.replace(/%mrp%/g,p.mrp);
@@ -1662,8 +1724,8 @@ var ppids=[];
 								{
 									has_insurance_dl++;
         								template=template.replace(/%has_insurance%/g,"Insurance : <span style='font-size:11px;color:#000;' onmouseover='view_insu_details(this);'>Yes</span> ");
-									if(p.insurance_value!=null && p.insurance_margin!=null)
-                                                                                template=template.replace(/%opt_insurance%/g,"<input type='checkbox' style='margin-top:-1px' name='opt_insurance[]' class='opt_insurance' value='"+p.pid+"'><span style='font-size:11px;color:#000;float:right;'>:Opting Insurance</span>");
+									if(p.insurance_value!=null && p.insurance_margin!=null && p.key_member==0)
+											template=template.replace(/%opt_insurance%/g,"<input type='checkbox' style='margin-top:-1px' name='opt_insurance[]' class='opt_insurance' value='"+p.pid+"'> <span style='font-size:11px;color:#000;float:right;'>: Opting Insurance</span> ");
                                                                         else
                                                                                 template=template.replace(/%opt_insurance%/g," ");	
 								
@@ -1681,7 +1743,14 @@ var ppids=[];
 										var imei=(p.lcost*p.imei_disc.credit_value)/100 ;
 										
 									template=template.replace(/%imei_sch_disc%/g,"<span style='font-size:11px;' class='tip_popup imei_wrap' title='On IMEI Activation'><b>IMEI Activation: </b>(Rs."+format_number(imei)+") </span> ");
-								}else
+								}
+								if(p.key_imei_disc!=0)
+								{
+									var key_mem_imei=(p.lcost*p.key_imei_disc)/100 ;
+										template=template.replace(/%imei_sch_disc%/g,"<span style='font-size:11px;' class='tip_popup imei_wrap' title='On IMEI Activation'><b>IMEI Activation: </b>(Rs."+format_number(key_mem_imei)+") </span> ");
+									
+								}
+								else
 								{
 									template=template.replace(/%imei_sch_disc%/g," ");
 								}
@@ -1742,11 +1811,23 @@ function change_total_subtotal()
     var ttl_subtotal=0;
     if($("#cart_prod_temp .stotal").html() == '') {
         ttl_subtotal=0;
+        member_feetotal=0;
+        insu_feetotal=0;
     }
     else {
         $("#cart_prod_temp .stotal").each(function(){
           ttl_subtotal += format_number($(this).html());
         });
+        if(selected_mid==0)
+       {
+	        $("#cart_prod_temp .insfeetotal ").each(function(){
+	        	ttl_subtotal += format_number($(this).html());
+	          });
+	        $("#cart_prod_temp .mfeetotal ").each(function(){
+	        	ttl_subtotal += format_number($(this).html());
+	          });
+        }
+        //ttl_subtotal=ttl_subtotal+insu_feetotal+member_feetotal;
     }
     $("#cart_totl").html(format_number(ttl_subtotal));
 }
@@ -1787,6 +1868,14 @@ $("#cart_prod_temp .qty").live("change",function(){
 	$(".qty",p).val(qty_e);
 	var sub_total = parseFloat( $(".lcost",p).text())*parseInt($(".qty",p).val() ) ;
 	$(".stotal",p).html( format_number( sub_total ) );
+
+	 if(selected_mid==0)
+	 {
+		var memfee_total = parseFloat($(".mfee",p).text())*parseInt($(".qty",p).val() ) ;
+		 $('.mfeetotal',p).html(format_number( memfee_total ));
+		 var insufee_total = parseFloat($(".ifee",p).text())*parseInt($(".qty",p).val() ) ;
+		 $('.insfeetotal',p).html(format_number( insufee_total ));
+	 }
     change_total_subtotal();
        
 });
@@ -1845,6 +1934,12 @@ $("#order_form").submit(function(){
 	$("#cart_prod_div .stotal").each(function(){
 		total+=parseFloat($(this).html());
 	});
+	  $("#cart_prod_temp .insfeetotal ").each(function(){
+		  total += format_number($(this).html());
+        });
+      $("#cart_prod_temp .mfeetotal ").each(function(){
+    	  total += format_number($(this).html());
+        });
 	total = format_number(total);
 	
 	$("#cart_prod_div .pids").each(function(){
@@ -1885,13 +1980,14 @@ $("#order_form").submit(function(){
 		 {
 			var menu_id=menuids[i];
 			var menu_qty=qty[i];
-			/*
-			if(menu_qty>1 && menu_id  == 112)
+		/*	if(menu_qty>1  && menu_id  == 112)
+			
 			{
+			
 				alert("More than 1 qty of Electronics Item for 1 member can't be processed");
 				return false;
 			}
-*/
+**/
 			if(mid==0 && menu_id != 112)
 			{
 				if(confirm("Instant Registration is required because Other than Electronic items are there in the Cart"))
@@ -1911,10 +2007,18 @@ $("#order_form").submit(function(){
 		}
 	
 		
+	/*	if(stk_confirm_prods != stk_confirm_prods_checked && stk_confirm_prods > 0)
+		{
+			alert("Please verify whether stock for the footwear is available?");
+			return false;
+		}*/
+		
+		
 		if(submit_order==0)
 		{
 			if(confirm("Total order value : Rs "+total+"\nAre you sure want to place the order?") )
 			{
+				
 				attr=$(".attr").serialize();
 				$.post(site_url+"/admin/pnh_jx_checkstock_order",{attr:attr,pids:ppids.join(","),qty:qty.join(","),fid:pre_selected_fid,mid:selected_mid}, function(resp){
 					
@@ -1933,7 +2037,7 @@ $("#order_form").submit(function(){
 					return false;
 				}
 		
-				if($('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length==0 && resp.new_mem==1)
+				if($('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length==0 && resp.new_mem==1 && selected_mid!=0)
 				{
 					if(confirm("No Insurance selected. Do you want to Continue ? "))
 					{
@@ -1955,7 +2059,7 @@ $("#order_form").submit(function(){
 						return false;
 					}
 				}
-				if($('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length==0 && resp.new_mem==0)
+				if($('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length==0 && resp.new_mem==0 && selected_mid!=0 )
 				{
 					if(confirm("Is Insurance Option communicated to franchise?"))
 					{
@@ -1969,7 +2073,7 @@ $("#order_form").submit(function(){
 					}
 				}
 				
-               if(resp.new_mem==1 && $('.opt_insurance').length !=0 && $('input[name="opt_insurance[]"]:checked').length !=0)
+               if(resp.new_mem==1 && $('.opt_insurance').length !=0 && $('input[name="opt_insurance[]"]:checked').length !=0 && selected_mid!=0)
 				{
 						$('.offr_sel_type').val('2');
 						$('.offerd_type').val('2');
@@ -1977,19 +2081,21 @@ $("#order_form").submit(function(){
 					 return false;	
 				}
 
-			 	if(resp.new_mem==0 && $('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length!=0)
+			 	if(resp.new_mem==0 && $('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length!=0 && selected_mid!=0)
 				{
+					
 						$('.offr_sel_type').val('0');
 			 			$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 			 			return false;
 				}
-               if(resp.new_mem==0 && $('.opt_insurance').length > 1 && $('input[name="opt_insurance[]"]:checked').length == 0)
+               if(resp.new_mem==0 && $('.opt_insurance').length > 1 && $('input[name="opt_insurance[]"]:checked').length == 0 && selected_mid!=0)
 				{
 			 		$('.offr_sel_type').val(0);
+			 		
 			 		$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 				 	 return false;
 				}
-		 	 	if(resp.new_mem==1 && resp.has_insurance==0 && resp.total > min_ord )
+		 	 	if(resp.new_mem==1 && resp.has_insurance==0 && resp.total > min_ord && selected_mid!=0)
 				{
 					$('.offr_sel_type').val('1');
 					$(".new_member").val('1');
@@ -2021,6 +2127,18 @@ $("#order_form").submit(function(){
 					submit_order++;	
 					$("#order_form").submit();
 				}
+
+
+				if(	selected_mid==0)
+				{
+					submit_order++;
+					$("#order_form").submit();
+				}
+				else
+					{
+						submit_order>=1;	
+						$("#order_form").submit();
+					}
 				},'json');
 			}
 		
@@ -2872,7 +2990,7 @@ $("#ship_log_dlg" ).dialog({
 	// ajax request fetch task details
    $.post(site_url+'/admin/jx_franchise_shipment_log_bydate',{sel_date:$(this).data('sel_date'), sel_mnth:$(this).data('sel_mnth'), sel_year:$(this).data('sel_year'), fid:$(this).data('fid'), ship_date:$(this).data('ship_date')},function(result){
    if(result.status == 'failure')
-	{
+    {
 		 $('#ship_log_dlg_wrap').html('No Shipments on '+ship_date);
 		 return false;
     }
@@ -3107,7 +3225,6 @@ $("#franchise_quickview").dialog({
 				  	$('.member_fname').val(mem_fname);
 				  	$('.member_lname').val(mem_lname);
 				  	$('.member_mobno').val(mem_mobno);
-				  	$('.member_address').val(mem_address);
 				  	$('.member_city').val(mem_city);
 				  	$('.member_pincode').val(mem_pincode);
 				  	$('.othrs_proofname').val(proof_name);
@@ -3143,5 +3260,59 @@ margin-top: 13px;
 padding: 2px 0 0 6px;
 font-weight: bold;
 }
+.key_mem_det
+{
+
+}
+.make_blink { 
+    margin-right: 50px;
+    padding: 4px 1px 4px 40px;
+    background-color: rgb(170, 54, 51);
+    border-radius: 5px;
+    margin-left: 20px;
+    font-weight: bold;
+    color: #ffffff; 
+    
+        -moz-animation-duration: 400ms;
+        -moz-animation-name: blink;
+        -moz-animation-iteration-count: infinite;
+        -moz-animation-direction: alternate;
+
+        -webkit-animation-duration: 400ms;
+        -webkit-animation-name: blink;
+        -webkit-animation-iteration-count: infinite;
+        -webkit-animation-direction: alternate;
+
+        animation-duration: 400ms;
+        animation-name: blink;
+        animation-iteration-count: infinite;
+        animation-direction: alternate;
+    }
+    @-moz-keyframes blink {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
+
+      @-webkit-keyframes blink {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
+
+      @keyframes blink {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
 </style>
 <?php

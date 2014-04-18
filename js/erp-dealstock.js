@@ -97,7 +97,7 @@
         ,loadstatus: true  // deal element status replace eg: <a>In Stock</a>
         ,autorefresh: true //true,false - Refresh deal status given interval time else on refresh
         ,interval: 300000 // if(autorefresh == true) interval must. eg: 1min == 60000, 5 min => 300000 (5 * 60000)
-        ,eventname:"click" // eg: hover,click
+        ,eventname: "hover"  // eg: "hover","click"
         ,change:'row' // text or row change the color (tr == row)
     };
 
@@ -184,7 +184,7 @@
                                     }
 
                             });
-
+                            
                     }
 
                     // on Escape key press close plugin box

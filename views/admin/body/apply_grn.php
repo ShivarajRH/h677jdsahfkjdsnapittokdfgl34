@@ -33,6 +33,13 @@ h2
 	color:red;
 	font-weight:bold;
 }
+.cancel_prd
+{
+	 float: left;
+    margin-left: 79px;
+    margin-top: 10px;
+    width: 100%;
+}
 </style>
 
 <div class="container">
@@ -66,6 +73,7 @@ h2
 							<th width="30px">Vat(%)</th>
 							<th width="160px" style="text-align: center">Price</th>
 							<th width="83px">SubTotal</th>
+							<th width="100px">Expiry/Offers</th>
 							<th></th>
 						</tr>
 					</thead>
@@ -100,7 +108,7 @@ h2
 								<tr>
 									<td>1</td>
 									<td><input type="text" name="invno[]" class="inp inv_inp_blk"></td>
-									<td><input type="text" name="invdate[]" readonly="readonly" class="inp inv_inp_datepick_blk datepick"></td>
+									<td><input type="text" name="invdate[]" class="inp inv_inp_datepick_blk datepick"></td>
 									<td><input size=7 type="text" class="inp invamount inv_inp_amount" name="invamount[]"></td>
 									<td><input type="file" name="scan_0" class="scan_file"></td>
 									<td><span class="addrow_tooltip" title="Add New Invoice Details"><a href="javascript:void(0)" onclick='cloneinvoice()'><div class="button button-tiny_wrap cursor">+</div></a></span></td>
@@ -161,6 +169,9 @@ h2
 								<a href="javascript:void(0)" class="view_imei" brandid="%brandid%" prodid="%prodid%">View</a>
 							</div>
 							
+							<div class="cancel_prd">
+								<input type="button" class="button button-caution button-rounded button-tiny cursor row_cancel" value="Cancel Scan" style="padding:0px;">	
+							</div>
 						</td>
 						
 						<td class="po_det_wrap_blk">
@@ -211,6 +222,12 @@ h2
 						</td>
                         <td>
 							<input type="text" disabled="" class="inp sub_ttl subttl_%prodid%" size=3 value="0" >
+						</td>
+						<td>
+							<div>Exp : <input name="expiry_date%pid%[]" class="inp exp_date" placeholder=""></div>
+							<div>has offer : <input type="checkbox" class="has_offer" value="0"></div>
+							<div>			<select name="offer%pid%[]" class="offer_list">==offers==</select></div>
+							<div><textarea cols="12" rows="2" name="new_offer%pid%[]" class="offer_area"></textarea></div>			
 						</td>
 						<td width="50">
 							<span class="addrow_tooltip" title="Click to add new MRP Details"><a href="javascript:void(0)" class="validate_edit_mode add_product_row"><div class="button button-tiny_wrap cursor">+</div></a></span>
@@ -272,6 +289,12 @@ h2
 		<span class="imei_error_text"></span>
 	</form>
 </div>
+
+<div id="load_vendor_po_dlg" class="load_vendor_po_dlg" title="POs">
+	
+</div>
+
+
 
 <script type="text/javascript">
 
@@ -339,6 +362,94 @@ $('.form_cancel').click(function(){
 	if(confirm("Warning: \r\nAre you sure , do you want to cancel this Stock Intake Process ?"))
 	{
 		window.location.assign(site_url+'/admin/apply_grn');	
+	}
+});
+
+$('#load_vendor_po_dlg').dialog({
+		modal:true,
+		autoOpen:false,
+		width:650,
+		height:500,
+		autoResize:true,
+			
+		 buttons: {
+		    "Ok": function() { 
+		    	var dlg_sel_pos=[];
+					$('.dlg_selected_pos a.selected').each(function(){
+						dlg_sel_pos.push($(this).attr('poid'));
+					});
+					
+				loadpo(dlg_sel_pos);
+				
+				$.post('<?=site_url('admin/ven_list_bypo')?>',{pos:dlg_sel_pos},function(data){
+					$('.page_title').html("Stock Intake for <span class='ven_title_wrap'>"+data.ven_det.vendor_name+"</span>");
+					
+					dlg_pos_arr=",";
+					
+					$.each(data.po_id_list,function(i,p){
+						
+						dlg_pos_arr+="<a target='_blank' href='"+site_url+'/admin/viewpo/'+p+"'>"+p+"</a>";
+						if(data.po_id_list.length-1 != i)
+						{
+							dlg_pos_arr+=",";	
+						}
+					});
+					
+				$('.ven_poid').append(dlg_pos_arr);
+				},'json');
+				
+				
+				
+				$('.load_vendor_po_dlg').dialog('close');
+		    	},
+		    "cancel": function(){
+		    	$('.load_vendor_po_dlg').dialog('close');
+		  	}
+		  },	
+		open:function(){
+		
+			pids_selected=[];
+			var pos=[];
+			$("#grn .datagrid tbody tr").each(function(){
+				var trele =$(this);
+				var po=trele.attr('pid');
+				pos.push(po);
+			});
+			var id=$('.selected a').attr('vid');
+			$.post(site_url+'/admin/polist_byvendor',{vid:id},function(resp){
+					var po_list = '';
+					po_list +='<div class="ajax_loadresult static_pos dlg_selected_pos">';
+			
+						$.each(resp.po_list,function(i,p){
+							if($.inArray(p.po_id,pos)==-1)
+							{
+								$('.jq_alpha_sort_overview_title').html("<h4>Purchase Order List for <span>"+p.vendor_name+"</span></h4>")
+					 			po_list +='<a class="modal_po_list" id="pos_'+p.po_id+'" poid="'+p.po_id+'" href="javascript:void(0)" onclick=pid_container('+p.po_id+')>';
+					 			po_list +='<div id="pricing_plan2" class="four columns">';
+				            	po_list +='<dl class="plans">';
+				                po_list +='</dl>';
+				            	po_list +='<dl class="plan" id="two">';
+				            	po_list +='<dd class="plan_features" style="font-weight:bold;font-size:16px">';
+				                po_list +='<div class="feature_desc">PO : <span class="title_highlight" style="font-weight:bold;font-size:16px;color:#000">'+p.po_id+'</span></div>';
+				                po_list +='</dd>';
+				            	po_list +='<dd class="plan_features">';
+				                po_list +='<div class="feature_desc">Value : <span class="title_highlight">'+p.total_value+'</span></div>';
+				                po_list +='</dd>';
+				                po_list +='<dd class="plan_features">';
+				                po_list +='<div class="feature_desc" style="font-size:12px;">Qty : <span class="title_highlight">'+p.order_qty+'</span></div>';
+				                po_list +='</dd>';
+				               	po_list +='<dd class="plan_features">';
+				                po_list +='<div class="feature_desc">D. Date : <span class="title_highlight">'+p.delivery_date+'</span> </div>';
+				                po_list +='</dd>';
+				                po_list +='</dl>';
+				        		po_list +='</div>';
+					 			po_list +="</a>";
+							}
+						});
+					
+					po_list +="</div>";
+				$('#load_vendor_po_dlg').html(po_list);
+			},'json');
 	}
 });
 
@@ -530,6 +641,15 @@ function loadpo(pids)
 			else
 				grow=grow.replace(/==rbs==/g,'<option value="10">A11-Default Rack</option>');
 			
+			
+			if(poi.offers)
+				grow=grow.replace(/==offers==/g,'<option value="0">Choose</option><option value="1">New</option>'+poi.offers);
+			else
+				grow=grow.replace(/==offers==/g,'<option value="0">Choose</option><option value="1">New</option>');
+			
+			
+			
+											
 			grow=grow.replace(/%dpe%/g,dpe);
 			offer=foc="NO";
 			if(poi.is_foc=="1")
@@ -537,9 +657,10 @@ function loadpo(pids)
 			if(poi.has_offer=="1")
 				offer="YES";
 			grow=grow.replace(/%foc%/g,foc);
-			grow=grow.replace(/%offer%/g,offer);
+			//grow=grow.replace(/%offer%/g,offer);
 			g_rows=g_rows+grow;
 			$(".expdate"+dpe).datepicker({minDate:0});
+			$(".exp_date"+dpe).datepicker({minDate:0});
 			dpes.push(".expdate"+dpe);
 			$("#grn_pids").append('<input type="hidden" name="poids[]" value="'+poi.po_id+'">');
 			added_pos.push(poi.po_id);
@@ -607,6 +728,14 @@ function reset_tabindex(row,cb)
 		$('input.prod_mrp',this).attr('tabindex',tabindex_cnt);
 		tabindex_cnt++;
 		$('input.upd_pmrp',this).attr('tabindex',tabindex_cnt);
+		tabindex_cnt++;
+		$('input.exp_date',this).attr('tabindex',tabindex_cnt);
+		tabindex_cnt++;
+		$('input.has_offer',this).attr('tabindex',tabindex_cnt);
+		tabindex_cnt++;
+		$('input.offer_list',this).attr('tabindex',tabindex_cnt);
+		tabindex_cnt++;
+		$('.offer_area',this).attr('tabindex',tabindex_cnt);
 		tabindex_cnt++;
 		$('.validate_edit_mode',this).attr('tabindex',tabindex_cnt);
 		tabindex_cnt++;
@@ -882,9 +1011,26 @@ $(".datagrid .rqty").live("change",function(){
 
 $(function(){
 	$('.page_title').html("Stock Intake");
+	$('.offer_list').hide();
+	$('.offer_area').hide();
 	$('.selected_po_list').hide();
+	$('.cancel_prd').hide();	
 	$("#srch_barcode").keyup(function(e){
+	if($('.edit_mode').hasClass('edit_mode'))
+	{
+		$('.edit_mode .scan_pbarcode').val('');
+		$('.edit_mode .pb_blk').hide().html('');
+		$('.edit_mode .imei_scanned_status').removeClass('active').html('NO');
+		$('.edit_mode .rqty').val('0');
+		$('.edit_mode .iqty').val('0');
+		$('.edit_mode .bcode_scanned_status').removeClass('active').html('NO');
+		$('.edit_mode .prod_mrp').val('');
+		$('.edit_mode .imeis').val('');
+		$('.edit_mode .view_imei').html('');
+		$('.edit_mode .cancel_prd').hide();
+		$('.edit_mode').removeClass('edit_mode');
 		
+	}
 	if(e.which==13)
 	{
 		var scan_bc =  $(this).val();
@@ -920,6 +1066,11 @@ $(function(){
 		
 		$(document).scrollTop($(".barcode"+$(this).val()).offset().top);
 		
+		$(".barcode"+$(this).val()+' .scan_pbarcode').val($(this).val());
+		var trele=$(".barcode"+$(this).val()+' .scan_pbarcode').parents('tr:first');
+		var prodid=trele.attr('prodid');
+		$('.bcode_scanned_status',trele).html('YES').addClass('active');
+		$('.pb_blk',trele).html($(this).val()).show();
 	}
 });
 
@@ -1056,7 +1207,9 @@ $("#apply_grn_form").submit(function(){
 	return flag;
 });
 	
-$(".expdate, .datepick").datepicker({minDate:0});
+$(".expdate,.exp_date,.datepick").datepicker({minDate:0});
+
+
 $("#grn_vendor").attr("disabled",false);
 
 <?php if(isset($po)){?>
@@ -1194,6 +1347,26 @@ $('.add_product_row').live('click',function(e){
 						}
     			});	
 });
+
+$(".row_cancel").live('click',function(){
+	var trele=$(this).parents('tr:first');
+	if($('.edit_mode').hasClass('edit_mode'))
+	{
+		$('.scan_pbarcode',trele).val('');
+		$('.pb_blk',trele).hide().html('');
+		$('.imei_scanned_status',trele).removeClass('active').html('NO');
+		$('.rqty',trele).val('0');
+		$('.iqty',trele).val('0');
+		$('.bcode_scanned_status',trele).removeClass('active').html('NO');
+		$('.prod_mrp',trele).val('');
+		$('.view_imei',trele).hide('');
+		$('.imeis',trele).val('');
+		$('.edit_mode').removeClass('edit_mode').removeClass('processed_mode').removeClass('bcode_scanned');
+		$('.cancel_prd',trele).hide();
+	}	
+	scanned_rows();	
+});			
+	
 
 $('.remove_product_row').live('click',function(e){
 	e.preventDefault();
@@ -1436,15 +1609,13 @@ $('.show').click(function(){
 	$('.ajax_loadresult a.selected').each(function(){
 		pos.push($(this).attr('poid'));
 	});
-	
+	var pos_arr ="";
 	if(pos.length)
 	{
 		loadpo(pos);
-		var pos_arr=[];
+		
 		$.post('<?=site_url('admin/ven_list_bypo')?>',{pos:pos},function(data){
 			$('.page_title').html("Stock Intake for <span class='ven_title_wrap'>"+data.ven_det.vendor_name+"</span>");
-			
-			var pos_arr ="";
 			
 			$.each(data.po_id_list,function(i,p){
 				pos_arr+="<a target='_blank' href='"+site_url+'/admin/viewpo/'+p+"'>"+p+"</a>";
@@ -1454,7 +1625,7 @@ $('.show').click(function(){
 				}
 			});
 			
-			$('.selected_po_list').html("<span style='float:left'>Selected PO Ids : "+pos_arr+"</span><span style='float:right'>Total PO Value : Rs."+data.ven_det.ttl+"</span>");
+			$('.selected_po_list').html("<span style='float:left'>Selected PO Ids : <span class='ven_poid'>"+pos_arr+"</span></span><button class='button button-action vid_wrap'>Add PO's</button><span style='float:right'>Total PO Value : Rs."+data.ven_det.ttl+"</span>");
 		},'json');
 		
 		$('.show').hide();
@@ -1469,6 +1640,7 @@ $('.show').click(function(){
 		$('.inv_inp_blk').html("");
 		$('.invamount').html("");
 		$('.invdate').html("");
+		
 	}
 	else
 	{
@@ -1560,12 +1732,21 @@ $(function(){
  
 $('#grn tr').unbind('focus').live('focus', function () {
     if (!$('.edit_mode').length) {
+    	
+	trele = $(this);
+    if (!$('.edit_mode',trele).length && (($('.rqty',trele).val() !=0) && ($('.rqty',trele).val() !='') || ($('.iqty',trele).val() !=0) && ($('.rqty',trele).val() !=''))) 
+    {
     	$(this).addClass('edit_mode');
-    	trele = $(this);
-    	process_edit_validation(function(){
-        	if(!trele.hasClass('bcode_scanned'))
-        		$('.bcode_upd',trele).trigger('click');
-        });
+    	$('.cancel_prd',$(this)).show();
+    	}else if($('.scan_pbarcode',trele).val())
+    	{
+    		$(this).addClass('edit_mode');
+    		$('.cancel_prd',$(this)).show();
+    	}
+    	//process_edit_validation(function(){
+        //	if(!trele.hasClass('bcode_scanned'))
+        	//	$('.bcode_upd',trele).trigger('click');
+        //});
         
     } else {
         if ($(this).hasClass('edit_mode')) { // do nothing           
@@ -1596,7 +1777,50 @@ $(".datagrid tr .rqty,.datagrid tr .iqty,.datagrid tr .vat_prc,.datagrid tr .bco
             });
      }
 });
+$('.has_offer').live('click',function(){
+	var trele=$(this).parents('tr:first');
+	var offer=$('.has_offer',trele).val();
+	if(offer == 0)
+	{
+		$('.has_offer',trele).val('1');
+		$('.offer_list',trele).show();
+		
+	}
+	else
+	{
+		$('.has_offer',trele).val('0');
+		$('.offer_list',trele).hide();
+		$('.offer_area',trele).hide();
+	}
+			
+	
 });  
+
+$('.offer_list').live('change',function(){
+	var trele=$(this).parents('tr:first');
+	
+	var v=$('.offer_list',trele).val();
+	if(v==1)
+	{
+		$('.offer_area',trele).show();
+	}else
+	{
+		$('.offer_area',trele).hide();
+	}
+});
+});  
+
+
+$('.exp_date').live('click',function(){
+	var trele=$(this).parents('tr:first');
+	$(".exp_date",trele).datepicker({minDate:0});
+});
+
+$('.vid_wrap').live('click',function(){
+	
+	$('#load_vendor_po_dlg').dialog('open');
+});
+
 </script>
 
 <script type="text/javascript">

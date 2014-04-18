@@ -146,7 +146,7 @@
 <a class="link" href="<?=site_url("admin/viewpo/{$p['po_id']}")?>">view</a>
 <?php if($p['po_status']!=2 && $p['po_status']!=3){?>
 &nbsp;&nbsp;&nbsp;<a href="<?=site_url("admin/apply_grn/{$p['po_id']}")?>">Stock Intake</a>
-<?php }?>&nbsp;<a onclick="print_po(<?=$p['po_id']?>)" >Print po</a>
+<?php }?>&nbsp;<a onclick="print_po(<?=$p['po_id']?>,'acct')" >Print po</a>
 
 </td>
 
@@ -191,9 +191,9 @@ $(function(){
 	
 }); 
 
-function print_po(poid)
+function print_po(poid,type)
 {
-	var print_url = site_url+'/admin/print_po/'+poid;
+	var print_url = site_url+'/admin/print_po/'+poid+'/acct';
 		window.open(print_url);
 }
 $('.leftcont').hide();

@@ -1,3 +1,6 @@
+<?php 
+	$print_type = $this->uri->segment(4);
+?>
 <html>
 	<head>
 		<title>Po Print</title>
@@ -15,7 +18,8 @@
 		</style>
 	</head>
 	<body onload="window.print()">
-		<h1 style="text-align: center;">Purchase Order</h1>
+		<h1 style="text-align: center;">Purchase Order - <?php echo (($print_type=='acct')?'Accounts Copy':'Sourcing Copy')?></h1>
+		
 		<div align="right" class="hideinprint">
 			<input type="button" value="Print" onClick="window.print()" >
 			<input type="button" value="Close" onClick="window.close()" >
@@ -39,7 +43,18 @@
 			
 			<div align="center" >
 				<table class="print_tbl" border="0" cellspacing="0" cellpadding="4" width="100%" >
-					<thead><tr><th>Slno</th><th style="text-align: left">Product name</th><th style="text-align: right">Mrp</th><th style="text-align: right">Unit price</th><th style="text-align: right">Qty</th><th style="text-align: right">Sub Total </th></tr></thead>
+					<thead><tr><th>Slno</th><th style="text-align: left">Product name</th>
+					<?php if($print_type == 'acct'){?>
+						<th style="text-align: right">Mrp</th>
+						<th style="text-align: right">DP Price</th>
+						<th style="text-align: right">Unit price</th>
+						<th>Margin (%)</th>
+					<?php } ?>
+					<th style="text-align: right">Qty</th>
+					<?php if($print_type == 'acct'){?>
+						<th style="text-align: right">Sub Total </th>
+					<?php } ?>
+					</tr></thead>
 					<tbody>
 					<?php
 						$ttl_order_qty = 0; 
@@ -55,10 +70,16 @@
 								<tr>
 									<td width="1%" style="text-align:center;" width="10"><?=$i;?></td>
 									<td><?=$po['product_name'] ?></td>
-									<td width="1%" style="text-align:right;"><?=$po['mrp']?></td>
+									<?php if($print_type == 'acct'){?>
+									<td width="1%" style="text-align:right;"><?=format_price($po['mrp'])?></td>
+									<td width="1%" style="text-align:right;"><?=format_price($po['dp_price'])?></td>
 									<td width="1%" style="text-align:right;"><?=format_price($po['purchase_price'])?></td>
+									<td width="1%" style="text-align:right;"><?=($po['margin']+$po['scheme_discount_value'])?></td>
+									<?php } ?>
 									<td width="1%" style="text-align:right;"><?=$po['order_qty'] ?></td>
+									<?php if($print_type == 'acct'){?>
 									<td width="1%" style="text-align:right;"><?=format_price($po_p_price)?></td>
+									<?php }?>
 								</tr>
 					<?php 
 								$i++;
@@ -67,9 +88,11 @@
 					?>
 					<tfoot>
 						<tr>
-							<td colspan="4" align="right"><b>Total</b></td>
+							<td colspan="<?php echo (($print_type == 'acct')?6:2);?>" align="right"><b>Total</b></td>
 							<td align="right"><b><?php echo format_price($ttl_order_qty,0);?></b></td>
+							<?php if($print_type == 'acct'){?>
 							<td align="right"><b><?php echo format_price($ttl_order_price,2);?></b></td>
+							<?php }?>
 						</tr>
 					</tfoot>
 					</tbody>
@@ -78,14 +101,18 @@
 			
 			<div class="clear" style="margin-top:10px;">
 				<div align="right"  class="fl_right">
+				<?php if($print_type == 'acct'){?>
 					Total Purchase Order Value : <b> Rs <?=format_price($ttl_order_price,2) ?></b>
+				<?php }?>
 				</div>
 				<div align="left" class="fl_left" style="width: 300px;">
 					<b>PO Remarks:</b>
 					<p><?=$po_det['remarks'] ?></p>
 				</div>
 				<div align="left" class="fl_left">
+					<?php if($print_type == 'acct'){?>
 					Please note : Tax already included in price.  
+					<?php } ?>  
 				</div>
 			</div>
 			<br>

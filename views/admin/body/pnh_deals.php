@@ -140,13 +140,13 @@ $('.Brands_bychar_list_content_listdata').live("click",function(){
 	  	{
 	  		$('.selected_class').removeClass('selected_class');
 	  		$(this).addClass('selected_class');
-	  	 	//deallist_bycat(brandid,catid,0);
-	  	 	filter_deallist($(this).text(),'brand');
+	  	 	deallist_bycat(brandid,catid,0);
+	  	 	//filter_deallist($(this).text(),'brand');
 	  	}
 	  	else
 	  	{ 
-		  	//deallist_bycat(0,catid,0);
-	  		filter_deallist('','all');
+	  		deallist_bycat(0,catid,0);
+		  	//filter_deallist('','all');
 	  	}
 		$('.left_filter_wrap').show();
 });

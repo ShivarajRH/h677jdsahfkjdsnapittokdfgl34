@@ -10,7 +10,7 @@
   RewriteEngine on
 
 #setting base
-  RewriteBase /
+  RewriteBase /sk-erp-sandbox
 
 
 #conditions for internal redir

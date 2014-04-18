@@ -130,7 +130,7 @@ class Admin extends Erp {
 				}
 			}
 			
-			$sessionData = array ("userid"=>$userdetails->id,'username' => $userdetails->name, 'login_flag' => true, 'usertype' => $usertype, 'brandid' => $brandid ,'access'=>$userdetails->access,'block_ip_addr'=>1);
+			$sessionData = array ("userid"=>$userdetails->id,'username' => $userdetails->name, 'login_flag' => true, 'usertype' => $userdetails->usertype, 'brandid' => $brandid ,'access'=>$userdetails->access,'block_ip_addr'=>1);
 			$this->session->set_userdata ( array("admin_user" => $sessionData) );
 			return true;
 		}else
@@ -2527,17 +2527,22 @@ class Admin extends Erp {
 	{
 		$this->erpm->auth();
 		
-		$inv_bygrpno = $this->db->query("select distinct split_inv_grpno 
-	from shipment_batch_process_invoice_link a 
-	join proforma_invoices b on a.p_invoice_no = b.p_invoice_no 
-	join king_invoice c on c.invoice_no = a.invoice_no  
-where (b.dispatch_id = ? or c.ref_dispatch_id = ? ) 
-	
-",array($invoice_no,$invoice_no))->row()->split_inv_grpno;
-
-	if($inv_bygrpno)
-		$invoice_no = $inv_bygrpno;
+		
+		if(!$this->db->query("select count(*) as t from king_invoice where invoice_no = ? ",$invoice_no)->row()->t)
+		{
+			$inv_bygrpno = $this->db->query("select distinct split_inv_grpno
+					from shipment_batch_process_invoice_link a
+					join proforma_invoices b on a.p_invoice_no = b.p_invoice_no
+					join king_invoice c on c.invoice_no = a.invoice_no
+					where (b.dispatch_id = ? or c.ref_dispatch_id = ? )
+			
+					",array($invoice_no,$invoice_no))->row()->split_inv_grpno;
+			
+			if($inv_bygrpno)
+				$invoice_no = $inv_bygrpno;
+		}
 		 
+		
 		
 //		$batch=$this->db->query("select * from shipment_batch_process_invoice_link where invoice_no=?",$invoice_no)->row_array();
 //		if(!empty($batch) && $batch['packed']==0 && $this->db->query("select invoice_status as s from king_invoice where invoice_no=?",$invoice_no)->row()->s==1)
@@ -2562,9 +2567,17 @@ where (b.dispatch_id = ? or c.ref_dispatch_id = ? )
 				";
 		$q=$this->db->query($sql,array($invoice_no,$invoice_no,$invoice_no));
 		
-	 
-		$data['page']="../../body/invoice";
 		$data['invoice_list']=$orders=$q->result_array();
+		$is_pnh=$this->db->query("select is_pnh as p from king_transactions where transid=?",$orders[0]['transid'])->row()->p;
+	 	if($is_pnh==1)	
+		{
+			
+			$data['page']="../../body/pnh_invoice";
+		}
+		else 
+		{ 
+			$data['page']="../../body/invoice";
+		}
 		$data['invoice_no']=$invoice_no;
 		$data['trans']=$this->db->query("select * from king_transactions where transid=?",$orders[0]['transid'])->row_array();
 		

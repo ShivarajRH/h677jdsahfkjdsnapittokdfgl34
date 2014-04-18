@@ -301,9 +301,9 @@ class Pnh extends Controller{
 		$mrp=$deal['mrp'];
 
 		if($deal['menuid']==112 || $deal['menuid']==116 || $deal['menuid']==118)
-			$cost='MRP Price:Rs '.$deal['mrp'];
-		else
 			$cost='DP Price:Rs '.$deal['price'];
+		else
+			$cost='MRP Price:Rs '.$deal['mrp'];
 
 		$name=ucfirst($deal['name']);
 
@@ -321,7 +321,7 @@ class Pnh extends Controller{
 				$this->pdie("{$name} - Not Available");
 			
 			if($avail_det[0][0]['stk']==0 && $deal['is_sourceable']==0 &&  $allow_for_fran==0 && !empty($fran))
-				$this->pdie("Thanks for your enquiry !Product not alloted to you,{$name} - Not Available, Please try another product -For more details contact Storeking Toll Free Customer Care no '18002001996'");
+				$this->pdie("Thanks for your enquiry !{$name} - Not Available, Please try another product -For more details contact Storeking Toll Free Customer Care no '18002001996'");
 		
 		if(!empty($fran) && $allow_for_fran!=0 && empty($mid))
 		{
@@ -332,7 +332,7 @@ class Pnh extends Controller{
 		if(!empty($fran) && $allow_for_fran==0 && empty($mid))
 		{
 			
-			$sms_msg= "Thanks for your enquiry ! Product  not alloted to you-{$name} - {$avail_stat}\n {$cost},please try another product -For more details contact Storeking Toll Free Customer Care no '18002001996'";
+			$sms_msg= "Thanks for your enquiry ! -{$name} {$avail_stat}\n {$cost},Landing Price:Rs {$lcost} -For more details contact Storeking Toll Free Customer Care no '18002001996'";
 			echo $sms_msg;
 		}
 		if(!empty($mid) && empty($fran))
@@ -353,40 +353,46 @@ class Pnh extends Controller{
 	 */
 	function process_memrating($from,$msg,$fran)
 	{
-		//E.g: rate {memberid} 5
+		//E.g: r {5}
 		$frags=explode(" ",trim($msg) );
 
-		if(count($frags) < 3)
+		if(count($frags) < 2)
 		{
-			$this->pdie("Member id or Rate value is not found.");
+                    $this->pdie("Invalid entry Please enter a number in the following format R&lt;SPACE&gt;[1 to ".MAX_RATE_VAL."]. Ex:R 4");
 		}
 
-		$pnh_memberid = $frags[1];
-		$rate = strtolower($frags[2]);
+                $rate_value = $frags[1];
 
-		if($rate > MAX_RATE_VAL)
-			$this->pdie("Rate value is greater than ".MAX_RATE_VAL);
-
-		if( $this->db->query("select count(*) as t from pnh_member_info where pnh_member_id=?",$pnh_memberid)->row()->t == 0 )
+                if(!is_numeric($rate_value))
+                    $this->pdie("Invalid entry Please enter a number in the following format R&lt;SPACE&gt;[1-".MAX_RATE_VAL."]. Ex:R 4");
+                // if rate value is greater than max_rate_val then take max_rate_val
+                if($rate_value > MAX_RATE_VAL)
+                    $rate_value = MAX_RATE_VAL;
+                
+                // if rate value is less than 1 then take 1
+                if($rate_value < 1)
+                    $this->pdie("Invalid number Please enter a number in the following format R&lt;SPACE&gt;[1-".MAX_RATE_VAL."]. Ex:R 4");
+                
+                if( $this->db->query("SELECT COUNT(*) AS t FROM pnh_member_info WHERE mobile= ?",$from)->row()->t == 0 )
 		{
-			$this->pdie("Un registered Member ID ".$pnh_memberid);
+                    $this->pdie("Unregistered Member, please register with storeking.");
 		}
 
-		$mem_set = $this->db->query("select group_concat('\'',sno,'\'') as snos from pnh_member_offers where feedback_status=0 and delivery_status=1 and member_id= ? ",$pnh_memberid);
-		if($mem_set->num_rows() == 0)
+                $mem_set = $this->db->query("SELECT GROUP_CONCAT('\'',mo.sno,'\'') AS snos 
+                                                    FROM pnh_member_offers mo
+                                                    JOIN pnh_member_info mi ON mi.pnh_member_id = mo.member_id
+                                                    WHERE mo.feedback_status=0 AND mo.delivery_status=1 AND mi.mobile=? ",$from);
+                if($mem_set->row()->snos == null)
 		{
-			$this->pdie("There is no member offers for MEMBER_ID $pnh_memberid");
+                    $this->pdie("No Offers found or Order is waiting for delivery - StoreKing.");
 		}
 		else
 		{
 			//found
 			$snos = $mem_set->row()->snos;
-
-			//echo "update pnh_member_offers set feedback_status = 1 where sno in = (".$snos.")";
-			$this->db->query("update pnh_member_offers set feedback_status = 1 where sno in (".$snos.")");
-			echo "Member feedback updated successfully.";
-		}
-
+                }
+                $this->db->query("UPDATE pnh_member_offers SET feedback_status = 1,feedback_value=? WHERE sno IN (".$snos.") ",$rate_value);
+                $this->pdie("Thank you for your valuable feedback.");
 	}
 
 
@@ -658,6 +664,7 @@ class Pnh extends Controller{
 	}
 
 	*/
+        
 	function cancelOrder($from,$msg)
 	{
 
@@ -1712,11 +1719,24 @@ class Pnh extends Controller{
 			if($this->db->affected_rows()>=1)
 			{
 				 
-				$this->erpm->pnh_sendsms($membr_mobno,"$membr_name Welcome to StoreKing � Hurry up!! Get Free Insurance on the 1st Electronic* product you buy. Your Member ID is $membr_id Offer Valid only after Registration fee Of Rs 50/- is paid to Storeking Franchisee.",$fran['franchise_id'],$membr_id,0);
-				//echo $membr_mobno,"You have registered successfully with storeking,member id:$membr_id";
-				$this->pdie("Hello {$fran['franchise_name']} $membr_name has been Registered as StoreKing Member and allotted Member id:$membr_id  Please make sure Registration fee of Rs 50/ has been collected.");
-			
 				
+				$this->pdie("Hello {$fran['franchise_name']}, Congrats!! $membr_name $membr_mobno has been Registered Successfully and has been assigned Member ID: $membr_id. Please make sure Registration fee of Rs ".PNH_MEMBER_FEE."/ has been collected.");
+
+                                //==================< Member REGISTER SMS >====================
+                                $fran_type = $this->fran_menu_type($fran['franchise_id']);
+                                if($fran_type['menu_type'] == 'electonics')
+                                {
+                                    //order menu having electronics
+                                    $mem_msg = "Hi $membr_name, Welcome to StoreKing – Hurry up!! Get Free Insurance on the 1st Electronic* product you buy. Your Member ID is $membr_id. Offer Valid only after Registration fee Of Rs ".PNH_MEMBER_FEE."/- is paid to Storeking Franchisee.";
+                                            echo "Hi $membr_name, Welcome to StoreKing – Hurry up!! Get Free Insurance on the 1st Electronic* product you buy. Your Member ID is $membr_id. Offer Valid only after Registration fee Of Rs ".PNH_MEMBER_FEE."/- is paid to Storeking Franchisee.";
+                                }
+                                else
+                                {
+                                    $mem_msg = "Hi $membr_name, Welcome to StoreKing – Hurry up!! Get Free Talk Time worth Rs.".PNH_MEMBER_FREE_RECHARGE." on your 1st purchase above Rs ".MEM_MIN_ORDER_VAL.". Don’t forget your Member ID is $membr_id. Please deposit Rs".PNH_MEMBER_FEE."/- Registration fee with Storeking Franchisee to avail this offer";
+                                            echo "Hi $membr_name, Welcome to StoreKing – Hurry up!! Get Free Talk Time worth Rs.".PNH_MEMBER_FREE_RECHARGE." on your 1st purchase above Rs ".MEM_MIN_ORDER_VAL.". Don’t forget your Member ID is $membr_id. Please deposit Rs".PNH_MEMBER_FEE."/- Registration fee with Storeking Franchisee to avail this offer";
+                                }
+				$this->erpm->pnh_sendsms($membr_mobno,$mem_msg,$fran['franchise_id'],$membr_id,0);
+                                
 			}
 		}
 
@@ -2470,9 +2490,11 @@ class Pnh extends Controller{
 		$given_vslnos=implode(',',$voucher_code_used['gven_secretcode']);
 		$othr_vslnos=implode(',',$voucher_code_used['othr_secretcode']);
 		$v_balamt=$this->db->query("SELECT SUM(customer_value) AS voucher_bal FROM pnh_t_voucher_details WHERE STATUS in(3,5) AND member_id=?",$is_strkng_membr['pnh_member_id'])->row()->voucher_bal;
+                
+                // =======================< MEMBER ORDER SMS >====================================
 		$this->erpm->pnh_sendsms($from,"your balance after purchase is Rs $v_balamt,redeemed vouchers for rs $c_total are $given_vslnos,$othr_vslnos .Happy Shopping",$from,0,1);
 		//echo "your balance after purchase is Rs $v_balamt,redeemed vouchers for rs $c_total are $given_vslnos,$othr_vslnos.Happy Shopping";
-			
+		// =======================< MEMBER ORDER SMS >====================================
 	}
 
 	function cancel_prepaidorder($from,$msg,$membr)
@@ -2974,11 +2996,12 @@ class Pnh extends Controller{
 							$batch_enabled = 0;
 						$this->db->query("insert into king_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,batch_enabled) values(?,?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran_id,$batch_enabled));
 					}
-					
+					// =======================< MEMBER CONFIRMED ORDER SMS >====================================
 					$this->erpm->pnh_sendsms($mem_mob,"$mem_name,Congrats!Your order [$confirm_oid] has been sucessfully placed,Thanks for Shopping with StoreKing ({$fran['franchise_name']},$from).",$fran_id,$mid,0);
 					echo "$mem_name,Congrats!Your order [$confirm_oid] has been sucessfully placed.Thanks for Shopping with StoreKing ({$fran['franchise_name']},$from)".'<br>';
 					$this->erpm->pnh_sendsms($from,"Thanks for your reply. With Reference to [$mem_name,$mem_mob], Order [$confirm_oid] has been sucessfully placed.",$fran_id,0,0);
 					echo "Thanks for your reply. With Reference to [$mem_name,$mem_mob], Order [$confirm_oid] has been sucessfully placed.";
+					// =======================< MEMBER CONFIRMED ORDER SMS >====================================
 				}
 					
 				$franid=$fran_id;
@@ -3005,11 +3028,14 @@ class Pnh extends Controller{
 			if($confirm_msg=='N' || $confirm_msg=='n')
 			{
 				$this->db->query("update king_user_orders set status=3 where transid=?",$transid);
-
+                                
+				// =======================< MEMBER CANCEL ORDER SMS >====================================
 				$this->erpm->pnh_sendsms($mem_mob,"Hi $mem_name Sorry to inform you ! your order[$confirm_oid] has been Cancelled. Please contact your ($fran_name-$from) for any queries.",$fran_id,$mid,0);
 					echo "Hi $mem_name Sorry to inform you ! your order[$confirm_oid] has been Cancelled. Please contact your ($fran_name-$from) for any queries.";
+				
 				$this->erpm->pnh_sendsms($from,"Thanks for your reply.  With Reference to[$mem_name,$mem_mob] order[$confirm_oid] has been Cancelled.",$fran_id,0,0);
 					echo "Thanks for your reply.  With Reference to[$mem_name,$mem_mob] order[$confirm_oid] has been Cancelled.";
+				// =======================< MEMBER CANCEL ORDER SMS >====================================
 
 			}
 		}
@@ -3053,13 +3079,27 @@ class Pnh extends Controller{
 				$userid=$this->db->insert_id();
 
 				$this->db->query("insert into pnh_member_info(user_id,first_name,last_name,mobile,franchise_id,pnh_member_id,created_on)values(?,?,?,?,?,?,?)",array($userid,$inp_fname,$inp_lname,$from,$fran_id,$membr_id,time()));
-					
-				$this->erpm->pnh_sendsms($fran_mob1,"Hello $fran_name, Congrats !! $inp_mname,has been Registered Successfully and has been assigned Member ID :$membr_id Please make sure Registration fee of Rs 50/ has been collected. -StoreKing Team",$fran_id,0,0);
-				echo "Hello $fran_name, Congrats !! $inp_mname,has been Registered Successfully and has been assigned Member ID :$membr_id Please make sure Registration fee of Rs 50/ has been collected. -StoreKing Team";
-				 
-				$this->erpm->pnh_sendsms($from,"$inp_mname $inp_mname Welcome to Storeking -  Hurry up!! Get Free Insurance on the 1st Electronic* product you buy. your Member ID :$membr_id Offer Valid only after Registration fee Of Rs 50/- is paid to Storeking Franchisee.",$fran_id,$membr_id,0);
-				echo "To Member : $inp_mname Welcome to Storeking -  Hurry up!! Get Free Insurance on the 1st Electronic* product you buy. your Member ID :$membr_id Offer Valid only after Registration fee Of Rs 50/- is paid to Storeking Franchisee.";
 				
+                                //==================< Franchise MEMBER REGISTER SMS >====================
+				$this->erpm->pnh_sendsms($fran_mob1,"Hello $fran_name, Congrats !! $inp_mname,has been Registered Successfully and has been assigned Member ID :$membr_id Please make sure Registration fee of Rs 50/ has been collected. -StoreKing Team",$fran_id,0,0);
+				
+                                echo "Hello $fran_name, Congrats !! $inp_mname,has been Registered Successfully and has been assigned Member ID :$membr_id Please make sure Registration fee of Rs 50/ has been collected. -StoreKing Team";
+				
+                                //==================< Member REGISTER SMS >====================
+                                $fran_type = $this->fran_menu_type($fran_id);
+                                if($fran_type['menu_type'] == 'electonics')
+                                {
+                                    //order menu having electronics
+                                    $mem_msg = "$inp_mname, Welcome to StoreKing – Hurry up!! Get Free Insurance on the 1st Electronic* product you buy. Your Member ID is $membr_id. Offer Valid only after Registration fee Of Rs ".PNH_MEMBER_FEE."/- is paid to Storeking Franchisee.";
+                                            echo "$inp_mname, Welcome to StoreKing – Hurry up!! Get Free Insurance on the 1st Electronic* product you buy. Your Member ID is $membr_id. Offer Valid only after Registration fee Of Rs ".PNH_MEMBER_FEE."/- is paid to Storeking Franchisee.";
+                                }
+                                else
+                                {
+                                    $mem_msg = "Hi $inp_mname, Welcome to StoreKing – Hurry up!! Get Free Talk Time worth Rs.".PNH_MEMBER_FREE_RECHARGE." on your 1st purchase above Rs ".MEM_MIN_ORDER_VAL.". Don’t forget your Member ID is $membr_id. Please deposit Rs".PNH_MEMBER_FEE."/- Registration fee with Storeking Franchisee to avail this offer";
+                                        echo "Hi $inp_mname, Welcome to StoreKing – Hurry up!! Get Free Talk Time worth Rs.".PNH_MEMBER_FREE_RECHARGE." on your 1st purchase above Rs ".MEM_MIN_ORDER_VAL.". Don’t forget your Member ID is $membr_id. Please deposit Rs".PNH_MEMBER_FEE."/- Registration fee with Storeking Franchisee to avail this offer";
+                                }
+				$this->erpm->pnh_sendsms($from,$mem_msg,$fran_id,$membr_id,0);
+                                #=================
 				
 			}
 			else
@@ -3069,6 +3109,40 @@ class Pnh extends Controller{
 		}
 	}
 
+        
+        /**
+         * Function to return franchise menu details
+         * @param type $fran_id int
+         * @return string array
+         */
+        function fran_menu_type($fran_id)
+        {
+            $is_fran_type_electronic = $this->erpm->_get_config_param("FRAN_TYPE_ELECTRONIC");
+            $arr_frn_menus_res = $this->db->query("SELECT m.id,m.name AS menu,find_in_set(m.id,?) as status FROM `pnh_franchise_menu_link`a JOIN pnh_m_franchise_info b ON b.franchise_id=a.fid JOIN pnh_menu m ON m.id=a.menuid WHERE a.status=1 AND b.franchise_id=? ORDER BY status DESC",array($is_fran_type_electronic,$fran_id));
+
+            if($arr_frn_menus_res->num_rows() > 0 )
+            {
+                $arr_frn_menus = $arr_frn_menus_res->result_array();
+                
+                // check if status is set
+                if($arr_frn_menus[0]["status"])
+                {
+                    $data =  array('status'=>"success","menus"=>$arr_frn_menus,"menu_type"=>'electonics',"menu_msg"=>"Only electronic items alloted");
+                }
+                else
+                {
+                    $data =  array('status'=>"success","menus"=>$arr_frn_menus,"menu_type"=>'beauty',"menu_msg"=>"Beauty products");
+                }
+            }
+            else
+            {
+                $data =  array('status'=>"error","menu_type"=>0,"menu_msg"=>"No menus");
+            }
+
+            return $data;
+    //            echo "<pre>"; print_r($data);
+        }
+        
 	function createOrder($from,$msg)
 	{
 		
@@ -3325,6 +3399,8 @@ class Pnh extends Controller{
 		{
 			$this->erpm->pnh_fran_account_stat($fran['franchise_id'],1, $d_total,"Order $transid - Total Amount: Rs $total","order",$transid);
 			$balance=$this->db->query("select current_balance from pnh_m_franchise_info where franchise_id=?",$fran['franchise_id'])->row()->current_balance;
+                        
+                        // =================< Franchise SMS >=============================
 			echo "Your order is placed successfully! Total order amount :Rs $total. Amount deducted is Rs $d_total. Your order ID is $transid Balance in your account Rs $balance";
 			$this->erpm->sendsms_franchise_order($transid,$d_total);
 
@@ -3351,8 +3427,8 @@ class Pnh extends Controller{
 			$updated_by=$userid;
 
 			// Process to batch this transaction
-			$this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
-			$this->erpm->do_trans_changelog($transid,$batch_remarks);
+//			$this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
+//			$this->erpm->do_trans_changelog($transid,$batch_remarks);
 		}
 
 		//Alotting Loyalty Points
@@ -3379,10 +3455,14 @@ class Pnh extends Controller{
 		{
 			$transid=$this->extract_numbers($transid);
 			$transid=trim($transid);
+                        
+                        // ============= FRANCHISE SMS =====================
 			$this->erpm->pnh_sendsms($is_mem['mobile'],"Congrats! Your Order [orderid:$transid] has been sucessfully placed.Please contact($fran_name-$fran_mobile) for any queries -Storeking Team",$fran['franchise_id'],0,'MEM_ORDER');
-			echo " Congrats !Your Order [orderid:$transid] has been sucessfully placed.Please contact($fran_name-$fran_mobile) for any queries -Storeking Team.";
-			$this->erpm->pnh_sendsms($fran['login_mobile1'],"Hello $fran_name,[$mem_name $mem_mob] has placed order for Rs $d_total.order ID is $transid your Order Commision:Rs $commision Please type y $transid to 9243404342 to confirm order.",$fran['franchise_id'],0,'MEM_ORDER');
-			echo "Hello $fran_name,[$mem_name $mem_mob] has placed order for Rs $d_total.order ID is $transid your Order Commision:Rs $commision Please type y $transid to 9243404342 to confirm order.";
+			echo "Congrats !Your Order [orderid:$transid] has been sucessfully placed.Please contact($fran_name-$fran_mobile) for any queries -Storeking Team.";
+			
+                        // ============= MEMBER SMS =====================
+                        $this->erpm->pnh_sendsms($fran['login_mobile1'],"Hello $fran_name,[$mem_name $mem_mob] has placed order for Rs $d_total.order ID is $transid your Order Commision:Rs $commision Please type y $transid to 9243404342 to confirm order.",$fran['franchise_id'],0,'MEM_ORDER');
+			echo "Hello $fran_name, [$mem_name $mem_mob] has placed order for Rs $d_total.order ID is $transid your Order Commision:Rs $commision Please type y $transid to 9243404342 to confirm order.";
 		}
 	}
 

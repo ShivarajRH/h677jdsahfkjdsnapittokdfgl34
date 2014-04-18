@@ -79,11 +79,6 @@ define("MAX_RATE_VAL",5);
 // member minimum order value
 define("MEM_MIN_ORDER_VAL",500);
 
-// member fee
-define("PNH_MEMBER_FEE",50);
-
-
-
 
 /* End of file constants.php */
 /* Location: ./system/application/config/constants.php */

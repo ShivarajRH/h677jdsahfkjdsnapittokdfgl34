@@ -181,6 +181,32 @@ ul.tabs li.active
 {
 	
 }
+/* styling for the image wrapper  */
+#image_wrap {
+    /* dimensions */
+     background-color: #EFEFEF;
+    border: 2px solid #FFFFFF;
+    outline: 1px solid #DDDDDD;
+    padding: 15px 0;
+    text-align: center;
+    margin-bottom:1px;
+    height:400px;
+}
+.scrollable {
+	background: none repeat scroll 0 0 #FFFFFF;
+    height: 86px;
+    overflow: hidden;
+    position: relative;
+}
+.scrollable .items {
+  /* this cannot be too large */
+  	margin-top: 11px;
+	position: absolute;
+	width: 20000em;
+}
+.items div {
+  float:left;
+}
 /*
 .badge.yellow {
   background: #faba3e;
@@ -200,6 +226,7 @@ ul.tabs li.active
 }
 */
 </style>
+
 
 <link rel="stylesheet" type="text/css" href="<?php echo base_url();?>/css/analytic.css" />
 <link class="include" rel="stylesheet" type="text/css" href="<?php echo base_url();?>/js/jq_plot/jquery.jqplot.min.css" />
@@ -308,7 +335,46 @@ ul.tabs li.active
 								</table>
 							</td>
 							<td width="50%">
-								<img src="<?=IMAGES_URL?>items/<?=$deal['pic']?>.jpg" style="margin-left:20px;"><br />
+								<?php $img_res = $this->db->query("select id from king_resources where dealid=?",$deal['dealid'])->result_array(); 
+									if($img_res)
+									{?>
+										<div id="image_wrap">
+											<img src="<?=IMAGES_URL?>items/<?=$deal['pic']?>.jpg" style="margin-left:20px;" >
+											<!---->
+										</div>
+										<div style="margin:0 auto; width: 634px; height:120px;">
+										<!-- "previous page" action -->
+										<a class="prev browse left"></a>
+										 
+										<!-- root element for scrollable -->
+										<div class="scrollable" id="scrollable">
+										 
+										  <!-- root element for the items -->
+										  <div class="items">
+										 
+										    
+										    <img src="<?=IMAGES_URL?>items/<?=$deal['pic']?>.jpg" style="margin-left:20px;" width="50" height="50">
+										    <?php foreach($img_res as $i)
+												{ ?>
+													<div>
+														<img src="<?=IMAGES_URL?>items/<?=$i['id']?>.jpg" style="margin-left:20px;" width="50" height="50">
+													</div>
+												<?php } ?>
+										</div>
+										 
+										<!-- "next page" action -->
+										<a class="next browse right"></a>
+										</div>
+									<?php }
+									else
+									{ ?>
+										<div>
+											<img src="<?=IMAGES_URL?>items/<?=$deal['pic']?>.jpg" style="margin-left:20px;">
+											
+										</div>
+									<?php }	
+								?>
+								
 								<a class="upload_pic_wrapper" href="<?=site_url("admin/pnh_deal_extra_images/{$deal['id']}")?>"><button type="button" class="btn btn-info btn-mini">Click Here</button></a>
 							</td>
 						</tr>
@@ -800,6 +866,46 @@ ul.tabs li.active
 </style>
 
 <script>
+$(function() {
+  // initialize scrollable
+  $(".scrollable").scrollable();
+});
+
+$(".items img").click(function() {
+	// see if same thumb is being clicked
+	if ($(this).hasClass("active")) { return; }
+ 
+	// calclulate large image's URL based on the thumbnail URL (flickr specific)
+	var url = $(this).attr("src").replace("_t", "");
+ 
+	// get handle to element that wraps the image and make it semi-transparent
+	var wrap = $("#image_wrap").fadeTo("medium", 0.5);
+ 
+	// the large image from www.flickr.com
+	var img = new Image();
+ 
+
+	// call this function after it's loaded
+	img.onload = function() {
+ 
+		// make wrapper fully visible
+		wrap.fadeTo("fast", 1);
+ 
+		// change the image
+		wrap.find("img").attr("src", url);
+ 
+	};
+ 
+	// begin loading the image from www.flickr.com
+	img.src = url;
+ 
+	// activate item
+	$(".items img").removeClass("active");
+	$(this).addClass("active");
+ 
+// when page loads simulate a "click" on the first image
+}).filter(":first").click();
+
 
 $('#frm_specialmargin').submit(function(){
 	var spm_val = $('input[name="special_margin"]',this).val();
@@ -865,8 +971,7 @@ $('select[name="state"]').change(function(){
 	deal_stat_pieview(state_id);
 });
 
-$(function()
-{
+(function ($) { 
 	
 	$('#tab_deal_sales').tabs();
 	$('#margin_his').tabs();
@@ -897,7 +1002,7 @@ $(function()
 	$("#mbrsch_from,#mbrsch_to").datepicker({changeMonth: false,minDate:0,}).focus(function(){
 		  $(".ui-datepicker-prev, .ui-datepicker-next").remove();
 	});
-});
+})(jQuery);
 
 $("#grid_list_frm_to").bind("submit",function(e){
     e.preventDefault();
@@ -1082,5 +1187,5 @@ $(".dealstock").dealstock({
 });
 
 </script>
-
+<script class="include" type="text/javascript" src="<?php echo base_url();?>/js/jquery.tools.min.js"></script>
 <?php

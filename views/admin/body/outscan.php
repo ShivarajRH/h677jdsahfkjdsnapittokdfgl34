@@ -29,7 +29,7 @@
 					<?php 
 						if($scan_pnh)
 							echo '<option value="1">AWB/Invoice No Barcode</option>';
-						else 
+						else
 							echo '<option value="2">Partner Orderno</option>';
 					?>
 					</select>

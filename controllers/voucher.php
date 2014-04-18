@@ -1832,7 +1832,7 @@ order by action_date ";
 		
 	}
 
-	function rmv_deals($menuid=0,$cat_ids=0)
+	function rmv_deals($menuid=0,$cat_ids=0,$brand_ids=0)
 	{
 
 		
@@ -1848,6 +1848,9 @@ order by action_date ";
 		
 		if($cat_ids)
 			$cond .= ' and b.catid in ('.$cat_ids.') ';
+                
+		if($brand_ids)
+			$cond .= ' and b.brandid in ('.$brand_ids.') ';
 		
 		$counter = 1;
 		$deleted = 1;

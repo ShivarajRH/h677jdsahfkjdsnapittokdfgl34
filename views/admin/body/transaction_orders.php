@@ -277,7 +277,7 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
             
             <?php
             $offers = $offers_q->result_array();
-            $arr_offer_type = array(0=>"Insurance Opted",1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
+            $arr_offer_type = array(0=>"Insurance Opted",1=>"Recharge",2=>"Insurance",3=>"N/A or Not Opted");
             $arr_offer_status = array(0=>"Not Processed",1=>"Ready to Process",2=>"Processed");
             $arr_feedback_status = array(0=>"No Feedback",1=>"Feedback received");
             
@@ -287,7 +287,7 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
                 <td><?=format_datetime($offer['created_on']);?></td>
                 <td><a href="<?=site_url("/admin/pnh_viewmember/".$offer['user_id']);?>" target="_blank"><?=$offer['first_name'];?></a></td>
                 <td><?=$arr_offer_type[$offer['offer_type']];?></td>
-                <td>Rs. <?=formatInIndianStyle($offer['offer_value']);?></td>
+                <td><?= ( $offer['offer_value'] == 0 ) ? 'Free' : "Rs. ".formatInIndianStyle($offer['offer_value']);?></td>
                 <td><?=$arr_offer_status[$offer['process_status']];?></td>
                 <td><?php if($offer['process_status'] == '1' ){ ?>
                     	<a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank">View</a>
@@ -507,7 +507,7 @@ $allow_qty_chng = 0;
 	<input type="hidden" name="transid" value="<?=$tran['transid']?>">
 	<h4>Orders</h4>
 	<table class="datagrid nofooter" width="100%">
-	<thead><tr><th></th><th>Order ID</th><th>Deal</th><th>Qty</th><th>Stock Product</th><th>MRP</th><th>Offer Price</th><th>Paid</th><th>Available Stock</th><th>Status</th><th>Backend Status</th><th>Last Update on</th></tr></thead>
+	<thead><tr><th></th><th>Order ID</th><th>Deal</th><th>Qty</th><th>Stock Product</th><th>MRP</th><th>Offer Price</th><th>M-Fee</th><th>I-Fee</th><th>sub total</th><th>Paid</th><th>Available Stock</th><th>Status</th><th>Backend Status</th><th>Last Update on</th></tr></thead>
 	<tbody>
 	<?php $shipped_oids=array_unique($shipped_oids); foreach($orders as $o){
 		
@@ -516,6 +516,7 @@ $allow_qty_chng = 0;
 		
 		$alloted_imei_det_res = $this->db->query("select * from t_imei_update_log where alloted_order_id = ? order by id desc limit 1;",$o['id']);
 		
+		$non_sk_imei_res = $this->db->query("select * from non_sk_imei_insurance_orders where order_id=? and transid=?",array($o['id'],$o['transid']));
 		?>
 	<tr>
 	<td>
@@ -573,10 +574,15 @@ $allow_qty_chng = 0;
 	</td>
 	<td><span class="nowrap">Rs <?=$o['i_orgprice']?></span></td>
 	<td class="nowrap">Rs <?=$o['i_price']?></td>
+	<td><?php echo $o['pnh_member_fee'] ;?></td>
+	<td><?php echo $o['insurance_amount'] ;?></td>
 	<td class="nowrap">
 	<?php if($o['quantity']>1){?>Rs  <?=(($o['i_price']-$o['i_coup_discount']))?> x <?=$o['quantity']?><?php }?>
 	<div>Rs<?php if($is_prepaid){?> <?=(($o['i_price']-$o['i_coup_discount'])*$o['quantity']);}else{?> <?=(($o['i_orgprice']-($o['i_discount']+$o['i_coup_discount']))*$o['quantity']);}?></div>
 	</td>
+	
+	<td><?php echo ($o['i_price']-$o['i_coup_discount']+$o['pnh_member_fee']+$o['insurance_amount'])*$o['quantity'] ;?>	</td>
+	
 	<td>
 	<?php foreach($prods as $p){ $s=$this->db->query("select sum(available_qty) as s from t_stock_info where product_id=?",$p)->row()->s; if(!$s) $s=0;?>
 	<div align="center">
@@ -611,7 +617,12 @@ $allow_qty_chng = 0;
 	{
 		$alloted_imei_det = $this->db->query("select * from t_imei_no where order_id = ? ", $o['id'])->row_array();
 	}
-	
+	if($non_sk_imei_res->num_rows())
+	{
+		$non_sk_imei_res=$non_sk_imei_res->row_array();
+		echo '<div style="font-size:11px;background:#fcfcfc;padding:5px;width:155px;text-align:center">
+		<b>Non SK IMEI : '.$non_sk_imei_res['nonsk_imei_no'].'</b>';
+	}
 	if(count($alloted_imei_det))
 	{
 		echo '<div style="font-size:11px;background:#fcfcfc;padding:5px;width:155px;text-align:center">

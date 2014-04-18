@@ -10,12 +10,12 @@
 		</div>
 		<div  class="stk_ordr_inpwrap"><b>Territory : </b><select class="fran_det chzn-select" data-placeholder="Choose Territory" name="sel_terr" id="sel_terr" style="width: 250px;"></select></div>
 		<div class="stk_ordr_inpwrap"><b>Franchise<span class="red_star">*</span> : </b> <select class=" chzn-select" data-placeholder="Choose Franchise "  name="sel_fid" id="sel_fid" style="width:250px;" ></select></div>
-		<div class="stk_ordr_inpwrap"><b>Order For<span class="red_star">*</span> : </b><select name="mid_entrytype" id="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option></select></div>
+		<div class="stk_ordr_inpwrap"><b>Order For<span class="red_star">*</span> : </b><select name="mid_entrytype" id="mid_entrytype" style="width:200px;"><option value="0">Registered Member</option><option value="1">Not Registered Member</option><option value="2">Key Member</option></select></div>
 		<div class="mid_blk" style="background-color:#FAFAFA;padding-left: 100px;margin: 20px 0px;"><b>Member Id</b>  <input type="radio" value="1" name="mtype" checked="checked"> <b>Member Mobno</b><input type="radio" value="2" name="mtype"></div>
 		<div class="stk_ordr_inpwrap mid_blk m_blk"><b> Id<span class="red_star">*</span>	 : </b><input style="font-size:120%" maxlength="8"  type="text" class="mid" name="mid" size=18 ></div>
 		<div class="stk_ordr_inpwrap mmob_blk"><b> Mobno : <span class="red_star">*</span></b><input style="font-size:120%" maxlength="10"  type="text" class="mid" name="mid" size=18 ></div>
 		<div class="reg_blk" style="float:right;font-weight: bold;"><a href="javascript:void(0)" onclick="mem_reg()">Register</a></div>
-		<!--  <div id="signin" style="display:none;"><input type="button" value="Proceed" onclick='load_franchisebyid()' class="button button-rounded button-action"></div>-->
+		<div id="signin" style="display:none;"><input type="button" value="Proceed" onclick='load_franchise_cart_page()' class="button button-rounded button-action"></div>
 		</div>
 	<div id="mid_det" title="Member Details"><div id="mem_fran"></div></div>
 	<div id="authentiacte_blk" title="Franchisee Authentication" ><div id="franchise_det"></div></div>
@@ -131,15 +131,24 @@ $('#mid_entrytype').change(function(){
 		$('.mid_blk').show();
 		$("#signin").hide();
 		$('.reg_blk').hide();
+		$('#signin').hide();
 		
 	}
-	else
+	else if($(this).val()==1)
 	{
 		$('.reg_blk').show();
 		$('.mid_blk').hide();
 		$('.mmob_blk').hide();
+		$('#signin').hide();
 		
+	}else
+	{
+		$('.mid_blk').hide();
+		$('.mmob_blk').hide();
+		$('.reg_blk').hide();
+		$('#signin').show();
 	}
+		
 });
 
 $(".mid").change(function(){
@@ -265,6 +274,17 @@ $("#sel_fid").change(function(){
 			}
 	
 });*/
+
+function load_franchise_cart_page()
+{
+	fid=$("#sel_fid").val();
+	mid=$(".membrid").val();
+	if($("#mid_entrytype").val() ==2)
+	{ mid=0; }
+	$("#hd").slideDown("slow");$(this).parent().hide();$("#prod_suggest_list").css({"top":"184px"});
+	location="<?=site_url("admin/stk_offline_order_deals") ?>/"+fid+'/'+mid;
+}
+
 $("input[type='radio']").change(function(){
 	if($(this).val()==2)
 	{

@@ -215,6 +215,35 @@ class Api extends Controller
 	/**
 	 * function for get franchise menu
 	 */
+	function get_menus()
+	{
+		$this->_is_validauthkey();
+		
+		$userid=$this->input->post('user_id');
+		$franchise_id=$this->input->post('franchise_id');
+		
+		if(!$userid)
+			$this->_output_handle('json',false,array('error_code'=>2001,'error_msg'=>"Invalid user"));
+		
+		$menu_list=array();
+		
+		$menu=$this->apim->get_menus($franchise_id);
+		
+		if($menu)
+		{
+			foreach($menu as $m)
+				array_push($menu_list,$m);
+			
+			$this->_output_handle('json',true,array("menu_list"=>$menu_list));
+		}else{
+			$this->_output_handle('json',false,array('error_code'=>2003,'error_msg'=>"No data found pls contact admin"));
+		}
+		
+	}
+	
+	/**
+	 * function for get franchise menu
+	 */
 	function get_franchise_menus()
 	{
 		$this->_is_validauthkey();
@@ -304,7 +333,7 @@ class Api extends Controller
 		
 	}
 	
-	/**
+/**
 	 * function for get the category list
 	 */
 	
@@ -319,7 +348,7 @@ class Api extends Controller
 		$userid=$this->input->post('user_id');
 		$full=$this->input->post('full');
 		
-		$brand_list=array();
+		
 		$full_cat=1;
 		$menu_brand=0;
 		
@@ -329,36 +358,10 @@ class Api extends Controller
 		if(!$limit)
 			$limit=10;
 		
-		if($brandid && $menuid)
-		{
-			$full_cat=0;
-			$menu_brand=1;
-			
-			$category_list_det=$this->apim->get_categories_by_brand_menu($brandid,$menuid,$start,$limit,$full);
-		}
-		
-		
-		if(!$menu_brand)
-		{
-			if($menuid)
-			{
-				$full_cat=0;
-				
-				$category_list_det=$this->apim->get_categories_by_menu($menuid,$start,$limit);
-			}
-			
-			
-			if($brandid)
-			{
-				$full_cat=0;
-				
-				$category_list_det=$this->apim->get_categories_by_brand($brandid,$start,$limit);
-			}
-		}
-		
 		if($full_cat)
 		{
-			$category_list_det=$this->apim->get_categories($start,$limit);
+			$category_list_det=$this->apim->get_categories_by_menu($menuid);
+			$menu_title=$this->apim->get_menudet($menuid);
 		}
 		
 		
@@ -396,7 +399,7 @@ class Api extends Controller
 				}
 			}
 			
-			$this->_output_handle('json',true,array("category_list"=>$category_cofig));
+			$this->_output_handle('json',true,array("category_list"=>$category_cofig,"menu_title"=>$menu_title['name']));
 		
 		}else{
 			$this->_output_handle('json',true,array("category_list"=>''));

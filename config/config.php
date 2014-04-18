@@ -11,7 +11,7 @@
 |	http://example.com/
 |
 */
-$config['base_url']	= "http://".$_SERVER['HTTP_HOST']."/";
+$config['base_url']	= "http://".$_SERVER['HTTP_HOST']."/sk-erp-sandbox/";
 
 /*
 |--------------------------------------------------------------------------
@@ -41,7 +41,7 @@ $config['index_page'] = "";
 | 'ORIG_PATH_INFO'	Uses the ORIG_PATH_INFO
 |
 */
-$config['uri_protocol']	= "PATH_INFO";
+$config['uri_protocol']	= "AUTO";//"PATH_INFO";
 
 /*
 |--------------------------------------------------------------------------

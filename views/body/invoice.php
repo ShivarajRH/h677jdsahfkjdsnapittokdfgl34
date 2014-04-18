@@ -11,6 +11,8 @@ $mem_det = array();
 $invoice_credit_note_res = $this->db->query("select group_concat(id) as id,sum(amount) as amount from t_invoice_credit_notes a where invoice_no in (select invoice_no from king_invoice where split_inv_grpno = ? or invoice_no = ? ) ",array($invoice_no,$invoice_no));
 $credit_days=$this->db->query("select credit_days from king_transactions where transid=?",$transid)->row()->credit_days;
 
+$inv_total_prints = $this->db->query("select total_prints from king_invoice where invoice_no = ? ",$invoice_no)->row()->total_prints;
+
 //echo $this->db->last_query();
 
 ?>
@@ -676,11 +678,12 @@ table{
 							<td align="right"><?=number_format($cod_ship_charges,2)?></td>
 						</tr>
 						<?php        } 
-							$mem_reg_fee = 0;
-							$num_recharge_offer = $this->db->query("select * from pnh_member_offers where mem_fee_applicable = 1 and process_status='0' and transid_ref = ? ",$order['transid'])->num_rows();
-                            if($num_recharge_offer)
-                            {
-								$mem_reg_fee = PNH_MEMBER_FEE;
+                                                    $mem_reg_fee = 0;
+                                                    $recharge_offer_res = $this->db->query("select * from pnh_member_offers where process_status = 0 and mem_fee_applicable = 1 and transid_ref = ? ",$order['transid']);
+                                                    if($recharge_offer_res->num_rows())
+                                                    {
+                                                                $recharge_offer = $recharge_offer_res->$num_recharge_offer;
+								$mem_reg_fee = $recharge_offer['pnh_member_fee'];
 						?>
 						<tr>
 							<td>Member Registration Fee</td>

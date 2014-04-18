@@ -91,50 +91,66 @@
 	float: left;
     width: 19%;
     margin-right: 1%;
+	min-height: 265px;
+	background: #FFF;
 }
 .prd_inner_wrap2
 {
 	float: left;
-    width: 49%
+    width: 49%;
+    background: #FFF;
 }
 .prd_inner_wrap3
 {
 	float: left;
 	margin-right: 1%;
-   	width: 30%
+   	width: 30%;
+   	background: #FFF;
 }
 .prd_inner_wrap1 .ttl_wrap1
 {
-	float:left;
-	background: none repeat scroll 0 0 #CCCCCC;
+	float: left;
+	background: none repeat scroll 0 0 #CCC;
     font-size: 13px;
     font-weight: bold;
-    padding: 3px 3px 2px 8px;
+	padding: 5px 10px;
+	background: orange;
+	color: #FFF;
+	border-radius: 5px 5px 0px 0px;
 }
 .prd_inner_wrap3 .ttl_wrap1
 {
-	float:left;
-	background: none repeat scroll 0 0 #CCCCCC;
+	float: left;
+	background: none repeat scroll 0 0 #CCC;
     font-size: 13px;
     font-weight: bold;
-    padding: 3px 3px 2px 8px;
+	padding: 5px 10px;
+	background: #A8AEB1;
+	color: #FFF;
+	border-radius: 5px 5px 0px 0px;
 }
 .prd_det .ttl_wrap1
 {
-	float:left;
-	background: none repeat scroll 0 0 #CCCCCC;
+	float: left;
+	background: none repeat scroll 0 0 #CCC;
     font-size: 13px;
     font-weight: bold;
-    padding: 3px 3px 2px 8px;
+	padding: 5px 10px;
+	background: #A8AEB1;
+	color: #FFF;
+	border-radius: 5px 5px 0px 0px;
 }
 
 .prd_inner_wrap2 .ttl_wrap1
 {
-	background: none repeat scroll 0 0 #CCCCCC;
     float: left;
+	background: none repeat scroll 0 0 #CCC;
     font-size: 13px;
     font-weight: bold;
-    padding: 3px 9px 2px 8px;
+	padding: 5px 10px;
+	background: #A8AEB1;
+	color: #FFF;
+	border-radius: 5px 5px 0px 0px;
 }
 .ttl_stk_wrap
 {
@@ -278,8 +294,9 @@
 }
 .total_stat_view
 {
-	height:150px;
+	height:200px;
 	margin-top:10px;
+	padding:10px;
 }
 .processed_stock_imei_ttl
 {
@@ -330,8 +347,11 @@
 			<div class="prd_inner_wrap3">	
 				<div class="prd_inner_sub_wrap1">
 					<div class="ttl_wrap1">Product Stock Summary</div>
-					<button class="button button-action button-tiny fl_right btn_correction">Correction</button>
-					<span class="ttl_stk_wrap">Total Stock : <?=$p['stock']?></span>
+					
+					<div class="clear" style="padding:5px;background: #f1f1f1;overflow: hidden;">
+						<span class="fl_left">Total Stock : <?=$p['stock']?></span>
+						<div class="fl_right"><button class="button button-action button-tiny fl_right btn_correction">Correction</button></div>
+					</div>
 					<div class="vendor_prd_wrap" style="max-height: 140px !important;">
 						<table class="datagrid fl_left" width="100%">
 							<thead>
@@ -375,6 +395,7 @@
 						</table>
 					</div>
 				</div>
+				
 			</div>
 			
 			<div class="prd_inner_wrap2">
@@ -396,13 +417,10 @@
 		<div class="prd_outer_wrap1">
 			<div class="prd_inner_wrap1">
 				<div class="prd_inner_sub_wrap2" style="width:100%">
-					<div class="ttl_wrap1">Linked Deals</div>
+					<div class="ttl_wrap1" >Linked Deals</div>
 					<div class="vendor_prd_wrap">
 						<table class="datagrid fl_left" width="100%">
-							<thead>
-								<tr><th>Sno</th><th>Deal</th><th>Qty</th><th>Type</th></tr>
-							</thead>
-							<tbody>
+							
 								<?php
 									$list_deals_res = $this->db->query("select i.is_pnh,i.id,i.name,l.qty,i.price 
 																		from m_product_deal_link l 
@@ -414,7 +432,14 @@
 								<?php  
 									if($list_deals_res->num_rows())
 									{
-										foreach($list_deals_res->result_array() as $d){
+								?>
+									<thead>
+										<tr><th>Sno</th><th>Deal</th><th>Qty</th><th>Type</th></tr>
+									</thead>
+									<tbody>
+								<?php 		
+										foreach($list_deals_res->result_array() as $d)
+										{
 								?>
 									<tr>
 										<td><?=$i++?></td>
@@ -423,13 +448,48 @@
 										<!--<td><?=$d['price']?></td>-->
 										<td><?=$d['is_pnh']?"PNH":"SNP"?></td>
 									</tr>
-								<?php } }else { ?>
+								<?php 
+										} 
+									}else 
+									{ 
+										$list_grpdeals_res = $this->db->query("select i.is_pnh,i.id,i.name,l.qty,i.price
+												from m_product_group_deal_link l
+												join products_group_pids g on g.group_id = l.group_id 
+												join king_dealitems i on i.id=l.itemid
+												where g.product_id=?",$p['product_id']);
+										
+										if($list_grpdeals_res->num_rows())
+										{
+											?>
+											<thead>
+												<tr><th>Sno</th><th>Group Deal</th><th>Type</th></tr>
+											</thead>
+											<tbody>
+											<?php
+											
+											foreach($list_grpdeals_res->result_array() as $d)
+											{
+								?>
+												<tr>
+													<td><?=$i++?></td>
+													<td><a href="<?=site_url("admin/deal/{$d['id']}")?>" target="_blank"><?=$d['name']?></a></td>
+													<td><?=$d['is_pnh']?"PNH":"SNP"?></td>
+												</tr>
+								<?php
+											}
+										}
+										else
+										{	
+								?>
 									<tr>
 										<td>
 											No Linked Deals Found
 										</td>
 									</tr>
-								<?php } ?>
+								<?php 
+										} 
+									}
+								?>
 							</tbody>
 						</table>
 					</div>
@@ -611,12 +671,11 @@
 						</table>
 						<div id="stock_imei_processed_pagination" style="display: none"></div>
 					</div>
-					
 					<div id="avl_serial_nos">
 						<h4 style="float: left;width:50%">Total : <span class="avl_stock_imei_ttl">0</span></h4>
 						<div style="float: right;width:50%;text-align: right">
 							<span>From : </span>
-							<input type="text" id="avl_from_date" value="<?php echo date('Y-m-d',time()-60*3600*24)?>" />
+							<input type="text" id="avl_from_date" value="2012-01-01" />
 							<span>To : </span>
 							<input type="text" id="avl_to_date" value="<?php echo date('Y-m-d',time())?>" /> 
 							<button class="button button-rounded button-action button-tiny a_imei_filter_submit">Go</button>

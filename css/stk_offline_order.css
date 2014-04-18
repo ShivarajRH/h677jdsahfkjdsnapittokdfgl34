@@ -232,7 +232,7 @@ width:100%;
     float: left;
     margin-right: 2px;
     text-align: right;
-    width: 19%;
+    width: 21%;
 }
 .pcart_extra span 
 {
@@ -275,6 +275,7 @@ width:100%;
 }
 .p_top
 {
+	text-align:center;
 padding-top: 16px;
 }
 .max_qty_wrap

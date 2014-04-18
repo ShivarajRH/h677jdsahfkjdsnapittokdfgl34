@@ -106,7 +106,7 @@ $(function(){
 					<?php echo $f['is_prepaid']?'[Unmark]':'[Mark Prepaid]' ?>
 			</span>
 		<?php }?>
-		<h2 class="franch_header_wrap"><?php echo $f['franchise_name']?><a style="margin-left: 10px; font-size: 12px;"href="<?php echo site_url('admin/pnh_edit_fran'.'/'.$f['franchise_id'])?>">(edit)</a></h2>
+		<h2 class="franch_header_wrap"><?php echo $f['franchise_name']?><a style="margin-left: 10px; font-size: 12px;" href="<?php echo site_url('admin/pnh_edit_fran'.'/'.$f['franchise_id'])?>">(edit)</a></h2>
 	</div>
 	
 	<div style="float:right;width:40%;margin-bottom: 6px;">
@@ -832,7 +832,7 @@ $(function(){
 
                                                                                     <?php
                                                                                     $offers = $offers_q->result_array();
-                                                                                    $arr_offer_type = array(0=>"Insurance Opted",1=>"Free Recharge",2=>"Free Insurance",3=>"N/A or Not Opted",4=>"Requested for Insurance");
+                                                                                    $arr_offer_type = array(0=>"Insurance Opted",1=>"Recharge",2=>"Insurance",3=>"N/A or Not Opted");
                                                                                     $arr_offer_status = array(0=>"Not Processed",1=>"Ready to Process",2=>"Processed");
                                                                                     foreach($offers as $i=>$offer) { ?>
                                                                                     <tr>
@@ -841,7 +841,7 @@ $(function(){
                                                                                         <td><a href="<?=site_url("/admin/pnh_viewmember/".$offer['user_id']);?>" target="_blank"><?=$offer['first_name'];?></a></td>
                                                                                         <td><a href="<?=site_url("/admin/trans/".$offer['transid_ref']);?>" target="_blank"><?=$offer['transid_ref'];?></a></td>
                                                                                         <td><?=$arr_offer_type[$offer['offer_type']];?></td>
-                                                                                        <td>Rs. <?=formatInIndianStyle($offer['offer_value']);?></td>
+                                                                                        <td><?= ( $offer['offer_value'] == 0 ) ? 'Free' : "Rs. ".formatInIndianStyle($offer['offer_value']);?></td>
                                                                                         <td><?=$arr_offer_status[$offer['process_status']];?></td>
                                                                                         <td><?php
                                                                                             if($offer['insurance_id'] != '') {?>

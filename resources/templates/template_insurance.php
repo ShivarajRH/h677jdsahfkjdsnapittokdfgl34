@@ -11,6 +11,7 @@
     <div class="clear"></div>
     <div id="insurance_block_main" style="page-break-after:auto;">
         <style>
+        #insurance_block_main{font-family: arial;font-size: 13px;}
         .showinprint{
             display: none;
         }
@@ -247,7 +248,7 @@
         <br>
         <br>
         
-        <hr>
+        <hr />
         <br>
 
         <p class="regular-style">I ____________________________ here by acknowledge that I have read and understood all the above terms and conditions and agree to abide by it incase of any claim arises.</p>
@@ -261,6 +262,18 @@
             </table>
         </p>
 
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        
+        <div align="center" style="font-size: 10px">
+        	<b>%%franchise_name%%</b>
+        	<br> 
+        	%%franchise_address%%, %%franchise_landmark%%, %%franchise_city%% %%franchise_state%% -  %%franchise_postcode%% - %%franchise_mobile%%
+        	
+        </div>
         
        
     </div>

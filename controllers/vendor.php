@@ -50,6 +50,7 @@ class vendor extends Controller
 	 */
 	function deal_import($client_id=0,$access_key='')
 	{
+		ini_set('memory_limit','512M');
 		$vdet = $this->_get_vendordetbykey($access_key);
 		
 		if(!$vdet)
@@ -108,10 +109,38 @@ class vendor extends Controller
 				$this->errors("Invalid template structure Missing ".$header[$i]);
 		}
 		
+		$this->deals_insert($deal_list,$client_id);
+	}
+	
+	/**
+	 * function for insert the products to database
+	 * 
+	 */
+	protected function deals_insert($deal_list,$client_id,$import_upt=0,$grp_v_link=array())
+	{
+		
+		//check deal import log update flag set
+		if($import_upt)
+		{
+			if(empty($grp_v_link))
+				return 0;
+			
+			if(empty($deal_list))
+				return 0;
+		}
+		
+		$report=array();
 		$p=1;
 		$e=0;
 		foreach($deal_list as $c=> $dl)
 		{
+			$log_id=0;
+			//get the client id if it id deal import log update process
+			if($import_upt)
+			{
+				$client_id=$grp_v_link[$c]['vendor_id'];
+				$log_id=$grp_v_link[$c]['log_id'];
+			}
 				
 			$prc_res=array('validation'=>0,'data'=>'','type'=>'new_data_import','msg'=>array());
 			$pids=array();
@@ -150,12 +179,20 @@ class vendor extends Controller
 				$client_url=$d['fashionara_url'];
 				
 				
+				$logId_det_res=$this->db->query("select id from t_vendor_product_import_log where vendor_id=? and group_id=?",array($client_id,$group_id));
+				
+				if($logId_det_res->num_rows() && !$log_id)
+				{
+					$log_id=$logId_det_res->row()->id;
+				}
+				
+				
 				//get desc
 				$description=$this->prepare_html_spec($d);
 				
 				//tile
-				$new_name=$brand.' '.$product_name.' '.$color.' ('.$group_id.')-size:'.$size;
-				$deal_name=$brand.' '.$product_name.' '.$color.' ('.$group_id.')';
+				$new_name=$brand.' '.trim($product_name).' '.$color.' ('.$group_id.')-size:'.$size;
+				$deal_name=$brand.' '.trim($product_name).' '.$color.' ('.$group_id.')';
 				
 				
 				//log data preparing
@@ -164,6 +201,7 @@ class vendor extends Controller
 				
 				if($this->db->query("select 1 from m_product_info where product_name=? or sku_code=?",array($new_name,$sku))->num_rows()!=0)
 				{
+					
 					$prc_res['validation']=1;
 					$prc_res['msg'][]=' Duplicate name for product : '.$new_name;
 				}
@@ -173,26 +211,79 @@ class vendor extends Controller
 				
 				if(!count($brand_det))
 				{
+					
+					// check if brand is already 
+					$this->db->query("insert into m_client_brand_link (brand_id,client_brand,created_on)  (select id,name,now() from king_brands where name = ? order by id desc limit 1); ",array($brand));
+					if($this->db->affected_rows())
+					{
+						$brand_det=$this->db->query("select a.* from m_client_brand_link a join king_brands b on a.brand_id=b.id where client_brand=?",$brand)->row_array();
+					}else
+					{
+						if(!$this->db->query("select count(*) as ttl from m_client_brand_link where client_brand=?",$brand)->row()->ttl)
+							$this->db->query("insert into m_client_brand_link(brand_id,client_brand,created_on)values(0,?,now())",array($brand));
+						
+						$prc_res['validation']=1;
+						$prc_res['msg'][]=$brand." Vendor Brand is not linked in our erp brand"; 
+					}
+				
+				}
+				
+				//check clint brand linked in our erp brand
+				if(count($brand_det))
+				{
+					if($brand_det['brand_id']==0)
+					{
 					$prc_res['validation']=1;
-					$prc_res['msg'][]=$brand." Brand not found in system";
+						$prc_res['msg'][]=$brand." Vendor Brand is not linked in our erp brand";
+				}
 				}
 
+				$cat='';
+				if($product_sub_type!='NULL' && $product_sub_type!='NA' && strlen($product_sub_type) > 2)
+					$cat=$product_sub_type;
+				else
+					$cat=$product_type;
+					
 				//get category id
-				$category_det=$this->db->query("select a.* from m_client_category_link a join king_categories b on b.id=a.category_id where client_category=?",$product_type)->row_array();
+				$category_det=$this->db->query("select b.name as erp_cat,a.* from m_client_category_link a join king_categories b on b.id=a.category_id where client_category=?",$cat)->row_array();
 
 				if(!count($category_det))
 				{
+					if(!$this->db->query("select count(*) as ttl from m_client_category_link where client_category=?",$cat)->row()->ttl)
+						$this->db->query("insert into m_client_category_link(category_id,client_category,created_on)values(0,?,now())",array($cat));
+					
 					$prc_res['validation']=1;
-					$prc_res['msg'][]=$product_type." category not found in system";
+					$prc_res['msg'][]=$product_type." category is not linked in our erp category";
+				}
+
+				if(count($category_det))
+					{
+					if($category_det['category_id']==0)
+					{
+					$prc_res['validation']=1;
+						$prc_res['msg'][]=$product_type." category is not linked in our erp category";
+				}
 				}
 					
 				//get menu det
-				$menu_det=$this->db->query("select b.id as menu_id from m_client_menu_link a join pnh_menu b on b.id=a.menu_id where client_menu=?",$menu)->row_array();
+				$menu_det=$this->db->query("select a.menu_id as menu_id from m_client_menu_link a join pnh_menu b on b.id=a.menu_id where client_menu=?",$menu)->row_array();
 				
 				if(empty($menu_det))
 				{
+					if(!$this->db->query("select count(*) as ttl from m_client_menu_link where client_menu=?",$menu)->row()->ttl)
+						$this->db->query("insert into m_client_menu_link(menu_id,client_menu,created_on)values(0,?,now())",array($menu));
+					
 					$prc_res['validation']=1;
-					$prc_res['msg'][]=$menu." menu not found in system";
+					$prc_res['msg'][]=$menu." menu is not linked in our erp menu";
+				}
+				
+				if(count($menu_det))
+				{
+					if($menu_det['menu_id']==0)
+					{
+						$prc_res['validation']=1;
+						$prc_res['msg'][]=$menu." menu is not linked in our erp menu";
+					}	
 				}
 				
 				//get category attributes details
@@ -203,7 +294,7 @@ class vendor extends Controller
 					if(empty($category_attr))
 					{
 						$prc_res['validation']=1;
-						$prc_res['msg'][]="Attributes not linked for category";
+						$prc_res['msg'][]="Attributes not linked for category ".$category_det['erp_cat'];
 					}else {
 							
 						foreach($category_attr as $ca)
@@ -211,7 +302,7 @@ class vendor extends Controller
 							if(!isset($d[strtolower($ca['attr_name'])]))
 							{
 								$prc_res['validation']=1;
-								$prc_res['msg'][]=$ca['attr_name']." attribute not found";
+								$prc_res['msg'][]=$ca['attr_name']." attribute not found for ".$category_det['erp_cat'];
 							}
 							
 							if(isset($d[strtolower($ca['attr_name'])]))
@@ -219,7 +310,7 @@ class vendor extends Controller
 								if($d[strtolower($ca['attr_name'])]=='' || $d[strtolower($ca['attr_name'])]=='NA')
 								{
 									$prc_res['validation']=1;
-									$prc_res['msg'][]=$ca['attr_name']." attribute value not found";
+									$prc_res['msg'][]=$ca['attr_name']." attribute value not found ".$category_det['erp_cat'];
 								}
 							}
 						}
@@ -280,13 +371,14 @@ class vendor extends Controller
 					
 					//client products link our system product
 					$cpl_inp=array();
-					$cpl_inp['vendor_id']=$vendor['vendor_id'];
+					$cpl_inp['vendor_id']=$client_id;
 					$cpl_inp['product_id']=$pid;
 					$cpl_inp['vendor_product_code']=$sku;
 					$cpl_inp['mrp']=$mrp;
 					$cpl_inp['created_on']=date('Y-m-d H:i:s');
 					$this->db->insert("m_vendor_product_link",$cpl_inp);
 					
+					if(!$import_upt)
 					echo '<b>'.$p.'</b> Product added."<br>"';
 					
 					$p=$p+1;
@@ -297,7 +389,14 @@ class vendor extends Controller
 			$process_log_inp['type']=$prc_res['type'];
 			$process_log_inp['data']=$prc_res['data'];
 			$process_log_inp['msg']=implode(',',$prc_res['msg']);
+			$process_log_inp['group_id']=$group_id;
+			
+			if(!$import_upt && !$log_id)
 			$process_log_inp['created_on']=date('Y-m-d H:i:s');
+			else
+				$process_log_inp['modified_on']=date('Y-m-d H:i:s');
+			
+			$process_log_inp['vendor_id']=$client_id;
 			
 			
 			//deal creation block
@@ -318,7 +417,17 @@ class vendor extends Controller
 				$tax=14.5;
 				$multi_imgs = array_filter(array_unique($multi_imgs));
 				
-				$main_img=$this->get_prd_img($main_img_url);
+				
+				//inerting the images
+				$img_inp=array();
+				$img_inp['vendor_id']=$client_id;
+				$img_inp['item_id']=$itemid;
+				$img_inp['main_image']=$main_img_url;
+				$img_inp['other_images']=implode(',',$multi_imgs);
+				$img_inp['created_on']=cur_datetime();
+				$this->db->insert("m_vendor_product_images",$img_inp);
+				
+				/*$main_img=$this->get_prd_img($main_img_url);
 				//deal image
 				if($main_img)
 				{
@@ -336,7 +445,7 @@ class vendor extends Controller
 						fclose($fp);
 					}
 					
-					/*$imgname = randomChars ( 15 );
+					$imgname = randomChars ( 15 );
 					$this->load->library("thumbnail");
 					echo $this->thumbnail->check($main_img);exit;
 					if($this->thumbnail->check($main_img))
@@ -346,11 +455,9 @@ class vendor extends Controller
 						$this->thumbnail->create(array("source"=>$main_img,"dest"=>"images/items/thumbs/$imgname.jpg","width"=>50,"max_height"=>50));
 						$this->thumbnail->create(array("source"=>$main_img,"dest"=>"images/items/$imgname.jpg","width"=>400));
 						$this->thumbnail->create(array("source"=>$main_img,"dest"=>"images/items/big/$imgname.jpg","width"=>1000));
-					}*/
-				
-				}else{
-					$imgname=null;
 				}
+				
+				}*/
 				
 				
 				$keywords=str_ireplace(array('(',')','-'),'',str_ireplace(' ',',',$deal_name));
@@ -381,22 +488,92 @@ class vendor extends Controller
 				
 				$report[]=array($itemid,$dealid,$name,$pnh_id);
 				
-				
-				
-				
-				
 				$process_log_inp['status']=1;
+				
+				if(!$import_upt && !$log_id)
 				$this->db->insert("t_vendor_product_import_log",$process_log_inp);
+				else{
+					$this->db->where('id', $log_id);
+					$this->db->update('t_vendor_product_import_log', $process_log_inp);
+				}
 				
 			}else{
 				
 				$process_log_inp['status']=2;
+				
+				if(!$import_upt && !$log_id)
 				$this->db->insert("t_vendor_product_import_log",$process_log_inp);
+				else{
+					$this->db->where('id', $log_id);
+					$this->db->update('t_vendor_product_import_log', $process_log_inp);
+				}
 			}
 		}
 		
 		$this->db->insert("deals_bulk_upload",array("items"=>count($report),"created_on"=>time()));
+		
+		if($import_upt)
+			return 1;
 	}
+	
+	/**
+	 * function for re-import the error flaged vendor deals
+	 */
+	function jx_update_deal_import()
+	{
+		$log_id=$this->input->post("log_id");
+		$output=array();
+		if($log_id && !empty($log_id) && is_array($log_id))
+		{
+			$log_res=$this->db->query("select l.* from t_vendor_product_import_log l join m_vendor_info v on l.vendor_id=v.vendor_id where id in (".implode(",",$log_id).") and status=2");
+			
+			if($log_res->num_rows())
+			{
+				$deal_list=array();
+				$grp_log_link=array();
+				
+				$log_det=$log_res->result_array();
+				foreach($log_det as $l)
+				{
+					$deal_det=json_decode($l['data'],true);
+					foreach($deal_det as $g=>$d)
+					{
+						if(!isset($deal_list[$g]))
+							$deal_list[$g]=$d;
+						
+						if(!isset($grp_log_link[$g]))
+						{
+							$grp_log_link[$g]=array();
+							$grp_log_link[$g]['log_id']=$l['id'];
+							$grp_log_link[$g]['vendor_id']=$l['vendor_id'];
+	}
+					}
+				}
+				
+				$status=$this->deals_insert($deal_list,0,1,$grp_log_link);
+				
+				if($status)
+				{
+					$output['status']='success';
+					$output['msg']="Update process completed";
+				}else{
+					$output['status']='error';
+					$output['msg']="Update process incompleted";
+				}
+				
+			}else{
+				$output['status']='error';
+				$output['msg']="No logs are found";
+			}
+			
+		}else{
+			$output['status']='error';
+			$output['msg']="LogId require";
+		}
+		
+		echo json_encode($output,true);
+	}
+	
 	
 	/**
 	 * function to prepare html description content for products 

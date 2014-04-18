@@ -1361,9 +1361,9 @@ class Cron extends Controller{
 	/**
 	 * fucntion to updte franchise app version
 	 */
-	function cron_update_app_version()
+	function cron_update_app_version_old()
 	{
-		
+		return;
 		ini_set('max_execution_time',6000);
 		ini_set('memory_limit','1024M');
 		
@@ -1374,15 +1374,15 @@ class Cron extends Controller{
 			foreach($res_vl->result_array() as $row_vl)
 			{
 				// check for version price updates and status updates.
-				$res_v = $this->db->query("
-						 					select a.id,a.dealid,a.orgprice,a.price,b.publish,ifnull(if(c.id,0,1),1) as is_new_deal,ifnull(c.id,0) as deal_v_id,
+				$res_v = $this->db->query("select a.id,a.dealid,a.orgprice,a.price,b.publish,ifnull(if(c.id,0,1),1) as is_new_deal,ifnull(c.id,0) as deal_v_id,
 												ifnull(if(c.mrp=a.orgprice,0,a.orgprice),0) as mrp_diff,
 												ifnull(if(c.price=a.price,0,a.price),0) as price_diff,
 												ifnull(if(b.publish=c.is_publish,0,1),0) as status_diff
 												from king_dealitems a 
 												join king_deals b on a.dealid = b.dealid 
-												left join m_apk_version_deal_link c on c.item_id = a.id  
 												join m_apk_store_menu_link d on d.menu_id = b.menuid 
+												join m_apk_version v on v.id = d.store_id
+												left join m_apk_version_deal_link c on c.item_id = a.id and c.version_id = v.id 
 											where store_id = ? and (c.version_id = ? or c.version_id is null ) 
 											having mrp_diff+price_diff+status_diff != 0
 										",array($row_vl['release_version'],$row_vl['id']));
@@ -1416,4 +1416,142 @@ class Cron extends Controller{
 		}
 		
 	}
+	
+	/**
+	 * fucntion to updte franchise app version
+	 */
+	function cron_update_app_version()
+	{
+		ini_set('max_execution_time',6000);
+		ini_set('memory_limit','1024M');
+	
+		// get working versions
+		$res_vl = $this->db->query("select id,release_version,code_version,max(db_version) as v,max(db_changes_v) as dcv from (select * from m_apk_version order by id desc) as g group by  release_version having release_version > 0 order by id desc ");
+		if($res_vl->num_rows())
+		{
+			foreach($res_vl->result_array() as $row_vl)
+			{
+				
+				$new_version_id = 0;
+				
+				
+				// check for deleted deals and mark as publish 0 
+				
+				$del_deal_res = $this->db->query("select a.item_id,a.mrp,a.price,a.is_publish,if(ifnull(b.id,0),1,0) as pub
+														from m_apk_version_deal_link a
+														left join king_dealitems b on a.item_id = b.id 
+														where a.version_id = ? and b.id is null 
+														having pub = 0 and is_publish = 1
+												 ",$row_vl['id']) or die(mysql_error());
+				
+				if($del_deal_res->num_rows())
+				{
+					$new_version_id = $this->_get_new_versionid($row_vl);
+					
+					foreach($del_deal_res->result_array() as $row_v)
+					{
+						// get price,status and new deal updates.
+						$inp = array($new_version_id,$row_v['item_id'],$row_v['mrp'],$row_v['price'],$row_v['pub'],0);
+						$this->db->query("insert into m_apk_version_deal_link (version_id,item_id,mrp,price,is_publish,is_new,created_on,created_by) values(?,?,?,?,?,?,now(),0) ",$inp);
+					}
+					
+				}
+				
+				
+				
+				
+				// check for version price updates and status updates.
+				$res_v = $this->db->query("select store_id,a.id,a.dealid,a.orgprice,a.price,b.publish
+						from king_dealitems a
+						join king_deals b on a.dealid = b.dealid
+						join m_apk_store_menu_link d on d.menu_id = b.menuid
+						where store_id =  ? ",array($row_vl['release_version']));
+				
+				if($res_v->num_rows())
+				{
+					foreach($res_v->result_array() as $row_v)
+					{
+						// check if the deal is available in the version 
+						$item_vdet_res = $this->db->query("select a.*
+													from m_apk_version_deal_link a 
+													join m_apk_version b on a.version_id = b.id
+													where release_version = ? and a.item_id = ? 
+												order by a.id desc 
+												limit 1 ",array($row_v['store_id'],$row_v['id']));
+						
+						
+						$ins_v = array();
+						if($item_vdet_res->num_rows())
+						{
+							// check if there is any diff to log
+							$item_vdet = $item_vdet_res->row_array();
+							
+							$process_tolog = 0;
+							if($item_vdet['mrp']*1 != $row_v['orgprice'])
+								$process_tolog = 1;
+							if($item_vdet['price']*1 != $row_v['price'])
+								$process_tolog = 1;
+							if($item_vdet['is_publish']*1 != $row_v['publish'])
+								$process_tolog = 1;
+							
+							$ins_v['mrp'] = $row_v['orgprice'];
+							$ins_v['price'] = $row_v['price'];
+							$ins_v['is_publish'] = $row_v['publish'];
+							if(!$process_tolog)
+								continue ;
+							
+							$ins_v['is_new'] = 0;
+						}else
+						{
+							
+							if(!$row_v['publish'])
+								continue;
+							
+							$ins_v['mrp'] = $row_v['orgprice'];
+							$ins_v['price'] = $row_v['price'];
+							$ins_v['is_publish'] = $row_v['publish'];
+							$ins_v['is_new'] = 1;
+						}
+
+						$ins_v['item_id'] = $row_v['id'];
+						$ins_v['created_by'] = 0;
+						$ins_v['created_on'] = $this->db->query('select now() as t')->row()->t;
+						
+						// check  if $new_version_id is created 
+						if(!$new_version_id)
+							$new_version_id = $this->_get_new_versionid($row_vl);
+						
+						$ins_v['version_id'] = $new_version_id;
+						
+						$this->db->insert("m_apk_version_deal_link",$ins_v) or die(mysql_error());
+						
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * function to generate new version id 
+	 */
+	function _get_new_versionid($row_vl)
+	{
+		$row_vl['dcv'] = $row_vl['dcv']+1;
+		
+		// reset db version index on 3 digits
+		if($row_vl['dcv'] > 999)
+		{
+			$row_vl['v'] = $row_vl['v']+1;
+			$row_vl['dcv'] = 1;
+		}
+		
+		
+		$inp = array($row_vl['release_version'].'.'.$row_vl['code_version'].'.'.$row_vl['v'].'.'.$row_vl['dcv'],$row_vl['release_version'],$row_vl['code_version'],$row_vl['v'],$row_vl['dcv']);
+		
+		// create new version
+		$this->db->query("insert into m_apk_version (version,release_version,code_version,db_version,db_changes_v,created_by,created_on) values (?,?,?,?,?,0,now())",$inp);
+		$new_version_id = $this->db->insert_id();
+		return $new_version_id;
+	}
+	
 }

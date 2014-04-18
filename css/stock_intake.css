@@ -796,3 +796,26 @@ span.name {font-size: 12px !important;}
 
 #grn a:focus{font-weight: bold;font-size: 14px;}
 #grn .iqty,#grn .rqty{min-width: 30px !important;border: 2px solid #000 !important}
+.exp_date
+{
+	width:60px;
+}
+.vid_wrap
+{
+	float: left;
+    padding: 0;
+    font-weight: bold;
+    font-size: 13px;
+    line-height: 23px;
+    height:26px !important; 
+}
+
+
+.modal_po_list
+{
+	width: 25% !important;
+}
+.if_offer
+{
+	width:123px;
+}

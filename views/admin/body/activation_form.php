@@ -7,6 +7,7 @@
 				<li><a class="<?php echo (($type=='mem_reg')?'selected':'')?>" href="#member_reg">Member Registeration</a></li>
 				<li><a class="<?php echo (($type=='coup_actv')?'selected':'')?>" href="#coupon_activation">Coupon Activation</a></li>
 				<li><a class="<?php echo (($type=='coup_redeem')?'selected':'')?>" href="#coupon_redeemtion">Coupon Redeemtion</a></li>
+				<li><a class="<?php echo (($type=='imei_actv')?'selected':'')?>" href="#imei_activation">IMEI Activation</a></li>
 			</ul>
 		<!-- Member registeration START -->
 			<div id="member_reg">
@@ -360,7 +361,7 @@
 													
 													<td colspan="2"><input maxlength="10" type="text" style="width: 200px;" class="member_mobno"
 														value="<?php echo set_value('mem_mobno');?>" name="mem_mobno"> <span
-														id="mobno_resp_msg" style="font-size: 9px"></span> <?php echo form_error('mobno','<span class="error_msg">','</span>');?>
+														id="mobno_resp_msg" style="font-size: 9px"></span> <?php echo form_error('mem_mobno','<span class="error_msg">','</span>');?>
 														<div id="mem_fran" style="background: #fcfcfc;"></div>
 													</td>
 												<!--  </tr>
@@ -442,8 +443,331 @@
 </div>
 		</div>
 		</div>
+		<!-- IMEI Activation Form Start -->
+		<div id="imei_activation">
+			<div class="tab_view tab_view_inner">
+				<ul>
+					<li><a href="#imei_activation">SK IMEI Activation</a></li>
+					<li><a href="#non_skimei_activation">NON SK IMEI Activation</a></li>
+				</ul>
+			
+			<!-- SK IMEI Block Start -->
+			<div id="imei_activation">
+			<table width="100%" cellpadding="0">
+			<tr>
+				<td width="30%">
+					<div class="form" style="background: #fafafa;margin-right:20px;padding:10px;">
+						<form action="<?php echo site_url('admin/pnh_process_franchise_imei_activation');?>" id="frm_franimeiactv" method="post">
+							<table cellpadding="10" cellspacing="0" border="0" style="border-collapse: collapse">
+								<tr style="background: #f1f1f1">
+									<td><b style="padding:5px;">Enter IMEI</b> <span class="red_star">*</span></td>	
+									<td><input type="text" style="width: 200px;" value="<?php echo set_value('imei_no');?>" name="imei_no" >
+										<?php echo form_error('imei_no','<span class="error_msg">','</span>');?>
+									</td>
+								</tr>
+								<tr id="imei_det"></tr>
+								<tr>
+									<td><b>Mobileno</b> <span class="red_star">*</span></td>	
+									<td>
+										<input type="hidden" name="franchise_id" value="0">
+										<input type="hidden" name="member_id" value="0">
+										<input type="hidden" name="imei_hasinsurance" value="0">
+										
+										<input maxlength="10" type="text" style="width: 200px;" value="<?php echo set_value('imei_mobno');?>" name="imei_mobno" >
+										<span id="mobno_resp_msg" style="font-size: 9px"></span>
+										<?php echo form_error('imei_mobno','<span class="error_msg">','</span>');?>
+									</td>
+									
+								</tr>
+								<tr id="new_memname_imei" style="display:none">
+									<td><b>Name</b></td>	
+									<td>
+										<input type="text" style="width: 200px;" name="mem_name" value="">
+									</td>
+								</tr>
+								<tr class="insu" style="display:none">
+									<td><b>Proof Type</b></td>	
+									<td><select name="insurance[proof_type]">
+										<option value="">Select</option>
+                                                    <?php $insurance_types=$this->db->query("select * from insurance_m_types order by name asc")->result_array();
+                                                            if($insurance_types){
+                                                            foreach($insurance_types as $i_type){
+                                                    ?>
+                                                            <option value="<?php echo $i_type['id']?>"><?php echo $i_type['name']?></option>
+                                                    <?php }}?>
+                                         </select>
+									</td>
+								</tr>
+								<tr class="insu" style="display:none">
+									<td><b>Proof ID</b></td>	
+									<td>
+										<input type="text" style="width: 200px;" name="insurance[proof_id]" value="">
+									</td>
+								</tr>
+								<tr class="insu" style="display:none">
+									<td><b>Address</b></td>	
+									<td>
+										<textarea type="text"  name="insurance[proof_address]" value=""></textarea>
+									</td>
+								</tr>
+								<tr class="insu" style="display:none">
+									<td><b>City</b></td>	
+									<td>
+										<input type="text" width="200px"  name="insurance[proof_city]" value=""></textarea>
+									</td>
+								</tr>
+								<tr class="insu" style="display:none">
+									<td><b>Pin Code</b></td>	
+									<td>
+										<input type="text" style="width: 200px;" name="insurance[proof_pincode]" value="">
+									</td>
+								</tr>		
+								<tr class="insu" style="display:none">
+									<td><b>Franchise Receipt No</b></td>	
+									<td>
+										<input type="text" style="width: 200px;" name="insurance[fran_receipt_no]" value="">
+									</td>
+								</tr>	
+								<tr class="insu" style="display:none">
+									<td><b>Franchise Receipt Amount</b></td>	
+									<td>
+										<input type="text" style="width: 200px;" name="insurance[fran_receipt_amt]" value="">
+									</td>
+								</tr>	
+								<tr class="insu" style="display:none">
+									<td><b>Franchise Receipt Date</b></td>	
+									<td>
+										<input type="text" style="width: 200px;" id="fran_receiptdate" name="insurance[fran_receipt_date]" value="">
+									</td>
+								</tr>				
+								<tr id="mobno_det"></tr>
+								<tr>
+									<td colspan="2" align="left">
+										<input type="submit" disabled="" id="actv_submit_btn" class="button button-flat-royal button-small button-rounded" value="Activate IMEI/Serialno" > 
+									</td>
+								</tr>
+							</table>
+						</form>
+					</div>
+				</td>
+				<td valign="top" width="70%" align="left">
+					 <div>
+						<?php
+							$imei_actv_list = $this->db->query("select f.invoice_no,b.userid as user_id,e.username as activated_byname,imei_activated_on,activated_by,activated_mob_no,activated_member_id,d.franchise_id,franchise_name,imei_no,imei_reimbursement_value_perunit as imei_credit_amt from t_imei_no a join king_orders b on a.order_id = b.id join king_transactions c on c.transid = b.transid join pnh_m_franchise_info d on d.franchise_id = c.franchise_id left join king_admin e on e.id = a.activated_by join king_invoice f on f.order_id = b.id where a.is_imei_activated = 1 order by imei_activated_on desc limit 10");
+						?>
+						<h3 style="margin:5px 0px">Latest IMEI/Serialno Activations</h3>
+						<table class="datagrid" width="100%">
+							<thead>
+								<th width="20" style="text-align: left">Slno</th>
+								<th width="130"  style="text-align: left">Activated On</th>
+								<th width="70"  style="text-align: left">Activated By</th>
+								<th  style="text-align: left">Franchise</th>
+								<th  style="text-align: left" width="80">Invoiceno</th>
+								<th  style="text-align: left" width="150">IMEI/Serial no</th>
+								<th  style="text-align: left" width="100">Mobile no</th>
+								<th  style="text-align: left" width="100">Activated MemberID</th>
+								<th  style="text-align: left" width="30">Credit</th>
+							</thead>
+							<tbody>
+								<?php
+									$i=0;
+									foreach($imei_actv_list->result_array() as $imei_det)
+									{
+								?>
+										<tr>
+											<td><?php echo ++$i ?></td>
+											<td><?php echo format_datetime($imei_det['imei_activated_on']) ?></td>
+											<td><?php echo ($imei_det['activated_byname']?$imei_det['activated_byname']:'SMS') ?></td>
+											<td><?php echo anchor('admin/pnh_franchise/'.$imei_det['franchise_id'],$imei_det['franchise_name'],'target="_blank"') ?></td>
+											<td><a href="<?php echo site_url('admin/invoice/'.$imei_det['invoice_no']);?>" target="_blank"><?php echo $imei_det['invoice_no'] ?></a></td> 
+											<td><?php echo $imei_det['imei_no'] ?></td>
+											<td><?php echo $imei_det['activated_mob_no'] ?></td>
+											<td><?php echo anchor('admin/pnh_viewmember/'.$imei_det['user_id'],$imei_det['activated_member_id'],'target="_blank"') ?></td>
+											<td><?php echo $imei_det['imei_credit_amt'] ?></td>
+										</tr>
+								<?php				
+									}
+								?>
+							</tbody>
+						</table>
+					</div>
+				</td>
+			</tr>
+		</table>
+		</div>
+		<!-- SK IMEI Block End -->
+		<!-- NON SK IMEI Block Start -->
+		
+		<div id="non_skimei_activation">
+		
+		<div align="left" style="float: left; width: 35%;">
+			<form action="<?php echo site_url('admin/pnh_process_nonsk_imei_activation');?>" method="post" data-validate="parsley">
+					
+							<div  class="nonsk_imeiwrap">
+								<div class="fran_imeilabel"><b >Enter IMEI :</b> <span class="red_star">*</span></div>	
+								<div class="imei_inp"><input type="text" style="width: 200px;" value="<?php echo set_value('nonsk_imeino');?>" name="nonsk_imeino" data-required="true" >
+									<?php echo form_error('nonsk_imeino','<span class="error_msg">','</span>');?>
+								</div>
+								<div  class="fran_imeilabel"><span id="nonskimei_overview"></span></div>
+							</div>
+							
+							
+							<div  class="nonsk_imeiwrap">
+								 <div class="fran_imeilabel"><b>Franchise :</b><span class="red_star">*</span></div>
+									<div class="imei_inp"><select  name="non_imei_fid" id="non_imei_fid" style="width:200px;" data-required="true">
+									<option value="">Choose</option>
+									<?php
+										if($fran_list->num_rows())
+										{
+											foreach($fran_list->result_array() as $fran)
+											{
+												echo '<option '.set_select('imei_fran_id',$fran['franchise_id']).' value="'.$fran['franchise_id'].'">'.$fran['franchise_name'].'</option>';
+											}
+										}
+										?>
+									
+										</select>
+									</div>
+							</div>
+							<div class="nonsk_imeiwrap">	
+								<div class="fran_imeilabel"><b>Order ID :</b><span class="red_star">*</span></div>
+								<div class="imei_inp"><input type="text" style="width:200px;" name="order_id" data-required="true"></div>
+								<!--  <div style="float:right;margin:-70px 279px;" id="nonskimeireplcmnt_orderdet"></div>-->
+								<div style="float:left;font-size: 10px;" id="nonskimeireplcmnt_orderdet"></div>
+								
+							</div>
+							<div class="nonsk_imeiwrap">
+								<div class="fran_imeilabel"><b>Mobileno :</b> <span class="red_star">*</span></div>	
+								<div class="imei_inp">
+									<input maxlength="10" type="text" style="width: 200px;" value="<?php echo set_value('nonskimei_mobno');?>" name="nonskimei_mobno" data-required="true" >
+								</div>
+								<span  id="mem_det"></span>
+							</div>
+							
+							<div class="nonsk_imeiwrap nonsk_imei_newmem" >
+								<div class="fran_imeilabel"><b>Name :</b> <span class="red_star">*</span></div>	
+								<div class="imei_inp">
+									<input type="text" style="width: 200px;" value="<?php echo set_value('nonskimei_memname');?>" name="nonskimei_memname" data-required="true" >
+								</div>
+								<div style="float:left;font-size: 10px;" id="mem_det"></div>
+							</div>
+													 
+							 <div class="nonsk_imeiwrap">
+								<div class="fran_imeilabel"><b>Model No :</b><span class="red_star">*</span></div>
+								<div class="imei_inp"><input type="text" name="nonskimei_modalno" value="<?php echo set_value('nonskimei_modalno');?>" style="width: 200px;" data-required="true"></div>
+							</div>
+										
+							<div class="nonsk_imeiwrap">
+								<div class="fran_imeilabel"><b>Receipt No :</b><span class="red_star">*</span></div>	
+								<div class="imei_inp">
+									<input  type="text" style="width: 200px;" value="<?php echo set_value('nonskimei_fran_receiptno');?>" name="nonskimei_fran_receiptno" data-required="true" >
+								</div>
+							</div>
+							<div class="nonsk_imeiwrap">
+								<div class="fran_imeilabel"><b>Amount :</b> <span class="red_star">*</span></div>	
+								<div class="imei_inp">
+									<input  type="text" style="width: 200px;" value="<?php echo set_value('nonskimei_fran_receiptamt');?>" name="nonskimei_fran_receiptamt" data-required="true" >
+								</div>
 
 	</div>
+							<div class="nonsk_imeiwrap">
+								<div class="fran_imeilabel"><b>Date :</b> <span class="red_star">*</span></div>	
+								<div class="imei_inp">
+									<input type="text" style="width: 200px;" value="<?php echo set_value('nonskimei_receipt_date');?>" name="nonskimei_receipt_date" data-required="true" >
+								</div>
+							</div>
+							<div class="nonsk_imeiwrap">
+								<div class="fran_imeilabel"><b>Proof Type :</b><span class="red_star">*</span></div>
+											<div class="imei_inp"><select name="nonsk_imei_prooftype">
+													<option value="">Select</option>
+                                                    <?php $insurance_types=$this->db->query("select * from insurance_m_types order by name asc")->result_array();
+                                                            if($insurance_types){
+                                                            foreach($insurance_types as $i_type){
+                                                    ?>
+                                                            <option value="<?php echo $i_type['id']?>"><?php echo $i_type['name']?></option>
+                                                    <?php }}?>
+                                                    </select>
+                                         	</div>			
+								</div>
+								<div class="nonsk_imeiwrap">
+									<div class="fran_imeilabel"><b>Proof ID :</b><span class="red_star">*</span></div>	
+									<div class="imei_inp">
+										<input  type="text" style="width: 200px;" value="<?php echo set_value('nonskimei_fran_proofid');?>" name="nonskimei_fran_receiptno" data-required="true" >
+									</div>
+								</div>
+								<div class="nonsk_imeiwrap">
+									<div class="fran_imeilabel"><b>Address :</b> <span class="red_star">*</span></div>	
+										<div class="imei_inp">
+											<textarea  style="width: 200px;" value="<?php echo set_value('nonskimei_proof_add');?>" name="nonskimei_proof_add" data-required="true" ></textarea>
+									</div>
+								</div>			
+								<div class="nonsk_imeiwrap">
+									<div class="fran_imeilabel"><b>City :</b> <span class="red_star">*</span></div>	
+										<div class="imei_inp">
+											<input type="text"  style="width: 200px;" value="<?php echo set_value('nonskimei_proof_city');?>" name="nonskimei_proof_city" data-required="true" >
+									</div>
+								</div>
+								<div class="nonsk_imeiwrap">
+									<div class="fran_imeilabel"><b>Pincode :</b> <span class="red_star">*</span></div>	
+										<div class="imei_inp">
+											<input type="text"  style="width: 200px;" value="<?php echo set_value('nonskimei_proof_pincode');?>" name="nonskimei_proof_pincode" data-required="true" >
+									</div>
+								</div>
+							
+								<div class="nonsk_imeiwrap" style="float:right;">	
+									<input class="button button-flat-royal button-small button-rounded" type="submit" value="Submit" id="nonskimei_btn">
+								</div>
+					</form>
+			</div>
+			
+			 <div align="right" style="display: inline-block;width:65%;">
+						<?php
+							$imei_actv_list = $this->db->query("SELECT i.franchise_id,i.nonsk_imei_no as imei_no,f.franchise_name,m.pnh_member_id AS activated_member_id,m.mobile AS activated_mob_no,i.insurance_amount,n.offer_status,i.created_on AS activated_on,a.name AS activated_byname,m.user_id  FROM `non_sk_imei_insurance_orders`i JOIN pnh_m_franchise_info f ON f.franchise_id=i.franchise_id JOIN pnh_member_info m ON m.user_id=i.userid  JOIN king_orders k ON k.id=i.order_id JOIN `pnh_member_insurance` n ON n.order_id=i.order_id JOIN king_admin a ON a.id=i.created_by  order by activated_on desc limit 10");
+
+						?>
+						<h3 style="margin:5px 0px;float:left;">Latest Non SK IMEI/Serialno Activations</h3>
+						<table class="datagrid" width="100%">
+							<thead>
+								<th width="20" style="text-align: left">Slno</th>
+								<th width="130"  style="text-align: left">Activated On</th>
+								<th width="70"  style="text-align: left">Activated By</th>
+								<th  style="text-align: left">Franchise</th>
+								<!--  <th  style="text-align: left" width="80">Invoiceno</th>-->
+								<th  style="text-align: left" width="150">IMEI/Serial no</th>
+								<th  style="text-align: left" width="100">Mobile no</th>
+								<th  style="text-align: left" width="100">Activated MemberID</th>
+								<th  style="text-align: left" width="30">Insurance Amount</th>
+							</thead>
+							<tbody>
+								<?php
+									$i=0;
+									foreach($imei_actv_list->result_array() as $imei_det)
+									{
+								?>
+										<tr>
+											<td><?php echo ++$i ?></td>
+											<td><?php echo format_datetime($imei_det['activated_on']) ?></td>
+											<td><?php echo ($imei_det['activated_byname']?$imei_det['activated_byname']:'SMS') ?></td>
+											<td><?php echo anchor('admin/pnh_franchise/'.$imei_det['franchise_id'],$imei_det['franchise_name'],'target="_blank"') ?></td>
+											<!--  <td><a href="<?php echo site_url('admin/invoice/'.$imei_det['invoice_no']);?>" target="_blank"><?php echo $imei_det['invoice_no'] ?></a></td>--> 
+											<td><?php echo $imei_det['imei_no'] ?></td>
+											<td><?php echo $imei_det['activated_mob_no'] ?></td>
+											<td><?php echo anchor('admin/pnh_viewmember/'.$imei_det['user_id'],$imei_det['activated_member_id'],'target="_blank"') ?></td>
+											<td><?php echo $imei_det['insurance_amount'] ?></td>
+										</tr>
+								<?php				
+									}
+								?>
+							</tbody>
+						</table>
+		
+		</div>
+			
+		<!-- NON SK IMEI Block End -->
+		</div>
+	</div>
+		<!-- IMEI Activation Form END -->
+</div>
 	
 </div>
 	<table id="template" style="display: none">
@@ -509,6 +833,8 @@
 	padding: 5px;
 }
 .error_msg{font-size: 10px;background: rgba(205, 0, 0, 0.6);color: #FFF;padding:3px;border-radius:3px;display: inline-block;}
+
+.nonsk_imei_det{font-size: 10px;color: #FFF;padding:3px;border-radius:3px;display: inline-block;}
 
 #srch_results{
 	margin-left:-1px;
@@ -819,7 +1145,8 @@ $('#coupon_redeem').click(function(){
 		return false;
 	}
 });
-$('.fran_id').chosen();
+
+$('.fran_id,#non_imei_fid').chosen();
 $('.voucher_code').change(function(){
 	var mem_mobno=$(".member_mobno").val();
 	
@@ -835,10 +1162,218 @@ $( ".fran_tabs a" ).click(function(){
 });
 
 $('input[name="mem_dob"]').datepicker();
+
+$('#fran_receiptdate').datepicker();
+
+$('input[name="nonskimei_receipt_date"]').datepicker();
+
+$('input[name="imei_no"]').change(function(){
+	
+	$('input[name="member_id"]').val(0);
+	$('input[name="franchise_id"]').val(0);
+	
+	
+	$('#new_memname_imei').hide();
+	$('input[name="mem_name"]').val('');
+	
+	$('#mobno_overview').html('').hide();
+	
+	$('input[name="mobno"]').val('').attr('disabled',true);
+	
+	$('#imei_det').html('<td colspan="2" style="background: #ffffa0;padding:10px;color:#333"><div id="imei_overview">Loading...</div></td>');
+	
+	$('#actv_submit_btn').attr('disabled',true); 
+	$.post(site_url+'/admin/jx_getimeidet','imeino='+$(this).val(),function(resp){
+		if(resp.error)
+		{
+			$('#imei_overview').html(resp.error);
+		}else
+		{
+			var html = '<table cellpadding="3" style="font-size: 12px">'
+				html +=	'	<tr><td width="120"><b>Franchise</b></td><td><a target="_blank" href="'+site_url+'/admin/pnh_franchise/'+resp.det.franchise_id+'">'+resp.det.franchise_name+'</a></td></tr>'
+				html +=	'	<tr><td><b>Product</b></td><td>'+resp.det.product_name+'</td></tr>'
+				html +=	'	<tr><td><b>MemberID</b></td><td>'+resp.det.member_id+'</td></tr>'
+				html +=	'	<tr><td><b>Invoiceno</b></td><td><a target="_blank" href="'+site_url+'/admin/invoice/'+resp.det.invoice_no+'">'+resp.det.invoice_no+'</a></td></tr>'
+				html +=	'	<tr><td><b>TransID</b></td><td><a target="_blank" href="'+site_url+'/admin/trans/'+resp.det.transid+'">'+resp.det.transid+'</a>'+' - ('+resp.det.ordered_on+')'+'</td></tr>';
+				html +=	'	<tr><td><b>Scheme Enabled</b></td><td>'+((resp.det.imei_scheme_id*1)?'Yes':'No')+'</td></tr>';
+				html +=	'	<tr><td><b>Insurance Applicable</b></td><td>'+((resp.det.insurance_id*1)?'Yes':'No')+'</td></tr>';
+				if(resp.det.imei_scheme_id!=0)
+				{
+					$('.insu').hide();
+					html +=	'	<tr><td><b>Activation Credit</b></td><td>'+resp.det.imei_reimbursement_value_perunit+'</td></tr>';
+					html +=	'	<tr><td><b>Status</b></td><td>'+((resp.det.is_imei_activated*1)?'<b style="color:#cd0000">Already Activated<b>':'<b style="color:green">Not Activated</b>')+'</td></tr>';	
+				}
+				if(resp.det.insurance_id!=null )
+				{
+					$('.insu').show();
+					$('input[name="imei_hasinsurance"]').val('1');
+					html +=	'	<tr><td><b>Insurancre Cost</b></td><td>'+resp.det.insurance_amount+'</td></tr>';
+					html +=	'	<tr><td><b>Insurance</b></td><td>'+((resp.det.process_status*1)?'<b style="color:#cd0000">Already Activated<b>':'<b style="color:green">Not Activated</b>')+'</td></tr>';
+				}
+				html +=	'</table>';
+			
+			$('input[name="member_id"]').val(resp.det.member_id);
+			$('input[name="franchise_id"]').val(resp.det.franchise_id);
+			
+			if(resp.det.is_imei_activated*1)
+			{
+				$('input[name="mobno"]').attr('disabled',true);
+			}else
+			{
+				$('input[name="mobno"]').attr('disabled',false);
+			}
+			$('#imei_overview').html(html);
+		}
+	},'json');	
+	 
+});
+//IMEI Activation related script--START
+$('input[name="imei_mobno"]').change(function(){
+	
+	$('#new_memname_imei').hide();
+	$('input[name="mem_name"]').val('');
+	$('#actv_submit_btn').attr('disabled',true);
+	$('#mobno_det').html('<td colspan="2" style="padding:0px;"><div id="mobno_overview" style="background: #ffffd0;padding:10px;color:#333">Loading...</div></td>');
+	
+	var mobno=$(this).val();
+	var params = {fid:$('input[name="franchise_id"]').val(),mobno:$(this).val(),mid:$('input[name="member_id"]').val()}
+		$.post(site_url+'/admin/jx_validate_mobno_imei',params,function(resp){
+			if(resp.error != undefined)
+			{
+				$('#mobno_overview').html(resp.error);
+			}else
+			{
+				
+				var html = '';
+					if(resp.member_id*1 != $('input[name="member_id"]').val() && (resp.member_name != undefined))
+					{
+						html = "<div>Mobileno "+mobno+" is already registered to "+resp.member_id+" </div>";
+						
+						if(resp.pen_ttl_actv)
+						{
+							html += "<div><br> Do you want to Activate IMEI to this mobile <input type=checkbox name='actv_confrim' value='1' > </div>";
+							$('#actv_submit_btn').attr('disabled',false);
+						}else
+						{
+							html += "<div><br> Activation Limit Ended for this MemberID</div>";
+							$('#actv_submit_btn').attr('disabled',true);
+						}
+						
+					}else
+					{
+						if(resp.pen_ttl_actv)
+						{
+							
+							$('#new_memname_imei').show();
+							$('#actv_submit_btn').attr('disabled',false);
+						}else
+						{
+							html += "<div><br> Activation Limit Ended for this mobileno</div>";
+							$('#actv_submit_btn').attr('disabled',true);
+						}
+					}
+					
+					if(html)
+						$('#mobno_overview').html(html).show();
+					else
+						$('#mobno_overview').html('').hide();
+			}
+		},'json');
+});
+
+$('input[name="actv_confrim"]').live('change',function(){
+	if($(this).attr('checked'))
+	{
+		$('#actv_submit_btn').attr('disabled',false);
+	}else
+	{
+		$('#actv_submit_btn').attr('disabled',true);
+	}
+});
+//IMEI Activation related script--END
+
+$('input[name="nonskimei_mobno"]').change(function(){
+	 $.post("<?=site_url("admin/jx_pnh_getmid")?>",{mid:$(this).val()},function(data){
+			$("#mem_det").html(data).show();
+			
+		});
+});
+
+$('input[name="nonsk_imeino"]').change(function(){
+	$.post(site_url+'/admin/jx_get_nonsk_imei_det','imeino='+$(this).val(),function(resp){
+		if(resp.error)
+		{
+			$('#nonskimei_overview').html('<span class="error_msg">'+resp.error+'</span>');
+			$('#nonskimei_btn').attr('disabled',true);
+			
+		}else
+		{
+			$('#nonskimei_overview').html(resp.success);
+			$('#nonskimei_btn').attr('disabled',false);
+		}
+	},'json');
+});
+
+$('input[name="order_id"]').live('change',function(){
+
+	if($("#non_imei_fid").val()=='')
+	{
+		alert("Please Select Franchise");
+		return false;
+	}
+	
+	$.post(site_url+'/admin/jx_check_valid_imeireplcmnt_order',{transid:$(this).val(),fid:$("#non_imei_fid").val()},function(resp){
+			if(resp.status =='error')
+			{
+				$('#nonskimeireplcmnt_orderdet').html('<span class="error_msg">'+resp.msg+'</span>');
+				$('#nonskimei_btn').attr('disabled',true);
+			}else
+			{
+				var html = '<span style="font-size:10px;">';
+				html +=	'	<b>Order Details</b><a target="_blank" href="'+site_url+'/admin/trans/'+resp.transdet.transid+'">'+resp.transdet.transid+' - ('+resp.transdet.ordererd_on+')'+' '+'Order Amount :'+resp.transdet.order_total+'</b>';
+				html +=	'   </span';
+				$('#nonskimei_btn').attr('disabled',false);
+			}
+			$('#nonskimeireplcmnt_orderdet').html(html);
+		},'json');
+	
+});
 </script>
 <style>
 ul
 {
     list-style-type: none;
+}
+.fran_imeilabel
+{
+float: left;
+    width: 41%;
+}
+.imei_inp
+{
+float: left;
+text-align: left;
+width: 25%;
+}
+
+.nonsk_imeiwrap{
+float: left;
+    margin: 17px 0;
+    width: 53%;
+}
+
+.nonsk_imeidet{
+float: left; width: 100%; margin: 5px 0px;
+}
+#mem_det
+{
+  margin:5px 2px;
+  font-size: 10px;
+    margin: 5px 2px;
+    float:left;
+}
+.nonsk_imei_bloc
+{
+background-color: #FAFAFA;
 }
 </style>

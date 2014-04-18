@@ -31,6 +31,7 @@ if(!function_exists('format_price')){
 * @param type $rtype string
 * @example if(!$itemid) output_error("Item id doesnot exists!");
 * @example if(!$itemid) output_error(array("status"=>"fail","message"=>"Item id doesnot exists!" ));
+* @Returns status:success/error, message:data output
 */
 if(!function_exists('output_error')) {
     function output_error($msg,$rtype='json',$status='error') {
@@ -47,6 +48,7 @@ if(!function_exists('output_error')) {
 }
 /**
  * Same as output_error() helper function ,input array or string
+ * @Returns status:success/error, message:data output
  */
 if(!function_exists('output_data')) {
     function output_data($msg,$rtype='json') {
