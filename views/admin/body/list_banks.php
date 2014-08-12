@@ -1,19 +1,19 @@
 <div id="container">
-<h2 class="page_title">Bank
-<a href="<?php echo site_url('admin/add_bankdetails')?>" style="float:right;">Add Bank</a>
-</h2>
+<a class="button fl_right button-tiny button-action" href="<?php echo site_url('admin/add_bankdetails')?>" style="float:right;">Add Bank</a>
+<h2 class="page_title">Manage Banks</h2>
 
-<table class="datagrid">
-<thead><th>Sl no</th><th>Bank Name</th><th>Branch Name</th><th>Account Name</th><th>Account Number</th><th>IFSC Code</th><th>Actions</th></thead>
+
+<table class="datagrid" width="100%">
+<thead><th>Sl no</th><th>Short Code</th><th>Bank Name</th><th>Branch Name</th><th>Account Name</th><th>Account Number</th><th>IFSC Code</th><th>Actions</th></thead>
 <?php if($bank_list){?>
 <tbody>
 <?php $i=1; foreach($bank_list as $b){?>
 <tr>
-<td><?php echo $i;?></td><td><?php echo $b['bank_name']?></td><td><?php echo $b['branch_name'];?></td><td><?php echo ''?></td><td><?php echo $b['account_number']?></td><td><?php echo $b['ifsc_code']?></td>
-<td>
+<td><?php echo $i;?></td><td><?php echo $b['short_code']?></td><td><?php echo $b['bank_name']?></td><td><?php echo $b['branch_name'];?></td><td><?php echo $b['account_name']?></td><td><?php echo $b['account_number']?></td><td><?php echo $b['ifsc_code']?></td>
+<td width="130">
 <!-- <a href="javascript:void(0)" onclick="view_bank()">View</a>-->
- <a href="<?php echo site_url('admin/view_bank/'.$b['id'])?>">View</a>&nbsp;
-<a href="<?php echo site_url('admin/p_editbank/'.$b['id'])?>">Edit</a>
+ 	<a class="button button-warning button-tiny" href="<?php echo site_url('admin/p_editbank/'.$b['id'])?>">Edit</a>
+	<a class="button button-caution button-tiny delete_link" href="<?php echo site_url('admin/p_deletebank/'.$b['id'])?>">Delete</a>
 </td>
 </tr>
 </tbody>
@@ -37,6 +37,12 @@
 </form>-->
 </div>
 <script>
+
+$('.delete_link').click(function(e){
+	if(confirm("Are you sure want to delete this bank details ?"))
+		return true;
+	e.preventDefault();
+});
 
 /*function view_bank()
 {

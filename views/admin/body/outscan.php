@@ -29,7 +29,7 @@
 					<?php 
 						if($scan_pnh)
 							echo '<option value="1">AWB/Invoice No Barcode</option>';
-						else
+						else 
 							echo '<option value="2">Partner Orderno</option>';
 					?>
 					</select>
@@ -706,7 +706,7 @@ $(".show_invoices").live('click',function(){
 $("#invoices_list").dialog({
 	autoOpen:false,
 	modal:true,
-	width:'480px',
+	width:'600px',
 	height:'auto',
 	autoResize:true,
 	open:function(){
@@ -720,6 +720,7 @@ $("#invoices_list").dialog({
 			html_cnt+="				<th>#</th>";
 			html_cnt+="				<th>Hub</th>";
 			html_cnt+="				<th>Town</th>";
+			html_cnt+="				<th>Franchise</th>";
 			html_cnt+="				<th>Invoice</th>";
 			html_cnt+="			</tr>";
 			html_cnt+="	</thead>";
@@ -729,6 +730,7 @@ $("#invoices_list").dialog({
 				html_cnt+="		<td>"+(a+1)+"</td>";
 				html_cnt+="		<td>"+b.territory_name+"</td>";
 				html_cnt+="		<td>"+b.town_name+"</td>";
+				html_cnt+="		<td><a href='"+site_url+'/admin/pnh_franchise/'+b.franchise_id+"' target='_blank' >"+b.franchise_name+"</td>";
 				var tem =new  Array();
 				$.each(b.invoice_nos.split(','),function(c,d){
 					var inv="<a href="+site_url+"/admin/invoice/"+d+" target='_blank'>"+d+"</a>";

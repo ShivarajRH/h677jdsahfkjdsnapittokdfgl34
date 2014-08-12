@@ -487,7 +487,8 @@
 								</tr>
 								<tr class="insu" style="display:none">
 									<td><b>Proof Type</b></td>	
-									<td><select name="insurance[proof_type]">
+									<td>
+										<select name="insurance[proof_type]" id="crd_insurence_type">
 										<option value="">Select</option>
                                                     <?php $insurance_types=$this->db->query("select * from insurance_m_types order by name asc")->result_array();
                                                             if($insurance_types){
@@ -495,9 +496,15 @@
                                                     ?>
                                                             <option value="<?php echo $i_type['id']?>"><?php echo $i_type['name']?></option>
                                                     <?php }}?>
+											<option value="others">Others</option>
                                          </select>
 									</td>
 								</tr>
+	                            <tr class="othrs_proofname">
+	                                    <td class="form_label_wrap">Proof Name <b class="red_star">*</b>:</span>
+	                                    <span class="form_input_wrap"><input class="max_width" type="text" name="proof_name" id="proof_name" value=""></span>
+	                            </tr>
+
 								<tr class="insu" style="display:none">
 									<td><b>Proof ID</b></td>	
 									<td>
@@ -629,13 +636,7 @@
 										</select>
 									</div>
 							</div>
-							<div class="nonsk_imeiwrap">	
-								<div class="fran_imeilabel"><b>Order ID :</b><span class="red_star">*</span></div>
-								<div class="imei_inp"><input type="text" style="width:200px;" name="order_id" data-required="true"></div>
-								<!--  <div style="float:right;margin:-70px 279px;" id="nonskimeireplcmnt_orderdet"></div>-->
-								<div style="float:left;font-size: 10px;" id="nonskimeireplcmnt_orderdet"></div>
-								
-							</div>
+							
 							<div class="nonsk_imeiwrap">
 								<div class="fran_imeilabel"><b>Mobileno :</b> <span class="red_star">*</span></div>	
 								<div class="imei_inp">
@@ -651,25 +652,33 @@
 								</div>
 								<div style="float:left;font-size: 10px;" id="mem_det"></div>
 							</div>
-													 
-							 <div class="nonsk_imeiwrap">
+							<div class="nonsk_imeiwrap">
+								<div class="fran_imeilabel"><b>Deal :</b><span class="red_star">*</span></div>
+								<div class="imei_inp">
+									
+									<input type="text" name="ec_dealname" id="ec_deal_search" style="width: 200px;" autocomplete="off">
+									<div id="ecdeal_results"></div>
+								</div>
+								<input type="hidden" name="ec_deal" type="text">
+							</div>						 
+							<!--  <div class="nonsk_imeiwrap">
 								<div class="fran_imeilabel"><b>Model No :</b><span class="red_star">*</span></div>
 								<div class="imei_inp"><input type="text" name="nonskimei_modalno" value="<?php echo set_value('nonskimei_modalno');?>" style="width: 200px;" data-required="true"></div>
-							</div>
+							</div>-->
 										
 							<div class="nonsk_imeiwrap">
 								<div class="fran_imeilabel"><b>Receipt No :</b><span class="red_star">*</span></div>	
 								<div class="imei_inp">
-									<input  type="text" style="width: 200px;" value="<?php echo set_value('nonskimei_fran_receiptno');?>" name="nonskimei_fran_receiptno" data-required="true" >
+									<input  type="text" style="width: 200px;" value="<?php echo set_value('nonskimei_fran_receiptno');?>" name="nonskimei_fran_receiptno" data-required="true" autocomplete="off">
 								</div>
 							</div>
 							<div class="nonsk_imeiwrap">
 								<div class="fran_imeilabel"><b>Amount :</b> <span class="red_star">*</span></div>	
 								<div class="imei_inp">
-									<input  type="text" style="width: 200px;" value="<?php echo set_value('nonskimei_fran_receiptamt');?>" name="nonskimei_fran_receiptamt" data-required="true" >
+									<input  type="text" style="width: 200px;" value="<?php echo set_value('nonskimei_fran_receiptamt');?>" name="nonskimei_fran_receiptamt" data-required="true" autocomplete="off">
 								</div>
-
-	</div>
+								
+							</div>
 							<div class="nonsk_imeiwrap">
 								<div class="fran_imeilabel"><b>Date :</b> <span class="red_star">*</span></div>	
 								<div class="imei_inp">
@@ -692,7 +701,7 @@
 								<div class="nonsk_imeiwrap">
 									<div class="fran_imeilabel"><b>Proof ID :</b><span class="red_star">*</span></div>	
 									<div class="imei_inp">
-										<input  type="text" style="width: 200px;" value="<?php echo set_value('nonskimei_fran_proofid');?>" name="nonskimei_fran_receiptno" data-required="true" >
+										<input  type="text" style="width: 200px;" value="<?php echo set_value('nonskimei_fran_proofid');?>" name="nonskimei_fran_proofid" data-required="true" autocomplete="off" >
 									</div>
 								</div>
 								<div class="nonsk_imeiwrap">
@@ -713,7 +722,12 @@
 											<input type="text"  style="width: 200px;" value="<?php echo set_value('nonskimei_proof_pincode');?>" name="nonskimei_proof_pincode" data-required="true" >
 									</div>
 								</div>
-							
+								<div class="nonsk_imeiwrap">	
+									<div class="fran_imeilabel"><b>Trans. ID :</b><span class="red_star">*</span></div>
+									<div class="imei_inp"><input type="text" style="width:200px;" name="order_id" data-required="true"></div>
+									<div style="float:left;font-size: 10px;" id="nonskimeireplcmnt_orderdet"></div>
+									
+								</div>
 								<div class="nonsk_imeiwrap" style="float:right;">	
 									<input class="button button-flat-royal button-small button-rounded" type="submit" value="Submit" id="nonskimei_btn">
 								</div>
@@ -862,6 +876,32 @@ color: black;
 text-decoration: none;
 }
 
+#ecdeal_results{
+	margin-left:-1px;
+	position: absolute;
+	width: 400px;
+	background: #EEE;
+	border: 1px solid #AAA;
+	max-height: 200px;
+	min-width: 300px;
+	max-width: 326px;
+	
+}
+#ecdeal_results a{
+	padding: 5px 10px;
+	font-size: 14px;
+	display: inline-table;
+	width: 400px;
+	text-transform: capitalize;
+	border-bottom: 1px dotted #DDD;
+	background: white;
+} 
+#ecdeal_results a:hover{
+background: #CCC;
+color: black;
+text-decoration: none;
+}
+
 #mob_error{
 vertical-align:center;
 color:red;
@@ -887,6 +927,7 @@ margin:5px 0px;
 }
 </style>
 <script>
+$("#ecdeal_results").hide();								
 var mobok=0;
 $(".member_mobno").change(function(){
 $.post("<?=site_url("admin/jx_pnh_getvouchermid")?>",{member_mobno:$(this).val(),more:1},function(data){
@@ -1112,6 +1153,21 @@ $('#srch_results').mouseleave(function(){
 	$('#srch_results').hide(); 
 });
 
+
+$('#ec_deal_search').mouseover(function(){
+	
+	if($(this).val().length)
+		$('#ecdeal_results').show();
+	else
+		$('#ecdeal_results').html('').hide();
+}).focus(function(){
+	$('#ecdeal_results').show();
+});
+
+$('#ecdeal_results').mouseleave(function(){
+	$('#ecdeal_results').hide(); 
+});
+
 $('#coupon_redeem').click(function(){
 
 	total=0;
@@ -1322,7 +1378,7 @@ $('input[name="order_id"]').live('change',function(){
 		return false;
 	}
 	
-	$.post(site_url+'/admin/jx_check_valid_imeireplcmnt_order',{transid:$(this).val(),fid:$("#non_imei_fid").val()},function(resp){
+	$.post(site_url+'/admin/jx_check_valid_imeireplcmnt_order',{transid:$(this).val(),fid:$("#non_imei_fid").val(),nonsk_imei_dl:$("input[name='ec_deal']").val()},function(resp){
 			if(resp.status =='error')
 			{
 				$('#nonskimeireplcmnt_orderdet').html('<span class="error_msg">'+resp.msg+'</span>');
@@ -1338,6 +1394,49 @@ $('input[name="order_id"]').live('change',function(){
 		},'json');
 	
 });
+
+
+
+
+$("#ec_deal_search").keyup(function(){
+	fid=$("#non_imei_fid").val();
+	q=$(this).val();
+	if(q.length<3)
+		return true;
+	if(jHR!=0)
+		jHR.abort();
+	window.clearTimeout(search_timer);
+	search_timer=window.setTimeout(function(){
+		$('.loading_srch').remove();
+		$('#ecdeal_results').html('<div class="loading_srch" style="display:block;text-align:center;background:#FFF"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
+	jHR=$.post('<?=site_url("admin/pnh_jx_searchdeals")?>',{fid:$("#i_fid").val(),q:q},function(data){
+		$("#ecdeal_results").html(data).show();
+		//$("#srch_results").css("margin-top","-"+($("#srch_results").height()+30)+"px");
+		$('.loading_srch').remove();
+	});},200);
+});
+
+function add_deal_callb(name,pid)
+{
+	$('#ecdeal_results').html('').hide();
+	$("#ec_deal_search").val(name).focus();
+	$("input[name='ec_deal']").val(pid);
+	$("input[name='ec_dealname']").val(name);
+}
+//===================< OTHER TYPE OF PROOF >=======================================
+$('.othrs_proofname').hide();
+$("#crd_insurence_type").live('change',function(){
+	if($(this).val()=='others')
+	{
+		$('.othrs_proofname').show();
+	}
+	else
+	{
+		$('.othrs_proofname').hide();
+	}
+});
+//===================< OTHER TYPE OF PROOF >=======================================
+
 </script>
 <style>
 ul

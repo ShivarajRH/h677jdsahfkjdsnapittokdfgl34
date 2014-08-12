@@ -79,6 +79,7 @@
 <?php if($this->erpm->auth(STOCK_INTAKE_ROLE,true)){?>
 <li><a href="#prod_grn_list">Purchase Products List</a></li>
 <?php } ?>
+<li><a href="#v_api_info">Api Integration Settings</a></li>
 </ul>
 
 <?php if($this->erpm->auth(STOCK_INTAKE_ROLE,true)){?>
@@ -307,6 +308,11 @@
 </div>
 </div>
 
+<div id="v_api_info">
+	
+	
+</div>
+
 <div id="v_brands">
 	<a class="editmargin fl_right button button-rounded button-action button-small" style="color: #FFF"  href="<?php echo site_url("admin/editvendor/{$v['vendor_id']}#v_linkbrands")?>">Edit Brand Margin</a>
 	<div class="po_filter_wrap2">
@@ -320,7 +326,7 @@
 		<h3>Linked Brands and Category Details</h3> 
 <table class="datagrid nofooter" width="100%">
 <thead>
-<tr><th>Sl no</th><th>Linked Brands</th><th>Linked Categorys </th>
+<tr><th>Sl no</th><th>Linked Brands</th><th>Linked Towns</th><th>Linked Categorys </th>
 <?php /*?>
 <th>Total PO value</th>
 <?php /*/?>
@@ -331,6 +337,21 @@
 <tr class="vbc_link  brandid_<?php echo $b['id'];?>" vendorid="<?php echo $b['vendor_id'] ;?>" brandid="<?php echo  $b['id']?>">
 	<td width="40"><?php echo $i;?></td>
 	<td width="150"><a href="<?=site_url("admin/viewbrand/{$b['id']}")?>"><?=$b['name']?></a></td>
+	<td width="150px">
+		<?php
+		 $town_names='';
+		 $towns=$this->db->query("select a.town_name,b.town_id from pnh_towns a join m_vendor_town_link b on b.town_id=a.id where b.vendor_id=? and brand_id=? and is_active=1",array($vid,$b['brand_id']))->result_array(); 
+		foreach($towns as $t)
+		{
+			$town_names.=$t['town_name'];
+			$town_names.=" , ";
+		}
+		echo rtrim($town_names, " , ");
+		?>
+		<!--
+		<select name="town[]" class="vendor_town" data-placeholder="Select Town" style="width: 250px;" data-required="true" multiple="true"></select>
+		-->
+	</td>
 	<td>
 		<div id="view_cat">
 			<span class="tgl_linkedcats">
@@ -527,15 +548,11 @@ $('.fil_brand').change(function(){
 	}
 });
 
-$('.tab_view').tabs();
-
 
 
 $(function(){
-	
+	$('.tab_view').tabs();	
 });
-
-
 
 </script>
 

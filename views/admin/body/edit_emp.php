@@ -36,24 +36,22 @@ $assigned_twn_det=$this->erpm->get_assigned_town_det($emp_details['employee_id']
 							<tr>
 								<td>Employee Name :<span class="red_star">*</span>
 								</td>
-								<td><input type="text" name="emp_name" 
-									value="<?php echo set_value('emp_name',$emp_details['name'])?>"> 
+								<td><input type="text" name="emp_name" value="<?php echo set_value('emp_name',$emp_details['name'])?>"> 
+									<?php echo form_error('emp_name','<span class="error">','</span>'); ?>
 								</td>
 							</tr>
 			
 							<tr>
 								<td>Father Name :
 								</td>
-								<td><input type="text" name="father_name" 
-									value="<?php echo set_value('father_name',$emp_details['fathername'])?>"> 
+								<td><input type="text" name="father_name" value="<?php echo set_value('father_name',$emp_details['fathername'])?>"> 
 								</td>
 							</tr>
 			
 							<tr>
 								<td>Mother Name :
 								</td>
-								<td><input type="text" name="mother_name" 
-									value="<?php echo set_value('mother_name',$emp_details['mothername'])?>"> 
+								<td><input type="text" name="mother_name" value="<?php echo set_value('mother_name',$emp_details['mothername'])?>"> 
 								</td>
 							</tr>
 							<?php 
@@ -67,7 +65,7 @@ $assigned_twn_det=$this->erpm->get_assigned_town_det($emp_details['employee_id']
 						</tr>
 			
 							<tr>
-								<td>Gender :<span class="red_star">*</span>
+								<td>Gender :<!--<span class="red_star">*</span>-->
 								</td>
 									<?php $gender=array('Male'=>'Male','Female'=>'Female');?>
 									<td><select name="gender" >
@@ -78,7 +76,9 @@ $assigned_twn_det=$this->erpm->get_assigned_town_det($emp_details['employee_id']
 												<?php echo $gen; ?></option>
 									<?php echo set_select('gender',$emp_details['gender'])?>
 									 <?php }?>
-									 </select></td>
+									 </select>
+										<?php echo form_error('gender','<span class="error">','</span>'); ?>
+									</td>
 							</tr>
 			
 			
@@ -92,7 +92,7 @@ $assigned_twn_det=$this->erpm->get_assigned_town_det($emp_details['employee_id']
 			
 						
 							<tr>
-								<td>Address :<span class="red_star">*</span></td>
+								<td>Address :</td><!--<span class="red_star">*</span>-->
 								
 								<td>
 								<textarea rows="1" style="height: 60px; width: 140px;"
@@ -103,8 +103,9 @@ $assigned_twn_det=$this->erpm->get_assigned_town_det($emp_details['employee_id']
 							</tr>
 			
 							<tr>
-								<td>City :<span class="red_star">*</span></td>
-								<td><input type="text" name="city" value="<?php echo set_value('city',$emp_details['city']);?>"><?php echo form_error('city','<div class="error">','</div>')?>
+								<td>City :</td><!--<span class="red_star">*</span>-->
+								<td><input type="text" name="city" value="<?php echo set_value('city',$emp_details['city']);?>">
+									<?php echo form_error('city','<span class="error">','</span>')?>
 								</td>
 							</tr>
 							
@@ -171,8 +172,8 @@ $assigned_twn_det=$this->erpm->get_assigned_town_det($emp_details['employee_id']
 						<tr>
 							<td>Email Id :
 							</td>
-							<td><input type="email" name="email_id" 
-								value="<?php echo set_value('email_id',$emp_details['email'])?>"> <?php echo form_error('email_id','<div class="error">','</div>')?>
+							<td><input type="email" name="email_id" value="<?php echo set_value('email_id',$emp_details['email'])?>">
+								<?php echo form_error('email_id','<div class="error">','</div>');?>
 							</td>
 						</tr>
 					
@@ -183,10 +184,10 @@ $assigned_twn_det=$this->erpm->get_assigned_town_det($emp_details['employee_id']
 								<ol id="contactList">
 							<?php 
 									$cno_list = $emp_details['contact_no'];
-									foreach(explode(',',$cno_list) as $cno)
+									foreach(explode(',',$cno_list) as $i=>$cno)
 									{
 								?>
-										<li><input type="text" maxlength="10" name="contact_no[]"  class="contact_no clearContent" value="<?php echo set_value('contact_no',$cno)?>"></li>		
+										<li><input type="text" maxlength="10" name="contact_no[]"  class="contact_no clearContent" value="<?php echo set_value('contact_no['.$i.']',$cno);?>"></li>
 								<?php 		
 									}
 								?>
@@ -200,16 +201,62 @@ $assigned_twn_det=$this->erpm->get_assigned_town_det($emp_details['employee_id']
 				<div id="assignment_details">
 					<fieldset>
 					<legend><b>Assignment Details</b></legend>
-						<table>	
+						<table>
 							<tr>
+								<td>Employee Type :<span class="red_star">*</span></td>
+								<td>
+									<?php 
+									$emp_type='';
+									if(!empty($_POST) ) {
+										$emp_type = $_POST['emp_type'];
+									} else {
+										$emp_type = $emp_details['emp_type'];
+										if(!$emp_type)
+											$emp_type = '2';
+									}
+
+									?>
+									<input type="radio" name="emp_type" value='1' <?php echo set_radio('emp_type','1',($emp_type == '1')); ?>/> Office Employee
+									<input type="radio" name="emp_type" value='2' <?php echo set_radio('emp_type','2',($emp_type == '2')); ?>/> Field Employee
+								</td>
+							</tr>
+							<tr id="emp_office">
+								<td>Department: <span class="red_star">*</span></td>
+								<td>
+									<?php
+										$sel_dept_det = $this->employee->get_dept_det_by_empid($emp_details['employee_id']);
+									?>
+									<select name="dept_id">
+										<option value="">Choose</option>
+
+										<?php if($departments){
+												foreach ($departments as $dept){
+													if($sel_dept_det['dept_id'] == $dept['id'] )
+													{
+														set_select('dept_id',$dept['id']);
+														echo '<option value="'.($dept['id']).'" selected>'.$dept['name'].'</option>';
+													}
+													else
+													{
+														set_select('dept_id',$dept['id']);
+														echo '<option value="'.($dept['id']).'">'.$dept['name'].'</option>';
+													}
+												}
+										} ?>
+
+									</select>
+									<?php echo form_error('dept_id','<div class="error">','</div>'); ?>
+								</td>
+							</tr>
+							<tr class="emp_others">
 								<td>Job Title :<span class="red_star">*</span>
 								</td>
 								<?php 
-									$access_roles = $this->erpm->get_emp_access_roles();
+									$access_roles = $this->employee->get_emp_access_roles();
 								?>
 								<td>
 									<select name="role_id">
-										<option value=Choose>Choose</option>
+										<option value="Choose">Choose</option>
 										<?php
 											if($access_roles){
 												foreach($access_roles as $role){
@@ -223,7 +270,7 @@ $assigned_twn_det=$this->erpm->get_assigned_town_det($emp_details['employee_id']
 								 <?php echo form_error('job','<div class="error">','</div>')?>
 								</td>
 							</tr>
-							<tr class="assign_under">
+							<tr class="assign_under emp_others">
 								<td>Assigned under :<span class="red_star">*</span></td>
 								<td>
 									<select name="assigned_under_id" prev_assign_under_id="<?php echo $assigned_emp_det['parent_emp_id']?>">
@@ -231,10 +278,8 @@ $assigned_twn_det=$this->erpm->get_assigned_town_det($emp_details['employee_id']
 								    </select>
 								
 							</tr>
-							
-							</tr>
-			
-							    <tr class="inst territory">
+										
+							<tr class="inst territory emp_others">
 								<td class="label">Territory</td>
 								
 								<?php
@@ -247,7 +292,7 @@ $assigned_twn_det=$this->erpm->get_assigned_town_det($emp_details['employee_id']
 								</td>
 							</tr>
 							
-							<tr class="inst towns">
+							<tr class="inst towns emp_others">
 								<td class="label">Towns</td>
 								<?php
 									$linked_twn_ids = $this->db->query("SELECT GROUP_CONCAT(town_id*1) AS twn_ids FROM m_town_territory_link WHERE employee_id = ? AND is_active = 1;",$emp_details['employee_id'])->row()->twn_ids;
@@ -302,10 +347,16 @@ $('#tgl_csv_cnt').change(function(){
 $('#contactList').manageList();
 var employee_id = "<?php echo $emp_details['employee_id'];?>";		
 var sel_role_id ='';
+
 	$('select[name="role_id"]').change(function(){
 
 		prev_assign_under_id = $('select[name="assigned_under_id"]').attr('prev_assign_under_id');
 		sel_role_id = $(this).val();
+		
+		if(sel_role_id == 'Choose' || sel_role_id == '9') // if office employee
+		{
+			return false;
+		}
 		
 		if(sel_role_id == 8)
 		{
@@ -474,6 +525,32 @@ $('#edit_emp').submit(function(){
 	}
 });
 
+	//=========================== Employee type CODE STARTS >===============================
+	function fn_emp_type_operation(emp_type) {
+		if(emp_type == '1')
+		{
+			$(".emp_others").hide();
+			$("#emp_office").show();
+		}
+		else
+		{
+			$(".emp_others").show();
+			$("#emp_office").hide();
+		}
+	}
+	
+	$(document).ready(function() {
+
+		var emp_type = $('input[name="emp_type"]:radio:checked').val();
+		fn_emp_type_operation(emp_type);
+		
+	});
+
+	$('input[name="emp_type"]:radio').change(function(e) {
+		var emp_type = $(this).val();
+		fn_emp_type_operation(emp_type);
+	}).trigger("change");
+	//=========================== Employee type CODE ENDS >===============================	
 
 <?php if(!$emp_details){?>
 var mobok1=0;

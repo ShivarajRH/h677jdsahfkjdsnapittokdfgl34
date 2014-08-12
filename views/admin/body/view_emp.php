@@ -382,12 +382,36 @@ if($emp_details['job_title'] <= 2){
 					<legend><b>Assignment Details</b></legend>
 					<table width="100%" cellspacing="5">
 					<td width="100">
-						
+						<p>Employee Type: <?php 
+								$emp_type_arr = array(1=>"Office Emp",2=>"Field Emp");
+								echo $emp_type_arr[$emp_details['emp_type']];
+							?>
+						</p>
 						<p>
-						<b>Designation</b><br/>
-						<?php echo $this->db->query("select role_name from m_employee_roles a join m_employee_info b on a.role_id = b.job_title2 where b.employee_id = ? ",$emp_details['employee_id'])->row()->role_name;?>
+							<b>Designation</b><br/>
+							<?php echo $this->db->query("select role_name from m_employee_roles a join m_employee_info b on a.role_id = b.job_title2 where b.employee_id = ? ",$emp_details['employee_id'])->row()->role_name;?>
 						</p>
 						
+						<p>
+						<?php
+						if($emp_details['emp_type'] == '1')
+						{
+							?>
+							<b>Department : </b>
+							<?php 
+								$dept_det = $this->employee->get_dept_det_byemp($emp_details['employee_id']);
+								if($dept_det)
+									echo $dept_det['dept_name'];
+								else
+									echo 'Not set'; ?>
+						</p>
+						<?php
+						}
+						?>
+						
+						<?php
+						if($emp_details['emp_type'] == '2')
+						{?>
 						<p>
 								<b>Working/Assigned Under</b><br />
 								<?php echo ($assigned_emp_det)?$assigned_emp_det['role_name'].'----'.$assigned_emp_det['name']:'' ;?>
@@ -427,6 +451,7 @@ if($emp_details['job_title'] <= 2){
 						</div>
 						<?php }}?>
 						<br />
+						<?php } ?>
 					</td>
 					</table>
 					</fieldset>

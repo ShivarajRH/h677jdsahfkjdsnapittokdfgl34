@@ -22,10 +22,10 @@ form{
 	text-align: left;
 }
 .welcomeuser{
-	padding:15px;
-	float:right;padding-right:20px;
+	padding: 15px 20px 2px 15px;
+	float:right;
 	color:#fff;
-	margin-bottom:10px;
+	margin-bottom:0px;
 }
 .welcomeuser b{
 	color:#fff;
@@ -1194,3 +1194,175 @@ background-image: url("../images/remove-roll-gray.png");
     margin-top: -4%;
 } 
 .error_msg { background-color: #CCC4C4; color:#ffffff; padding:10px 10px;float:left; }
+.page_alert_wrap
+{
+	text-align:center;
+}
+
+/* highlight results */
+.ui-autocomplete span.hl_results {
+    background-color: #ffff66;
+}
+ 
+/* loading - the AJAX indicator */
+.ui-autocomplete-loading {
+    background: white url('../images/preloader.gif') right center no-repeat;
+}
+ 
+/* scroll results */
+.ui-autocomplete {
+    max-height: 250px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+    /* add padding for vertical scrollbar */
+    padding-right: 5px;
+    
+    border:1px solid #aaa;
+}
+ 
+.ui-autocomplete li {
+    font-size: 12px;
+}
+ 
+/* IE 6 doesn't support max-height
+* we use height instead, but this forces the menu to always be this tall
+*/
+* html .ui-autocomplete {
+    height: 250px;
+}
+/*===========< Default filters style - Shivarj >==============*/
+.filters_block { margin-top:0px; margin-bottom:8px; width: 100%; display: block;}
+.filters_block .filter { float: left; background-color: #FCF5F5; border:1px solid #dddddd; margin: 5px 5px; padding: 11px 13px; }
+.filters_block b { font-size: 13px; margin:5px; }
+/*===========< END Default filters style - Shivarj >==============*/
+
+
+/*========== header search form CSS ==================*/
+.notify_block {     color:white;font-size: 12px;  border-radius: 10px;  }
+#searchbox{	color:#aaa;	font-size:14px;	}
+ 
+
+/* SEARCH FORM */
+#searchformbox {}
+#searchformbox div { color:#eeeeee; }
+#searchformbox div input { font-size:18px; padding:5px; width:294px; }
+#hd #suggestions{ position: absolute;
+margin-left: 0px;
+width: 294px;
+display: none;z-index: 999}
+
+/* SEARCHRESULTS */
+#hd #searchresults 
+{ 
+	border-width: 0px;
+	border-color: #8897A7;
+	border-style: solid;
+	width: 292px;
+	background-color: #633D72;
+	font-size: 11px;
+	line-height: 14px;
+	margin: 0px;
+}
+#hd #searchresults a 
+{ 
+	display: block;
+	background-color: #F7F7F7;
+	clear: left;
+	text-decoration: none;
+	padding: 5px;
+	border-bottom: 1px dotted #DFDFDF; 
+}
+#hd #searchresults a:hover { background-color:#ccc; color:#ffffff; }
+#hd #searchresults a img { float:left; padding:5px 10px; }
+#hd #searchresults a span.searchheading { display:block; font-weight:bold; color:#191919; }
+#hd #searchresults a:hover span.searchheading { color:#ffffff; }
+#hd #searchresults a span { color:#555555; }
+#hd #searchresults a:hover span { color:#f1f1f1; }
+#hd #searchresults span.category { font-size: 11px;
+									margin: 0px;
+									display: block;
+									color: #FFF;
+									padding: 5px;
+									background: #6B6A6A;
+								}
+#hd #searchresults span.seperator { float:right; padding-right:15px; margin-right:5px;background-repeat:no-repeat; background-position:right; }
+#hd #searchresults span.seperator a { background-color:transparent; display:block; margin:5px; height:auto; color:#ffffff; }
+#hd #searchresults a span.viewall { text-align: center;}
+.cont .img_blk
+{
+	display: inline-block;
+    margin: 12px 0;
+    min-height: 200px;
+    min-width: 19%;
+}
+.cont .img_blk img
+{
+	border: 1px solid #eee;
+}
+.cont .desc_blk
+{
+    display: inline-block;
+    margin: 12px 2% 0;
+    padding: 0;
+    vertical-align: top;
+    width: 65%;
+}
+.cont .serial_numb_blk
+{
+	margin-top: 19%;
+	width:98%;
+}
+.cont .serial_numb_blk .numbs
+{
+    background: none repeat scroll 0 0 #f1f1f1;
+    display: block;
+    margin: 2% 0;
+    vertical-align: top;
+}
+.cont .numbs div
+{
+	padding: 6% 0 5% 6%;
+}
+.cont .serial_numb_blk .sales
+{
+    background: none repeat scroll 0 0 #f1f1f1;
+    margin: 11% 0 0 0;
+    vertical-align: top;
+}
+.cont .sales div
+{
+	padding: 7% 0 7% 6%;
+}
+.cont h4.title
+{
+	background: none repeat scroll 0 0 #eaeaea;
+    margin: 0;
+    padding: 10px;
+}
+.desc_blk div
+{
+	margin-bottom: 18px;
+}
+.more a
+{
+    color: blue !important;
+    float: right;
+    margin: 18px 0;
+    text-align: right;
+}
+.desc_blk span 
+{
+	display: inline-block;
+    text-align: left;
+    width: 90px;
+}
+#srch_opt
+{
+	margin-right: -4px;
+    width: 67px;
+}
+.cont h4
+{
+	margin:5px 0px;
+}

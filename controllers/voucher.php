@@ -1832,15 +1832,20 @@ order by action_date ";
 		
 	}
 
-	function rmv_deals($menuid=0,$cat_ids=0,$brand_ids=0)
+	function rmv_deals($menuid=0,$cat_ids=0,$brand_ids=0,$itemids=0,$productids=0)
 	{
 
+		//die("Sorry not now");
+
+		$this->erpm->auth(true);
 		
 		error_reporting(E_ALL);
 		ini_set('max_execution_time',60000);
 		ini_set('memory_limit','1024M');
+		ini_set('display_errors',1);
 		
-		//$cat_ids = "142,124,140,914,916,917,918,920,923,924,926,929,930,657,319,841,842,854,849,850,851,852,500,502,503,504,505,506,507,508,509,510,511,521,522,523,524,525,526,528,529,530,531,532,533,535,538,539,540,542,543,47,513,675,846,847,848,856,857,858,248";
+
+		$productids = "196402,196420,196425,196441,196476,196464,196269,196272,196277,196480,196516,196275,196432,196408,196454,196455,196456,196457,196479,196268,196270,196276,196336,196376,196338,196345,196413,196430,196447,196315,196444,196493,196297,196351,196364,196371,196385,196398,196449,196450,196451,196343,196367,196375,196502,196520,196348,196361,196365,196374,196523,196362,196313,196419,196462,196482,196511,196524,196417,196458,196459,196470,196293,196311,196312,196422,196428,196448,196483,196489,196494,196285,196290,196310,196350,196358,196368,196369,196517,196352,196298,196306,196314,196329,196341,196418,196423,196461,196465,196469,196521,196522,196468,196283,196380,196382,196394,196396,196323,196325,196399,196439,196440,196466,196471,196474,196475,196495,196280,196295,196300,196301,196308,196416,196433,196510,196292,196304,196279,196282,196286,196287,196288,196291,196299,196302,196326,196284,196303,196353,196355,196370,196324,196332,196333,196339,196344,196377,196383,196337,196359,196363,196373,196387,196388,196389,196434,196460,196467,196481,196484,196485,196497,196406,196411,196443,196407,196424,196431,196453,196340,196342,196487,196499,196463,196349,196478,196322,196381,196390,196393,196397,196401,196409,196410,196412,196426,196429,196435,196436,196437,196438,196445,196446,196473,196496,196501,196514";
 		
 		$cond = '';
 		if($menuid)
@@ -1848,14 +1853,24 @@ order by action_date ";
 		
 		if($cat_ids)
 			$cond .= ' and b.catid in ('.$cat_ids.') ';
-                
+		
 		if($brand_ids)
 			$cond .= ' and b.brandid in ('.$brand_ids.') ';
+		
+		if($itemids)
+			$cond .= ' and a.id in ('.$itemids.') ';
+		
+		if($productids)
+			$cond .= ' and c.product_id in ('.$productids.') ';
+		
+		if($cond == "")
+			die("No condition provided");
 		
 		$counter = 1;
 		$deleted = 1;
 		// get deals by category  
-		$deal_list_res = $this->db->query("select a.id,a.dealid from king_dealitems a join king_deals b on a.dealid = b.dealid and is_pnh = 1 where 1 $cond ");
+		$deal_list_res = $this->db->query("select a.id,a.dealid from king_dealitems a join king_deals b on a.dealid = b.dealid join m_product_deal_link c on c.itemid = a.id where 1 $cond limit 1000");
+
 		 
 		if($deal_list_res->num_rows())
 		{
@@ -1865,7 +1880,7 @@ order by action_date ";
 				$counter++;
 				// conditions to check  before deal is deleted
 				// check if deal is ordered atleast one time 
-				$is_deal_ordered = (@$this->db->query("select count(a.id) as t from king_orders a join king_dealitems b on a.itemid = b.id where b.id = ? and is_pnh = 1 ",$deal['id'])->row()->t)*1;
+				$is_deal_ordered = (@$this->db->query("select count(a.id) as t from king_orders a join king_dealitems b on a.itemid = b.id where b.id = ? ",$deal['id'])->row()->t)*1;
 				if($is_deal_ordered)
 					continue;
 				
@@ -1902,13 +1917,26 @@ order by action_date ";
 					$process_delete = 1;
 					// delete linked product info
 
+					// delete deals info
+					$this->db->query("delete from king_deals where dealid = ? ",$deal['dealid']);
+					$this->db->query("delete from king_dealitems where dealid = ? ",$deal['dealid']);
+					
 					foreach($this->db->query("select product_id from m_product_deal_link where itemid = ? ",$deal['id'])->result_array() as $dprd)
 					{
-						$this->db->query("delete from m_product_info where product_id = ? ",array($dprd['product_id']));
 						$this->db->query("delete from m_product_deal_link where itemid = ? and product_id = ? ",array($deal['id'],$dprd['product_id']));
+						//$this->db->query("delete from m_product_info where product_id = ? ",array($dprd['product_id']));
+					
+						// check if product is orphan to process delete 
+						if(($this->db->query("select count(*) as t from m_product_deal_link where product_id = ? ",$dprd['product_id'])->row()->t)==0)
+						{
+							// check if product has no stock 
+							if(($this->db->query("select ifnull(sum(available_qty),0) as t from t_stock_info where product_id = ? and available_qty >=0 ",$dprd['product_id'])->row()->t)==0)
+							{
+								$this->db->query("delete from m_product_info where product_id = ? ",array($dprd['product_id']));
+							}
+						}
+					
 					}
-					
-					
 					
 				}else if($this->db->query("select count(*) as t from m_product_group_deal_link where itemid = ? ",$deal['id'])->row()->t)
 				{
@@ -1916,7 +1944,22 @@ order by action_date ";
 					
 					foreach($this->db->query("select product_id from m_product_group_deal_link a join products_group_pids b on a.group_id = b.group_id where a.itemid = ? ",$deal['id'])->result_array() as $dprd)
 					{
+						//$this->db->query("delete from m_product_info where product_id = ? ",array($dprd['product_id']));
+						//$this->db->query("update m_product_info set is_sourceable = 0 where product_id = ? ",array($dprd['product_id']));
+						
+						// check if product is orphan to process delete
+						if(($this->db->query("select count(*) as t 
+												from products_group_pids a 
+												join m_product_group_deal_link b on a.group_id=b.group_id
+												where product_id = ? ",$dprd['product_id'])->row()->t)==0)
+						{
+							// check if product has no stock
+							if(($this->db->query("select ifnull(sum(available_qty),0) as t from t_stock_info where product_id = ? and available_qty >=0 ",$dprd['product_id'])->row()->t)==0)
+							{
 						$this->db->query("delete from m_product_info where product_id = ? ",array($dprd['product_id']));
+					}
+						}
+						
 					}
 					
 					// delete linked group product info
@@ -1931,9 +1974,7 @@ order by action_date ";
 				
 				if($process_delete)
 				{
-					// delete deals info 
-					$this->db->query("delete from king_deals where dealid = ? ",$deal['dealid']);
-					$this->db->query("delete from king_dealitems where dealid = ? ",$deal['dealid']);
+					
 					
 					echo "Deleted ".$deleted.' - '.$deal['id'].'<br>';
 					$deleted++;
@@ -2204,6 +2245,595 @@ Please use your points for your next purchase in one of the StoreKing retailer i
 			$log_prm['grp_msg']=$sms['grp_msg'];
 			$log_prm['created_on']=cur_datetime();
 			$this->erpm->insert_pnh_employee_grpsms_log($log_prm);
+		}
+	}
+
+	/**
+	 * fucntioin to manage pnh coupon codes 
+	 */
+	function pnh_coupon_list()
+	{
+		$user = $this->erpm->auth(true);
+		
+		$data['coupon_list'] = $this->db->query("select * from pnh_m_coupons ");
+		$data['page'] = 'pnh_coupon_list';
+		$this->load->view('admin',$data);
+	}
+	
+	/**
+	 * function to check if the coupon values are valid or not 
+	 * @param unknown_type $str
+	 */
+	function _chk_validpnhcoup($str)
+	{
+		$cname = $this->input->post('cname');
+		$ccode = $this->input->post('ccode');
+		$cv_frm = $this->input->post('cv_frm');
+		$cv_to = $this->input->post('cv_to');
+		
+		if($this->db->query("select count(*) as t from pnh_m_coupons where (coup_name = ? or coup_code = ?) and is_active = 1 ",array($cname,$ccode))->row()->t)
+		{
+			$this->form_validation->set_message('_chk_validpnhcoup','Coupon Code or Name Already Exists');
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * fucjton to create pnh coupons 
+	 */
+	function pnh_coupon_create()
+	{
+		$user = $this->erpm->auth(true);
+		
+		$output = array();
+		
+		$cname = $this->input->post('cname');
+		$ccode = $this->input->post('ccode');
+		$cv_frm = $this->input->post('cv_frm');
+		$cv_to = $this->input->post('cv_to');
+		$cmenu = $this->input->post('cmenu_id');
+		$ccartval = $this->input->post('ccart_val');
+		$cdiscval = $this->input->post('cdisc_val');
+		
+		$this->load->library('form_validation');
+		$this->form_validation->set_rules('cname','Coupon Name','required|callback__chk_validpnhcoup');
+		$this->form_validation->set_rules('ccode','Coupon Code','required');
+		$this->form_validation->set_rules('cv_frm','Valid From','required');
+		$this->form_validation->set_rules('cv_to','Valid To','required');
+		foreach($cmenu as $i=>$cm)
+		{
+			$this->form_validation->set_rules('cmenu_id['.$i.']','Menu '.($i+1),'required');
+			$this->form_validation->set_rules('ccart_val['.$i.']','Cart Value '.($i+1),'required');
+			$this->form_validation->set_rules('cdisc_val['.$i.']','Discount Value '.($i+1),'required');
+		}
+		if($this->form_validation->run()===FALSE)
+		{
+			$output['status'] = 'error';
+			$output['error'] = strip_tags(validation_errors());
+		}else
+		{
+			// create coupon entry 
+			$ins = array();
+			$ins['coup_code'] = $ccode;
+			$ins['coup_name'] = $cname;
+			$ins['valid_from'] = $cv_frm;
+			$ins['valid_to'] = $cv_to;
+			$ins['is_active'] = 1;
+			$ins['created_by'] = $user['userid'];
+			$ins['created_on'] = cur_datetime();
+			$this->db->insert('pnh_m_coupons',$ins);
+			$coup_id = $this->db->insert_id();
+			
+			// insert coupon menu link 
+			foreach($cmenu as $i=>$cm)
+			{
+				$ins = array();
+				$ins['coup_id'] = $coup_id;
+				$ins['menu_id'] = $cmenu_id[$i];
+				$ins['cart_value'] = $ccartval[$i];
+				$ins['disc_value'] = $cdiscval[$i];
+				$ins['is_active'] = 1;
+				$ins['created_by'] = $user['userid'];
+				$ins['created_on'] = cur_datetime();
+				$this->db->insert('pnh_m_coupon_menu_link',$ins);
+			}
+			
+			$output['status'] = 'success';
+		}
+		echo json_encode($output);
+	}
+	
+	
+	function chk_ship()
+	{
+		$this->erpm->sendsms_franchise_shipments('20141019679,20141019681');
+	}
+
+	/**
+	 * functon to update deal publish status by product src and stock availabity. 
+	 */
+	function _upd_dealstatusbyprod_srcnstk($product_id=0)
+	{
+		
+		$user = $this->erpm->auth(false,true);
+		
+		if(!$user)
+			$user = array('userid'=>0);
+		
+		if(!$product_id)
+			return false;
+
+			// get product linked deal
+			$p_item_list_res = $this->db->query("select g.*,d.publish,di.is_combo,di.is_group from (
+														(select dl.product_id,is_sourceable,dl.itemid,1 as deal_type
+															from m_product_info p 
+															join m_product_deal_link dl on dl.product_id = p.product_id 
+															where dl.is_active = 1 and p.product_id = ? and p.is_active = 1 
+														group by dl.itemid)union(
+														select p.product_id,is_sourceable,dl.itemid,2 as deal_type
+															from m_product_info p 
+															join products_group_pids grp on grp.product_id = p.product_id
+															join m_product_group_deal_link dl on dl.group_id = grp.group_id 
+															where p.product_id = ? and dl.is_active = 1 and 1
+														group by dl.itemid) ) as g
+														join king_dealitems di on di.id = g.itemid
+														join king_deals d on d.dealid = di.dealid
+														group by g.itemid
+												",array($product_id,$product_id));
+			if(!$p_item_list_res->num_rows())
+				return false;
+			
+			
+			foreach($p_item_list_res as $item)
+			{
+				
+				$deal_status = $item['publish'];
+				// check for deal type is normal deal 
+				if($item==1)
+				{
+					// check if the deal is combo deal
+					if($item['is_combo'])
+					{
+						// check for linked products src and sourceablity
+
+						$c_item_res = $this->db->query("select dl.product_id,is_sourceable,dl.itemid,1 as deal_type,dl.qty,sum(available_qty) as stk,sum(ifnull(available_qty,0))*dl.qty as rqty
+												from m_product_info p 
+												join m_product_deal_link dl on dl.product_id = p.product_id 
+												left join t_stock_info s on s.product_id =p.product_id
+												where dl.is_active = 1 and dl.itemid = ?
+											group by dl.product_id;",$item['itemid']);
+						
+						if($c_item_res->num_rows())
+						{
+							// check if products are sourceable and ready to process.
+							foreach($c_item_res->result_array() as $c_item)
+							{
+								// check if product has stock and product is sourceable 
+								if(!$c_item['is_sourceable'] && $c_item['stk'] == 0)
+								{
+									$deal_status = 0;
+								}
+							}
+						}
+						
+					}else
+					{
+						
+						$pstk = @$this->db->query("select sum(available_qty) as stk from t_stock_info where product_id = ? ",$product_id)->row()->stk;
+						
+						$pstk = $pstk?$pstk:0;
+						
+						// check for normal deals 1:N 
+						// check if product has stock and product is sourceable
+						if(!$item['is_sourceable'] && $pstk == 0)
+						{
+							$deal_status = 0;
+						}else
+						{
+							$deal_status = 1;
+						}
+					}
+				}
+				else
+				if($item==2)
+				{
+					// check for linked products src and sourceablity
+					
+					$c_item_res = $this->db->query("select p.product_id,is_sourceable,dl.itemid,1 as deal_type,dl.qty,sum(available_qty) as stk,sum(ifnull(available_qty,0))*dl.qty as rqty
+							from m_product_info p
+							join products_group_pids grp on grp.product_id = p.product_id
+							join m_product_group_deal_link dl on dl.group_id = grp.group_id
+							left join t_stock_info s on s.product_id =p.product_id
+							where dl.is_active = 1 and dl.itemid = ? 
+							group by grp.product_id;",$item['itemid']);
+					
+					if($c_item_res->num_rows())
+					{
+						// check if products are sourceable and ready to process.
+						foreach($c_item_res->result_array() as $c_item)
+						{
+							// check if product has stock and product is sourceable
+							if(!$c_item['is_sourceable'] && $c_item['stk'] == 0)
+							{
+								$deal_status = 0;
+							}
+						}
+					}					
+				}
+				
+				// update deal publish status
+				$this->db->query("update king_dealitems set live = ?,modified_on=now() where id = ? ",array($deal_status,$item['itemid']));
+				$this->db->query("update king_deals set publish = ?,modified_on=now() where dealid = ? ",array($deal_status,$item['dealid']));
+				
+				// update publish status to log
+				$this->db->query("update t_deal_status_log set itemid=?,publish = ?,created_on=now(),created_by=? ",array($item['itemid'],$deal_status,$user['userid']));  
+				
+			}
+				
+			
+	}
+	
+	/**
+	 * function to update vendor api details 
+	 */
+	function upd_vendor_api_det()
+	{
+		// check if user is logged in and is superadmin 
+		$this->erpm->auth(true);
+		
+		// collect all post params 
+		$api_vendor_id = $this->input->post('api_vendor_id');
+		$api_access_key = $this->input->post('api_access_key');
+		$prod_url = $this->input->post('prod_url');
+		$prod_url_resp_type = $this->input->post('prod_url_resp_type');
+		$prod_url_cron_time = $this->input->post('prod_url_cron_time');
+		$prod_stk_url = $this->input->post('prod_stk_url');
+		$prod_stk_url_resp_type = $this->input->post('prod_stk_url_resp_type');
+		$prod_stk_url_cron_time = $this->input->post('prod_stk_url_cron_time');
+		$po_file_url = $this->input->post('po_file_url');
+		$po_file_notifyby = $this->input->post('po_file_notifyby');
+		
+		$this->db->query('update m_vendor_info set api_access_key = ? where vendor_id = ? ',array($api_access_key,$api_vendor_id));
+		
+		if($this->db->query("select count(*) as t from m_vendor_api_info where vendor_id = ? and type = 'deal_import' ",array($api_vendor_id))->row()->t)
+			$this->db->query("update m_vendor_api_info set api_link = ? where vendor_id = ? and type = 'deal_import' ",array($prod_url,$api_vendor_id));
+		else
+			$this->db->query("insert into m_vendor_api_info (api_link,vendor_id,type) values (?,?,'deal_import') ",array($prod_url,$api_vendor_id));
+		
+		if($this->db->query("select count(*) as t from m_vendor_api_info where vendor_id = ? and type = 'stock_availablity_api' ",array($api_vendor_id))->row()->t)
+			$this->db->query("update m_vendor_api_info set api_link = ? where vendor_id = ? and type = 'stock_availablity_api' ",array($prod_stk_url,$api_vendor_id));
+		else
+			$this->db->query("insert into m_vendor_api_info (api_link,vendor_id,type) values (?,?,'stock_availablity_api') ",array($prod_stk_url,$api_vendor_id));
+		
+		if($this->db->query("select count(*) as t from m_vendor_api_info where vendor_id = ? and type = 'po_file_loc' ",array($api_vendor_id))->row()->t)
+			$this->db->query("update m_vendor_api_info set api_link = ? where vendor_id = ? and type = 'po_file_loc' ",array($po_file_url,$api_vendor_id));
+		else
+			$this->db->query("insert into m_vendor_api_info (api_link,vendor_id,type) values (?,?,'po_file_loc') ",array($po_file_url,$api_vendor_id));
+		
+		$this->session->set_flashdata("erp_pop_info","Api Details Updated");
+		redirect('admin/vendor/'.$api_vendor_id.'#vi_api_info','refresh');
+		
+	}
+	
+	function reset_pattrs()
+	{
+		$p_attrs = array();
+				
+		// check if attr exists
+		foreach($p_attrs as $at)
+		{
+			$p_res = $this->db->query("select a.product_id,product_cat_id,attribute_ids 
+												from m_vendor_product_link a 
+												join m_product_info b on a.product_id = b.product_id 
+												join king_categories c on c.id = b.product_cat_id
+												where vendor_product_code = ? 
+									",$at[0]);
+			if(!$p_res->num_rows())
+				continue;
+ 
+			$p_det = $p_res->row_array();
+			// check if product attributes are updated
+			$p_attr_ids = explode(',',$p_det['attribute_ids']);
+			
+			foreach($p_attr_ids as $p_aid)
+			{
+				
+				// check if the product entry is set 
+				if(($this->db->query('select count(*) as t from m_product_attributes where pid = ? and pcat_id = ? and attr_id = ? ',array($p_det['product_id'],$p_det['product_cat_id'],$p_aid))->row()->t) == 0)
+				{
+					// create product attibute entry
+					$ins = array();
+					$ins['pid'] = $pdet['product_id'];
+					$ins['pcat_id'] = $pdet['product_cat_id'];
+					$ins['attr_id'] = $p_aid;
+					$ins['attr_value'] = ($p_aid == 1)?$at[1]:$at[2];
+					$this->db->query("m_product_attributes",$ins);
+				}				
+			}
+			
+		} 
+		
+	}
+
+	
+	/**
+	 * function to delete deals  
+	 */
+	function delete_deals()
+	{
+		$this->erpm->auth(true);
+		// check if form is submitted
+		if(!$this->input->post('submit'))
+		{
+			$data['page'] = 'delete_deals';
+			$this->load->view('admin',$data);
+		}else
+		{	
+			$menuids = 	$this->input->post('menuids');
+			$brandids = $this->input->post('brandids');
+			$catids = 	$this->input->post('catids');
+			$dealids = 	$this->input->post('dealids');
+			$productids = 	$this->input->post('productids');
+			
+			$menuids = ($menuids)?$menuids:0;
+			$brandids = ($brandids)?$brandids:0;
+			$catids = ($catids)?$catids:0;
+			$dealids = ($dealids)?$dealids:0;
+			$productids = ($productids)?$productids:0;
+			
+			$cond = '';
+			if($menuids)
+				$cond .= ' and d.menuid in ('.$menuids.') ';
+			
+			if($brandids)
+				$cond .= ' and d.brandid in ('.$brandids.') ';
+			
+			if($catids)
+				$cond .= ' and d.catid in ('.$catids.') ';
+			
+			if($dealids)
+				$cond .= ' and (di.id in ('.$dealids.') or di.dealid in ('.$dealids.') ) ';
+			
+			if($productids)
+				$cond .= ' and a.product_id in ('.$productids.') ';
+			
+			if($cond)
+			{	
+			
+				// get deal linked products to delete 
+				$sql = "select product_id,sqty,itemid,sum(status) as is_ordered from (
+							select g.*,ifnull(o.status,0) as status,o.id 
+								from (
+									select a.itemid,a.product_id,sum(available_qty) as sqty
+									from m_product_deal_link a 
+									join m_product_info b on a.product_id = b.product_id 
+									join t_stock_info c on c.product_id = a.product_id 
+									join king_dealitems di on di.id = a.itemid   
+									join king_deals d on d.dealid = di.dealid 
+									where 1 $cond 
+									group by itemid,product_id  
+							) as g
+							left join king_orders o on o.itemid = g.itemid 
+							order by product_id  
+							) as h
+							group by itemid,product_id 
+							order by product_id 
+						";
+				$res = $this->db->query($sql);
+				$item_list = array();
+				foreach($res->result_array() as $row)
+				{
+					// check for item with 0
+					if($row['is_ordered'])
+						continue ;
+					
+					if(!isset($item_list[$row['itemid']]))
+						$item_list[$row['itemid']] = array();
+					
+					
+				}
+			}
+			
+		}
+	}
+	
+	
+	function reset_dealstatusbyprod_sync()
+	{
+		 
+		error_reporting(E_ALL);
+		ini_set('memory_limit','512M');
+		ini_set('max_execution_time','6000');
+		
+		$user = $this->erpm->auth();
+		$prod_list = $this->db->query("select product_id from m_product_info where sync_product_src = 0 order by product_id limit 50000");
+		echo $prod_list->num_rows().' '; 
+		$i=0;
+		foreach($prod_list->result_array() as $row)
+		{
+			$i++;
+			
+			$this->erpm->_upd_product_deal_statusbyproduct($row['product_id'],6,'reset by script');
+
+			$this->db->query("update m_product_info set sync_product_src = 1 where product_id = ? ",$row['product_id']);
+			
+			echo $i.'<br>';
+			flush();
+		}
+		
+	}
+	
+	/** function to push po to vendor via ftp **/
+	function push_potovendor($po_id)
+	{
+		$user=$this->auth(PURCHASE_ORDER_ROLE|FINANCE_ROLE);
+		$po_det_res=$this->db->query("select po.vendor_id,vpo.id as vo_refid, vpo.product_id,sku_code,order_id,vpo.order_qty,pl.mrp,vpo.created_on,po.po_id
+				from t_vendor_po_order_link vpo
+				join t_po_info po on po.po_id=vpo.po_id
+				join t_po_product_link pl on vpo.po_id=pl.po_id and vpo.product_id = pl.product_id
+				join m_product_info p on p.product_id = pl.product_id
+				where po.po_id=? and po.po_status in (4) and order_status = 1
+				group by order_id ",array($po_id));
+	
+		if($po_det_res->num_rows())
+		{
+	
+			// prepare po export data
+			$this->load->plugin('csv_logger');
+			$csv_obj=new csv_logger_pi();
+			$csv_obj->head(array("PO Date","PO ID/Order ref no","Partner name","Product SKU","Order Qty","PO Product MRP"));
+			$vendorid = 0;
+			foreach($po_det_res->result_array() as $po_det)
+			{
+				$this->db->query("update t_vendor_po_order_link set order_status = 1 where id = ? ",$po_det['vo_refid']);
+				$csv_obj->push(array($po_det['created_on'],$po_det['po_id'].'/'.$po_det['order_id'],'StoreKing',$po_det['sku_code'],$po_det['order_qty'],$po_det['mrp']));
+	
+				$vendorid = $po_det['vendor_id'];
+			}
+	
+			$this->db->query("update t_po_info set po_status = 0 where po_id = ? ",$po_id);
+	
+			$vendor_ftp_det_res = $this->db->query("select *
+					from m_vendor_api_resources a
+					join m_vendor_api_access b on a.api_access_id = b.id
+					where a.vendor_id = ? and module_type = 'CreatePO'
+					",array($vendorid));
+	
+			if($vendor_ftp_det_res->num_rows())
+			{
+				$ftp_settings = $vendor_ftp_det_res->row_array();
+				if($ftp_settings)
+				{
+					//get the sv file
+					$order_csv=$csv_obj->get();
+					if($order_csv)
+					{
+						$filename = $this->_prepare_filename($ftp_settings['filename_pattern'],$po_det['po_id']);
+						$filename = $filename.'.'.$ftp_settings['file_format'];
+	
+						$filename=VENDOR_ORDES_CSV_PATH.$filename;
+	
+						$file = fopen($filename,"w");
+						fwrite($file,$order_csv);
+						fclose($file);
+	
+						$ftp_settings['source_path']=$filename;
+						$ftp_settings['destination_path']=$ftp_settings['access_path'];
+						$uploaded=$this->ftp_upload($ftp_settings);
+						if(!$uploaded)
+							$this->errors("Order file not uploaded");
+						else
+							$this->db->query("update t_po_info set po_status = 0 where po_id = ? ",$po_id);
+					}
+				}else{
+					$csv_obj->download('Storeking_Stock_Order_List');
+				}
+			}
+		}
+	
+		redirect('admin/viewpo/'.$po_id,'refresh');
+	}
+	
+
+	/**
+	 * function to update bulk member price via csv  
+	 */
+	function bulk_update_memberprice()
+	{
+		$this->erpm->auth(true);
+		$data['page'] = 'bulk_updatememberprice';
+		$this->load->view('admin',$data);
+		
+	}
+	
+	/**
+	 * fucntion to process bulk member price update 
+	 */
+	function process_update_memberprices()
+	{
+		//	error_reporting(E_ALL);
+		//	print_r($_POST);
+		if($_POST['submit'])
+		{
+			if($_FILES['mp_data_file']['tmp_name'])
+			{	
+			
+				$user_det = $this->erpm->auth();
+				$userid = $user_det['userid'];
+				$total_available = 0;
+				$total_updated = 0;
+				$f=fopen($_FILES['mp_data_file']['tmp_name'],"r");
+				$i=-1;
+				$valid_templ = 1;
+				while(($data=fgetcsv($f))!==false)
+				{
+					$i++;
+					
+					if(!$valid_templ)
+						break;
+					
+					if($i==0)
+					{
+						$data_heads = array_values($data);
+						
+						if($data_heads[0] != 'Itemid')
+							$valid_templ = 0;
+						if($data_heads[1] != 'MRP')
+							$valid_templ = 0;
+						if($data_heads[2] != 'Price')
+							$valid_templ = 0;
+						if($data_heads[3] != 'Member Price')
+							$valid_templ = 0;
+						if($data_heads[4] != 'mp_frn_max_qty')
+							$valid_templ = 0;
+						if($data_heads[5] != 'mp_mem_max_qty')
+							$valid_templ = 0;
+						if($data_heads[6] != 'mp_max_allow_qty')
+							$valid_templ = 0;
+						
+						continue;
+					}
+					
+					$total_available ++;
+					
+					
+					
+					$itemid = $data[0]*1;
+					$offerprice = $data[2]*1;
+					$mp_price = $data[3]*1;
+					$mp_frn_max_qty = $data[4]*1;
+					$mp_mem_max_qty = $data[5]*1;
+					$mp_max_allow_qty = $data[6]*1;
+					$valid_data = 1;
+					if(!$itemid || !$offerprice || !$mp_price || !$mp_frn_max_qty || !$mp_mem_max_qty || !$mp_max_allow_qty)
+						$valid_data = 0;
+					
+					if(!$valid_data)
+						continue;
+					
+					if(!($this->db->query("select count(*) as t from king_dealitems where id = ? ",$itemid)->row()->t))
+						continue;
+					
+					//$mrp = $data[1];
+					$mrp = $this->db->query("select orgprice from king_dealitems where id = ? ",$itemid)->row()->orgprice;
+					
+					
+					$member_price_det = array('price'=>$mp_price,'mp_frn_max_qty'=>$mp_frn_max_qty,'mp_mem_max_qty'=>$mp_mem_max_qty,'mp_max_allow_qty'=>$mp_max_allow_qty);
+					$stat = $this->erpm->_upd_deal_price_detail($userid,$itemid,$mrp,$offerprice,$member_price_det);
+					if($stat)
+						$total_updated += 1;
+				}
+				
+				if($valid_templ)
+					$this->session->set_flashdata("erp_pop_info","Total $total_updated/$total_available Deals updated");
+				else
+					$this->session->set_flashdata("erp_pop_info","Invalid Template uploaded");
+			}else
+			{
+				$this->session->set_flashdata("erp_pop_info","No file uploaded");
+			}
+			redirect('admin/bulk_update_memberprice','refresh');
 		}
 	}
 

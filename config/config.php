@@ -41,7 +41,7 @@ $config['index_page'] = "";
 | 'ORIG_PATH_INFO'	Uses the ORIG_PATH_INFO
 |
 */
-$config['uri_protocol']	= "AUTO";//"PATH_INFO";
+$config['uri_protocol']	= "PATH_INFO"; //"AUTO"
 
 /*
 |--------------------------------------------------------------------------
@@ -123,7 +123,7 @@ $config['subclass_prefix'] = 'MY_';
 | DO NOT CHANGE THIS UNLESS YOU FULLY UNDERSTAND THE REPERCUSSIONS!!
 |
 */
-$config['permitted_uri_chars'] = '';
+$config['permitted_uri_chars'] ='\#'; //'';
 
 
 /*
@@ -148,7 +148,7 @@ $config['permitted_uri_chars'] = '';
 | use segment based URLs.
 |
 */
-$config['enable_query_strings'] = false;
+$config['enable_query_strings'] = true;
 $config['controller_trigger'] 	= 'c';
 $config['function_trigger'] 	= 'm';
 $config['directory_trigger'] 	= 'd'; // experimental not currently in use

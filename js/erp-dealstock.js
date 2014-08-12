@@ -27,14 +27,15 @@
         var EVENT = base.options.eventname;
         
         var ITEMID = base.$el.attr("dealid");
+        var DEAL_STATUS = base.options.dl_status;
         var IS_PNH = 1; //base.$el.attr("is_pnh");
         //function debug(e) { console.log(e); }
         
         base.drawbox = function(e) {
             //debug(e);
                 // plug in as opened
-                $.getJSON(site_url+'/admin/jx_pnh_deal_stock_det/'+ITEMID+"/"+IS_PNH,{},function(resp){ // height:'+HEIGHT+'; top:'+TOP+'px;  left:'+LEFT+'px;
-                        var HTML_DATA = '<div style="float:left;width:100%"><div style="width:'+WIDTH+'; background:'+BGCOLOR+'; position: '+POSITION+'; " class="'+CLASSNAME+'">\n\
+                $.getJSON(site_url+'/admin/jx_pnh_deal_stock_det/'+ITEMID+"/"+IS_PNH+"/"+DEAL_STATUS,{},function(resp){ // height:'+HEIGHT+'; top:'+TOP+'px;  left:'+LEFT+'px;
+                        var HTML_DATA = '<div style="float:left;width:100%" class="'+CLASSNAME+'_block"><div style="width:'+WIDTH+'; background:'+BGCOLOR+'; position: '+POSITION+'; " class="'+CLASSNAME+'">\n\
                                             <span dealid="'+ITEMID+'" class="stock_det_close">X</span>';
                             HTML_DATA += '<table width="100%" border=1 class="datagrid" cellpadding=1 cellspacing=0>';
                         if(resp.status == 'fail')
@@ -76,7 +77,7 @@
         
         base.clearbox = function(e) {
             base.active = 0;
-            $("."+CLASSNAME,base.itemrow).remove();
+            $("."+CLASSNAME+"_block,"+CLASSNAME,(base.itemrow) ).remove();
         };
         //on page load (as soon as its ready) call JT_init
         //$(document).ready(base.init()); //
@@ -99,6 +100,7 @@
         ,interval: 300000 // if(autorefresh == true) interval must. eg: 1min == 60000, 5 min => 300000 (5 * 60000)
         ,eventname: "hover"  // eg: "hover","click"
         ,change:'row' // text or row change the color (tr == row)
+		,dl_status:"all" // eg: 0:Sold out products, 1:In Stock, all: no filter
     };
 
     // Calling function
@@ -184,7 +186,7 @@
                                     }
 
                             });
-                            
+
                     }
 
                     // on Escape key press close plugin box
@@ -213,6 +215,7 @@
         var ELTCLASS = elt.attr("class");  ELTCLASS = ELTCLASS == undefined ? '' : ELTCLASS;
             
         var CHANGE = elt.options.change;
+        var DL_STATUS = elt.options.dl_status;
         
         var arr_dealids = [];
         $.each(elt,function(i,elt) {
@@ -221,7 +224,7 @@
         });
 
         // request api
-        var postData = {itemids: "'" +( arr_dealids.join(',') +"'" ) };
+        var postData = {itemids: "'" +( arr_dealids.join(',') +"'" ), deal_status:DL_STATUS};
         //print(postData);
 
         $.post(site_url+'/admin/jx_pnh_deal_stock_status',postData,function(resp){
@@ -232,7 +235,7 @@
                         base.itemrow = base.closest("tr");
                         var dealid =  base.attr("dealid");
 
-                        $.each(resp,function(itemid,itemdata) {
+						$.each(resp,function(itemid,itemdata) {
                             
                             if(dealid == itemid) {
 
@@ -245,7 +248,12 @@
                                     else
                                     {
                                             HTML_DATA = itemdata.deal_status;
-                                            
+											if( base.attr("curr_stock") != undefined)
+											{
+												base.attr("curr_stock",itemdata.stock );
+												//if(itemdata.is_group != 1)
+												base.itemrow.find(".stock_msg").html(itemdata.stock);
+											}
                                             if(CHANGE == 'text')
                                             {
                                                 if(itemdata.deal_status == 'In Stock')

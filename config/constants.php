@@ -27,6 +27,8 @@ define('DIR_WRITE_MODE', 0777);
 |
 */
 
+define("AUTH_LOGIN_DOMAIN",'snapittoday.com');
+
 define('FOPEN_READ', 							'rb');
 define('FOPEN_READ_WRITE',						'r+b');
 define('FOPEN_WRITE_CREATE_DESTRUCTIVE', 		'wb'); // truncates existing file data, use with care
@@ -63,14 +65,18 @@ define("CS_EMAIL","hello@snapittoday.com");
 define('REQUEST_URI',$_SERVER['REQUEST_URI']);
 define("CRON_IMAGES_LOC","/home/snapitto/cron_images_updater/imgs/subfolder/images/");
 
-
-define("EXOTEL_UID","snapittoday");
+//===========< SMS SETTINGS >=========================
+define("EXOTEL_UID","snapittoday-222222");
 define("EXOTEL_AUTHKEY","491140e9fbe5c507177228cf26cf2f09356e042c-test");
-define("EXOTEL_MOBILE_NO",'9243404342');
+define("EXOTEL_MOBILE_NO",'9243404342-2222');
+//===========< SMS SETTINGS >=========================
+
+//===========< CUSTOMER TOLL FREE NUMBER >============
+define("TOLL_FREE_NUMBER",'1800 200 1996');
 
 define('HTTP_IS_AJAX', isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
 
-define('GLOBAL_BATCH_ID', 7000);
+define('GLOBAL_BATCH_ID', 5833); // 7000
 
 // Default member recharge value
 define('PNH_MEMBER_FREE_RECHARGE',100);
@@ -79,6 +85,17 @@ define("MAX_RATE_VAL",5);
 // member minimum order value
 define("MEM_MIN_ORDER_VAL",500);
 
+// member minimum order value
+define("API_USER_ID",60);
 
+//vendor api resources 
+define("VENDOR_CATALOG_FILE_PATH","resources/ven_order_files/");
+define("VENDOR_ORDES_CSV_PATH","resources/ven_order_files/");
+
+//Top sold products on number of quantity sold --- Default
+define("QUANTITY_CONST",2);
+
+//Reorder qty Default value
+define("REORDER_QTY",60);
 /* End of file constants.php */
 /* Location: ./system/application/config/constants.php */

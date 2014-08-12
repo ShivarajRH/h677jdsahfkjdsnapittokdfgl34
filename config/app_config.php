@@ -72,3 +72,16 @@ $config['pnh_logistick'][2]='Fright-cordinator';
 $config['pnh_logistick'][3]='Bus transport';
 $config['pnh_logistick'][4]='Courier';
 
+/** 
+ * shipment running status flags
+ * 
+ * 1:in-transit,2:pickup or hand-over,3:delivered,4:return
+ */ 
+$config['shipment_status']=array();
+$config['shipment_status'][0]='Pending to Ship';
+$config['shipment_status'][1]='Intransit';
+$config['shipment_status'][2]='Intransit'; 
+$config['shipment_status'][3]='Delivered';
+$config['shipment_status'][4]='Marked for Return';
+$config['shipment_status'][5]='Pickup';
+

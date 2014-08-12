@@ -347,7 +347,6 @@
 </table>
 
 <script type="text/javascript">
-		
 	$('.scan_proditems').each(function(){
 		var ttl_stkgrp_items = $('.scan_proditem',this).length;
 		var ttl_scanbybc= $('.scan_bybc',this).length;
@@ -621,8 +620,8 @@
 		validate_item(p);		
 	}
 
-		function process_invoice(pmp)
-		{
+	function process_invoice(pmp)
+	{
 		var fs_id_list_arr = [];
 		var fs_id_list='';
 		if($(".free-samples-data").length)
@@ -654,32 +653,38 @@
 			alert("No products were cleared to pack. Invoice can't be empty");
 			return;
 		}
-			f=true;
-			$(".imeis").each(function(){
-		if($(this).val()==0)
-		{
-			f=false;
-			alert("One of the serial No is not selected. Serial nos are mandatory to select against quantity");
-			return false;
-		}
+		f=true;
+		/*$(".imeis").each(function(){
+			if($(this).val()==0)
+			{
+				f=false;
+				alert("One of the serial No is not selected. Serial nos are mandatory to select against quantity");
+				return false;
+			}
 		});
-		if(f==false) return;
+		if(f==false) return;*/
+		
 		$(".imeip1").each(function(){
-		p=$($(this).parents("tr").get(0));
-		if($(".imeis",p).length<1)
-		return;
-		var imeis=[];
-		$(".imeis",p).each(function(){
-		if($.inArray($(this).val(),imeis)!=-1)
-		{
-			f=false;
-			alert("Duplicate serial nos! Check serial nos");
-			return false;
-		}
-			imeis.push($(this).val());
-		});
-		if(f==false)
-		return false;
+				p=$($(this).parents("tr").get(0));
+				
+				if($(".imeis",p).length<1)
+				{
+					alert("IMEI Not entered.");
+					return;
+				}
+				
+				var imeis=[];
+				$(".imeis",p).each(function(){
+					if($.inArray($(this).val(),imeis)!=-1)
+					{
+						f=false;
+						alert("Duplicate serial nos! Check serial nos");
+						return false;
+					}
+					imeis.push($(this).val());
+				});
+				if(f==false)
+					return false;
 		});
 		if(f==false) return;
 		imei_payload="";
@@ -709,7 +714,14 @@
 			return false;
 		}	
 	
-		msg='<form id="packform" method="post"><?php $r=rand(303,34243234);?><input type="hidden" name="fs_ids" value="'+fs_id_list+'"><input type="hidden" name="pids" value="'+done_pids.join(",")+'"<input type="hidden" name="pass" value="<?=md5("$r {$invoice[0]['p_invoice_no']} svs snp33tdy")?>">	<input type="hidden" name="key" value="<?=$r?>"><input type="hidden" name="invoice" value="<?=$invoice[0]['p_invoice_no']?>">'+imei_payload+' '+sel_stk_inps+'	</form>';
+		msg='<form id="packform" method="post"><?php $r=rand(303,34243234);?>\n\
+				<input type="hidden" name="fs_ids" value="'+fs_id_list+'">\n\
+				<input type="hidden" name="pids" value="'+done_pids.join(",")+'">\n\
+				<input type="hidden" name="pass" value="<?=md5("$r {$invoice[0]['p_invoice_no']} svs snp33tdy")?>">\n\
+				<input type="hidden" name="key" value="<?=$r?>">\n\
+				<input type="hidden" name="invoice" value="<?=$invoice[0]['p_invoice_no']?>">\n\
+				'+imei_payload+' '+sel_stk_inps+'\n\
+			</form>';
 		$(".container").append(msg);
 	
 		if(confirm("Confirm if Free samples for order has been added for packing ? "))
@@ -765,6 +777,7 @@
 				if(prod_imeino_list[s_imei] == undefined)
 				{
 					alert("The product is not in invoice");
+                                        return;
 				}else
 				{
 					if(prod_imeino_list[s_imei] == 0)
@@ -778,6 +791,7 @@
 						if(resp.status == 'error')
 						{
 							alert(resp.error);
+							return;
 						}else
 						{
 							var i_prod_id = prod_imeino_list[s_imei];

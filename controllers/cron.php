@@ -1125,7 +1125,11 @@ class Cron extends Controller{
 			
 			$this->cron_log(15);
 		}
-		
+	
+	/**
+	 * Function to send offer of the day sms to franchise 
+	 * @modified by Shivaraj
+	 */
 	function enday_orderd_sms_tofranchise()
 	{
 		$this->cron_log(19,1);
@@ -1135,18 +1139,32 @@ class Cron extends Controller{
 		{
 			foreach($franchise_info_res->result_array() as $franchise_det)
 			{
-				$day_orderd_amt=$this->db->query("SELECT IFNULL(ROUND(SUM((i_orgprice-(i_coup_discount+i_discount))*b.quantity),2),0) AS amt 
+				$curr_date = "CURDATE()"; //'2014-05-27'
+				$day_orderd_amt_res=$this->db->query("SELECT IFNULL(ROUND(SUM((i_orgprice-(i_coup_discount+i_discount))*b.quantity),2),0) AS amt,a.transid
 														FROM king_transactions a
 														JOIN king_orders b ON a.transid = b.transid
 														JOIN pnh_m_franchise_info c ON c.franchise_id = a.franchise_id
-														WHERE a.franchise_id = ? AND c.is_suspended = 0 AND DATE(FROM_UNIXTIME(a.init)) = CURDATE() 
-														",$franchise_det['franchise_id'])->row()->amt;
-					
-				$franchise_name=$franchise_det['franchise_name'];
-				$login_mobile1=$franchise_det['login_mobile1'];
-				if($day_orderd_amt['amt']>0)
-					$this->erpm->pnh_sendsms($login_mobile1,"Congratulations!!!Dear Franchise $franchise_name, your placed order of the day -Rs.$day_orderd_amt Happy Franchising",$franchise_det['franchise_id']);
-				//echo $login_mobile1,"Congratulations!!!Dear Franchise $franchise_name, your placed order of the day -Rs.$day_orderd_amt Happy Franchising".'<br>';
+														WHERE a.franchise_id = ? AND c.is_suspended = 0 AND DATE(FROM_UNIXTIME(a.init)) = $curr_date
+														GROUP BY a.transid",array($franchise_det['franchise_id']) );
+				$day_orderd_amt=0;
+				foreach($day_orderd_amt_res->result_array() as $day_orders)
+				{
+					$transid = $day_orders['transid'];
+					$amt = $this->erpm->trans_fee_insu_value($transid,$day_orders['amt']);
+					$day_orderd_amt += $amt;
+				}
+				
+				if( $day_orderd_amt > 0 )
+				{
+					$franchise_name=$franchise_det['franchise_name'];
+					$login_mobile1=$franchise_det['login_mobile1'];
+					// =====================< FRANCHISE OFFER OF THE DAY SMS START >===================================
+					//$this->erpm->pnh_sendsms($login_mobile1,"Congratulations!!!Dear Franchise $franchise_name, your placed order of the day -Rs.$day_orderd_amt Happy Franchising",$franchise_det['franchise_id']);
+					$offer_of_day_sms = "Congratulations!!! Dear Franchise $franchise_name, your placed order of the day Rs.$day_orderd_amt Happy Franchising";
+					//echo $offer_of_day_sms;
+					$this->erpm->pnh_sendsms($login_mobile1,$offer_of_day_sms,$franchise_det['franchise_id']);
+					// =====================< FRANCHISE OFFER OF THE DAY SMS START >===================================
+				}
 			}
 		}
 		$this->cron_log(19);
@@ -1426,7 +1444,7 @@ class Cron extends Controller{
 		ini_set('memory_limit','1024M');
 	
 		// get working versions
-		$res_vl = $this->db->query("select id,release_version,code_version,max(db_version) as v,max(db_changes_v) as dcv from (select * from m_apk_version order by id desc) as g group by  release_version having release_version > 0 order by id desc ");
+		$res_vl = $this->db->query("select id,release_version,code_version,max(db_version) as v,max(db_changes_v) as dcv from (select * from m_apk_version order by id desc) as g group by  release_version having release_version > 14 and release_version < 100 order by id desc ");
 		if($res_vl->num_rows())
 		{
 			foreach($res_vl->result_array() as $row_vl)
@@ -1461,11 +1479,13 @@ class Cron extends Controller{
 				
 				
 				// check for version price updates and status updates.
-				$res_v = $this->db->query("select store_id,a.id,a.dealid,a.orgprice,a.price,b.publish
+				$res_v = $this->db->query("select release_version as store_id,a.id,a.dealid,a.orgprice,a.price,b.publish
 						from king_dealitems a
 						join king_deals b on a.dealid = b.dealid
-						join m_apk_store_menu_link d on d.menu_id = b.menuid
-						where store_id =  ? ",array($row_vl['release_version']));
+												join m_apk_version_deal_link c on c.item_id = a.id 
+												join m_apk_version d on d.id = c.version_id 
+												where release_version =  ? 
+											group by a.id ",array($row_vl['release_version']));
 				
 				if($res_v->num_rows())
 				{
@@ -1523,7 +1543,7 @@ class Cron extends Controller{
 						
 						$ins_v['version_id'] = $new_version_id;
 						
-						$this->db->insert("m_apk_version_deal_link",$ins_v) or die(mysql_error());
+						$this->db->insert("m_apk_version_deal_link",$ins_v);// or die(mysql_error());
 						
 					}
 				}
@@ -1551,6 +1571,7 @@ class Cron extends Controller{
 		// create new version
 		$this->db->query("insert into m_apk_version (version,release_version,code_version,db_version,db_changes_v,created_by,created_on) values (?,?,?,?,?,0,now())",$inp);
 		$new_version_id = $this->db->insert_id();
+		
 		return $new_version_id;
 	}
 	

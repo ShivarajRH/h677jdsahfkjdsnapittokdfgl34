@@ -878,7 +878,7 @@ if($e && $sizing_type==2)
 <div class="itcont">
 <div class="headimp"><label>Is COD available?</label></div>
 <div class="cont">
-<input type="checkbox" <?php if($e && $dealdetails->cod==1) echo "checked"; if(!$e) echo 'checked';?> name="cod" value="1" style="min-width:0px;"> COD Available
+<input type="checkbox" <?php if($e && $dealdetails->cod==1) echo "checked"; if(!$e) echo '';?> name="cod" value="1" style="min-width:0px;"> COD Available
 </div>
 </div>
 </td>

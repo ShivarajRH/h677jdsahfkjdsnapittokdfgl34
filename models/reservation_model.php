@@ -1,9 +1,9 @@
 <?php
 /**
  * Description of reservation_model
- *
  * @author Shivaraj@storeking.in
  * @access public
+ * @modified_on May_20_2014
  */
 class reservation_model extends Model
 {
@@ -23,28 +23,81 @@ class reservation_model extends Model
     
     /**
      * Function to return orders of the transaction
+	 * @author Shivaraj <shivaraj@storeking.in>
      * @param type $transid varchar
      * @return type array 
+	 * @usage Reservations Module and View Orders of franchise API
+	 * @last_modified_by Roopa <roopashree@storeking.in>_12_june_2014
+	 * @last_modified_by Shivaraj <shivaraj@storeking.in>_14_June_2014
      */
-    function get_orders_of_trans($transid) {
-            $sql="select o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
-                    ,di.name
+    function get_orders_of_trans($transid,$get_batch_invoice='all',$ord_status='',$get_addr_fields = '',$fields2=0) // if $default==all get all orders of a transaction id
+	{
+			$j_cond= $cond= $status_cond= $ord_addr_fields = $join_cond =$field_list2= $field_join_cond1=$field_join_cond2='';
+			$trans_orders=array();
+			//===============< GET ONLY BATCH AND INVOIVE GENERATED ORDERS OF TRANIS >========================
+			if($get_batch_invoice != "all")
+			{
+				$j_cond .= ' and o.status in (0,1) and tr.batch_enabled = 1 ';
+				$cond .= '  and i.id is null ';
+				$field_join_cond1 .= " AND i.invoice_status = 1 ";
+				$field_join_cond2 .= " AND pi.invoice_status = 1 ";
+			}
+			//===============< GET ONLY BATCH AND INVOIVE GENERATED ORDERS OF TRANIS ENDS >========================
+			
+			//===============< Order status Condition >========================
+			if($ord_status=='')
+				$status_cond .=' ';
+			else if($ord_status==0)
+				$status_cond .=' and o.status=0';
+			else if($ord_status==1)
+				$status_cond .=' and o.status in (0,1) ';
+//			else if($ord_status==2)
+//				$status_cond .=' and o.status=2';
+			else if($ord_status==3)
+				$status_cond .=' and o.status=3';
+//			else if($ord_status==4)
+//				$status_cond .=' and o.status=4';
+			//===============< Order status Condition Ends >========================
+			
+			//===============< Shipement Address details >========================
+			if($get_addr_fields!='')
+			{
+				$ord_addr_fields =  ",o.bill_person,o.bill_address,o.bill_city,o.bill_pincode,o.bill_phone,o.bill_state"
+									.",o.ship_person,o.ship_address,o.ship_city,o.ship_pincode,o.ship_phone,o.ship_state";
+			}
+			//===============< Shipement Address details Ends >========================
+			$field_list = "o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
+                    ,di.name,di.pnh_id,concat('".IMAGES_URL."items/',di.pic,'.jpg') as image_url,di.has_insurance
                     ,tr.init,tr.actiontime,tr.status tr_status,tr.is_pnh,tr.batch_enabled
-                    ,pi.p_invoice_no
+                    ,pi.p_invoice_no$ord_addr_fields";
+			if($fields2==1)
+			{
+				$field_list2=",i.invoice_no,o.has_insurance,o.insurance_amount,o.pnh_member_fee,o.userid,CONCAT(m.first_name,m.last_name)AS mem_name,m.address,m.pincode,m.email,m.mobile,o.i_coup_discount AS commission,
+            		if(tr.order_for=0,'Member order',if(tr.order_for=1,'New Member',if(tr.order_for=2,'Key Member','na'))) as orderfor,tr.order_for";
+				
+				$join_cond .= "JOIN pnh_member_info m ON m.user_id=o.userid";
+			}
+			
+            $sql="SELECT * FROM ( select $field_list $field_list2
                     from king_orders o
-                    join king_transactions tr on tr.transid = o.transid and o.status in (0,1) and tr.batch_enabled = 1
+                    join king_transactions tr on tr.transid = o.transid $j_cond
                     join pnh_m_franchise_info f on f.franchise_id = tr.franchise_id
-                    left join king_invoice i on o.id = i.order_id and i.invoice_status = 1
-                    left join proforma_invoices `pi` on pi.order_id = o.id and pi.invoice_status = 1 
+                    left join king_invoice i on o.id = i.order_id  #AND i.invoice_status = 1 
+                    left join proforma_invoices `pi` on pi.order_id = o.id  #AND pi.invoice_status = 1 
+					$join_cond
                     join king_dealitems di on di.id = o.itemid 
-                    where i.id is null and tr.transid = ?
-                    order by tr.init,di.name ";
+                    where tr.transid = ? $cond $status_cond
+                    order by tr.init,di.name) as g ";
+			
+			
              $trans_orders = $this->db->query($sql,$transid)->result_array();
+             //$trans_orders['query'] = $sql.'\n'.$transid;
+//				echo '<pre>'.$sql.$transid.'</pre>'; //die();
              return $trans_orders;
     }
     
     /**
-     * 
+     * Function to get packing details
      * @param type $fid
      * @param type $p_invoice_ids string
      * @return type array
@@ -149,7 +202,16 @@ class reservation_model extends Model
      * @return type string
      */
     function get_username_byid($userid) {
-        return $this->db->query("select username from king_admin where id=?",$userid)->row()->username;
+		$user_det_res = $this->db->query("select username from king_admin where id=?",$userid);
+		if($user_det_res->num_rows())
+		{
+			$user_det = $user_det_res->row();
+			$username = $user_det->username;
+		}
+		else {
+			$username = '';
+		}
+        return $username;
     }
     
     /**
@@ -157,7 +219,8 @@ class reservation_model extends Model
      * @param type $userid int
      * @return type array
      */
-    function do_create_batch_by_group_config ($userid) {
+    function do_create_batch_by_group_config ($userid)
+    {
         
         error_reporting(E_ALL);
         ini_set("display_errors",true);
@@ -1211,8 +1274,18 @@ class reservation_model extends Model
         return $this->db->query("select * from t_imei_no where status=0 and product_id=?",$product_id)->result_array();
     }
     
-    function get_batch_print_count($batch_id) {
-        $printcount = $this->db->query("select printcount from picklist_log_reservation where batch_id=?",$batch_id)->row()->printcount;
+    /**
+     * Function to get print count of Pickslip
+     * @param type $batch_id int
+     * @return int 
+     */
+    function get_batch_print_count($batch_id)
+	{
+		$print_res = $this->db->query("select printcount from picklist_log_reservation where batch_id=?",$batch_id);
+		if($print_res->num_rows()>0)
+			$printcount = $print_res->row()->printcount;
+		else
+		    $printcount = 0;
         return $printcount;
     }
 }

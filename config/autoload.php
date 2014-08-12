@@ -51,7 +51,7 @@ $autoload['libraries'] = array('database','session',"image_lib","upload");
 |	$autoload['helper'] = array('url', 'file');
 */
 
-$autoload['helper'] = array('string','url','html','frontend','my_html',"my_string","date","form","mobdetect","custom_func");
+$autoload['helper'] = array('string','url','html','frontend','my_html',"my_string","date","form","mobdetect","custom_func","text");
 
 
 /*

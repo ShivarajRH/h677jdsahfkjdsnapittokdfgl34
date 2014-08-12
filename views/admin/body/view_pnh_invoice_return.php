@@ -11,6 +11,7 @@
 	$return_process_cond_str = $return_process_cond;
 	
 	$return_process_cond_str[4] = 'Return From Service';
+	$return_process_cond_str[5] = 'Part to part replacement';
 	
 ?>
 <div class="page_wrap container">
@@ -30,11 +31,19 @@
 			 <table cellpadding="10" cellspacing="0"   border=1 style="border-collapse: collapse;border-color:#ccc;text-align: center">
 				<tr>
 					<td width="100"><b>Return ID</b> <br> <?php echo $return_det['det']['return_id'] ?></td>
-					<td width="140"><b>Returned On</b> <?php echo format_datetime($return_det['det']['returned_on']) ?></td>
-					<td width="200"><b>Transaction / Ticket no</b> <br/><a target="_blank" href="<?php echo site_url('admin/trans/'.$return_det['det']['transid']);?>"><?php echo $return_det['det']['transid']; ?></a></td>
+					<!--  <td width="140"><b>Returned On</b> <?php $created_on=($return_det['det']['in_transit']==0 || $return_det['det']['transit_status']==1 )? format_datetime($return_det['det']['returned_on']): format_datetime($return_det['det']['logged_on']);?></td>-->
+					<td width="140"><?php echo  ($return_det['det']['in_transit']==0 || $return_det['det']['transit_status']==1 )?"<b>Returned On $created_on <b>":"<b>Collected on $created_on </b>"?></td>
+					<td width="200"><b>Transaction / Ticket no</b> <br/><a target="_blank" href="<?php echo site_url('admin/trans/'.$return_det['det']['transid']);?>"><?php echo $return_det['det']['transid']; ?></a> &nbsp;/ <a target="_blank" href="<?php echo site_url('admin/ticket/'.$return_det['det']['ticket_id']);?>"><?php echo 'TK'.$return_det['det']['ticket_no']; ?></a></td>
 					<td width="100"><b>InvoiceNo</b> <br/><a target="_blank" href="<?php echo site_url('admin/invoice/'.$return_det['det']['invoice_no']);?>"><?php echo $return_det['det']['invoice_no']; ?></a></td>
 					<td width="200"><b>Franchise Name</b> <br/><a target="_blank" href="<?php echo site_url('admin/pnh_franchise/'.$return_det['det']['franchise_id']);?>" ><?php echo $return_det['det']['franchise_name'];?></a></td>
+					<?php if($return_det['det']['in_transit']==0 || $return_det['det']['transit_status']==1){?>
 					<td width="100"><b>Handled By</b> <?php echo $return_det['det']['handled_by_name'] ?></td>
+					<?php }else{
+						
+						$handled_by=$return_det['det']['emp_name']? $return_det['det']['emp_name']:$return_det['det']['courier'].' AWB :'.$return_det['det']['courier'];;
+					?>
+					<td width="200"><b>Sent via</b></br> <?php echo $handled_by ?></td>
+					<?php }?>
 					<td width="100">
 							<b style="font-size: 18px;top: 5px;position: relative"><?php echo $return_request_cond[$return_det['det']['status']] ?></b>
 					</td>
@@ -54,6 +63,7 @@
 					<th width="100">OrderID</th>
 					<th width="150">ProductDetails</th>
 					<th width="150">Return Reason/Condition </th>
+					<!-- <th width="150">Transit type</th> -->
 					<th width="150">Status </th>
 					<th width="300">Remarks</th>
 				</tr>
@@ -73,15 +83,17 @@
 						<td width="150">
 							<?php echo anchor_popup('admin/product/'.$prod_det['product_id'],$prod_det['product_name']); ?> <br /><br />
 							Barcode : <?php echo $prod_det['barcode'] ?><br />
-							<?php 
-								if($prod_det['imei_no'])
-								{
-							?>
-								IMEI NO : <?php echo $prod_det['imei_no'] ?> 
-							<?php									
-								}
-							?>	
+							<?php if($prod_det['imei_no']){?>
+							<?php if($prod_det['new_imei_no']!=$prod_det['imei_no']){?>
+							<b>Old IMEI NO : <del><?php echo $prod_det['imei_no'] ;?></b></del> 
+								<br>
+							<b>New IMEI NO : <?php echo $prod_det['new_imei_no']?></b>
+							<?php }else {?>
+								<b>IMEI NO : <?php echo $prod_det['imei_no'] ;?></b>
+								<?php }?>
+								<?php }?>
 						</td>
+					
 						<td width="150">
 							<?php echo $condition_type_arr[$prod_det['condition_type']] ?>
 							
@@ -104,6 +116,8 @@
 							<div><?php echo (($prod_det['status']==2)?('<b>Moved to Stock :</b> '.($prod_det['is_stocked']?'Yes':'No')):'') ?></div>
 							<div><?php echo (($prod_det['status']==2)?('<b>Refund Processed :</b> '.($prod_det['is_refunded']?'Yes':'No')):'') ?></div>
 						</td>
+					
+						<?php if($prod_det['in_transit']==0 || $prod_det['transit_status']==1){?>
 						<td width="150" >
 							<form action="<?php echo site_url('admin/jx_upd_invretprodremark') ?>" class="remark_add_frm" method="post">
 								
@@ -176,7 +190,8 @@
 									<table width="100%" cellpadding="0" cellspacing="0" >
 										<tr>
 											<td style="width: 80px;"><b>OLD IMEINO  : </b> </td>
-											<td><input type="text" readonly="readonly" style="width: 200px;" name="old_imei_no" value="<?php echo $prod_det['imei_no'];?>" /></td>
+											<td><input type="text" readonly="readonly" style="width: 200px;" name="old_imei_no" value="<?php echo $prod_det['new_imei_no']!=0?$prod_det['new_imei_no']:$prod_det['imei_no'];?>" /><span id="imei_resp_msg" style="color: red;"></span></td>
+											
 										</tr>
 										<tr>
 											<td style="width: 80px;"><b>New IMEINO  : </b> </td>
@@ -197,6 +212,9 @@
 								</div> 
 							</form>
 						</td>
+						<?php }else{?>
+						<td><a href="javascript:void(0)" onclick="change_toreturned(<?php echo $prod_det['return_id']?>)" class="button button-small action">Change to in hand status</a></td>
+					<?php }?>	
 						<td width="300" style="padding:0px;">
 							<div class="product_remarks_list"> 
 							<?php 
@@ -231,9 +249,17 @@
 	<div align="right">
 		<?php if($gen_return_receipt){?>
 			<br >
-			<input type="button" style="display: none" onclick="alert('comming soon...')" value="Generate Return Receipt for All products" >
+			<input type="button" style="display: none" onclick="alert('coming soon...')" value="Generate Return Receipt for All products" >
 		<?php }?>
 	</div>
+	<div id="returned_div" title="Change to 'IN Hand' status" style="display:none;">
+		<form id="rtrnd_status_form" action="<?php echo site_url("admin/changecollected_toreturned")?>" method="post" data-validate="parsley">
+				<table class="datagrid">
+					<tr><td><b>Return Id : <span id="returnid"></span></b><input type="hidden" value="" name="returnid"></td></tr>
+					<tr><td><b>Return By : <input type="text" name="return_by" data-required="true"></b></td></tr>
+					<tr><td valign="top"><b valign="top">Remarks :  <textarea id="returnstatus_remarks" name="returnstatus_remarks" value="" style="width:530px;height:87px;" data-required="true"></textarea> </b></td></tr>
+				</table>
+		</form>
 	</div>
 </div>
 <style>
@@ -311,5 +337,36 @@
 			}
 		},'json');
 		return false;
+	});
+
+	function change_toreturned(returnid)
+	{
+		$("#returned_div").data('returnid',returnid).dialog('open');
+	}
+
+	$("#returned_div").dialog({
+		modal:true,
+		autoOpen:false,
+		width:'657',
+		height:'329',
+		open:function(){
+			var dlg=$(this);
+			$("input[name='return_by']").val("");
+			$("#returnstatus_remarks").val("");
+			$("#returnid").html("<b>"+dlg.data('returnid')+"</b>");
+			$("input[name='returnid']").val(dlg.data('returnid'));
+		},
+		buttons:{
+			'submit': function(){
+				var returned_frm=$("#rtrnd_status_form",this);
+				if(returned_frm.parsley('validate'))
+				{
+					$("#rtrnd_status_form").submit();
+				}
+			},
+			'cancel':function(){
+				$(this).dialog('close');
+			}
+		}
 	});
 </script>

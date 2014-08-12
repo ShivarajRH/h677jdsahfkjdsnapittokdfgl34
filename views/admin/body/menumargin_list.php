@@ -2,13 +2,14 @@
 <h2>Manage Menu Margin</h2>
 <table class="datagrid datagridsort"   width="50%" >
 <!--<thead><th>Sl no</th><th>Menu</th><th>Menu Margin</th><th width="20%">Loyalty Point Value(1 point value)</th><th>Minimum Balance Discount</th><th>Actions</th></thead>-->
-<thead><th>Sl no</th><th>Menu</th><th>Menu Margin</th><th>Actions</th></thead>
+<thead><th>Sl no</th><th>Menu</th><th>Menu Margin on OP</th><th>Menu Margin on MP</th><th>Actions</th></thead>
 <?php $i=1; foreach($menu_list_res->result_array() as $menu_det ){?>
 <tbody>
 	<tr>
 		<td><?php echo $i;?></td>
 		<td><?php echo $menu_det['name']?></td>
 		<td><?php echo $menu_det['default_margin'];?> %</td>
+		<td><?php echo $menu_det['default_mp_margin'];?> %</td>
 		<!--<td ><?php // echo 'Rs '.$menu_det['loyality_pntvalue'] ?></td>-->
 		<!--<td>Amount : <b>Rs <?php // echo formatInIndianStyle($menu_det['min_balance_value'])?></b>-->
 			<!--<p style="margin:3px 0px">Discount: <b><?php // echo $menu_det['bal_discount']?>%</b></p>-->
@@ -38,7 +39,7 @@
 			</tr>
 			<tr></tr>
 			<tr>
-				<td><b>Margin</b></td>
+				<td><b>OP Margin</b></td>
 				<td><b>:</b></td>
 				<td><input type="text" size="3px" name="margin" value="">%
 				</td>
@@ -46,13 +47,18 @@
 				<td style="display:none;"><b>:</b></td>
 				<td style="display:none;">Rs.<input type="hidden" name="loyalty_pntvalue" size="3px" value="0"></td>
 			</tr>
+			<tr>
+				<td><b>MP Margin</b></td>
+				<td><b>:</b></td>
+				<td><input type="text" size="3px" name="mp_margin" value="">%</td>
+			</tr>
 		</table>
 		</form>
 	</div>
 	
 	<div id="view_marginupdatelog" title="Margin update Log">
 		<table class="datagrid" id="menumargin_updatelog" width="100%">
-			<thead><th>Menu</th><th>Menu Margin(%)</th><th>Loyality Point(Rs)</th><th>Balance Amount(rs)</th><th>Balance Discount(%)</th><th>Last Updated By</th><th>Updated On</th></thead>
+			<thead><th>Menu</th><th>OP Menu Margin(%)</th><th>MP Menu Margin(%)</th><th>Loyality Point(Rs)</th><th>Balance Amount(rs)</th><th>Balance Discount(%)</th><th>Last Updated By</th><th>Updated On</th></thead>
 			<tbody></tbody>
 		</table>
 	</div>
@@ -87,7 +93,7 @@ open:function(){
 			$('#edit_menumargin input[name="loyalty_pntvalue"]').val(result.menu_det.loyality_pntvalue);
 			$('#edit_menumargin input[name="min_bal_val"]').val(result.menu_det.min_balance_value);
 			$('#edit_menumargin input[name="bal_disc"]').val(result.menu_det.bal_discount);
-			
+			$('#edit_menumargin input[name="mp_margin"]').val(result.menu_det.default_mp_margin);
 		}
 			
 
@@ -135,6 +141,7 @@ $("#view_marginupdatelog").dialog({
 				"<tr>"	
 				+"<td>"+b.name+"</td>"
 				+"<td>"+b.default_margin+"</td>"
+				+"<td>"+b.default_mp_margin+"</td>"
 				+"<td>"+b.loyality_pntvalue+"</td>"
 				+"<td>"+b.balance_amount+"</td>"
 				+"<td>"+b.balance_discount+"</td>"

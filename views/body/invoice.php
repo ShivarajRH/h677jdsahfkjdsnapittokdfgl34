@@ -227,20 +227,24 @@ table{
 				<tr>
 					<td valign="top">
 					<?php 
+						$cin_no = '';
 						$service_no = '';
 						$tin_no = '';
 						if($is_pnh){
+								$cin_no = 'U51909KA2012PTC063576';
 								$tin_no = '29230678061';
 								$service_no = 'AACCL2418ASD001';	
 								echo 'LocalCube Commerce Pvt Ltd<br>Plot 3B1,KIADB Industrial Area,Kumbalagudu 1st Phase,Mysore Road,Bangalore -560074';
 						}else{					
 								if($inv_createdon >= strtotime('2013-04-01'))
 								{
+									$cin_no = 'U72200KA2012PTC064800';
 									$tin_no = '29180691717';
 									$service_no = 'AADCE1297KSD001';
 									echo 'Eleven feet technologies<br>#1751, 18th B main,Jayanagar 4th T block,  Bangalore : 560 041<br>';
 								}else
 								{
+									$cin_no = 'U72200KA2012PTC064800';
 									$tin_no = '29390606969';
 									$service_no = 'AABCL7597DSD001';
 									echo '#9, 5th Main, Sameerpura, Chamrajpet, Bangalore : 560 018<br>';
@@ -678,10 +682,10 @@ table{
 							<td align="right"><?=number_format($cod_ship_charges,2)?></td>
 						</tr>
 						<?php        } 
-                                                    $mem_reg_fee = 0;
+							$mem_reg_fee = 0;
                                                     $recharge_offer_res = $this->db->query("select * from pnh_member_offers where process_status = 0 and mem_fee_applicable = 1 and transid_ref = ? ",$order['transid']);
                                                     if($recharge_offer_res->num_rows())
-                                                    {
+                            {
                                                                 $recharge_offer = $recharge_offer_res->$num_recharge_offer;
 								$mem_reg_fee = $recharge_offer['pnh_member_fee'];
 						?>
@@ -703,14 +707,18 @@ table{
 			<tr>
 				<td width="50%">
 					<div style="margin-right:10px;">
-						<table cellspacing=0 border=1 cellpadding=2 width="100%">
+						<table cellspacing=0 border=1 cellpadding=2 >
 							<tr>
-								<td>VAT/TIN No</td>
-								<td align="center"><?php echo $tin_no;?></td>
+								<td width="100">VAT/TIN No</td>
+								<td width="300" align="center"><?php echo $tin_no;?></td>
 							</tr>
 							<tr>
 								<td>Service Tax No</td>
 								<td align="center"><?php echo $service_no;?></td>
+							</tr>
+							<tr>
+								<td>CIN No</td>
+								<td align="center"><?php echo $cin_no;?></td>
 							</tr>
 						</table>
 					</div>

@@ -30,7 +30,7 @@
 	<div id="wrapper" style="clear: both">
 		<table border=1 style="font-family:arial;font-size:13px;width: 100%"  cellpadding=3>
 		<tr style="background:#aaa">
-			<th>Product ID</th><th>Product Name</th><th>Qty</th><Th>MRP</Th><th>Location</th>
+			<th>Product ID</th><th>Product Name</th><th>Qty</th><Th>MRP</Th><th>Location</th><th>Serial nos</th>
 		</tr>
 		<?php $i=0; foreach($prods as $p){?>
 			<tr <?php if($i%2==0){?>style="background:#eee;"<?php }?>>
@@ -40,6 +40,7 @@
 				<?php list($loc,$mrp) = explode('::',$p['location']);?>
 				<td width="30" ><?=$mrp?></td>
 				<td width="150"><?=$loc?>&nbsp;</td>
+				<td width="30"><?=str_replace(',','<br>',$p['serial_nos'])?>&nbsp;</td>
 			</tr>
 		<?php $i++;
 		}?>

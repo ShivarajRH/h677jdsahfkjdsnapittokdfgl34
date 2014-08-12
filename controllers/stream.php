@@ -416,7 +416,7 @@ class Stream extends Analytics
 	
 	function pnh_export_franchise_analytics_report()
 	{
-		$fran_bio_res=$this->db->query("SELECT f.franchise_name,f.franchise_id,f.town_id,f.territory_id,f.is_suspended,t.territory_name,tw.town_name,f.created_on,f.credit_limit FROM pnh_m_franchise_info f JOIN pnh_m_territory_info t ON t.id=f.territory_id JOIN pnh_towns tw ON tw.id=f.town_id GROUP BY f.franchise_id order by franchise_name asc");
+		$fran_bio_res=$this->db->query("SELECT f.franchise_name,f.franchise_id,f.town_id,f.territory_id,f.is_suspended,t.territory_name,tw.town_name,DATE_FORMAT(FROM_UNIXTIME(f.created_on),'%d-%b-%Y') as created_on,f.credit_limit FROM pnh_m_franchise_info f JOIN pnh_m_territory_info t ON t.id=f.territory_id JOIN pnh_towns tw ON tw.id=f.town_id GROUP BY f.franchise_id order by franchise_name asc");
 		$fortwkdaterange=$this->db->query("SELECT DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 4 WEEK),'%d %b') AS endate,DATE_FORMAT(DATE_ADD(DATE(DATE_SUB(CURDATE(), INTERVAL 4 WEEK)), INTERVAL -6 DAY),'%d %b') AS startdate")->row_array();
 		$thirdwkdaterange=$this->db->query("SELECT DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 3 WEEK),'%d %b') AS endate,DATE_FORMAT(DATE_ADD(DATE(DATE_SUB(CURDATE(), INTERVAL 3 WEEK)), INTERVAL -6 DAY),'%d %b') AS startdate")->row_array();
 		$secwkdaterange=$this->db->query("SELECT DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 2 WEEK),'%d %b') AS endate,DATE_FORMAT(DATE_ADD(DATE(DATE_SUB(CURDATE(), INTERVAL 2 WEEK)), INTERVAL -6 DAY),'%d %b') AS startdate")->row_array();
@@ -468,9 +468,9 @@ class Stream extends Analytics
 					$fr_sales_det[] = ucwords($row_f['territory_name']);
 					$fr_sales_det[] = ucwords($row_f['town_name']);
 					$fr_sales_det[] = ucwords($row_f['franchise_name']);
-					$fr_sales_det[] = format_date_ts($row_f['created_on']);
-					$last_ordate=$this->db->query("SELECT t.init FROM king_orders o  JOIN king_transactions t ON t.transid=o.transid  where franchise_id=? ORDER BY t.init DESC LIMIT 1",$row_f['franchise_id'])->row_array() ;
-						$fr_sales_det[] = format_date_ts($last_ordate['init']);
+					$fr_sales_det[] = $row_f['created_on'];
+					$last_ordate=$this->db->query("SELECT date_format(from_unixtime(t.init),'%d-%b-%Y') as init FROM king_orders o  JOIN king_transactions t ON t.transid=o.transid  where franchise_id=? ORDER BY t.init DESC LIMIT 1",$row_f['franchise_id'])->row_array() ;
+						$fr_sales_det[] = $last_ordate['init'];
 					$curwk_sales=$this->db->query("SELECT ROUND(SUM((i_orgprice-(i_coup_discount+i_discount))*b.quantity),2) AS ttl_sales  FROM king_transactions a  JOIN king_orders b ON a.transid = b.transid JOIN pnh_m_franchise_info c ON c.franchise_id = a.franchise_id WHERE   WEEK(DATE(FROM_UNIXTIME(a.init)))=WEEK(CURDATE()) AND a.franchise_id=?",$row_f['franchise_id'])->row_array();
 						$fr_sales_det[] = $curwk_sales['ttl_sales'];
 					$forth_wksales=$this->db->query("SELECT ROUND(SUM((i_orgprice-(i_coup_discount+i_discount))*b.quantity),2) AS ttl_sales  FROM king_transactions a  JOIN king_orders b ON a.transid = b.transid JOIN pnh_m_franchise_info c ON c.franchise_id = a.franchise_id WHERE   WEEK(DATE(FROM_UNIXTIME(a.init)))=WEEK(DATE_SUB(CURDATE(), INTERVAL 4 WEEK)) and year(DATE(FROM_UNIXTIME(a.init))) = year(DATE_SUB(CURDATE(), INTERVAL 4 WEEK)) AND a. franchise_id=?",$row_f['franchise_id'])->row_array();

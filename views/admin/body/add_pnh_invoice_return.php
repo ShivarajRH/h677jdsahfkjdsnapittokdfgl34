@@ -104,6 +104,7 @@ var return_prod_imei_list = new Array();
 						});
 						
 						var i = 0; 
+						var is_all_processed = 1;
 							$.each(resp.invdet.itemlist,function(oid,item){
 								rspan = inv_orders;//*item.product_list.length;
 								cspan = 0;
@@ -111,12 +112,18 @@ var return_prod_imei_list = new Array();
 								
 								if(item.imei_list != undefined)
 									return_prod_imei_list[oid] = item.imei_list; 
+								
 								ttl_scanned = 0;
-								is_all_processed = 1;
+								
+								
 								$.each(item.product_list,function(k,prod1){
 									$.each(prod1,function(j,prod){
-										if((item.quantity*prod.qty - prod.pen_return_qty) != 0)
+										console.log(item.product_list);
+										
+										if((parseInt(item.quantity)*parseInt(prod.qty) - parseInt(prod.pen_return_qty)) != 0)
 										{
+											//console.log((parseInt(item.quantity)*parseInt(prod.qty) - parseInt(prod.pen_return_qty)));
+											
 											cspan = 0;
 											rowHtml += '<tr>';
 											if(j==0)

@@ -1,10 +1,22 @@
 <style>.leftcont{display:none}</style>
 <link type="text/css" rel="stylesheet" href="<?php echo base_url();?>css/po_product.css" />
 
+<?php
+	if($prod_ids)
+	{
+		$prod_ids=implode(",",$prod_ids);
+		$product_ids=$prod_ids;
+	}else
+	{
+		$product_ids=0;
+	}
+	
+?>
 <div class="page_wrap">
 	<h2 class="page_title">Purchase Order - Productwise</h2>
 	
 	<div class="clearboth">
+		
 		<div class="fl_right">
 			<a href="javascript:void(0)" id="load_unavail" class="button button-rounded button-action button-small" style="float:right;" onclick="show()">Load unavailable products</a>
 			<form name="tcol" onsubmit="return false" style="float:right;margin:7px;">
@@ -33,6 +45,7 @@
 
 	<form method="post" id="poprodfrm" autocomplete="off">
 		<!--<input type="button" value="show offer" style="font-size: 10px;" id="offer_details">-->
+		<input type="hidden" value="1" name="cont">
 		<div id="expected_del_det_payload" style="display: none;"></div>
 		<div style="margin-bottom:22px;clear:both;">
 			<table class="datagrid " id="pprods" width="100%" cellpadding="8">
@@ -234,7 +247,7 @@
 	</div>
 	
 	<div id="purchase_productdet" title="Purchase Pattern Details">
-		<form id="purchase_productdet_frm" method="post" data-validate="parsley" action="<?php// echo site_url('admin/to_load_purchaseprod_details')?>" >
+		<form id="purchase_productdet_frm" method="post" data-validate="parsley" action="" >
 			<input type="hidden" name="purchase_pid" id="purchase_pid">
 			<div class="module_type1">
 				<h4 class="module_type1_title">Last 7 days Purchase</h4>
@@ -319,8 +332,188 @@
 
 <script>
 
+$(function(){
+	var pids='<?= $product_ids ?>';
+	
+	if(pids)
+	{
+		var pid_arr = pids.split(",");
+		var i=0;
+	
+		$.each(pid_arr,function(i,v){
+			addproduct(pid_arr[i],0,0,0);
+			++i;	
+		});
+   }
+	
+   $("#srch_barcode").keyup(function(e){
+		if(e.which==13)
+		{
+			$(".barcodereset").removeClass("highlightprow");
+			if($(".barcode"+$(this).val()).length==0)
+			{
+				alert("Product not found on rising PO");
+				return;
+			}
+			$(".barcode"+$(this).val()).addClass("highlightprow");
+			$(document).scrollTop($(".barcode"+$(this).val()).offset().top);
+		}
+	});
+
+	
+	$("#load_unavail").click(function(){
+		$('#show_submit').show();
+		$(this).hide();
+		$.post("<?=site_url("admin/jx_load_unavail_products")?>",{hash:<?=time()?>,oldest_order:'asc'},function(data){
+			os=$.parseJSON(data);
+			if(data.status=='error')
+			{
+				alert(data.msg);
+			}
+			else
+			{
+				$('.po_filters').show();
+				$('select[name="fil_brand"]').html('<option value="">Choose</option>');
+				$('select[name="fil_menu"]').html('<option value="">Choose</option>');
+				$('select[name="fil_vendor"]').html('<option value="">Choose</option>');
+				$('select[name="fil_partner"]').html('<option value="">Choose</option>');
+			
+				$.each(os,function(i,o){
+					addproduct(o.product_id, "", "",0);
+				});
+								
+
+				var brand_list = [];
+					$('select[name="fil_brand"] option').each(function(){
+						brand_list[$(this).text().replace(' ','_')]=$(this).val();
+					});
+					$('select[name="fil_brand"]').html('<option value="">Choose</option>');
+					$.each(brand_list,function(a,b){
+						$('select[name="fil_brand"]').append('<option id="brand_'+a+'" value="'+a+'">'+b+'</option>');
+					});
+				var menu_list = [];
+					$('select[name="fil_menu"] option').each(function(){
+						menu_list[$(this).text().replace(' ','_')]=$(this).val();
+					});
+					$.each(menu_list,function(a,b){
+						$('select[name="menu_list"]').append('<option id="menu_'+a+'" value="'+a+'">'+b+'</option>');
+					});
+				var vendor_list = [];
+					$('select[name="fil_vendor"] option').each(function(){
+						vendor_list[$(this).text().replace(' ','_')]=$(this).val();
+					});
+					$.each(vendor_list,function(a,b){
+						$('select[name="vendor_list"]').append('<option id=vendor_'+a+'" value="'+a+'">'+b+'</option>');
+					});
+	
+				var partner_list = [];
+					$('select[name="fil_partner"] option').each(function(){
+						partner_list[$(this).text().replace(' ','_')]=$(this).val();
+					});
+					$.each(partner_list,function(a,b){
+						$('select[name="partner_list"]').append('<option id=partner_'+a+'" value="'+a+'">'+b+'</option>');
+					});
+					
+				$('#filter_prods').show();
+				$("#load_othrunavlibleprod").hide();
+			
+			}
+		});
+	}).attr("disabled",false);
+
+	$('select[name="fil_brand"]').change(function(){
+		
+ 		if($(this).val() == '')
+		{
+			$('#pprods tbody tr').show();
+		}
+		else
+		{
+			var bid=$(this).val();
+
+			$('#pprods tbody tr').hide();
+			$('#pprods tbody tr.filbrand_'+$(this).val()).show();
+			$("#load_othrunavlibleprod").show();
+		}
 
 
+		var v_vendors = new Array();
+			$('#pprods tbody tr:visible select.vendor option').each(function(){
+				v_vendors[$(this).attr('value')]= $(this).text();
+			});
+ 
+		$('select[name="fil_vendor"]').html("<option value=''>choose</option>");
+		for(var vid in v_vendors)
+		{
+			$('select[name="fil_vendor"]').append("<option value='"+vid+"'>"+v_vendors[vid]+"</option>");	
+		}
+	});
+
+	$('select[name="fil_menu"]').change(function(){
+	
+		if($(this).val() == '')
+		{
+			$('#pprods tbody tr').show();
+		}else
+		{
+			$('#pprods tbody tr').hide();
+			$('#pprods tbody tr.filmenu_'+$(this).val()).show();
+		}
+
+		var v_brands = new Array();
+			$('#pprods tbody tr:visible').each(function(){
+				v_brands[$(this).attr('brandid')]= $(this).attr('brandname');
+			});
+ 
+			$('select[name="fil_brand"]').html("<option value=''>choose</option>");
+			for(var bid in v_brands)
+			{
+				$('select[name="fil_brand"]').append("<option value='"+bid+"'>"+v_brands[bid]+"</option>");	
+			}
+		
+		var v_vendors = new Array();
+			$('#pprods tbody tr:visible select.vendor option').each(function(){
+				v_vendors[$(this).attr('value')]= $(this).text();
+			});
+	
+			$('select[name="fil_vendor"]').html("<option value=''>choose</option>");
+			for(var vid in v_vendors)
+			{
+				$('select[name="fil_vendor"]').append("<option value='"+vid+"'>"+v_vendors[vid]+"</option>");	
+			}
+
+		var v_partners = new Array();
+			$('#pprods tbody tr:visible select.partner option').each(function(){
+				v_partners[$(this).attr('value')]= $(this).text();
+			});
+	
+			$('select[name="fil_partner"]').html("<option value=''>choose</option>");
+			for(var partnerid in v_partners)
+			{
+				$('select[name="fil_partner"]').append("<option value='"+partnerid+"'>"+v_partners[partnerid]+"</option>");	
+			}
+		
+	});
+	
+		
+	 $('select[name="fil_partner"]').change(function(){
+		
+ 		if($(this).val() == '')
+		{
+			$('#pprods tbody tr').show();
+		}
+		else
+		{
+			var bid=$(this).val();
+
+			$('#pprods tbody tr').hide();
+			$('#pprods tbody tr.filpartner_'+$(this).val()).show();
+			$("#load_othrunavlibleprod").show();
+		}
+	
+	 });
+});
+	
 $('.pur_unitprice').live('change',function(){
 	var unitprc = $(this).val();
 	var trele = $(this).parents('tr:first');
@@ -892,183 +1085,13 @@ function addproduct(id,name,mrp,require)
 
 var search_timer=0;
 var jHR=0;
-$(function(){
-
-	$("#srch_barcode").keyup(function(e){
-		if(e.which==13)
-		{
-			$(".barcodereset").removeClass("highlightprow");
-			if($(".barcode"+$(this).val()).length==0)
-			{
-				alert("Product not found on rising PO");
-				return;
-			}
-			$(".barcode"+$(this).val()).addClass("highlightprow");
-			$(document).scrollTop($(".barcode"+$(this).val()).offset().top);
-		}
-	});
-
-	
-	$("#load_unavail").click(function(){
-		$('#show_submit').show();
-		$(this).hide();
-		$.post("<?=site_url("admin/jx_load_unavail_products")?>",{hash:<?=time()?>,oldest_order:'asc'},function(data){
-			os=$.parseJSON(data);
-			if(data.status=='error')
-			{
-				alert(data.msg);
-			}
-			else
-			{
-				$('.po_filters').show();
-				$('select[name="fil_brand"]').html('<option value="">Choose</option>');
-				$('select[name="fil_menu"]').html('<option value="">Choose</option>');
-				$('select[name="fil_vendor"]').html('<option value="">Choose</option>');
-				$('select[name="fil_partner"]').html('<option value="">Choose</option>');
-			
-				$.each(os,function(i,o){
-					addproduct(o.product_id, "", "",0);
-				});
-								
-
-				var brand_list = [];
-					$('select[name="fil_brand"] option').each(function(){
-						brand_list[$(this).text().replace(' ','_')]=$(this).val();
-					});
-					$('select[name="fil_brand"]').html('<option value="">Choose</option>');
-					$.each(brand_list,function(a,b){
-						$('select[name="fil_brand"]').append('<option id="brand_'+a+'" value="'+a+'">'+b+'</option>');
-					});
-				var menu_list = [];
-					$('select[name="fil_menu"] option').each(function(){
-						menu_list[$(this).text().replace(' ','_')]=$(this).val();
-					});
-					$.each(menu_list,function(a,b){
-						$('select[name="menu_list"]').append('<option id="menu_'+a+'" value="'+a+'">'+b+'</option>');
-					});
-				var vendor_list = [];
-					$('select[name="fil_vendor"] option').each(function(){
-						vendor_list[$(this).text().replace(' ','_')]=$(this).val();
-					});
-					$.each(vendor_list,function(a,b){
-						$('select[name="vendor_list"]').append('<option id=vendor_'+a+'" value="'+a+'">'+b+'</option>');
-					});
-	
-				var partner_list = [];
-					$('select[name="fil_partner"] option').each(function(){
-						partner_list[$(this).text().replace(' ','_')]=$(this).val();
-					});
-					$.each(partner_list,function(a,b){
-						$('select[name="partner_list"]').append('<option id=partner_'+a+'" value="'+a+'">'+b+'</option>');
-					});
-					
-				$('#filter_prods').show();
-				$("#load_othrunavlibleprod").hide();
-			
-			}
-		});
-	}).attr("disabled",false);
-
-	$('select[name="fil_brand"]').change(function(){
-		
- 		if($(this).val() == '')
-		{
-			$('#pprods tbody tr').show();
-		}
-		else
-		{
-			var bid=$(this).val();
-
-			$('#pprods tbody tr').hide();
-			$('#pprods tbody tr.filbrand_'+$(this).val()).show();
-			$("#load_othrunavlibleprod").show();
-		}
-
-
-		var v_vendors = new Array();
-			$('#pprods tbody tr:visible select.vendor option').each(function(){
-				v_vendors[$(this).attr('value')]= $(this).text();
-			});
- 
-		$('select[name="fil_vendor"]').html("<option value=''>choose</option>");
-		for(var vid in v_vendors)
-		{
-			$('select[name="fil_vendor"]').append("<option value='"+vid+"'>"+v_vendors[vid]+"</option>");	
-		}
-	});
-
-	$('select[name="fil_menu"]').change(function(){
-	
-		if($(this).val() == '')
-		{
-			$('#pprods tbody tr').show();
-		}else
-		{
-			$('#pprods tbody tr').hide();
-			$('#pprods tbody tr.filmenu_'+$(this).val()).show();
-		}
-
-		var v_brands = new Array();
-			$('#pprods tbody tr:visible').each(function(){
-				v_brands[$(this).attr('brandid')]= $(this).attr('brandname');
-			});
- 
-			$('select[name="fil_brand"]').html("<option value=''>choose</option>");
-			for(var bid in v_brands)
-			{
-				$('select[name="fil_brand"]').append("<option value='"+bid+"'>"+v_brands[bid]+"</option>");	
-			}
-		
-		var v_vendors = new Array();
-			$('#pprods tbody tr:visible select.vendor option').each(function(){
-				v_vendors[$(this).attr('value')]= $(this).text();
-			});
-	
-			$('select[name="fil_vendor"]').html("<option value=''>choose</option>");
-			for(var vid in v_vendors)
-			{
-				$('select[name="fil_vendor"]').append("<option value='"+vid+"'>"+v_vendors[vid]+"</option>");	
-			}
-
-		var v_partners = new Array();
-			$('#pprods tbody tr:visible select.partner option').each(function(){
-				v_partners[$(this).attr('value')]= $(this).text();
-			});
-	
-			$('select[name="fil_partner"]').html("<option value=''>choose</option>");
-			for(var partnerid in v_partners)
-			{
-				$('select[name="fil_partner"]').append("<option value='"+partnerid+"'>"+v_partners[partnerid]+"</option>");	
-			}
-		
-	});
-	
-		
-	 $('select[name="fil_partner"]').change(function(){
-		
- 		if($(this).val() == '')
-		{
-			$('#pprods tbody tr').show();
-		}
-		else
-		{
-			var bid=$(this).val();
-
-			$('#pprods tbody tr').hide();
-			$('#pprods tbody tr.filpartner_'+$(this).val()).show();
-			$("#load_othrunavlibleprod").show();
-		}
-	
-	 });
-});
-	
 
 $('input[name="srch_prod"]').autocomplete({
 	source:site_url+'/admin/jx_searchproducts_json',
 	minLength: 2,
 	select:function(event, ui ){
-		addproduct(ui.item.id ,ui.item.label,ui.item.mrp);
-	}
+			addproduct(ui.item.id ,ui.item.label,ui.item.mrp);
+		}
 });
 	
 	$("#sl_show").click(function(){

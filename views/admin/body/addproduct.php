@@ -33,6 +33,10 @@
 <?php }?>
 </select>
 </td></tr>
+<tr>
+	<td>Self Life[Months]: </td>
+	<td><input type="text" name="self_life" value="<?=$p?$p['self_life']:""?>" placeholder="Months"><span style="color:red">[-1 : No Expiry]</span></td>
+</tr>
 <tr style="display:none;"><td>Rackbin :</td><td>
 <select name="prackbin">
 <option value="">Choose</option>
@@ -89,5 +93,6 @@
         }
         
     }).trigger("change");
+
 </script>
 <?php

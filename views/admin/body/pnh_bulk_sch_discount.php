@@ -132,6 +132,15 @@
 					</select>
 				</td>
 			</tr>
+			<tr class="price_type">
+				<td width="10%"><b>Price Type</b></td>
+				<td>
+					<select name="price_type" style="width:150Px;" id="price_type">
+						<option value="0">Offer Price</option>	
+						<option value="1">Member Price</option>
+					</select>
+				</td>
+			</tr>
 			<tr>
 				<td><b>Menu</b></td>
 				<td>
@@ -251,7 +260,7 @@
 
 <script>
 
-$('#choose_menu,#bulk_schtype,.select_cat,.select_brand,.disc_type').chosen();
+$('#choose_menu,#bulk_schtype,.select_cat,.select_brand,.disc_type,#price_type').chosen();
 
 function sel_fran_btn(ele)
 {
@@ -259,13 +268,14 @@ function sel_fran_btn(ele)
 	var catid=$('.select_cat',trele).val();
 	var brandid=$('.select_brand',trele).val();
 	var fids=$('.sel_fids',trele).val();
+	var pricetype=$("#price_type",trele).val();
 	
 	if($('.sel_fran_btn',trele).hasClass('franlist_selected'))
 		var status=0;
 	else
 		status=1;	
 	
-	if(catid !=0 && brandid !='')
+	if(catid !='' && brandid !='')
 		$('#franchise_det_dlg').data({'menu_id':$('.choose_menuid').val(),'trele':trele,'status':status,'fids':fids}).dialog("open");
 	else
 	{
@@ -337,11 +347,12 @@ $("#franchise_det_dlg" ).dialog({
 			var status=dlg.data('status');
 			var fids=dlg.data('fids');
 			var fid=$('.sel_fids',trele).val();
+			var price_type=$('#price_type').val();
 			fid_arr=fid.split(",");
 			
 			if(status != 0)	
 			{
-				$.getJSON(site_url+'/admin/get_franchisebymenu_id/'+menuid+'/0'+'/0/'+type,function(resp){
+				$.getJSON(site_url+'/admin/get_franchisebymenu_id/'+menuid+'/0'+'/0/'+type+'/'+price_type,function(resp){
 					if(resp.status=='error')
 					{
 						$('#franchise_det').html(resp.message);
@@ -378,7 +389,8 @@ $("#franchise_det_dlg" ).dialog({
 			$('select[name="fil_territory"]').val("");
 			$('select[name="fil_town"]').val("");
 			
-			$.getJSON(site_url+'/admin/jx_check_has_scheme/'+menuid+'/'+catid+'/'+brandid+'/'+type,function(resp){
+			
+			$.getJSON(site_url+'/admin/jx_check_has_scheme/'+menuid+'/'+catid+'/'+brandid+'/'+type+'/'+price_type,function(resp){
 				if(resp.status=='success')
 				{
 					if(resp.has_sch_disc.length != 0)
@@ -763,6 +775,8 @@ $("#bulk_schtype").live('change',function(){
 	 	$('.sel_deal_btn').hide();
 	 	$('.col_head').hide();
 	 	$('.deals_td').hide();
+	 	$(".price_type").hide()
+	 	
 	}else if($("#bulk_schtype").val() == 2 )
 	{
 		$('#msch_applyfrm').hide();
@@ -771,6 +785,11 @@ $("#bulk_schtype").live('change',function(){
 	 	$('.sel_deal_btn').hide();
 	 	$('.col_head').hide();
 	 	$('.deals_td').hide();
+	 	$(".price_type").hide()
+	}
+	else if($("#bulk_schtype").val() == 1 )
+	{
+		$(".price_type").show();
 	}
 	else
 	{
@@ -780,6 +799,7 @@ $("#bulk_schtype").live('change',function(){
 		$('.sel_deal_btn').show();
 		$('.col_head').show();
 		$('.deals_td').show();
+		$(".price_type").hide();
 	}
 });
 
@@ -804,7 +824,7 @@ $('#choose_menu').change(function(){
 					else
 					{
 						cat_html = '<option value=""></option>';
-						//cat_html+='<option value="0">All</option>';
+						cat_html+='<option value="0">All</option>';
 						$.each(resp.cat_list,function(i,b){
 							cat_html+='<option value="'+b.catid+'">'+b.name+'</option>';
 						});
@@ -830,7 +850,7 @@ $('.select_cat').live('change',function(){
 
 	if($(this).val())
 	{
-		$.getJSON(site_url+'/admin/jx_load_allbrandsbycat/'+$(this).val(),'',function(resp){
+		$.getJSON(site_url+'/admin/jx_load_allbrandsbycat/'+$(this).val()+'/'+$('#choose_menu').val(),'',function(resp){
 			var brand_html='';
 			if(resp.status=='error')
 			{

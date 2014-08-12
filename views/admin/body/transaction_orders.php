@@ -1,82 +1,90 @@
 <style>.leftcont{display:none}</style>
+
 <?php 
-$cancelall=true;
-$cancelsingle=false;
-$order=$orders[0];
-$processed=$p_processed=array();
-$shipped_oids=array();
-$shipped_orders=array();
-$transid=$order['transid'];
-
-$order_status_arr=array();
-$order_status_arr[0]='Pending';
-$order_status_arr[1]='Processed';
-$order_status_arr[3]='Cancelled';
-
-
-$sql_trans_ttls = 'select status,ifnull(amt1,amt2) as amt from (
-select b.status,sum((mrp-(discount+credit_note_amt))*a.invoice_qty) as amt1,
-	sum((i_orgprice-(i_coup_discount+i_discount))*b.quantity) as amt2
-	from king_orders b 
-	left join king_invoice a on a.order_id = b.id 
-	where b.transid = ?
-group by b.status )
-as g';
-
-$trans_order_status_amt = $this->db->query($sql_trans_ttls,$transid);
-
-$trans_order_status_amt_arr = array();
-$trans_order_status_amt_arr[0] = 0;
-$trans_order_status_amt_arr[1] = 0;
-$trans_order_status_amt_arr[2] = 0;
-$trans_order_status_amt_arr[3] = 0;
-$trans_order_status_amt_arr[4] = 0;
-
-foreach($trans_order_status_amt->result_array() as $to_row)
-{
-	$trans_order_status_amt_arr[$to_row['status']] =  $to_row['amt'];
-}
-
-$fran_status_arr=array();
-$fran_status_arr[0]="Live";
-$fran_status_arr[1]="Permanent Suspension";
-$fran_status_arr[2]="Payment Suspension";
-$fran_status_arr[3]="Temporary Suspension";
-$is_fran_suspended = @$this->db->query("select is_suspended from pnh_m_franchise_info where franchise_id=?",$tran['franchise_id'])->row()->is_suspended;
-
-if($is_fran_suspended)
-	$tran['batch_enabled'] = 0;
+	$cancelall=true;
+	$cancelsingle=false;
+	$order=$orders[0];
+	$processed=$p_processed=array();
+	$shipped_oids=array();
+	$shipped_orders=array();
+	$transid=$order['transid'];
+	$price_type=$order['is_memberprice'];
+	$order_status_arr=array();
+	$order_status_arr[0]='Pending';
+	$order_status_arr[1]='Processed';
+	$order_status_arr[3]='Cancelled';
 
 
-$pbatch=$this->db->query("select i.p_invoice_no,c.courier_name as courier,bi.shipped,bi.shipped_on,bi.awb,bi.courier_id,bi.batch_id,bi.packed,bi.shipped,i.createdon,i.invoice_status,bi.p_invoice_no from proforma_invoices i left outer join shipment_batch_process_invoice_link bi on bi.p_invoice_no=i.p_invoice_no left outer join m_courier_info c on c.courier_id=bi.courier_id where i.transid=? group by i.p_invoice_no",$transid)->result_array();
+	$sql_trans_ttls = 'select status,ifnull(amt1,amt2) as amt from (
+	select b.status,sum((mrp-(discount+credit_note_amt))*a.invoice_qty) as amt1,
+		sum((i_orgprice-(i_coup_discount+i_discount))*b.quantity) as amt2
+		from king_orders b 
+		left join king_invoice a on a.order_id = b.id and invoice_status = 1  
+		where b.transid = ?
+	group by b.status )
+	as g';
 
-foreach($batch as $b)
-{
-	if($b['invoice_status']==1)
-	foreach($this->db->query("select order_id from king_invoice where invoice_no=?",$b['invoice_no'])->result_array() as $i)
-		$processed[$i['order_id']]=$b['invoice_no'];
-}
+	$trans_order_status_amt = $this->db->query($sql_trans_ttls,$transid);
 
-foreach($pbatch as $b)
-{
-	if($this->db->query("select invoice_status as s from proforma_invoices where p_invoice_no=?",$b['p_invoice_no'])->row()->s==1)
-	foreach($this->db->query("select i.order_id,o.status from proforma_invoices i join king_orders o on o.id=i.order_id where i.p_invoice_no=?",$b['p_invoice_no'])->result_array() as $i)
-		if($i['status']!=0)
-			$p_processed[$i['order_id']]=$b['p_invoice_no'];
-}
+	$trans_order_status_amt_arr = array();
+	$trans_order_status_amt_arr[0] = 0;
+	$trans_order_status_amt_arr[1] = 0;
+	$trans_order_status_amt_arr[2] = 0;
+	$trans_order_status_amt_arr[3] = 0;
+	$trans_order_status_amt_arr[4] = 0;
+
+	foreach($trans_order_status_amt->result_array() as $to_row)
+	{
+		$trans_order_status_amt_arr[$to_row['status']] =  $to_row['amt'];
+	}
+
+	$fran_status_arr=array();
+	$fran_status_arr[0]="Live";
+	$fran_status_arr[1]="Permanent Suspension";
+	$fran_status_arr[2]="Payment Suspension";
+	$fran_status_arr[3]="Temporary Suspension";
+	$is_fran_suspended_res = $this->db->query("select is_suspended from pnh_m_franchise_info where franchise_id=?",$tran['franchise_id']);
+	$fran_price_type=$price_type==1?'Member Price':'Dealer price/Offer Price'; 
+	
+	if($is_fran_suspended_res->num_rows() >0 ) {
+	    $is_fran_suspended=$is_fran_suspended_res->row()->is_suspended;
+	
+	    if($is_fran_suspended == 1)
+		$tran['batch_enabled'] = 0;
+	}
+
+	$pbatch=$this->db->query("select i.p_invoice_no,c.courier_name as courier,bi.shipped,bi.shipped_on,bi.awb,bi.courier_id,bi.batch_id,bi.packed,bi.shipped,i.createdon,i.invoice_status,bi.p_invoice_no from proforma_invoices i left outer join shipment_batch_process_invoice_link bi on bi.p_invoice_no=i.p_invoice_no left outer join m_courier_info c on c.courier_id=bi.courier_id where i.transid=? group by i.p_invoice_no",$transid)->result_array();
+	
+	foreach($batch as $b)
+	{
+		if($b['invoice_status']==1)
+		foreach($this->db->query("select order_id from king_invoice where invoice_no=?",$b['invoice_no'])->result_array() as $i)
+			$processed[$i['order_id']]=$b['invoice_no'];
+	}
+	
+	foreach($pbatch as $b)
+	{
+		if($this->db->query("select invoice_status as s from proforma_invoices where p_invoice_no=?",$b['p_invoice_no'])->row()->s==1)
+		foreach($this->db->query("select i.order_id,o.status from proforma_invoices i join king_orders o on o.id=i.order_id where i.p_invoice_no=?",$b['p_invoice_no'])->result_array() as $i)
+			if($i['status']!=0)
+				$p_processed[$i['order_id']]=$b['p_invoice_no'];
+	}
 ?>
+
 <div class="container transaction">
-<div style="float:right;padding:5px;background:#ffaaaa;color:#000;margin:5px;min-width:300px;margin-top:-7px;border:1px dashed #000;">
-<?php $user_msg=$this->db->query("select note from king_transaction_notes where transid=? and note_priority=1 order by id asc limit 1",$tran['transid'])->row_array();?>
-<?=isset($user_msg['note'])?"<b>{$user_msg['note']}</b>":"<i>no user msg</i>"?>
-</div>
-<div style="float:right;padding:5px;background:#eea;color:#000;margin:5px;min-width:100px;margin-top:-7px;border:1px dashed #000;">
-<?php $c=$this->db->query("select * from king_used_coupons where transid=?",$order['transid'])->row_array();
-if(empty($c)) echo '<i>no coupon used</i>';
-else {?>
-Coupon used : <a href="<?=site_url("admin/coupon/{$c['coupon']}")?>"><?=$c['coupon']?></a>
-<?php }?>
-</div>
+	<div style="float:right;padding:5px;background:#ffaaaa;color:#000;margin:5px;min-width:300px;margin-top:-7px;border:1px dashed #000;">
+		<?php $user_msg=$this->db->query("select note from king_transaction_notes where transid=? and note_priority=1 order by id asc limit 1",$tran['transid'])->row_array();?>
+		<?=isset($user_msg['note'])?"<b>{$user_msg['note']}</b>":"<i>no user msg</i>"?>
+	</div>
+
+	<div style="float:right;padding:5px;background:#eea;color:#000;margin:5px;min-width:100px;margin-top:-7px;border:1px dashed #000;">
+		<?php $c=$this->db->query("select * from king_used_coupons where transid=?",$order['transid'])->row_array();
+		if(empty($c)) echo '<i>no coupon used</i>';
+		else {?>
+		Coupon used : <a href="<?=site_url("admin/coupon/{$c['coupon']}")?>"><?=$c['coupon']?></a>
+		<?php }?>
+	</div>
+	
 <div style="float:right;padding:5px;background:#FF6347;color:#000;margin:5px;min-width:100px;margin-top:-7px;border:1px dashed #000;">
 <?php $c=$this->db->query("select group_concat(voucher_slno) as vslno from pnh_voucher_activity_log where transid=?",$order['transid'])->row()->vslno;
 if(empty($c)) echo '<i>no Prepaid Voucher used</i>';
@@ -84,40 +92,43 @@ else {?>
 Prepaid Voucher used : <?=$c?>
 <?php }?>
 </div>
-<?php foreach($orders as $o){?>
-<?php if(!isset($processed[$o['id']]) && $o['status']!=3 && !isset($p_processed[$o['id']])){?>
-<?php $cancelsingle=true; } else $cancelall=false;?>
-<?php }?>
-<?php if($cancelsingle){?>
-<div style="float:right;padding-right:20px;">
-<form method="post" onsubmit='return confirm("Are you sure want to update batch status?")' action="<?=site_url("admin/endisable_for_batch/{$order['transid']}")?>">
+<?php
+    foreach($orders as $o){
+            if( !isset($processed[$o['id']]) && $o['status']!=3 && !isset($p_processed[$o['id']])){
+                    $cancelsingle=true; 
+            } 
+            else $cancelall=false;
+    }
+    if($cancelsingle){ ?>
+        <div style="float:right;padding-right:20px;">
+        <form method="post" onsubmit='return confirm("Are you sure want to update batch status?")' action="<?=site_url("admin/endisable_for_batch/{$order['transid']}")?>">
 	<input type="submit" class="button button-tiny button-flat-caution button-rounded " value="<?=$tran['batch_enabled']?"Dis":"En"?>able for Batch">
-</form>
-</div>
-<?php if($tran['batch_enabled']){?>
-<div style="float:right;padding-right:20px;" id="process_fulltrans">
-<form method="post" onsubmit='return confirm("Are you sure want to process this transaction for batch?")' action="<?=site_url("admin/add_batch_process")?>">
-<input type="hidden" name="num_orders" value="1">
-<input type="hidden" name="transid" value="<?=$tran['transid']?>">
+        </form>
+        </div>
+        <?php if($tran['batch_enabled']){?>
+        <div style="float:right;padding-right:20px;" id="process_fulltrans">
+        <form method="post" onsubmit='return confirm("Are you sure want to process this transaction for batch?")' action="<?=site_url("admin/add_batch_process")?>">
+        <input type="hidden" name="num_orders" value="1">
+        <input type="hidden" name="transid" value="<?=$tran['transid']?>">
 	<input type="submit" class="button button-tiny button-rounded " value="Process to Batch">
-</form>
-</div>
-<div style="float:right;padding-right:20px;" id="process_parttrans">
-<form method="post" onsubmit='return confirm("Are you sure want to process this transaction for batch?")' action="<?=site_url("admin/add_batch_process")?>">
-<input type="hidden" name="num_orders" value="1">
-<input type="hidden" name="process_partial" value="1">
-<input type="hidden" name="transid" value="<?=$tran['transid']?>">
+        </form>
+        </div>
+        <div style="float:right;padding-right:20px;" id="process_parttrans">
+        <form method="post" onsubmit='return confirm("Are you sure want to process this transaction for batch?")' action="<?=site_url("admin/add_batch_process")?>">
+        <input type="hidden" name="num_orders" value="1">
+        <input type="hidden" name="process_partial" value="1">
+        <input type="hidden" name="transid" value="<?=$tran['transid']?>">
 	<input type="submit" class="button button-tiny button-rounded " value="Partial Process to Batch">
-</form>
-</div>
-<?php }?>
+        </form>
+        </div>
+        <?php }?>
 <?php }?>
 
 <h2 style="margin: 3px 0px;margin-bottom: 10px;">Order Transaction : <?=$tran['transid']?></h2>
 <div class="clear"></div>
 <table class="datagrid" width="100%">
-<thead><tr><th>Transaction ID</th><th>User</th><th>Mode</th>
-	<?php if($tran['is_pnh']){?> <th>Payment Days</th> <?php } ?><th>Amount</th><th>Paid</th><th>Refund</th><th colspan="2">Payment Status</th><th>Init Time</th><th>Completed on</th></tr></thead>
+<thead><tr><th>Transaction ID</th><th>User</th><th>Mode</th><?php if($tran['is_pnh']){?> <th>Payment Days</th><th>Price Type</th> <?php } ?><th>Amount</th><th>Paid</th><th>Refund</th><th>Payment</th><th style="text-align:center">Status</th><th>Ordered On</th><th>Created By</th><th>Completed on</th></tr></thead>
+
 <tbody>
 <tr>
 <td><?=$tran['transid']?></td>
@@ -135,13 +146,17 @@ if(count($allotted_memids) <= 1)
 	<?php	
 }else
 {
+        $allotted_memids = array_unique($allotted_memids);
 	echo implode(', ',$allotted_memids);
 }
 $is_pnh = $tran['is_pnh'];
 ?>
 
-<?php if($tran['is_pnh']){?>
-<br>Franchise : <a href="<?=site_url("admin/pnh_franchise/{$tran['franchise_id']}")?>"><?=$this->db->query("select pnh_franchise_id as fid from pnh_m_franchise_info where franchise_id=?",$tran['franchise_id'])->row()->fid?></a>
+<?php if($tran['is_pnh']){
+	$f_det=$this->db->query("select * from pnh_m_franchise_info where franchise_id=?",$tran['franchise_id'])->row_array();
+?>	
+<br>Franchise : <a href="<?=site_url("admin/pnh_franchise/{$tran['franchise_id']}")?>" target="_blank"><?=$f_det['pnh_franchise_id']?></a>
+<br><a href="<?=site_url("admin/pnh_franchise/{$tran['franchise_id']}")?>" target="_blank"><?=$f_det['franchise_name']?></a>
 
 <?php
 	echo $is_fran_suspended?'<b style="color:#cd0000;font-size:11px;">'.$fran_status_arr[$is_fran_suspended].'</b>':'';
@@ -164,10 +179,35 @@ default:
 <td>
 	<b><?php echo $tran['credit_days']?>&nbsp;Days Payment</b>
 </td>
+<td><?php echo $price_type==1?'<b>Member Price</b>':'<b>Offer Price</b>';?></td>
 <?php }?>
 
-<td>Rs <?=$tran['amount']?></td>
-<td>Rs <?=$tran['paid']?><?php if($tran['mode']==0){?><br><a style="font-size:70%" href="<?=site_url("admin/callcenter/trans/{$tran['transid']}")?>">check PG details</a><?php }?></td>
+<?php   
+    if($tran['is_pnh'])
+    {
+		$trans_ins_fee=$this->db->query("SELECT IFNULL(SUM(insurance_amount),0) AS insu_amt FROM king_orders WHERE transid=? AND STATUS !=3",$tran['transid'])->row()->insu_amt;
+        if( $tran['order_for'] == 2 )
+        {
+                
+                $trans_mem_fee=$this->db->query("SELECT IFNULL(SUM(pnh_member_fee),0) AS memfee FROM king_orders WHERE transid=? AND STATUS !=3",$tran['transid'])->row()->memfee;
+        }
+        else
+        {
+                $trans_mem_fee=$tran['pnh_member_fee'];
+        }
+        $paid=$trans_mem_fee+$trans_ins_fee+$tran['paid'];
+    }
+    else
+    {
+        $paid=$tran['paid'];
+    }
+?>
+		
+<!--<td>Rs <?=$tran['amount']?></td>-->
+<td>Rs <?=$paid?></td>
+
+
+<td>Rs <?php //echo $tran['paid']?> <?=$paid?><?php if($tran['mode']==0){?><br><a style="font-size:70%" href="<?=site_url("admin/callcenter/trans/{$tran['transid']}")?>">check PG details</a><?php }?></td>
 <td width="10" style="white-space:nowrap;"><?php 
 $rf=$this->db->query("select sum(amount) as a from t_refund_info where transid=? and status=1",$tran['transid'])->row()->a;
 if(!empty($rf))
@@ -186,6 +226,7 @@ BATCH <?php if($tran['batch_enabled']){?>EN<?php }else{?>DIS<?php }?>ABLED
 </div>
 </td>
 <td><?=format_datetime_ts($tran['init'])?></td>
+<td><?=$this->db->query("select name from king_admin where id=?",$tran['trans_created_by'])->row()->name?></td>
 <td><?=$tran['actiontime']?format_datetime_ts($tran['actiontime']):"na"?></td>
 </tr>
 </tbody>
@@ -258,7 +299,10 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
 </form>
 </div>
 
- <?php $offers_q = $this->db->query("select a.*,b.first_name,b.user_id from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id  where a.transid_ref=? and a.offer_type not in (0,3) ;",$order['transid']);
+ <?php
+	$offers_q = $this->db->query("select a.*,b.first_name,b.user_id from pnh_member_offers a 
+										join pnh_member_info b on b.pnh_member_id=a.member_id 
+										where a.transid_ref=?",$order['transid']);// and a.offer_type not in (0,3) ;
     if($offers_q->num_rows())
     { ?>
 <div style="margin:5px 0px;padding:5px;border:1px solid #f7f7f7;">
@@ -272,27 +316,20 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
                 <th>Type</th>
                 <th>Value</th>
                 <th>Status</th>
-                <th>Action</th>
             </tr>
             
             <?php
             $offers = $offers_q->result_array();
-            $arr_offer_type = array(0=>"Insurance Opted",1=>"Recharge",2=>"Insurance",3=>"N/A or Not Opted");
-            $arr_offer_status = array(0=>"Not Processed",1=>"Ready to Process",2=>"Processed");
-            $arr_feedback_status = array(0=>"No Feedback",1=>"Feedback received");
-            
-            foreach($offers as $i=>$offer) { ?>
+            foreach($offers as $i=>$offer) { 
+				$ofr_sts = $this->erpm->get_offer_process_status($offer['sno']);
+			?>
             <tr>
                 <td><?=++$i;?></td>
                 <td><?=format_datetime($offer['created_on']);?></td>
                 <td><a href="<?=site_url("/admin/pnh_viewmember/".$offer['user_id']);?>" target="_blank"><?=$offer['first_name'];?></a></td>
-                <td><?=$arr_offer_type[$offer['offer_type']];?></td>
+                <td><?= $ofr_sts['offer_type']; ?></td>
                 <td><?= ( $offer['offer_value'] == 0 ) ? 'Free' : "Rs. ".formatInIndianStyle($offer['offer_value']);?></td>
-                <td><?=$arr_offer_status[$offer['process_status']];?></td>
-                <td><?php if($offer['process_status'] == '1' ){ ?>
-                    	<a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank">View</a>
-                    <?php } else echo '--'; ?>
-                </td>
+                <td><?=$ofr_sts['status_msg']; ?></td>
             </tr>
             <!--<div style="padding:4px 5px;border-bottom:1px solid #DDDDDD;">Rs. <?=formatInIndianStyle($offer['offer_value']);?> worth of <?=$arr_offer_type[$offer['offer_type']];?> given</div>-->
     <?php   }?>
@@ -312,6 +349,8 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
 		<div align="right">Shipped Orders (Rs): <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[2]);?></span></div>
 		<div align="right">Cancelled Orders (Rs): <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[3]);?></span></div>
 		<div align="right">Returned Orders (Rs): <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[4]);?></span></div>
+		<div align="right">Member Fee (Rs): <span style="width:80px;display: inline-block"><?=format_price($tran['pnh_member_fee'])?></span></div>
+		<div align="right">Insurance Fee (Rs): <span style="width:80px;display: inline-block"><?=format_price($this->db->query("SELECT IFNULL(SUM(insurance_amount),0) AS insu_amt FROM king_orders WHERE transid=? AND STATUS !=3",$tran['transid'])->row()->insu_amt)?></span></div>
 	</div>
 	<br>
 <div style="float:left;width:200px;padding:0px 20px;" align="center">
@@ -331,9 +370,19 @@ PROCESSED IN <span style="color:red"><?=(count($pbatch)==0?count($batch):count($
 <thead><tr><th width="33%">Shipping</th><th width="50" align="left">COD</th><th width="33%">Giftwrap</th></tr></thead>
 <tbody><tr><td>Rs <?=$tran['ship']?></td><td>Rs <?=$tran['cod']?></td><td>Rs <?=$tran['giftwrap_charge']?></td></tr></tbody>
 </table>
-
 </div>
-
+<?php
+if($tran['is_pnh'])
+{
+    if($tran['order_for'] != 2 && $tran['pnh_member_fee'] > 0) {
+?>
+    <div style="white-space:nowrap;float:left;border:1px dashed green;padding:6px 7px;background:#DFDB82;margin: 12px 0 0 14px;">
+        Other than Key Member Fee: <br>Rs. <?=$tran['pnh_member_fee']?>
+    </div>
+<?php
+    }
+}
+?>
 </div>
 </td>
 <td width="60%">
@@ -507,7 +556,17 @@ $allow_qty_chng = 0;
 	<input type="hidden" name="transid" value="<?=$tran['transid']?>">
 	<h4>Orders</h4>
 	<table class="datagrid nofooter" width="100%">
-	<thead><tr><th></th><th>Order ID</th><th>Deal</th><th>Qty</th><th>Stock Product</th><th>MRP</th><th>Offer Price</th><th>M-Fee</th><th>I-Fee</th><th>sub total</th><th>Paid</th><th>Available Stock</th><th>Status</th><th>Backend Status</th><th>Last Update on</th></tr></thead>
+	<thead><tr><th></th><th>Order ID</th><th>Deal</th><th>Qty</th><th>Stock Product</th><th>MRP</th><th><?php echo $fran_price_type?></th>
+<?php
+               if($tran['is_pnh'] && $tran['order_for'] == 2)
+               {
+?>
+                    <th>M-Fee</th>
+<?php
+               }
+?>
+                <th>I-Fee</th>
+                <th>sub total</th><th>Paid</th><th>Available Stock</th><th>Status</th><th>Backend Status</th><th>Last Update on</th></tr></thead>
 	<tbody>
 	<?php $shipped_oids=array_unique($shipped_oids); foreach($orders as $o){
 		
@@ -518,7 +577,7 @@ $allow_qty_chng = 0;
 		
 		$non_sk_imei_res = $this->db->query("select * from non_sk_imei_insurance_orders where order_id=? and transid=?",array($o['id'],$o['transid']));
 		?>
-	<tr>
+	<tr class="<?php echo $o['has_nonsk_imei_insurance']==1?"has_nonskinsu":'';?>">
 	<td>
 	<?php if(!isset($processed[$o['id']]) && $o['status']!=3 && !($o['status']==4) && !isset($p_processed[$o['id']])){?>
 	<input class="ordercheckbox" type="checkbox" name="oids[]" value="<?=$o['id']?>">
@@ -557,10 +616,37 @@ $allow_qty_chng = 0;
 		<?php }?>
 	</td>
 	<td>
-	<?php $prods=array(); foreach($this->db->query("select l.qty,p.product_id,p.product_name from m_product_deal_link l join m_product_info p on p.product_id=l.product_id where l.itemid=?",$o['itemid'])->result_array() as $p){ $prods[]=$p['product_id'];?>
-	<a href="<?=site_url("admin/product/{$p['product_id']}")?>" style="color:#000"><?=$p['product_name']?></a> <span style="font-size: 11px;font-weight: bold;color:#cd0000"> (<?php echo $p['qty'].'x'.$o['quantity']?>)</span> <br>
-	<?php } 
-		foreach($this->db->query("select d.qty,p.product_name,p.product_id 
+	<?php $prods=array(); 
+            if(!empty($o['order_product_id']))
+            {
+                $order_product_id = $o['order_product_id'];
+                $order_product_msg = ' and p.product_id = '.$order_product_id;
+            }
+            else 
+                $order_product_msg='';
+            
+			foreach($this->db->query("select l.qty,p.product_id,p.product_name 
+											from m_product_deal_link l 
+											join m_product_info p on p.product_id=l.product_id 
+											where l.itemid=? ".$order_product_msg,$o['itemid'])->result_array() as $p)
+			{ 
+				$prods[]=$p['product_id'];
+	?>
+				<a href="<?=site_url("admin/product/{$p['product_id']}")?>" style="color:#000"><?=$p['product_name']?></a> <span style="font-size: 11px;font-weight: bold;color:#cd0000"> (<?php echo $p['qty'].'x'.$o['quantity']?>)</span> <br>
+	<?php 	
+				if(!empty($o['order_product_id']))
+				{
+					echo '<span style="background:#f1f1f1;padding:3px;display:inline-block;width:auto">'.($this->db->query("select group_concat(concat('<b>',attr_name,'</b> : ',attr_value) order by attr_id desc SEPARATOR '<br>' ) as p_attr_det 
+										from m_product_info a 
+										join m_product_deal_link b on a.product_id = b.product_id  
+										join m_product_attributes c on c.pid = b.product_id 
+										join m_attributes d on d.id = c.attr_id 
+										where b.itemid = ?  and a.product_id = ? 
+										group by a.product_id ",array($o['itemid'],$o['order_product_id']))->row()->p_attr_det).'</span>';
+				}
+			}
+	 
+			foreach($this->db->query("select d.qty,p.product_name,p.product_id 
 											from products_group_orders o 
 											join king_orders o1 on o1.id = o.order_id 
 											join m_product_group_deal_link d on d.itemid = o1.itemid 
@@ -574,21 +660,41 @@ $allow_qty_chng = 0;
 	</td>
 	<td><span class="nowrap">Rs <?=$o['i_orgprice']?></span></td>
 	<td class="nowrap">Rs <?=$o['i_price']?></td>
-	<td><?php echo $o['pnh_member_fee'] ;?></td>
-	<td><?php echo $o['insurance_amount'] ;?></td>
+<?php
+        // if keymember member fee applicable
+        $insurance_amount=($o['insurance_amount']=='')?0:$o['insurance_amount'];
+        if($tran['is_pnh'] && $tran['order_for'] == 2)
+        {
+                $pnh_member_fee=$o['pnh_member_fee'];
+?>
+		<td><?php echo $pnh_member_fee; ?></td>
+<?php                 
+        }
+        else
+        {
+                $pnh_member_fee=0;
+
+        }
+?>
+        <td><?php echo $insurance_amount; ?></td>    
 	<td class="nowrap">
 	<?php if($o['quantity']>1){?>Rs  <?=(($o['i_price']-$o['i_coup_discount']))?> x <?=$o['quantity']?><?php }?>
 	<div>Rs<?php if($is_prepaid){?> <?=(($o['i_price']-$o['i_coup_discount'])*$o['quantity']);}else{?> <?=(($o['i_orgprice']-($o['i_discount']+$o['i_coup_discount']))*$o['quantity']);}?></div>
 	</td>
-	
-	<td><?php echo ($o['i_price']-$o['i_coup_discount']+$o['pnh_member_fee']+$o['insurance_amount'])*$o['quantity'] ;?>	</td>
+	<td><?php echo ( ($o['i_price']-$o['i_coup_discount']) + ($pnh_member_fee+$insurance_amount) )*$o['quantity'] ;?>	</td>
 	
 	<td>
-	<?php foreach($prods as $p){ $s=$this->db->query("select sum(available_qty) as s from t_stock_info where product_id=?",$p)->row()->s; if(!$s) $s=0;?>
-	<div align="center">
-	<span><?=$s?></span>
-	</div>
-	<?php }?>
+		<?php foreach($prods as $p)
+		{
+			 $s=$this->db->query("select sum(available_qty) as s 
+							from t_stock_info a 
+							join m_rack_bin_info b on a.location_id = b.location_id and a.rack_bin_id = b.id 
+							where product_id = ? and b.is_damaged!=1",$p)->row()->s; 
+			if(!$s) $s=0;?>
+				<div align="center">
+					<span><?=$s?></span>
+				</div>
+		<?php }?>
 	</td>
 	<td>
 	<?php $status=array("Confirmed","Processed","Shipped","Cancelled","Returned");?>
@@ -656,12 +762,15 @@ $allow_qty_chng = 0;
 	<?php }?>
 	</form>
 	
+	
 	<div style="float:right;padding:10px;background: #f8f8f8;margin-top:3px;line-height: 22px;" align="center">
 		<b>Order Amount by Status</b>
 		<div align="right">Pending : <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[0]+$trans_order_status_amt_arr[1]);?></span></div>
 		<div align="right">Shipped : <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[2]);?></span></div>
 		<div align="right">Cancelled : <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[3]);?></span></div>
 		<div align="right">Returned : <span style="width:80px;display: inline-block"><?php echo format_price($trans_order_status_amt_arr[4]);?></span></div>
+		<div align="right">Member Fee : <span style="width:80px;display: inline-block"><?=format_price($tran['pnh_member_fee'])?></span></div>
+		<div align="right">Insurance Fee : <span style="width:80px;display: inline-block"><?=format_price($this->db->query("SELECT IFNULL(SUM(insurance_amount),0) AS insu_amt FROM king_orders WHERE transid=? AND STATUS !=3",$tran['transid'])->row()->insu_amt)?></span></div>
 	</div>
 	
 	<div class="clear"></div>
@@ -869,25 +978,29 @@ $allow_qty_chng = 0;
 <div class="clear">
 <h4 style="padding-top:10px;">Commission details</h4>
 <table class="datagrid">
-<thead><Tr><th>Sno</th><th width="200">Product Name</th><th>MRP</th><th>Offer price/ Dealer price</th><th>Menu Margin (A)</th><th>Scheme discount (B)</th><th>Balance Discount (C)</th><th>Voucher Margin(D)</th><th>Total Discount (A+B+C+D)</th><th>Unit Price</th><th>Qty</th><th>Order price</th><th>Redeem value</th></Tr></thead>
+<thead><Tr><th>Sno</th><th width="250">Product Name</th><th>MRP</th><th><?php echo $fran_price_type;?></th><th>Menu Margin (A)</th><th>Scheme discount (B)</th><th>IMEI Margin (C)</th><th>Balance Discount (D)</th><th>Voucher Margin (E)</th><th width="100">Total Discount (A+B+C+D+E)</th><th>Unit Price</th><th>Order Qty</th><th>Order price</th><th>Redeem value</th></Tr></thead>
 <tbody>
-<?php $i=1; foreach($this->db->query("SELECT p.*,i.name,o.i_orgprice AS mrp,o.i_price AS price,c.loyality_pntvalue,o.redeem_value
+<?php $i=1; foreach($this->db->query("SELECT p.*,i.name,o.imei_reimbursement_value_perunit,o.i_orgprice AS mrp,o.i_price AS price,c.loyality_pntvalue,o.redeem_value,i_coup_discount
 										FROM pnh_order_margin_track AS p 
 										JOIN king_dealitems i ON p.itemid=i.id
 										JOIN king_orders o ON o.transid=p.transid AND o.itemid=p.itemid
 										JOIN king_deals b ON i.dealid = b.dealid 
-										JOIN pnh_menu c ON c.id = b.menuid  where p.transid=? GROUP BY o.id",$tran['transid'])->result_array() as $item){?>
+										JOIN pnh_menu c ON c.id = b.menuid  where p.transid=? GROUP BY o.id",$tran['transid'])->result_array() as $item){
+										
+	$item['imei_marg'] = round(($item['imei_reimbursement_value_perunit']/($item['price']-$item['i_coup_discount']))*100,2);		
+?>
 <tr>
 <td><?=$i++?></td>
 <td><?=$item['name']?></td>
 <td><?=$item['mrp']?></td>
 <td><?=$item['price']?></td>
 
-<td><b><?=$item['price']/100*$item['base_margin']?> (<?=$item['base_margin']?>%)</b></td>
-<td><b><?=$item['price']/100*$item['sch_margin']?> (<?=$item['sch_margin']?>%)</b></td>
-<td><?=$item['price']/100*$item['bal_discount']?> (<?=$item['bal_discount']?>%)</td>
-<td><?=$item['price']/100*$item['voucher_margin']?> (<?=$item['voucher_margin']?>%)</td>
-<td><?=($item['price']/100*($item['sch_margin']+$item['base_margin']+$item['bal_discount']+$item['voucher_margin']))?> (<?=$item['base_margin']+$item['sch_margin']+$item['bal_discount']+$item['voucher_margin']?>%)</td>
+<td><b><?=$item['price']/100*$item['base_margin']?> <br>(<?=$item['base_margin']?>%)</b></td>
+<td><b><?=$item['price']/100*$item['sch_margin']?> <br>(<?=$item['sch_margin']?>%)</b></td>
+<td><b><?=$item['imei_reimbursement_value_perunit']?> <br>(<?=$item['imei_marg']?>%)</b></td>
+<td><?=$item['price']/100*$item['bal_discount']?> <br>(<?=$item['bal_discount']?>%)</td>
+<td><?=$item['price']/100*$item['voucher_margin']*1?> <br>(<?=$item['voucher_margin']*1?>%)</td>
+<td><?=($item['price']/100*($item['sch_margin']+$item['base_margin']+$item['bal_discount']+$item['voucher_margin']+$item['imei_marg']))?> <br>(<?=$item['base_margin']+$item['sch_margin']+$item['bal_discount']+$item['imei_marg']+$item['voucher_margin']?>%)</td>
 <td><?=$item['final_price']?></td>
 <td>x<?=$item['qty']?></td>
 <td><?=$item['final_price']*$item['qty']?></td>
@@ -1043,5 +1156,27 @@ margin-bottom:0px;
     text-align: center;
     width: 15%;
 }
+.has_nonskinsu{
+background-color: orange !important;
+}
+/*================< INSURANCE RELATED STYLES >========================*/
+.payment_pending {color:orange;font-weight:bold;font-size:13px; }
+.view_insurance_lnk {float:right; margin-right: 25px;}
+
+.details_pending {
+	background: #F8F8F2;
+	color: rgb(235, 131, 111);
+	font-weight: bold;
+	font-size: 11px;
+	padding: 4px 2px;
+}
+.delivery_pending {
+	background: #F1F1D9;
+	color: #754D4D;
+	font-weight: bold;
+	font-size: 13px;
+	padding: 4px 2px;
+}
+/*================< INSURANCE RELATED STYLES >========================*/
 </style>
 <?php

@@ -35,38 +35,24 @@
 </div>
 
 <div id="bank">
-<table class="datagrid" style="font-size:120%;width:450px;">
-<thead><tr><th colspan="100%">Bank details - 1</th></tr></thead>
-<tbody>
-<tr><td width="150">Bank Name : </td><td><b><?=$dets['bank_name']?></b></td></tr>
-<tr><td>Account No : </td><td><b><?=$dets['bank_ac_no']?></b></td></tr>
-<tr><td>Account Name : </td><td><b><?=$dets['bank_ac_name']?></b></td></tr>
-<tr><td>Branch Name : </td><td><b><?=$dets['bank_branch_name']?></b></td></tr>
-<tr><td>IFSC Code : </td><td><b><?=$dets['bank_ifsc_code']?></b></td></tr>
-</tbody>
-</table>
-<table class="datagrid" style="font-size:120%;width:450px;margin-top:20px;">
-<thead><tr><th colspan="100%">Bank details - 2</th></tr></thead>
-<tbody>
-<tr><td width="150">Bank Name : </td><td><b><?=$dets['bank_name2']?></b></td></tr>
-<tr><td>Account No : </td><td><b><?=$dets['bank_ac_no2']?></b></td></tr>
-<tr><td>Account Name : </td><td><b><?=$dets['bank_ac_name2']?></b></td></tr>
-<tr><td>Branch Name : </td><td><b><?=$dets['bank_branch_name2']?></b></td></tr>
-<tr><td>IFSC Code : </td><td><b><?=$dets['bank_ifsc_code2']?></b></td></tr>
-</tbody>
-</table>
-
-<table class="datagrid" style="font-size:120%;width:450px;margin-top:20px;">
-<thead><tr><th colspan="100%">Bank details - 3</th></tr></thead>
-<tbody>
-<tr><td width="150">Bank Name : </td><td><b><?=$dets['bank_name3']?></b></td></tr>
-<tr><td>Account No : </td><td><b><?=$dets['bank_ac_no3']?></b></td></tr>
-<tr><td>Account Name : </td><td><b><?=$dets['bank_ac_name3']?></b></td></tr>
-<tr><td>Branch Name : </td><td><b><?=$dets['bank_branch_name3']?></b></td></tr>
-<tr><td>IFSC Code : </td><td><b><?=$dets['bank_ifsc_code3']?></b></td></tr>
-</tbody>
-</table>
-
+<?php 
+	foreach($this->db->query('select * from pnh_m_bank_info where is_active = 1 order by bank_name')->result_array() as $k=>$bank)
+	{
+?>
+	<table class="datagrid" style="font-size:120%;width:450px;">
+		<thead><tr><th colspan="100%">Bank details - <?php echo ($k+1);?></th></tr></thead>
+		<tbody>
+			<tr><td width="150">Bank Name : </td><td><b><?=$bank['bank_name']?></b></td></tr>
+			<tr><td>Short Code : </td><td><b><?=$bank['short_code']?></b></td></tr>
+			<tr><td>Account No : </td><td><b><?=$bank['account_number']?></b></td></tr>
+			<tr><td>Account Name : </td><td><b><?=$bank['account_name']?></b></td></tr>
+			<tr><td>Branch Name : </td><td><b><?=$bank['branch_name']?></b></td></tr>
+			<tr><td>IFSC Code : </td><td><b><?=$bank['ifsc_code']?></b></td></tr>
+		</tbody>
+	</table>
+<?php 
+	}
+?>
 </div>
 
 </div>

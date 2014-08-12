@@ -539,9 +539,9 @@ li.required
     min-width: 450px;
     padding: 25px;
 }
-.fr_top_sold
+.fr_top_sold,.fr_top_sold_cat	
 {
-float:left;max-height: 400px;overflow:auto;
+float:left;max-height: 400px;overflow:auto;width:100%;
 }
 
 #fr_order_stat

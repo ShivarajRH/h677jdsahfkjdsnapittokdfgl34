@@ -153,6 +153,11 @@ function validate_is_email($email)
 	return false;
 }	
 
+/**
+ * Function to check mobile number is valid of 10 digit number
+ * @param type $mob int
+ * @return boolean
+ */
 function validate_is_mobile($mob)
 {
 	if(strlen($mob)==10)
@@ -166,25 +171,48 @@ function validate_is_mobile($mob)
 	return false;
 }
 
-
-function format_datetime($d)
+/**
+ * Format string date to DD/MM/YYYY HH:II AM or format passed as argument
+ * @param type $d date
+ * @param type $format optional
+ * @return type 
+ */
+function format_datetime($d,$format='d/m/Y h:i a')
 {
-	return strtotime($d)?date('d/m/Y h:i a',strtotime($d)):'--na--';
+	return strtotime($d)?date($format,strtotime($d)):'--na--';
 }
 
-function format_date($d)
+/**
+ * Format string date to DD/MM/YYYY or format passed as argument
+ * @param type $d date
+ * @param type $format optional
+ * @return type date
+ */
+function format_date($d,$format='d/m/Y')
 {
-	return strtotime($d)?date('d/m/Y',strtotime($d)):'--na--';
+	return strtotime($d)?date($format,strtotime($d)):'--na--';
 }
 
-function format_datetime_ts($ts)
+/**
+ * Format numeric date to DD/MM/YYYY HH:II AM or format passed as argument
+ * @param type $ts Numeric
+ * @param type $format
+ * @return type date
+ */
+function format_datetime_ts($ts,$format='d/m/Y h:i a')
 {
-	return $ts?date('d/m/Y h:i a',$ts):'--na--';
+	return $ts?date($format,$ts):'--na--';
 }
 
-function format_date_ts($ts)
+/**
+ * Format numeric date to DD/MM/YYYY or format passed as argument
+ * @param type $ts Numeric
+ * @param type $format optional format
+ * @return type date
+ */
+function format_date_ts($ts,$format='d/m/Y')
 {
-	return $ts?date('d/m/Y',$ts):'--na--';
+	return $ts?date($format,$ts):'--na--';
 }
 
 
@@ -229,6 +257,14 @@ function formatInIndianStyle($num){
     if(substr($stringtoreturn,0,2)=="-,"){$stringtoreturn = "-".substr($stringtoreturn,2 );}
 
     return $stringtoreturn;
+}
+
+/**
+ * Function to build print headers - in export option
+ */
+function _gen_header_name($k)
+{
+    return ucwords(str_replace('_',' ',$k));
 }
 
 ?>

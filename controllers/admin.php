@@ -1,5 +1,5 @@
 <?php
-
+session_start();
 include APPPATH.'/controllers/erp.php';
 /**
  * Admin file
@@ -24,6 +24,7 @@ class Admin extends Erp {
 		$this->load->model('viakingmodel',"vkm");
 		$this->load->model("erpmodel","erpm");
 		$this->load->model("reservation_model","reservations");
+		$this->load->model("employee_model","employee");
 		$this->load->library("email");
 		$this->erpm->loadroles();
 
@@ -36,44 +37,53 @@ class Admin extends Erp {
 			show_404();
 		*/
 
-		if($_SERVER['HTTP_HOST']!="localhost" && $_SERVER['HTTP_HOST']!="sand43.snapittoday.com" && $_SERVER['HTTP_HOST']!="erp69.sand43.snapittoday.com")
+		//if($_SERVER['HTTP_HOST']!="localhost" && $_SERVER['HTTP_HOST']!="sand43.snapittoday.com" && $_SERVER['HTTP_HOST']!="erp69.sand43.snapittoday.com")
+		if(AUTH_LOGIN_DOMAIN == $_SERVER['HTTP_HOST'])	
 		{
-			/*
+
+			// check if key is valid to process
+			
 			if($this->uri->segment(2)=="key"){
 
 			}else{
 				 
 				if(!isset($_COOKIE['admauth']))
 				{
-					show_404();
+					show_error("Domain Access not permitted");
+					exit;
 				}
 				else
 				{
 					if($_COOKIE['admauth']!=$this->session->userdata("admkey"))
 					{
-						if($this->uri->segment(2)!="key"){
-							$this->session->set_userdata("admkey",$_COOKIE['admauth']);
-							//show_error("Cookie auth expired,please login again from secure link");
+						if($this->uri->segment(2)!="key")
+						{
+							show_error("Cookie auth expired,please login again from secure link");
 						}
 
 					}	
 				}
 				 
 			}
-			*/
-
-			if($this->uri->segment(2)=="key"){
-
+			
+			
+			/*
+			if($this->uri->segment(2)=="key")
+			{
+						
 			}else{
 				if(strlen($this->session->userdata("admkey")) < 5 )
 				{
 					//show_404();
 				}
 			}
+			*/
 
 		}
 		
 	}
+	
+	
 
 	function key($hash)
 	{
@@ -130,7 +140,7 @@ class Admin extends Erp {
 				}
 			}
 			
-			$sessionData = array ("userid"=>$userdetails->id,'username' => $userdetails->name, 'login_flag' => true, 'usertype' => $userdetails->usertype, 'brandid' => $brandid ,'access'=>$userdetails->access,'block_ip_addr'=>1);
+			$sessionData = array ("userid"=>$userdetails->id,'username' => $userdetails->name, 'login_flag' => true, 'usertype' => $userdetails->usertype, 'brandid' => $userdetails->brandid ,'access'=>$userdetails->access,'block_ip_addr'=>1);
 			$this->session->set_userdata ( array("admin_user" => $sessionData) );
 			return true;
 		}else
@@ -444,6 +454,9 @@ class Admin extends Erp {
 			//			$this->session->unset_userdata ( "usertype" );
 			$this->session->unset_userdata("admin_user");
 		}
+		
+		unset($_COOKIE['admauth']);
+		
 		redirect('admin','refresh');
 	}
 
@@ -2541,8 +2554,8 @@ class Admin extends Erp {
 			if($inv_bygrpno)
 				$invoice_no = $inv_bygrpno;
 		}
-		 
 		
+				 
 		
 //		$batch=$this->db->query("select * from shipment_batch_process_invoice_link where invoice_no=?",$invoice_no)->row_array();
 //		if(!empty($batch) && $batch['packed']==0 && $this->db->query("select invoice_status as s from king_invoice where invoice_no=?",$invoice_no)->row()->s==1)
@@ -2566,7 +2579,7 @@ class Admin extends Erp {
 						group by in.invoice_no  
 				";
 		$q=$this->db->query($sql,array($invoice_no,$invoice_no,$invoice_no));
-		
+	
 		$data['invoice_list']=$orders=$q->result_array();
 		$is_pnh=$this->db->query("select is_pnh as p from king_transactions where transid=?",$orders[0]['transid'])->row()->p;
 	 	if($is_pnh==1)	
@@ -3367,7 +3380,7 @@ class Admin extends Erp {
 			if($st==1)
 			{
 				$msg='Dear '.$pr['user'].',<br><br>
-			We are pleased to inform that your quoted price for the Item â€˜'.$pr['name'].'â€™ has been accepted.<br>';
+			We are pleased to inform that your quoted price for the Item ‘'.$pr['name'].'’ has been accepted.<br>';
 				if($this->input->post("nprice")!=false)
 				$msg.="<b>Negotiated price : Rs ".$this->input->post("nprice").'</b><br>';
 				$msg.='Please click on the below link to purchase the item<br>
@@ -3377,7 +3390,7 @@ class Admin extends Erp {
 			}
 			else
 			$msg='Dear '.$pr['user'].',<br><br>
-			We are sorry to inform that your quoted price for the Item â€˜'.$pr['name'].'â€™ has been declined.<br> 
+			We are sorry to inform that your quoted price for the Item ‘'.$pr['name'].'’ has been declined.<br> 
 			However, if you would like to revise the rate, please click on <a href="'.site_url("deal/".$pr['itemurl']).'">'.site_url("deal/".$pr['itemurl']).'</a><br><br>
 			Team Viabazaar';
 			if($st==1)
@@ -5675,4 +5688,4 @@ Brands Under this category please add!!!</span></div>';
 		
 		 
 	}
-	?>
+?>

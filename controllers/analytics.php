@@ -413,9 +413,10 @@
 			$output['summary'] = $sales_summary;
 			echo json_encode($output);	
 		 }
+		 
 		  /*
-		 * 
 		 *  Category sales statistics by territory id
+		 * unknown type @territory_id
 		 */ 
 		function jx_catsalesbyterritoryid($sid="",$tid="",$s="",$e="")
 		{
@@ -451,8 +452,8 @@
 		}
 	
 		 /*
-		 * 
 		 *  Category sales statistics by town id
+		 * unknown type @town_id
 		 */ 
 		function jx_catsalesbytown($sid="",$twid="",$s="",$e="")
 		{
@@ -490,7 +491,7 @@
 	
 	/*
 	 * Ajax function to load brand sales 
-	 * 
+	 * unknown type @brandid
 	 */
 	function jx_brand_sales($brandid="",$s="",$e="")
 	{
@@ -539,8 +540,8 @@
 	}
 
 	/*
-	 * 
 	 *  Category sales statistics by brandid
+	 * unknown type @brandid
 	 */ 
 	function jx_catsales_bybrand($brandid="",$s="",$e="")
 	{
@@ -570,8 +571,8 @@
 	}
 
 	/*
-	 * 
 	 *  Category sales statistics by brandid
+	 * unknown type @brandid
 	 */ 
 	function jx_vendors_bybrand($brandid="",$s="",$e="")
 	{
@@ -600,8 +601,8 @@
 	}
 
 	 /*
-	 * 
-	 * Ajax Function to get Franchises by brandid and townid 
+	 * Ajax Function to get Franchises by brandid and townid
+	 * unknown type @brandid,@town_id 
 	 */
 	 function jx_getfranchisebybrandid_townid($bid="",$twid="",$s="",$e="")
 	 {
@@ -638,8 +639,8 @@
 	 }
 	 
 	 /*
-	 * 
 	 * Ajax Function to get franchises by territory_id and brandid
+	 * unknown type @territoryid,@town_id
 	 */
 	 function jx_getallfranchisesbybrandid_terrid()
 	 {
@@ -676,8 +677,8 @@
 	 }
 
 	/*
-	 * 
 	 * Ajax Function to get franchises by town_id and brandid
+	 * unknown type @brandid,@town_id
 	 */
 	 function jx_getallfranchisesbybrandid_townid()
 	 {
@@ -714,8 +715,9 @@
 	 }
 
 	 /*
-	 * 
 	 * Ajax Function to get Categories by brand 
+	 *unknown type @brandid
+	 *    
 	 */
 	 function jx_categoriesbybrandid()
 	 {
@@ -750,9 +752,9 @@
 		echo json_encode($output);	
 	 }
 	 
-	  /*
-	 * 
-	 * Ajax Function to get top Products by brand 
+	 /* 
+	 * Ajax Function to get top Products by brand
+	 *  unknown type @brandid
 	 */
 	 function jx_topproductbybrandid()
 	 {
@@ -789,8 +791,8 @@
 	 }
 
 	 /*
-	 * 
 	 * Ajax Function to get top Franchises by brand 
+	 * unknown type @brandid
 	 */
 	 function jx_topfranchisebybrandid()
 	 {
@@ -826,7 +828,7 @@
 	 }
 	 /*
 	 * Ajax function to load territories by brandid 
-	 * 
+	 * unknown type @territoryid,@brandid
 	 */
 	function jx_top_sale_terr($bid="",$s="",$e="")
 	{
@@ -857,9 +859,10 @@
 		$output['summary'] = $sales_summary;
 		echo json_encode($output);
 	}
+	
 	/*
-	 * 
 	 * Ajax Function to get towns by territory and brand
+	 * unknown type @territoryid,@brandid
 	 */
 	 function jx_gettownsbybrandid($bid="",$tid="",$s="",$e="")
 	 {
@@ -893,9 +896,10 @@
 		$output['summary'] = $sales_summary;
 		echo json_encode($output);	
 	 }
+	 
 	 /*
-	 * 
-	 * Ajax Function to get Franchises by territory and brand 
+	 * Ajax Function to get Franchises by territory and brand
+	 * unknown type @territoryid,@brandid  
 	 */
 	 function jx_getfranchisebybrand($bid="",$tid="",$s="",$e="")
 	 {
@@ -932,7 +936,7 @@
 	 
 	 
 	 
-	 	function jx_order_payment_det($s="",$e="",$fid="")
+	function jx_order_payment_det($s="",$e="",$fid="")
 	{
 		$st = date('Y-m-d',strtotime($s));
 		$en = date('Y-m-d',strtotime($e));
@@ -1084,8 +1088,8 @@
 	}
 
 	 /*
-	 * 
 	 * Ajax Function to get order details by franchise_id
+	 * unknown type @franchiseid
 	 */
 	 function jx_order_det_franchise_id()
 	 {
@@ -1119,8 +1123,8 @@
 	 }
 	 
 	/*
-	 * 
 	 * Indivisual Franchise menu sales statistics 
+	 * * unknown type @franchiseid
 	 */ 
 	function jx_order_getsales_bymenu($fid="")
 	{
@@ -1146,7 +1150,7 @@
 
 	/*
 	 * Ajax function to load brands by franchise_id 
-	 * 
+	 * unknown type @franchiseid
 	 */
 	function jx_brandsbyfranid($fid="",$s="",$e="")
 	{
@@ -1180,7 +1184,7 @@
 
 	/*
 	 * Ajax function to load brands by menuid and franchise id
-	 * 
+	 * unknown type @franchiseid,@menuid
 	 */
 	function jx_brandsbymenuid($id="",$fid="",$s="",$e="")
 	{
@@ -1214,8 +1218,49 @@
 	}
 
 	/*
+	 * Ajax to load top ordered categories 
+	 * unknown type @menu_id
+	 * author Suresh
+	 */ 
+	function jx_cat_det_bymenu()
+	{
+		$fid= $this->input->post('franid');
+		$m= $this->input->post('menu_id');
+		$s=$this->input->post('start_date');
+		$e=$this->input->post('end_date');
+		$st = date('Y-m-d',strtotime($s));
+		$en = date('Y-m-d',strtotime($e));
+		$date_diff = date_diff_days($en,$st);
+		$output=array();
+		
+		$top_sold_list = $this->db->query("select ROUND(SUM((i_orgprice-(i_coup_discount+i_discount))*a.quantity),2) as total_value,cat.name as cat_name,cat.id as catid,sum(a.quantity) as qty_sold 
+									from king_orders a
+									join king_transactions ki on ki.transid=a.transid
+									join king_dealitems b on b.id=a.itemid
+									join king_deals c on c.dealid=b.dealid
+									join king_categories cat on cat.id=c.catid
+									join pnh_menu m on m.id=c.menuid
+									where ki.franchise_id =? and m.id=? and date_format(from_unixtime(ki.init),'%Y-%m-%d') between ? and ? 
+									group by cat.id order by qty_sold desc", array($fid,$m,$st,$en));
+									
+		if($top_sold_list)
+		{
+			$output['top_cat_list']=$top_sold_list->result_array();
+			$output['status']='success';
+		}
+		else
+		{
+			$output['status']="error";
+			$output['message']="No Data Found";
+
+		}
+			echo json_encode($output);
+	}
+	
+	/*
 	 * Ajax to load top ordered product 
-	 * 
+	 * unknown type @menu_id
+	 * author Suresh
 	 */ 
 	function jx_prod_det_bymenu()
 	{
@@ -1254,7 +1299,7 @@
 	
 	/*
 	 * Ajax function to load product sales 
-	 * 
+	 * unknown type @prodid
 	 */
 	function jx_product_sales($prodid="",$s="",$e="")
 	{

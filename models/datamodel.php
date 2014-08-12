@@ -99,7 +99,28 @@ class Datamodel extends Model
 			$ret[$i]['products']=array("product"=>$prods);
 			$ret[$i]['images']=$this->db->query("select CONCAT('".IMAGES_URL."items/',id,'.jpg') as url from king_resources where itemid=? and type=0",$r['itemid'])->result_array();
 			$ret[$i]['attributes']=array();
-			foreach($this->db->query("select group_concat(concat(a.attribute_name,':',v.attribute_value)) as a from m_product_group_deal_link l join products_group_pids p on p.group_id=l.group_id join products_group_attributes a on a.attribute_name_id=p.attribute_name_id join products_group_attribute_values v on v.attribute_value_id=p.attribute_value_id where l.itemid=? group by p.product_id",$itemid)->result_array() as $i2=>$p)
+			$sql_q = "(
+										select l.itemid,p.product_id,concat(group_concat(concat(a.attribute_name,':',v.attribute_value)),',ProductID:',p.product_id) as a 
+											from m_product_group_deal_link l 
+											join products_group_pids p on p.group_id=l.group_id 
+											join products_group_attributes a on a.attribute_name_id=p.attribute_name_id 
+											join products_group_attribute_values v on v.attribute_value_id=p.attribute_value_id 
+											where l.itemid=?
+											group by p.product_id
+										)
+										union
+										(
+											select a.itemid,a.product_id,concat(group_concat(concat(attr_name,':',attr_value) order by f.id desc ),',ProductID:',a.product_id) as a 
+											from m_product_deal_link a 
+											join king_dealitems b on a.itemid = b.id 
+											join king_deals c on c.dealid = b.dealid 
+											join m_product_info d on d.product_id = a.product_id 
+											join m_product_attributes e on e.pid = d.product_id 
+											join m_attributes f on f.id = e.attr_id 
+											where b.is_group = 1 and a.itemid = ? and a.is_active = 1 
+											group by a.product_id 
+										)";
+			foreach($this->db->query($sql_q,array($itemid,$itemid))->result_array() as $i2=>$p)
 				$ret[$i]['attributes']['attr'.($i2+1)]=$p['a'];
 		}
 		return $ret;

@@ -232,7 +232,9 @@
 										<!-- manifesto print button -->
 										<?php if($sent_det['status']!=1){?>
 
-<?php if($this->db->query("select count(*) as t 
+<?php 
+	/*
+if($this->db->query("select count(*) as t 
 	from shipment_batch_process_invoice_link e 
 	join pnh_m_manifesto_sent_log f on f.manifesto_id = e.inv_manifesto_id
 	join proforma_invoices i on i.p_invoice_no = e.p_invoice_no 
@@ -243,9 +245,11 @@
 
 												<input type="button" value="<?php echo ($sent_det['is_printed'])?'Reprint':'Print'; ?>"  onclick="print_sent_manifesto(<?php echo $sent_det['manifesto_id'].','.$sent_det['id']?>)"><br>
 
-<?php }	?>
+<?php } */	?>
 
-<?php if($this->db->query("select count(*) as t 
+<?php 
+	/*
+if($this->db->query("select count(*) as t 
 	from shipment_batch_process_invoice_link e 
 	join pnh_m_manifesto_sent_log f on f.manifesto_id = e.inv_manifesto_id
 	join proforma_invoices i on i.p_invoice_no = e.p_invoice_no 
@@ -255,10 +259,21 @@
 	where f.id = ? and dispatch_id > 0 ",$sent_det['id'])->row()->t) { ?>
 												<input type="button" value="<?php echo ($sent_det['is_printed'])?'Reprint':'Print'; ?> Dispatch Manifesto"  onclick="print_sent_newmanifesto(<?php echo $sent_det['manifesto_id'].','.$sent_det['id']?>)"><br>
 
+										<?php }	*/?>
+
+<?php 
+	
+if($this->db->query("select count(*) as t 
+	from shipment_batch_process_invoice_link e 
+	join pnh_m_manifesto_sent_log f on f.manifesto_id = e.inv_manifesto_id
+	join proforma_invoices i on i.p_invoice_no = e.p_invoice_no 
+	join king_orders c on c.id = i.order_id 
+	join king_dealitems d on d.id = c.itemid 
+	join king_deals a on a.dealid = d.dealid  
+	where f.id = ? and dispatch_id > 0 ",$sent_det['id'])->row()->t) { ?>
+												<input type="button" value="<?php echo ($sent_det['is_printed'])?'Reprint':'Print'; ?> Dispatch Manifesto"  onclick="print_sent_newmanifesto(<?php echo $sent_det['manifesto_id'].','.$sent_det['id']?>)"><br>
+
 										<?php }	?>
-
-
-
 
 										<?php }	?>
 										<!-- manifesto print button end-->
@@ -880,12 +895,13 @@ $('#invoices_list_dlg').dialog({
 		var manifesto_id=$(this).data('manifesto_id');
 
 	$.post(site_url+'/admin/jx_get_territory_by_invoices',{invoices:$(this).data('invoices'),manifesto_id:manifesto_id},function(resp){
-			table_html+='<h3>Selected Invoices for Shipment</h3><table class="datagrid" cellpadding="5" cellspacing="0">';
+			table_html+='<h3>Selected Invoices for Shipment</h3><table width="100%" class="datagrid" cellpadding="5" cellspacing="0">';
 			table_html+="<thead>";
 				table_html+="<tr>";
 				table_html+="<th>#</th>";
 				table_html+="<th>Territory</th>";
 				table_html+="<th>Town</th>";
+				table_html+="<th>Franchise</th>";
 				table_html+="<th>Invoice</th>";
 				table_html+="<th>AWb</th>";
 				table_html+="</tr>";
@@ -897,7 +913,8 @@ $('#invoices_list_dlg').dialog({
 					table_html+='<tr>';
 					table_html+=   '<td>'+(a+1)+'</td>';
 					table_html+=   '<td><span>'+b.territory_name+'</span></td>';
-					table_html+=   '<td>'+b.town_name+'</span></td>';
+					table_html+=   '<td><span>'+b.town_name+'</span></td>';
+					table_html+=   '<td><a target="_blank" href="'+(site_url+'/admin/pnh_franchise/'+b.franchise_id)+'">'+b.franchise_name+'</a></td>';
 					table_html+=   '<td>';
 					temp =new Array();
 					$.each(b.invoice_no.split(','),function(c,d){
@@ -1545,7 +1562,7 @@ $("#mark_delivered_courier_transport").dialog({
 
 			html_contant+="</tbody></table>";
 			$("#mark_delivered_courier_transport_form").html(html_contant);
-			$('#mark_delivered_courier_transport_form .received_on').datepicker();
+			$('#mark_delivered_courier_transport_form .received_on').datepicker({maxDate:0});
 
 			$('#mark_delivered_courier_transport_form .readonly_inp').each(function(){
 				$('input[type="text"]',$(this).parents('tr:first')).attr('readonly',true);

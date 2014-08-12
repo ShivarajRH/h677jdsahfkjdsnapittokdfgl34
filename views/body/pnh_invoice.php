@@ -8,12 +8,13 @@ $ttl_inv_amt = 0;
 $ttl_inv_list = array();
 // check if the invoice is split invoice 	
 $mem_det = array();	
-$invoice_credit_note_res = $this->db->query("select group_concat(id) as id,sum(amount) as amount from t_invoice_credit_notes a where invoice_no in (select invoice_no from king_invoice where split_inv_grpno = ? or invoice_no = ? ) ",array($invoice_no,$invoice_no));
+$invoice_credit_note_res = $this->db->query("select group_concat(id) as id,sum(amount) as amount from t_invoice_credit_notes a where invoice_no in (select invoice_no from king_invoice where split_inv_grpno = ? or invoice_no = ? and payment_id!=0) ",array($invoice_no,$invoice_no));
 $credit_days=$this->db->query("select credit_days from king_transactions where transid=?",$transid)->row()->credit_days;
 
 $inv_total_prints = $this->db->query("select total_prints from king_invoice where invoice_no = ? ",$invoice_no)->row()->total_prints;
 
 //echo $this->db->last_query();
+
 
 ?>
 <div class="container" style="background:#fff;">
@@ -52,6 +53,11 @@ $inv_total_prints = $this->db->query("select total_prints from king_invoice wher
 					<input type="button" value="Print Acknowledgement" onclick="print_tax_acknowledgement()" >
 				<?php } ?>
 				
+				<?php if($is_pnh){ ?>
+					<input type="button" value="Print Gate Pass" onclick="printgatepassdoc(this)" >
+				<?php } ?>
+				
+				
 			</td>
 			<td align="center" width="33%"><input class="print_partner_orderfrm_btn" style="display: none;" type="button" value="<?php echo $inv_total_prints?'RePrint':'Print' ?> Partner Order Form" onclick='printpartorderform(this)'></td>
 			<td align="right" width="33%"><input class="print_partner_orderfrm_btn" style="display: none;" type="button" value="<?php echo $inv_total_prints?'RePrint':'Print' ?> Invoice and Partner Order Form" onclick='printinvpartorderform(this)'></td>
@@ -86,6 +92,10 @@ table{
 </style>
 
 <?php
+
+	
+	
+	
 	
 	$orderslist_byproduct = array();
 	
@@ -93,7 +103,7 @@ table{
 	{
 		$invoice_no = $inv_det['invoice_no'];
 		$sql="select in.invoice_no,item.nlc,item.phc,ordert.*,
-							item.service_tax_cod,item.name,if(length(item.print_name),item.print_name,item.name) as print_name,in.invoice_no,
+							item.service_tax_cod,item.name,if(length(item.print_name),item.print_name,item.name) as print_name,in.invoice_no,item.member_price,
 							brand.name as brandname,
 							in.mrp,in.tax as tax,
 							in.discount,
@@ -101,7 +111,7 @@ table{
 							in.service_tax,
 							item.pnh_id,f.offer_text,f.immediate_payment,
 							in.invoice_qty as quantity,
-							ordert.member_id  as alloted_mem_id,ordert.has_insurance,ordert.insurance_amount
+							ordert.member_id  as alloted_mem_id,ordert.has_insurance,ordert.insurance_amount,ordert.other_price,ordert.is_memberprice
 						from king_orders as ordert
 						join king_dealitems as item on item.id=ordert.itemid 
 						join king_deals as deal on deal.dealid=item.dealid 
@@ -227,20 +237,24 @@ table{
 				<tr>
 					<td valign="top">
 					<?php 
+						$cin_no = '';
 						$service_no = '';
 						$tin_no = '';
 						if($is_pnh){
+								$cin_no = 'U51909KA2012PTC063576';
 								$tin_no = '29230678061';
 								$service_no = 'AACCL2418ASD001';	
 								echo 'LocalCube Commerce Pvt Ltd<br>Plot 3B1,KIADB Industrial Area,Kumbalagudu 1st Phase,Mysore Road,Bangalore -560074';
 						}else{					
 								if($inv_createdon >= strtotime('2013-04-01'))
 								{
+									$cin_no = 'U72200KA2012PTC064800';
 									$tin_no = '29180691717';
 									$service_no = 'AADCE1297KSD001';
 									echo 'Eleven feet technologies<br>#1751, 18th B main,Jayanagar 4th T block,  Bangalore : 560 041<br>';
 								}else
 								{
+									$cin_no = 'U72200KA2012PTC064800';
 									$tin_no = '29390606969';
 									$service_no = 'AABCL7597DSD001';
 									echo '#9, 5th Main, Sameerpura, Chamrajpet, Bangalore : 560 018<br>';
@@ -306,7 +320,7 @@ table{
 							</td>
 							</tr>
                                                         <?php 
-                                                        if( isset($arr_offer_type[$order['offer_type']]) ) {
+                                                        /*if( isset($arr_offer_type[$order['offer_type']]) ) {
                                                             ?>
                                                         
                                                             <tr><th>Offers :</th>
@@ -319,7 +333,7 @@ table{
                                                                 </td>
                                                             </tr>
                                                     <?php
-                                                        }
+                                                        }*/
                                                     ?>
 						</table>
 					</td>
@@ -332,11 +346,14 @@ table{
 					<?php }?>
 					<td width="<?=$is_pnh?"70":"45"?>%"><b>Product Item Name</b></td>
 					<?php if($is_pnh){?>
-							<td align="right" width="80" ><b>MRP</b></td>
+							<td align="center" width="80" ><b>MRP</b></td>
 						<?php if($inv_type =='auditing'){ ?>
 							<td align="right"><b>Discount</b></td>
 						<?php } ?>
-						<td align="right" width="70"><b>Base Price</b></td>
+						<td align="center" width="70"><b>Price</b></td>
+					<?php }?>
+					<?php if($is_pnh && $inv_has_insurance==1){?>
+					<td align="center" width="50" ><b>Insurance fee</b></td>
 					<?php }?>
 					<td align="center" width="50" ><b>VAT (%)</b></td>
 					<td align="center" width="70"><b>Qty</b></td>
@@ -357,6 +374,7 @@ table{
 					<td align="right" width=100><b>Total</b></td>
 				</tr>
 <?php
+		
 		$tpc_tax = 0;
 		$thc_tax = 0;
 		$mrp_total=$discount=$rejected=$cphc=$total=$stax=0; 
@@ -366,7 +384,7 @@ table{
 		$s_tax_on = 0; 
 		
 		$col_span_fix = $orders[0]['alloted_mem_id']?1:0; 
-		
+		$col_span_fix+=$inv_has_insurance;
 		$p_tax_list = array();
 		$p_tax_amount_list = array();
 		
@@ -374,16 +392,28 @@ table{
 			$returned_item_amt = 0;
 		else
 			$returned_item_amt = 1;
-
 		foreach($orders as $order){
-		
+			
+	
 			// if reutrnd
 			if($order['status'] == 4 && $is_pnh == 1)
 			{
 				if($invdet['invoice_status']==1)
 					continue;
 			}
-
+			
+			$ordertime_mp=$order['is_memberprice']==1?$order['i_price']:$order['other_price'];
+			
+	 		if($order['is_memberprice']==1)
+	 		{
+				$order['i_price']=$order['other_price'];
+				$order['nlc']=$order['other_price'];
+	 		}
+			else
+			{
+				$order['i_price']=$order['i_price'];
+				$order['nlc']=$order['nlc'];
+			}
 			$consider_item_total = 1;
 		
 			$ptax=$order['tax']/100;
@@ -392,14 +422,25 @@ table{
 			$discount += round($consider_item_total*$order['discount']*$qty,2);
 			$mrp_total += round($order['mrp']*$qty,2);
 			$tpc += $product_rate = round(($order['nlc']*$qty*100/(100+$ptax)),2);
+			
+			if($order['insurance_amount']!=null || $order['insurance_amount']!=''||$order['insurance_amount']!=0)
+				$tpc +=$insurance_rate=round(($order['insurance_amount']*$qty*100/(100+$ptax)),2);
+			else 
+				$insurance_rate=0;
+			
 			$tpc_tax += $product_rate_tax = round(($order['nlc']*$qty-$product_rate),2);
+			$tpc_tax += $insurance_rate_tax = round(($order['insurance_amount']*$qty-$insurance_rate),2);
+			
 			if(!isset($p_tax_list[$p1tax])){
 				$p_tax_list[$p1tax] = 0;
 				$p_tax_amount_list[$p1tax] = 0;
-			} 
+			}
+
+			$p_tax_list[$p1tax] += $product_rate_tax+$insurance_rate_tax;
+			$p_tax_amount_list[$p1tax] += $product_rate +$insurance_rate;
 			
-			$p_tax_list[$p1tax] += $product_rate_tax;
-			$p_tax_amount_list[$p1tax] += $product_rate;
+			
+			
 			$thc += $handling_cost = round((($order['phc']*$qty*100)/(100+$pstax)),2);
 			$thc_tax += $handling_cost_tax = round((($order['phc']*$qty)-$handling_cost),2); 
 			$tphc += $handling_cost;
@@ -407,7 +448,8 @@ table{
             if($order['has_insurance'] == 1 && $order['insurance_amount'] != 0 && $order['insurance_amount'] !='' && $is_pnh) {
                 $ttl_insu_val = round($order['insurance_amount'],2);
             }
-			$item_total_amount =  ($product_rate+$product_rate_tax+$handling_cost+$handling_cost_tax);
+            
+			$item_total_amount =  ($product_rate+$product_rate_tax+$handling_cost+$handling_cost_tax+$ttl_insu_val);
 
 			$total_item_amount += $item_total_amount; 
 			
@@ -415,7 +457,7 @@ table{
 				$returned_item_amt += $item_total_amount;
 			
 			//PNH Member Fee --->Order Considerd
-			$mem_reg_fee=0;$ttlinsurance_amount=0;
+			/*$mem_reg_fee=0;$ttlinsurance_amount=0;
 			$num_recharge_offer = $this->db->query("select * from pnh_member_offers where mem_fee_applicable = 1 and process_status='0' and transid_ref = ? ",$order['transid'])->num_rows();
 			if($num_recharge_offer)
 			{
@@ -425,7 +467,7 @@ table{
 				$pnh_memfee=$this->db->query("select pnh_member_fee from king_orders where transid=?",$order['transid'])->row()->pnh_member_fee;
 				if($pnh_memfee!=null)
 					$mem_reg_fee+=$pnh_memfee;
-			}
+			}*/
 			
 			//Insurance Cost  --->Order Considerd
 			
@@ -440,17 +482,19 @@ table{
 					<?php if($inv_type !='original'){ ?>
 						<span class="hideinprint">
 							<?php
+								$product_name= $order['name'].'-'.$order['pnh_id'] .' '.'(<b>Rs.</b>'.$ordertime_mp .')';
 								if($order['status'] == 4)
 								{
-									echo '<strike>'.$order['name'].'-'.$order['pnh_id'].'</strike> - Product Returned';
+									echo '<strike>'.$product_name.'</strike> - Product Returned';
 								}else
 								{
-									echo $order['name'].'-'.$order['pnh_id'];
+									
+									echo $order['has_nonsk_imei_insurance']==1 ?'<b>Insurance For : </b>'.$product_name : $product_name;
 								}
 							?>
-							<?php  $imei=$this->db->query("select imei_no from t_imei_no where order_id=?",$order['id'])->result_array(); $inos=array(); foreach($imei as $im) $inos[]=$im['imei_no'];
-									
-									$nonsk_imei = $this->db->query("select nonsk_imei_no from non_sk_imei_insurance_orders where transid=? and order_id=? ",array($order['transid'],$order['id']))->row()->nonsk_imei_no;
+							<?php  
+								$imei=$this->db->query("select imei_no from t_imei_no where order_id=? and is_returned=0",$order['id'])->result_array(); $inos=array(); foreach($imei as $im) $inos[]=$im['imei_no'];
+								$nonsk_imei = @$this->db->query("select nonsk_imei_no from non_sk_imei_insurance_orders where transid=? and order_id=? ",array($order['transid'],$order['id']))->row()->nonsk_imei_no;
 							?>
 							<?php if($nonsk_imei){?>
 							<br><b>Non SK Imeino: <?php echo $nonsk_imei;?></b>
@@ -462,12 +506,15 @@ table{
 							<?php }?>
 							<?php }?>
 							
-							<?php if($order['pnh_member_fee']){echo '<br>';?>
-								<span>Member Registeration Fee : <b><?php echo $order['pnh_member_fee'];?></b></span>	
-							<?php }?>
-							<?php if($order['insurance_amount']!=null && $inv_has_insurance==1){ echo '<br>';?>	
-							<span>Insurance Cost :<b><?php echo $order['insurance_amount'];?></b></span>	
-							<?php }?>
+							<?php 
+                                if( $trans['order_for'] == 2 && $order['pnh_member_fee'] !=0 && $order['pnh_member_fee'] !=null)
+                                {
+                                    echo '<br>';?>
+                                                                    <span>Member Registration Fee : <b><?php echo $order['pnh_member_fee'];?></b></span>	
+							<?php 
+								} 
+							?>
+							
 						</span>
 						
 						<span class="showinprint">
@@ -479,20 +526,35 @@ table{
 								{
 									echo $order['print_name'].'-'.$order['pnh_id'];
 								}
+								
+								if(!empty($order['order_product_id']))
+								{
+									echo '<font style="margin-left:10px;padding:3px;">'.($this->db->query("select group_concat(concat('<b>',attr_name,'</b> : ',attr_value) order by attr_id desc SEPARATOR ' ' ) as p_attr_det 
+														from m_product_info a 
+														join m_product_deal_link b on a.product_id = b.product_id  
+														join m_product_attributes c on c.pid = b.product_id 
+														join m_attributes d on d.id = c.attr_id 
+														where b.itemid = ?  and a.product_id = ? 
+														group by a.product_id ",array($order['itemid'],$order['order_product_id']))->row()->p_attr_det).'</font>';
+								}
+								
 							?>
 							<?php $imei=$this->db->query("select imei_no from t_imei_no where order_id=?",$order['id'])->result_array(); $inos=array(); foreach($imei as $im) $inos[]=$im['imei_no'];?>
 							<?php if(!empty($inos)){?>
 							<br><b>Imeino: <?=implode(", ",$inos)?></b>
 							<br><span> Activation : <b> <?php echo $order['imei_reimbursement_value_perunit']; ?></b></span>
 							<?php }?>
-							<?php if($order['pnh_member_fee']){echo '<br>';?>
-								<span>Member Registeration Fee : <b><?php echo $order['pnh_member_fee'];?></b></span>	
+							<?php if( $trans['order_for'] == 2 && $order['pnh_member_fee'] !=0 && $order['pnh_member_fee'] !=null  ){
+                                                                    echo '<br>';?>
+								<span>Member Registration Fee : <b><?php echo $order['pnh_member_fee'];?></b></span>	
 							<?php }?>
 							<?php if($order['insurance_amount']!=null && $inv_has_insurance==1){ echo '<br>';?>	
 							<span>Insurance Cost :<b><?php echo $order['insurance_amount'];?></b></span>	
 							<?php }?>
 						</span>
-					<?php }else
+					<?php 
+						}
+						else
 						{
 					?>
 					
@@ -500,7 +562,7 @@ table{
 							<?php
 								if($order['status'] == 4)
 								{
-									echo '<strike>'.$order['name'].'-'.$order['pnh_id'].'</strike> - Product Returned';
+									echo '<strike>'.$order['name'].'-'.$order['pnh_id'].' '.'(<b>Rs.</b>'.$ordertime_mp .')</strike> - Product Returned';
 								}else
 								{
 									echo $order['name'].'-'.$order['pnh_id'];
@@ -518,14 +580,19 @@ table{
 				</td>
 				
 				<?php if($is_pnh){ ?>
-					<td align="right" width="80" ><?=number_format($order['mrp'],2)?></td>
+					<td align="right" width="80" ><?=$order['has_nonsk_imei_insurance']==1?'NA':number_format($order['mrp'],2);?></td>
 					<?php 
 						if($inv_type =='auditing'){
 					?>
-						<td align="right"><?=number_format($order['discount'],2)?></td>
+						<td align="right"><?=$order['has_nonsk_imei_insurance']==1?'NA':number_format($order['discount'],2);?></td>
 					<?php } ?>
-				<td align="right"><?=number_format($product_rate/$order['quantity'],2)?></td>
+					<td align="right"><?=$order['has_nonsk_imei_insurance']==1?'NA':number_format($order['nlc'],2);?></td>
+					
+					<?php if($order['insurance_amount']!=null && $inv_has_insurance==1){?>	
+							<td><?php echo number_format($order['insurance_amount'],2);?></td>	
+					<?php }?>
 				<?php } ?>
+				
 				<td align="center"><?=$ptax?></td>
 				<td align="center"><?=$order['quantity']?></td>
 				<?php if(!$is_pnh){?>
@@ -540,22 +607,18 @@ table{
 				<td align="right"><?=number_format($product_rate_tax,2)?></td>
 				<?php 
 					}?>
-					
-				
-				
-				
 				<?php
 					 
 				$ttl_amt = number_format(round($item_total_amount));
 				?>
 				<td align="right"><?php echo ($order['status'] == 4)?'<strike>':'';?><?=$ttl_amt; ?><?php echo ($order['status'] == 4)?'</strike>':'';?></td>
 			</tr>
-                        
+            
 <?php
 			if($order['status'] != 4)
 			{
 				if(!isset($orderslist_byproduct[$order['itemid']]))
-					$orderslist_byproduct[$order['itemid']] = array('det'=>array('name'=>$order['name'],'print_name'=>$order['print_name'],'pnh_id'=>$order['pnh_id']),'qty'=>0,'amt'=>0,'invs'=>array());
+					$orderslist_byproduct[$order['itemid']] = array('det'=>array('name'=>$order['name'],'print_name'=>$order['print_name'],'itemid'=>$order['itemid'],'pnh_id'=>$order['pnh_id'],'order_product_id'=>$order['order_product_id']),'qty'=>0,'amt'=>0,'invs'=>array());
 				
 				$orderslist_byproduct[$order['itemid']]['qty'] += $order['quantity'];
 				$orderslist_byproduct[$order['itemid']]['amt'] += $item_total_amount;
@@ -567,7 +630,7 @@ table{
 ?>			
 			
 			
-<?php }  
+<?php } 
 			$fs_list_res = $this->db->query("select *
 					from king_freesamples_order fso
 					join king_freesamples fs on fs.id = fso.fsid
@@ -619,29 +682,15 @@ table{
 			}
 			$stax_tot = ($sship+$ccod+$sgc); 
 		 	$s_tax_apl = ($stax_tot*$pstax/100);
-		 	
-		 	/*
-		 	$mem_reg_fee = 0;
-		 	
-		  	$num_recharge_offer = $this->db->query("select * from pnh_member_offers where mem_fee_applicable = 1 and process_status='0' and transid_ref = ? ",$order['transid'])->num_rows();
-		 	if($num_recharge_offer)
-		 	{
-		 		$mem_reg_fee = PNH_MEMBER_FEE;
-		 	}else
-		 	{
-		 		$pnh_memfee=$this->db->query("select sum(pnh_member_fee) as pnh_member_fee from king_orders where transid=? and status=1",$order['transid'])->row()->pnh_member_fee;
-		 		if($pnh_memfee!=null)
-		 			$mem_reg_fee=$pnh_memfee;
-		 	}
-		 	*/
-		 	
-		 	//$ttlinsurance_amount=$this->db->query("select sum(insurance_amount) as insurance_amount from king_orders where transid=? and has_insurance=1 and status=1",$order['transid'] )->row()->insurance_amount;
-		 	
+		 		 	
+                        
 		 	$ttlinsurance_amount=@$this->db->query("select ifnull(sum(insurance_amount),0)  as amt from king_orders a join king_invoice b on a.id = b.order_id where b.invoice_no = ? ",$order['invoice_no'] )->row()->amt;
 		 	$ttlinsurance_amount = $ttlinsurance_amount*1;
 		 	
-		 	
-		 	$mem_reg_fee = @$this->db->query("select ifnull(sum(pnh_member_fee),0) as fee from 
+		 	// =================< PNH MEMBER FEE CODE STARTS >===========================
+		 	if( $trans['order_for'] == 2)
+		 	{
+		 		$mem_reg_fee = @$this->db->query("select ifnull(sum(pnh_member_fee),0) as fee from 
 														(
 															select userid,member_id,(pnh_member_fee) 
 																from king_orders a 
@@ -649,9 +698,20 @@ table{
 																where b.invoice_no = ?
 															group by member_id 
 														) as h",$invoice_no)->row()->fee; 
+		 		
+		 	}
+		 	else
+		 	{
+				$mem_fee_log = $this->db->query("select count(*) as t from pnh_member_fee where status = 1 and invoice_no=? and transid=?",array($invoice_no,$transid));
+                $is_mem_fee_paid = $mem_fee_log->row()->t;
+                if($is_mem_fee_paid)
+					$mem_reg_fee=$trans['pnh_member_fee'];
+                else
+                	$mem_reg_fee=0;
+		 	
+		 	}
 		 	$mem_reg_fee = $mem_reg_fee*1;
-		 	
-		 	
+			// =================< PNH MEMBER FEE CODE ENDS >===========================
 ?>
 
 
@@ -669,6 +729,7 @@ table{
 				<td align="right" ><?=number_format($tpc,2)?></td>
 				<td align="right" ><?=number_format($tpc_tax,2)?></td>
 				<?php } ?>
+				
 				<td align="right" ><?=number_format($total_item_amount-$returned_item_amt,2)?></td>
 			</tr>	
 		</table>
@@ -689,7 +750,9 @@ table{
 					<?php }?>
 				<?php }?>	
 				<table cellspacing=0 cellpadding=5 border=1 style="margin:10px 0px;" width=400>
+						
 						<?php 
+							
 							foreach($p_tax_list as $ptax_t=>$ptax_a){
 						?> 
 						<tr>
@@ -736,17 +799,10 @@ table{
 							<td>Rs. <?=$mem_reg_fee;?></td>
 						</tr>
 						<?php }?>
-						<?php 
-							if($ttlinsurance_amount!=null){
-						?>
-						<tr>
-							<td>Total Insurance Fee</td>
-							<td>Rs. <?=$ttlinsurance_amount;?></td>
-						</tr>
-						<?php }?>
+						
 						<tr>
 							<td width="180"><b>Total Amount </b></td>
-							<?php $ttl_invoice_amt = number_format( ($cod_ship_charges +  $total_item_amount + $mem_reg_fee + $ttlinsurance_amount) - $returned_item_amt,0); ?>
+							<?php $ttl_invoice_amt = number_format( ($cod_ship_charges +  $total_item_amount + $mem_reg_fee ) - $returned_item_amt,0); ?>
 							<td align="right" ><b>Rs. <?=$ttl_invoice_amt?></b></td>
 						</tr>
 					</table>
@@ -757,14 +813,18 @@ table{
 			<tr>
 				<td width="50%">
 					<div style="margin-right:10px;">
-						<table cellspacing=0 border=1 cellpadding=2 width="100%">
+						<table cellspacing=0 border=1 cellpadding=2 >
 							<tr>
-								<td>VAT/TIN No</td>
-								<td align="center"><?php echo $tin_no;?></td>
+								<td width="100">VAT/TIN No</td>
+								<td width="300" align="center"><?php echo $tin_no;?></td>
 							</tr>
 							<tr>
 								<td>Service Tax No</td>
 								<td align="center"><?php echo $service_no;?></td>
+							</tr>
+							<tr>
+								<td>CIN No</td>
+								<td align="center"><?php echo $cin_no;?></td>
 							</tr>
 						</table>
 					</div>
@@ -782,10 +842,10 @@ table{
 				<td width="50%">
 					<?php 
 						$offer_det_res = $this->db->query("select b.invoice_no,has_offer,offer_refid,b.invoice_no,c.offer_text,c.immediate_payment 
-	from king_orders a
-	join king_invoice b on a.id = b.order_id
-	join pnh_m_offers c on c.id = a.offer_refid and is_active = 1 
-	where b.invoice_no != 0 and b.invoice_no = ? and has_offer = 1  ",$invoice_no);
+															from king_orders a
+															join king_invoice b on a.id = b.order_id
+															join pnh_m_offers c on c.id = a.offer_refid and is_active = 1 
+															where b.invoice_no != 0 and b.invoice_no = ? and has_offer = 1  ",$invoice_no);
 					if($offer_det_res->num_rows()){
 						$offer_det  = $offer_det_res->row_array();
 					?>
@@ -967,6 +1027,9 @@ table{
 table{
 	font-size:12px;
 }
+.showinprint{
+		display: none;
+}
 
 @media print {
 	.cancelled_invoice_text{
@@ -979,8 +1042,8 @@ table{
 		display:none;
 	}
 	.showinprint{
-					display:block;
-				}
+		display:block;
+	}
 }
 </style>
 
@@ -1071,12 +1134,25 @@ table{
 		<?php 
 			$k1=0;
 			foreach($orderslist_byproduct as $itmid=>$itm_ord){ 
-			?>
+		?>
 		<tr>
 			<td><?php echo ++$k1; ?></td>
 			<td>
 					<span class="showinprint"><?php echo $itm_ord['det']['print_name'].'-'.$itm_ord['det']['pnh_id'];?></span>
 					<span class="hideinprint"><?php echo $itm_ord['det']['name'].'-'.$itm_ord['det']['pnh_id'];?></span>
+					<?php
+						if(!empty($itm_ord['det']['order_product_id']))
+						{
+							echo '<span style="padding:3px;">'.($this->db->query("select group_concat(concat('<b>',attr_name,'</b> : ',attr_value) order by attr_id desc SEPARATOR ' ' ) as p_attr_det 
+												from m_product_info a 
+												join m_product_deal_link b on a.product_id = b.product_id  
+												join m_product_attributes c on c.pid = b.product_id 
+												join m_attributes d on d.id = c.attr_id 
+												where b.itemid = ?  and a.product_id = ? 
+												group by a.product_id ",array($itm_ord['det']['itemid'],$itm_ord['det']['order_product_id']))->row()->p_attr_det).'</span>';
+						}
+					?>
+					
 				</td>
 			<td><?php echo implode(', ',array_unique($itm_ord['invs']));?></td>
 			<td><?php echo $itm_ord['qty'];?></td>
@@ -1103,6 +1179,9 @@ table{
 table{
 	font-size:12px;
 }
+.showinprint{
+		display: none;
+}
 
 @media print {
 	.cancelled_invoice_text{
@@ -1115,8 +1194,8 @@ table{
 		display:none;
 	}
 	.showinprint{
-					display:block;
-				}
+		display:block;
+	}
 }
 </style>
 
@@ -1214,7 +1293,18 @@ table{
 			<td><?php echo ++$k1; ?></td>
 			<td>
 				<span><?php echo $itm_ord['det']['name'].'-'.$itm_ord['det']['pnh_id'];?></span>
-				
+				<?php
+					if(!empty($itm_ord['det']['order_product_id']))
+					{
+						echo '<span style="padding:3px;">'.($this->db->query("select group_concat(concat('<b>',attr_name,'</b> : ',attr_value) order by attr_id desc SEPARATOR ' ' ) as p_attr_det 
+											from m_product_info a 
+											join m_product_deal_link b on a.product_id = b.product_id  
+											join m_product_attributes c on c.pid = b.product_id 
+											join m_attributes d on d.id = c.attr_id 
+											where b.itemid = ?  and a.product_id = ? 
+											group by a.product_id ",array($itm_ord['det']['itemid'],$itm_ord['det']['order_product_id']))->row()->p_attr_det).'</span>';
+					}
+				?>
 			</td>
 			<td><?php 
 					$itm_ord['invs'] = array_filter(array_unique($itm_ord['invs']));
@@ -1275,6 +1365,9 @@ table{
 
 table{
 	font-size:12px;
+}
+.showinprint{
+	display: none;
 }
 
 @media print {
@@ -1358,6 +1451,20 @@ table{
 				<td>
 					<span class="showinprint"><?php echo $itm_ord['det']['print_name'].'-'.$itm_ord['det']['pnh_id'];?></span>
 					<span class="hideinprint"><?php echo $itm_ord['det']['name'].'-'.$itm_ord['det']['pnh_id'];?></span>
+					<?php
+					if(!empty($itm_ord['det']['order_product_id']))
+					{
+						echo '<span style="padding:3px;">'.($this->db->query("select group_concat(concat('<b>',attr_name,'</b> : ',attr_value) order by attr_id desc SEPARATOR ' ' ) as p_attr_det 
+											from m_product_info a 
+											join m_product_deal_link b on a.product_id = b.product_id  
+											join m_product_attributes c on c.pid = b.product_id 
+											join m_attributes d on d.id = c.attr_id 
+											where b.itemid = ?  and a.product_id = ? 
+											group by a.product_id ",array($itm_ord['det']['itemid'],$itm_ord['det']['order_product_id']))->row()->p_attr_det).'</span>';
+					}
+				?>
+					
+					
 				</td>
 				<td align="center"><?php echo $itm_ord['qty'];?></td>
 			</tr>
@@ -1382,7 +1489,9 @@ table{
 				font-size:12px;
 				font-family: arial;
 			}
-			
+			.showinprint{
+				display: none;
+			}
 			@media print {
 				.cancelled_invoice_text{
 					font-size: 800% !important;
@@ -1742,7 +1851,8 @@ myWindow=window.open('','','width=950,height=600,scrollbars=yes,resizable=yes');
 		//inv_html += $('#customer_acknowlegment').html();
 		//inv_html += '</div>';
 		inv_html += '</div>';
-		
+
+		/*
 		if($('#gate_pass_copy').length)
 		{
 			inv_html += '<div style="page-break-before:always">';
@@ -1753,6 +1863,7 @@ myWindow=window.open('','','width=950,height=600,scrollbars=yes,resizable=yes');
 			inv_html += $('#gate_pass_copy').html();
 			inv_html += '</div>';
 		}
+		*/
 		
 		$('.tax_block_content').show();
 		
@@ -1792,6 +1903,14 @@ function printdispatchdoc(ele)
 {
 	myWindow=window.open('','','width=950,height=600,scrollbars=yes,resizable=yes');
 	myWindow.document.write($('#dispatch_document').html());
+	myWindow.focus();
+	myWindow.print();
+}
+
+function printgatepassdoc(ele)
+{
+	myWindow=window.open('','','width=950,height=600,scrollbars=yes,resizable=yes');
+	myWindow.document.write($('#gate_pass_copy').html());
 	myWindow.focus();
 	myWindow.print();
 }

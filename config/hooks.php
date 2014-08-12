@@ -10,6 +10,19 @@
 |
 */
 
+$hook['post_controller_constructor'] = array(
+		'class'    => 'PageLoadAnalyzer',
+		'function' => 'startPageLog',
+		'filename' => 'PageLoadAnalyzer.php',
+		'filepath' => 'hooks'
+);
+
+$hook['post_system'][] = array(
+		'class' => 'PageLoadAnalyzer',
+		'function' => 'stopPageLog',
+		'filename' => 'PageLoadAnalyzer.php',
+		'filepath' => 'hooks'
+);
 
 
 /* End of file hooks.php */

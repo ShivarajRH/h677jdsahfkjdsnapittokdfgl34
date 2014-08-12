@@ -9,13 +9,34 @@
 $po_status_arr[0]="Open";
 $po_status_arr[1]="Partially Received";
 $po_status_arr[2]="Complete";
-$po_status_arr[3]="Cancelled";?>
+$po_status_arr[3]="Cancelled";
+$po_status_arr[4]="Pending for Approval";
+
+?>
+<style>
+
+.prd_orders {
+    background: none repeat scroll 0 0 #ccc;
+    display: inline-block;
+    margin: 8px 4px;
+    padding: 5px 9px;
+   color:green;font-weight:bold;
+ }
+ .prd_sales_orders {
+    background: none repeat scroll 0 0 #ccc;
+    display: inline-block;
+    margin: 8px 4px;
+    padding: 5px 9px;
+   color:green;font-weight:bold;
+ }
+</style>
 <div class="container">
 	<span class="fl_right">
 		<?php if($po['po_status']!="2" && $po['po_status']!="3"){?>
 			<a onclick='closepo( )' href="javascript:void(0)" class="button button-tiny button-caution button-rounded" >Close PO</a>
 		<?php } ?>
 		<?php if($po['po_status']!="3"){?>
+			<a class="button button-tiny" onclick="export_po(<?=$po['po_id']?>,'api_ven')" style="cursor: pointer;">Export CSV</a>
 		<a class="button button-tiny" onclick="print_po(<?=$po['po_id']?>,'acct')" style="cursor: pointer;">Print Accounts Copy</a>
 		<a class="button button-tiny" onclick="print_po(<?=$po['po_id']?>,'sour')" style="cursor: pointer;">Print Sourcing Copy</a>
 		<?php }?>
@@ -59,14 +80,29 @@ $po_status_arr[3]="Cancelled";?>
 			<span style="color: red"><b><?php echo $po_status_arr[$po['po_status']] ?></b></span>
 			<?php }else{?>
 			<span><b><?php echo $po_status_arr[$po['po_status']] ?></b></span>
+			
+			<?php 
+				if($po['po_status'] == 4)
+				{
+			?>
+					<br><a href="<?php echo site_url('admin/push_potovendor/'.$po['po_id'])?>" >Approve and send PO</a>
+			<?php 		
+				}
+			?>
+			
 			<?php }?>
 			</td></tr>
 			
 			<tr>
-				<td>Notify By Mail</td>
+				<td>Notify Vendor</td>
 				<td>|</td>
 				<td>
 					<?php 
+						if($po['po_status'] == 4)
+						{
+							echo "<b>Approval Pending...</b>";
+						}else if($po['po_status'] != 3)
+						{
 						$vendor_email_res = $this->db->query("select concat(email_id_1,',',email_id_2) from m_vendor_contacts_info where vendor_id = ? and (email_id_1 != '' or email_id_2 != '') limit 1",$po['vendor_id']);
 						if($vendor_email_res->num_rows())
 						{
@@ -74,6 +110,10 @@ $po_status_arr[3]="Cancelled";?>
 						}else
 						{
 							echo "<b>Vendor Email not found</b>";
+						}
+						}else
+						{
+							echo "Cancelled PO";
 						}
 					?>
 				</td>
@@ -91,7 +131,7 @@ $po_status_arr[3]="Cancelled";?>
 </table>
 </fieldset>
 
-<div class="tab_view ">
+<div class="tab_view">
 <ul>
 <li><a href="#po_list"><b>Product List</b></a></li>
 <li><a href="#po_removedlist"><b>Removed Product List</b></a></li>
@@ -102,13 +142,15 @@ $po_status_arr[3]="Cancelled";?>
 <thead>
 	<tr>
 	<th>Slno</th>
-	<th>Product Name</th>
-	<th>Order Qty</th>
-	<th style="text-align:center">Received Qty</th>
-	<th>MRP</th>
-	<th>DP Price</th>
-	<th>Margin</th>
-	<th>Scheme Discount</th>
+	<th width="350" style="text-align:left">Product Name</th>
+	<th style="text-align: right">Available <br> Qty</th>
+	<th style="text-align: right" >Required <br> Qty</th>
+	<th style="text-align: right">PO <br> Order <br> Qty</th>
+	<th style="text-align: right">Received <br> Qty</th>
+	<th style="text-align: right">MRP</th>
+	<th style="text-align: right">DP Price</th>
+	<th style="text-align: right">Margin</th>
+	<th style="text-align: right">Scheme <br> Discount</th>
 	<th style="text-align:right;">Unit Price</th>
 	<th style="text-align:right;">Sub Total</th>
 	<th></th>
@@ -116,19 +158,51 @@ $po_status_arr[3]="Cancelled";?>
 </thead>
 <tbody>
 <?php $sno=1; foreach($items as $i){
+	$i['sales_30days']=$this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_deal_link l join king_orders o on o.itemid=l.itemid where l.product_id=? and o.time>".(time()-(24*60*60*30)).' and o.time < ?  ',array($i['product_id'],strtotime($po['created_on'])))->row()->s;
+	$i['sales_30days'] += $this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_group_deal_link l join king_orders o on o.itemid=l.itemid join products_group_orders pgo on pgo.order_id = o.id where pgo.product_id=? and o.time>".(time()-(24*60*60*30)).' and o.time < ?  ',array($i['product_id'],strtotime($po['created_on'])))->row()->s;
+	$i['pen_ord_qty']=$this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_deal_link l join king_orders o on o.itemid=l.itemid where l.product_id=? and o.status = 0 and o.time < ? ",array($i['product_id'],strtotime($po['created_on'])))->row()->s;
 	
+	$prd_stock = $this->erpm->get_product_stock($i['product_id']);
+	$i['cur_avail_qty'] = $prd_stock['current_stock'];
 ?>
 <tr>
-<td><?=$sno++?></td>
-<td><a href="<?=site_url("admin/product/{$i['product_id']}")?>"><?=$i['product_name']?></a></td>
-<td><?=$i['order_qty']?></td>
-<td align="center"><?=$i['received_qty']?></td>
-<td><?=$i['mrp']?></td>
-<td><?=$i['dp_price']?></td>
-<td><?=$i['margin']?>%</td>
-<td><?=$i['scheme_discount_value']?$i['scheme_discount_value']:0?>%</td>
-<td style="text-align:right;"><?=format_price($i['purchase_price'])?></td>
-<td style="text-align:right;"><?=format_price($i['purchase_price']*$i['order_qty'])?></td>
+	<td><?=$sno++?></td>
+	<td>
+	<div><a href="<?=site_url("admin/product/{$i['product_id']}")?>" target="_blank"><?=$i['product_name']?></a><br>
+	<span class="prd_sales_orders" product_id="<?=$i['product_id']?>">30 day Sales : <?=$i['sales_30days']*1?></span>
+	<?php
+		$prd_orders=$this->db->query("select count(distinct b.id) as total 
+										from king_transactions a 
+										join king_orders b on a.transid = b.transid
+										join m_product_deal_link l on b.itemid=l.itemid and l.is_active = 1 
+										where b.status = 0  and l.product_id=?",$i['product_id'])->row()->total;
+		
+		if($prd_orders > 0)
+		{
+		?>
+			<span class="prd_orders" product_id="<?=$i['product_id']?>">Pending Orders : <?=$prd_orders?></span>
+			&nbsp;
+			<span class="ord_blk_<?=$i['product_id']?>" style="display:none"></span>
+		<?php	
+		}
+		?>
+		<?php 
+			$link = @$this->db->query("select vendor_site_link as l from m_vendor_product_link where product_id = ? ",$i['product_id'])->row()->l;
+			if($link)
+				echo '<div><a href="'.($link).'" style="font-size:10px;" target="_blank">View Vendor Product</a></div>';
+		?>
+			
+	</td>
+	<td align="right"><?=$i['cur_avail_qty']*1?></td>
+	<td align="right"><?=$i['pen_ord_qty']*1?></td>
+	<td align="right"><?=$i['order_qty']*1?></td>
+	<td align="right"><?=$i['received_qty']?></td>
+	<td style="text-align: right"><?=$i['mrp']?></td>
+	<td style="text-align: right"><?=$i['dp_price']?></td>
+	<td style="text-align: right"><?=$i['margin']?>%</td>
+	<td style="text-align: right"><?=$i['scheme_discount_value']?$i['scheme_discount_value']:0?>%</td>
+	<td style="text-align:right;"><?=format_price($i['purchase_price'])?></td>
+	<td style="text-align:right;"><?=format_price($i['purchase_price']*$i['order_qty'])?></td>
 <?php if($i['received_qty']==0){?>
 <td style="text-align:right;"><a href="javascript:void(0)" onclick="remove_prod_frmpo(<?php echo $i['product_id']?>)" prodid=<?php echo $i['product_id'];?> ><img  src="<?php echo base_url().'images/icon_delete13.gif'?>"></a></td>
 <?php }?>
@@ -136,10 +210,11 @@ $po_status_arr[3]="Cancelled";?>
 <?php }?>
 </tbody>
 <tfoot class="nofooter">
-<tr>
-	<td align="right" colspan="3" style="text-align: right !important;padding-right: 62px !important"><b>Total O.Qty : <?=$ttl_po_val['total_qty']?></b></td>
-<td style="text-align: right !important;padding-right: 59px !important"><b>Total : <?=$ttl_po_val['received_qty']?></b></td>
-<td colspan="7" style="text-align: right !important;padding-right: 55px !important"><b>Total Purchase Value : Rs&nbsp;&nbsp;<?=format_price($ttl_po_val['total_value'])?></b></td>
+	<tr>
+		<td align="right" colspan="5">Grand Totals</td>
+		<td align="right" style="text-align: right !important;"><b><?=$ttl_po_val['total_qty']?></b></td>
+		<td align="right" style="text-align: right !important;"><b><?=$ttl_po_val['received_qty']?></b></td>
+		<td colspan="6" style="text-align: right !important;"><b>Total Purchase Value &nbsp;: &nbsp;Rs&nbsp;<?=format_price($ttl_po_val['total_value'])?></b></td>
 	</tr>
 </tfoot>
 </table>
@@ -246,8 +321,11 @@ Regards
 </div>
 
 <script>
-$('.leftcont').hide();
-$('.tab_view').tabs();
+$(function(){
+	$('.leftcont').hide();
+	$('.tab_view').tabs();
+});
+
 function update_po_det(po_id)
 {
 	$('#update_po_delivery_det').data('po_id',po_id).dialog('open');
@@ -350,8 +428,12 @@ function updateexpected_podeliverydate()
 
 function print_po(poid,type)
 {
-	var print_url = site_url+'/admin/print_po/'+poid+'/'+type;
-		window.open(print_url);
+	window.open(site_url+'/admin/print_po/'+poid+'/'+type);	
+}
+
+function export_po(poid,type)
+{
+	window.open(site_url+'/admin/export_po/'+poid+'/'+type);	
 }
 
 function remove_prod_frmpo(pid)
@@ -360,5 +442,30 @@ function remove_prod_frmpo(pid)
 	if(confirm("Are you sure  want to remove this product from PO?"))
 		location="<?=site_url('admin/remove_prodfrmpo/'.$po['po_id'])?>/"+prodid;
 }
+
+$('.prd_orders').click(function(){
+	pid=$(this).attr('product_id');
+	$.getJSON(site_url+'/admin/get_product_pending_orderdetails/'+pid,function(resp){
+			
+    	if(resp.status == 'error')
+			{
+				alert("Order Detail not found");
+				return false;
+		    }
+			else
+			{
+				
+					var b_list = '';
+					b_list+= '<table class="datagrid"><thead><th>Sl.No</th><th>TransID</th><th>Orderid</th><th>Created On</th><th>Created By</th></thead><tbody>';
+					
+					$.each(resp.order_list,function(i,b){
+			 			b_list+= '<tr><td>'+(i+1)+'</td><td><a href="'+site_url+'/admin/trans/'+b.transid+'">'+b.transid+'</a></td><td>'+b.orderid+'</td><td>'+b.time+'</td><td>'+b.name+'</td></tr>';
+					});
+					b_list+= '</tbody></table>';
+				//$('.jq_alpha_sort_alphalist_itemlist').html(b_list);
+				$('.ord_blk_'+pid).html(b_list);
+				$('.ord_blk_'+pid).show();
+			}
+    	});
+});
 </script>
- 

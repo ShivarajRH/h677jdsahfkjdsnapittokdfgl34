@@ -20,13 +20,14 @@ Member ID : <input maxlength="8" type="text" readonly="" class="mid_inp" name="m
 <table cellpadding=3>
 <tr><td class="label">Gender</td><td><input checked="checked" type="radio" name="gender" value="0" <?php echo set_radio('gender',0,($mem_det['user_id']==0)?true:false);?> >Male <input type="radio" name="gender" value="1" <?php echo set_radio('gender',1,($mem_det['gender']==1)?true:false);?> >Female  </td></tr>
 <tr><td class="label">Salutation</td><td><input checked="checked" type="radio" <?php echo set_radio('salute',0,($mem_det['salute']==0)?true:false);?> name="salute" value="0">Mr <input type="radio" name="salute" value="1" <?php echo set_radio('salute',1,($mem_det['salute']==1)?true:false);?> >Mrs <input type="radio" name="salute" value="2" <?php echo set_radio('salute',2,($mem_det['salute']==2)?true:false);?> >Ms</td></tr>
-<tr><td class="label">First Name</td><td><input class="inp mand" type="text" value="<?php echo set_value('fname',$mem_det['first_name']);?>" name="fname" size=30></td></tr>
-<tr><td class="label">Last Name</td><td><input class="inp mand" type="text" name="lname" size=30 value="<?php echo set_value('lname',$mem_det['last_name']);?>" ></td></tr>
+<tr><td class="label">First Name <b class="red_star">*</b></td><td><input class="inp mand" type="text" value="<?php echo set_value('fname',$mem_det['first_name']);?>" name="fname" size=30></td></tr>
+<tr><td class="label">Last Name <b class="red_star">*</b></td><td><input class="inp mand" type="text" name="lname" size=30 value="<?php echo set_value('lname',$mem_det['last_name']);?>" ></td></tr>
 <tr><td class="label">DOB</td><td><input class="inp" type="text" name="dob_d" maxlength="2" size=2 value="<?php echo set_value('dob_d',$m_dob_d);?>" ><input class="inp" type="text" name="dob_m" maxlength="2" size=2 value="<?php echo set_value('dob_m',$m_dob_m);?>" ><input class="inp" maxlength="4" type="text" name="dob_y" size=4 value="<?php echo set_value('dob_y',$m_dob_y);?>"> (dd/mm/yyyy)</td></tr>
-<tr><td class="label">Address</td><td><textarea class="inp mand" rows=5 cols=90 name="address"><?php echo $mem_det['address'];?></textarea></td></tr>
-<tr><td class="label">City</td><td><input class="inp mand" type="text" name="city" size=30 value="<?php echo $mem_det['city'];?>" ></td></tr>
+<tr><td class="label">Address <b class="red_star">*</b></td><td><textarea class="inp mand" rows=5 cols=90 name="address"><?php echo $mem_det['address'];?></textarea></td></tr>
+<tr><td class="label">City <b class="red_star">*</b></td><td><input class="inp mand" type="text" name="city" size=30 value="<?php echo $mem_det['city'];?>" ></td></tr>
 <tr><td class="label">Pin Code</td><td><input class="inp" type="text" name="pincode" size=10 value="<?php echo $mem_det['pincode'];?>" ></td></tr>
-<tr><td class="label">Mobile</td><td><input class="inp mand mob_inp" maxlength="10" type="text" name="mobile" size=20 value="<?php echo $mem_det['mobile'];?>" ><span id="mob_error"></span></td></tr>
+<tr><td class="label">Mobile <b class="red_star">*</b></td><td><input class="inp mand mob_inp" maxlength="10" type="text" name="mobile" size=20 value="<?php echo $mem_det['mobile'];?>" ><span id="mob_error"></span></td></tr>
+<tr><td class="label">Mobile Network <b class="red_star">*</b></td><td><input name="mob_nk" id="mob_nk" class="inp mand mob_nk" value="<?php echo $mem_det['mobile_network'];?>"></td></tr>
 <tr><td class="label">Email</td><td><input class="inp email_inp" type="text" name="email" size=50 value="<?php echo $mem_det['email'];?>" ><span id="email_error" value="<?php echo $mem_det['email'];?>" ></span></td></tr>
 </table>
 
@@ -127,7 +128,7 @@ $(function(){
 			else
 				$("#email_error").html("Email already exists").css("color","red");
 		});
-	}).change();;
+	}).change();
 	$("#pnh_editm_form").submit(function(){
 		if(mobok==0 || emailok==0)
 		{
@@ -181,7 +182,7 @@ display: none;
 }
 .label{
 font-weight:bold;
-width:100px;
+width:128px;
 }
 </style>
 <?php

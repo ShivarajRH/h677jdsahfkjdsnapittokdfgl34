@@ -49,7 +49,7 @@
 										$p_html.='<ul>';
 										foreach($prd as $p)
 										{
-											$p_html.='<li>'.$p['name'].'-'.$p['sku'].'</li>';
+											$p_html.='<li>'.$p['product_name'].'-'.$p['sku_code'].'</li>';
 										}
 										$p_html.='</ul>';
 									}

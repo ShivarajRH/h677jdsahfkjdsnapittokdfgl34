@@ -796,9 +796,11 @@ span.name {font-size: 12px !important;}
 
 #grn a:focus{font-weight: bold;font-size: 14px;}
 #grn .iqty,#grn .rqty{min-width: 30px !important;border: 2px solid #000 !important}
-.exp_date
+.exp_date, .self_life
 {
-	width:60px;
+	font-size: 10px;
+    height: 11px;
+    width: 66px !important;
 }
 .vid_wrap
 {

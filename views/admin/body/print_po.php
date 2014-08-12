@@ -45,12 +45,22 @@
 				<table class="print_tbl" border="0" cellspacing="0" cellpadding="4" width="100%" >
 					<thead><tr><th>Slno</th><th style="text-align: left">Product name</th>
 					<?php if($print_type == 'acct'){?>
+					<th style="text-align: right">Sold Qty [60 Days]</th>
+					<th style="text-align: right">Sold Qty [30 Days]</th>
+					<th style="text-align: right">Available Qty</th>
+					<th style="text-align: right">Required Qty</th>
 						<th style="text-align: right">Mrp</th>
 						<th style="text-align: right">DP Price</th>
 						<th style="text-align: right">Unit price</th>
 						<th>Margin (%)</th>
+					<?php 
+						}
+						else
+						{ 
+					?>
+						<th style="text-align: right">MRP</th>
 					<?php } ?>
-					<th style="text-align: right">Qty</th>
+					<th style="text-align: right">PO Qty</th>
 					<?php if($print_type == 'acct'){?>
 						<th style="text-align: right">Sub Total </th>
 					<?php } ?>
@@ -66,16 +76,38 @@
 								$ttl_order_qty += $po['order_qty'];
 								$po_p_price = $po['purchase_price']*$po['order_qty'];
 								$ttl_order_price += $po_p_price;
+								
+								
+								$po['sales_60days']=$this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_deal_link l join king_orders o on o.itemid=l.itemid where l.product_id=? and o.time>".(time()-(24*60*60*60)).' and o.time < ?  ',array($po['product_id'],strtotime($po['created_on'])))->row()->s;
+								$po['sales_60days'] += $this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_group_deal_link l join king_orders o on o.itemid=l.itemid join products_group_orders pgo on pgo.order_id = o.id where pgo.product_id=? and o.time>".(time()-(24*60*60*60)).' and o.time < ?  ',array($i['product_id'],strtotime($po['created_on'])))->row()->s;
+								
+								
+								$po['sales_30days']=$this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_deal_link l join king_orders o on o.itemid=l.itemid where l.product_id=? and o.time>".(time()-(24*60*60*30)).' and o.time < ?  ',array($po['product_id'],strtotime($po['created_on'])))->row()->s;
+								$po['sales_30days'] += $this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_group_deal_link l join king_orders o on o.itemid=l.itemid join products_group_orders pgo on pgo.order_id = o.id where pgo.product_id=? and o.time>".(time()-(24*60*60*30)).' and o.time < ?  ',array($i['product_id'],strtotime($po['created_on'])))->row()->s;
+								
+								$po['pen_ord_qty']=$this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_deal_link l join king_orders o on o.itemid=l.itemid where l.product_id=? and o.status = 0 and o.time < ? ",array($po['product_id'],strtotime($po['created_on'])))->row()->s;
+								
+								$prd_stock = $this->erpm->get_product_stock($i['product_id']);
+								$po['cur_avail_qty'] =  $prd_stock['current_stock'];
+								
 					?>
 								<tr>
 									<td width="1%" style="text-align:center;" width="10"><?=$i;?></td>
 									<td><?=$po['product_name'] ?></td>
 									<?php if($print_type == 'acct'){?>
+									<td width="1%" style="text-align:right;"><?=$po['sales_60days'] ?></td>
+									<td width="1%" style="text-align:right;"><?=$po['sales_30days'] ?></td>
+									<td width="1%" style="text-align:right;"><?=$po['cur_avail_qty'] ?></td>
+									<td width="1%" style="text-align:right;"><?=$po['pen_ord_qty'] ?></td>
 									<td width="1%" style="text-align:right;"><?=format_price($po['mrp'])?></td>
 									<td width="1%" style="text-align:right;"><?=format_price($po['dp_price'])?></td>
 									<td width="1%" style="text-align:right;"><?=format_price($po['purchase_price'])?></td>
 									<td width="1%" style="text-align:right;"><?=($po['margin']+$po['scheme_discount_value'])?></td>
-									<?php } ?>
+									<?php }else{
+									?>
+									<td width="1%" style="text-align:right;"><?=format_price($po['mrp'])?></td>
+									<?php 	
+									} ?>
 									<td width="1%" style="text-align:right;"><?=$po['order_qty'] ?></td>
 									<?php if($print_type == 'acct'){?>
 									<td width="1%" style="text-align:right;"><?=format_price($po_p_price)?></td>
@@ -88,7 +120,7 @@
 					?>
 					<tfoot>
 						<tr>
-							<td colspan="<?php echo (($print_type == 'acct')?6:2);?>" align="right"><b>Total</b></td>
+							<td colspan="<?php echo (($print_type == 'acct')?10:3);?>" align="right"><b>Total</b></td>
 							<td align="right"><b><?php echo format_price($ttl_order_qty,0);?></b></td>
 							<?php if($print_type == 'acct'){?>
 							<td align="right"><b><?php echo format_price($ttl_order_price,2);?></b></td>
@@ -111,7 +143,7 @@
 				</div>
 				<div align="left" class="fl_left">
 					<?php if($print_type == 'acct'){?>
-					Please note : Tax already included in price.  
+					Please note : Tax already included in price.
 					<?php } ?>  
 				</div>
 			</div>

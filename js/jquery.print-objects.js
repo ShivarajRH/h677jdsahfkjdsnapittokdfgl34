@@ -5,6 +5,7 @@
  *  USAGE: 
  *  var data = [{'id':1,'name':'hello'},'world'];
  *  $('#element').print_r(data);
+ *  @author Shivaraj@storeking.in
  */
 function print(variable) {
     if(typeof variable == 'object') {

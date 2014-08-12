@@ -8,6 +8,7 @@
 	
 	$cond = '';
 	$cond1 = '';
+	$pg=0;
 	if($sdate && $edate)
 	{
 		$cond .= ' and date(created_on) between "'.$sdate.'" and "'.$edate.'" ';
@@ -58,6 +59,7 @@
 					<option value="0" <?php echo ($status == "0"?'selected':'') ?> >Open</option>
 					<option value="1" <?php echo ($status == "1"?'selected':'') ?> >Partial</option>
 					<option value="2" <?php echo ($status == "2"?'selected':'') ?> >Close</option>
+					<option value="4" <?php echo ($status == "4"?'selected':'') ?> >UnApproved</option>
 				</select>
 			</span>
 			
@@ -68,7 +70,9 @@
 	<br>
 	<div class="page_topbar" align="left">
 		 
-			
+			<div class="stat_block color_green"><b>UnApproved</b> <span><?=$this->db->query("select count(1) as l from t_po_info where po_status=4 $cond ")->row()->l?></span> 
+			<?php /*?><div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1 and po_status = 2 ")->row()->l,0)?>)</div><?php /*/?>
+			</div>
 			<div class="stat_block color_red"><b>Open</b> <span><?=$this->db->query("select count(1) as l from t_po_info where po_status=0 $cond ")->row()->l?></span>
 			<?php /*?> 
 			<div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1 and po_status = 0  ")->row()->l,0)?>)</div>
@@ -80,6 +84,7 @@
 			<div class="stat_block color_green"><b>Closed</b> <span><?=$this->db->query("select count(1) as l from t_po_info where po_status=2 $cond ")->row()->l?></span> 
 			<?php /*?><div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1 and po_status = 2 ")->row()->l,0)?>)</div><?php /*/?>
 			</div>
+			
 			<div class="stat_block color_blue"><b>Total</b> <span><?=$this->db->query("select count(1) as l from t_po_info where 1 $cond ")->row()->l?>
 				<?php /*?><div style="font-size:9px;">(Rs <?=format_price($this->db->query("select sum(total_value) as l from t_po_info a where 1 $cond1 ")->row()->l,0)?>)</div><?php /*/?>
 			</span> </div>

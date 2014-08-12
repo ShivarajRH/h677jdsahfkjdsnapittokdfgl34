@@ -189,16 +189,29 @@
 		Batch Enabled : <?php echo $o['batch_enabled']?'yes':'no' ?>
 		<br />
 		<?php 
-			$sql_trans_ttls = 'SELECT STATUS,IFNULL(amt1,amt2) AS amt,totals
+			$sql_trans_ttls = 'SELECT STATUS,IFNULL(amt1,amt2) AS amt,totals,invoice_no
 									FROM ( SELECT b.status,SUM((mrp-(discount+credit_note_amt))*a.invoice_qty) AS amt1,SUM(i_orgprice-(i_coup_discount+i_discount)*b.quantity) AS amt2,
-									COUNT(b.id) AS totals
+									COUNT(b.id) AS totals,a.invoice_no
 									FROM king_orders b
 									LEFT JOIN king_invoice a ON a.order_id = b.id
 									WHERE b.transid = ? GROUP BY b.status ) AS g';
 				
 			$trans_order_status_amt = $this->db->query($sql_trans_ttls,$o['transid']);
-			foreach($trans_order_status_amt->result_array() as $to_row){ ?>
-			<div><span class="span_count_wrap"><?php echo $order_status_arr[$to_row['STATUS']] ?> (<b><?php echo $to_row['totals']?></b>) : <b>Rs. <span style=""><?php echo format_price($to_row['amt']);?></span></b></span></div>
+			foreach($trans_order_status_amt->result_array() as $to_row){
+                            $ttl_trans_cost = $this->erpm->trans_fee_insu_value($o['transid'],$to_row['amt']);
+                            $ttl_trans_cost = format_price($ttl_trans_cost);
+                            $s_shipdate = @$this->db->query("select date_format(shipped_on,'%d/%m/%Y') as shipped_on from shipment_batch_process_invoice_link where invoice_no = ? and shipped = 1 ",$to_row['invoice_no'])->row()->shipped_on;
+
+				if($s_shipdate!='')
+					$status_msg = 'Shipped';
+				else
+					$status_msg = $order_status_arr[$to_row['STATUS']];
+                        ?>
+			<div>
+                            <span class="span_count_wrap">
+                                <?php echo $status_msg ?> (<b><?php echo $to_row['totals']?></b>) : <b>Rs. <span style=""><?php echo $ttl_trans_cost;?></span></b>
+                            </span>
+                        </div>
 		<?php }?>
 	</td>
 	<td><?=round($o['amount'],2)?></td>
@@ -367,12 +380,12 @@
 	 <style>
 	 	.subdatagrid th{padding:3px !important;text-align: left;}
 	 	.span_count_wrap {
-    background: none repeat scroll 0 0 #87318c;
-	float: left;
-	font-size: 11px;
-	color: #fff;
-	margin: 7px 0;
-	padding: 5px 7px;
-	text-align: center;
-
+				    background: none repeat scroll 0 0 #87318c;
+					float: left;
+					font-size: 11px;
+					color: #fff;
+					margin: 7px 0;
+					padding: 5px 7px;
+					text-align: center;
+                }
 	 </style>

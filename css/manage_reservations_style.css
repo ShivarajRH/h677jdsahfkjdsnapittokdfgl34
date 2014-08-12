@@ -208,8 +208,6 @@ h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;}
 .trans_created_by { padding: 5px 0 5px; font-size: 11px; 
                    /*font-weight: bold;*/ 
 }
-
-
 .datagrid .small_text { font-size: 10px; }
 
 
@@ -225,6 +223,7 @@ h3.filter_heading { margin-bottom: 0px; margin-top: 0;width: 788px;}
 }
 
 .total_trans { float: left; font-weight: bold; margin: 0 0 0 38px; }
+
 .view_all_orders a {
     margin: 5px 0px 5px 2px;
 }

@@ -1,4 +1,14 @@
-<style>.leftcont{display:none;}</style>
+<style>.leftcont{display:none;}
+.dlg_town_list div
+{
+	margin: 10px 0;
+    vertical-align: middle;
+}
+.dlg_town_list span
+{
+	
+}
+</style>
 <?php 
 	$v=false;
 	if(isset($vendor))
@@ -118,18 +128,19 @@
 						</div>
 					</div>
 					
-					<div>Category : <button type="button" class="add_pop">Add</button></div>
-					<div id="po_filter_wrap1" style="display:none;" title="Add Category">
+					<div style="display: inline-block;width: 10%">Category : <button type="button" class="cat_popup">Add</button></div>
+					<div style="display: inline-block;width: 10%">Brand : <button type="button" class="brand_popup">Add</button></div>
+					<div style="display: inline-block;width: 10%">Towns : <button type="button" class="allot_towns">Allot</button></div>
+					<div id="po_category_vendor_margin"  title="Add Category">
 						<div class="po_filter_blk">
 							<div id="filter_prods">
 								<table cellspacing='10'>
 									<tr>
-										<td><b style="float:left;margin:3px 5px">Category : </b></td><td><select name="select_cat" class="select_cat" style='width:230px;'>
-											<option value="">Select Category</option>
-											<?php $cats=$this->db->query("select id,name from king_categories  GROUP BY name order by name asc")->result_array();?>
-											<?php foreach($cats as $c){?>
-												<option value="<?php echo $c['id']?>"><?php echo $c['name']?></option>
-											<?php }?></select></td></tr>
+										<td><b style="float:left;margin:3px 5px">Category : </b></td>
+										<td>
+											<div class="cat_det_list"></div>
+										</td>
+									</tr>
 									<tr class='show_brand'>
 										<td><b style="float:left;margin:3px 15px">Brand : </b></td>
 										<td><select name='select_brand' class='select_brand' style="width:220px;height:300px;" multiple="true" data-placeholder='Select Brand'><option value=''>select brand</option></select></td>
@@ -138,7 +149,22 @@
 							</div>	
 						</div>
 					</div>
-				
+					<div id="po_brand_vendor_margin" style="" title="Add brand">
+						<div class="po_filter_blk">
+							<div id="filter_prods">
+								<table cellspacing='10'>
+									<tr>
+										<td><b style="float:left;">Brand : </b></td>
+										<td><div class="brand_list"></div>
+											</td></tr>
+									<tr class='show_category'>
+										<td><b style="float:left;">Category : </b></td>
+										<td><select name='select_category' class='select_category' style="width:220px;height:300px;" multiple="true" data-placeholder='Select cat'><option value=''>select category</option></select></td>
+									</tr>
+								</table>
+							</div>	
+						</div>
+					</div>
 				<table class="datagrid nofooter v_lbtable" width="100%">
 					<thead>
 						<tr>
@@ -147,7 +173,9 @@
 							<th>Category</th>
 							<th>Margin %</th>
 							<th>Applicable From</th>
-							<th colspan=2>Applicable Until</th>
+							<th>Applicable Until</th>
+							<th width="120px">Towns</th>
+							<th></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -166,7 +194,23 @@
 							<td><input type="text" disabled="disabled" class="inp " name="l_margin[]" value="<?=$b['brand_margin']?>"></td>
 							<td><input type="text" disabled="disabled"  class="inp  datepic lb_date lb_date<?=$i?>" name="l_from[]" value="<?php echo $b['applicable_from']!=0 ? $b['applicable_from']:0;?>" readonly="readonly"></td>
 							<td><input type="text" disabled="disabled"  class="inp  datepic lb_date lb_date<?=$i?>t" name="l_until[]" value="<?php echo $b['applicable_till']!=0 ? $b['applicable_till']:0;?>"readonly="readonly"></td>
-							<td><a href="javascript:void(0)" onclick="remove_catbrandvblink(this)" >remove</a></td>
+							<td width="120px">
+								<?php
+								 $town_names='';
+								 $towns=$this->db->query("select a.town_name,b.town_id from pnh_towns a join m_vendor_town_link b on b.town_id=a.id where b.vendor_id=? and brand_id=? and is_active=1",array($vid,$b['brand_id']))->result_array(); 
+								foreach($towns as $t)
+								{
+									$town_names.=$t['town_name'];
+									$town_names.=" , ";
+								}
+								echo rtrim($town_names, " , ");
+								?>
+								<!--
+								<select name="town[]" class="vendor_town" data-placeholder="Select Town" style="width: 250px;" data-required="true" multiple="true"></select>
+								-->
+							</td>	
+							
+							<td><a href="javascript:void(0)" onclick="remove_catbrandvblink(this)" style="color:red">remove</a></td>
 						</tr>
 					<?php }}?>
 					</tbody>
@@ -205,14 +249,24 @@
 				<td><input type="hidden" name="l_brand[]" value="%brandid%">%brand%</td>
 				<td><input type="hidden" name="l_cat[]" value="%catid%">%cat%</td>
 				<td><input type="text" class="inp" name="l_margin[]" value="10"></td>
-				<td><input type="text" class="inp lb_date lb_date%di%" name="l_from[]" readonly="readonly"></td>
-				<td><input type="text" class="inp lb_date lb_date%di%t" name="l_until[]" readonly="readonly"></td>
+				<td><input type="text" class="inp lb_date lb_date%di%" name="l_from[]" readonly="readonly" value="<?php echo date('Y-m-d') ?>"></td>
+				<td><input type="text" class="inp lb_date lb_date%di%t" name="l_until[]" readonly="readonly" value="<?php echo date('Y-m-d',strtotime(date("Y-m-d", mktime()) . " + 365 day")) ?>"></td>
 				<td><a href="javascript:void(0)" onclick="remove_catbrandvblink(this)" >remove</a>
 			</tr>
 		</tbody>
 	</table>
 </div>
-
+<div id="towns_edit_by_brand" title="Add town">
+	<div class="dlg_town_list">
+		<div class="fl_left"><span>Brand :</span> <select name="sel_brand[]" class="choose_brand" data-placeholder="Select Brand" style="width: 250px;" data-required="true" multiple="true">
+				</select>
+		</div>
+		<div class="fl_left">		
+		Town : <select name="sel_town[]" class="sel_town" data-placeholder="Select Town" style="width: 250px;" data-required="true" multiple="true">
+				</select>
+		</div>			
+	</div>
+</div>	
 <table id="cnt_clone">
 	<tr>
 		<td>Name : </td><td><input type="text" class="inp" name="cnt_name[]"></td>
@@ -254,11 +308,11 @@ border:1px solid #aaa;
 display:block;
 padding:5px;
 }
-.add_pop
+.cat_popup,.brand_popup
 {
 	margin-top: 8px 8px 8px 0;
 }
-.show_brand
+.show_brand,.show_category
 {
 	margin-top:15px;
 }
@@ -300,24 +354,166 @@ td.selected{
 <script>
 $('#load_brnd_catlink').hide();
 $('.show_brand').hide();
+$('.show_category').hide();
 $('.select_cat ').chosen();
 $(".select_brand ").chosen();
+$(".sel_brand ").chosen();
+$(".select_category ").chosen();
 $('.fil_cat').chosen();
 $('.fil_brand').chosen();
 
-$('.datepic lb_date').datepicker({minDate:0});
+//$('.datepic.lb_date').datepicker();
 
 
-$('.add_pop').click(function(){
-	$('#po_filter_wrap1').dialog('open');
+$('.allot_towns').click(function(){
+	$('#towns_edit_by_brand').dialog('open');
 });
 
-$('#po_filter_wrap1').dialog({
+
+$('.cat_popup').click(function(){
+	$('#po_category_vendor_margin').dialog('open');
+	$('.select_brand').val('');
+});
+
+$('.brand_popup').click(function(){
+	$('#po_brand_vendor_margin').dialog('open');
+	$('.select_category').val('');
+});
+
+		
+$('#towns_edit_by_brand').dialog({
 	modal:true,
 	autoOpen:false,
 	width:'400',
 	height:'430',
 	open:function(){
+		var vid = '<?php echo $this->uri->segment(3);?>';
+		$.post(site_url+'/admin/jx_load_brand_byvendor',{ven_id:vid},function(resp){
+			var b_html='';
+			if(resp.status=='error')
+			{
+				alert(resp.message);
+			}
+			else
+			{
+				b_html+='<option value="0">All</option>';
+				//town_html+='<option value="0">All</option>';
+				$.each(resp.br_list,function(i,b){
+				b_html+='<option value="'+b.brandid+'">'+b.brand_name+'</option>';
+				});
+			}
+			
+			 $('#towns_edit_by_brand .dlg_town_list .choose_brand').html(b_html).trigger("liszt:updated");
+			 
+		},'json');
+		
+		$.post(site_url+'/admin/jx_suggest_townbyterrid',{},function(resp){
+			var town_html='';
+			if(resp.status=='error')
+			{
+				alert(resp.message);
+			}
+			else
+			{
+				//town_html+='<option value="0">All</option>';
+				$.each(resp.towns,function(i,b){
+				town_html+='<option value="'+b.id+'">'+b.town_name+'</option>';
+				});
+			}
+			
+			 $('#towns_edit_by_brand .dlg_town_list .sel_town').html(town_html).trigger("liszt:updated");
+			 
+		},'json');
+		
+		$('.sel_town').chosen();
+		$('.choose_brand').chosen();
+	},
+	buttons:{
+	'Allot Town':function(){
+		town=$('.sel_town').val();
+		brand=$('.choose_brand').val();
+		if(brand == undefined)
+		{
+			alert("Please Choose Brand");
+			return false;
+		}
+		if(town == undefined)
+		{
+			alert("Please Choose Towns");
+			return false;
+		}
+		
+		add_towns(brand,town,1);
+		$(this).dialog('close');
+	},
+	'Remove Town':function(){
+		town=$('.sel_town').val();
+		brand=$('.choose_brand').val();
+		if(brand == undefined)
+		{
+			alert("Please Choose Brand");
+			return false;
+		}
+		if(town == undefined)
+		{
+			alert("Please Choose Towns");
+			return false;
+		}
+		
+		add_towns(brand,town,0);
+		$(this).dialog('close');
+	},
+	'Cancel':function(){
+		$(this).dialog('close');
+	}
+}
+});	
+	
+function add_towns(bid,tid,act)
+{
+	var vid = '<?php echo $this->uri->segment(3);?>';
+	
+	$.getJSON(site_url+'/admin/jx_allot_townsforvendor/'+bid+'/'+vid+'/'+tid+'/'+act,{},function(resp){
+			var town_html='';
+			if(resp.status=='error')
+			{
+				alert(resp.message);
+			}
+			else
+			{
+				location.reload();	
+			}
+			
+		});
+}
+
+
+$('#po_category_vendor_margin').dialog({
+	modal:true,
+	autoOpen:false,
+	width:'400',
+	height:'430',
+	open:function(){
+		$.post(site_url+'/admin/jx_getallcategory',{},function(resp){
+			var cats_html='';
+			if(resp.status=='error')
+			{
+				alert(resp.message);
+			}
+			else
+			{
+				cats_html+='<select name="select_cat" class="select_cat" style="width:230px;">';
+				cats_html+='<option value=""></option>';
+				cats_html+='<option value="0">All</option>';
+				$.each(resp.cat_list,function(i,c){
+				cats_html+='<option value="'+c.id+'">'+c.name+'</option>';
+				});
+				cats_html+='</select>';
+			}
+			
+			 $('.cat_det_list').html(cats_html).trigger("liszt:updated");
+			 $('.select_cat').chosen();
+		},'json');
 	},
 	buttons:{
 	'Submit':function(){
@@ -329,14 +525,14 @@ $('#po_filter_wrap1').dialog({
 			
 			return false;
 		}
-		else if(select_brand==0 || select_brand == undefined)
+		else if(select_brand == undefined)
 		{
 			alert('Please select  atleast one Brand');
 			return false;
 		}
 		else
 		{
-			update_new_cat();
+			update_new_cat(brandid_arr);
 			$(this).dialog('close');
 		}
 	},
@@ -345,6 +541,61 @@ $('#po_filter_wrap1').dialog({
 	}
 }
 });
+
+$('#po_brand_vendor_margin').dialog({
+	modal:true,
+	autoOpen:false,
+	width:'400',
+	height:'430',
+	open:function(){
+		$.post(site_url+'/admin/jx_getallbrands',{},function(resp){
+			var brands_html='';
+			if(resp.status=='error')
+			{
+				alert(resp.message);
+			}
+			else
+			{
+				brands_html+='<select name="sel_brand" class="sel_brand" style="width:230px;">';
+				brands_html+='<option value=""></option>';
+				brands_html+='<option value="0">All</option>';
+				$.each(resp.brand_list,function(i,b){
+				brands_html+='<option value="'+b.id+'">'+b.name+'</option>';
+				});
+				brands_html+='</select>';
+			}
+			
+			 $('.brand_list').html(brands_html).trigger("liszt:updated");
+			 $('.sel_brand').chosen();
+		},'json');
+	},
+	buttons:{
+	'Submit':function(){
+		var select_cat=$('.select_category').val();
+		var brand_id=$('.sel_brand').val();
+		if(brand_id==0 || brand_id == undefined)
+		{
+			alert('Please select Brand');
+			
+			return false;
+		}
+		else if(select_cat == undefined)
+		{
+			alert('Please select  atleast one Category');
+			return false;
+		}
+		else
+		{
+			update_new_brand(catid_arr);
+			$(this).dialog('close');
+		}
+	},
+	'Cancel':function(){
+		$(this).dialog('close');
+	}
+}
+});
+
 $('.fil_cat').change(function(){
 	var catid=$(this).val();
 	var ven_id = '<?php echo $this->uri->segment(3);?>';
@@ -386,7 +637,7 @@ $('.fil_cat').change(function(){
 			$('.v_lbtable tbody').html(template);
 			$('.v_lbtable .lb_date').each(function(i,dpEle){
 				if(!$(this).hasClass('hasDatepicker'))
-					$(this).datepicker({minDate:0});
+					$(this).datepicker();
 			});
 			
 		}else
@@ -469,7 +720,7 @@ $('.fil_brand').change(function(){
 			$('.v_lbtable tbody').html(temp);
 			$('.v_lbtable .lb_date').each(function(i,dpEle){
 				if(!$(this).hasClass('hasDatepicker'))
-					$(this).datepicker({minDate:0});
+					$(this).datepicker();
 			});
 			
 		}else
@@ -480,8 +731,8 @@ $('.fil_brand').change(function(){
 	},'json');
 });
 
-$('.select_cat').change(function(){
-	
+var brandid_arr=[];
+$('.select_cat').live('change',function(){
 	var sel_catid=$(this).val();
 	if(sel_catid!='0')
 	{
@@ -500,6 +751,7 @@ $('.select_cat').change(function(){
 			brands_html+='<option value="0">All</option>';
 			$.each(resp.brand_list,function(i,b){
 			brands_html+='<option value="'+b.brandid+'">'+b.name+'</option>';
+			brandid_arr.push(b.brandid);
 			});
 		}
 		 $('.select_brand').html(brands_html).trigger("liszt:updated");
@@ -510,7 +762,37 @@ $('.select_cat').change(function(){
 	
 });
 
-
+var catid_arr=[];
+$('.sel_brand').live('change',function(){
+	
+	var sel_bid=$(this).val();
+	if(sel_bid!='0')
+	{
+		$('.show_category').show();
+		//$('#load_brnd_catlink').show();
+		$(".select_category").html('').trigger("liszt:updated");
+		$.getJSON(site_url+'/admin/jx_load_allcatsbybrand/'+sel_bid,'',function(resp){
+		var cat_html='';
+		if(resp.status=='error')
+		{
+			alert(resp.message);
+		}
+		else
+		{
+			cat_html+='<option value=""></option>';
+			cat_html+='<option value="0">All</option>';
+			$.each(resp.cat_list,function(i,c){
+			cat_html+='<option value="'+c.catid+'">'+c.cat_name+'</option>';
+			catid_arr.push(c.catid);
+			});
+		}
+		 $('.select_category').html(cat_html).trigger("liszt:updated");
+		
+		});
+		
+	}
+	
+});
 
 $('#venfrm').submit(function()
 {
@@ -609,10 +891,15 @@ b_added.push(<?=$b['brand_id']?>);
 <?php }}?>
 
 //$('#load_brnd_catlink').click(function(){
-function update_new_cat(){	
+function update_new_cat(bid)
+{	
 	var select_brand=$('.select_brand').val();
 	var cat_id=$('.select_cat').val();
 	var ven_id = '<?php echo $this->uri->segment(3);?>';
+	if(select_brand == 0)
+	{
+		select_brand=bid;
+	}
 	$.post(site_url+'/admin/update_vendor_catgory_brand',{catid:cat_id,brandid:select_brand,vendorid:ven_id},function(resp){
 		if(resp.status=="success")
 		{
@@ -625,8 +912,8 @@ function update_new_cat(){
 							+"<td><input type='hidden'  class='inp' name='l_brand[]' value='"+c.brandid+"'>"+c.brand_name+"</td>"
 							+"<td><input type='hidden'  class='inp' name='l_catid[]' value='"+c.catid+"'>"+c.category_name+"</td>"
 							+"<td><input type='text'   class='inp' name='l_margin[]' value=''></td>"
-							+"<td><input type='text'   class='inp datepic lb_date' name='l_from[]' value='' readonly='readonly'></td>"
-							+"<td><input type='text'   class='inp datepic lb_date' name='l_until[]' value=''readonly='readonly'></td>"
+							+"<td><input type='text'   class='inp datepic lb_date' name='l_from[]' value='<?php echo date('Y-m-d') ?>' readonly='readonly'></td>"
+							+"<td><input type='text'   class='inp datepic lb_date' name='l_until[]' value='<?php echo date('Y-m-d',strtotime(date("Y-m-d", mktime()) . " + 365 day")) ?>' readonly='readonly'></td>"
 							+"<td><a href='javascript:void(0)' onclick='remove_catbrandvblink(this)' >remove</a>"
 							+"</tr>"
 				$(template).prependTo(".v_lbtable tbody");
@@ -635,7 +922,7 @@ function update_new_cat(){
 
 			$('.v_lbtable .lb_date').each(function(i,dpEle){
 				if(!$(this).hasClass('hasDatepicker'))
-					$(this).datepicker({minDate:0});
+					$(this).datepicker();
 			});
 			
 		}else
@@ -646,6 +933,47 @@ function update_new_cat(){
 	},'json');
 }
 
+
+function update_new_brand(cid){	
+	var select_brand=$('.sel_brand').val();
+	var cat_id=$('.select_category').val();
+	var ven_id = '<?php echo $this->uri->segment(3);?>';
+	if(cat_id == 0)
+	{
+		cat_id=cid;
+	}
+	$.post(site_url+'/admin/update_vendor_brand_category',{catid:cat_id,brandid:select_brand,vendorid:ven_id},function(resp){
+		if(resp.status=="success")
+		{
+			$(this).attr('disabled',true);
+			
+			$.each(resp.brnd_cat_res,function(i,c){
+				var template=''
+							+"<tr>"
+							+"<td><input type='checkbox' class='edit_vblink_chk' checked='checked' ></td>"
+							+"<td><input type='hidden'  class='inp' name='l_brand[]' value='"+c.brandid+"'>"+c.brand_name+"</td>"
+							+"<td><input type='hidden'  class='inp' name='l_catid[]' value='"+c.catid+"'>"+c.category_name+"</td>"
+							+"<td><input type='text'   class='inp' name='l_margin[]' value=''></td>"
+							+"<td><input type='text'   class='inp datepic lb_date' name='l_from[]' value='<?php echo date('Y-m-d') ?>' readonly='readonly'></td>"
+							+"<td><input type='text'   class='inp datepic lb_date' name='l_until[]' value='<?php echo date('Y-m-d',strtotime(date("Y-m-d", mktime()) . " + 365 day")) ?>' readonly='readonly'></td>"
+							+"<td><a href='javascript:void(0)' onclick='remove_catbrandvblink(this)' >remove</a>"
+							+"</tr>"
+				$(template).prependTo(".v_lbtable tbody");
+				
+			});
+
+			$('.v_lbtable .lb_date').each(function(i,dpEle){
+				if(!$(this).hasClass('hasDatepicker'))
+					$(this).datepicker();
+			});
+			
+		}else
+		{
+			alert(resp.msg);
+			$(this).attr('disabled',false);
+		}
+	},'json');
+}
 	
 $('.edit_vblink_chk').live('change',function(){
 	var tds = $(this).parent().parent().find('td');
@@ -747,7 +1075,7 @@ function addproduct(id,name,mrp,tax)
 $(function(){
 	
 	$(".lb_date").each(function(){
-		$(this).datepicker({minDate:0});
+		$(this).datepicker();
 	});
 	
 	if(b_added.length==0)
@@ -766,6 +1094,8 @@ $(function(){
 			$("#v_searchresb").show();
 	});
 	
+	//var date='<?php echo date('Y-m-d') ?>';
+	//$('.datepic').val(date);
 });
 
 
@@ -813,10 +1143,10 @@ $("#all_catdiv").dialog({
 
 					$('#cat_brandtable .from_date').each(function(i,dpEle){
 						if(!$(this).hasClass('hasDatepicker'))
-							$(this).datepicker({minDate:0});
+							$(this).datepicker();
 						
 						if(!$('#cat_brandtable .to_date:eq('+i+')').hasClass('hasDatepicker'))
-							$('#cat_brandtable .to_date:eq('+i+')').datepicker({minDate:0});
+							$('#cat_brandtable .to_date:eq('+i+')').datepicker();
 						
 					});
 					

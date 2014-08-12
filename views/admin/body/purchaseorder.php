@@ -149,7 +149,7 @@ Loading...
 	</table>
 	<div>
 		<table id="p_clone_template" width="100%">
-			<tr class="barcode--barcode-- barcodereset rec_type brand_%brandid%  cat_%catid%" brandid="%brandid%" catid="%catid%">
+			<tr class="barcode--barcode-- barcodereset rec_type brand_%brandid%  cat_%catid%" brandid="%brandid%" catid="%catid%" src="%src%" style="%src_cond%">
 				<td>%sno%</td>
 				<td >
 					<div>
@@ -359,19 +359,20 @@ Loading...
 <script>
 
 $('.pur_unitprice').live('change',function(){
-	var unitprc = $(this).val();
+	var unitprc = parseFloat($(this).val());
 	var trele = $(this).parents('tr:first');
-	var mrp = $('input[name="mrp[]"]',trele).val();
-	var dp_price = $('input[name="dp_price[]"]',trele).val();
-	var margin = $('input[name="margin[]"]',trele).val();
-	var margin_type = $('input[type="radio"]:checked',trele).val();
+	var mrp = parseFloat($('input[name="mrp[]"]',trele).val());
+	var dp_price = parseFloat($('input[name="dp_price[]"]',trele).val());
+	var margin = parseFloat($('input[name="margin[]"]',trele).val());
+	var margin_type = parseFloat($('input[type="radio"]:checked',trele).val());
 	var sdisc = 0;
-		if(dp_price == "")
+		if(isNaN(dp_price))
 		{
 			if(unitprc > mrp)
 			{
 				alert("Purchase price cannot be more than MRP");
-				return false;
+				$(this).val(0);
+				unitprc = 0;
 			}
 			if(margin_type*1 == 1)
 				sdisc = (100-((unitprc/mrp)*100))-margin;
@@ -382,7 +383,8 @@ $('.pur_unitprice').live('change',function(){
 			if(unitprc > dp_price)
 			{
 				alert("Purchase price cannot be more than DP Price");
-				return false;
+				$(this).val(0);
+				unitprc = 0;
 			}
 			
 			if(margin_type*1 == 1)
@@ -698,10 +700,18 @@ function addproduct(id,name,mrp,margin,orders,qty,require)
 		template=template.replace(/%offer%/g,"offer"+i);
 		template=template.replace(/--barcode--/g,o.barcode);
 		template=template.replace(/%brandid%/g,o.brand_id);
+		template=template.replace(/%src%/g,o.is_sourceable);
 		template=template.replace(/%product_brand%/g,o.brand_name);
+		
 		var mrgin=$('input[name="margin[]"],tr',this).val()*1;
 	 	var sch_type=$('select[name="sch_type[]"],tr',this).val();
 	 	var extra_mrgin=$('input[name="sch_discount[]"],tr',this).val()*1;
+		
+		if(o.is_sourceable == 1)
+				template=template.replace(/%src_cond%/g,'background-color: rgba(170, 255, 170, 0.8)');
+			else
+				template=template.replace(/%src_cond%/g,'background-color: #FFAAAA');
+				
 		
 		if(!o.dp_price.length)
 		{
@@ -922,9 +932,8 @@ $(function(){
 		source:site_url+'/admin/getvendorproducts_json/'+$("#vendorsel").val(),
 		 minLength: 2,
 		 select:function(event, ui ){
-			addproduct(ui.item.id ,ui.item.label,ui.item.mrp);
-			 }
-	
+				addproduct(ui.item.id ,ui.item.label,ui.item.mrp);
+			}
 	});
 		
 
@@ -936,6 +945,20 @@ $(function(){
 				alert("No products added for creating PO, Please add atleast one product");
 				return false;
 			}
+			var k=0;
+
+			/*
+			
+			$("#pprods tr").each(function(){
+				var s=$(this).attr('src');
+				if(s==0)
+				{
+					//alert("You cannot place PO for not sourceable products.");
+					++k;
+//					return false;
+				}
+			});
+			*/
 			
 			var block_frm_submit = 0;
 			var qty_pending = 0;
@@ -1005,10 +1028,13 @@ $(function(){
 					return false;
 				}
 				
-				if(confirm("Are you sure want to create this PO ?"))
-					return true;
-				else
-					return false;
+				if(k==0)
+				{
+					if(confirm("Are you sure want to create this PO ?"))
+						return true;
+					else
+						return false;
+				}
 		}
 		return false;
 	});
@@ -1044,9 +1070,8 @@ $(function(){
 					source:site_url+'/admin/getvendorproducts_json/'+pre_selected_vendor_id,
 					 minLength: 2,
 					 select:function(event, ui ){
-						addproduct(ui.item.id ,ui.item.label,ui.item.mrp);
-						 }
-				
+								addproduct(ui.item.id ,ui.item.label,ui.item.mrp);
+							}
 				});
 		}else
 		{
@@ -1167,11 +1192,13 @@ $("#sl_products").dialog({
 											{
 												$('#ttl_res').html('Total Products:'+data.length);
 											$.each(data,function(i,p){
+												if(p.src==1)
+												{
 												if(!$('select[name="cat_prod_disp"] option#cat_'+p.product_cat_id).length){
 													if(p.product_cat_id != undefined){
 													$('select[name="cat_prod_disp"]').append('<option id="cat_'+p.product_cat_id+'" value="'+p.product_cat_id+'">'+p.p_category_name+'</option>');
 													}
-												}
+												 }
 													template=$("#sl_prod_template tbody").html();
 													template=template.replace(/%id%/g,i);
 													template=template.replace(/%pid%/g,p.id);
@@ -1212,7 +1239,7 @@ $("#sl_products").dialog({
 																rec_type += ' NOSTOCKNOORDER ';
 										
 													$("#sl_products .datagrid tbody tr:last").addClass(rec_type);
-													
+												}	
 												});
 											$("#sl_products .datagrid").trigger("update");
 											$("table").trigger("sorton",[[[1,1]]]); 

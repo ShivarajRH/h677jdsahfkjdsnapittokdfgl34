@@ -1,4 +1,8 @@
 <?php
+/*ini_set('memory_limit','1024M');
+ini_set('max_exection_time','3600');
+ini_set('display_errors',1);
+error_reporting(E_ALL); */
 /**
  * Api Model Class
  * @author Madhan
@@ -20,7 +24,10 @@ class Api_model extends Model
 	 */
 	function is_valid_login($username,$password)
 	{
-		$userdet_res = $this->db->query("select * from pnh_api_users where username = ? and password = md5(?) ",array($username,$password));
+		$userdet_res = $this->db->query("SELECT * FROM pnh_users u
+										LEFT JOIN pnh_m_franchise_info f ON f.franchise_id = u.reference_id
+										WHERE (u.username = ? OR f.login_mobile1=? ) AND u.password = MD5(?)
+									",array($username,$username,$password));
 		// query to table to check if user exists 
 		if($userdet_res->num_rows())
 			return $userdet_res->row_array();
@@ -36,14 +43,43 @@ class Api_model extends Model
 	function get_userdet($inp='',$by='id')
 	{
 		if($by == 'name')
-			$cond = ' and username = ? ';
+			$cond = ' and au.username = ? ';
 		else if($by == 'id')
-			$cond = ' and user_id = ? ';
+			$cond = ' and au.user_id = ? ';
 		
-		$userdet_res = $this->db->query("select user_id,username,type from pnh_api_users where 1 ".$cond,array($inp));
+		$userdet_res = $this->db->query("select 
+												user_id,username,type
+											from pnh_users au 
+											where 1 
+										".$cond,array($inp));
 		if($userdet_res->num_rows())
 			return $userdet_res->row_array();
-		return false; 
+		else
+		{
+			$frandet_res = $this->db->query("SELECT franchise_id,login_mobile1 FROM pnh_m_franchise_info f WHERE 1 AND login_mobile1=? ",array($inp) );
+			if($frandet_res->num_rows()==0)
+			{
+				return false;
+			}
+			else
+			{
+				$frandet = $frandet_res->row_array();
+				$mobile_no = $frandet['login_mobile1'];
+				$in_arr=array('type'=>0,"reference_id"=>$frandet['franchise_id'],"username"=>$mobile_no,"password"=>'',"is_logged_in"=>0,"created_by"=>68,"created_on"=>cur_datetime() );
+				$this->db->insert("pnh_users",$in_arr);
+				$user_id = $this->db->insert_id();
+				
+				$resp = $this->update_password($user_id);
+				if($resp['status']==true)
+				{
+					output_data($resp['msg']);
+				}
+				else
+				{
+					output_error( array('error_code'=>2000,'error_msg'=>$resp['msg']) );
+				}
+			}
+		}
 	}
 
 	/**
@@ -52,7 +88,7 @@ class Api_model extends Model
 	 */
 	function get_authkey($userid,$auth_key)
 	{
-		$authkey_res = $this->db->query('select auth_key from pnh_api_user_auth where (user_id = ? or auth_key = ? ) and unix_timestamp(expired_on) > unix_timestamp() ',array($userid,$auth_key));
+		$authkey_res = $this->db->query('select auth_key from pnh_user_auth where (user_id = ? or auth_key = ? ) and unix_timestamp(expired_on) > unix_timestamp() ',array($userid,$auth_key));
 		
 		if($authkey_res->num_rows())
 			return $authkey_res->row()->auth_key;
@@ -73,10 +109,10 @@ class Api_model extends Model
 		$inp = array();
 		$inp['user_id'] = $userid;
 		$inp['auth_key'] = $authkey = md5(rand(1000, 1000000));
-		$inp['expired_on'] = date('Y-m-d H:i:s',time()+(24*60*60));
+		$inp['expired_on'] = date('Y-m-d H:i:s',time()+(24*60*60) ); //1 day, half an hour=strtotime("+30 minutes")
 		$inp['created_by'] = 0;
 		$inp['created_on'] = date('Y-m-d H:i:s');
-		$this->db->insert('pnh_api_user_auth',$inp);
+		$this->db->insert('pnh_user_auth',$inp);
 
 		return $authkey;
 	}
@@ -87,7 +123,7 @@ class Api_model extends Model
 	 */
 	function get_api_user()
 	{
-		$api_userdet = $this->db->query("select * from king_admin where username = 'api'");
+		$api_userdet = $this->db->query("select * from king_admin where username = 'Franchisee/API' ");
 		if($api_userdet->num_rows())
 			return array("userid"=>$api_userdet->row()->id);
 		else
@@ -103,7 +139,7 @@ class Api_model extends Model
 		$sql="select a.franchise_id,a.pnh_franchise_id,a.franchise_name,a.address,a.locality,a.city,a.postcode,a.state,a.credit_limit,
 				t.town_name,tt.territory_name,a.login_mobile1,is_prepaid
 					from pnh_m_franchise_info a 
-					join pnh_api_users b on b.franchise_id=a.franchise_id
+					join pnh_users b on b.reference_id=a.franchise_id
 					join pnh_towns as t on t.id=a.town_id
 					join pnh_m_territory_info tt on tt.id=a.territory_id
 					where a.franchise_id=?";
@@ -148,11 +184,15 @@ class Api_model extends Model
 	/**
 	 * function for get the franchise menu list
 	 */
-	function get_menus_by_franchise($franchise_id)
+	function get_menus_by_franchise($fid)
 	{
-		$sql="SELECT id,name as menu from pnh_menu order by name asc";
+		$sql="SELECT m.id,m.name AS menu FROM `pnh_franchise_menu_link`a
+					JOIN pnh_m_franchise_info b ON b.franchise_id=a.fid
+					join pnh_users c on c.reference_id=b.franchise_id
+					JOIN pnh_menu m ON m.id=a.menuid
+					WHERE a.status=1 AND b.franchise_id=? and m.id not in(124,125) and a.status=1";
 	
-		$menu_res=$this->db->query($sql);
+		$menu_res=$this->db->query($sql,$fid);
 	
 		if($menu_res->num_rows())
 			return $menu_res->result_array();
@@ -180,7 +220,7 @@ class Api_model extends Model
 	 */
 	function get_categories_by_menuid($menuid)
 	{
-		$sql="SELECT b.id,b.name as menu from king_deals a join king_categories b on b.id=a.catid where a.menuid=? group by name order by name asc";
+		$sql="SELECT b.id,b.name AS menu,COUNT(o.quantity) AS sold_qty FROM king_deals a  JOIN king_dealitems i ON i.dealid=a.dealid JOIN king_categories b ON b.id=a.catid LEFT JOIN king_orders o ON o.itemid=i.id WHERE a.menuid=? GROUP BY b.name ORDER BY sold_qty DESC";
 	
 		$cat_res=$this->db->query($sql,$menuid);
 	
@@ -193,26 +233,66 @@ class Api_model extends Model
 	/**
 	 * function for get the brands by menu id
 	 */
-	function get_brands_by_menu($menu_id,$pg,$bransdlimit)
+	function get_brands_by_menu($fid,$menu_id,$pg,$brandslimit,$alpha_sort,$top_brands)
 	{
 		$menu_details=array();
+		$param=array();
+		$cond='';
+		$param[]=$menu_id;
+
+		if($alpha_sort)
+		{
+			$cond=' and b.name like ? ';
+			$param[]=$alpha_sort.'%';
+		}
+		
+		$join_cond=''; $order_by='';
+
+		if($fid!=0)
+		{
+			$is_menu_linked=$this->apim->check_if_menu_islinked_tofran($fid,$menu_id,0,0,0);
+		
+			if(!$is_menu_linked)
+				return false;
+			else 
+			{
+				if($top_brands)
+				{
+				
+					$join_cond="join king_dealitems i on i.dealid=a.dealid 
+								join king_orders o on o.itemid=i.id 
+								join king_transactions t on t.transid=o.transid and t.is_pnh=1 
+							";
+					$order_by=	"order by count(o.id) desc ";
+					
+					$cond.="and franchise_id=".$fid;
+					
+					$limit=5;
+				}
+				
+			}
+		
+		}
 		
 		$sql="select a.brandid,b.name as brandname from king_deals a 
 					join king_brands b on b.id=a.brandid
-					join king_dealitems c on c.dealid=a.dealid
-				where a.menuid=? and a.publish=1 and c.is_pnh=1 
-				group by a.brandid 
-				order by b.name";
+					$join_cond
+					where a.menuid=? and a.publish=1  $cond
+					group by a.brandid
+					$order_by"; 
 		
-		$menu_res=$this->db->query($sql,$menu_id);
-		
+		$menu_res=$this->db->query($sql,$param);
+
 		if($menu_res->num_rows())
 		{
 			$menu_details['ttl_brands']=$menu_res->num_rows();
 			
-			$sql.=" limit $pg,$bransdlimit";
+			if(!$top_brands)
+				$sql.=" limit $pg,$brandslimit";
+			else 
+				$sql.=" limit $pg,$limit";
 			
-			$menu_details['brand_list']=$this->db->query($sql,$menu_id)->result_array();
+			$menu_details['brand_list']=$this->db->query($sql,$param)->result_array();
 			
 			
 			return $menu_details;
@@ -224,26 +304,52 @@ class Api_model extends Model
 	/**
 	 * function get brand list by category
 	 */
-	function get_brands_by_cat($catid,$start,$limit)
+	function get_brands_by_cat($catid,$start,$limit,$alpha_sort,$top_brands)
 	{
 		$brand_det=array();
+		$param=array();
+		$cond='';
+		$param[]=$catid;
 		
+		if($alpha_sort)
+		{
+			$cond=' and b.name like ? ';
+			$param[]=$alpha_sort.'%';
+		}
+		
+		$join_cond='';$order_by='';
+		
+		if($top_brands)
+		{
+			$join_cond="join king_orders o on o.itemid=c.id 
+						join king_transactions t on t.transid=o.transid
+					";
+			$order_by=	"order by count(o.id) desc ";
+			
+			$limit=5;
+		}
+	
 		$sql="select a.brandid,b.name as brandname from king_deals a 
 					join king_brands b on b.id=a.brandid
 					join king_dealitems c on c.dealid=a.dealid
-				where a.catid=? and a.publish=1 and c.is_pnh=1 
-				group by a.brandid 
-				order by b.name";
+					$join_cond
+				where a.catid=? and a.publish=1 and c.is_pnh=1 $cond
+				group by a.brandid
+				$order_by 
+				";
 		
-		$cat_res=$this->db->query($sql,$catid);
+		$cat_res=$this->db->query($sql,$param);
 		
 		if($cat_res->num_rows())
 		{
 			$brand_det['total_brands']=$cat_res->num_rows();
 			
-			$sql.=" limit $start,$limit";
+			if(!$top_brands)
+				$sql.=" limit $start,$limit";
+			else 
+				$sql.=" limit $start,$limit";
 			
-			$brand_det['brand_list']=$this->db->query($sql,$catid)->result_array();
+			$brand_det['brand_list']=$this->db->query($sql,$param)->result_array();
 			
 			return $brand_det;
 		}else{
@@ -256,13 +362,32 @@ class Api_model extends Model
 	 * @param unknown_type $start
 	 * @param unknown_type $limit
 	 */
-	function get_brands($start,$limit)
+	function get_brands($start,$limit,$alpha_sort,$top_brands)
 	{
 		$brand_det=array();
 		
-		$sql="select id as brandid,name as brandname from king_brands order by name";
+		$param=array();
+		$cond='';
+		$join_cond ='';
+		$order_by='';
 		
-		$brand_res=$this->db->query($sql);
+		if($alpha_sort)
+		{
+			$cond=' and name like ? ';
+			$param[]=$alpha_sort.'%';
+		}
+		if($top_brands)
+		{
+			$join_cond="join king_deals d on d.brandid=a.id
+						join king_dealitems c c.id=on d.dealid
+						join king_orders o on o.itemid=c.id
+						join king_transactions t on t.transid=o.transid
+							";
+			$order_by =	"order by sum(o.quantity) desc ";
+		}
+		$sql="select a.id as brandid,a.name as brandname from king_brands a  $join_cond where 1 $cond  $order_by";
+		
+		$brand_res=$this->db->query($sql,$param);
 		
 		if($brand_res->num_rows())
 		{
@@ -270,7 +395,7 @@ class Api_model extends Model
 			
 			$sql.=" limit $start,$limit";
 			
-			$brand_det['brand_list']=$this->db->query($sql)->result_array();
+			$brand_det['brand_list']=$this->db->query($sql,$param)->result_array();
 			
 			return $brand_det;
 		}else{
@@ -285,25 +410,55 @@ class Api_model extends Model
 	 * @param unknown_type $start
 	 * @param unknown_type $limit
 	 */
-	function get_brands_by_menu_cat($menu_id,$catid,$start,$limit,$full=0)
+	function get_brands_by_menu_cat($menu_id,$catid,$start,$limit,$full=0,$alpha_sort,$top_brands)
 	{
+		$param=array();
+		$cond='';
+		
+		$param[]=$catid;
+		$param[]=$menu_id;
+		
+		if($alpha_sort)
+		{
+			$cond=' and b.name like  ?  '; 
+			$param[]=$alpha_sort.'%';
+		}
+		
+		$join_cond='';$order_by='';
+		
+		
+		if($top_brands)
+		{
+			$join_cond='join king_orders o on o.itemid=c.id join king_transactions t on t.transid=o.transid';
+			
+			$order_by='order by count(o.id) desc';
+			
+			$full=0;
+			
+			$limit=5;
+		}
+		
 		$sql="select a.brandid,b.name as brandname from king_deals a 
 					join king_brands b on b.id=a.brandid
 					join king_dealitems c on c.dealid=a.dealid
-				where a.catid=? and a.menuid=? and a.publish=1 and c.is_pnh=1 
+					$join_cond
+				where a.catid=? and a.menuid=? and a.publish=1 and c.is_pnh=1 $cond 
 				group by a.brandid 
-				order by b.name;";
+				$order_by";
 		
-		$brand_res=$this->db->query($sql,array($catid,$menu_id));
+		$brand_res=$this->db->query($sql,$param);
 		
 		if($brand_res->num_rows())
 		{
 			$brand_det['total_brands']=$brand_res->num_rows();
 		
-			if(!$full)
+			if(!$full && !$top_brands)
+				$sql.=" limit $start,$limit";
+			
+			if($top_brands)
 				$sql.=" limit $start,$limit";
 		
-			$brand_det['brand_list']=$this->db->query($sql,array($catid,$menu_id))->result_array();
+			$brand_det['brand_list']=$this->db->query($sql,$param)->result_array();
 		
 			return $brand_det;
 		}else{
@@ -318,27 +473,58 @@ class Api_model extends Model
 	 * @param unknown_type $limit
 	 * @return unknown|boolean
 	 */
-	function get_categories($start,$limit)
+	function get_categories($fid,$start,$limit,$alpha_sort=0,$full)
 	{
 		$cat_det=array();
 		$cat_det['ttl_cat']='';
 		$cat_det['cat_list']='';
 		
+		$cond='';
+		$param=array();
+		
+		if($alpha_sort)
+		{
+			$cond=" and a.name like ? ";
+			$param[]=$alpha_sort.'%';
+		}
+		
+		$join_cond=''; $order_by='';
+		
+		if($fid!=0)
+		{
+			$is_menu_linked=$this->apim->check_if_menu_islinked_tofran($fid,0,0,0,0);
+				
+			if(!$is_menu_linked)
+				return false;
+			else
+			{
+				$join_cond='join king_deals d on d.catid=a.id
+							join king_dealitems i on i.dealid=d.dealid
+							join king_orders o on o.itemid=i.id join king_transactions t on t.transid=o.transid';
+			
+				$order_by='order by count(o.id) desc';
+			
+				$cond.="AND franchise_id=".$fid;
+			}
+		}
 		$sql='select a.id,a.name,group_concat(b.id,"::") as sub_catids,group_concat(b.name,"::") as sub_cat_names
 					from king_categories a 
 					left join king_categories b on b.type=a.id
+					'.$join_cond.'
+					'.$cond.'	
 					group by a.id
-				order by a.name';
+				'.$order_by;
 		
-		$cate_res=$this->db->query($sql);
+		$cate_res=$this->db->query($sql,$param);
 		
 		if($cate_res->num_rows())
 		{
 			$cat_det['ttl_cat']=$cate_res->num_rows();
 			
-			//$sql.=" limit $start,$limit";
+			if(!$full)
+				$sql.=" limit $start,$limit";
 			
-			$cat_det['cat_list']=$this->db->query($sql)->result_array();
+			$cat_det['cat_list']=$this->db->query($sql,$param)->result_array();
 		}
 		
 		return $cat_det;
@@ -351,14 +537,35 @@ class Api_model extends Model
 	 * @param unknown_type $limit
 	 * @return multitype:string NULL
 	 */
-	function get_categories_by_menu($menuid)
+	function get_categories_by_menu($menuid,$start,$limit,$alpha_sort=0,$full=0,$top_cats)
 	{
 		$cat_det=array();
 		$cat_det['ttl_cat']='';
 		$cat_det['cat_list']='';
 		$menu_catids=array();
 		
-		$sql="select catid from king_deals where menuid=? group by catid";
+		$cond='';
+		$param=array();
+		
+		if($alpha_sort)
+		{
+			$cond=" and a.name like ? ";
+			$param[]=$alpha_sort.'%';
+		}
+		
+		$join_cond='';  $order_by='';
+		
+		if($top_cats)
+		{
+			$join_cond.=" join king_deals d on d.catid=a.id JOIN king_dealitems i ON i.dealid=d.dealid  JOIN king_orders o ON o.itemid=i.id JOIN king_transactions t ON t.transid=o.transid AND t.is_pnh=1";
+				
+			$order_by.=" ORDER BY COUNT(o.id) DESC";
+			
+			//$limit=5;
+		}
+			
+		
+		$sql="select catid from king_deals d where menuid=? group by catid ";
 		
 		$menu_cat_res=$this->db->query($sql,$menuid);
 		
@@ -370,33 +577,58 @@ class Api_model extends Model
 			$sql='select a.id,a.name,group_concat(b.id,"::") as sub_catids,group_concat(b.name,"::") as sub_cat_names
 						from king_categories a
 						left join king_categories b on b.type=a.id
-						where a.id in ('.implode(',',$menu_catids).') or b.id in ('.implode(',',$menu_catids).')
+						'. $join_cond.
+						' where a.id in ('.implode(',',$menu_catids).') or b.id in ('.implode(',',$menu_catids).')
 						or a.type in ('.implode(',',$menu_catids).') or b.type in ('.implode(',',$menu_catids).')
-					group by a.id
-					order by a.name';
-			
-			$cate_res=$this->db->query($sql);
-			
+						'.$cond .'
+						group by a.id
+						'.$order_by.'
+					';
+			$cate_res=$this->db->query($sql,$param);
+		//	echo $this->db->last_query();exit;
 			if($cate_res->num_rows())
 			{
 				$cat_det['ttl_cat']=$cate_res->num_rows();
 			
-				//$sql.=" limit $start,$limit";
+				//if(!$full)
+					//$sql.=" limit $start,$limit";
 			
-				$cat_det['cat_list']=$this->db->query($sql)->result_array();
+				$cat_det['cat_list']=$this->db->query($sql,$param)->result_array();
 			}
 		}
 		
 		return $cat_det;
 	}
 	
-	function get_categories_by_brand($brandid,$start,$limit)
+	function get_categories_by_brand($brandid,$start,$limit,$alpha_sort=0,$full=0,$top_cats)
 	{
 		$cat_det=array();
 		$cat_det['ttl_cat']='';
 		$cat_det['cat_list']='';
 		$menu_catids=array();
 		
+		$cond='';
+		$param=array();
+		
+		if($alpha_sort)
+		{
+			$cond=" and a.name like ? ";
+			$param[]=$alpha_sort.'%';
+		}
+		$join_cond=''; $order_by='';
+		
+		if($top_cats)
+		{
+			$join_cond="join king_deals d on d.catid=a.id
+						join king_dealitems i on i.dealid=d.dealid
+						join king_orders o on o.itemid=i.id
+						join king_transactions t on t.transid=o.transid and t.is_pnh=1
+					";
+			$order_by=	"order by count(o.id) desc ";
+		
+			$limit=5;
+		}
+
 		$sql="select catid from king_deals where brandid=? group by catid";
 		
 		$brand_cat_res=$this->db->query($sql,$brandid);
@@ -409,20 +641,23 @@ class Api_model extends Model
 			$sql='select a.id,a.name,group_concat(b.id,"::") as sub_catids,group_concat(b.name,"::") as sub_cat_names
 						from king_categories a
 						left join king_categories b on b.type=a.id
+						'.$join_cond.'
 						where a.id in ('.implode(',',$menu_catids).') or b.id in ('.implode(',',$menu_catids).')
 						or a.type in ('.implode(',',$menu_catids).') or b.type in ('.implode(',',$menu_catids).')
-						group by a.id
-						order by a.name';
+						'.$cond.'
+						group by a.id '.$order_by ;
+						
 			
-			$cate_res=$this->db->query($sql);
+			$cate_res=$this->db->query($sql,$param);
 			
 			if($cate_res->num_rows())
 			{
 				$cat_det['ttl_cat']=$cate_res->num_rows();
 			
-				$sql.=" limit $start,$limit";
+				if(!$full)
+					$sql.=" limit $start,$limit";
 			
-				$cat_det['cat_list']=$this->db->query($sql)->result_array();
+				$cat_det['cat_list']=$this->db->query($sql,$param)->result_array();
 			}
 		}
 		
@@ -436,16 +671,41 @@ class Api_model extends Model
 	 * @param unknown_type $start
 	 * @param unknown_type $limit
 	 */
-	function get_categories_by_brand_menu($brandid,$menuid,$start,$limit,$full=0)
+	function get_categories_by_brand_menu($brandid,$menuid,$start,$limit,$full=0,$alpha_sort=0,$top_cats)
 	{
 		$cat_det=array();
 		$cat_det['ttl_cat']='';
 		$cat_det['cat_list']='';
 		$menu_catids=array();
+		$cond='';
+		$param=array();
+		
+		$join_cond=''; $order_by='';
+		
+		
+		if($top_cats)
+		{
+			$join_cond="join king_deals d on d.catid=a.id
+						join king_dealitems i on i.dealid=d.dealid
+						join king_orders o on o.itemid=i.id
+						join king_transactions t on t.transid=o.transid and t.is_pnh=1
+					";
+			$order_by=	"order by count(o.id) desc ";
+	
+			$limit=5;
+			
+			$full=0;
+		}
+
+		if($alpha_sort)
+		{
+			$cond=" and a.name like ? ";
+			$param[]=$alpha_sort.'%';
+		}
 		
 		$sql="select catid from king_deals where brandid=? and menuid=? group by catid";
 		
-		$brandmenu_cat_res=$this->db->query($sql,array($brandid,$menuid));
+		$brandmenu_cat_res=$this->db->query($sql,array($brandid,$menuid)); 
 		
 		if($brandmenu_cat_res->num_rows())
 		{
@@ -454,13 +714,15 @@ class Api_model extends Model
 		
 			$sql='select a.id,a.name,group_concat(b.id,"::") as sub_catids,group_concat(b.name,"::") as sub_cat_names
 						from king_categories a
-						left join king_categories b on b.type=a.id
+						left join king_categories b on b.type=a.id '
+						.$join_cond.'
 						where a.id in ('.implode(',',$menu_catids).') or b.id in ('.implode(',',$menu_catids).')
 						or a.type in ('.implode(',',$menu_catids).') or b.type in ('.implode(',',$menu_catids).')
+						'.$cond.'
 						group by a.id
-						order by a.name';
+						'.$order_by;
 		
-			$cate_res=$this->db->query($sql);
+			$cate_res=$this->db->query($sql,$param);
 		
 			if($cate_res->num_rows())
 			{
@@ -468,12 +730,82 @@ class Api_model extends Model
 		
 				if(!$full)
 					$sql.=" limit $start,$limit";
-		
-				$cat_det['cat_list']=$this->db->query($sql)->result_array();
+				
+				$cat_det['cat_list']=$this->db->query($sql,$param)->result_array();
 			}
 		}
 		
 		return $cat_det;
+	}
+	
+	/**
+	 * function for get the menu list by brand and cat
+	 * @param unknown_type $brand_id
+	 * @param unknown_type $catid
+	 * @param unknown_type $start
+	 * @param unknown_type $limit
+	 */
+	function get_menu($brand_id=0,$catid=0,$menuid=0,$start,$limit)
+	{
+		$cond='';
+		$param=array();
+		$menu_list=array('total_menus'=>0,"menu_list"=>'');
+		
+		if($brand_id)
+		{
+			$cond.=" and a.brandid=? ";
+			$param[]=$brand_id;
+		}
+		
+		if($catid)
+		{
+			$cond.=" and a.catid=?  ";
+			$param[]=$catid;
+		}
+		
+		if($menuid)
+		{
+			$cond.=" and id=?  ";
+			$param[]=$menuid;
+		}
+		
+		
+		if($brand_id || $catid)
+		{
+		
+			$sql="select b.id as menu_id,b.name as menu
+						from king_deals a
+						join pnh_menu b on b.id=a.menuid
+						join king_dealitems c on c.dealid=a.dealid
+					where 1 a.publish=1 and c.is_pnh=1 and b.status=1  $cond
+					group by a.menuid
+					order by b.name ";
+		}else{
+			$sql="select id as menu_id,name as menu from pnh_menu where 1 and status=1  $cond order by name asc ";
+		}
+		
+		$menu_list_res=$this->db->query($sql,$param);
+		
+		if($menu_list_res->num_rows())
+		{
+			$menu_list['total_menus']=$menu_list_res->num_rows();
+			$sql.=" limit $start , $limit ";
+			
+			$menu_list_res1=$this->db->query($sql,$param);
+			
+			$menu_list['menu_list']=$menu_list_res1->result_array();
+		}
+		
+		return $menu_list;
+	}
+	
+	/**
+	 * function for check the array values are number
+	 * @param unknown_type $array
+	 * @param unknown_type $predicate
+	 */
+	function check_isarray_num($array) {
+		return ctype_digit(implode('',$array));
 	}
 	
 	/**
@@ -484,125 +816,598 @@ class Api_model extends Model
 	 * @param unknown_type $start
 	 * @param unknown_type $limit
 	 * @return multitype:NULL Ambigous <multitype:, unknown>
+	 * @last_modified roopashree@storeking.in
 	 */
-	function get_deals($brand_id=0,$cat_id=0,$menu_id=0,$start,$limit,$pids=0,$srch_data=array(),$gender='',$min_price=0,$max_price=0)
+	
+	function get_deals($brand_id=0,$cat_id=0,$menu_id=0,$start,$limit,$publish,$pids=0,$srch_data=array(),$gender='',$min_price=0,$max_price=0,$fid=0,$sortby,$type='deals')
 	{
-		$cond='';
-		$param=array();
-		$deal_list=array();
+
+		//echo $sortby;
+		$cond=' and publish = 1 ';
+		$publish_cond='';
+		$order_cond='';
+		$limit_cond='';
+
+		if($publish==0)
+			$publish_cond='';
+		else if($publish==1)
+			$publish_cond=' and d.publish=1';
+		else if($publish==2)
+			$publish_cond=' and d.publish=0';
 		
+		$publish_cond=' and d.publish=1';
+		
+		$param=array();
+		$deal_list=array("ttl_deals"=>0,"deals_list"=>'');
+		$deal_list['cat_list'] = array();
+		$deal_list['brand_list'] = array();
+		$deal_list['price_list'] = array();
+		$deal_list['gender_list'] = array();
+		$deal_list['attr_list'] = array();
+
+
 		if($brand_id)
 		{
-			$cond.=" and d.brandid=? ";
-			$param[]=$brand_id;
+			if(is_array($brand_id))
+			{
+				if($this->check_isarray_num($brand_id,'is_int'))
+					$cond.=" and d.brandid in (".implode(",",array_filter($brand_id)).") ";
+			}else{
+				$cond.=" and d.brandid=? ";
+				$param[]=$brand_id;
+			}
+
 		}
-		
+
 		if($cat_id)
 		{
-			$cond.=" and d.catid=? ";
-			$param[]=$cat_id;
+			if(is_array($cat_id))
+			{
+				if($this->check_isarray_num($cat_id))
+					$cond.=" and d.catid in (".implode(",",array_filter($cat_id)).")";
+			}else{
+				$cond.=" and d.catid=? ";
+				$param[]=$cat_id;
+			}
 		}
-		
+
 		if($menu_id)
 		{
 			$cond.=" and m.id=? ";
 			$param[]=$menu_id;
 		}
-		
+
 		if($gender)
 		{
 			$cond.=" and i.gender_attr like ? ";
 			$param[]='%'.$gender.'%';
 		}
-		
+
 		if($pids)
 		{
 			$cond.=" and pnh_id in ($pids) ";
-			
 		}
-		
+
 		if($min_price)
 		{
-			$cond.=" and i.orgprice >= ? ";
-			$param[]=$min_price;
+			if(is_array($min_price))
+			{
+				$cond.=" and ( ";
+				foreach($min_price as $i=>$m)
+				{
+					$cond.="(i.price >= ? ";
+					$param[]=$m;
+
+					//if max price set
+					if($max_price)
+					{
+						if(is_array($max_price))
+						{
+							if(isset($max_price[$i]))
+							{
+								$cond.=" and i.price <= ? ) ";
+								$cond.=(count($min_price)!=($i+1))?' or ':'';
+							}
+							$param[]=$max_price[$i];		
+						}		
+					}else{
+						$cond.=" ) ";
+						$cond.=(count($min_price)!=($i+1))?' or ':'';
+					}
+				}
+				$cond.=" ) ";
+			}else{
+				$cond.=" and i.price >= ? ";
+				$param[]=$min_price;
+			}
+
+			if($max_price)
+			{
+				if(is_array($max_price) && !is_array($min_price))
+				{
+					$cond.=" and ( ";
+					foreach($max_price as $i=>$m)
+					{
+						$cond.="(i.price <= ? )  ";
+						$cond.=(count($max_price)!=($i+1))?' or ':'';
+						$param[]=$m;
+					}
+					$cond.=" ) ";
+				}else if(!is_array($max_price))
+				{
+					$cond.=" and i.price <= ? ";
+					$param[]=$max_price;
+				}
+			}
 		}
-		
-		if($max_price)
+
+		if($max_price && !$min_price)
 		{
-			$cond.=" and i.orgprice <= ? ";
-			$param[]=$max_price;
+			if(is_array($max_price))
+			{
+				$cond.=" and ( ";
+				foreach($max_price as $i=> $m)
+				{
+					$cond.="(i.price <= ? )  ";
+					$cond.=(count($max_price)!=($i+1))?' or ':'';
+					$param[]=$m;
+				}
+				$cond.=" ) ";
+			}else{
+				$cond.=" and i.price <= ? ";
+				$param[]=$max_price;
+			}
 		}
-		
-		
+
+		$join_tbl = '';
+		$rel_filter_tag = ',0 as rel_ttl';
+
 		//thi condition used for search api
 		if(!empty($srch_data))
 		{
-			$tag=$srch_data['tag'];
+			$tag=trim($srch_data['tag']);
 			$menuid=$srch_data['menuid'];
+
+			if($tag == 'offers')
+			{
+				$cond.=' and mp_is_offer = 1 and unix_timestamp() between unix_timestamp(mp_offer_from) and unix_timestamp(mp_offer_to)  ';
+				$tag = '';
+			}
 			
+			$tag = str_ireplace('  ', ' ', $tag);
+
+			$attrs=$srch_data['attrs'];
+
+			if($attrs)
+			{
+				$join_tbl .= '  join m_product_deal_link dl on dl.itemid = i.id and dl.is_active = 1  
+								join m_product_attributes pa on pa.pid = dl.product_id 
+								join m_attributes atr on atr.id = pa.attr_id 
+								
+							'; 
+				foreach($attrs as $adet)
+				{
+					$cond.=' and attr_name = "'.$adet['name'].'" and  attr_value = "'.$adet['val'].'" ';
+				}
+			}
+
 			if($tag)
 			{
-				$cond.=' and (pnh_id=? or  i.name like ? or mc.name like ? or b.name like ? or c.name like ? or d.keywords  like  ? ) and m.id in ('.$menuid.')';
-				$param[]=$tag;
-				$param[]='%'.$tag.'%';
-				$param[]='%'.$tag.'%';
-				$param[]='%'.$tag.'%';
-				$param[]='%'.$tag.'%';
-				$param[]='%'.$tag.'%';
-				
+
+				if($menuid)
+					$cond.=' and m.id in ('.$menuid.') ';
+
+				if($this->db->query("select count(*) as t from king_dealitems where pnh_id = ?  ",$tag)->row()->t && is_int($tag))
+				{
+					$cond.=' and pnh_id=?  ';
+					$param[]=$tag;
+				}else if($this->db->query("select count(*) as t from king_brands where name = ? ",$tag)->row()->t)
+				{
+					$cond.=' and b.name = ?  ';
+					$param[]=$tag;
+				}else
+				{
+
+					/*$cond.=' and (pnh_id=? or  i.name like ? or mc.name like ? or b.name like ? or c.name like ? or d.keywords  like  ? )  ';
+					$param[]=$tag;
+					$param[]='%'.$tag.'%';
+					$param[]='%'.$tag.'%';
+					$param[]='%'.$tag.'%';
+					$param[]='%'.$tag.'%';
+					$param[]='%'.$tag.'%';
+
+					$tag_list =  explode(' ',$tag);
+					$tag_list[] = $tag;
+					foreach($tag_list as $tg)
+					{
+						// check if tag is brand name
+						$bid = @$this->db->query("select * from king_brands where name = ? ",$tg)->row()->id;
+							
+						if($bid)
+						{
+							$cond .= ' and d.brandid = '.$bid;
+						}
+						
+						if($tg*1)
+						{
+							// check if tag is brand name
+							$t_pnh_id = @$this->db->query("select * from king_dealitems where pnh_id = ? ",$tg)->row()->pnh_id;
+							
+							if($t_pnh_id)
+							{
+								$cond .= ' and pnh_id = '.$t_pnh_id;
+							}
+						}
+					}
+					*/ 
+
+					if($this->db->query("select count(*) as t from king_dealitems where is_pnh = 1 and  (pnh_id = ? or name = ? )",array($tag*1,$tag))->row()->t)
+					{
+						// recheck - name and id diffs 
+						$cond .= ' and ( pnh_id = "'.$tag.'" or  name = "'.$tag.'" ) ';
+					}else
+					{
+						$tag_list =  explode(' ',$tag);
+						$tag_list[] = $tag;
+						$kwd_srch = array(); 
+						$rel_filter = array();
+						foreach($tag_list as $tg)
+						{
+							// check if tag is brand name
+							$bid = @$this->db->query("select * from king_brands where name = ? ",$tg)->row()->id;
+							
+							if($bid)
+							{
+								$cond .= ' and d.brandid = '.$bid;
+								continue ;
+							}
+							
+							// recheck for only one find_in_set - need to check with match function in mysql for relavency 
+							$tg = strtolower($tg);
+							$kwd_srch[] = " find_in_set('$tg',concat(pnh_id,',',i.name,',',ifnull(mc.name,''),',',b.name,',',c.name,',',d.keywords)) ";
+							$rel_filter[] =  " if(find_in_set('$tg',concat(pnh_id,',',i.name,',',ifnull(mc.name,''),',',b.name,',',c.name,',',d.keywords)),1,0) ";
+							
+							/*
+							$tg = strtoupper($tg);
+							$kwd_srch[] = " find_in_set('$tg',concat(pnh_id,',',i.name,',',ifnull(mc.name,''),',',b.name,',',c.name,',',d.keywords)) ";
+							$rel_filter[] =  " if(find_in_set('$tg',concat(pnh_id,',',i.name,',',ifnull(mc.name,''),',',b.name,',',c.name,',',d.keywords)),1,0) ";
+							
+							$tg = strtolower($tg);
+							$kwd_srch[] = " find_in_set('$tg',concat(pnh_id,',',i.name,',',ifnull(mc.name,''),',',b.name,',',c.name,',',d.keywords)) ";
+							$rel_filter[] =  " if(find_in_set('$tg',concat(pnh_id,',',i.name,',',ifnull(mc.name,''),',',b.name,',',c.name,',',d.keywords)),1,0) ";
+							*/
+							
+						}
+						if(count($kwd_srch))
+						{
+							$cond .= ' and ('.implode(' or ',$kwd_srch).' ) ';
+							$rel_filter_tag = ','.implode('+',$rel_filter).' as rel_ttl';
+						}
+					}
+
+				}
+
 			}
-			
+
 		}
+
 		
+		//$cond .= ' and publish = 1 '; 
 		
-		$sql="select pnh_id as pid,i.id as itemid,i.name,m.name as menu,m.id as menu_id,
-				i.gender_attr,c.name as category,d.catid as category_id,mc.name as main_category,
-				c.type as main_category_id,b.name as brand,d.brandid as brand_id,i.orgprice as mrp,i.price as price,i.store_price,
-				i.is_combo, concat('".IMAGES_URL."items/',d.pic,'.jpg') as image_url,concat('http://snapittoday.com/images/items/small/',d.pic,'.jpg') as small_image_url,d.description,i.shipsin as ships_in,d.keywords 
-			from king_deals d 
-			join king_dealitems i on i.dealid=d.dealid 
-			join king_brands b on b.id=d.brandid 
-			join king_categories c on c.id=d.catid 
-			left outer join pnh_menu m on m.id=d.menuid 
-			left outer join king_categories mc on mc.id=c.type 
-			where d.publish=1 and is_pnh=1 $cond order by d.sno asc ";
-		
-		
-		$deal_list_res=$this->db->query($sql,$param);
-		
-		if($deal_list_res->num_rows())
+		$order_by_cond = '';
+		if($sortby == 'popular')
 		{
-			$deal_list['ttl_deals']=$deal_list_res->num_rows();
+			$order_by_cond = ' total_orders desc ';
+		}else if($sortby == 'new')
+		{
+			$order_by_cond = ' d_sno desc ';
+		}else
+		{
+			$order_by_cond = ' name asc ';
+		}
+
+		$price_type = 0;
+
+		if($fid)
+			$price_type=$this->erpm->get_fran_pricetype($fid);
 			
-			$sql.=" limit $start,$limit";
-			
-			$deal_det=$this->db->query($sql,$param)->result_array();
-			
-			foreach($deal_det as $i=>$d)
+		$last_query='';
+		if($type == 'total')
+		{
+			 
+			$sql="select count(distinct i.id) as total
+						from king_deals d	
+						join king_dealitems i on i.dealid=d.dealid	
+						join king_brands b on b.id=d.brandid	
+						join king_categories c on c.id=d.catid	
+						$join_tbl	
+						left outer join pnh_menu m on m.id=d.menuid	
+						left outer join king_categories mc on mc.id=c.type	
+						where is_pnh=1	
+						$cond	
+			";
+
+			$deal_list['ttl_deals']=$this->db->query($sql,$param)->row()->total;
+			//echo $this->db->last_query(); exit;
+			$last_query = $this->db->last_query();
+		}else
+		{
+
+			if($type == 'refine')
 			{
-				$itemid=$d['itemid'];
-				$prods=$this->db->query("select p.product_name as name,l.qty from m_product_deal_link l join m_product_info p on p.product_id=l.product_id where l.itemid=?",$d['itemid'])->result_array();
+				$sql="select i.id as itemid,i.is_group,i.pnh_id as pid,orgprice,price,gender_attr,c.name as cat,b.name as brand,d.catid,d.brandid 
+							from king_deals d 
+							join king_dealitems i on i.dealid=d.dealid 
+							join king_brands b on b.id=d.brandid 
+				JOIN king_categories c ON c.id=d.catid
+							$join_tbl 
+							left outer join pnh_menu m on m.id=d.menuid 
+							left outer join king_categories mc on mc.id=c.type 
+							where  is_pnh=1 
+							$cond
+							group by i.id 
+							order by c.name,b.name
+					";
 				
-				$deal_det[$i]['products']=array("product"=>$prods);
-				$deal_det[$i]['images']=$this->db->query("select CONCAT('".IMAGES_URL."items/',id,'.jpg') as url from king_resources where itemid=? and type=0",$d['itemid'])->result_array();
+				$deal_list_res=$this->db->query($sql,$param) or die(mysql_error());
+				$last_query = $this->db->last_query();
+				if($deal_list_res->num_rows())
+				{
+					$deal_list['ttl_deals']=$deal_list_res->num_rows();
+					
+					$group_deal_ids=array();
+					
+					foreach($deal_list_res->result_array() as $i=>$d_det)
+					{
+						
+						$deal_list['cat_list'][$d_det['catid']] = array('id'=>$d_det['catid'],'name'=>$d_det['cat']);
+						$deal_list['brand_list'][$d_det['brandid']] = array('id'=>$d_det['brandid'],'name'=>$d_det['brand']);
+						$deal_list['price_list'][] = $d_det['price'];
+						$deal_list['gender_list'][] = $d_det['gender_attr'];
+						
+						//$group_deal_ids=array();
+						// change to in condition before for loop - 500 times 
+						if($d_det['is_group'])
+						{
+							$group_deal_ids[$i]='"'.$d_det['itemid'].'" ';
+						}
+						
+//					}
+					
+						//======================================
+						//echo '<pre>'; print_r($group_deal_ids); die();
+						if( count($group_deal_ids) > 0 ) {
+							$deal_ids=implode(",",$group_deal_ids);
+							
+							$sql_q = "
+										(
+											select l.itemid,p.product_id,concat(group_concat(concat(a.attribute_name,':',v.attribute_value)),',ProductID:',p.product_id) as a
+												from m_product_group_deal_link l
+												join products_group_pids p on p.group_id=l.group_id
+												join products_group_attributes a on a.attribute_name_id=p.attribute_name_id
+												join products_group_attribute_values v on v.attribute_value_id=p.attribute_value_id
+												join m_product_info p1 on p1.product_id = p.product_id and p1.is_sourceable = 1
+											where l.itemid in($deal_ids)
+											group by p.product_id
+										)
+										union
+										(
+											select a.itemid,a.product_id,concat(group_concat(concat(attr_name,':',attr_value) order by f.id desc ),',ProductID:',a.product_id) as a
+												from m_product_deal_link a
+												join king_dealitems b on a.itemid = b.id
+												join m_product_info d on d.product_id = a.product_id
+												join m_product_attributes e on e.pid = d.product_id
+												join m_attributes f on f.id = e.attr_id
+								where b.is_group = 1 and a.itemid in($deal_ids) and a.is_active = 1 and d.is_sourceable = 1 and length(attr_value)  
+											group by a.product_id
+										)
+									";
+								$grp_deal_rslt = $this->db->query( $sql_q ); //array($d_det['itemid'],$d_det['itemid'])
+								//echo '<pre>'.$this->db->last_query().'<br>';
+								
+								if( $grp_deal_rslt->num_rows() ) {
+									
+									foreach( $grp_deal_rslt->result_array() as $p ) {
+										$deal_list['attr_list'][]=$p['a'];
+									}
+									
+								}
+							}
+							//======================================
+					
+						sort($deal_list['price_list']);
+
+						$min_price = 0;
+						$max_price = 0;
+						if($deal_list['price_list'] > 1)
+						{
+							$min_price = $deal_list['price_list'][0];
+							$max_price = $deal_list['price_list'][count($deal_list['price_list'])-1];
+						}
+
+						$deal_list['price_list'] = array('min'=>$min_price,'max'=>$max_price);
+
+						$deal_list['gender_list'] = array_filter(array_unique($deal_list['gender_list']));
+						$deal_list['attr_list'] = array_filter(array_unique($deal_list['attr_list']));
+					
+					}
+					
+				}
+				else
+				{
+					$output['error'] ='No refine data found';
+					return $output;
+				}
+			}else if($type == 'deals')
+			{
+				$sql="select free_frame,has_power,pnh_id as pid,i.size_chart,i.id as itemid,i.name,m.name as menu,m.id as menu_id,
+						i.gender_attr,c.name as category,d.catid as category_id,mc.name as main_category,i.member_price,
+						c.type as main_category_id,b.name as brand,d.brandid as brand_id,i.orgprice as mrp,i.price as price,i.store_price,
+						i.is_combo,ifnull(v.main_image,concat('".IMAGES_URL."items/',d.pic,'.jpg')) as image_url,ifnull(v.main_image,concat('".IMAGES_URL."items/small/',d.pic,'.jpg')) as small_image_url,d.description,i.shipsin as ships_in,d.keywords,
+						count(o.id) as total_orders,
+							(if($price_type,i.price,i.member_price))/orgprice as p_discount,
+						i.sno as d_sno $rel_filter_tag
+						from king_deals d
+						join king_dealitems i on i.dealid=d.dealid
+						join king_brands b on b.id=d.brandid
+						join king_categories c on c.id=d.catid
+						$join_tbl
+						left outer join pnh_menu m on m.id=d.menuid
+						left join m_vendor_product_images v on v.item_id=i.id
+						left outer join king_categories mc on mc.id=c.type
+						left join king_orders o on o.itemid = i.id
+						where  is_pnh=1 $cond
+						group by i.id
+						order by p_discount asc,rel_ttl desc,$order_by_cond
+					limit $start,$limit";
 				
-				$deal_det[$i]['attributes']=array();
-				foreach($this->db->query("select group_concat(concat(a.attribute_name,':',v.attribute_value)) as a from m_product_group_deal_link l join products_group_pids p on p.group_id=l.group_id join products_group_attributes a on a.attribute_name_id=p.attribute_name_id join products_group_attribute_values v on v.attribute_value_id=p.attribute_value_id where l.itemid=? group by p.product_id",$itemid)->result_array() as $i2=>$p)
-					$deal_det[$i]['attributes']['attr'.($i2+1)]=$p['a'];
+				$deal_det=$this->db->query($sql,$param) or die(mysql_error());
 				
-				//$min_max_price_det=$this->get_min_max_price($brand_id,$cat_id,$menu_id,$start,$limit,$pids,$srch_data,$gender);
-				//echo 1;exit;
-				//$deal_det[$i]['min_price']=$min_max_price_det['min_price'];
-				//$deal_det[$i]['max_price']=$min_max_price_det['max_price'];
+				$last_query = $this->db->last_query();
+				if($deal_det->num_rows())
+				{
+					$deal_det = $deal_det->result_array();
+					
+					foreach($deal_det as $i=>$d)
+					{
+						$itemid=$d['itemid'];
+						$prods=$this->db->query("select p.product_name as name,l.qty from m_product_deal_link l join m_product_info p on p.product_id=l.product_id where l.itemid=?",$d['itemid'])->result_array();
+						$deal_det[$i]['products']=array("product"=>$prods);
+						
+						$v_imgs = @$this->db->query("select other_images from m_vendor_product_images where item_id = ? ",$d['itemid'])->row()->other_images;
+						if($v_imgs)
+						{
+							$v_imgs = explode(',',$v_imgs);
+							foreach($v_imgs as $vimg)
+								$deal_det[$i]['images'][] = array('url'=>$vimg);
+						}else
+						{
+							$deal_det[$i]['images']=$this->db->query("select CONCAT('".IMAGES_URL."items/',r.id,'.jpg')  as url from king_resources r where r.itemid=? and type=0",$d['itemid'])->result_array();
+						}
+						
+						$deal_det[$i]['attributes']=array();
+						$deal_det[$i]['pseller_id'] = "";
+						
+						/*foreach($this->db->query("select group_concat(concat(a.attribute_name,':',v.attribute_value)) as a from m_product_group_deal_link l join products_group_pids p on p.group_id=l.group_id join products_group_attributes a on a.attribute_name_id=p.attribute_name_id join products_group_attribute_values v on v.attribute_value_id=p.attribute_value_id where l.itemid=? group by p.product_id",$itemid)->result_array() as $i2=>$p)
+							$deal_det[$i]['attributes']['attr'.($i2+1)]=$p['a'];
+							*/
+						
+						/*
+							$min_max_price_det=$this->get_min_max_price($brand_id,$cat_id,$menu_id,$start,$limit,$pids,$srch_data,$gender);
+							$deal_det[$i]['min_price']=$min_max_price_det['min_price'];
+							$deal_det[$i]['max_price']=$min_max_price_det['max_price'];
+						*/
+						$margin = 0;
+						if($fid)
+						{
+							$margin_det=$this->erpm->get_pnh_margin($fid,$d['pid'],$price_type);
+								
+							if($d['is_combo'])
+								$margin=$margin_det['combo_margin'];
+							else
+								$margin=$margin_det['margin'];
+						}
+						
+						$lcost=0;
+						$deal_det[$i]['mp_frn_max_qty']=$deal_det[$i]['mp_mem_max_qty']=$member_price_det['member_price']=0;
+						if($price_type==1 )
+						{
+						
+							$member_price_det=$this->erpm->get_memberprice($itemid,$fid,0);
+							if($member_price_det['status'] == 'success')
+							{
+								$deal_det[$i]['price_type']=$member_price_det['price_type'];
+								if($member_price_det['price_type'])
+								{
+										//echo 3;print_r($member_price_det);die();
+									$deal_det[$i]['mp_frn_max_qty']=@$member_price_det['mp_frn_max_qty']?$member_price_det['mp_frn_max_qty']:0;
+									$deal_det[$i]['mp_mem_max_qty']=@$member_price_det['mp_mem_max_qty']?$member_price_det['mp_mem_max_qty']:0;
+									$deal_det[$i]['price']=@$member_price_det['price']?$member_price_det['member_price']:'';
+									$deal_det[$i]['max_ord_qty']=$member_price_det['max_ord_qty']?$member_price_det['max_ord_qty']:0;
+									$lcost=round($d['member_price']-($d['member_price']/100*$margin),2);
+								}
+								else
+								{
+									$deal_det[$i]['max_ord_qty'] = $this->erpm->get_maxordqty_pid($fid,$deal_det[$i]['pid'],0);
+									$deal_det[$i]['price']=$d['price'];
+									$lcost=round($d['price']-($d['price']/100*$margin),2);
+								}
+							}else
+							{
+								return $member_price_det;
+							}
+							
+						}
+						else
+						{
+							$deal_det[$i]['max_ord_qty'] = $this->erpm->get_maxordqty_pid($fid,$deal_det[$i]['pid'],0);
+							$deal_det[$i]['price']=$d['price'];
+							$lcost=round($d['price']-($d['price']/100*$margin),2);
+						}
+						
+					
+	
+						$deal_det[$i]['landing_cost']=$lcost;
+						
+						$deal_det[$i]['availability']=0;
+
+						$avail=$this->erpm->do_stock_check(array($itemid),array(1),true);
+						if(count($avail))
+						{
+							if(isset($avail[$itemid][0]) ) {
+								//print_r($avail_det);exit;
+								if( $avail[$itemid][0]['stk']==0 && $avail[$itemid][0]['status']==0)	
+									$deal_det[$i]['availability']=0;
+								else
+									$deal_det[$i]['availability']=1;
+							}
+							else
+								$deal_det[$i]['availability']=0;
+						}
+	
+					}
+				}
+				else
+				{
+					$output['error'] ='No deals data found';
+					return $output;
+				}
+				$deal_list['deals_list']=$deal_det;
 			}
 			
-			//$min_max_price_det=$this->get_min_max_price($brand_id,$cat_id,$menu_id,$start,$limit,$pids,$srch_data,$gender);
-			
-			$deal_list['deals_list']=$deal_det;
 		}
-		
+		$deal_list['last_query'] = $last_query;
+		$deal_list['type'] = $type;
+		//echo $this->db->last_query();exit;
 		return $deal_list; 
-		 
+	}
+	
+	function get_local_updated_deals($version)
+	{
+		$output=array();
+		$version_details=array();
+		
+		$deals_res = $this->db->query("
+										select vdl.item_id,ifnull(publish,0) as publish,c.orgprice,if(1,c.price,c.member_price) as price
+											from m_apk_version a
+											join m_apk_version_deal_link vdl on vdl.version_id = a.id 
+											left join king_dealitems c on c.id = vdl.item_id 
+											left join king_deals d on d.dealid = c.dealid 
+										where version=?  
+								",$version);
+		
+		if($deals_res->num_rows())
+		{
+			$deal_list = array();
+			foreach($deals_res->result_array() as $row)
+			{
+				$row['pseller_id'] = '';
+				$deal_list[] = $row;
+			}
+			$version_details["products"]=$deal_list;
+			array_push($output,$version_details);
+		}
+		return $output;
 	}
 	
 	/**
@@ -626,14 +1431,26 @@ class Api_model extends Model
 		
 		if($brand_id)
 		{
-			$cond.=" and d.brandid=?";
-			$param[]=$brand_id;
+			if(is_array($brand_id))
+			{
+				if($this->check_isarray_num($brand_id,'is_int'))
+					$cond.=" and d.brandid in (".implode(",",array_filter($brand_id)).") ";
+			}else{
+				$cond.=" and d.brandid=? ";
+				$param[]=$brand_id;
+			}	
 		}
 		
 		if($cat_id)
 		{
-			$cond.=" and d.catid=?";
-			$param[]=$cat_id;
+			if(is_array($cat_id))
+			{
+				if($this->check_isarray_num($cat_id))
+					$cond.=" and d.catid in (".implode(",",array_filter($cat_id)).")";
+			}else{
+				$cond.=" and d.catid=? ";
+				$param[]=$cat_id;
+			}
 		}
 		
 		if($menu_id)
@@ -675,7 +1492,6 @@ class Api_model extends Model
 		
 		}
 		
-		
 		$sql="select min(i.orgprice) as min_price,max(i.orgprice) as max_price from king_deals d
 				join king_dealitems i on i.dealid=d.dealid
 				join king_brands b on b.id=d.brandid
@@ -700,65 +1516,182 @@ class Api_model extends Model
 	 * function to get the deal info by pid
 	 * @param unknown_type $pid
 	 */
-	function get_deal($pid=0)
+	function get_deal($pid=0,$fid=0)
 	{
-		$sql="select pnh_id as pid,i.gender_attr,i.id as itemid,i.name,d.tagline,c.name as category,m.name as menu,d.menuid as menu_id,
-					d.catid as category_id,mc.name as main_category,c.type as main_category_id,b.name as brand,d.brandid as brand_id,
-					i.orgprice as mrp,i.price as price,i.store_price,i.is_combo,concat('".IMAGES_URL."items/',d.pic,'.jpg') as image_url,
-					d.description,i.shipsin as ships_in,d.keywords,i.live as is_stock,d.publish as is_enabled,concat('".IMAGES_URL."items/small/',d.pic,'.jpg') as small_image_url 
+		$sql="select free_frame,has_power,i.id as item_id,i.size_chart,pnh_id as pid,i.is_group,i.gender_attr,i.id as itemid,i.name,d.tagline,c.name as category,m.name as menu,d.menuid as menu_id,
+					d.catid as category_id,mc.name as main_category,c.type as main_category_id,b.name as brand,d.brandid as brand_id,i.member_price,
+					i.orgprice as mrp,i.price as price,i.store_price,i.is_combo,
+					ifnull(v.main_image,concat('".IMAGES_URL."items/',d.pic,'.jpg')) as image_url,
+					d.description,i.shipsin as ships_in,d.keywords,i.live as is_stock,d.publish as is_enabled,
+					ifnull(v.main_image,concat('".IMAGES_URL."items/small/',d.pic,'.jpg')) as small_image_url, 
+					i.has_insurance,d.publish
 					from king_deals d 
 					join king_dealitems i on i.dealid=d.dealid 
 					join king_brands b on b.id=d.brandid 
 					join king_categories c on c.id=d.catid 
 					left outer join pnh_menu m on m.id=d.menuid 
 					left outer join king_categories mc on mc.id=c.type 
-					where is_pnh=1 and i.pnh_id =? and i.pnh_id!=0 order by d.sno asc";
+					left join m_vendor_product_images v on v.item_id=i.id  
+					where is_pnh=1 and i.pnh_id =? and i.pnh_id!=0
+					order by d.sno asc";
 		
 		$deal_res=$this->db->query($sql,$pid);
 		
+		$price_type = 0;
+		if($fid)
+		$price_type=$this->erpm->get_fran_pricetype($fid);
+		 
 		if($deal_res->num_rows())
 		{
 			$deal_info=$deal_res->row_array();
-			
-			$deal_info['images']=$this->db->query("select CONCAT('".IMAGES_URL."items/',id,'.jpg') as url,CONCAT('".IMAGES_URL."items/small/',id,'.jpg') as small_img_url from king_resources where itemid=? and type=0",$deal_info['itemid'])->result_array();
-			
-			$attr_det=$this->db->query("select group_concat(concat(LOWER(a.attribute_name),':',v.attribute_value)) as a,group_concat(concat(LOWER(a.attribute_name_id),':',v.attribute_value_id)) as aid from m_product_group_deal_link l join products_group_pids p on p.group_id=l.group_id join products_group_attributes a on a.attribute_name_id=p.attribute_name_id join products_group_attribute_values v on v.attribute_value_id=p.attribute_value_id where l.itemid=? group by p.product_id",$deal_info['itemid'])->result_array();
-			
-			$attr_id_config=array();
-			$attr_config=array();
-			if($attr_det)
+			$deal_info['images'] = array();
+			$v_imgs = @$this->db->query("select other_images from m_vendor_product_images where item_id = ? ",$deal_info['itemid'])->row()->other_images;
+			if($v_imgs)
 			{
-				foreach($attr_det as $attr)
-				{
-					$attr_name=explode(":",$attr['a']);
-					$attr_ids=explode(":",$attr['aid']);
-					
-					if(!isset($attr_config[$attr_name[0]]))
-					{
-						$attr_config[strtolower($attr_name[0])]=array();
-						$attr_config[strtolower($attr_name[0])]['attribute_name']=$attr_name[0];
-						$attr_config[strtolower($attr_name[0])]['attribute_id']=$attr_ids[0];
-						$attr_config[strtolower($attr_name[0])]['attribute_values']=array();
-					}
-					
-					$attr_config[strtolower($attr_name[0])]['attribute_values'][$attr_ids[1]]=$attr['a'];
-				}
-				
-				$deal_info['attributes']=$attr_config;
-				
-				//attribute ids group config
-				foreach($attr_det as $attr)
-				{
-					$attr_nameid=explode(":",$attr['aid']);
-					
-					if(!isset($attr_id_config[$attr_nameid[0]]))
-						$attr_id_config[$attr_nameid[0]]=array();
-					
-					array_push($attr_id_config[$attr_nameid[0]],$attr_nameid[1]);
-				}
-				
-				$deal_info['attributes_id']=$attr_id_config;
+				$v_imgs = explode(',',$v_imgs);
+				foreach($v_imgs as $vimg)
+					$deal_info['images'][] = array('url'=>$vimg,'small_img_url'=>$vimg);
+			}else
+			{
+				$deal_info['images']=$this->db->query("select CONCAT('".IMAGES_URL."items/',r.id,'.jpg')  as url,CONCAT('".IMAGES_URL."items/small/',r.id,'.jpg')  as small_img_url from king_resources r where r.itemid=? and type=0",$deal_info['itemid'])->result_array();
 			}
+			//	$deal_info['images']=$this->db->query("SELECT IFNULL(CONCAT('".IMAGES_URL."items/',r.id,'.jpg'),v.main_image)AS url,IFNULL(CONCAT('".IMAGES_URL."items/small/',r.id,'.jpg'),v.other_images) AS small_img_url  FROM king_resources r  LEFT JOIN m_vendor_product_images v ON v.item_id=r.itemid WHERE r.itemid=?  AND TYPE=0",$deal_info['itemid'])->result_array();
+			
+			if($deal_info['is_combo'])
+				$deal_info['products']=$this->db->query("select group_concat(concat(product_name,',',qty) SEPARATOR '||') as products from m_product_deal_link a join m_product_info b on a.product_id = b.product_id where a.itemid = ? and a.is_active = 1 ",$deal_info['itemid'])->row()->products;
+			
+			$deal_info['pseller_id'] = "";
+			$deal_info['offer_note'] = "";
+			$deal_info['attributes']="";
+			$deal_info['p_attr_stk'] = "";
+			$margin_det = array();
+			$margin = 0;
+			if($fid)
+			{
+			$margin_det=$this->erpm->get_pnh_margin($fid,$pid);
+			
+			if($deal_info['is_combo'])
+				$margin=$margin_det['combo_margin'];
+			else
+				$margin=$margin_det['margin'];
+			}	
+			if($price_type==1 )
+			{
+			
+				$member_price_det=$this->erpm->get_memberprice($deal_info['item_id'],$fid,0);
+				if($member_price_det['status'] == 'success')
+				{
+					$deal_info['price_type']= $member_price_det['price_type'];
+					if($member_price_det['price_type'])
+					{
+						$deal_info['offer_note']= @$member_price_det['mp_offer_note'];
+						$deal_info['mp_frn_max_qty']=@$member_price_det['mp_frn_max_qty'];
+						$deal_info['mp_mem_max_qty']=@$member_price_det['mp_mem_max_qty'];
+						$deal_info['price']=@$member_price_det['member_price'];
+						$deal_info['max_ord_qty']=$member_price_det['max_ord_qty'];
+					}else
+					{
+						$deal_info['price']=$member_price_det['offer_price'];
+						$deal_info['max_ord_qty']=$member_price_det['max_ord_qty'];
+					}
+				}
+
+				$lcost=round($deal_info['member_price']-($deal_info['member_price']/100*$margin),2);
+			}
+			else
+			{
+				$deal_info['max_ord_qty'] = $this->erpm->get_maxordqty_pid($fid,$pid,0);
+				$deal_info['price']=$deal_info['price'];
+				$lcost=round($deal_info['price']-($deal_info['price']/100*$margin),2);
+			}
+				
+			$deal_info['landing_cost']=$lcost;
+			$avail=$this->erpm->do_stock_check(array($deal_info['item_id']),array(1),true);
+			if(count($avail))
+			{
+				//print_r($avail_det);exit;
+				if($avail[$deal_info['item_id']][0]['stk']==0 && $avail[$deal_info['item_id']][0]['status']==0)	
+					$deal_info['availability']=0;
+				else
+					$deal_info['availability']=1;
+			}
+			
+			
+			
+			if($deal_info['is_group'])
+				{
+				/*
+				$sql_q = "
+				(
+				select l.itemid,p.product_id,concat(group_concat(concat(a.attribute_name,':',v.attribute_value)),',ProductID:',p.product_id) as a
+				from m_product_group_deal_link l
+				join products_group_pids p on p.group_id=l.group_id
+				join products_group_attributes a on a.attribute_name_id=p.attribute_name_id
+				join products_group_attribute_values v on v.attribute_value_id=p.attribute_value_id
+				where l.itemid=?
+				group by p.product_id
+				)
+				union
+				(
+				select a.itemid,a.product_id,concat(group_concat(concat(attr_name,':',attr_value) order by f.id desc ),',ProductID:',a.product_id) as a
+				from m_product_deal_link a
+				join king_dealitems b on a.itemid = b.id
+				join m_product_info d on d.product_id = a.product_id
+				join m_product_attributes e on e.pid = d.product_id
+				join m_attributes f on f.id = e.attr_id
+				where b.is_group = 1 and a.itemid = ? and a.is_active = 1
+				group by a.product_id
+				)";
+				foreach($this->db->query($sql_q,array($deal_info['itemid'],$deal_info['itemid']))->result_array() as $p)
+					$deal_info['attributes']=$p['a'];
+				*/
+				
+				$sql_a = "select group_concat(concat(product_id,':',ifnull(stk,0))) as p_attr_stk,group_concat(a SEPARATOR '||') as attrs
+				from (
+				select itemid,h.product_id,a,member_price,mp_frn_max_qty,mp_mem_max_qty,ifnull(ven_stock_qty,sum(available_qty)) as stk from (
+				(
+				select l.itemid,p.product_id,concat(group_concat(concat(a.attribute_name,':',v.attribute_value)),',ProductID:',p.product_id) as a,di.member_price,di.mp_frn_max_qty,di.mp_mem_max_qty
+				from m_product_group_deal_link l
+				JOIN king_dealitems di ON di.id=l.itemid
+				join products_group_pids p on p.group_id=l.group_id
+				join products_group_attributes a on a.attribute_name_id=p.attribute_name_id
+				join products_group_attribute_values v on v.attribute_value_id=p.attribute_value_id
+				join m_product_info p1 on p1.product_id = p.product_id and p1.is_sourceable = 1
+				where l.itemid=?
+				group by p.product_id
+				)
+				union
+				(
+				select a.itemid,a.product_id,concat(group_concat(concat(attr_name,':',attr_value) order by f.id desc ),',ProductID:',a.product_id) as a,b.member_price,b.mp_frn_max_qty,b.mp_mem_max_qty
+				from m_product_deal_link a
+				join king_dealitems b on a.itemid = b.id
+				join king_deals c on c.dealid = b.dealid
+				join m_product_info d on d.product_id = a.product_id
+				join m_product_attributes e on e.pid = d.product_id
+				join m_attributes f on f.id = e.attr_id
+				where b.is_group = 1 and a.itemid = ? and a.is_active = 1 and d.is_sourceable = 1 and length(attr_value) 
+				group by a.product_id
+				)
+				) as h
+				left join m_vendor_product_link vl on vl.product_id = h.product_id
+				left join t_stock_info pstk on pstk.product_id = h.product_id
+				group by h.product_id
+				) as g
+				having attrs is not null
+				";
+				
+				$attr_res = $this->db->query($sql_a,array($deal_info['item_id'],$deal_info['item_id']));
+				if($attr_res->num_rows())
+				{
+					$deal_info['attributes'] = @$attr_res->row()->attrs;
+					$deal_info['p_attr_stk'] = @$attr_res->row()->p_attr_stk;
+				}
+				
+			}
+			
+			$deal_info['max_order_qty'] = $deal_info['max_ord_qty']; 
+			
+			$deal_info['description']=htmlspecialchars($deal_info['description']);
 			
 			return $deal_info;
 		}else{
@@ -941,6 +1874,7 @@ class Api_model extends Model
 			
 			foreach($cart_item_det as $i=>$cart)
 			{
+				/*
 				//group the attributes
 				if($cart['attributes'])
 				{
@@ -958,12 +1892,11 @@ class Api_model extends Model
 					}
 					
 					$cart_item_det[$i]['attributes']=$attr_group;
-				}
-				
+				}*/
+				 
 				//get the cart product details
-				$cart_item_det[$i]['deal_deails']=$this->get_deal($cart['pid']);
+				$cart_item_det[$i]['deal_deails']=$this->get_deal($cart['pid'],$fid);
 			}
-			
 			return $cart_item_det;
 			
 		}else{
@@ -974,27 +1907,44 @@ class Api_model extends Model
 	/**
 	 * function for get the memebers details
 	 */
-	function get_member_details($memid)
+	function get_member_details($memid=0,$mob_no=0)
 	{
-		$sql="select * from pnh_member_info where pnh_member_id=?";
+		$cond=1;
+		$param=array();
 		
-		$mem_det_res=$this->db->query($sql,$memid);
+		if($memid)
+		{
+			$cond.=" and pnh_member_id=?";
+			$param[]=$memid;
+		}
+		
+		if($mob_no)
+		{
+			$cond.=" and mobile=?";
+			$param[]=$mob_no;
+		}
+		
+		$sql="select * from pnh_member_info where $cond";
+		
+		$mem_det_res=$this->db->query($sql,$param);
 		
 		if($mem_det_res->num_rows())
 		{
 			$member_det=$mem_det_res->result_array();
+			/*
 			foreach($member_det as $i=> $m)
 			{
 				$order=$this->db->query("select count(1) as n,sum(amount) as t from king_transactions where transid in (select transid from king_orders where userid=?)",$m['user_id'])->row_array();
 				$member_det[$i]['total_orders']=$order['n'];
 				$member_det[$i]['total_ordered_amount']=$order['t'];
 			}
-			
+			*/
 			return $member_det;
 		}else{
 			return false;
 		}
 	}
+	
 	
 	/**
 	 * function to get config parameters from Database
@@ -1632,8 +2582,93 @@ class Api_model extends Model
 	
 	/**
 	 * function for get the return details
+	 * @last_modified roopashree<roopashree@storeking_in>
 	 */
-	function get_inv_returns_details($fid,$start,$limit)
+	function get_inv_returns_details($fid,$returnid)
+	{
+		$output=array("return_details"=>'',"ttl_returns"=>0);
+		$param=array($returnid,$fid);
+		
+		$sql="select c.transid,e.franchise_id,e.franchise_name,a.return_id,a.invoice_no,return_by,returned_on,
+					b.name as handled_by_name,a.status,a.order_from,d.partner_id  
+					from pnh_invoice_returns a 
+					left join king_admin b on a.handled_by = b.id 
+					join king_invoice c on c.invoice_no = a.invoice_no
+					join king_transactions d on d.transid = c.transid
+					left join pnh_m_franchise_info e on e.franchise_id = d.franchise_id
+					where 1 and a.return_id=? and e.franchise_id=?
+					order by returned_on desc";
+		
+		$return_det_res=$this->db->query($sql,$param);
+		//echo $this->db->last_query();exit;
+		if($return_det_res->num_rows())
+		{
+			$output['ttl_returns']=$return_det_res->num_rows();
+			
+		//	$sql.=" limit ?,? ";
+			
+			$return_det_res2=$this->db->query($sql,$param);
+			
+			if($return_det_res2->num_rows())
+			{
+				$return_det=$return_det_res2->result_array();
+				$output['return_details']=array();
+				foreach($return_det as $d)
+				{
+					if(!isset($output['return_details'][$d['return_id']]))
+						$output['return_details'][$d['return_id']]=array();
+					
+					$output['return_details'][$d['return_id']]['return_id']=$d['return_id'];
+					$output['return_details'][$d['return_id']]['transid']=$d['transid'];
+					$output['return_details'][$d['return_id']]['invoice_no']=$d['invoice_no'];
+					$output['return_details'][$d['return_id']]['returned_date']=format_datetime($d['returned_on']);
+					$output['return_details'][$d['return_id']]['status']=$d['status'];
+					$output['return_details'][$d['return_id']]['status_config']=$this->config->item('return_request_cond');
+					
+					//get the returned prd details
+					$sql="select a.is_packed,a.readytoship,d.franchise_id,e.franchise_name,IF(a.is_refunded=0,'No',IF(a.is_refunded=1,'Yes','na')) AS is_refunded,IF(a.is_shipped=0,'No',IF(a.is_shipped=1,'Yes','na')) AS is_shipped,IF(a.is_stocked=0,'No',IF(a.is_stocked=1,'Yes','na')) AS is_stocked,
+															a.id as return_product_id,a.return_id,a.order_id,a.product_id,
+															b.product_name,qty,a.barcode,a.imei_no,IF(condition_type=1,'Good condition',IF(condition_type=2,'Duplicate product',IF(condition_type=3,'UnOrdered Product',IF(condition_type=4,'Late Shipment',IF(condition_type=6,'Faulty and needs service','na'))))) AS condition_type,
+															IF(a.status=0,'pending',IF(a.status=1,'updated',IF(a.status=2,'closed','na'))) AS status,transit_mode,courier,awb,emp_phno,emp_name,logged_by 
+															from pnh_invoice_returns_product_link a
+															join pnh_invoice_returns f on f.return_id = a.return_id  
+															join m_product_info b on a.product_id = b.product_id 
+															join king_invoice c on c.invoice_no = f.invoice_no
+															join king_transactions d on d.transid = c.transid
+															LEFT JOIN pnh_t_returns_transit_log t ON t.return_id=a.return_id
+															left join pnh_m_franchise_info e on e.franchise_id = d.franchise_id  
+															where a.return_id = ?
+															group by a.id";
+					
+					$return_remarks_update_res=$this->db->query("SELECT IF(product_status=0,'Pending',IF(product_status=1,'Out for Service',IF(product_status=2,'Move to Warehouse Stock',IF(product_status=3,'Ready to ship',IF(product_status=4,' Return From Service','na'))))) AS product_status,
+																	p.return_id,DATE_FORMAT(r.created_on,'%d/%m/%Y %h:%i %p') AS created_on,r.remarks,transit_mode,courier,awb,emp_phno,emp_name,logged_by,IF(p.is_refunded=0,'No',IF(p.is_refunded=1,'Yes','na')) AS is_refunded,IF(p.is_shipped=0,'No',IF(p.is_shipped=1,'Yes','na')) AS is_shipped,
+																	IF(p.is_stocked=0,'No',IF(p.is_stocked=1,'Yes','na')) AS is_stocked
+																	FROM  pnh_invoice_returns_remarks r
+																	JOIN pnh_invoice_returns_product_link p ON p.id=r.return_prod_id
+																	LEFT JOIN pnh_t_returns_transit_log t ON t.return_id=p.return_id
+																	WHERE p.return_id=?
+																	ORDER BY r.created_on desc",$d['return_id']);
+					
+					$output['return_details'][$d['return_id']]['return_remarks_update_res']=$return_remarks_update_res->result_array();
+						//
+			//		$sql.=" limit $start,$limit";
+					$output['return_details'][$d['return_id']]['products']=$this->db->query($sql,$d['return_id'])->result_array();
+					//echo $this->db->last_query();exit;
+					$output['return_details'][$d['return_id']]['prd_status_config']=$this->config->item('return_process_cond');
+					
+				}
+			}
+			
+		}
+		
+		return $output;
+		
+	}
+	
+	/**
+	 * function for get the return details
+	 */
+	function get_pnh_invreturns($fid,$start,$limit)
 	{
 		$output=array("return_details"=>'',"ttl_returns"=>0);
 		$param=array($fid,$start*1,$limit*1);
@@ -1641,12 +2676,12 @@ class Api_model extends Model
 		$sql="select c.transid,e.franchise_id,e.franchise_name,a.return_id,a.invoice_no,return_by,returned_on,
 					b.name as handled_by_name,a.status,a.order_from,d.partner_id  
 					from pnh_invoice_returns a 
-					join king_admin b on a.handled_by = b.id 
+					left join king_admin b on a.handled_by = b.id 
 					join king_invoice c on c.invoice_no = a.invoice_no
 					join king_transactions d on d.transid = c.transid
 					left join pnh_m_franchise_info e on e.franchise_id = d.franchise_id
-					where 1 and e.franchise_id=? 
-					order by returned_on desc";
+					where 1 and e.franchise_id=? group by a.return_id
+					order by a.return_id desc";
 		
 		$return_det_res=$this->db->query($sql,$param);
 		
@@ -1693,7 +2728,6 @@ class Api_model extends Model
 			}
 			
 		}
-		
 		return $output;
 		
 	}
@@ -1727,90 +2761,302 @@ class Api_model extends Model
 	}
 	
 	/**
-	 * function for get the updated deals
+	 * function to get total update for catgory and menu
+	 * @last_modified by roopashree<roopashree@storeking.in>
 	 */
-	function get_updated_deals($versions=array())
+	function get_ttlupdate_catmenu($versions=array(),$update_flag=0)
 	{
 		$output=array();
 		$version_ids=array();
-		
 		if($versions)
 		{
 			$latest_vesrion_det=end($versions);
 			$version_detatils=array("version"=>'',"created_on"=>'',"latest_version"=>'',"products"=>'');
-			
+			$updates=array();
+
 			foreach($versions as $v)
 				array_push($version_ids,$v['id']);
+
+			$version_detatils["latest_version"]=$latest_vesrion_det['version'];
+			$version_detatils["created_on"]=$latest_vesrion_det["created_on"];
+			$cond = '';
+			
+			if($update_flag==2)
+				$cond.=' and is_publish = 0 ';
+			else
+				$cond.=' and i.price != h.price ';
+
+			$menu_cat_res=$this->db->query("
+											select is_publish,menuid,m.name as menu_name,catid,h.mrp,h.price,c.name as cat_name,count(*) as ttl 
+												from (
+															select *,max(new_stat) as is_new 
+																from 
+																(
+														select b.id,a.version,b.item_id,b.mrp,b.price,b.is_publish,b.is_new as new_stat
+															from m_apk_version a
+															join m_apk_version_deal_link b on a.id=b.version_id
+															where b.version_id in (".implode(",",$version_ids).") 						
+															order by b.id desc
+														) as g
+														group by g.item_id,g.id
+												) as h 
+											JOIN king_dealitems i ON i.id=h.item_id
+											JOIN king_deals d ON d.dealid=i.dealid
+											join pnh_menu m on m.id = d.menuid
+											join king_categories c on c.id = d.catid
+											where 1 $cond 
+											group by menuid,catid 
+											order by menu_name,cat_name
+										") or die(mysql_error());
+			$menu_cat_list = array();
+			if($menu_cat_res->num_rows())
+			{
+				foreach ($menu_cat_res->result_array() as $mc_det)
+				{
+					$mc_mid = $mc_det['menuid'];
+					$mc_cid = $mc_det['catid'];
+					if(!isset($menu_cat_list[$mc_mid]))
+						$menu_cat_list[$mc_mid] = array('id'=>$mc_det['menuid'],'name'=>$mc_det['menu_name'],'total'=>0,'cat_list'=>array());
+					
+					$menu_cat_list[$mc_mid]['total']+=$mc_det['ttl'];
+					
+					if(!isset($menu_cat_list[$mc_mid]['cat_list'][$mc_cid]))
+						$menu_cat_list[$mc_mid]['cat_list'][$mc_cid] = array('id'=>$mc_det['catid'],'name'=>$mc_det['cat_name'],'total'=>$mc_det['ttl']);
+					
+				}
+			}
+			
+			$output['mc'] = $menu_cat_list;
+			
+			/* 
+			det => menu - id - 100 
+			            - name - beauty
+			            - total - 30 
+			            - cat - 1 - id 
+			            		1 - name
+			            		1 - total  */
+			            		
+			
 			/*
-			$sql="select * from ( 
-									select b.id,a.version,b.item_id,b.mrp,b.price,b.is_publish,b.is_new 
-											from m_apk_version a
-											join m_apk_version_deal_link b on a.id=b.version_id
-											where b.version_id in (".implode(",",$version_ids).")
-									order by b.id desc 
-								) as g
-								group by g.item_id ";
+
+			$menu_det=$this->db->query("select *,max(new_stat) as is_new from (
+					select b.id,a.version,b.item_id,b.mrp,b.price,b.is_publish,b.is_new as new_stat,d.catid,d.menuid,m.name as menuname
+					from m_apk_version a
+					join m_apk_version_deal_link b on a.id=b.version_id
+					JOIN king_dealitems i ON i.id=b.item_id
+					JOIN king_deals d ON d.dealid=i.dealid
+					join pnh_menu m on m.id=d.menuid
+					where b.version_id in (".implode(",",$version_ids).")
+					order by b.id desc
+			) as g
+					group by menuid
+					order by id asc");
+
+			if($menu_det)
+			{
+				foreach ($menu_det->result_array() as $m)
+				{
+					$catres=$this->db->query("select catid,c.name as catname from king_deals d join king_categories c on c.id=d.catid where menuid=?",$m['menuid']);
+					if($catres->num_rows())
+					{
+						foreach($catres->result_array() as $c)
+						{
+							if(!isset($updates[$m['menuid']][$m['menuname']][$c['catid']]))
+							{
+								$cat_id=$c['catid'];
+								$menu_id=$m['menuid'];
+								$sql="select *,max(new_stat) as is_new from (
+										select b.id,a.version,b.item_id,b.mrp,b.price,b.is_publish,b.is_new as new_stat,d.catid,d.menuid
+										from m_apk_version a
+										join m_apk_version_deal_link b on a.id=b.version_id
+										JOIN king_dealitems i ON i.id=b.item_id
+										JOIN king_deals d ON d.dealid=i.dealid
+										where b.version_id in (".implode(",",$version_ids).") and d.catid=? and d.menuid=?
+												order by b.id desc
+												) as g
+												group by g.item_id,g.id
+												order by id asc";
+
+								$deals_res=$this->db->query($sql,array($cat_id,$menu_id));
+									
+								$ttl_updates=$deals_res->num_rows();
+									
+								if($ttl_updates)
+								{
+									$updates[$m['menuid']][$m['menuname']][$c['catid']]=array();
+								$updates[$m['menuid']][$m['menuname']][$c['catid']]=array("catid"=>$c['catid'],"catname"=>$c['catname'],"updates"=>$ttl_updates);
+							}
+
+						}
+
+					}
+					}
+				}
+			}
+			
 			*/
 
-			$sql="select *,max(new_stat) as is_new from (
-						select b.id,a.version,b.item_id,b.mrp,b.price,b.is_publish,b.is_new as new_stat
-								from m_apk_version a
-								join m_apk_version_deal_link b on a.id=b.version_id
-								where b.version_id in (".implode(",",$version_ids).") 
-						order by b.id desc 
-					) as g
-					group by g.item_id,g.id
-					order by id asc";
+		}
 
-								
+		return $output;
+	}
+
+	/**
+	 * function to get updated deal 
+	 * @param unknown_type $versions
+	 * @param unknown_type $menuid
+	 * @param unknown_type $catid
+	 * @param unknown_type $brandid
+	 * @param unknown_type $update_flag
+	 * @author roopashree<roopashree@storeking.in>
+	 */
+	function get_updated_deals($versions=array(),$menuid,$catid,$brandid,$update_flag,$fid)
+	{
+		 
+		$output=array();
+		$version_ids=array();
+		$param='';
+		$cond='';
+		$select_cond='';
+		if($menuid!=0)
+			$param.="and menuid=$menuid";
+		if($catid!=0)
+			$param.=" and catid in ($catid)";
+		if($brandid!=0)
+			$param.=" and brandid in ($brandid)";
+		
+		if($update_flag==1)
+			$cond.=' and price != pprice  ';
+		if($update_flag==3)
+			$cond.=' and is_new=1';
+		if($update_flag==2)
+			$cond.=' and is_publish = 0 ';
+		if($update_flag==3)
+			$cond.=' and is_new=1';
+		
+		$price_type=$this->erpm->get_fran_pricetype($fid);
+	//	echo $this->db->last_query();exit;
+		if($price_type==1)
+			$select_cond='b.member_price';
+		else
+			$select_cond='b.price';
+		if($versions)
+		{
+			$latest_vesrion_det=end($versions);
+			$version_detatils=array("version"=>'',"created_on"=>'',"latest_version"=>'',"products"=>'');
+			$updates=array();
+		
+			foreach($versions as $v)
+				array_push($version_ids,$v['id']);
 			
-			$deals_res=$this->db->query($sql);
+			$sql="SELECT *,MAX(new_stat) AS is_new FROM (
+					SELECT l.id,k.version,l.item_id,l.mrp,l.price,l.is_publish,l.is_new AS new_stat,b.pnh_id AS pid,menuid AS pmenu_id,e.name AS pmenu,b.name AS pname,catid AS pcat_id,c.name AS pcat,
+					cp.id AS parent_cat_id,cp.name AS parent_cat,brandid AS pbrand_id,d.name AS pbrand,
+					b.orgprice AS pmrp,$select_cond AS pprice,publish AS is_sourceable,
+					b.gender_attr,b.url,b.is_combo,a.description AS pdesc,a.keywords AS kwds,
+					a.pic AS pimg,menuid AS pimg_path,b.shipsin AS shipin
+					FROM m_apk_version k
+					JOIN m_apk_version_deal_link l ON k.id=l.version_id
+					JOIN king_dealitems b ON b.id = l.item_id
+					JOIN king_deals a ON a.dealid=b.dealid
+					JOIN king_categories c ON c.id = a.catid
+					LEFT JOIN king_categories cp ON cp.id = c.type
+					JOIN king_brands d ON d.id = a.brandid
+					JOIN pnh_menu e ON e.id = a.menuid
+					WHERE l.version_id IN (".implode(",",$version_ids).") $param 
+					ORDER BY l.id DESC
+					) AS g
+					where 1 $cond 
+					GROUP BY g.item_id,g.id
+					ORDER BY id ASC";
 			
-			if($deals_res->num_rows())
+			$updated_deals_res=$this->db->query($sql);
+				
+			if($updated_deals_res)
 			{
-				$version_detatils["latest_version"]=$latest_vesrion_det['version'];
-				$version_detatils["created_on"]=$latest_vesrion_det["created_on"];
+				$version_detatils['ttl_updated_deals']=$updated_deals_res->num_rows();
+				$version_detatils['updated_deals']=$updated_deals_res->result_array();
 				
 				$deal_list = array();
-				foreach($deals_res->result_array() as $row)
+				foreach($updated_deals_res->result_array() as $i=>$row)
 				{
 					$tmp = array();
 					$tmp = $row;
-					
+
 					// if deal is new then fetch deal name,mp,price,status,image,cat,parent,parent_linked_cats
-					if($tmp['is_new'])
+					//if($tmp['is_new'])
+					if(1)
 					{
 						$res_d = $this->db->query("select b.id as item_id,b.pnh_id as pid,menuid as pmenu_id,e.name as pmenu,b.name as pname,catid as pcat_id,c.name as pcat,
-															cp.id as parent_cat_id,cp.name as parent_cat,brandid as pbrand_id,d.name as pbrand,
-															b.orgprice as pmrp,b.price as pprice,publish as is_sourceable,
-															b.gender_attr,b.url,b.is_combo,a.description as pdesc,a.keywords as kwds,
-															a.pic as pimg,a.pic as pimages,menuid as pimg_path,'' as attributes,
-															b.shipsin as shipin
-														from king_deals a
-														join king_dealitems b on a.dealid = b.dealid 
-														join king_categories c on c.id = a.catid 
-														left join king_categories cp on cp.id = c.type
-														join king_brands d on d.id = a.brandid 
-														join pnh_menu e on e.id = a.menuid 
-														where b.id = ? and b.pnh_id != 0   ",$row['item_id']);
+													cp.id as parent_cat_id,cp.name as parent_cat,brandid as pbrand_id,d.name as pbrand,
+													b.orgprice as pmrp,$select_cond AS pprice,publish as is_sourceable,
+													b.gender_attr,b.url,b.is_combo,a.description as pdesc,a.keywords as kwds,
+													a.pic as pimg,menuid as pimg_path,b.shipsin as shipin
+													from king_deals a
+													join king_dealitems b on a.dealid = b.dealid
+													join king_categories c on c.id = a.catid
+													left join king_categories cp on cp.id = c.type
+													join king_brands d on d.id = a.brandid
+													join pnh_menu e on e.id = a.menuid
+														where b.id = ? and b.pnh_id != 0 
+													",$row['item_id']);
 						if($res_d->num_rows())
 						{
 							$row_d = $res_d->row_array();
 							
+							
 							foreach($row_d as $k1=>$v1)
 								$tmp[$k1] = htmlspecialchars($v1);
-							 
+
+							$tmp['pimages'] = @$this->db->query("select group_concat(distinct id) as images from king_resources where itemid = ? order by id desc",$row['item_id'])->row()->images;
+							$tmp['attributes'] = "";
+							// get deal attributes if available
+
+							$sql_a = "select group_concat(a SEPARATOR '||') as attrs
+									from (
+									(
+									select l.itemid,p.product_id,concat(group_concat(concat(a.attribute_name,':',v.attribute_value)),',ProductID:',p.product_id) as a
+									from m_product_group_deal_link l
+									join products_group_pids p on p.group_id=l.group_id
+									join products_group_attributes a on a.attribute_name_id=p.attribute_name_id
+									join products_group_attribute_values v on v.attribute_value_id=p.attribute_value_id
+									where l.itemid=?
+									group by p.product_id
+									)
+									union
+									(
+									select a.itemid,a.product_id,concat(group_concat(concat(attr_name,':',attr_value) order by f.id desc ),',ProductID:',a.product_id) as a
+									from m_product_deal_link a
+									join king_dealitems b on a.itemid = b.id
+									join king_deals c on c.dealid = b.dealid
+									join m_product_info d on d.product_id = a.product_id
+									join m_product_attributes e on e.pid = d.product_id
+									join m_attributes f on f.id = e.attr_id
+									where b.is_group = 1 and a.itemid = ? and a.is_active = 1
+									group by a.product_id
+									)
+									) as g ";
+							$attr_res = $this->db->query($sql_a,array($row['item_id'],$row['item_id']));
+							if($attr_res->num_rows())
+							{
+								$tmp['attributes'] = @$attr_res->row()->attrs;
+							}
+
+							$tmp['attributes'] = (is_null($tmp['attributes'])?'':$tmp['attributes']);
+							$tmp['parent_cat_id'] = $tmp['parent_cat_id']*1;
+							$tmp['parent_cat'] = (String)$tmp['parent_cat'];
 						}
 					}
 					$deal_list[] = $tmp;
 				}
-								
+				
+				$this->db->query("insert into m_apk_version_update_log(franchise_id,menu_id,brand_id,cat_id,updated_version,updated_on)values(?,?,?,?,?,now())",array($fid,$menuid,$brandid,$catid,$latest_vesrion_det['version']));
 				$version_detatils["products"]=$deal_list;
-				array_push($output,$version_detatils);
+				
 			}
+			array_push($output,$version_detatils);
 		}
-		
-		return $output;
+		return($version_detatils);
 	}
 
 
@@ -1866,7 +3112,7 @@ class Api_model extends Model
 
 
 	}
-
+	
 	function get_menudet($mid)
 	{
 		return $this->db->query("select * from pnh_menu where id=?",$mid)->row_array();
@@ -1877,6 +3123,1189 @@ class Api_model extends Model
 	{
 		return $this->db->query("select * from king_categories a join king_deals b on b.catid=a.id where a.id=?",$mid)->row_array();
 	}
-} 
+	
+	/**
+	 * function to check if member is already registered 
+	 * @param unknown_type $m
+	 * @return boolean
+	 */
+	function is_mem_reg($m)
+	{
+		$m_res = $this->db->query("select pnh_member_id from pnh_member_info where (pnh_member_id = ? or mobile = ?) ",array($m,$m));
+		if($m_res->num_rows())
+			return $m_res->row()->pnh_member_id;
+		return false;
+	}
+	
+	/**
+	 * fucntion to get total orders placed by member 
+	 * @param unknown_type $mid
+	 */
+	function get_memberorders_ttl($mid)
+	{
+		return $this->db->query("select count(distinct transid) as t from king_orders a join pnh_member_info b on a.userid = b.user_id where b.pnh_member_id = ? ",array($mid))->row()->t;
+	}
+	
+	/**
+	 * Function to update old password with new password & send sms to franchise
+	 * @param type $rnd_key string
+	 * @param type $user_id string
+	 * @author Shivaraj <shivaraj@storeking.in>
+	 * @return boolean true/false
+	 */
+	function update_password($user_id)
+	{
+		$rnd_key = random_num(7);  //lcfirst(random_alpha(1)).
+		if($this->_chk_pwd_exists($rnd_key,$user_id))
+		{
+			$this->update_password($user_id);
+		}
+		else
+		{
+			$this->db->query("UPDATE `pnh_users` SET `password` = MD5(?) WHERE `user_id` = ?",array($rnd_key,$user_id));
+
+			if( $this->db->affected_rows() ){
+				$sql="SELECT f.franchise_id,f.pnh_franchise_id,f.franchise_name,f.login_mobile1,f.address,f.city,f.postcode,f.state,u.user_id
+						FROM pnh_m_franchise_info f 
+						JOIN pnh_users u ON u.reference_id=f.franchise_id
+						WHERE u.user_id=?";
+				$fran_det_res=$this->db->query($sql,array($user_id));
+				$fran_det = $fran_det_res->row_array();
+				
+				$sms_txt="Dear {$fran_det['franchise_name']}, As per your request new password {$rnd_key} has been generated. You can now log in with this password  -Storeking Team";
+				$this->resource_model->sendsms($fran_det['login_mobile1'],$sms_txt,$fran_det['franchise_id'],0,"FORGOT_PWD");
+				
+				$output['status'] = TRUE;
+				$output['msg']="Password has been generated and sent your registered mobile number -Storeking";
+			}
+			else {
+				$output['status'] = FALSE;
+				$output['msg'] = 'Unable to reset your password, please contact our customer care executive.';
+			}
+			return $output;
+		}
+	}
+	
+	/**
+	 * function to get similar products of all brands and DP price range
+	 * @param unknown_type $pid
+	 */
+	function get_similar_products($itemid,$start,$end)
+	{
+		$output=array('similar_products'=>array(),'error'=>'');
+		
+		$sql="SELECT i.id AS itemid,i.orgprice,i.price,IF((i.price BETWEEN (p1.price-(p1.price*10/100)) AND (p1.price+(p1.price*10/100))),10,25) AS perc,d.catid,i.name,pnh_id,i.id AS itemid,c.name as cat_name,b.name as brand_name,d.brandid,
+				pnh_id AS pid,i.gender_attr,mc.name AS main_category,
+				c.type AS main_category_id,i.orgprice AS mrp,i.price AS price,i.store_price,
+				i.is_combo, CONCAT('".IMAGES_URL."items/',d.pic,'.jpg') AS image_url,CONCAT('".IMAGES_URL."items/small/',d.pic,'.jpg') AS small_image_url,i.shipsin AS ships_in,d.keywords 
+									FROM king_dealitems i 
+									JOIN king_deals d ON d.dealid=i.dealid 
+									JOIN king_categories c ON c.id=d.catid 
+									JOIN king_brands b ON b.id=d.brandid 
+									LEFT OUTER JOIN king_categories mc ON mc.id=c.type 
+									JOIN (
+										SELECT d.catid,i.price
+											FROM king_dealitems i 
+											JOIN king_deals d ON d.dealid=i.dealid 
+											JOIN king_categories c ON c.id=d.catid 
+											WHERE i.id = ? AND d.publish=1
+									) AS p1 ON p1.catid = c.id 
+									AND ( (i.price BETWEEN (p1.price-(p1.price*10/100)) AND (p1.price+(p1.price*10/100))) OR (i.price BETWEEN (p1.price-(p1.price*25/100)) AND (p1.price+(p1.price*25/100))))
+									where publish = 1  AND pnh_id!=0 
+									GROUP BY i.pnh_id 
+									ORDER BY i.price ASC
+									Limit $start,$end";
+		$similar_prod_res=$this->db->query($sql,$itemid);
+		
+		if($similar_prod_res->num_rows())
+		{
+			$output['similar_products']=$similar_prod_res->result_array();
+			return $output;
+		}
+		else
+		{ 
+			return $output['error']='1';
+		}
+	}
+	
+	/**
+	 * function to get popular products for selected menu,category,brand
+	 * @param unknown_type $fid
+	 * @param unknown_type $menuid
+	 * @param unknown_type $catid
+	 * @param unknown_type $brandid
+	 * @return multitype:unknown |string
+	 * @author Roopa <roopashree@storeking.in>
+	 */
+	function get_popular_products($menuid,$catid,$brandid,$start,$limit,$publish,$fid)
+	{
+		
+		$output=array();
+		
+		$cond=$publish_cond='';
+		
+		if($publish==0)
+			$publish_cond='';
+		else if($publish==1)
+			$publish_cond=' and d.publish=1';
+		else if($publish==2)
+			$publish_cond=' and d.publish=0';
+			
+		if($catid)
+			$cond.=" and d.catid=".$catid;
+		
+		if($brandid)
+			$cond.=" and d.brandid in ($brandid)";
+		
+		if($menuid)
+			$cond.=" and d.menuid=".$menuid;
+		
+		if(!$start)
+			$start=0;
+		
+		if(!$limit)
+			$limit=5;
+		
+		$sql="SELECT count(*) as ttl
+				FROM king_orders o
+				JOIN king_dealitems i ON i.id=o.itemid
+				JOIN king_deals d ON d.dealid=i.dealid
+				JOIN king_categories c ON c.id=d.catid
+				left outer join king_categories mc on mc.id=c.type 
+				join king_brands b on b.id=d.brandid
+				JOIN pnh_menu m ON m.id=d.menuid
+				JOIN king_transactions t ON t.transid=o.transid
+				WHERE 1 $cond AND o.status!=3  $publish_cond
+				GROUP BY itemid ";
+		
+		$popular_prod_det=$this->db->query($sql);
+		//echo $this->db->last_query();exit;
+		if($popular_prod_det->num_rows())
+		{
+			$output['total_deals']=$popular_prod_det->num_rows();
+			
+			
+			$sql="SELECT o.itemid,m.id AS menuid,m.name AS menuname,o.brandid,b.name as brandname,d.catid,c.name as catname,i.name,i.orgprice,i.price,SUM(o.quantity) AS sold_qty,
+				pnh_id as pid,i.gender_attr,mc.name as main_category,
+				c.type as main_category_id,i.orgprice as mrp,i.price as price,i.store_price,
+				i.is_combo, concat('".IMAGES_URL."items/',d.pic,'.jpg') as image_url,concat('".IMAGES_URL."items/small/',d.pic,'.jpg') as small_image_url,i.shipsin as ships_in,d.keywords,i.member_price 
+				FROM king_orders o
+				JOIN king_dealitems i ON i.id=o.itemid
+				JOIN king_deals d ON d.dealid=i.dealid
+				JOIN king_categories c ON c.id=d.catid
+				left outer join king_categories mc on mc.id=c.type 
+				join king_brands b on b.id=d.brandid
+				JOIN pnh_menu m ON m.id=d.menuid
+				JOIN king_transactions t ON t.transid=o.transid
+				WHERE 1 $cond AND o.status!=3 $publish_cond
+				GROUP BY itemid
+				ORDER BY sold_qty DESC ";
+			$sql.=" limit $start,$limit";
+			$popular_prod_res=$this->db->query($sql)->result_array();
+			foreach($popular_prod_res as $i=>$d)
+			{
+				$margin_det=$this->erpm->get_pnh_margin($fid,$d['pid']);
+					
+				if($d['is_combo'])
+					$margin=$margin_det['combo_margin'];
+				else
+					$margin=$margin_det['margin'];
+			
+				$price_type=$this->erpm->get_fran_pricetype($fid);
+				if($price_type==0)
+					$lcost=round($d['price']-($d['price']/100*$margin),2);
+				else
+					$lcost=round($d['member_price']-($d['member_price']/100*$margin),2);
+				
+				$popular_prod_res[$i]['landing_cost']=$lcost;
+				
+				
+				
+			}
+			$output['status']='success';
+			$output['popular_prod_res']=$popular_prod_res;
+			return $output; 
+		}
+		else 
+		{
+			$output['error']='1';
+			$output['message']='No records found';
+			return $output;
+		}
+	}
+	
+	/**
+	 * Function to check new password is same as old password
+	 * @author Shivaraj <shivaraj@storeking.in>
+	 * @param type $rnd_key random password
+	 * @param type $user_id string
+	 * @return boolean 
+	 */
+	function _chk_pwd_exists($rnd_key,$user_id)
+	{
+		// if rand key is already used by him
+		// redirect to same function
+		$user_det = $this->db->query("SELECT * FROM pnh_users WHERE `password`=MD5(?) AND user_id=?",array($rnd_key,$user_id));
+		if($user_det->num_rows() > 0)
+			return TRUE;
+		else
+			return false;
+	}
+	
+	/**
+	 * Function to get the franchise basic details
+	 * @author Shivaraj <shivaraj@storeking.in>
+	 * @param unknown_type $user_id
+	 * @param type $username string
+	 @return boolean array/false
+	 */
+	function do_get_franchise_details($fid,$username)
+	{
+		$sql="select a.franchise_id,a.pnh_franchise_id,a.franchise_name,a.login_mobile1,a.login_mobile2,a.address,a.locality,a.city,a.postcode,a.state,a.credit_limit,
+				t.town_name,tt.territory_name,is_prepaid
+					from pnh_m_franchise_info a 
+					join pnh_users b on b.reference_id=a.franchise_id
+					join pnh_towns as t on t.id=a.town_id
+					join pnh_m_territory_info tt on tt.id=a.territory_id
+					where a.franchise_id=? or a.login_mobile1 = ?";
+		
+		$franchise_det_res=$this->db->query($sql,array($fid,$username));
+		
+		if($franchise_det_res->num_rows())
+		{
+			return $franchise_det_res->row_array();	
+		
+		}else{
+			return false;
+		}
+	}
+	
+	/**
+	 * Function to return franchise contact person details
+	 * @author Shivaraj <shivaraj@storeking.in>
+	 * @return string
+	 */
+	function get_contact_person($franchise_id)
+	{
+		$contact_det_res = $this->db->query("SELECT GROUP_CONCAT(DISTINCT contact_name) AS contact_names FROM pnh_m_franchise_contacts_info WHERE franchise_id=? GROUP BY franchise_id",array($franchise_id));
+		if($contact_det_res->num_rows()) {
+			$contact_det = $contact_det_res->row_array();
+			return trim($contact_det['contact_names'],',');
+		}
+		else{
+			return '';
+		}
+	}
+
+	/**
+	 * Function to return detailed status of a invoice
+	 * @author Shivaraj <shivaraj@storeking.in>
+	 * @param type $invoice_no bigint
+	 * @return string|boolean
+	 */
+	function get_transit_status($invoice_no)
+	{
+		$inv_transit_log_res = $this->db->query("select a.id,a.ref_id,a.sent_log_id,a.invoice_no,a.logged_on,a.status,if(ref_id,b.name,d.name) as hndleby_name,
+													if(ref_id,b.contact_no,d.contact_no) as hndleby_contactno,c.id as manifesto_id,c.hndleby_empid,c.bus_id,c.bus_destination,
+													c.office_pickup_empid,c.pickup_empid,b.job_title2,c.hndlby_type,c.hndleby_courier_id,a.logged_by,c.alternative_contactno,a.received_on
+														from pnh_invoice_transit_log a
+														left join m_employee_info b on a.ref_id = b.employee_id
+														join pnh_m_manifesto_sent_log c on c.id = a.sent_log_id
+														left join pnh_transporter_info d on d.id=c.bus_id
+														where invoice_no = ?
+														order by a.id desc ",$invoice_no);
+		if($inv_transit_log_res->num_rows())
+		{
+			$inv_transit_log = $inv_transit_log_res->row_array();
+
+			if($inv_transit_log['status'] <= 2)
+			{
+				$inv_last_status = 'In Transit';
+			}else if($inv_transit_log['status'] == 3)
+			{
+				$inv_last_status = 'Delivered'; 
+			}else if($inv_transit_log['status'] == 4)
+			{
+				$inv_last_status = 'Marked for Return'; 
+			} else if ($inv_transit_log['status'] == 5)
+			{
+				$inv_last_status = 'Picked';
+			}
+			
+			
+			//========
+			$inv['inv_last_status'] = $inv_last_status;
+			$inv['last_updated_on'] = format_datetime($inv_transit_log['logged_on']);
+			$inv_last_updated_by = $inv_transit_log['hndleby_name'];
+			$contact_no = $inv_transit_log['hndleby_contactno'];
+
+			$franchise_details=$this->db->query("select a.invoice_no,d.franchise_name,e.town_name from shipment_batch_process_invoice_link a 
+														join king_invoice b on b.invoice_no=a.invoice_no 
+														join king_transactions c on c.transid=b.transid
+														join pnh_m_franchise_info d on d.franchise_id=c.franchise_id
+														join pnh_towns e on e.id = d.town_id
+													where a.invoice_no=? group by a.invoice_no",$invoice_no)->row_array();
+
+
+
+
+			$inv['Franchise_name']=$franchise_details['franchise_name'];
+			$inv['town_name']=$franchise_details['town_name'];
+			$inv['manifesto_id']=$inv_transit_log['sent_log_id'];
+
+			// EXTRA INFO
+			$alternative_number='';
+			if($inv_transit_log['alternative_contactno'])
+				$inv['alternative_number'] = $inv_transit_log['alternative_contactno'];
+
+			//transport type manage
+			if($inv_transit_log['hndlby_type']==4)
+			{
+				$courier_det=$this->db->query("select * from m_courier_info where courier_id=?",$inv_transit_log['hndleby_courier_id'])->row_array();
+				$inv_last_updated_by = $courier_det['courier_name'];
+				$contact_no = '';
+				if(isset($courier_det['contact_no']))
+					$contact_no=$courier_det['contact_no'];
+			}
+			else if(($inv_transit_log['hndlby_type']==1 || $inv_transit_log['hndlby_type']==2) && $inv_last_updated_by=='')
+			{
+				$emp_det=$this->db->query("select * from m_employee_info where employee_id=?",$inv_transit_log['hndleby_empid'])->row_array();
+				$inv_last_updated_by=$emp_det['name'];
+				$contact_no=$emp_det['contact_no'];
+			}
+			$inv['last_updated_by'] = $inv_last_updated_by;
+			$inv['contact_no'] = $contact_no;
+
+
+			$from_det='';
+			$log_msg='';
+			$sms='';
+			//track message manage
+			if($inv_transit_log['status'] <= 1)
+			{
+				$inv_last_status = 'In Transit';
+
+				//if it is transportaion msg
+				if($inv_transit_log['bus_id'])
+				{
+					//get the bus_details
+					$bus_details=$this->db->query("select b.name as bus_name,b.contact_no,a.short_name,a.contact_no as ds_contact_no,a.type from pnh_transporter_dest_address a
+												join pnh_transporter_info b on b.id=a.transpoter_id
+												where a.id=?",$inv_transit_log['bus_destination'])->row_array();
+
+					//get the office pick up details
+					$office_pickiup_det=$this->db->query("select * from m_employee_info where employee_id=?",$inv_transit_log['office_pickup_empid'])->row_array();
+
+					//get the destinaton pick up
+					$destination_pickiup_det=$this->db->query("select * from m_employee_info where employee_id=?",$inv_transit_log['pickup_empid'])->row_array();
+
+					$type='';
+					if($bus_details['type']==1)
+						$type='Bus transport';
+					else if($bus_details['type']==2)
+						$type='Cargo transport';
+					else if($bus_details['type']==3)
+						$type='General package transport';
+
+					$transport_name=$bus_details['bus_name'].' '.$type.' ('.$bus_details['contact_no'].')';
+					$destination_name=$bus_details['short_name'].' ('.$bus_details['ds_contact_no'].')';
+
+					if(!$office_pickiup_det)
+					{
+						$office_pickiup_det=$this->db->query("select b.* from pnh_m_manifesto_sent_log a join king_admin b on b.id=a.modified_by where a.id=?",$inv_transit_log['manifesto_id'])->row_array();
+						$log_msg="<b>Shipment Sent via : </b>".$transport_name." to ".$destination_name."<br>"."<b>by : </b>".$office_pickiup_det['name']."(".$office_pickiup_det['phone'].")<br> <b>To be collected by @ destination :</b>".$destination_pickiup_det['name'].'('.$destination_pickiup_det['contact_no'].')';
+					}else{
+
+						$log_msg="<b>Shipment Sent via :</b>  ".$transport_name." to ".$destination_name."<br>"."<b>office pickup by : </b>".$office_pickiup_det['name']."(".$office_pickiup_det['contact_no'].")<br> <b>To be collected by @ destination :</b>".$destination_pickiup_det['name'].'('.$destination_pickiup_det['contact_no'].')';
+					}
+
+				}else if($inv_transit_log['hndleby_empid'])
+				{
+					//get the office pick up details
+					$driver_det=$this->db->query("select * from m_employee_info where employee_id=?",$inv_transit_log['hndleby_empid'])->row_array();
+
+					$type=($driver_det['job_title2']==7)?'Driver ':'Fright Co-oridnator ';
+					$driver_name=$type."<b>".$driver_det['name'].'('.$driver_det['contact_no'].')</b>';
+
+					$log_msg="<b>Shipment Sent via : </b>".$driver_name." to "."<b>".$franchise_details['town_name']."</b>";
+
+				}else if($inv_transit_log['hndlby_type']==4)
+				{
+					$log_msg="<b>Shipment Sent via Courier : </b>".$courier_det['courier_name']." to "."<b>".$franchise_details['town_name']."</b>";
+					$inv_last_updated_by = $courier_det['courier_name'];
+					$contact_no = '';
+			}
+			}
+			
+			if($inv_transit_log['status'] == 2 || $inv_transit_log['status'] == 5  )
+			{
+				if($inv_transit_log['status']==2)
+					$inv_last_status = 'Handed over';
+				else
+					$inv_last_status='Picked';
+
+				if($inv_transit_log['hndleby_empid'])
+				{
+					if($inv_transit_log['hndleby_empid']!=$inv_transit_log['ref_id'])
+					{
+						//get the sms 
+						$last_ref_id='';
+						$last_ref_id=$this->db->query("select * from pnh_invoice_transit_log where status=2 and ref_id!=? and invoice_no=? and id < ? order by logged_on desc limit 1",array($inv_transit_log['ref_id'],$invoice_no,$inv_transit_log['id']))->row_array();
+
+						if(!$last_ref_id)
+						{
+							$last_ref_id=$this->db->query("select * from pnh_invoice_transit_log where status=1 and ref_id=? and invoice_no=? order by logged_on desc limit 1",array($inv_transit_log['hndleby_empid'],$invoice_no))->row_array();
+						}
+
+						$sms=$this->erpm->get_shipements_update_sms(array($last_ref_id['ref_id'],9));
+						$from_det=$this->erpm->get_shipements_update_sms_from(array($last_ref_id['ref_id'],9));
+
+						$destination_pickiup_det=$this->db->query("select * from m_employee_info where employee_id=?",$inv_transit_log['ref_id'])->row_array();
+						$log_msg="Shipment Collected by ".$destination_pickiup_det['name'].'('.$destination_pickiup_det['contact_no'].')';
+
+					}else{
+
+
+						$driver_det=$this->db->query("select * from m_employee_info where employee_id=?",$inv_transit_log['hndleby_empid'])->row_array();
+
+						$sms=$this->erpm->get_shipements_update_sms(array($inv_transit_log['hndleby_empid'],9));
+						$from_det=$this->erpm->get_shipements_update_sms_from(array($inv_transit_log['hndleby_empid'],9));
+
+						$type=($driver_det['job_title2']==7)?'Driver ':'Fright Co-oridnator ';
+						$driver_name=$type.$driver_det['name'].'('.$driver_det['contact_no'].')';
+
+						$handover_det=$this->db->query("select * from m_employee_info where employee_id=?",$inv_transit_log['ref_id'])->row_array();
+
+						// Shipment handed over to Kiran(91991) |  234124 | Kumar
+						$log_msg=$driver_name." Shipment handed over to ".$handover_det['name'].'('.$handover_det['contact_no'].')';
+					}
+
+				}else if($inv_transit_log['bus_id']){
+
+					if($inv_transit_log['pickup_empid']!=$inv_transit_log['ref_id'])
+					{
+						$last_ref_id='';
+						$last_ref_id=$this->db->query("select * from pnh_invoice_transit_log where (status=2 or status=5)  and ref_id!=? and invoice_no=? and id <= ? order by logged_on desc limit 1",array($inv_transit_log['ref_id'],$invoice_no,$inv_transit_log['id']))->row_array();
+
+						$sms=$this->erpm->get_shipements_update_sms(array($last_ref_id['ref_id'],9));
+						$from_det=$this->erpm->get_shipements_update_sms_from(array($last_ref_id['ref_id'],9));
+					}
+					else
+					{
+						$last_ref_id='';
+						$last_ref_id=$this->db->query("select * from pnh_invoice_transit_log where status=2 and ref_id=? and invoice_no=? and id <= ? order by logged_on desc limit 1",array($inv_transit_log['pickup_empid'],$invoice_no,$inv_transit_log['id']))->row_array();
+
+						$msg_type=0;
+						if($last_ref_id)
+						{
+							$last_ref_id='';
+							$last_ref_id=$this->db->query("select * from pnh_invoice_transit_log where status=2  and ref_id!=? and invoice_no=? and id <= ? order by logged_on desc limit 1",array($inv_transit_log['ref_id'],$invoice_no,$inv_transit_log['id']))->row_array();
+							$msg_type=9;
+							$last_ref_id=$last_ref_id['ref_id'];
+						}else{
+
+							$msg_type=8;
+							$last_ref_id=$inv_transit_log['ref_id'];
+						}
+
+
+						$sms=$this->erpm->get_shipements_update_sms(array($last_ref_id,$msg_type));
+						$from_det=$this->erpm->get_shipements_update_sms_from(array($last_ref_id,$msg_type));
+					}
+	
+					$destination_pickiup_det=$this->db->query("select * from m_employee_info where employee_id=?",$inv_transit_log['ref_id'])->row_array();
+					$log_msg="Shipment Collected by ".$destination_pickiup_det['name'].'('.$destination_pickiup_det['contact_no'].')';
+					// Shipment Collected by Kumar | 234124 | Kumar
+				}
+
+			}
+			else if($inv_transit_log['status'] == 3)
+			{
+				$inv_last_status = 'Delivered';
+
+				if($inv_transit_log['received_on'] && $inv_transit_log['received_on']!=null)
+					$inv_last_status.="<br>[".format_date($inv_transit_log['received_on'])."]";
+
+				$driver_det=$this->db->query("select b.name,b.contact_no,b.job_title2 from pnh_invoice_transit_log  a join m_employee_info b on b.employee_id=a.ref_id where status=3 and invoice_no=?",$invoice_no)->row_array();
+
+				if($driver_det)
+				{
+						if($driver_det['job_title2']==4)
+							$type=" Territory Manager ";
+						else if($driver_det['job_title2']==5)
+							$type=" Bussiness Executive ";
+						else if($driver_det['job_title2']==6)
+							$type=" Fright Co-oridnator ";
+						else if($driver_det['job_title2']==7)
+							$type=" Driver ";
+
+						$driver_name=$type."<b>".$driver_det['name'].'('.$driver_det['contact_no'].')</b>';
+
+						$log_msg=$driver_name." Shipment <span style='color:green;'><b>Delivered</b></span> to <b>".$franchise_details['franchise_name']."</b>";
+
+						$sms=$this->erpm->get_shipements_update_sms(array($inv_transit_log['ref_id'],10));
+						$from_det=$this->erpm->get_shipements_update_sms_from(array($inv_transit_log['ref_id'],10));
+
+				}else if(($inv_transit_log['logged_by'] && $inv_transit_log['ref_id']==0) || $inv_transit_log['hndlby_type']==4)
+				{
+					$user=$this->db->query("select * from king_admin where id=?",$inv_transit_log['logged_by'])->row_array();
+					$log_msg=" Shipment  manully marked as <span style='color:green;'><b>Delivered</b></span> to <b>".$franchise_details['franchise_name']."</b><br> Marked by <b>".$user['username'];
+				}
+
+
+				// Shipment Delivered to Sri Sai Medicals |  234124 | Kiran
+			}else if($inv_transit_log['status'] == 4)
+			{
+				$log_msg="Shipment Marked as Returned";
+				$emp_det=$this->db->query("select * from m_employee_info where employee_id=?",$inv_transit_log['ref_id'])->row_array();
+				$inv_last_updated_by = $emp_det['name'];
+				$contact_no=$emp_det['contact_no'];
+
+				$inv_last_status = 'Marked for Return';
+
+				$sms=$this->erpm->get_shipements_update_sms(array($inv_transit_log['ref_id'],11));
+				$from_det=$this->erpm->get_shipements_update_sms_from(array($inv_transit_log['ref_id'],11));
+				// Shipment Marked  as Returned |  234124 | Kiran
+			}
+
+			$from='';
+			if($from_det)
+				$from='from : '.$from_det['contact_no'];
+
+			if(!$sms)
+			{
+				$sms='system';
+				$from='';
+			}
+
+			$inv['from'] = $from;
+			$inv['sms'] = $sms;
+
+			return $inv;
+		}
+		else
+		{
+			return false;
+		}
+			
+	}
+
+	/**
+	 * 
+	 * @param unknown_type $fid
+	 * @param unknown_type $menuid
+	 * @param unknown_type $brandid
+	 * @param unknown_type $catid
+	 * @param unknown_type $pid
+	 * @author Roopa <roopashree@storeking.in>
+	 */
+	function check_if_menu_islinked_tofran($fid,$menuid,$catid,$brandid,$pid)
+	{
+		$cond='';
+		
+		if(!$menuid)
+			$menuid=0;
+		else 
+			$cond.=" and a.menuid=".$menuid;
+		
+		if(!$brandid)
+			$brandid=0;
+		else 
+			$cond.=" and d.brandid=".$brandid;
+		
+		
+		if(!$catid)
+			$catid=0;
+		else
+			$cond.=" and d.catid=".$catid;
+		
+		if(!$pid)
+			$pid=0;
+		else 
+			$cond.=" and i.pnh_id=".$pid;
+			
+		$sql="SELECT m.id,m.name AS menu FROM `pnh_franchise_menu_link`a
+					JOIN pnh_m_franchise_info b ON b.franchise_id=a.fid
+					join pnh_users c on c.reference_id=b.franchise_id
+					JOIN pnh_menu m ON m.id=a.menuid
+					JOIN king_deals d on d.menuid=a.menuid
+					JOIN king_dealitems i on i.dealid=d.dealid
+					WHERE a.status=1 AND b.franchise_id=? $cond and a.status=1 GROUP by m.id";
+	//	echo $this->db->last_query();exit;
+		
+		$is_menulinked=$this->db->query($sql,$fid);
+	
+		if($is_menulinked->num_rows())
+			return true;
+		else 
+			return false;
+		
+	}
+	
+	/**
+	* function to get recent payments
+	* @param unknown_type $fid
+	* @param unknown_type $st_date
+	* @param unknown_type $en_date
+	* @return string
+	* @author Roopa <roopashree@storeking.in>
+	*/
+	function get_recent_payments_byfran($fid,$st_date,$en_date,$receipt_id)
+	{
+		$cond='';
+		$output=array();
+		if($st_date)
+		{
+			$st_date=strtotime($st_date.' 00:00:00');
+			$en_date=strtotime($en_date.' 23:59:59');
+			$cond = " AND created_on BETWEEN $st_date AND $en_date  ";
+		}	
+	
+		if($receipt_id!=0)
+			$cond.=" and receipt_id = $receipt_id";
+			
+			$sql="SELECT receipt_id,bank_name,IF(payment_mode=0,'cash', IF(payment_mode=1,'cheque',IF(payment_mode=2,'dd',IF(payment_mode=3,'trans','na')))) AS payment_mode,receipt_amount,receipt_type,instrument_no,instrument_date,`status`,
+			DATE_FORMAT(FROM_UNIXTIME(created_on) ,'%d/%m/%Y') AS created_on,DATE_FORMAT(FROM_UNIXTIME(created_on) ,'%h:%i %p') AS created_on_time,remarks
+			FROM pnh_t_receipt_info r WHERE franchise_id=? and r.status=1 AND r.is_active=1 AND (r.is_submitted=1 OR r.activated_on!=0) AND r.is_active=1 $cond
+			ORDER BY receipt_id DESC LIMIT 10";
+	
+		$recent_payment_det=$this->db->query($sql,$fid);
+		
+		if($recent_payment_det->num_rows())
+			return $output['recent_payment']=$recent_payment_det->result_array();
+		else
+		return $output['error']='1';
+	}
+	
+	/**
+	 * function to get returns list
+	 * @param unknown_type $fid
+	 */
+	function get_returns_list($fid,$start_date="0000-00-00",$end_date="0000-00-00",$start,$limit)
+	{
+		$cond='';
+		$output = array();
+		
+		if($start_date && $end_date)
+			$cond = "and date(returned_on) >= '$start_date' and date(returned_on)<= '$end_date'";
+		
+		if(!$start)
+			$start=0;
+		
+		if(!$limit)
+			$limit=10;
+		
+		$sql="SELECT i.*,a.name AS handled_byname,f.franchise_name
+				FROM pnh_invoice_returns i
+				JOIN king_invoice b ON b.invoice_no=i.invoice_no
+				JOIN king_transactions t ON t.transid=b.transid
+				JOIN king_admin a ON a.id=i.handled_by
+				JOIN pnh_m_franchise_info f ON f.franchise_id=t.franchise_id
+				WHERE t.franchise_id=? $cond
+				ORDER BY returned_on DESC";
+		
+		$sql.=" limit $start,$limit";
+		
+		$return_list_res=$this->db->query($sql,$fid);
+		
+		if($return_list_res->num_rows())
+		{
+			 $output['returns_res']=$return_list_res->result_array();
+			 
+			 return $output; 
+		}
+		else
+			return $output['error']='1';
+	}
+
+	/**
+	 * function to get itemid by pnh id 
+	 * @param INTEGER $pnh_id
+	 */
+	function get_itemdetbypnhid($pnh_id)
+	{
+		return $this->db->query("select id from king_dealitems where pnh_id = ? ",$pnh_id)->row()->id;
+	}
+
+	/**
+	 * function to check for valid invoice number
+	 * @param unknown_type $fid
+	 * @param unknown_type $invoice_no
+	 * @return boolean
+	 */
+	function _check_is_validinvno($fid,$invoice_no)
+	{
+		// check if the entered no is imeino
+		$imei_inv_res = $this->db->query('select b.invoice_no from t_imei_no a join king_invoice b on a.order_id = b.order_id and b.invoice_status = 1 where imei_no = ? ',$invoice_no);
+		if($imei_inv_res->num_rows())
+		{
+			$invoice_no = $imei_inv_res->row()->invoice_no;
+		} 
+		$fr_det = $this->db->query("select a.franchise_id,franchise_name from pnh_m_franchise_info a join king_transactions b on a.franchise_id = b.franchise_id join king_invoice c on c.transid = b.transid where c.invoice_no = ? and a.franchise_id=? ",array($invoice_no,$fid));
+	
+		if($fr_det->num_rows())
+			return $invoice_no;
+		else 
+			return false;
+		
+	}
+	
+	/**
+	 * function returns list of banks with details
+	 */
+  	function get_bank_list()
+	{
+		return $this->db->query("Select * from pnh_m_bank_info group by account_number order by bank_name asc")->result_array();
+	}	
+	
+	/**
+	 * function to get all raw menu list 
+	 */
+	function get_all_menu()
+	{
+		return $this->db->query("select id,name from pnh_menu order by name ")->result_array();
+	}
+	
+	/**
+	 * function to get all raw brand list
+	 */
+	function get_all_brands()
+	{
+		return $this->db->query("select id,name from king_brands order by name ")->result_array();
+	}
+	
+	/**
+	 * function to get all raw brand list
+	 */
+	function get_all_categories()
+	{
+		return $this->db->query("select id,name,type as parent_id from king_categories order by name ")->result_array();
+	}
+	
+	/**
+	 * function to get all raw groups list
+	 * @last_modified by Roopashree <roopashree@storeking.in>
+	 */
+	function get_menu_groups()
+	{
+		return $this->db->query("select a.id,a.name,b.menu_id from pnh_menu_groups a join pnh_menu_group_link b on a.id = b.group_id order by name ")->result_array();
+	}
+	
+	/**
+	 * function to get all raw groups list
+	 */
+	function get_groups()
+	{
+		$g_res = $this->db->query("SELECT g.id AS group_id,g.name AS group_name,GROUP_CONCAT(l.menu_id ) AS menuid FROM `pnh_menu_groups`g JOIN `pnh_menu_group_link`l ON l.group_id=g.id JOIN pnh_menu m ON m.id=l.menu_id GROUP BY g.id order by group_name");
+		
+		if($g_res->num_rows())
+			return $g_res->result_array();
+		return false;
+	}
+	
+	/**
+	 * function to get all raw groups list
+	 */
+	function get_group_cats($group_id,$start,$limit,$alpha_sort=0,$full=0,$top_cats)
+	{
+		$gc['cat_list']='';
+		if($top_cats)
+		{
+			$limit=5;		
+		}		
+		$sql = "select a.id as group_id,a.name as group_name,catid as catid,d.name as cat_name,count(ifnull(o.id,0)) as ttl_orders 
+										from pnh_menu_groups a 
+										join pnh_menu_group_link b on a.id = b.group_id 
+										join king_deals c on c.menuid = b.menu_id 
+										join king_categories d on d.id = c.catid
+										join king_dealitems di on di.dealid = c.dealid 
+										left join king_orders o on o.itemid = di.id  
+										where a.id = ? and o.status!=3
+									group by catid 
+									order by ttl_orders desc ";
+		$gc_res=$this->db->query($sql,$group_id);
+									
+		if($gc_res->num_rows())
+		{
+			$gc['ttl_cat']=$gc_res->num_rows();
+			
+			$sql.=" limit $start,$limit";
+			
+			$gc['cat_list']=$this->db->query($sql,$group_id)->result_array();
+			return $gc;
+		}
+		else
+		{
+			return false;
+		}
+		
+	}
+	function is_valid_emp_phno($fid,$emp_phno)
+	{
+		$sql="SELECT f.territory_id,l.employee_id,e.contact_no,NAME
+		FROM pnh_m_franchise_info f
+		JOIN `pnh_m_territory_info` t ON f.territory_id=t.id
+		JOIN m_town_territory_link l ON l.territory_id=t.id
+		JOIN m_employee_info e ON e.employee_id=l.employee_id
+		WHERE franchise_id=? AND e.is_suspended=0 AND e.contact_no IN(?)";
+		
+		$is_valid=$this->db->query($sql,array($fid,$emp_phno));
+		if($is_valid->num_rows())
+		return true;
+		else
+		return false;
+	}
+	
+	/**
+	 * function to get all menus of the group menu
+	 * @param unknown_type $grp_menuid
+	 * @return boolean
+	 */
+	function get_menu_bygroupmenuid($grp_menuid)
+	{
+		$sql="SELECT group_id,m.name AS menu,menu_id FROM pnh_menu_groups a JOIN  pnh_menu_group_link b ON a.id = b.group_id  JOIN pnh_menu m ON m.id=menu_id WHERE group_id= ?";
+		$grp_menu_list=$this->db->query($sql,$grp_menuid);
+		if($grp_menu_list)
+			return $grp_menu_list->result_array();
+		else
+			return false;
+	}
+	/**
+	 * Function create customer tickets
+	 * @author Shivaraj <shivaraj@storeking.in>
+	 * @param type $name
+	 * @param type $mobile
+	 * @param type $msg
+	 * @param type $email
+	 * @param type $transid
+	 * @param type $type
+	 * @param type $priority
+	 * @param type $franchise_id
+	 * @param type $related_to
+	 * @param type $medium
+	 * @return type Array
+	 */
+	function do_ticket($name='',$mobile='',$msg='',$email='',$transid='',$type='',$priority='',$franchise_id=0,$related_to='',$medium=0,$req_mem_name=0,$req_mem_mobile=0)
+	{
+		$no=rand(1000000000,9999999999);
+		$user_det =  $this->get_api_user();
+		$userid = $user_det['userid'];
+
+		$from_app=1;
+		$msg=nl2br($msg);
+		$this->db->query("insert into support_tickets(ticket_no,name,mobile,user_id,email,transid,type,priority,created_on,franchise_id,related_to,req_mem_name,req_mem_mobile,from_app)
+							values(?,?,?,?,?,?,?,?,now(),?,?,?,?,?)",array($no,$name,$mobile,$userid,$email,$transid,$type,$priority,$franchise_id,$related_to,$req_mem_name,$req_mem_mobile,$from_app));
+		$tid=$this->db->insert_id();
+		$from_customer=1;
+		$this->erpm->addnotesticket($tid,$type,$medium,$msg,$from_customer);
+		return array('ticket_id'=>$tid,'ticket_no'=>$no);
+	}
+	
+	/**
+	 * Function to return individual ticket details by ticket id
+	 * @author Shivaraj <shivaraj@storeking.in>
+	 * @param type $ticket_id int
+	 * @return Array|boolean
+	 */
+	function getticket($ticket_id)//$filter
+	{
+		
+		$sql = "SELECT u.name AS USER,t.*,a.name AS assignedto
+					FROM support_tickets t 
+					LEFT OUTER JOIN king_admin a ON a.id=t.assigned_to 
+					LEFT OUTER JOIN king_users u ON u.userid=t.user_id WHERE t.ticket_id= ?";
+		
+//		die('<pre>'.$sql );
+		$ticket_det_res = $this->db->query($sql,$ticket_id);
+		if($ticket_det_res->num_rows())
+		{
+			//die('<pre>'.$this->db->last_query() );
+			$ticket = $ticket_det_res->row_array();
+			$output = $ticket;
+			$related_to_array = array(0=>'Not specific',1=>"Product",2=>"Payment",3=>"Service",4=>"insurance",5=>"Shipment",6=>"Technical");
+			$type_array = array(10=>'Request',11=>"Complaint");
+			$priority_array = array(0=>'Low',1=>"Medium",2=>"High",3=>"Urgent");
+			//$ticket_status=array("all"=>-1,"unassigned"=>0,"opened"=>1,"inprogress"=>2,"closed"=>3);
+			$ticket_status=array(0=>"Open",1=>"Open",2=>"Open",3=>"Closed");
+			
+			$output['related_to'] = $related_to_array[$ticket['related_to']];
+			$output['type'] = $type_array[$ticket['type']];
+			$output['priority'] = $priority_array[$ticket['priority']];
+			$output['status'] = $ticket_status[$ticket['status']];
+			$output['created_on'] = format_datetime($ticket['created_on']);//format_datetime(date( 'Y/m/d H:i:s',strtotime($ticket['created_on']) ) ; //format_datetime( ,'d/M/Y H:i A')
+			$output['updated_on'] = format_datetime($ticket['updated_on']);
+			$output['messages'] = $this->get_ticket_messages($ticket['ticket_id']);
+			return $output;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+	/**
+	 * Function to return tickets list array by franchise id
+	 * @author Shivaraj <shivaraj@storeking.in>
+	 * @param type $franchise_id int
+	 * @param type $s date_format
+	 * @param type $e date_format
+	 * @param type $limit int
+	 * @return string|boolean
+	 */
+	function gettickets($franchise_id=false,$s=false,$e=false,$type=false,$limit=100)//$filter
+	{
+		$cond = $cond_order_by = $cond_limit = '';
+		$filter=-1;
+		
+		if($franchise_id){
+			$cond .= ' AND franchise_id= '.$franchise_id;
+		}
+		if($filter!=-1)
+		{
+			$filters=array("all"=>-1,"unassigned"=>0,"opened"=>1,"inprogress"=>2,"closed"=>3);
+			$filter=$filters[$filter];
+			$cond.=" and t.status=$filter and";
+		}
+		
+		if($e)
+		{
+			$cond.=" AND t.created_on BETWEEN ? AND ? ";
+		}
+		
+		if($type)
+		{
+			$cond.=" AND t.type= ".$type;
+		}
+		
+		$cond_order_by .=" ORDER BY t.updated_on DESC, t.created_on DESC";
+		
+		
+		if(!$e)
+		{
+			if($limit) {
+				$cond_limit.=" limit ".$limit;
+			}
+			
+			$tom=mktime(0,0,0,date("m"),date("d")+1);
+			$s=date("Y-m-d",time()-(30*24*60*60));
+			$e=date("Y-m-d",time());
+		}
+		$sql = "SELECT u.name AS USER,t.*,a.name AS assignedto
+						FROM support_tickets t LEFT OUTER JOIN king_admin a ON a.id=t.assigned_to
+						LEFT OUTER JOIN king_users u ON u.userid=t.user_id WHERE 1 $cond
+					$cond_order_by $cond_limit";
+
+		$ticket_det_res = $this->db->query($sql,array($s,$e));
+		if($ticket_det_res->num_rows())
+		{
+			//die('<pre>'.$this->db->last_query() );
+			$ticket_det = $ticket_det_res->result_array();
+			foreach($ticket_det as $i=>$ticket)
+			{
+				$output[$i] = $ticket;
+				$related_to_array = array(0=>'Not specific',1=>"Product",2=>"Payment",3=>"Shipment",4=>"insurance",5=>"Technical");
+				$type_array = array(10=>'Request',11=>"Complaint");
+				$priority_array = array(0=>'Low',1=>"Medium",2=>"High",3=>"Urgent");
+				//$ticket_status=array("all"=>-1,"unassigned"=>0,"opened"=>1,"inprogress"=>2,"closed"=>3);
+				$ticket_status=array(0=>"Open",1=>"Open",2=>"Open",3=>"Closed");
+				
+				$output[$i]['related_to'] = $related_to_array[$ticket['related_to']];
+				$output[$i]['type'] = $type_array[$ticket['type']];
+				$output[$i]['priority'] = $priority_array[$ticket['priority']];
+				$output[$i]['status'] = $ticket_status[$ticket['status']];
+				$output[$i]['created_on'] = format_datetime($ticket['created_on']) ; //format_datetime( ,'d/M/Y H:i A')
+				$output[$i]['updated_on'] = format_datetime($ticket['updated_on']);
+				$output[$i]['messages'] = $this->get_ticket_messages($ticket['ticket_id']);
+			}
+			return $output;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+	/**
+	 * Function to return message information of ticket id, including reply messages
+	 * @author Shivaraj <shivaraj@storeking.in>
+	 * @param type $ticket_id int
+	 * @return type array
+	 */
+	function get_ticket_messages($ticket_id)
+	{
+		//,DATE_FORMAT(m.created_on,'%d/%b/%Y %H:%i %p') as created_on
+		return $this->db->query("select a.name as admin_user,m.ticket_id,m.msg,m.msg_type,m.medium,m.from_customer,m.support_user,DATE_FORMAT(m.created_on,'%d/%m/%Y %H:%i %p') as created_on
+									from support_tickets_msg m
+									left outer join king_admin a on a.id=m.support_user
+									where m.ticket_id=? order by m.id desc",$ticket_id)->result_array();
+	}
+
+	/**
+	 * function to get all menus of the group menu
+	 * @param unknown_type $grp_menuid
+	 * @return boolean
+	 * @author roopashree@storeking.in
+	 * @last_modified_on_20_june_2014
+	 */
+	function get_menucat_bygroupmenuid($grp_menuid,$start,$end)
+	{
+		$sql="SELECT group_id,m.name AS menu,menu_id FROM pnh_menu_groups a JOIN  pnh_menu_group_link b ON a.id = b.group_id  JOIN pnh_menu m ON m.id=menu_id WHERE group_id= ?";
+		$grp_menu_list=$this->db->query($sql,$grp_menuid);
+		
+		$menu_list=array();
+		if($grp_menu_list)
+		{
+			foreach($grp_menu_list->result_array() as $m)
+			{
+				if(!isset($menu_list[$m['group_id']][$m['menu_id']]))
+				{
+					$menu_list[$m['group_id']][$m['menu_id']]=array();
+					$menu_list[$m['group_id']][$m['menu_id']]=array("menuid"=>$m['menu_id'],"menu_name"=>$m['menu']);
+				}
+					
+				$sql="SELECT a.id,group_id,m.name AS menu,menu_id,c.id as catid,c.name AS category_name,COUNT(IFNULL(o.id,0)) AS ttl_orders  
+						FROM pnh_menu_groups a 
+						JOIN  pnh_menu_group_link b ON a.id = b.group_id  
+						JOIN pnh_menu m ON m.id=menu_id 
+						JOIN king_deals d ON d.menuid=m.id
+						JOIN king_categories c ON c.id=d.catid
+						JOIN king_dealitems di ON di.dealid = d.dealid 
+						LEFT JOIN king_orders o ON o.itemid = di.id  
+						WHERE menu_id= ? AND a.id=?
+						GROUP BY c.id
+						ORDER BY ttl_orders DESC";
+			
+				
+				$ttl_cats=$this->db->query($sql,array($m['menu_id'],$grp_menuid));
+				$menu_list[$m['group_id']][$m['menu_id']]['ttl_cats']=$ttl_cats->num_rows(); 
+				$cat_list=$this->db->query($sql,array($m['menu_id'],$grp_menuid));
+
+				if($cat_list)
+				{
+					/*
+					foreach($cat_list->result_array() as $c)
+										{
+											$menu_list[$m['group_id']][$m['menu_id']]['ttl_cats']=sizeof($menu_list[$m['group_id']][$m['menu_id']]);
+										}*/
+					
+					if($end!=0)
+						$sql.=" limit $start,$end";
+					
+					$cat_list=$this->db->query($sql,array($m['menu_id'],$grp_menuid));
+
+					foreach($cat_list->result_array() as $c)
+					{
+						if(!isset($menu_list[$c['group_id']][$c['menu_id']][$c['catid']]))
+						{
+							$menu_list[$c['group_id']][$c['menu_id']][$c['catid']]=array();
+							$menu_list[$c['group_id']][$c['menu_id']][$c['catid']]=array("catid"=>$c['catid'],"cat_name"=>$c['category_name']);
+						}
+						
+					}
+				}
+
+			}
+			
+			return $menu_list;
+		}
+		else 
+			return false;
+			
+	}
+	
+	/**
+	 * Function to return breif info of order delivery and transit status and date info
+	 * @author Shivaraj <shivaraj@storeking.in>
+	 * @param type $orderid bigint
+	 * @return boolean|Array
+	 */
+	function get_order_ship_det($orderid)
+	{
+		/*select a.id,a.ref_id,a.sent_log_id,a.invoice_no,a.logged_on,a.status,if(ref_id,b.name,d.name) as hndleby_name,
+													if(ref_id,b.contact_no,d.contact_no) as hndleby_contactno,c.id as manifesto_id,c.hndleby_empid,c.bus_id,c.bus_destination,
+													c.office_pickup_empid,c.pickup_empid,b.job_title2,c.hndlby_type,c.hndleby_courier_id,a.logged_by,c.alternative_contactno,a.received_on
+														from pnh_invoice_transit_log a
+														left join m_employee_info b on a.ref_id = b.employee_id
+														join pnh_m_manifesto_sent_log c on c.id = a.sent_log_id
+														left join pnh_transporter_info d on d.id=c.bus_id
+														where order_id = ? order by a.id desc*/
+		$inv_transit_log_res = $this->db->query("SELECT tlog.id,tlog.ref_id,tlog.sent_log_id,tlog.invoice_no,tlog.logged_on,tlog.status,tlog.received_on
+													,mlog.id AS manifesto_id
+													FROM king_invoice i 
+													LEFT JOIN pnh_invoice_transit_log tlog ON tlog.invoice_no = i.invoice_no
+													LEFT JOIN pnh_m_manifesto_sent_log mlog ON mlog.id = tlog.sent_log_id
+													WHERE order_id = ? ORDER BY tlog.logged_on DESC",$orderid);
+//		return ($this->db->last_query());
+		if($inv_transit_log_res->num_rows())
+		{
+			$inv_transit_log = $inv_transit_log_res->result_array();
+			$inv = array();
+			foreach($inv_transit_log as $i=>$tlog)
+			{
+				if($tlog['status'] <= 2)
+				{
+					$inv_last_status = 'Shipped';//'In Transit';
+				}else if($tlog['status'] == 3)
+				{
+					$inv_last_status = 'Delivered'; 
+				}else if($tlog['status'] == 4)
+				{
+					$inv_last_status = 'Marked for Return'; 
+				} else if ($tlog['status'] == 5)
+				{
+					$inv_last_status = 'Picked';
+				}
+
+				//========
+				$inv[$i]['invoice_no'] = $tlog['invoice_no'];
+				$inv[$i]['inv_last_status'] = $inv_last_status;
+				$inv[$i]['last_updated_on'] = format_datetime($tlog['logged_on']);
+			}
+			return $inv;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+	/**
+	 * Function to return transit log & its invoice numbers by transid
+	 * @author Shivaraj <shivaraj@storeking.in>_Jun_14_2014
+	 * @param type $transid Mixed
+	 * @return boolean|Array
+	 */
+	function get_transit_status_transid($transid,$status='')
+	{
+		$cond = '';
+		if($status == "2")
+		{
+			$cond .= ' AND tlog.status in (2)';
+		}
+		elseif($status == "4")
+		{
+			$cond .= ' AND tlog.status in (3,5)';
+		}
+		
+		$transit_sts_res = $this->db->query("SELECT DISTINCT tlog.invoice_no,tlog.status,tlog.logged_on FROM king_invoice i
+								JOIN pnh_invoice_transit_log tlog ON tlog.invoice_no = i.invoice_no
+								WHERE i.transid = ? $cond
+								ORDER BY tlog.logged_on DESC LIMIT 1",array($transid) );
+		if($transit_sts_res->num_rows())
+		{
+			$transit_sts = $transit_sts_res->row_array();
+			$inv['invoice_no']=$transit_sts['invoice_no'];
+			$inv['status']=$transit_sts['status'];
+			$inv['logged_on']=$transit_sts['logged_on'];
+			return $inv;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+
+}
 
 ?>

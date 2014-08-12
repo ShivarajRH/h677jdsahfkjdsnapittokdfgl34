@@ -19,6 +19,7 @@
 *   http://www.gnu.org/licenses/gpl.html
 *   
 *   Note, Iframe Printing is not supported in Opera and Chrome 3.0, a popup window will be shown instead
+*  @implemented Shivaraj@storeking.in
 */
 ; (function (window, undefined) {
     var document = window["document"];

@@ -40,7 +40,7 @@
 				</tr>
 
 				<tr>
-					<td>Gender : <span class="red_star">*</span></td>
+					<td>Gender :</td> <!-- <span class="red_star">*</span>-->
 					<td><select name="gender" >
 							<option value="">Choose</option>
 							<option value="Male" <?php echo set_select('gender','Male')?> >Male</option>
@@ -58,14 +58,14 @@
 				</tr>
 				
 				<tr>
-					<td>Address : <span class="red_star">*</span></td>
+					<td>Address : </td><!--<span class="red_star">*</span>-->
 					<td><textarea rows="1" style="height: 60px; width: 140px;"
 							cols="25" name="address" ><?php echo set_value('address')?></textarea><?php echo form_error('address','<div class="error">','</div>')?>
 					</td>
 				</tr>
 
 				<tr>
-					<td>City :<span class="red_star">*</span></td>
+					<td>City :</td><!--<span class="red_star">*</span>-->
 					<td><input type="text" name="city" value="<?php echo set_value('city')?>"><?php echo form_error('city','<div class="error">','</div>')?>
 					</td>
 				</tr>
@@ -146,9 +146,43 @@
 				<fieldset>
 				<legend><b>Assignment Details</b></legend>
 					<table>
-						<tr>                                                                      
+						<tr>
+							<td>Employee Type: <span class="red_star">*</span></td>
+							<td>
+								<?php 
+								$emp_type = $this->input->post('emp_type');
+								if(!$emp_type)
+									$emp_type = '2';
+
+								?>
+								<input type="radio" name="emp_type" value='1' <?php echo ($emp_type=='1') ? ' checked="checked" ' : ''; ?> onchange=""/> Office Employee
+								<input type="radio" name="emp_type" value='2' <?php echo ($emp_type=='2') ? ' checked="checked"' : ''; ?>/> Field Employee
+							</td>
+						</tr>
+						<tr id="emp_office">
+							<td>Department :<span class="red_star">*</span></td>
+							<td>
+								<select name="dept_id">
+									<option value="">Choose</option>
+									
+									<?php if($departments){
+										foreach ($departments as $dept){
+									?>
+											<option <?php echo set_select('dept_id',$dept['id']);?> value="<?php echo ($dept['id']);?>">
+												<?php echo $dept['name'];?>
+											</option>
+									<?php }
+									} ?>
+									
+								</select>
+								<?php echo form_error('dept_id','<div class="error">','</div>'); ?>
+							</td>
+						</tr>
+						<tr class="emp_others">                                                                      
 							<td>Job Title : <span class="red_star">*</span></td>
-							<td><select name="role_id" class="inst_type">
+							<td>
+								<!-- 1 -->
+								<select name="role_id" class="inst_type">
 									<option value="">Choose</option>
 									<?php if($access_roles){
 										foreach ($access_roles as $roles){
@@ -158,11 +192,14 @@
 										<?php echo $roles['role_name'];?>
 									</option>
 									<?php }
-									}?>
-							</select> <?php echo form_error('role_id','<div class="error">','</div>')?>
+									} ?>
+								</select>
+								
+								
+								<?php echo form_error('role_id','<div class="error">','</div>'); ?>
 							</td>
 						</tr>
-						<tr>
+						<tr class="emp_others">
 							<td>Has Login</td>
 							<td>
 								<input type="checkbox" value="1" name="has_login" <?php echo set_checkbox('has_login',1) ?>  />
@@ -177,31 +214,33 @@
 								</div>	
 							</td>
 						</tr>
-						<tr id="assigned_under">
+						<tr id="assigned_under" class="emp_others">
 							<td>Assigned under :<span class="red_star">*</span></td>
 							<td><select name="assigned_under_id"></select></td>
 						</tr>
-						<tr class="inst territory">
+						<tr class="inst territory" class="emp_others">
 							<td class="label">Territory : <span class="red_star">*</span></td>
 							<td>
 								<select class="chzn-select" style="width: 200px;" name="territory[]" ></select>
 							</td>
 						</tr>
 				 		
-						<tr id="all_territory"><td >Territory :<span class="red_star">*</span></td>
+						<tr id="all_territory" class="emp_others">
+							<td >Territory :<span class="red_star">*</span></td>
 							<td>
-							<div>
-							<select name="territory[]" class="chzn-select" style="width: 200px;">
-							<option value=""></option>
-							<?php $tr=$this->db->query("select * from pnh_m_territory_info order by territory_name asc")->result_array();?>
-							<?php foreach($tr as $t){?>
-							<option value="<?php echo $t['id']?>"><?php echo $t['territory_name']?></option>
-							<?php }?>
-							</select>
-							</div>
-						</td></tr>
+								<div>
+								<select name="territory[]" class="chzn-select" style="width: 200px;">
+								<option value=""></option>
+								<?php $tr=$this->db->query("select * from pnh_m_territory_info order by territory_name asc")->result_array();?>
+								<?php foreach($tr as $t){?>
+								<option value="<?php echo $t['id']?>"><?php echo $t['territory_name']?></option>
+								<?php }?>
+								</select>
+								</div>
+							</td>
+						</tr>
 						
-						<tr class="inst towns">
+						<tr class="inst towns" class="emp_others">
 								<td class="label">Towns :<span class="red_star">*</span></td>
 								<td><select class="chzn-select" style="width: 200px;" name="town[]" multiple="multiple">
 								     <option value="0">Choose</option>
@@ -402,6 +441,33 @@ var sel_role_id =0;
 				//alert('Already a Employee exists with given login mobile');
 		});
 	});
+	
+	//=========================== Employee type CODE STARTS >===============================
+	function fn_emp_type_operation(emp_type) {
+		if(emp_type == '1')
+		{
+			$(".emp_others").hide();
+			$("#emp_office").show();
+		}
+		else
+		{
+			$(".emp_others").show();
+			$("#emp_office").hide();
+		}
+	}
+	
+	$(document).ready(function() {
+
+		var emp_type = $('input[name="emp_type"]:radio:checked').val();
+		fn_emp_type_operation(emp_type);
+		
+	});
+
+	$('input[name="emp_type"]:radio').change(function(e) {
+		var emp_type = $(this).val();
+		fn_emp_type_operation(emp_type);
+	}).trigger("change");
+	//=========================== Employee type CODE ENDS >===============================	
 </script>
 
 <style>

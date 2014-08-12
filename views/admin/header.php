@@ -45,7 +45,7 @@
 	
 	$menu['front']=array("menu"=>"Menu","deals"=>"Deals","deals_table"=>"Deals table","deals_bulk_upload"=>"Deals Bulk upload","freesamples"=>"Free Samples","variants"=>"Variants","cache_control"=>"Cache Control","activity"=>"Activity","vars"=>"Vars","deal_price_changelog"=>"Price Changelog","partner_deal_prices"=>"Bulk partner deal price update","auto_image_updater"=>"Auto Image updater");
 	$menu["selling"]=array("orders"=>"Orders","order_summary"=>"Order Summary","bulk_cancelorders"=>"Bulk Cancel Orders","partner_orders"=>"Partner Orders","partner_order_import"=>"Partner Order Import","uplaod_partner_settelment_details"=>"Upload partner payment","callcenter"=>"Recent Transaction");
-	$menu['shipment']=array("batch_process"=>"Shipment batch process","pending_batch_process"=>"Pending Shipment batch process",'update_partnerorder_manifesto'=>"Update HS18 Manifesto","outscan/0"=>"Outscan Order" ,"generate_kfile"=>"Generate kfile","print_franlabels"=>"Print Franchise Delivery Labels","pnh_pending_shipments"=>"PNH Manifesto","update_ship_kfile"=>"Update shipment kfile","courier"=>"Courier","pnh_shipment_sms_notify"=>"PNH Shipment SMS Notification","pnh_ship_log"=>"Ship Log");
+	$menu['shipment']=array("batch_process"=>"Shipment batch process","pending_batch_process"=>"Pending Shipment batch process","manage_trans_reservations"=>"Manage Transaction Reservations",'update_partnerorder_manifesto'=>"Update HS18 Manifesto","outscan/0"=>"Outscan Order" ,"generate_kfile"=>"Generate kfile","print_franlabels"=>"Print Franchise Delivery Labels","pnh_pending_shipments"=>"PNH Manifesto","update_ship_kfile"=>"Update shipment kfile","courier"=>"Courier","pnh_shipment_sms_notify"=>"PNH Shipment SMS Notification","pnh_ship_log"=>"Ship Log");
 	$menu['crm']=array("support"=>"Customer Support/Tickets","users"=>"Site Users","review"=>"Reviews","callcenter"=>"Recent transactions","stock_checker"=>"Stock Checker");
 	$menu['accounting']=array("vouchers"=>"Vouchers","pending_pay_grns"=>"Ready for payment","list_allbanks"=>"Bank Accounts","pending_grns"=>"Unaccounted Stock Intakes","clients"=>"Corporate Clients","client_orders"=>"Corporate Orders","client_invoices"=>"Corporate Invoices","pending_refunds_list"=>"Pending Refunds","partners"=>"Partners","deals_report"=>"Deals Report","pnh_executive_account_log"=>"PNH Executive Paid Log");
 	$menu['marketing']=array("featured_newsletter"=>"Newsletter","announcements"=>"Announcements","stats"=>"Stats","coupons"=>"Coupons","cashback_campaigns"=>"Cashback Campaigns","pointsys"=>"Loyalty Points","headtotoe"=>"Head to toe");
@@ -56,7 +56,7 @@
 		$menu['pnh']=array("pnh_reports"=>"Reports");
 	}else
 	{
-		$menu['pnh']=array("pnh_franchises"=>"Franchises","pnh_class"=>"Admin","pnh_deals"=>"Deals","pnh_members"=>"Members","list_employee"=>"Employees","pnh_special_margins"=>"Special Margins","pnh_receiptsbytype/1"=>"Pending Receipts","pnh_receipt_upd_log"=>"Receipts Update Log","pnh_special_margins"=>"Discounts","pnh_reports"=>"Reports","pnh_voucher_book"=>"Manage Voucher Books");
+		$menu['pnh']=array("pnh_franchises"=>"Franchises","asset_list"=>"Manage Assets","pnh_class"=>"Admin","pnh_deals"=>"Deals","pnh_members"=>"Members","list_employee"=>"Employees","pnh_special_margins"=>"Special Margins","pnh_receiptsbytype/1"=>"Pending Receipts","pnh_receipt_upd_log"=>"Receipts Update Log","pnh_special_margins"=>"Discounts","pnh_reports"=>"Reports","pnh_voucher_book"=>"Manage Voucher Books");
 	}
 	
 	//$menu['pnh']=array("pnh_franchises"=>"Franchises","pnh_class"=>"Admin","pnh_deals"=>"Deals","pnh_members"=>"Members","list_employee"=>"Employees","pnh_special_margins"=>"Special Margins","pnh_offline_order"=>"Place Order",'pnh_invoice_returns'=>"PNH Invoice Returns","pnh_quotes"=>"Franchise Requests","pnh_pending_receipts"=>"Pending Receipts","pnh_comp_details"=>"Company Details","pnh_catalogue"=>"Products Catalogue","pnh_special_margins"=>"Discounts","pnh_add_credits"=>"Add Credit","pnh_gen_statement"=>"Generate Account Statement",'pnh_sales_report'=>"PNH Sales Report","pnh_employee_sales_summary"=>"Employee Sales Summary","export_pnh_sales_report"=>"Export PNH Franchise Sales");
@@ -68,13 +68,15 @@
 		$menu['pnh']=array("pnh_reports"=>"Reports");
 	}
 	
+	$menu['pnh']["pnh_comp_details"]="Company Details";
+	
 	$menu['manage'] = array("adminusers"=>"Admin Access","roles"=>"User Roles");
 	
 	$submenu['vouchers']=array("vouchers"=>"Vouchers List","create_voucher"=>"Create Voucher");
 	$submenu['list_employee']=array("list_employee"=>"Employees","add_employee"=>"Add Employees","assignment_histroy"=>"Assignment Histroy","roletree_view"=>"Role Tree View","calender"=>"Calender View","manage_routes"=>"Routes","pnh_exsms_log"=>"PNH SMS Log");
 	$submenu['list_allbanks']=array("list_allbanks"=>"List Bank Accounts",'add_bankdetails'=>'Add New Bank');
 	
-	$submenu['products']=array("addproduct"=>"Add Product","products_report"=>"Product report");
+	$submenu['products']=array("addproduct"=>"Add Product","products_report"=>"Product report",'get_barcode_info'=>'Add Barcode',"sk_product_deal_report"=>"Products Deals Report");
 	$submenu['categories']=array("addcat"=>"Add Category");
 	$submenu['brands']=array("addbrand"=>"Add Brand");
 	$submenu['vendors']=array("addvendor"=>"Add Vendor","vendor_margin_bulk_update"=>"vendor margin bulk update");
@@ -88,7 +90,7 @@
 	
 	//$submenu['paflist'] = array("createpaf"=>"Create PAF","paflist"=>"List all PAF");
 	
-	$submenu['pnh_reports']=array("pnh_fran_salesbydate"=>"Franchise Montly Sales","packed_list"=>"Packed Summary","outscan_list"=>"Outscan Summary","pnh_gen_statement"=>"Generate Account Statement","pnh_states"=>"States",'pnh_sales_report'=>"PNH Sales Report","pnh_sales_bydeal_report"=>'PNH Sales by Deal Report',"pnh_employee_sales_summary"=>"Employee Sales Summary","pnh_comp_details"=>"Company Details","pnh_exsms_log"=>"PNH SMS Log","export_salesfortally"=>"Export Sales Report - Tally Import","list_activesuperscheme"=>"super scheme Log","fr_hyg_anlytcs_report"=>"Franchise Hygenie Analytics ","export_pnh_sales_report"=>"Export PNH Franchise Sales");
+	$submenu['pnh_reports']=array("pnh_fran_salesbydate"=>"Franchise Montly Sales","packed_list"=>"Packed Summary","outscan_list"=>"Outscan Summary","pnh_gen_statement"=>"Generate Account Statement","pnh_states"=>"States",'pnh_sales_report'=>"PNH Sales Report","pnh_sales_bydeal_report"=>'PNH Sales by Deal Report',"pnh_employee_sales_summary"=>"Employee Sales Summary","pnh_exsms_log"=>"PNH SMS Log","export_salesfortally"=>"Export Sales Report - Tally Import","list_activesuperscheme"=>"super scheme Log","fr_hyg_anlytcs_report"=>"Franchise Hygenie Analytics ","export_pnh_sales_report"=>"Export PNH Franchise Sales");
 	
 	$submenu['pnh_members']=array("pnh_addmember"=>"Add Member");
 	$submenu['clients']=array("addclient"=>"Add Client");
@@ -96,25 +98,31 @@
 	
 	if($this->erpm->auth(FINANCE_ROLE,true))
 	{
-		$submenu['pnh_franchises']=array("pnh_addfranchise"=>"Add franchise","orders_status_summary"=>"Order Status Summary","pnh_gen_statement"=>"Generate Account Statement","pnh_quotes"=>"Franchise Requests",'pnh_invoice_returns'=>"Manage Returns","pnh_add_credits"=>"Add Credit","pnh_activation"=>"SMS Alternative Activations","pnh_imei_activation_log"=>'IMEI Activation Log','manage_offers'=>'Manage Member Offers');
+		$submenu['pnh_franchises']=array("pnh_addfranchise"=>"Add franchise","orders_status_summary"=>"Order Status Summary","pnh_gen_statement"=>"Generate Account Statement","pnh_quotes"=>"Franchise Requests",'pnh_invoice_returns'=>"Manage Returns","pnh_add_credits"=>"Add Credit","pnh_activation"=>"SMS Alternative Activations","pnh_imei_activation_log"=>'IMEI Activation Log','manage_offers'=>'Manage Member Offers','disable_batch_log'=>'Batch Disabled Log');
 	}else
 	{
 		$submenu['pnh_franchises']=array("pnh_addfranchise"=>"Add franchise","orders_status_summary"=>"Order Status Summary","pnh_quotes"=>"Franchise Requests",'pnh_invoice_returns'=>"Manage Returns","pnh_add_credits"=>"Add Credit","pnh_franchise_activate_imei"=>"Franchise IMEI Activation","pnh_activation"=>"SMS Alternative Activations","pnh_imei_activation_log"=>'IMEI Activation Log','manage_offers'=>'Manage Member Offers');
 	}
 	
+	if($this->erpm->auth(CALLCENTER_ROLE,true))
+	{
+		$submenu['pnh_franchises']['franch_sales_calender_view']='Franchise sales';
+	}
+	
 	$submenu['menu']=array("addmenu"=>"Add Menu");
 	$submenu['deals']=array("adddeal"=>"Add Deal","pnh_catalogue"=>"Products Catalogue","deal_product_link_update_log"=>"Deal product link updates log");
+	$submenu['asset_list']=array("add_franchise_asset"=>"Add Franchise Asset");
 	
 	$submenu['orders']=array('orders/1'=>'Pending Orders','partial_shipment'=>'Partial Shipment Orders','disabled_but_possible_shipment'=>'Disabled But Possible','product_order_summary'=>'Product Order Summ Last 90 Days','userend_orders'=>'DIY - User Generated Orders');
 	
 	$submenu['stock_unavail_report']=array('stock_unavail_report/0/0/0/0'=>'Show All Orders','stock_unavail_report/0/0/0/2'=>'Show Snapittoday Orders','stock_unavail_report/0/0/0/1'=>'Show PNH Orders','pnh_stock_unavail_report'=>'Advanced PNH Unavailable Report');
 	
 	
-	
+	$submenu['warehouse_summary']=array("po_on_top_sold"=>"Top sold Products");
 	$submenu['purchaseorder']=array("purchaseorder"=>"Vendorwise","po_product"=>"Productwise",'bulk_createpo_byfile'=>"Bulk Create PO");
-	$submenu['pnh_class']=array("list_allmenumargin"=>"Manage Menu","pnh_class"=>"Class","pnh_less_margin_brands"=>"Less margin brands","pnh_sms_log"=>"SMS Log","pnh_device_type"=>"Device Types","pnh_loyalty_points"=>"Loyalty points","manage_skinsurance_bymenu"=>"Manage Insurance Menu","pnh_states"=>"States","pnh_territories"=>"Territories","pnh_towns"=>"Towns","pnh_app_versions"=>"App Versions","pnh_order_import"=>"Import orders","pnh_member_card_batch"=>"MID card printing batch","pnh_version_price_change"=>"Version price changes","pnh_sms_campaign"=>"SMS Campaign","pnh_tray_management"=>'Tray Management',"pnh_transport_management"=>"Transport Management",'pnh_manage_delivery_hub'=>"Manage Delivery Hubs","pnh_employee_sms_activity_log"=>"Employee activity log");
+	$submenu['pnh_class']=array("list_allmenumargin"=>"Manage Menu","reset_franchise_limit"=>"Reset Franchisee Limit","pnh_class"=>"Class","pnh_less_margin_brands"=>"Less margin brands","pnh_sms_log"=>"SMS Log","pnh_device_type"=>"Device Types","pnh_loyalty_points"=>"Loyalty points","manage_skinsurance_bymenu"=>"Manage Insurance Menu","pnh_states"=>"States","pnh_territories"=>"Territories","pnh_towns"=>"Towns","pnh_app_versions"=>"App Versions","pnh_order_import"=>"Import orders","pnh_member_card_batch"=>"MID card printing batch","pnh_version_price_change"=>"Version price changes","pnh_sms_campaign"=>"SMS Campaign","pnh_tray_management"=>'Tray Management',"pnh_transport_management"=>"Transport Management",'pnh_manage_delivery_hub'=>"Manage Delivery Hubs","pnh_employee_sms_activity_log"=>"Employee activity log","reverse_reconciled_invoice"=>"Reverse Reconciled Invoice","depts_request"=>"Departments");
 	$submenu['pnh_special_margins']=array("pnh_special_margins"=>"Special Margins","pnh_sch_discounts"=>"List scheme discounts","pnh_bulk_sch_discount"=>"Add Scheme Discounts","pnh_bulk_offeradd"=>"Manage Offers");
-	$submenu['pnh_deals']=array("pnh_adddeal"=>"Add Deal","pnh_deals"=>"List Deals","pnh_deals_bulk_upload"=>"Deals Bulk upload","pnh_update_description"=>"Update description","pnh_deals_bulk_update"=>"Deals Bulk Update",'pnh_update_dp_price'=>'Update DP Price',"vendor_deal_import"=>"Vendor deal import");
+	$submenu['pnh_deals']=array("pnh_adddeal"=>"Add Deal","pnh_deals"=>"List Deals","pnh_deals_bulk_upload"=>"Deals Bulk upload","pnh_update_description"=>"Update description","pnh_deals_bulk_update"=>"Deals Bulk Update",'pnh_update_dp_price'=>'Update DP Price','member_price_update'=>'Member Price Update','mp_loyaltypoint_config'=>'MP Loyaltypoint Config',"vendor_deal_import"=>"Vendor deal import");
 	$submenu['pnh_voucher_book']=array("pnh_prepaid_menus"=>"Config prepaid menus","pnh_book_template"=>"Manage book template","pnh_voucher_book"=>"Manage Voucher book","pnh_manage_book_allotments"=>"Manage book allotments");
 	
 	
@@ -213,10 +221,15 @@
                 <a class="notify_block" id="notify_block" href="<?=site_url("admin/streams")?>" title="Stream Notification"></a>
 		<a href="<?=site_url("admin/changepasswd")?>" style="color:#fff;font-size:75%;text-decoration: underline;">change password</a> 
 		<a class="signout" href="<?=site_url("admin/logout")?>">Sign Out</a></div>
-		<div id="searchformbox" style="clear:right;float:right;padding-top:5px;">
+			<div id="searchformbox" style="clear:right;padding-top:5px;">
 			<input type="text" id="searchbox" value="Search..." style="width:250px;"><input type="button" id="searchtrigh" value="Go!">
 			<div id="suggestions"></div>
 		</div>
+			<div class="fl_left" style="padding-top: 4px;">
+				<input type="radio" name="srch_opt" value="0" checked> All
+				<input type="radio" name="srch_opt" value="1"> Barcode
+				<input type="radio" name="srch_opt" value="2"> IMEI
+			</div>	
 	</div>
 	<div style="float:right;margin-top:20px;margin-right:20px;">
 		<a href="<?=site_url("admin/stk_offline_order")?>"><img src="<?=IMAGES_URL?>storeking_icon_orders.png" style="cursor:pointer;"></a>
@@ -228,6 +241,8 @@
 	<div style="float:right;margin-top:20px;">
 		<a href="<?=site_url("admin/streams")?>"><img src="<?=IMAGES_URL?>storeking_icon_streams.png" style="cursor:pointer;"></a>
 	</div>
+	<!-- Modal for PO products selected display-->
+		<div id="prd_det_dlg" title="Product Details"></div>
 	<script>
 	$(function(){
 		$("#phone_booth form").submit(function(){
@@ -255,8 +270,19 @@
 			return false;
 		});
 	});
-	</script>
 	
+	//Open PO product view block
+	$('#prd_det_dlg').dialog({'width':1150,autoOpen:false,height:600,modal:true,open:function(){
+	},
+	buttons:{
+		'Close' : function()
+			{
+				$(this).dialog('close');
+			}	
+		}
+	});
+	            
+	</script>
 	
 	<div id="phone_booth">
 		<form>
@@ -306,50 +332,6 @@
 </div>
 <style type="text/css">
 .notify_block {     color:white;font-size: 12px;  border-radius: 10px;  }
-
-#searchbox{	color:#aaa;	font-size:14px;	}
- 
-
-/* SEARCH FORM */
-#searchformbox {}
-#searchformbox div { color:#eeeeee; }
-#searchformbox div input { font-size:18px; padding:5px; width:294px; }
-#hd #suggestions{ position: absolute;
-margin-left: 0px;
-width: 294px;
-display: none;z-index: 999}
-
-/* SEARCHRESULTS */
-#hd #searchresults { border-width: 0px;
-border-color: #8897A7;
-border-style: solid;
-width: 292px;
-background-color: #633D72;
-font-size: 11px;
-line-height: 14px;
-margin: 0px;}
-#hd #searchresults a { display: block;
-background-color: #F7F7F7;
-clear: left;
-text-decoration: none;
-padding: 5px;
-border-bottom: 1px dotted #DFDFDF; }
-#hd #searchresults a:hover { background-color:#ccc; color:#ffffff; }
-#hd #searchresults a img { float:left; padding:5px 10px; }
-#hd #searchresults a span.searchheading { display:block; font-weight:bold; color:#191919; }
-#hd #searchresults a:hover span.searchheading { color:#ffffff; }
-#hd #searchresults a span { color:#555555; }
-#hd #searchresults a:hover span { color:#f1f1f1; }
-#hd #searchresults span.category { font-size: 11px;
-margin: 0px;
-display: block;
-color: #FFF;
-padding: 5px;
-background: #6B6A6A;}
-#hd #searchresults span.seperator { float:right; padding-right:15px; margin-right:5px;background-repeat:no-repeat; background-position:right; }
-#hd #searchresults span.seperator a { background-color:transparent; display:block; margin:5px; height:auto; color:#ffffff; }
-
-#hd #searchresults a span.viewall { text-align: center;}
 
 </style>
 

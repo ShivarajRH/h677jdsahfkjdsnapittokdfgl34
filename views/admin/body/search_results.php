@@ -98,7 +98,7 @@ padding:5px;
 
 
 <div class="search_cont">
-<h2>Products (<?=count($products)?>)</h2>
+<h2>Products (<?php if(!empty($products)){ echo count($products); } else if(!empty($products_bybarc)){ echo count($products_bybarc); } else { echo 0; } ?>)</h2>
 <div class="cont">
 <table class="datagrid smallheader noprint <?=empty($products)?"grey":""?>" width="100%">
 <thead><tr><th colspan="100%">Product Name</th></tr></thead>
@@ -111,7 +111,17 @@ padding:5px;
 <a href="<?=site_url("admin/viewlinkeddeals/{$o['product_id']}")?>"><nobr>linked deals</nobr></a>
 </td>
 </tr>
-<?php }if(empty($products)){?>
+<?php } ?>
+<?php foreach($products_bybarc as $o){?>
+<tr><td><a class="link" href="<?=site_url("admin/product/{$o['product_id']}")?>"><?=$o['product_name']?></a></td>
+<td><?=$o['stock']?> stock</td>
+<td>
+<a href="<?=site_url("admin/editproduct/{$o['product_id']}")?>"><nobr>edit</nobr></a><br>
+<a href="<?=site_url("admin/viewlinkeddeals/{$o['product_id']}")?>"><nobr>linked deals</nobr></a>
+</td>
+</tr>
+<?php } ?>
+<?php if(empty($products) && empty($products_bybarc)){?>
 <tr><td colspan="100%">no matches</td>
 <?php }?>
 </tbody>

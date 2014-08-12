@@ -133,6 +133,7 @@
 							<thead>
 								<tr>
 									<th width="3%">Si</th>
+									<th width="10%">Main category</th>
 									<th width="10%">Vendor category</th>
 									<th width="30%">Link category</th>
 									<th>Action</th>
@@ -145,6 +146,7 @@
 										?>
 										<tr>
 											<td><?php echo ($i+1); ?></td>
+											<td><?php echo  ($c['main_category'])?$c['main_category']:'-NA-'; ?></td>
 											<td><?php echo  $c['client_category']; ?></td>
 											<td>
 												<?php 

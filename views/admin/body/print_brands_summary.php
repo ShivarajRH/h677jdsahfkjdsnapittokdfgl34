@@ -27,17 +27,29 @@
 		</div>	
 		<div id="container">
 		<table class="print_tbl" border="0" cellspacing="0" cellpadding="4" width="100%" >
-			<thead><tr><Th>Sno</Th><th align="left">ProductID</th><th align="left">Product Name</th><th align="right">MRP</th><th align="center">Stock Qty</th><th align="right">MRP Value</th><th align="right">Avg <br /> Purchase <br />Price</th><th align="right">Avg <br /> Total <br />purchase</th></tr></thead>
+			<thead>
+				<tr>
+					<th align="left">Sl.No</th>
+					<th align="left">ProductID</th>
+					<th align="left">Product Name</th>
+					<th align="center">Stock Qty</th>
+					<th align="center">Sourceable</th>
+					<th align="right">DP</th>
+					<th align="right">15day sales</th>
+					<th align="right">30day sales</th>
+					<th align="right">60day sales</th>
+				</tr>
+			</thead>
 			<tbody>
 			<?php 
-				$t_sv=$t_avg=0;$i=1; $qty_t = 0; 
+				$t_sv=$t_avg=0;$i=1; $qty_t = 0;$k=1; 
 				foreach($products as $p){
 			?>
 				<tr>
-					<td><?=$i++?></td>
+					<td><?=$k++?></td>
 					<td><?=$p['product_id']?></td>
 					<td style="text-align:left !important"><?=$p['product_name']?></td>
-					<td align="right"><?=format_price($p['mrp'],0)?></td>
+					
 					<td align="center">
 						<?=$p['stock']*1?>
 						<?php
@@ -53,9 +65,40 @@
 							$qty_t += $p['stock']*1;
 						?>
 					</td>
-					<td align="right"><?=format_price($p['stock_value'],0)?></td>
-					<td align="right"><?php $avg=round($this->db->query("select avg(purchase_price) as a from t_grn_product_link where product_id=?",$p['product_id'])->row()->a,2); echo format_price($avg);?></td>
-					<td align="right"><?=format_price($p['stock']*$avg,2)?></td>
+					<td>
+						<?php 
+							if($p['is_sourceable'] == 1)
+							{
+								echo '<span style="color:green">Sourceable</span>';
+							}
+							else 
+							{
+								echo '<span style="color:red">Not Sourceable</span>';
+							}
+						
+					
+						?>
+					</td>	
+					<td align="right"><?=format_price($p['price'],0)?></td>
+					
+					<td align="right"><?=$this->db->query("SELECT IFNULL(SUM(o.quantity*d.qty),0) AS o 
+										FROM m_product_deal_link d
+										JOIN m_product_info a ON d.product_id = a.product_id  
+										LEFT JOIN king_orders o ON o.itemid = d.itemid AND o.time > (UNIX_TIMESTAMP()-(24*15*60*60))  
+										WHERE a.product_id=".$p['product_id']."
+										GROUP BY d.id ")->row()->o ?></td>
+					<td align="right"><?=$this->db->query("SELECT IFNULL(SUM(o.quantity*d.qty),0) AS o 
+										FROM m_product_deal_link d
+										JOIN m_product_info a ON d.product_id = a.product_id  
+										LEFT JOIN king_orders o ON o.itemid = d.itemid AND o.time > (UNIX_TIMESTAMP()-(24*30*60*60))  
+										WHERE a.product_id=".$p['product_id']."
+										GROUP BY d.id ")->row()->o ?></td>
+					<td align="right"><?=$this->db->query("SELECT IFNULL(SUM(o.quantity*d.qty),0) AS o 
+										FROM m_product_deal_link d
+										JOIN m_product_info a ON d.product_id = a.product_id  
+										LEFT JOIN king_orders o ON o.itemid = d.itemid AND o.time > (UNIX_TIMESTAMP()-(24*60*60*60))  
+										WHERE a.product_id=".$p['product_id']."
+										GROUP BY d.id ")->row()->o ?></td>
 				</tr>
 				<?php 
 						$t_sv+=$p['stock_value']; 
@@ -63,11 +106,10 @@
 					}
 				?>
 				<tr>
-					<td colspan="4" align="right">Total </td>
+					<td colspan="2" align="right">Total </td>
 					<td align="center"><?=$qty_t;?> Qtys</td>
 					<td align="right"><b><?=format_price($t_sv)?></b></td>
-					<td></td>
-					<td align="right"><b><?=format_price($t_avg)?></b></td>
+					<td></td><td></td><td></td>
 				</tr>
 			</tbody>
 		</table>

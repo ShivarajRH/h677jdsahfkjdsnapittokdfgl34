@@ -1,6 +1,11 @@
 <?php
 
 	$item_id = $this->uri->segment(3);
+	$deal_pub_det = @$this->db->query("select a.created_on,b.username,is_publish,remarks
+			from t_deal_publish_changelog a
+			left join king_admin b on a.created_by = b.id
+			where item_id = ?
+			order by a.id desc limit 1;",$deal['id'])->row_array();
 ?>
 
 <style>
@@ -225,6 +230,24 @@ ul.tabs li.active
   background-image: linear-gradient(to bottom, #fc9f8a, #fa623f);
 }
 */
+.prd_active_wrap
+{
+	float: right;
+    text-align: right;
+    width: 50%;
+}
+.red {
+    background: none repeat scroll 0 0 #FF6655;
+    color: #FFFFFF;
+    font-weight: bold;
+    padding: 3px;
+}
+.green {
+    background: none repeat scroll 0 0 #619C5C;
+    color: #FFFFFF;
+    font-weight: bold;
+    padding: 3px;
+}
 </style>
 
 
@@ -252,24 +275,36 @@ ul.tabs li.active
 
 
 <div class="container page_wrap" style="padding:10px">
-
-
 <div style="width:75%;">	
 	<?=$deal['menu_name']?>  &raquo; 
 	<a href="<?=site_url("admin/viewcat/{$deal['catid']}")?>"><?=$deal['category']?></a>  &raquo; 
 	<a href="<?=site_url("admin/viewbrand/{$deal['brandid']}")?>"><?=$deal['brand']?></a>
 </div>
 
-<div class="fl_left" style="width:67%">
+<div class="clear" >
 	<h3 class="page_title">
 		<br>
 		<?=$deal['name']?> <a style="font-size: 9px;" href="<?=site_url("admin/pnh_editdeal/{$deal['id']}")?>">Edit</a> 
 	</h3>
-	<span class="stock_wrap" style="width:15%;">
+	<span class="stock_wrap" style="width:60%;">
 		<div>
-		<?php $d=$deal; ?>
-
-		<h5 dealid="<?=$d['id'];?>" class="dealstock"></h5>
+		<?php $d=$deal;  ?>
+		
+		<div class="prd_active_wrap">
+			<?php if($deal_stk != '0'){ ?>
+				<span class="notifications green" style="margin-right: 4px">Stock : <span style="font-size: 14px"><?=$deal_stk ?></span> </span>
+			<?php }else{ ?>	
+				<span class="notifications red">No Stock</span>
+			<?php } ?>
+				
+			<span style="font-size:19px"> | </span> 
+			
+			<?php if($deal['live']){ ?>
+				<span class="notifications green">Sourceble</span>
+			<?php }else{ ?>	
+				<span class="notifications red">Not Sourceble</span>
+			<?php } ?>
+		</div>
 
 		</div>
 	</span>
@@ -281,6 +316,7 @@ ul.tabs li.active
 		        <li rel="deal_det" style="margin-left:10px;" class="active" >Deal Details</li>
 		        <li rel="prod_linked">Product Linked</li>
 		        <li rel="prc_chanlog">Price Changelog</li>
+		        <li rel="pub_chanlog">Publish Changelog</li>
 		        <li rel="recent">Recent Orders</li>
 		        <li rel="spec_marg_his">Special Margin History</li>
 		        <li rel="analytics" class="sales_anl">Sales Analytics</li>
@@ -297,13 +333,28 @@ ul.tabs li.active
 										<td>PNH PID :</td><Td><?=$deal['pnh_id']?></Td>
 									</tr>
 									<tr><td>Deal Name :</td><Td style="font-weight:bold;"><?=$deal['name']?></Td></tr>
-									<tr><td>Print Name :</td><Td style="font-weight:bold;"><?=$deal['print_name']?$deal['print_name']:$deal['name']?></Td></tr>
+									<tr><td>Print Name :</td><Td style="font-weight:bold;"><?=isset($deal['print_name']) ? $deal['print_name'] : $deal['name']?></Td></tr>
 									<tr>
-									<td>Status :</td><td><?=$d['publish']==1?"Enabled":"Disabled"?> 
-									<a class="danger_link" href="<?=site_url("admin/pnh_pub_deal/{$d['id']}/{$d['publish']}")?>">change</a></td></tr>
+									<td>Status :</td>
+										<td><?=$d['publish']==1?"Published":"Not Published"?>
+											<?php 
+												if($this->erpm->auth(UPDATE_PRODUCT_DEAL_ROLE,true))
+												{
+											?> 
+													<a class="button button-tiny button-rounded button-caution"  href="<?=site_url("admin/pnh_pub_deal/{$d['id']}/{$d['publish']}")?>">change</a>
+											<?php 
+												}
+												
+												echo '<div style="font-size:11px;">Updated by : '.$deal_pub_det['username'].' | On : '.format_datetime($deal_pub_det['created_on']).' </div>';
+											?>
+										</td>
+									</tr>
+									
 									<tr><td>Tagline :</td><td><?=$deal['tagline']?></td></tr>
 									<tr><td>MRP :</td><td>Rs <?=$deal['orgprice']?></td></tr>
 									<tr><td><b>Offer price/Dealer Price </b>:</td><td>Rs <?=$deal['price']?></td></tr>
+									<tr><td><b>Member Price </b>:</td><td>Rs <?=$deal['member_price']?></td></tr>
+									<tr><td><b>Member Price Max order qty </b>:</td><td><?=$deal['mp_mem_max_qty']?></td></tr>
 									<tr><td>Store price :</td><td>Rs <?=$deal['store_price']?></td></tr>
 									<tr><td>NYP price :</td><td>Rs <?=$deal['nyp_price']?></td></tr>
 									
@@ -311,15 +362,16 @@ ul.tabs li.active
 									<tr><Td>Gender Attribute :</Td><td><?=$deal['gender_attr']?></td></tr>
 									<tr><Td>Max Allowed Qty <br>(for franchise per day):</Td><td><?=$deal['max_allowed_qty']?></td></tr>
 									<tr><td><b>Has Insurance</b> :</td><td><?=$deal['has_insurance']==1?'Yes':'No';?></td></tr>
+									<tr><td>ShipsIn :</td><Td style="font-weight:bold;"><?=$deal['shipsin']?></Td></tr>
 									<tr><td>Brand :</td><Td style="font-weight:bold;"><?=$deal['brand']?></Td></tr>
 									<tr><td>Category :</td><Td style="font-weight:bold;"><?=$deal['category']?></Td></tr>
 									<tr>
 									<td>Description :</td>
-									<Td style="font-weight:bold;">
+									<td style="font-weight:bold;">
 										<div id="description" >
 											<p class="show"><?=$deal['description']?></p>
 										</div>
-									</Td>
+									</td>
 									</tr>
 									<tr><td>Created by :</td><Td style="font-weight:bold;"><?=$deal['created_by']?></Td></tr>
 									<tr><td>Modified by :</td><Td style="font-weight:bold;"><?=$deal['mod_name']?></Td></tr>
@@ -387,31 +439,32 @@ ul.tabs li.active
 	       		<!-- #Price Changelog Block start -->
 	       		<div id="prc_chanlog" class="tabcontent">
 	       			<?php
-       					$prc_chan = $this->db->query("select a.*,b.username as logged_by from deal_price_changelog a left join king_admin b on a.created_by = b.id where itemid=? order by id desc",$deal['id']);
-						if($prc_chan->num_rows())
+						$prc_chan = $this->erpm->get_price_change_log($deal['id']); 
+						
+						if($prc_chan)
 						{	
 					?>
-					<table class="datagrid smallheader noprint">
+					<table class="datagrid smallheader noprint" width="100%">
 	       				<thead>
 							<tr>
-								<th>Sno</th><th>Old MRP</th><th>New MRP</th><th>Old Price</th><th>New Price</th><th>Reference</th><th>Updated By</th><th>Date</th>
+								<th>Sno</th><th>MRP <small>(Rs)</small></th><th>Price <small>(Rs)</small></th> <th>Member Price <small>(Rs)</small></th><th>Reference</th><th>Updated By</th><th>Date</th>
 							</tr>
 						</thead>
 						
 						<tbody>
-							<?php $i=1; foreach($prc_chan->result_array() as $pc){?>
+							<?php $i=1; foreach($prc_chan as $pc){?>
 							<tr>
 							<td><?=$i++?></td>
-							<td>Rs <?=$pc['old_mrp']?></td>
-							<td>Rs <?=$pc['new_mrp']?></td>
-							<td>Rs <?=$pc['old_price']?></td>
-							<td>Rs <?=$pc['new_price']?></td>
+							<td><?=$pc['old_mrp']?>  => <b><?=$pc['new_mrp']?></b></td>
+							<td><?=$pc['old_price']?> => <b><?=$pc['new_price']?></b></td>
+							<td><?=$pc['old_member_price']?> => Rs <b><?=$pc['new_member_price']?></b></td>
+							
 							<td>
 							<?php if($pc['reference_grn']==0) echo "MANUAL";else{?>
 							<a href="<?=site_url("admin/viewgrn/{$pc['reference_grn']}")?>"><?=$pc['reference_grn']?></a>
 							<?php }?>
 							</td>
-							<td><?=$pc['logged_by']?></td>
+							<td><?=  ucfirst($pc['logged_by']);?></td>
 							<td><?=format_datetime_ts($pc['created_on'])?></td>
 							</tr>
 							<?php }?>
@@ -420,6 +473,51 @@ ul.tabs li.active
 				<?php } else { ?>
 					<div style="margin:10px;font-weight:bold"> No Details Found </div>
 				<?php } ?>
+	       		</div>	
+	       		<!-- #Price Changelog Block End -->
+       		
+	       		<!-- #Price Changelog Block start -->
+	       		<div id="pub_chanlog" class="tabcontent">
+	       			<?php
+						$pub_chan = $this->db->query("select a.created_on,b.username,is_publish,remarks
+															from t_deal_publish_changelog a 
+															left join king_admin b on a.created_by = b.id 
+															where item_id = ?
+															order by a.id desc limit 10;",$deal['id']); 
+						
+						
+					?>
+							<table class="datagrid smallheader noprint" >
+			       				<thead>
+									<tr>
+										<th>Slno</th>
+										<th>Status</th>
+										<th>Updated By</th>
+										<th>Updated On</th>
+									</tr>
+								</thead>
+								<tbody>
+									
+									<?php 
+										if($pub_chan->num_rows())
+										{	
+											foreach($pub_chan->result_array() as $k=>$pub_c){?>
+											<tr>
+												<td><?=($k+1);?></td>
+												<td><?=($pub_c['is_publish']?'Published':'Unpublished');?></td>
+												<td><?=ucfirst($pub_c['username']);?></td>
+												<td><?=format_datetime($pub_c['created_on'])?></td>
+											</tr>
+											<?php }
+										}else
+										{
+											echo '<tr><td colspan="3" align="center">No Data Found</td></tr>';
+										}	
+									?>
+											
+								</tbody>
+							</table>
+					
 	       		</div>	
 	       		<!-- #Price Changelog Block End -->
        		
@@ -617,7 +715,7 @@ ul.tabs li.active
 	       			
 	       			<table width="100%">
 	       				<tr>
-	       					<td width="50%">
+	       					<td width="70%">
 	       						<?php if($linked_prod->num_rows()){ ?>
 		       						<h4>Linked Product Groups</h4>
 									<table class="datagrid smallheader noprint" width="88%">
@@ -635,28 +733,49 @@ ul.tabs li.active
 								<?php }
 								if($prods){ ?>
 									<h4>Linked Products</h4>
-									<table class="datagrid smallheader noprint"  width="88%">
+									<table class="datagrid smallheader noprint"  width="98%">
 										<thead>
-											<tr><th>Sno</th><th>ID</th><th>Product Name</th><th>Qty</th><th>Sourceable</th></tr>
+											<tr><th>Sno</th><th>ID</th><th>SKU CODE</th><th>Product Name</th><th>MRP</th><th>Qty</th><th>Sourceable</th><th>Vendor Stock</th></tr>
 										</thead>
 										
 										<tbody>
 											<?php foreach($prods as $i=>$p){
-												$p['is_sourceable'] = $this->db->query("select is_sourceable from m_product_info where product_id = ? ",$p['product_id'])->row()->is_sourceable;
+												$p_det = $this->db->query("select sku_code,is_sourceable,mrp from m_product_info where product_id = ? ",$p['product_id'])->row_array();
+												
+												$p['is_sourceable'] = $p_det['is_sourceable'];
+												$p['sku_code'] = $p_det['sku_code'];
+												$p['mrp'] = $p_det['mrp'];
 											?>
-											<tr><td><?=++$i?></td><td><?=$p['product_id']?></td><td><a href="<?=site_url("admin/product/{$p['product_id']}")?>"><?=$p['product_name']?></a></td><td><?=$p['qty']?></td><td><?=($p['is_sourceable']?'Yes':'No')?></td></tr>
+											<tr>
+												<td><?=++$i?></td>
+												<td><?=$p['product_id']?></td>
+												<td><?=$p['sku_code']?></td>
+												<td><a href="<?=site_url("admin/product/{$p['product_id']}")?>"><?=$p['product_name']?></a></td>
+												<td><?=$p['mrp']?></td>
+												<td><?=$p['qty']?></td>
+												<td><?=($p['is_sourceable']?'Yes':'No')?></td>
+												<td>
+													<?php
+														$ven_stock_qty_det_res = @$this->db->query('select ven_stock_qty from m_vendor_product_link where product_id = ? ',$p['product_id']);
+														if(!$ven_stock_qty_det_res->num_rows())
+															echo '-na-';
+														else
+															echo $ven_stock_qty_det_res->row()->ven_stock_qty;
+													?>
+												</td>
+											</tr>
 											<?php }?>
 										</tbody>
 									</table>
 								<?php } ?>
 	       					</td>
-	       					<td width="50%">
+	       					<td width="30%">
 	       						<h4>Product Link Update Log</h4>
 	       						<?php 
 	       						if($pnh_Deal_upd_log)
 									{
 	       						 ?>
-					       		<table class="datagrid smallheader noprint" width="88%">
+					       		<table class="datagrid smallheader noprint" width="90%">
 									<thead>
 										<tr>
 											<th>#</th>
@@ -972,7 +1091,7 @@ $('select[name="state"]').change(function(){
 });
 
 (function ($) { 
-	
+
 	$('#tab_deal_sales').tabs();
 	$('#margin_his').tabs();
 
@@ -1007,6 +1126,8 @@ $('select[name="state"]').change(function(){
 $("#grid_list_frm_to").bind("submit",function(e){
     e.preventDefault();
     deal_sale_stat();
+    state_id = $('select[name="state"]').val();
+	deal_stat_pieview(state_id);
     return false;
 });
 
@@ -1091,8 +1212,11 @@ function deal_sale_stat()
 function deal_stat_pieview(state_id)
 {
 	var state_id=state_id;
+	var start_date = $('#date_from').val();
+	var end_date = $('#date_to').val();
+	
 	var state_name_name = document.getElementById('state_filter').options[document.getElementById('state_filter').selectedIndex].text;
-	$.getJSON(site_url+'/admin/jx_deal_getsales_by_territory/'+itemid+'/'+state_id,'',function(resp){
+	$.getJSON(site_url+'/admin/jx_deal_getsales_by_territory/'+itemid+'/'+state_id+'/'+start_date+'/'+end_date,'',function(resp){
 			
 	if(resp.result == 0)
 	{

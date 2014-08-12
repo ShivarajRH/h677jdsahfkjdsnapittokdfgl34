@@ -40,6 +40,12 @@ h2
     margin-top: 10px;
     width: 100%;
 }
+.load_cont
+{
+	font-size: 13px;
+    text-align: center;
+    margin-top: 15px;
+}
 </style>
 
 <div class="container">
@@ -59,10 +65,10 @@ h2
 			<input type="text" placeholder="Barcode" id="srch_barcode">
 		</div> 
 	
-		<form method="post" id="apply_grn_form" enctype="multipart/form-data">
+		<form id="apply_grn_form" enctype="multipart/form-data" method="post">
 			<div id="grn_pids"></div>
 			<div id="grn">
-				<table class="datagrid nofooter" style="width: 86% !important	">
+				<table id="po_prd_lst" class="datagrid nofooter" style="width: 86% !important	">
 					<thead>
 						<tr>
 							<th width="20px">S.no</th>
@@ -73,7 +79,7 @@ h2
 							<th width="30px">Vat(%)</th>
 							<th width="160px" style="text-align: center">Price</th>
 							<th width="83px">SubTotal</th>
-							<th width="100px">Expiry/Offers</th>
+							<th width="125px">Expiry/Offers</th>
 							<th></th>
 						</tr>
 					</thead>
@@ -87,12 +93,12 @@ h2
 					</tfoot>
 				</table>
 			</div>
-
+			<textarea name="grn_data" class="grn_data" style="display:none" value=""></textarea>
 			<div class="clearboth">
 				<div class="fl_left" style="width:86%">
 				 	<div style="padding:10px 10px 0">
 						<h3 style="width: 100%">Invoice Details </h3>
-						<table class="datagrid invoice_tab nofooter" style="width: 53%;float:left">
+						<table id="grn_inv_list_det" class="datagrid invoice_tab nofooter" style="width: 53%;float:left">
 							<thead>
 								<tr>
 									<th>Sl.No</th>
@@ -103,7 +109,6 @@ h2
 									<th></th>
 								</tr>
 							</thead>
-							
 							<tbody>
 								<tr>
 									<td>1</td>
@@ -133,6 +138,7 @@ h2
 					<input type="submit" class="button button-action button-rounded cursor" value="Submit" id="form_submit">
 				</div>
 			</div>
+			
 		</form>
 	</div>
 	
@@ -140,7 +146,7 @@ h2
 		<div class="right">
 			<table>
 				<tbody>
-					<tr class="barcode%bcode% barcodereset pending_mode edit_prod_row " bcode="%bcode%" prodid="%prodid%" pid="%pid%" qty="%qty%" dp_price="%dp_price%" brandid="%brandid%" p_price="%price%" po_mrp="%po_mrp%" po_margin="%po_margin%" has_serialno="%has_serialno%">
+					<tr class="barcode%bcode% barcodereset pending_mode edit_prod_row row_data" bcode="%bcode%" pname="%pname%" prodid="%prodid%" pid="%pid%" qty="%qty%" dp_price="%dp_price%" brandid="%brandid%" p_price="%price%" po_mrp="%po_mrp%" po_margin="%po_margin%" has_serialno="%has_serialno%" self_life="%self_life%">
 						<td>%sno%</td>
 						<td>
 	                        <input type="hidden" name="imei%pid%[]" class="imeisvvv imei%prodid%" id="list_imei_%prodid%" value="">
@@ -173,7 +179,7 @@ h2
 								<input type="button" class="button button-caution button-rounded button-tiny cursor row_cancel" value="Cancel Scan" style="padding:0px;">	
 							</div>
 						</td>
-						
+												
 						<td class="po_det_wrap_blk">
 							<select class="stkloc" name="storage%pid%[]">==rbs==</select>
 							<br /><br />
@@ -224,9 +230,10 @@ h2
 							<input type="text" disabled="" class="inp sub_ttl subttl_%prodid%" size=3 value="0" >
 						</td>
 						<td>
-							<div>Exp : <input name="expiry_date%pid%[]" class="inp exp_date" placeholder=""></div>
+							<div class="ex_dt"  style="text-align: right">Exp : <input type="text" name="expiry_date%pid%[]" class="inp exp_date" placeholder=""></div>
+							<div class="self_life_blk">Self Life : <input type="text" class="inp self_life" name="self_life%pid%[]" value="%self_life%"></div>
 							<div>has offer : <input type="checkbox" class="has_offer" value="0"></div>
-							<div>			<select name="offer%pid%[]" class="offer_list">==offers==</select></div>
+							<div>			<select name="offer_stkid%pid%[]" class="offer_list">==offers==</select></div>
 							<div><textarea cols="12" rows="2" name="new_offer%pid%[]" class="offer_area"></textarea></div>			
 						</td>
 						<td width="50">
@@ -283,18 +290,35 @@ h2
 	
 <div id="rqty_imei_blk_dlg" class="rqty_imei_blk_dlg" title="IMEI Numbers">
 	<form>
-		<span class="prod_title"></span>
+		<span class="imei_prod_title"></span>
 		<input type="hidden" value="" id="imei_pid">
 		<div class="imei_nos_dlg prodid_%prodid%"></div>
 		<span class="imei_error_text"></span>
 	</form>
 </div>
 
+<div id="scan_imei_dlg" class="scan_imei_dlg" title="IMEI Numbers">
+	<div class="imei_san_wrap">
+	</div>
+</div>
+
 <div id="load_vendor_po_dlg" class="load_vendor_po_dlg" title="POs">
 	
 </div>
 
+<div id="loading_dlg" title="Please Wait....">
+	<div class="load_cont"></div>
+</div>
+<!--
+<div id="post_grndata" style="display:none">
+	<form action="" method="post">
+		<textarea name="grn_data"></textarea>
+		<div id="grn_inv_list_data" ></div>
+		<input type="submit" value="submit">
+	</form>
+</div>
 
+-->
 
 <script type="text/javascript">
 
@@ -415,6 +439,7 @@ $('#load_vendor_po_dlg').dialog({
 				var po=trele.attr('pid');
 				pos.push(po);
 			});
+			
 			var id=$('.selected a').attr('vid');
 			$.post(site_url+'/admin/polist_byvendor',{vid:id},function(resp){
 					var po_list = '';
@@ -448,6 +473,8 @@ $('#load_vendor_po_dlg').dialog({
 						});
 					
 					po_list +="</div>";
+				
+				
 				$('#load_vendor_po_dlg').html(po_list);
 			},'json');
 	}
@@ -613,7 +640,8 @@ function loadpo(pids)
 			grow=grow.replace(/%prodid%/g,poi.product_id);
 			grow=grow.replace(/%sno%/g,dpe);
 			grow=grow.replace(/%pid%/g,poi.po_id);
-			grow=grow.replace(/%name%/g,'<a href="'+site_url+'/admin/product/'+poi.product_id+'" target="_blank">'+poi.product_name+'</a>');
+			grow=grow.replace(/%name%/g,'<a href="'+site_url+'/admin/product/'+poi.product_id+'" class="name_ttl" target="_blank">'+poi.product_name+'</a>');
+			grow=grow.replace(/%pname%/g,poi.product_name);
 			grow=grow.replace(/%qty%/g,poi.order_qty);
 			grow=grow.replace(/%pqty%/g,tot_rqty);
             grow=grow.replace(/%po_mrp%/g,poi.mrp);
@@ -647,7 +675,7 @@ function loadpo(pids)
 			else
 				grow=grow.replace(/==offers==/g,'<option value="0">Choose</option><option value="1">New</option>');
 			
-			
+			grow=grow.replace(/%self_life%/g,poi.self_life);
 			
 											
 			grow=grow.replace(/%dpe%/g,dpe);
@@ -660,7 +688,6 @@ function loadpo(pids)
 			//grow=grow.replace(/%offer%/g,offer);
 			g_rows=g_rows+grow;
 			$(".expdate"+dpe).datepicker({minDate:0});
-			$(".exp_date"+dpe).datepicker({minDate:0});
 			dpes.push(".expdate"+dpe);
 			$("#grn_pids").append('<input type="hidden" name="poids[]" value="'+poi.po_id+'">');
 			added_pos.push(poi.po_id);
@@ -674,11 +701,31 @@ function loadpo(pids)
 		calc_rec_value();
 		
 		$('#grn .datagrid tbody tr').each(function(){
-			if($(this).attr('has_serialno') == 1)
-			
-				$('.imei_scanned_div',this).show();
+			var trele=$(this);
+			$('.exp_date',this).datepicker({
+				onSelect: function(dateText, inst) {
+			       $('.self_life',trele).select();
+			    }
+			});
+			if($(this).attr('has_serialno') == 0)
+			{
+				$('.imei_scanned_div',$(this)).hide();
+			}
 			else
-				$('.imei_scanned_div',this).hide();
+			{
+				$('.imei_scanned_div',$(this)).show();
+			}
+			
+			if($(this).attr('self_life') == '-1')
+			{
+				$('.ex_dt',this).hide();
+				$('.self_life_blk',this).hide();
+			}
+			else
+			{
+				$('.ex_dt',this).show();
+				$('.self_life_blk',this).show();
+			}
 				
 		});
 		scanned_rows();
@@ -731,12 +778,15 @@ function reset_tabindex(row,cb)
 		tabindex_cnt++;
 		$('input.exp_date',this).attr('tabindex',tabindex_cnt);
 		tabindex_cnt++;
+		$('input.self_life',this).attr('tabindex',tabindex_cnt);
+		tabindex_cnt++;
 		$('input.has_offer',this).attr('tabindex',tabindex_cnt);
 		tabindex_cnt++;
 		$('input.offer_list',this).attr('tabindex',tabindex_cnt);
 		tabindex_cnt++;
-		$('.offer_area',this).attr('tabindex',tabindex_cnt);
+		$('textarea.offer_area',this).attr('tabindex',tabindex_cnt);
 		tabindex_cnt++;
+		
 		$('.validate_edit_mode',this).attr('tabindex',tabindex_cnt);
 		tabindex_cnt++;
 		$('#srch_barcode',this).attr('tabindex',tabindex_cnt);
@@ -787,6 +837,24 @@ function print_imei_inputs(tot_rqty,prodid) {
     return imei_out;
 }
 
+$('#loading_dlg').dialog({
+	modal:true,
+	autoOpen:false,
+	width:350,
+	height:150,
+	autoResize:true,
+	closeOnEscape: false,
+	open:function(event,ui){
+		 //hide close button.
+   		 $(this).parent().children().children('.ui-dialog-titlebar-close').hide();
+		
+		load_html='';
+		load_html+='Stock intake is in progress.<br />';
+		load_html+='<img style="margin-top:15px" src="'+base_url+'/images/loading_bar.gif'+'">';
+		$('#loading_dlg .load_cont').html(load_html);
+	}
+});
+
 $('#add_barcode_dialog').dialog({
 	modal:true,
 	autoOpen:false,
@@ -816,7 +884,7 @@ $('.prod_mrp').live('change',function(){
 	
 		if(dp_price != 0)
 		{
-			if(mrp <= dp_price)
+			if(mrp < dp_price)
 			{
 				$('.row_error_inp',trele).html('<span>MRP should be greater than DP price</span>');
 				$('.prod_mrp',trele).val("");
@@ -898,7 +966,7 @@ $(".datagrid .iqty").live("change",function(){
     		alert("Please give valid Invoice quantity");
     		$(this).val("0");
     		return false;
-    	}else if(tot_iqty > tot_rqty)
+    	}else if(tot_iqty != tot_rqty)
     	{
     		if(confirm("Warning: \r\nInvoice Qty is greater than required Qty.Do you want to Proceed"))
 			{
@@ -912,28 +980,39 @@ $(".datagrid .iqty").live("change",function(){
 });
 
 $(".inv_inp_blk").live("change",function(){
+	/*
 	trele=$(this).parents('tr:first');
-    	$(this).val(inv);
-    	if(inv.toString().indexOf('.') != -1 || inv < 0)
-    	{
-    		alert("Please give valid Invoice number");
-    		$(this).val("");
-    		return false
-    	}
+    	//$(this).val(inv);
+    if(inv.toString().indexOf('.') != -1 || inv < 0)
+    {
+    	alert("Please give valid Invoice number");
+    	$(this).val("");
+    	return false
+    }
+	*/
 });
 
 $(".datagrid .rqty").live("change",function(){
 		trele=$(this).parents('tr:first');
 		var tot_rqty = $(this).val();
     	tot_rqty = isNaN(tot_rqty)?0:tot_rqty;
-    	if(tot_rqty.toString().indexOf('.') != -1 || tot_rqty < 0)
+    	var prodid = $(this).attr('prodid');
+    	var pname = $(this).attr('pname');
+    	
+		$(".imei_prod_title").html("Product : <a target='_blank' href='"+site_url+'/admin/product/'+prodid+"'>"+pname+'</a>');
+    	
+    	if(tot_rqty.toString().indexOf('.') != -1 || tot_rqty < 0 )
     	{
-    		alert("Please give valid required Qty");
     		$(this).val("0");
-    		$('.edit_mode .rqty').select();
+    		alert('Quantity is invalid..Please give correct input');
+    	}else if(!$('.scan_pbarcode',trele).val())
+    	{
+    		$(this).val("0");
+    		alert('Please Scan Barcode to Continue');
     	}
     	else
     	{
+    		
     		 $(this).val(tot_rqty);
     		 var prodid = $(this).attr('prodid');
 	  		 var brandid = $(this).attr('brandid');
@@ -1014,7 +1093,7 @@ $(function(){
 	$('.offer_list').hide();
 	$('.offer_area').hide();
 	$('.selected_po_list').hide();
-	$('.cancel_prd').hide();	
+		$('.cancel_prd').hide();
 	$("#srch_barcode").keyup(function(e){
 	if($('.edit_mode').hasClass('edit_mode'))
 	{
@@ -1030,7 +1109,7 @@ $(function(){
 		$('.edit_mode .cancel_prd').hide();
 		$('.edit_mode').removeClass('edit_mode');
 		
-	}
+	}	
 	if(e.which==13)
 	{
 		var scan_bc =  $(this).val();
@@ -1105,19 +1184,101 @@ $('#apply_grn_form .dp_price').live('keyup',function(){
 			upd_dp_price_blk.hide();	
 		}
 });
+
+(function($){
+    $.fn.serializeObject = function(){
+
+        var self = this,
+            json = {},
+            push_counters = {},
+            patterns = {
+                "validate": /^[a-zA-Z][a-zA-Z0-9_]*(?:\[(?:\d*|[a-zA-Z0-9_]+)\])*$/,
+                "key":      /[a-zA-Z0-9_]+|(?=\[\])/g,
+                "push":     /^$/,
+                "fixed":    /^\d+$/,
+                "named":    /^[a-zA-Z0-9_]+$/
+            };
+
+
+        this.build = function(base, key, value){
+            base[key] = value;
+            return base;
+        };
+
+        this.push_counter = function(key){
+            if(push_counters[key] === undefined){
+                push_counters[key] = 0;
+            }
+            return push_counters[key]++;
+        };
+
+        $.each($(this).serializeArray(), function(){
+
+            // skip invalid keys
+            if(!patterns.validate.test(this.name)){
+                return;
+            }
+
+            var k,
+                keys = this.name.match(patterns.key),
+                merge = this.value,
+                reverse_key = this.name;
+
+            while((k = keys.pop()) !== undefined){
+
+                // adjust reverse_key
+                reverse_key = reverse_key.replace(new RegExp("\\[" + k + "\\]$"), '');
+
+                // push
+                if(k.match(patterns.push)){
+                    merge = self.build([], self.push_counter(reverse_key), merge);
+                }
+
+                // fixed
+                else if(k.match(patterns.fixed)){
+                    merge = self.build([], k, merge);
+                }
+
+                // named
+                else if(k.match(patterns.named)){
+                    merge = self.build({}, k, merge);
+                }
+            }
+
+            json = $.extend(true, json, merge);
+        });
+
+        return json;
+    };
+})(jQuery);
+	
+$('#apply_grn_form').data('validate-frm',true);
 	
 var chk_for_vendor_ids = 1;
 $("#apply_grn_form").submit(function(){
+	
+	if(!$(this).data('validate-frm'))
+		return true;
+	
 	flag=true;
 	var inv_ttl = $("#invoice_ttl_value").text();
 	var grn_ttl = $("#grn_ttl").text();
 	var scan_status = $(".processed_mode").length;
+	var edit_status = $(".edit_mode").length;
+	
 	if(scan_status == 0)
 	{
 		alert("Please scan atleast 1 products from List before submitting");
 		flag=false;
-		return flag;
+		
+	}
+	if(edit_status != 0 )
+	{
+		alert("Please complete or cancel scan  before submitting");
+		flag=false;
+		
 	}	
+		
 	
 	if($(".prod_addcheck").length==0)
 	{
@@ -1138,6 +1299,8 @@ $("#apply_grn_form").submit(function(){
 		alert("Please choose rackbin");
 		return false;
 	}
+	
+	
 		
 	$('.invoice_tab tbody tr',this).each(function(){
 		var trele=$(this).parents('tr:first');
@@ -1184,11 +1347,12 @@ $("#apply_grn_form").submit(function(){
 	{
 		$('.remarks').removeClass('imei_error_inp');
 	} 
-	
+			
 	if(chk_for_vendor_ids && flag)
 	{
 		var frm_ele = $(this);
-		$.post(site_url+'/admin/check_vendor_invs',$(this).serialize(),function(resp){
+		var form_data = JSON.stringify(frm_ele.serializeObject());
+		$.post(site_url+'/admin/check_vendor_invs',{grn_data:form_data},function(resp){
 			if(resp.error)
 			{
 				alert(resp.error);
@@ -1203,12 +1367,26 @@ $("#apply_grn_form").submit(function(){
 	}
 		
 	if(flag)
+	{
 		$("#form_submit").attr("disabled",true);
-	return flag;
+	}else
+	{
+		var frm_ele = $(this);
+		var form_data = JSON.stringify(frm_ele.serializeObject());
+			//$('#grn_inv_list_data').html($('#grn_inv_list_det').html());
+			//$('#post_grndata form textarea[name="grn_data"]').val(form_data);
+			//var ht='<textarea name="grn_data" class="grn_data"></textarea>';
+		$('textarea[name="grn_data"]').val(form_data);
+		$('#grn table:first').html('');
+		$('#loading_dlg').dialog('open');
+		$('#apply_grn_form').data('validate-frm',false);
+		$('#apply_grn_form').submit();	
+	}
+	return false;
+	//return flag;
 });
 	
-$(".expdate,.exp_date,.datepick").datepicker({minDate:0});
-
+$(".expdate,.datepick").datepicker({minDate:0});
 
 $("#grn_vendor").attr("disabled",false);
 
@@ -1271,8 +1449,10 @@ $('.add_product_row').live('click',function(e){
 	var trele_pomrp = trele.attr('po_mrp');
 	var trele_pomargin = trele.attr('po_margin');
 	var trele_rackname = $('.stkloc').html();
+	var trele_offers = $('.offer_list').html();
 	var trele_has_serialno = trele.attr('has_serialno');
 	var trele_bcscanned = trele.hasClass('bcode_scanned');
+	var trele_selflife = trele.attr('self_life');
 	//alert(trele_has_serialno);
 	process_edit_validation(function (stat) {
 		                if (stat) {
@@ -1290,6 +1470,7 @@ $('.add_product_row').live('click',function(e){
 							grow=grow.replace(/%update_barcode%/g,update_barcode);
 							grow=grow.replace(/%prodid%/g,trele_prodid);
 							grow=grow.replace(/%name%/g,trele_name);
+							grow=grow.replace(/%pname%/g,trele_name);
 							grow=grow.replace(/%pid%/g,trele_pid);
 							grow=grow.replace(/%qty%/g,trele_oqty);
 							
@@ -1312,16 +1493,48 @@ $('.add_product_row').live('click',function(e){
 							grow=grow.replace(/%po_margin%/g,trele_pomargin);
 							grow=grow.replace(/%po_mrp%/g,trele_pomrp);
 							
+							
+							grow=grow.replace(/%self_life%/g,trele_selflife);
+							
 							if(trele_rackname)
 								grow=grow.replace(/==rbs==/g,trele_rackname);
 							else
 								grow=grow.replace(/==rbs==/g,'<option value="10">A11-Default Rack</option>');
+							
+							if(trele_offers)	
+								grow=grow.replace(/==offers==/g,trele_offers);
+							else
+								grow=grow.replace(/==offers==/g,'<option value="0">Choose</option><option value="1">New</option>');
+								
 							
 							trele.after(grow);
 							
 							var new_trele = trele.next();
 							$('span.name',new_trele).hide();
 							$('td:first',new_trele).html('');
+							
+							$('#grn .datagrid tbody tr').each(function(){
+								var trele=$(this);
+								$('.exp_date',this).datepicker({
+									onSelect: function(dateText, inst) {
+								       $('.self_life',trele).select();
+								    }
+								});
+								//alert($(this).attr('self_life'));
+								if($(this).attr('self_life') == -1)
+								{
+									
+									$('.ex_dt',this).hide();
+									$('.self_life_blk',this).hide();
+								}
+								else
+								{
+									
+									$('.ex_dt',this).show();
+									$('.self_life_blk',this).show();
+								}
+									
+							});
 							
 							if(trele_has_serialno != 1)
 								$('.imei_scanned_div',new_trele).hide();
@@ -1350,21 +1563,34 @@ $('.add_product_row').live('click',function(e){
 
 $(".row_cancel").live('click',function(){
 	var trele=$(this).parents('tr:first');
-	if($('.edit_mode').hasClass('edit_mode'))
+	if(confirm("All entries will cleared...Do you want to continue"))
+
 	{
-		$('.scan_pbarcode',trele).val('');
-		$('.pb_blk',trele).hide().html('');
-		$('.imei_scanned_status',trele).removeClass('active').html('NO');
-		$('.rqty',trele).val('0');
-		$('.iqty',trele).val('0');
-		$('.bcode_scanned_status',trele).removeClass('active').html('NO');
-		$('.prod_mrp',trele).val('');
-		$('.view_imei',trele).hide('');
-		$('.imeis',trele).val('');
-		$('.edit_mode').removeClass('edit_mode').removeClass('processed_mode').removeClass('bcode_scanned');
-		$('.cancel_prd',trele).hide();
-	}	
-	scanned_rows();	
+		if($('.edit_mode').hasClass('edit_mode'))
+		{
+			$('.scan_pbarcode',trele).val('');
+			$('.pb_blk',trele).hide().html('');
+			$('.imei_scanned_status',trele).removeClass('active').html('NO');
+			$('.rqty',trele).val('0');
+			$('.iqty',trele).val('0');
+			$('.bcode_scanned_status',trele).removeClass('active').html('NO');
+			$('.prod_mrp',trele).val('');
+			$('.view_imei',trele).hide('');
+			$('.imeis',trele).val('');
+			$('.exp_date',trele).val('');
+			$('.has_offer',trele).attr("checked",false);
+			$('.offer_list',trele).val('0').hide();
+			$('.offer_area',trele).html('').hide();
+			$('.edit_mode').removeClass('edit_mode').removeClass('processed_mode').removeClass('bcode_scanned');
+			$('.cancel_prd',trele).hide();
+		}	
+		scanned_rows();	
+	}
+	else
+	{
+		return false;
+	}
+	$('.edit_mode .rqty',trele).focus();
 });			
 	
 
@@ -1444,6 +1670,10 @@ $('#rqty_imei_blk_dlg form').submit(function(){
 						$('input[scninp_imei="imei_'+dup_imei+'"]').addClass('imei_error_inp');
 					});
 					$('#rqty_imei_blk_dlg .imei_error_inp:first').focus();
+					if(!imei_dup_list.length)
+						$('.imei_error_text').html("");
+					else
+						$('.imei_error_text').html("Duplicate IMEI found : "+imei_dup_list);
 				}
 			}else
 			{
@@ -1481,10 +1711,12 @@ $('#rqty_imei_blk_dlg form').submit(function(){
 						
 						}
 					}
+					
 					$("#rqty_imei_blk_dlg").dialog('close');
 					$('.iqty',ref_trele).select();
 			}
 		},'json');
+			
 	}
 	return false;
 });
@@ -1543,13 +1775,40 @@ $('#add_barcode_dialog form').submit(function(){
 	return false;
 });
 
-$('#rqty_imei_blk_dlg').dialog({
+$('#scan_imei_dlg').dialog({
 		modal:true,
 		autoOpen:false,
 		width:350,
 		height:400,
 		autoResize:true,
 			
+		 buttons: {
+		    "Ok": function() { 
+		    	$('#rqty_imei_blk_dlg form').submit();},
+		    "cancel": function(){
+		    	$('#scan_imei_dlg').dialog('close');
+			} 
+		  },	
+		open:function(){
+			dlg = $(this);
+			var trele = dlg.ref_tr;
+			var imeis=[];
+			$(".imeis",trele).each(function(){
+			 	imeis=$(this).val().split(",");
+			 	alert(imeis);
+			});
+			
+	}
+});
+
+
+$('#rqty_imei_blk_dlg').dialog({
+		modal:true,
+		autoOpen:false,
+		width:350,
+		height:400,
+		autoResize:true,
+		onescapeclose:false,	
 		 buttons: {
 		    "Ok": function() { 
 		    	$('#rqty_imei_blk_dlg form').submit();},
@@ -1573,6 +1832,7 @@ $('#rqty_imei_blk_dlg').dialog({
 							$('.rqty',ref_trele).val("0").select();
 						}else
 						{
+							
 							$('.iqty',ref_trele).val("0").select();
 						}
 				}else
@@ -1584,12 +1844,38 @@ $('#rqty_imei_blk_dlg').dialog({
 		  },	
 		open:function(){
 			dlg = $(this);
+			var dlgData = $("#rqty_imei_blk_dlg").data("pro_data");
+			ref_trele = dlgData.ref_tr;
+			prodid = dlgData.prodid;
+			tot_rqty = dlgData.ttl_qty;	
+			state=dlgData.state;
+			var pname=ref_trele.attr('pname');
+			$('.imei_error_text').html("");
+			$(".imei_prod_title").html("Product : <a target='_blank' href='"+site_url+'/admin/product/'+prodid+"'>"+pname+'</a>');	
+			 	
+			if(state == 'edit')
+			{
+				var imeilist_html ='';
+			 	var scanned_imei = '';
+				var p_imei_scanned = $("#list_imei_"+prodid,ref_trele).val();
+					p_imei_scanned_arr = p_imei_scanned.split(',');
+					imeilist_html = '<ol>'; 
+			    	
+			    	for(i=0;i<tot_rqty;i++) 
+			    	{
+			    			scanned_imei = ((p_imei_scanned_arr[i]==undefined)?"":p_imei_scanned_arr[i]);				    		
+							imeilist_html += '<li>';
+							imeilist_html += '	<input type="text" class="inp imei_input dlg_imei_inp" placeholder="" name="imei_input_'+prodid+'[]" id="imei_input_'+prodid+'_'+i+'" value="'+scanned_imei+'">';
+							imeilist_html += '	<span class="append_imei_items_'+prodid+'_'+i+'"></span>';
+							imeilist_html += '</li>';
+					}
+					imeilist_html+='</ol>';
+					
+				 	$('.imei_nos_dlg').html(imeilist_html);
+			}
 			$('.ui-dialog-titlebar-close').hide();
 			$('#rqty_imei_blk_dlg').data('process_by','');
-			if(!imei_dup_list.length)
-				$('.imei_error_text').html("");
-			else
-				$('.imei_error_text').html("Duplicate IMEI found : "+imei_dup_list);
+			
 	}
 });
 
@@ -1653,6 +1939,7 @@ $('.view_imei').live('click',function(){
 	//tot_rqty=$('.rqty',$(this).parent()).val();
 	 var trele=$(this).parents('tr:first');
 	 var tot_rqty=$('.rqty',trele).val();
+	
 	$('#rqty_imei_blk_dlg').data("pro_data",{'prodid': $(this).attr("prodid"),'brandid':$(this).attr("brandid"),'ttl_qty':tot_rqty,'ref_tr' : trele,'state':'edit'}).dialog('open');
 	
 });
@@ -1733,11 +2020,11 @@ $(function(){
 $('#grn tr').unbind('focus').live('focus', function () {
     if (!$('.edit_mode').length) {
     	
-	trele = $(this);
-    if (!$('.edit_mode',trele).length && (($('.rqty',trele).val() !=0) && ($('.rqty',trele).val() !='') || ($('.iqty',trele).val() !=0) && ($('.rqty',trele).val() !=''))) 
-    {
-    	$(this).addClass('edit_mode');
-    	$('.cancel_prd',$(this)).show();
+    	trele = $(this);
+    	 if (!$('.edit_mode',trele).length && (($('.rqty',trele).val() !=0) && ($('.rqty',trele).val() !='') || (($('.iqty',trele).val() !=0) && ($('.rqty',trele).val() !='')) || (($('.exp_date',trele).val() !=0) && ($('.exp_date',trele).val() !='')))) 
+    	{
+    		$(this).addClass('edit_mode');
+    		$('.cancel_prd',$(this)).show();
     	}else if($('.scan_pbarcode',trele).val())
     	{
     		$(this).addClass('edit_mode');
@@ -1745,7 +2032,7 @@ $('#grn tr').unbind('focus').live('focus', function () {
     	}
     	//process_edit_validation(function(){
         //	if(!trele.hasClass('bcode_scanned'))
-        	//	$('.bcode_upd',trele).trigger('click');
+        //		$('.bcode_upd',trele).trigger('click');
         //});
         
     } else {
@@ -1784,6 +2071,7 @@ $('.has_offer').live('click',function(){
 	{
 		$('.has_offer',trele).val('1');
 		$('.offer_list',trele).show();
+		$('.offer_list',trele).focus();
 		
 	}
 	else
@@ -1794,7 +2082,7 @@ $('.has_offer').live('click',function(){
 	}
 			
 	
-});  
+});
 
 $('.offer_list').live('change',function(){
 	var trele=$(this).parents('tr:first');
@@ -1803,18 +2091,13 @@ $('.offer_list').live('change',function(){
 	if(v==1)
 	{
 		$('.offer_area',trele).show();
+		$('.offer_area',trele).focus();
 	}else
 	{
 		$('.offer_area',trele).hide();
 	}
 });
 });  
-
-
-$('.exp_date').live('click',function(){
-	var trele=$(this).parents('tr:first');
-	$(".exp_date",trele).datepicker({minDate:0});
-});
 
 $('.vid_wrap').live('click',function(){
 	

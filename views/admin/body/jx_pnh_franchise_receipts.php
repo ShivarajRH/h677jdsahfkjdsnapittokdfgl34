@@ -688,10 +688,79 @@ else if($type=="unreconcile")
             $( "#tabs-unreconcile" ).tabs();
         </script>
     </div>
-<?php 
-}
-?>
+<?php } else if($type =='out_pmt'){ ?>
+   	
+   	<div class="receipt_totals"><b>Total Out Payments:</b><?php echo $total_records;?>&nbsp;&nbsp;<b>Total value:</b>Rs <?php echo formatInIndianStyle($ttl_paymnt_val)?></div>
+		<div class="clear"></div>
+		<table class="datagrid smallheader" width="100%">
+			<thead>
+				<th>Payment Details</th>
+				<th>Amount Details</th>
+			</thead>
+			
+			<?php if($paymnt_log){ ?>
+			<tbody>
+			<?php foreach($paymnt_log as $p){?>
+				<tr>
+							<td>
+							<div id="paymnt_det">
+							<table class="datagrid1">
+								<tr>
+									<td><b>Payment Id</b>
+									</td>
+									<td><b>:</b>
+									</td>
+									<td><?php echo $p['payment_id'];?>
+									</td>
+								</tr>
+								<tr>
+									<td><b>created on</b>
+									</td>
+									<td><b>:</b>
+									</td>
+									<td><?php echo format_datetime($p['created_on'])?>
+									</td>
+								</tr>
+								<tr>
+									<td><b>created by</b>
+									</td>
+									<td><b>:</b>
+									</td>
+									<td><b><?=$p['created_byname'];?>
+									</b>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</td>
+					<td>
+						<div id="bank_det">
+						<table class="datagrid1">
+							<tr>
+								<td><b>Bank</b></td><td><b>:</b></td><td><?php echo $p['bank_name']?></td>
+							</tr>
+							<tr>
+								<td><b>Payment</b></td><td><b>:</b></td><td> Rs. <?php echo $p['amount']?$p['amount']:0;?></td>
+							</tr>
+							<tr>
+								<td><b>Cheque no</b></td><td><b>:</b></td><td><?php echo $p['instrument_no']?></td>
+							</tr>
+							<tr>
+								<td><b>Payment Date</b></td><td><b>:</b></td><td><?php echo format_date($p['instrument_date'])?></td>
+							</tr>
+						
+						</table>
+							
+						</div>
+					</td>
+					
+				</tr>
+			
+			</tbody>
+			<?php } }?>
+		</table>
 
+<?php }?>
 <!--<div align="right" class="receipt_pg">
 	<?php // echo $pagination;?>
 </div>-->

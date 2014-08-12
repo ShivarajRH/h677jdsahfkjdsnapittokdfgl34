@@ -10,12 +10,29 @@
 			 
 		<?php if($destination_details){
 					foreach($destination_details as $details){
+						if(isset($details['man_id']))
+						{
+							$man_amt = $this->db->query("	select sum(amt) as amt from (
+									select (b.mrp-b.discount-credit_note_amt)*invoice_qty as amt
+									from pnh_franchise_account_summary a
+									join king_invoice b on a.invoice_no = b.invoice_no
+									join shipment_batch_process_invoice_link c on c.invoice_no = b.invoice_no
+									join pnh_m_manifesto_sent_log d on d.manifesto_id = c.inv_manifesto_id
+									where d.id = ?
+									group by b.id) as g
+									",$details['man_id'])->row()->amt;
+						}
 			?>
-		
+			
+			<?php if(isset($details['man_id'])) {?>
+			<div style="font-size: 16px;">
+				<b>ManifestoID </b>:# <?php echo $details['man_id']; ?> | <b>Amount </b>:Rs <?php echo round($man_amt); ?> 
+			</div>
+			<?php } ?>
+			
 			<h1 style="font-size:260%;line-height: 100%"><?php echo $details['pick_up_name'].'-'.$details['pick_up_contact']; ?></h1>
 			<h2 style="font-size:180%"><?php echo $details['short_name'];?></h2>
-			 
-			 <br >
+			<br >
 			<div style="width: 100%">
 			<fieldset style="padding:5%;border:2px solid #000">
 				<div style="margin:10px;text-align: left;font-size: 90%">

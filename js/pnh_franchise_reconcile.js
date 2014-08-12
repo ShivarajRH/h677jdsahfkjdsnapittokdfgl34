@@ -1,4 +1,8 @@
-
+/**
+ *@Author Shivaraj@storeking.in
+ *@Desc	Receipts & Credit notes Reconcilation towards invoices & debit entries, scripts are in this file
+ *@date	May_14_2014
+ */
 /* $("#top_form") code
 var sts = validate_selected_invoice_val();
 if(sts !== true) {
@@ -20,7 +24,8 @@ if(error_msgs.length)
             $(".amt_unreconcile").each(function(i,row){
                 if($(row).val() != '') { // selected invoice
                     var addi_val = $(".amt_adjusted:eq("+i+")");
-                    if(addi_val.val() == '') { //additional value is empty
+                    if(addi_val.val() == '') //additional value is empty
+					{
                         //$(".error_status").html("Please enter additional amount!");
                         return err_status = "Please specify adjusted amount for selected invoices";
                         addi_val.focus();
@@ -596,7 +601,7 @@ if(error_msgs.length)
 
     }
     
-    $(window).resize(function() {
+    $(window).on("resize scroll",function() {
        $("#dlg_unreconcile_form,#dlg_unreconcile_view_list,#dlg_credit_note_block").dialog("option","position",["center","center"]); 
     });
 

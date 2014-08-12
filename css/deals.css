@@ -69,11 +69,11 @@
     text-decoration: none;
     width: 25%;
 }
-.total_wrap
+.total_wrap, .src_deals, .unsrc_deals
 {
 	font-size: 13px !important;
     font-weight: bold !important;
-    margin: 9px 6px;
+    margin: 10px 20px;
     float: left;
 }
 .last-item
@@ -87,14 +87,14 @@
 	background:#F1EEE9;
 }
 
-.deal_prd_blk {
+.deal_prd_blk, .prd_barcode_srch {
     border-radius: 0 !important;
     float: right;
     font-size: 10px;
     height: 18px;
     margin-right: -1px;
     margin-top: 0;
-    width: 266px;
+    width: 265px;
 }
 .search_blk
 {
@@ -260,13 +260,13 @@
 {
 	width:100%;
 }
-.brands_bychar_list
+.brands_bychar_list, .sub_category_list
 {
 	float: left;
 	margin-left: 1px;
 	width: 100%;
 }
-.Brands_bychar_list_head
+.Brands_bychar_list_head, .sub_category_list_head
 {
 	background: none repeat scroll 0 0 #F1F1F1;	
 }
@@ -280,7 +280,7 @@
     cursor:pointer;
 }
 
-.brands_bychar_list .Brands_bychar_list_head h4
+.brands_bychar_list .Brands_bychar_list_head h4, .sub_category_list .sub_category_list_head h4
 {
 	float:left;
 	width:80%;
@@ -293,12 +293,12 @@
 	height: 700px !important;
 }
 
-.brands_bychar_list .Brands_bychar_list_content 
+.brands_bychar_list .Brands_bychar_list_content , .sub_category_list .sub_category_list_content
 {
     float: left;
     width: 100%;
 }
-.brands_bychar_list .Brands_bychar_list_content_listdata
+.brands_bychar_list .Brands_bychar_list_content_listdata, .sub_category_list .sub_category_list_content_listdata
 {
   	background: none repeat scroll 0 0 #fff;
     border: 1px solid #EAEAEA;

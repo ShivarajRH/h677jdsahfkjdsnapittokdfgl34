@@ -9,9 +9,11 @@
 	else
 		$selected_menu = explode(',',$selected_menu);
 	
-	
-	
-	
+	if(!isset($selected_accessories))
+		$selected_accessories=array();
+	else
+		$selected_accessories = explode(',',$selected_accessories);
+
 $sec_q=array("What was your childhood nickname?","In what city were you born?","What is the name of the company of your first job?","In what year was your father born?","What was the name of your elementary / primary school?","What is your mother's maiden name?"," What is your oldest sibling's name?"," Who was your childhood hero?")
 	
 ?>
@@ -63,52 +65,48 @@ function init_frmap() {
 
 </script>
 <div class="container">
-<h2><?=$v?"Edit":"Add new"?> PNH Franchise</h2>
+	<h2><?=$v?"Edit":"Add new"?> PNH Franchise</h2>
+	<form method="post" autocomplete="off" id="pnh_af_form" date-validate="parsley">
+		<div class="tab_view">
+			<ul>
+				<li><a href="#v_details">Basic Details</a></li>
+				<li><a href="#v_login">Login Details</a></li>
+				<li><a href="#v_pnh_details">PNH Details</a></li>
+				<li><a href="#v_shop" onclick="init_frmap()">Shop Details</a></li>
+				<li><a href="#v_contacts">Contacts</a></li>
+			</ul>
 
-<form method="post" autocomplete="off" id="pnh_af_form" date-validate="parsley">
-<div class="tab_view">
-
-<ul>
-<li><a href="#v_details">Basic Details</a></li>
-<li><a href="#v_login">Login Details</a></li>
-<li><a href="#v_pnh_details">PNH Details</a></li>
-<li><a href="#v_shop" onclick="init_frmap()">Shop Details</a></li>
-<li><a href="#v_contacts">Contacts</a></li>
-</ul>
-
-<div id="v_details">
-<table width="100%">
-<tr><td>Name<span class="red_star">*</span></td><td>:</td><td><input type="text" name="name" class="inp mand" size="40" value="<?=$v?"{$v['franchise_name']}":""?>"></td></tr>
-<tr><td>Address<span class="red_star">*</span></td><td>:</td><td><input type="text" name="address" class="inp mand" size="50" value="<?=$v?"{$v['address']}":""?>"></td></tr>
-<tr><td>Locality<span class="red_star">*</span></td><td>:</td><td><input type="text" name="locality" size="30" class="inp mand" value="<?=$v?"{$v['locality']}":""?>"></td></tr>
-<tr><td>City<span class="red_star">*</span></td><td>:</td><td><input type="text" name="city" class="inp mand" value="<?=$v?"{$v['city']}":""?>"></td></tr>
-<tr><td>State<span class="red_star">*</span></td><td>:</td><td><input type="text" name="state" class="inp mand" value="<?=$v?"{$v['state']}":""?>"></td></tr>
-<tr><td>Postcode<span class="red_star">*</span></td><td>:</td><td><input type="text" name="postcode" class="inp mand" value="<?=$v?"{$v['postcode']}":""?>"></td></tr>
-</table>
-</div>
- 
-
-<div id="v_login">
-<table width="100%">
-<tr><td>Login Mobile 1<span class="red_star">*</span></td><td>:</td><td><input type="text" maxlength="10" class="inp mand loginmob1" name="login_mobile1" value="<?=$v?"{$v['login_mobile1']}":""?>"><span id="mob1_error"></span></td></tr>
-<tr><td>Login Mobile 2</td><td>:</td><td><input type="text" maxlength="10" class="inp loginmob2" name="login_mobile2" value="<?=$v?"{$v['login_mobile2']}":""?>"><span id="mob2_error"></span></td></tr>
-<tr><td>Login Email</td><td>:</td><td><input type="text" class="inp mand login_email" name="login_email" size=30 value="<?=$v?"{$v['email_id']}":""?>"></td></tr>
-</table>
-</div>
+			<div id="v_details">
+				<table width="100%">
+				<tr><td>Name<span class="red_star">*</span></td><td>:</td><td><input type="text" name="name" class="inp mand" size="40" value="<?=$v?"{$v['franchise_name']}":""?>"></td></tr>
+				<tr><td>Address<span class="red_star">*</span></td><td>:</td><td><input type="text" name="address" class="inp mand" size="50" value="<?=$v?"{$v['address']}":""?>"></td></tr>
+				<tr><td>Locality<span class="red_star">*</span></td><td>:</td><td><input type="text" name="locality" size="30" class="inp mand" value="<?=$v?"{$v['locality']}":""?>"></td></tr>
+				<tr><td>City<span class="red_star">*</span></td><td>:</td><td><input type="text" name="city" class="inp mand" value="<?=$v?"{$v['city']}":""?>"></td></tr>
+				<tr><td>State<span class="red_star">*</span></td><td>:</td><td><input type="text" name="state" class="inp mand" value="<?=$v?"{$v['state']}":""?>"></td></tr>
+				<tr><td>Postcode<span class="red_star">*</span></td><td>:</td><td><input type="text" name="postcode" class="inp mand" value="<?=$v?"{$v['postcode']}":""?>"></td></tr>
+				</table>
+			</div>
 
 
-<div id="v_shop">
+			<div id="v_login">
+			<table width="100%">
+			<tr><td>Login Mobile 1<span class="red_star">*</span></td><td>:</td><td><input type="text" maxlength="10" class="inp mand loginmob1" name="login_mobile1" value="<?=$v?"{$v['login_mobile1']}":""?>"><span id="mob1_error"></span></td></tr>
+			<tr><td>Login Mobile 2</td><td>:</td><td><input type="text" maxlength="10" class="inp loginmob2" name="login_mobile2" value="<?=$v?"{$v['login_mobile2']}":""?>"><span id="mob2_error"></span></td></tr>
+			<tr><td>Login Email</td><td>:</td><td><input type="text" class="inp mand login_email" name="login_email" size=30 value="<?=$v?"{$v['email_id']}":""?>"></td></tr>
+			</table>
+			</div>
 
-<div id="map_canv" style="width: 400px;height: 300px;border:2px solid #cdcdcd;float: right;width: 400px;"></div>
 
-<table cellspacing="5">
-<tr><td>Shop Name : </td><td><input type="text" class="inp" name="shop_name" size=30 value="<?=$v?"{$v['store_name']}":""?>" data-required="true"></td></tr>
-<tr><td>Type of Business</td><td><input type="text" class="inp" name="business_type" size=15 value="<?=$v?"{$v['business_type']}":""?>" data-required="true"></td></tr>
-<tr><td>No. of employees : </td><td><input type="text" class="inp" name="shop_emps" size=4 value="<?=$v?"{$v['no_of_employees']}":""?>" data-required="true"></td></tr>
-<tr><td>Area : </td><td><input type="text" class="inp" name="shop_area" size=4 value="<?=$v?"{$v['store_area']}":""?>" data-required="true">sqft</td></tr>
-<tr><td>Latitude :</td><td><input type="text" class="inp" name="lat" size=15 value="<?=$v?"{$v['lat']}":""?>" data-required="true"></td></tr>
-<tr><td>Longitude :</td><td><input type="text" class="inp" name="long" size=15 value="<?=$v?"{$v['long']}":""?>" data-required="true"></td></tr>
-<tr>
+			<div id="v_shop">
+				<div id="map_canv" style="width: 400px;height: 300px;border:2px solid #cdcdcd;float: right;width: 400px;"></div>
+				<table cellspacing="5">
+					<tr><td>Shop Name : </td><td><input type="text" class="inp" name="shop_name" size=30 value="<?=$v?"{$v['store_name']}":""?>" data-required="true"></td></tr>
+					<tr><td>Type of Business</td><td><input type="text" class="inp" name="business_type" size=15 value="<?=$v?"{$v['business_type']}":""?>" data-required="true"></td></tr>
+					<tr><td>No. of employees : </td><td><input type="text" class="inp" name="shop_emps" size=4 value="<?=$v?"{$v['no_of_employees']}":""?>" data-required="true"></td></tr>
+					<tr><td>Area : </td><td><input type="text" class="inp" name="shop_area" size=4 value="<?=$v?"{$v['store_area']}":""?>" data-required="true">sqft</td></tr>
+					<tr><td>Latitude :</td><td><input type="text" class="inp" name="lat" size=15 value="<?=$v?"{$v['lat']}":""?>" data-required="true"></td></tr>
+					<tr><td>Longitude :</td><td><input type="text" class="inp" name="long" size=15 value="<?=$v?"{$v['long']}":""?>" data-required="true"></td></tr>
+					<tr>
 	<td width="100" colspan="2">
 	<div style="padding:7px 0px;">
 		<div style="overflow: hidden;width:700px;">
@@ -121,156 +119,197 @@ function init_frmap() {
 						$prepaid_menu='<b> (Prepaid menu)</b>';
 				?>
 				<li style="list-style:none;width: 300px;float: left;">
-					<input type="checkbox" name="fran_menu[]"  value="<?php echo $f_menu['id']?>" <?=in_array($f_menu['id'],$selected_menu)?"checked":""?> ><?php echo $f_menu['name'] . $prepaid_menu;?>
+										<!--<input type="hidden" name="fran_menu[]"  value="<?php echo $f_menu['id']?>" <?=in_array($f_menu['id'],$selected_menu)?"checked":"checked"?> >-->
+										<input type="checkbox" name="fran_menu[]"  value="<?php echo $f_menu['id']?>" <?=in_array($f_menu['id'],$selected_menu)?"checked":"checked"?> style="display:none"><?php echo $f_menu['name'] . $prepaid_menu;?>
 				</li>
 				<?php }?>
 			</ol>
 		</div>
 	</div>	
 	</td>
-</tr>
-<tr><td>Working Time : </td><td>
-<select name="shop_from">
-<?php for($i=1;$i<=24;$i++){?>
-<option value="<?=date("H:i:s",mktime($i,0,0))?>" <?=(($v&&date("H",strtotime($v['store_open_time']))==$i)?'selected':"")?>><?=date("g:ia",mktime($i,0))?></option>
-<?php }?>
-</select>
-to 
-<select name="shop_to">
-<?php for($i=1;$i<=24;$i++){?>
+					</tr>
+					<tr>
+	
+	<td>Store Type <span class="red_star">*</span>:</td>
+	<?php $store_types=$this->db->query("SELECT id,store_name FROM m_apk_store_types ORDER BY store_name ASC");if($store_types){?>
+	<td>
+		<select name="store_type" id="store_type" width="180px">
+		<option value="0">Select</option>
+		<?php foreach($store_types->result_array() as $st){?>
+		<option value="<?=$st['id']?>"<?=$selected_storetype == $st['id'] ? ' selected="selected"' : '';?>><?=$st['store_name']?></option>
+		<?php }?>
+	</td>
+	<?php }?>
+					</tr>
+					<tr><td>Working Time : </td><td>
+					<select name="shop_from">
+					<?php for($i=1;$i<=24;$i++){?>
+					<option value="<?=date("H:i:s",mktime($i,0,0))?>" <?=(($v&&date("H",strtotime($v['store_open_time']))==$i)?'selected':"")?>><?=date("g:ia",mktime($i,0))?></option>
+					<?php }?>
+					</select>
+					to 
+					<select name="shop_to">
+					<?php for($i=1;$i<=24;$i++){?>
 	<option value="<?=date("H:i:s",mktime($i,0,0))?>" <?=(($v&&date("H",strtotime($v['store_close_time']))==$i)?'selected':"")?>><?=date("g:ia",mktime($i,0))?></option>
-<?php }?>
-</select>
-</td></tr>
+					<?php }?>
+					</select>
+					</td></tr>
 
 
-<tr><td>Own Property? :</td><td><input type="checkbox" name="own" value="1" <?=((($v&&$v['own_rented'])==1)?"checked":"")?> ></td></tr>
+					<tr><td>Own Property? :</td><td><input type="checkbox" name="own" value="1" <?=((($v&&$v['own_rented'])==1)?"checked":"")?> ></td></tr>
 
-<tr><td>Website :</td><td><input type="text" name="website" size=50 value="<?=$v?$v['website_name']:""?>"></td></tr>
-<tr><td>If Internet Available,mention ISP :</td><td><input type="text" name="internet" size=50 value="<?=$v?$v['internet_available']:""?>"></td></tr>
-<tr><td>TIN No :</td><td><input type="text" name="shop_tin" class="inp" value="<?=$v?$v['store_tin_no']:""?>" size=30  maxlength="40"></td></tr> 
-<tr><td>PAN No :</td><td><input type="text" name="shop_pan" class="inp" value="<?=$v?$v['store_pan_no']:""?>" size=30  maxlength="40"></td></tr> 
-<tr><td>Service Tax No :</td><td><input type="text" name="shop_stax" class="inp" value="<?=$v?$v['store_service_tax_no']:""?>" size=30  maxlength="40"></td></tr> 
-<tr><td>Registration No :</td><td><input type="text" name="shop_reg" class="inp" value="<?=$v?$v['store_reg_no']:""?>" size=30  maxlength="40"></td></tr> 
-</table>
-</div>
+					<tr><td>Website :</td><td><input type="text" name="website" size=50 value="<?=$v?$v['website_name']:""?>"></td></tr>
+					<tr><td>If Internet Available,mention ISP :</td><td><input type="text" name="internet" size=50 value="<?=$v?$v['internet_available']:""?>"></td></tr>
+					<tr><td>TIN No :</td><td><input type="text" name="shop_tin" class="inp" value="<?=$v?$v['store_tin_no']:""?>" size=30  maxlength="40"></td></tr> 
+					<tr><td>PAN No :</td><td><input type="text" name="shop_pan" class="inp" value="<?=$v?$v['store_pan_no']:""?>" size=30  maxlength="40"></td></tr> 
+					<tr><td>Service Tax No :</td><td><input type="text" name="shop_stax" class="inp" value="<?=$v?$v['store_service_tax_no']:""?>" size=30  maxlength="40"></td></tr> 
+					<tr><td>Registration No :</td><td><input type="text" name="shop_reg" class="inp" value="<?=$v?$v['store_reg_no']:""?>" size=30  maxlength="40"></td></tr> 
+				</table>
+			</div>
 
-<div id="v_pnh_details">
-<table cellpadding=5>
-<tr><td>Is LC Store</td><td>:</td><td><input type="checkbox" name="is_lc_store" value="1" <?=($v&&$v['is_lc_store']==1)?"checked":""?>></td></tr>
-<tr><td>Class</td><td>:</td><td>
-<select name="class">
-<?php foreach($this->db->query("select id,class_name from pnh_m_class_info order by class_name asc")->result_array() as $c){?>
-<option value="<?=$c['id']?>" <?=$v&&$v['class_id']==$c['id']?"selected":""?>><?=$c['class_name']?></option>
-<?php }?>
-</select>
-</td></tr>
-<tr><td>Territory</td><td>:</td>
-<td><select name="territory" id="pnh_terry">
-<?php foreach($this->db->query("select * from pnh_m_territory_info order by territory_name asc")->result_array() as $t){?>
-<option value="<?=$t['id']?>" <?=$v&&$v['territory_id']==$t['id']?"selected":""?>><?=$t['territory_name']?></option>
-<?php }?>
-</select>
-</td></tr>
+			<div id="v_pnh_details">
+				<table cellpadding=5>
+					<tr><td>Is LC Store</td><td>:</td><td><input type="checkbox" name="is_lc_store" value="1" <?=($v&&$v['is_lc_store']==1)?"checked":""?>></td></tr>
+					<tr><td>Class</td><td>:</td><td>
+					<select name="class">
+					<?php foreach($this->db->query("select id,class_name from pnh_m_class_info order by class_name asc")->result_array() as $c){?>
+					<option value="<?=$c['id']?>" <?=$v&&$v['class_id']==$c['id']?"selected":""?>><?=$c['class_name']?></option>
+					<?php }?>
+					</select>
+					</td></tr>
+					<tr><td>Territory</td><td>:</td>
+					<td><select name="territory" id="pnh_terry">
+					<?php foreach($this->db->query("select * from pnh_m_territory_info order by territory_name asc")->result_array() as $t){?>
+					<option value="<?=$t['id']?>" <?=$v&&$v['territory_id']==$t['id']?"selected":""?>><?=$t['territory_name']?></option>
+					<?php }?>
+					</select>
+					</td></tr>
 
-<tr><td>Town</td><td>:</td>
-<td><div id="pnh_towns">
-<?php if($v){
+					<tr><td>Town</td><td>:</td>
+					<td><div id="pnh_towns">
+					<?php if($v){
 		echo "<select name='town'>";
 		echo '<option value="">Choose</option>';
 		foreach($this->db->query("select id,town_name from pnh_towns where territory_id=?",$v['territory_id'])->result_array() as $t)
 			echo '<option value="'.$t['id'].'">'.$t['town_name'].'</option>';
 		echo "</select>";
-}?>
-</div></td>
-</tr>
+					}?>
+					</div></td>
+					</tr>
+				</table>
 
-</table>
+				<table cellpadding=3 style="background:#eee;margin-top:10px;">
+					<tr>
+					<td colspan="100%"><h3 style="margin:3px;">Authentication</h3></td>
+					</tr>
+					<tr>
+					<td>security question<span class="red_star">*</span></td><td>:</td><td><select name="sec_q" class="sec_q">
+					<?php foreach($sec_q as $i=>$q){?>
+					<option value="<?=$i?>" <?=$v&&$v['security_question']==$i?"selected":""?>><?=$q?></option>
+					<?php }?>
+					<option value="-1"  <?=$v&&$v['security_question']==-1?"selected":""?> style="font-style:italic">custom question</option>
+					</select>
+					</td>
+					</tr>
+					<tr class="sec_cq1" style="<?=$v&&$v['security_question']==-1?"display:none;":""?>"><td>Custom Question :</td><td><input type="text" class="inp" name="sec_cq" size="40" value="<?=$v&&$v['security_question']==-1?$v['security_custom_question']:""?>"></td></tr>
+					<tr><td>Answer</td><td>:</td><td><input type="text" class="inp sec_a" name="sec_a" size=40 value="<?=$v?$v['security_answer']:""?>"></td></tr>
+				</table>
 
-<table cellpadding=3 style="background:#eee;margin-top:10px;">
-<tr>
-<td colspan="100%"><h3 style="margin:3px;">Authentication</h3></td>
-</tr>
-<tr>
-<td>security question<span class="red_star">*</span></td><td>:</td><td><select name="sec_q" class="sec_q">
-<?php foreach($sec_q as $i=>$q){?>
-<option value="<?=$i?>" <?=$v&&$v['security_question']==$i?"selected":""?>><?=$q?></option>
-<?php }?>
-<option value="-1"  <?=$v&&$v['security_question']==-1?"selected":""?> style="font-style:italic">custom question</option>
-</select>
-</td>
-</tr>
-<tr class="sec_cq1" style="<?=$v&&$v['security_question']==-1?"display:none;":""?>"><td>Custom Question :</td><td><input type="text" class="inp" name="sec_cq" size="40" value="<?=$v&&$v['security_question']==-1?$v['security_custom_question']:""?>"></td></tr>
-<tr><td>Answer</td><td>:</td><td><input type="text" class="inp sec_a" name="sec_a" size=40 value="<?=$v?$v['security_answer']:""?>"></td></tr>
-</table>
+				<table cellpadding=3 style="background:#eee;margin-top:10px;">
+					<tr>
+					<td colspan="100%"><h3 style="margin:3px;">Authentication</h3></td>
+					</tr>
+					<tr>
+					<td>security question 2</td><td>:</td><td><select name="sec_q2" class="sec_q2">
+					<?php foreach($sec_q as $i=>$q){?>
+					<option value="<?=$i?>" <?=$v&&$v['security_question2']==$i?"selected":""?>><?=$q?></option>
+					<?php }?>
+					<option value="-1" <?=$v&&$v['security_question2']==-1?"selected":""?> style="font-style:italic">custom question</option>
+					</select>
+					</td>
+					</tr>
+					<tr class="sec_cq2"><td>Custom Question</td><td>:<td><input type="text" class="inp" name="sec_cq2" size="40" value="<?=$v&&$v['security_question2']==-1?$v['security_custom_question2']:""?>"></td></tr>
+					<tr><td>Answer</td><td>:</td><td><input type="text" class="inp sec_a" name="sec_a2" size=40 value="<?=$v?$v['security_answer2']:""?>"></td></tr>
+				</table>
 
-<table cellpadding=3 style="background:#eee;margin-top:10px;">
-<tr>
-<td colspan="100%"><h3 style="margin:3px;">Authentication</h3></td>
-</tr>
-<tr>
-<td>security question 2</td><td>:</td><td><select name="sec_q2" class="sec_q2">
-<?php foreach($sec_q as $i=>$q){?>
-<option value="<?=$i?>" <?=$v&&$v['security_question2']==$i?"selected":""?>><?=$q?></option>
-<?php }?>
-<option value="-1" <?=$v&&$v['security_question2']==-1?"selected":""?> style="font-style:italic">custom question</option>
-</select>
-</td>
-</tr>
-<tr class="sec_cq2"><td>Custom Question</td><td>:<td><input type="text" class="inp" name="sec_cq2" size="40" value="<?=$v&&$v['security_question2']==-1?$v['security_custom_question2']:""?>"></td></tr>
-<tr><td>Answer</td><td>:</td><td><input type="text" class="inp sec_a" name="sec_a2" size=40 value="<?=$v?$v['security_answer2']:""?>"></td></tr>
-</table>
-
-<!--<h3>Device Details <input type="button" id="add_device" value="Add Device"></h3>
-<table class="datagrid smallheader device_list">
-<thead><tr><th>Device Serial No</th><th>Device Type</th></tr></thead>
-<tbody>
-<tr id="add_device_cont">
-<td>
-<input type="text"  name="dev_sno[]"></td>
-<td><Select name="dev_type">
-<?php foreach($this->db->query("select id,device_name from pnh_m_device_type order by device_name asc")->result_array() as $t){?>
-<option value="<?=$t['id']?>"><?=$t['device_name']?></option>
-<?php }?>
-</Select>
-</td>
-</tr>
-</tbody>
-</table>
--->
-</div>
+				<!--<h3>Device Details <input type="button" id="add_device" value="Add Device"></h3>
+				<table class="datagrid smallheader device_list">
+				<thead><tr><th>Device Serial No</th><th>Device Type</th></tr></thead>
+				<tbody>
+				<tr id="add_device_cont">
+				<td>
+				<input type="text"  name="dev_sno[]"></td>
+				<td><Select name="dev_type">
+				<?php foreach($this->db->query("select id,device_name from pnh_m_device_type order by device_name asc")->result_array() as $t){?>
+				<option value="<?=$t['id']?>"><?=$t['device_name']?></option>
+				<?php }?>
+				</Select>
+				</td>
+				</tr>
+				</tbody>
+				</table>
+				-->
+			</div>
 
 
-<div id="v_contacts">
-<input type="button" value="+ new contact" onclick='clone_vcnt()'>
-<div id="v_contact_cont">
-<?php $contacts=$this->db->query("select * from pnh_m_franchise_contacts_info where franchise_id=?",$v['franchise_id'])->result_array(); if($v){foreach($contacts as $c){?>
+			<div id="v_contacts">
+				<input type="button" value="+ new contact" onclick='clone_vcnt()'>
+				<div id="v_contact_cont">
+					<?php $contacts=$this->db->query("select * from pnh_m_franchise_contacts_info where franchise_id=?",$v['franchise_id'])->result_array(); if($v){foreach($contacts as $c){?>
+						<table>
+							<tr><td>Name : </td><td><input type="text" class="inp" name="cnt_name[]" value="<?=$c['contact_name']?>"></td>
+							<td>Designation : </td><td><input type="text" class="inp" name="cnt_desgn[]" value="<?=$c['contact_designation']?>"></td>
+							</tr>
+							<tr>
+							<td>Mobile 1 : </td><td><input type="text" class="inp" name="cnt_mob1[]" value="<?=$c['contact_mobile1']?>"></td>
+							<td>Mobile 2 : </td><td><input type="text" class="inp" name="cnt_mob2[]" value="<?=$c['contact_mobile2']?>"></td>
+							</tr>
+							<tr>
+							<td>Telephone : </td><td><input type="text" class="inp" name="cnt_telephone[]" value="<?=$c['contact_telephone']?>"></td>
+							<td>FAX : </td><td><input type="text" class="inp" name="cnt_fax[]" value="<?=$c['contact_fax']?>"></td>
+							</tr>
+							<tr>
+							<td>Email 1 : </td><td><input type="text" class="inp" name="cnt_email1[]" value="<?=$c['contact_email1']?>"></td>
+							<td>Email 2 : </td><td><input type="text" class="inp" name="cnt_email2[]" value="<?=$c['contact_email2']?>"></td>
+							</tr>
+						</table>
+					<?php } }?>
+				</div>
+			</div>
 
-<table>
-<tr><td>Name : </td><td><input type="text" class="inp" name="cnt_name[]" value="<?=$c['contact_name']?>"></td>
-<td>Designation : </td><td><input type="text" class="inp" name="cnt_desgn[]" value="<?=$c['contact_designation']?>"></td>
-</tr>
-<tr>
-<td>Mobile 1 : </td><td><input type="text" class="inp" name="cnt_mob1[]" value="<?=$c['contact_mobile1']?>"></td>
-<td>Mobile 2 : </td><td><input type="text" class="inp" name="cnt_mob2[]" value="<?=$c['contact_mobile2']?>"></td>
-</tr>
-<tr>
-<td>Telephone : </td><td><input type="text" class="inp" name="cnt_telephone[]" value="<?=$c['contact_telephone']?>"></td>
-<td>FAX : </td><td><input type="text" class="inp" name="cnt_fax[]" value="<?=$c['contact_fax']?>"></td>
-</tr>
-<tr>
-<td>Email 1 : </td><td><input type="text" class="inp" name="cnt_email1[]" value="<?=$c['contact_email1']?>"></td>
-<td>Email 2 : </td><td><input type="text" class="inp" name="cnt_email2[]" value="<?=$c['contact_email2']?>"></td>
-</tr>
-</table>
-<?php } }?>
-</div>
-</div>
-
-</div>
-<input type="submit" value="Submit">
-</form>
-
+			<div id="v_asset">
+				<table width="100%">
+	<tr>
+		<td>Asset Type :</td>
+						<?php $asset_list=$this->db->query("select * from m_asset_info order by asset_name asc")->result_array();if($asset_list){?>
+		<td>
+			<select name="asset_type">
+			<option value="0">Choose</option>
+			<?php foreach($asset_list as $as){?>
+				<option value="<?=$as['id']?>"<?=$selected_asset == $as['id'] ? ' selected="selected"' : '';?>><?=$as['name'] ?></option>
+			<?php }?>
+			</select>
+		</td>	
+		<?php }?>
+		
+	</tr>
+	 <tr>
+		<td>Accessories :</td>
+		<?php $accessory_list=$this->db->query("select * from m_accessory_info order by name asc")->result_array();if($accessory_list){?>
+			<td>
+				<?php foreach($accessory_list as $ac){?>
+					<li style="list-style:none;width: 150px;float: left;">
+						<input type="checkbox" name="fran_access[]"  value="<?php echo $ac['id']?>"  <?=in_array($ac['id'],$selected_accessories)?"checked":""?>  ><?php echo $ac['name'];?>
+					</li>
+				<?php }?>
+			</td>
+			<?php }?>
+	</tr>
+				</table>
+			</div>
+		</div>
+		<input type="submit" value="Submit">
+	</form>
 </div>
 
 
@@ -323,6 +362,13 @@ padding:5px;
 background:blue;
 color:#fff;
 }
+#menu_list li
+{
+    background: url("../../images/right_mark.jpg") no-repeat scroll 4px 14px transparent;
+    padding-left: 26px;
+    padding-top: 13px;
+	
+}
 </style>
 <script>
 
@@ -372,16 +418,19 @@ function addbrand(name,id)
 $(function(){
 
 	$("#pnh_af_form").submit(function(){
+	
 		f=true;
 		var validation_report=new Array();
 		var error=0;
-
+		/*
 		if ($(this).find('input[name="fran_menu[]"]:checked').length == 0) 
 		{	
 			error=1;
 			validation_report.push('Select at least one Menu ');
 		    f=false;
 		}
+		*/
+		
 	
 		if(mobok1!=1 || ($(".loginmob2").val().length!=0 && mobok2!=1))
 		{
@@ -416,7 +465,14 @@ $(function(){
 			validation_report.push("Please choose franchise town.");
 			f=false;
 		}
-
+		
+		if($('#store_type').val()==0)
+		{
+			error=1;
+			validation_report.push('Select Store Type');
+			f=false;
+		}
+		
 		if(error)
 		{	var html_cnt='';
 			$.each(validation_report,function(a,b){

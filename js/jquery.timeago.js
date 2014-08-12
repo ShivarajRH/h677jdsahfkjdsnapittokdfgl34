@@ -12,6 +12,7 @@
  * http://timeago.yarp.com/
  *
  * Copyright (c) 2008-2013, Ryan McGeary (ryan -[at]- mcgeary [*dot*] org)
+ * @implemented Shivaraj@storeking.in
  */
 
 (function (factory) {

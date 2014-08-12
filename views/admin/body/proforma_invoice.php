@@ -38,12 +38,12 @@
 <?php $sno=1; 
 $ttl_amt = 0;
 foreach($orders as $o){
-	$o_det = $this->db->query("select b.invoice_no,a.i_orgprice as mrp,(a.i_orgprice-(i_discount)) as offer_price,(a.i_orgprice-(i_discount+i_coup_discount)) as amt,i_coup_discount as coup_discount,a.quantity,d.shipped
-	from king_orders a 
-	join king_invoice b on a.id = b.order_id 
+		$o_det = $this->db->query("select b.invoice_no,a.i_orgprice as mrp,(a.i_orgprice-(i_discount)) as offer_price,(a.i_orgprice-(i_discount+i_coup_discount)) as amt,i_coup_discount as coup_discount,a.quantity,d.shipped
+				from king_orders a 
+				join king_invoice b on a.id = b.order_id 
 	join proforma_invoices c on c.order_id = b.order_id and c.invoice_status = 1 
-	join shipment_batch_process_invoice_link d on d.p_invoice_no = c.p_invoice_no 
-	where c.p_invoice_no = ? and a.id = ? 
+				join shipment_batch_process_invoice_link d on d.p_invoice_no = c.p_invoice_no 
+				where c.p_invoice_no = ? and a.id = ? 
 group by a.id,b.invoice_no  
 order by a.sno ",array($batch['p_invoice_no'],$o['id']))->row_array();	
 ?>
@@ -59,11 +59,11 @@ order by a.sno ",array($batch['p_invoice_no'],$o['id']))->row_array();
 <td><a target="_blank" href="<?php echo site_url('admin/product/'.$o['product_id']);?>">View Product</a> </td>
 </tr>
 <?php 
-	$ttl_amt+= $o_det['amt']*$o['quantity'];
+		$ttl_amt+= $o_det['amt']*$o['quantity'];
 }?>
 <tr>
-	<td colspan="6" align="right">Total</td>
-	<td><?php echo $ttl_amt;?></td>
+			<td colspan="6" align="right">Total</td>
+			<td><?php echo $ttl_amt;?></td>
 </tr>
 </tbody>
 </table>

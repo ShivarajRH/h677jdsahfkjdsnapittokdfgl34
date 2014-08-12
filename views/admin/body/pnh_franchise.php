@@ -79,7 +79,7 @@ $(function(){
 ?>
 
 <div class="page_topbar_left">
-	<div style="width:50%;float:left; margin-bottom: 9px;">
+	<div style="width:55%;float:left; margin-bottom: 9px;">
 		
 		<?php 
 			$fran_status_arr=array();
@@ -106,7 +106,51 @@ $(function(){
 					<?php echo $f['is_prepaid']?'[Unmark]':'[Mark Prepaid]' ?>
 			</span>
 		<?php }?>
-		<h2 class="franch_header_wrap"><?php echo $f['franchise_name']?><a style="margin-left: 10px; font-size: 12px;" href="<?php echo site_url('admin/pnh_edit_fran'.'/'.$f['franchise_id'])?>">(edit)</a></h2>
+		|
+		<b>price type:</b><span class="level_wrapper" style="margin-left:2px;background-color:#CC0099;font-size:11px;"><?php echo $fran['price_type']==1?'Member Price':'Offer Price';?></span>
+		<?php $price_type=$fran['price_type'];?>
+		
+		<?php 
+			if($this->erpm->auth(PNH_FRANCHISE_EDIT,true))
+			{
+		?> 
+			<span class="fran_suspendlink paid_unmark_wrapper" onclick="mark_pricetype(<? echo $f['franchise_id'].','.$price_type?>)">
+					<?php echo $fran['price_type']==1?'[Change to offr price]':'[Change to mem. price]' ;?>
+			</span>
+		
+		<?php }?>		
+		|
+			<b style="font-size: 11px;">consolidated payment</b>
+			<?php $is_consolidated=$f['is_consolidated_payment']?>
+		<?php 
+			if($this->erpm->auth(PNH_FRANCHISE_EDIT,true))
+			{
+		?>	
+			<span class="fran_suspendlink paid_unmark_wrapper" onclick="mark_consolidated_pmt(<? echo $f['franchise_id'].','.$is_consolidated?>)">
+				<?php echo $f['is_consolidated_payment']==1?'[Unmark]':'[Mark]' ?>
+			</span>
+		<?php }?>		
+			
+		<?php $pmt_amt=$this->db->query("SELECT IFNULL(SUM(amount),0) AS amt FROM t_invoice_credit_notes  WHERE invoice_no IN (SELECT  DISTINCT i.invoice_no FROM king_invoice i JOIN king_transactions t ON t.transid=i.transid WHERE invoice_status=1 AND t.franchise_id=?) AND payment_id=0", $f['franchise_id'])->row()->amt;?>	
+			
+		<?php if($pmt_amt){?>
+			<b style="font-size: 11px;">Make payment</b>
+			
+			
+			<!--  <span class="fran_suspendlink paid_unmark_wrapper" onclick="make_payment(<? echo $f['franchise_id']?>)")>Rs.<?php echo $pmt_amt;?></span>-->
+			<a  target="_blank" class="fran_suspendlink paid_unmark_wrapper" href="<?php echo site_url("admin/make_payment/{$fid}")?>">Rs.<?php echo $pmt_amt;?></a>
+			
+			<?php }?>
+		
+		<h2 class="franch_header_wrap"><?php echo $f['franchise_name']?>
+			<?php 
+				if($this->erpm->auth(PNH_FRANCHISE_EDIT,true))
+				{
+			?> 
+				<a style="margin-left: 10px; font-size: 12px;" href="<?php echo site_url('admin/pnh_edit_fran'.'/'.$f['franchise_id'])?>">(edit)
+					</a>
+			<?php }?>		
+		</h2>
 	</div>
 	
 	<div style="float:right;width:40%;margin-bottom: 6px;">
@@ -221,6 +265,8 @@ $(function(){
 					<li><a href="#payment_suspn">Payment Suspension</a></li>
 					<li><a href="#temp_suspn">Temporary Suspension</a></li>
 					<li><a href="#live_suspn">Unsuspended Log</a></li>
+					<li><a href="#price_type">PriceType Change Log</a></li>
+					<li><a href="#payment_type">Consolidated Payment type Change Log</a></li>
 				</ul>
 				
 				<?php $log_res=$this->db->query("SELECT l.*,a.name FROM franchise_suspension_log l JOIN king_admin a ON a.id=suspended_by WHERE franchise_id=? AND suspension_type IN(0,1,2,3)",$f['franchise_id'])?>
@@ -308,6 +354,50 @@ $(function(){
 				<?php }else{
 					echo '<div align="center">No data found</div>';
 				}?>
+				
+				<?php $pricetype_change_res=$this->db->query("SELECT IF(price_type=0,'Offer Price','Member Price') AS pricetype,a.name,l.reason,DATE_FORMAT(FROM_UNIXTIME(modified_on),'%d/%m/%Y %h:%i %p') AS modified_on FROM franchise_pricetype_log l JOIN king_admin a ON a.id=l.modified_by WHERE franchise_id=? ORDER BY modified_on DESC limit 20",$fid);
+						if($pricetype_change_res->num_rows())
+				{?>
+				<div id="price_type">
+					<table class="datagrid">
+						<thead>
+							<th>Price Type</th><th>Reason</th><th>Modified On</th><th>Modified By</th>
+						</thead>
+						<?php 
+						foreach($pricetype_change_res->result_array() as $p){?>
+						<tr>
+							<td><?php echo $p['pricetype']?></td>
+							<td><?php echo $p['reason']?></td>
+							<td><?php echo $p['modified_on']?></td>
+							<td><?php echo $p['name']?></td>
+						</tr>
+							<?php }?>
+					</table>
+				</div>
+				<?php }else{
+					echo '<div align="center">No data found</div>';
+				}?>
+				<?php $paymenttype_change_res=$this->db->query("SELECT l.reason,IF(is_consolidated_payment=1,'Yes','No') AS is_consolidated_payment,reason,name,DATE_FORMAT(created_on,'%d/%m/%Y %h:%i %p') AS createdon FROM pnh_payment_flag_changelog l JOIN king_admin a ON a.id=l.created_by where franchise_id=? ORDER BY created_on DESC limit 20",$fid);
+					if($paymenttype_change_res->num_rows()){
+				?>			
+				<div id="payment_type">
+					<table class="datagrid">
+						<thead>
+							<th>Is consolidated Payment</th><th>Reason</th><th>Modified On</th><th>Modified By</th>
+						</thead>
+						<?php 
+						foreach($paymenttype_change_res->result_array() as $p){?>
+						<tr>
+							<td><?php echo $p['is_consolidated_payment']?></td>
+							<td><?php echo $p['reason']?></td>
+							<td><?php echo $p['createdon']?></td>
+							<td><?php echo $p['name']?></td>
+						</tr>
+							<?php }?>
+					</table>
+				</div>
+				<?php }?>
+				
 			</div>
 		</div>
 		<!-- franchise status log END -->
@@ -368,13 +458,18 @@ $(function(){
 			
 			<table width="100%">
 				<tr>
-					<td width="35%">
-						<div id="menu_det_tab" style="clear: both;">
+					<td width="50%">
+						<div id="menu_det_tab" style="clear: both;width:90%">
 							<h5 style="margin:4px 6px"><div class="stat_head_wrap"></div></h5>
 							<div class="fr_top_sold"></div>
 						</div>
 					</td>
-					<td></td>
+					<td width="50%">
+						<div id="menu_cat_det_tab" style="clear: both;">
+							<h5 style="margin:4px 6px"><div class="stat_head_wrap"></div></h5>
+							<div class="fr_top_sold_cat"></div>
+						</div>
+					</td>
 				</tr>
 			</table>
 		</div>
@@ -622,7 +717,7 @@ $(function(){
 	<?php }?>
 	<!-- IMEI slno log END-->
 	
-	<!-- sTART of name block -->	
+	<!-- START of name block -->	
 		<div id="name">
 	 		<table width="100%" cellpadding="0" cellspacing="0">
 				<tr>
@@ -692,6 +787,7 @@ $(function(){
 									<?php if($f['lat']){?><tr><td class="label">Latitude</td><td><b><?=$f['lat']?></b></td></tr><?php }?>
 									<?php if($f['long']){?><tr><td class="label">Longitude</td><td><b><?=$f['long']?></b></td></tr><?php }?>
 									<tr><td class="label">Registered</td><td><b><?php echo format_date(date('Y-M-d H:i:s',$f['created_on']))?></b></td></tr>
+									<tr><td class="label">Store Type</td><td><b><?php echo $fran_store_type?></b></td></tr>
 								</table>
 							</div>
 						</div>
@@ -716,7 +812,12 @@ $(function(){
 							</div>
 							
 							<div id="alloted_menu">
+								<?php 
+									if($this->erpm->auth(PNH_FRANCHISE_EDIT,true))
+									{
+								?>	
 								<a class="edit_wrapper" style="font-size: 11px;color: blue;" href="<?php echo site_url("admin/pnh_edit_fran/{$f['franchise_id']}#v_shop")?>" style="float: right;margin-left: 12px;">Add/Edit</a>
+								<?php } ?>
 								<?php
 									if($fran_menu)
 									{ 
@@ -844,7 +945,7 @@ $(function(){
                                                                                         <td><?= ( $offer['offer_value'] == 0 ) ? 'Free' : "Rs. ".formatInIndianStyle($offer['offer_value']);?></td>
                                                                                         <td><?=$arr_offer_status[$offer['process_status']];?></td>
                                                                                         <td><?php
-                                                                                            if($offer['insurance_id'] != '') {?>
+                                                                                            if($offer['process_status'] == 1 && $offer['insurance_id'] != '') {?>
                                                                                                 <a href="<?=site_url("admin/insurance_print_view/".$offer['insurance_id']);?>" target="blank">View</a>
                                                                                             <?php }
                                                                                                 else echo '--';
@@ -920,6 +1021,7 @@ $(function(){
 												<table class="datagrid" width="100%">
 												<thead>
 													<tr>
+														<th>Price Type</th>
 														<th>Menu</th>
 														<th>Brand</th>
 														<th>Category</th>
@@ -940,6 +1042,7 @@ $(function(){
 													?>
 													<?php // foreach($this->db->query("select h.*,a.name as admin,m.name AS menu  from pnh_sch_discount_track h left outer join king_admin a on a.id=h.created_by LEFT JOIN pnh_menu m ON m.id=h.sch_menu where franchise_id=? and ? between valid_from and valid_to and sch_type=1 order by h.id desc",array($fran['franchise_id'],time()))->result_array()  as $s){?>
 													<tr>
+														<td><?php echo $s['price_type']==1?'<b>Member Price</b>':'<b>Offer Price</b>';?></td>
 														<td><?=$s['menu']?></td>
 														<td><?=empty($s['brand'])?"All brands":$s['brand']?></td>
 														<td><?=empty($s['category'])?"All categories":$s['category']?>
@@ -1189,42 +1292,25 @@ $(function(){
 				</tr>
 			</table>
 		</fieldset>
-		<br>
-			
-		<fieldset>
-			<legend><b>Device Information</b></legend>
-				<table width="100%">
-					<tr>
-						<td width="20%">
-							<?php 
-								$app_v = '';
-								$app_v_res = $this->db->query("select version_no from pnh_app_versions where id=? ",$f['app_version']);
-								if($app_v_res->num_rows())
-									$app_v=$app_v_res->row()->version_no;
-							?>
-						<p>
-							<h4 style="margin: 0px; font-size: 15px;">
-								<b>App Version : </b><span><?=$app_v?></span>
-							</h4>
-						</p>
-						
-						<form action="<?=site_url("admin/pnh_change_app_version")?>">
-							<input type="hidden" name="fid" value="<?=$f['franchise_id']?>">
-								<p>	Change to New Version : <select id="fran_ver_change">
-																<option value="0">select</option>
-																<?php foreach($this->db->query("select version_no,id from pnh_app_versions where id>?",$f['app_version'])->result_array() as $v){?>
-																<option value="<?=$v['id']?>">
-																	<?=$v['version_no']?>
-																</option>
-																<?php }?>
-															</select>
-								</p>
-						</form>
-					</td>	
-
-				</tr>
-			</table>
-		</fieldset>
+	
+		<div class="clear"></div>
+		<div id="store_info">
+			<div class="tab_view">
+				  <ol>
+				  		<li><a href="#asset_type">Asset Type</a></li>
+				  </ol>
+				  <div id="asset_type">
+				  	<table>
+				  		<tr><td><b>Asset : </b></td><td><?php echo $fran_asset_info['asset_name']?></td></tr>
+				  		<tr><td><b>Asset Serialno :</b></td><td><?php echo $fran_asset_info['asset_serialno']?></td></tr>
+				  		<tr><td><b>Accessory :</b></td><td><?php echo $fran_asset_info['accessory_name']?></td></tr>
+				  	</table>
+				  </div>
+			  
+			 
+			</div>
+		
+		</div>
 	</div>
 	<!-- End of name block -->
 	
@@ -1384,8 +1470,10 @@ $(function(){
 						<li><a href="#acct_stat" onclick="load_receipts(this,'acct_stat',0,<?=$f['franchise_id']?>,100)">Account Correction</a></li>
 						<?php if($this->erpm->auth(FINANCE_ROLE,true)){ ?>
 						<li><a href="#security_cheques" >Security Cheque Details</a></li>
-						<?php } ?>
 						<li><a href="#unreconcile" onclick="load_receipts(this,'unreconcile',0,<?=$f['franchise_id']?>,10)">Un-Reconciled</a></li>
+						<?php if($fran_det['is_consolidated_payment']==1)?>
+							<li><a href="#out_pmt" onclick="load_receipts(this,'out_pmt',0,<?=$f['franchise_id']?>,10)">Out Payment Info</a></li>
+						<?php } ?>
 					</ul>
 					
 					<div id="pending">
@@ -1451,6 +1539,9 @@ $(function(){
 					<div class="tab_content"></div>
 				</div>
                 <div id="unreconcile">
+					<div class="tab_content"></div>
+				</div>
+				<div id="out_pmt">
 					<div class="tab_content"></div>
 				</div>
 			</div>
@@ -1543,8 +1634,22 @@ $(function(){
 							<div id="sch_hist" title=" Give Scheme Discount" style="overflow: hidden">
 								<form id="sch_form" method="post" action="<?=site_url("admin/pnh_give_sch_discount/{$f['franchise_id']}")?>" data-validate="parsley">
 									<table cellspacing="10">
+									<!--  <tr>
+										<td><b>Price Type</b></td><td>:</td>
+										<td><b><?php echo $price_type==1?'Member Price':'Offer Price';?></b></td>
+									</tr>-->
+									
 										<tr>
-											<Td>Scheme Discount</td><td>:</td>
+											<td><b>Price Type</b><span class="red_star">*</span></td><td>:</td>
+											<td><select name="price_type"  data-required="true">
+													<option value="">select</option>
+													<option value="0">Offer Price</option>
+													<option value="1">Member Price</option>
+													
+											</select></td>
+										</tr>
+										<tr>
+											<td>Scheme Discount</td><td>:</td>
 											<td>
 												<input type="text" name="discount" value="1" size="5" data-required="true">%
 											</td>
@@ -1874,7 +1979,7 @@ $(function(){
 						
 							
 							<div id="remarks_changestatus" title="Change Amount Transit Status">
-								<form id="transit_rmks" method="post" action="<?php echo site_url("admin/pnh_change_receipt_trans_type/{$pr['receipt_id']}")?>" date-validate="parsley">
+								<form id="transit_rmks" method="post" action="<?php echo @site_url("admin/pnh_change_receipt_trans_type/{$pr['receipt_id']}")?>" date-validate="parsley">
 									<table>
 										<tr><td><b>Receipt Id</b></td><td><b>:</b></td><td id="r_receiptid"><b></b></td></tr>
 										<tr><td><b>Remarks</b></td><td><b>:</b></td><td><textarea name="transit_rmks" data-required="true" style="width: 331px; height: 172px;"></textarea></td></tr>
@@ -2055,6 +2160,23 @@ $(function(){
 			
 		</div>
 	</div>		
+	
+	
+	<div style="display:none">
+		<div id="dlg_add_security_cheque_det" title="Add Security Cheque Details">
+			<form action="<?php echo site_url('admin/jx_add_security_chqdet');?>" method="post">
+				<input type="hidden" name="f_schq_fid" value="<?php echo $f['franchise_id'];?>">
+				<table width="100%" cellpadding="5" cellspacing="0">
+					<tr><td><b>Bank name</b></td> <td><input type="text" name="f_schq_bankname" value=""></td></tr>
+					<tr><td><b>Cheque no</b></td> <td><input type="text" name="f_schq_no" value=""></td></tr>
+					<tr><td><b>Cheque Date</b></td> <td><input type="text" name="f_schq_date" value=""></td></tr>
+					<tr><td><b>Amount (Rs)</b></td> <td><input type="text" name="f_schq_amt" value=""></td></tr>
+					<tr><td><b>Collected On</b></td> <td><input type="text" name="f_schq_colon" value=""></td></tr>
+				</table>
+			</form>
+		</div>
+	</div>
+	
         <!--============================================<< Re-concilation Dialog box Start >>===================================-->
 
         <div id="dlg_unreconcile_view_list" style="display:none;">
@@ -2159,10 +2281,57 @@ $(function(){
             </div>
         <!--============================================<< Re-concilation Dialog box End >>===================================-->
         
+         <!--=============================================<<Price type [Offer price/Member price] Start>>===================== -->
+        
+        <div id="mark_price_type"  style="display:none;" >
+	        <form action="<?php echo site_url('admin/mark_price_type')?>"data-validate="parsley" id="mark_price_type_form" method="post">
+		        <table width="100%">
+		        	<tr><td><input type="hidden" name="pricetype_fid" value=""> <input type="hidden" name="pricetype" value=""></td></tr>
+		        	<tr><td>Reason :</td><td><textarea name="price_type_reason" style="width: 334px; height: 80px;" data-required="true"></textarea></td></tr>
+		        </table>
+	        </form>
+        </div>
+        <!--=============================================<<Price type [Offer price/Member price] End>>===================== -->
+        
+        <!-- ============================================<<Consolidated payment Start>>====================================== -->
+          <div id="mark_consolidated_pmt" style="display: none;">
+			<form action="<?php echo site_url('admin/upd_consolidated_pmt')?>" data-validate="parsley" id="mark_consolidated_pmt_form" method="post">
+				<table width="100%">
+					<tr><td><input type="hidden" name="cpmt_fid" value=""> <input type="hidden" name="cpmt_flag" value="<?php echo $is_consolidated?>"></td></tr>
+					<tr><td valign="top"><b>Remarks : </b></td><td><textarea name="consolidated_pmt_reason" style="width: 334px; height: 80px;" value="" data-required="true"></textarea></td></tr>
+				</table>
+			</form>
+		</div>
+		
+		<div id="makepayment_div" style="display:none;" title="Make Payment">
+		<div style="margin:10px 0"><b>Total Payment Amount : </b><span id="ttl_pmt_amt"><b></b></span></div>
+		<form action="<?php echo site_url('admin/make_payment')?>" method="post">
+		<!--  <div style="float:right;margin:10px 0;">From :<input type="text" id="frm_dt"> To :<input type="text" id="to_dt"></div>-->
+			<table class="datagrid" width="100%" id="payment_tbl">
+			<input type="hidden" name="cpmt_fid" value="<?php echo $fid ;?>" >
+			<input type="hidden" name="cpmt_invno" class="cpmt_invno" value="" >
+				<thead>
+					<th><input type="checkbox" value="" class="check_all"></th>
+					<th>Sl no</th>
+					<th>Invoice number</th>
+					<th>Transid</th>
+					<th>Credit Amount</th>
+					<th>Created On</th>
+					<th>Last ModifiedOn</th>
+				</thead>
+				<tbody></tbody>
+			</table>
+			</form>
+			<div class="pagination_links" style="display:none;float: right;"></div>
+			
+		</div>
+	<!-- ============================================<<Consolidated payment End>>====================================== -->
+        
 </div>
 
 <!--============================================<< Javascript Code Start >>===================================-->
 <script>
+$("#frm_dt,#to_dt").datepicker();
 
  var twnlnk_franchise_html='';
 
@@ -2282,7 +2451,7 @@ $("#ordered_log_dlg" ).dialog({
 	    	var k=1;
 	    	 
 	    	 order_det +='<table class="datagrid" width="100%"  ><tr><th width="5%">Sl.No</th><th>TransID</th><th>Itemid</th>';
-	    	 order_det +='<th>Item</th><th>Quantity</th><th>Commission</th><th>Amount</th></tr>';
+	    	 order_det +='<th>Item</th><th>Quantity</th><th>Amount</th><th>Member Fee</th><th>Insurance Fee</th><th>Total</th><th>Commission</th></tr>';
 	    	 $.each(result.order_det,function(i,s1){
 	    	 	s = s1[0];
 	    	 	
@@ -2290,21 +2459,49 @@ $("#ordered_log_dlg" ).dialog({
 	    	 		order_det +='	<td rowspan="'+s1.itemid.length+'">'+(k++)+'</td>';
 	    	 		order_det +='	<td rowspan="'+s1.itemid.length+'"><a href="'+site_url+'/admin/trans/'+s1.transid+'" target="_blank">'+s1.transid+'</a></td>';
 	    	 		j=0;
+	    	 		c=0;
+	    	 		ttl_amount=0;
 	    	 		$.each(s1.itemid,function(a,b){
 	    	 			if(j!=0)
 	    	 				order_det +='<tr>';			
 	    	 			order_det +='<td>'+b.itemid+'</a></td>';
 		    	 		order_det +='	<td><a href="'+site_url+'/admin/pnh_deal/'+b.itemid+'" target="_blank">'+b.name+'</a></td>';
 		    	 		order_det +='	<td>'+b.qty+'</td>';
-		    	 		order_det +='	<td>'+b.com+'</td>';
 		    	 		order_det +='	<td>'+b.amount+'</td>';
+		    	 		
+		    	 		
+		    	 		if(b.is_pnh && b.order_for==1 && c==0)
+		    	 		{
+		    	 			order_det +='	<td>'+b.mem_fee+'<br /><span style="font-size:10px;color:red">(new member fee)</span></td>';
+		    	 			++c;
+		    	 			ttl_amount=parseFloat(b.ttl_amount)+parseFloat(b.mem_fee);
+		    	 			
+		    	 		}else if(b.is_pnh && b.order_for==2)
+		    	 		{
+		    	 			order_det +='	<td>'+b.mem_fee+'<br /><span style="font-size:10px;color:red">(key member fee)</span></td>';
+		    	 			ttl_amount=parseFloat(b.ttl_amount)+parseFloat(b.mem_fee);
+		    	 		}else if(b.is_pnh && b.order_for==1 && c!=0)
+		    	 		{
+		    	 			order_det +='	<td>0.00</td>';
+		    	 			ttl_amount=b.ttl_amount;
+		    	 		}
+		    	 		else
+		    	 		{
+		    	 			order_det +='	<td>0.00</td>';
+		    	 			ttl_amount=b.ttl_amount;
+		    	 		}
+		    	 		order_det +='	<td>'+b.insu_amt+'</td>';
+		    	 		order_det +='	<td>'+format_indianprice(ttl_amount)+'<br />';
+		    	 					
+		    	 		order_det +='</td>';
+		    	 		order_det +='	<td>'+b.com+'</td>';
 		    	 		if(j!=0)
 	    	 				order_det +='</tr>';
 	    	 				j++;	
 	    	 		});
 	    	 		order_det +='</tr>';
 	    	 });			
-	    	 order_det +='<tfoot class="nofooter"><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_com+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td></td><td></td><td></td></tr></tfoot>';
+	    	 order_det +='<tfoot class="nofooter"><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td></td><td></td><td></td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td style="text-align:left">Rs.'+result.ttl_com+'</td></tr></tfoot>';
 	    	 $('#order_log_dlg_wrap').html(order_det);	
 		}
 	  },'json');
@@ -2313,7 +2510,7 @@ $("#ordered_log_dlg" ).dialog({
 $("#ship_log_dlg" ).dialog({
 		modal:true,
 		autoOpen:false,
-		width:'1000',
+		width:'1200',
 		height:'450',
 		autoResize:true,
 		open:function(){
@@ -2335,7 +2532,7 @@ $("#ship_log_dlg" ).dialog({
 	    	var k=1;
 	    	 
 	    	 shipment_det +='<table class="datagrid" width="100%"  ><tr><th width="5%">Sl.No</th><th>TransID</th><th>Invoice</th>';
-	    	 shipment_det +='<th>Item</th><th>Quantity</th><th>Commission</th><th>Amount</th><th></th></tr>';
+	    	 shipment_det +='<th>Item</th><th>Quantity</th><th>Amount</th><th>Member Fee</th><th>Insurance Fee</th><th>Total</th><th>Commission</th></tr>';
 	    	 $.each(result.ship_det,function(i,s1){
 	    	 	s = s1[0];
 	    	 	
@@ -2343,14 +2540,40 @@ $("#ship_log_dlg" ).dialog({
 	    	 		shipment_det +='	<td rowspan="'+s1.invoices.length+'">'+(k++)+'</td>';
 	    	 		shipment_det +='	<td rowspan="'+s1.invoices.length+'"><a href="'+site_url+'/admin/trans/'+s1.transid+'" target="_blank">'+s1.transid+'</a><br /><span style="font-size:10px;font-weight:bold">Ordered On : '+s1.ord_on+'</span> </td>';
 	    	 		j=0;
+	    	 		c=0;
+	    	 		ttl_amount=0;
+	    	 		var normal_mem_fee=0;
 	    	 		$.each(s1.invoices,function(a,b){
 	    	 			if(j!=0)
 	    	 				shipment_det +='<tr>';			
 	    	 			shipment_det +='<td><a href="'+site_url+'/admin/invoice/'+b.invoice_no+'" target="_blank">'+b.invoice_no+'</a></td>';
 		    	 		shipment_det +='	<td><a href="'+site_url+'/admin/pnh_deal/'+b.itemid+'" target="_blank">'+b.name+'</a></td>';
 		    	 		shipment_det +='	<td>'+b.qty+'</td>';
-		    	 		shipment_det +='	<td>'+b.com+'</td>';
 		    	 		shipment_det +='	<td>'+b.amount+'</td>';
+		    	 		
+		    	 		if(b.is_pnh && b.order_for==1 && c==0)
+		    	 		{
+		    	 			shipment_det +='	<td>'+b.mem_fee+'<br /><span style="font-size:10px;color:red">(new member fee)</span></td>';
+		    	 			++c;
+		    	 			ttl_amount=parseFloat(b.ttl_amount)+parseFloat(b.mem_fee);
+		    	 		}else if(b.is_pnh && b.order_for==2)
+		    	 		{
+		    	 			shipment_det +='	<td>'+b.mem_fee+'<br /><span style="font-size:10px;color:red">(key member fee)</span></td>';
+		    	 			ttl_amount=parseFloat(b.ttl_amount)+parseFloat(b.mem_fee);
+		    	 		}else if(b.is_pnh && b.order_for==1 && c!=0)
+		    	 		{
+		    	 			shipment_det +='	<td>0.00</td>';
+		    	 			ttl_amount=b.ttl_amount;
+		    	 		}
+		    	 		else
+		    	 		{
+		    	 			shipment_det +='	<td>0.00</td>';
+		    	 			ttl_amount=b.ttl_amount;
+		    	 		}
+		    	 		shipment_det +='	<td>'+b.insu_amt+'</td>';
+		    	 		shipment_det +='	<td>'+format_indianprice(ttl_amount)+'<br />';
+		    	 		shipment_det +='	</td>';
+		    	 		shipment_det +='	<td>'+b.com+'</td>';
 		    	 		shipment_det +='	<td><a class="link_btn" onclick="get_invoicetransit_log(this,'+b.invoice_no+')" href="javascript:void(0)">View Transit Log</a></td>';
 		    	 		if(j!=0)
 	    	 				shipment_det +='</tr>';
@@ -2358,7 +2581,7 @@ $("#ship_log_dlg" ).dialog({
 	    	 		});
 	    	 		shipment_det +='</tr>';
 	    	 });			
-	    	 shipment_det +='<tfoot class="nofooter"><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_com+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td></td><td></td><td></td></tr></tfoot>';
+	    	 shipment_det +='<tfoot class="nofooter"><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td></td><td></td><td></td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td style="text-align:left">Rs.'+result.ttl_com+'</td><td></td></tr></tfoot>';
 	    	 $('#ship_log_dlg_wrap').html(shipment_det);	
 		}
 	  },'json');
@@ -2367,7 +2590,7 @@ $("#ship_log_dlg" ).dialog({
 $("#delivery_log_dlg" ).dialog({
 		modal:true,
 		autoOpen:false,
-		width:'1000',
+		width:'1200',
 		height:'450',
 		autoResize:true,
 		open:function(){
@@ -2390,7 +2613,7 @@ $("#delivery_log_dlg" ).dialog({
 	    	var k=1;
 	    	 
 	    	 delivery_det +='<table class="datagrid" width="100%"  ><tr><th width="5%">Sl.No</th><th>TransID</th><th>Invoice</th>';
-	    	 delivery_det +='<th>Item</th><th>Quantity</th><th>Commission</th><th>Amount</th><th></th></tr>';
+	    	 delivery_det +='<th>Item</th><th>Quantity</th><th>Amount</th><th>Member Fee</th><th>Insurance Fee</th><th>Total</th><th>Commission</th></tr>';
 	    	 $.each(result.delivery_det,function(i,s1){
 	    	 	s = s1[0];
 	    	 	
@@ -2398,14 +2621,40 @@ $("#delivery_log_dlg" ).dialog({
 	    	 		delivery_det +='	<td rowspan="'+s1.invoices.length+'">'+(k++)+'</td>';
 	    	 		delivery_det +='	<td rowspan="'+s1.invoices.length+'"><a href="'+site_url+'/admin/trans/'+s1.transid+'" target="_blank">'+s1.transid+'</a><br /><span style="font-size:10px;font-weight:bold">Ordered On : '+s1.ord_on+'</span></td>';
 	    	 		j=0;
+	    	 		c=0;
+	    	 		ttl_amount=0;
 	    	 		$.each(s1.invoices,function(a,b){
 	    	 			if(j!=0)
 	    	 				delivery_det +='<tr>';			
 	    	 			delivery_det +='<td><a href="'+site_url+'/admin/invoice/'+b.invoice_no+'" target="_blank">'+b.invoice_no+'</a></td>';
 		    	 		delivery_det +='	<td><a href="'+site_url+'/admin/pnh_deal/'+b.itemid+'" target="_blank">'+b.name+'</a></td>';
 		    	 		delivery_det +='	<td>'+b.qty+'</td>';
-		    	 		delivery_det +='	<td>'+b.com+'</td>';
 		    	 		delivery_det +='	<td>'+b.amount+'</td>';
+		    	 		
+		    	 		
+		    	 		if(b.is_pnh && b.order_for==1 && c==0)
+		    	 		{
+		    	 			delivery_det +='	<td>'+b.mem_fee+'<br /><span style="font-size:10px;color:red">(new member fee)</span></td>';
+		    	 			++c;
+		    	 			ttl_amount=parseFloat(b.ttl_amount)+parseFloat(b.mem_fee);
+		    	 		}else if(b.is_pnh && b.order_for==2)
+		    	 		{
+		    	 			delivery_det +='	<td>'+b.mem_fee+'<br /><span style="font-size:10px;color:red">(key member fee)</span></td>';
+		    	 			ttl_amount=parseFloat(b.ttl_amount)+parseFloat(b.mem_fee);
+		    	 		}else if(b.is_pnh && b.order_for==1 && c!=0)
+		    	 		{
+		    	 			delivery_det +='	<td>0.00</td>';
+		    	 			ttl_amount=b.ttl_amount;
+		    	 		}
+		    	 		else
+		    	 		{
+		    	 			delivery_det +='	<td>0.00</td>';
+		    	 			ttl_amount=b.ttl_amount;
+		    	 		}
+		    	 		delivery_det +='	<td>'+b.insu_amt+'</td>';
+		    	 		delivery_det +='	<td>'+format_indianprice(ttl_amount)+'<br />';
+		    	 		delivery_det +='	</td>';
+		    	 		delivery_det +='	<td>'+b.com+'</td>';
 		    	 		delivery_det +='	<td><a class="link_btn" onclick="get_invoicetransit_log(this,'+b.invoice_no+')" href="javascript:void(0)">View Transit Log</a></td>';
 		    	 		if(j!=0)
 	    	 				delivery_det +='</tr>';
@@ -2413,7 +2662,7 @@ $("#delivery_log_dlg" ).dialog({
 	    	 		});
 	    	 		delivery_det +='</tr>';
 	    	 	});
-	    	  delivery_det +='<tfoot class="nofooter"><tr><td>Total </td><td></td><td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td style="text-align:left">Rs.'+result.ttl_com+'</td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td></td><td></td><td></td></tr></tfoot>';
+	    	  delivery_det +='<tfoot class="nofooter"><tr><td>Total </td><td><td></td></td><td></td><td style="text-align:left">'+result.ttl_qty+'</td><td></td><td></td><td></td><td style="text-align:left">Rs.'+result.ttl_amt+'</td><td style="text-align:left">Rs.'+result.ttl_com+'</td><td></td></tr></tfoot>';
 	    	 $('#delivery_log_dlg_wrap').html(delivery_det);	
 		
 		}
@@ -2541,6 +2790,7 @@ function load_allcatgory()
 	}
 $(function(){
 	$('#menu_det_tab').hide();
+	$('#menu_cat_det_tab').hide();
 	
 	var fran_reg_date = "<?php echo date('m/d/Y',$f['created_on'])?>";
 	prepare_daterange('ord_fil_from','ord_fil_to');
@@ -3771,6 +4021,7 @@ $("#pnh_membersch").dialog({
 			    $('#fr_order_stat .order_piestat_view').bind('jqplotDataClick', function(ev,seriesIndex,pointIndex,data) {
 			    	$('.fr_menu_by_mn').show();
 			    	$('#menu_det_tab').show();
+			    	$('#menu_cat_det_tab').show();
 			    	var menu_id = resp[pointIndex][2];
 			    	var menu_name = resp[pointIndex][0];
 			    	
@@ -3779,6 +4030,9 @@ $("#pnh_membersch").dialog({
 					 
 					 // top sold brands for selected menu
 					 brands_bymenu(menu_id,menu_name);
+					 
+					  // top sold Categories for selected menu
+					 cats_bymenu(menu_id,menu_name);
 			    });
 			});
 		}
@@ -3934,6 +4188,33 @@ $("#pnh_membersch").dialog({
 			 },'json');
 		}
 		
+		function cats_bymenu(id,name)
+		{
+			var franid = "<?php echo $this->uri->segment(3);?>";
+			var start_date=$('#frm').val();
+    		var end_date=$('#to').val();
+    		$('.fr_top_sold_cat').html('<div class="bar"><span></span></div>'); 
+			$.post("<?=site_url("admin/jx_cat_det_bymenu")?>",{menu_id:id,franid:franid,start_date:start_date,end_date:end_date},function(resp){
+				$('#menu_cat_det_tab .stat_head_wrap').html("Top sold Categories of "+name+" menu ");
+					var topsold_prod_list="";
+				 
+				 	if(resp.status == 'error')
+				 	{
+				 		topsold_prod_list +='<span>'+resp.message+'</span>';
+				 		$('.fr_top_sold_cat').html(topsold_prod_list);
+				 	}
+				 	else
+				 	{
+				 		topsold_prod_list +='<table class="datagrid" width="100%"><thead><tr><th>Category Name</th><th>Qty Sold</th><th>Total Value</th></tr></thead><tbody>';
+				 		$.each(resp.top_cat_list,function(i,p){
+							topsold_prod_list +='<tr><td><a target="blank" href="'+site_url+'/admin/viewcat/'+p.catid+'">'+p.cat_name+'</a></td><td>'+p.qty_sold+'</td><td>'+p.total_value+'</td></tr>';	
+						});
+				 		topsold_prod_list +='</tbody></table>';
+				 		$('.fr_top_sold_cat').html(topsold_prod_list);
+				 	}
+			 },'json');
+		}
+		
 		function mark_prepaid_franchise(fid,flag)
 		{
 			$("#mark_prepaid_franchise").data('franchise_id',fid,'p_flg',flag).dialog('open');
@@ -4014,7 +4295,7 @@ $("#pnh_membersch").dialog({
 																					}else
 																					{
 																						
-																						$('#security_cheques table tbody').append('<tr><td>'+$('#security_cheques table tbody tr').length+'</td><td>'+f_schq_no+'</td><td>'+f_schq_bankname+'</td><td>'+f_schq_date+'</td><td>'+f_schq_amt+'</td><td>'+f_schq_colon+'</td></tr>');
+																						$('#security_cheques table tbody').append('<tr><td>'+($('#security_cheques table tbody tr').length+1)+'</td><td>'+f_schq_no+'</td><td>'+f_schq_bankname+'</td><td>'+f_schq_date+'</td><td>'+f_schq_amt+'</td><td>'+f_schq_colon+'</td></tr>');
 																						dlg.dialog('close');
 																					}
 																				},'json');
@@ -4022,12 +4303,12 @@ $("#pnh_membersch").dialog({
 																	}
 																}
 														});
-					function load_add_security_cheque_dlg()
-					{
-						$('#dlg_add_security_cheque_det').dialog('open');
-					}
-					
-					$('input[name="f_schq_date"],input[name="f_schq_colon"]').datepicker({dateFormat:'yy-mm-dd'});
+		function load_add_security_cheque_dlg()
+		{
+			$('#dlg_add_security_cheque_det').dialog('open');
+		}
+		
+		$('input[name="f_schq_date"],input[name="f_schq_colon"]').datepicker({dateFormat:'yy-mm-dd'});
 					
 		function tgl_addcalllog_msg(ele)
 		{
@@ -4087,7 +4368,84 @@ $("#pnh_membersch").dialog({
 		}
 		load_recent_calllog('',<?php echo $f['franchise_id'];?>);
 			
-	
+		function mark_pricetype(fid,flag)
+		{
+			$("#mark_price_type").data('franchise_id',fid,'ptype_flg',flag).dialog('open');
+		}
+
+		$("#mark_price_type").dialog({
+			modal:true,
+			autoOpen:false,
+			width:467,
+			height:220,
+			open:function()
+			{
+				var dlg=$(this);
+				if(dlg.data('ptype_flg'))
+					$('#mark_price_type').dialog('option', 'title','Offer price type reason');
+				else
+					$('#mark_price_type').dialog('option', 'title','Member price type reason');
+			
+				$('input[name="pricetype_fid"]').val(dlg.data('franchise_id'));
+				$('input[name="pricetype"]').val(dlg.data('ptype_flg'));
+			},
+			buttons:{
+			'submit':function(){
+				var pt_form=$("#mark_price_type_form",this);
+				if(pt_form.parsley('validate'))
+					pt_form.submit();
+
+				},
+			'cancel':function()
+			{
+				$(this).dialog('close');
+			}
+
+		}
+
+		});
+
+		function mark_consolidated_pmt(fid,flag)
+		{
+			$("#mark_consolidated_pmt").data('franchise_id',fid,'pmntype_flg',flag).dialog("open");
+		}
+
+		$("#mark_consolidated_pmt").dialog({
+			modal:true,
+			autoOpen:false,
+			width:467,
+			height:220,
+			open:function()
+			{
+				var dlg=$(this);
+				if(dlg.data('pmntype_flg'))
+				{
+					$('#mark_consolidated_pmt').dialog('option', 'title','Consolidated Out payment Unmark  reason');
+					
+				}
+				else
+				{
+					$('#mark_consolidated_pmt').dialog('option', 'title','Consolidated Out payment  reason');
+					
+				}	
+				$('input[name="cpmt_fid"]').val(dlg.data('franchise_id'));
+			
+				
+			
+			},
+		buttons:{
+			'Submit':function(){
+					var consoldted_pmt_frm=$("#mark_consolidated_pmt_form",this);
+					if(consoldted_pmt_frm.parsley('validate')==true)
+						consoldted_pmt_frm.submit();
+					else
+						return false;
+				},
+			'Cancel':function(){
+					$(this).dialog('close');
+				}
+		}
+	});
 </script>
 
 <style type="text/css">

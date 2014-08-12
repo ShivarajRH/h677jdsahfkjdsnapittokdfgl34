@@ -14,6 +14,14 @@ $d=$deal;
 <tr><td>Tagline : </td><td><input type="text" name="tagline" class="inp" size=30 value="<?=$d?$d['tagline']:""?>"></td></tr>
 <tr><td>MRP : </td><td>Rs <input type="text" name="mrp" <?=$d?"readonly":""?> class="inp" size="5" value="<?=$d?$d['orgprice']:""?>"></td></tr>
 <tr><td>Offer Price : </td><td>Rs <input type="text" name="offer_price" class="inp chk_price" size="5" value="<?=$d?$d['price']:""?>"></td></tr>
+
+<input type="hidden" name="member_price" class="inp chk_price" size="5" value="<?=$d?$d['member_price']:""?>">
+<input type="hidden" name="mp_max_allow_qty" size="5" value="<?=$d?$d['mp_max_allow_qty']:""?>">
+<input type="hidden" name="mp_frn_max_qty" size="5" value="<?=$d?$d['mp_frn_max_qty']:""?>">
+<input type="hidden" name="mp_mem_max_qty" size="5" value="<?=$d?$d['mp_mem_max_qty']:""?>">
+<!--<tr><td><b>Member Price</b> : </td><td>Rs </td></tr>-->
+<!--<tr><td><b>Mem price Max qty</b>:</td><td>&nbsp;&nbsp;<b>Mem price Max order qty</b> : </td></tr>-->
+
 <tr><td>Store Offer Price : </td><td>Rs <input type="text" name="store_offer_price" class="inp chk_price" size="5" value="<?=$d?$d['store_price']:""?>"></td></tr>
 <tr><td>NYP Offer Price : </td><td>Rs <input type="text" name="nyp_offer_price" class="inp chk_price" size="5" value="<?=$d?$d['nyp_price']:""?>"></td></tr>
 <tr><td>Bill on order price : </td><td><input type="checkbox" name="billon_orderprice" class="inp" value="1" <?=$d?($d['billon_orderprice']?"checked":""):""?> ></td></tr>

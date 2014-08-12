@@ -30,6 +30,10 @@ $(function(){
 		});
 	}
 	
+	/*
+	 * Panel Alerts
+	 * 
+	 */
 	function get_panel_alerts()
 	{
 		
@@ -63,7 +67,7 @@ $(function(){
 		 		$('#strip_itemlist_wrap').hide();
 		 		setTimeout(function(){
 		 			get_panel_alerts();
-		 		},10000);
+		 		},120000);
 		 	}
 		 },'json');
 	}
@@ -130,6 +134,7 @@ $(function(){
         
         
 $(document).ready(function() {
+		//Stream Notifications
         $.post(site_url+'admin/jx_get_stream_notifications/'+userid,{},function(rdata){
             if(rdata>0 && rdata!='')
                     $(".notify_block").css({"background-color": "brown", "padding":"2px 10px"}).html(rdata);
@@ -172,6 +177,7 @@ $(function(){
         });
 });
 $(function(){
+	//Search Input events 
 	$("#searchbox").focus(function(){
 		sr=$(this);
 		if(sr.val()=="Search...")
@@ -189,20 +195,101 @@ $(function(){
 		}
 	});
 	$("#searchbox").keypress(function(e){
-		 
 		if(e.which==13)
 		{
-			$("#searchkeyword").val($(this).val());
+			var v=$(this).val();
+			$("#searchkeyword").val(v);
+			prod_cnt='';
+			if($('input[name="srch_opt"]:checked').val()==1)
+			{
+				$.post(site_url+'/admin/jx_prd_srch_bybarcode',{chr:v},function(resp){
+				var prod_det=resp.p_det;	
+				if(resp.status == 'error')//If response status is error[barcode not found]
+				{
+					$('#prd_det_dlg').html('<div class="page_alert_wrap">No Details Found</div>');
+						$('#prd_det_dlg').dialog('open');
+				}
+				else
+				{
+						product_det(prod_det,'barc');
+				}
+					$('.ui-dialog-title').html('Barcode : '+v);
+				},'json');
+		 	}
+		 	else if($('input[name="srch_opt"]:checked').val()==2)
+			{
+				$.post(site_url+'/admin/jx_prd_srch_byimei',{chr:v},function(resp){
+				var prod_det=resp.p_det;	
+					if(resp.status == 'error')//If response status is error[imei not found]
+				{
+					$('#prd_det_dlg').html('<div class="page_alert_wrap">No Details Found</div>');
+						$('#prd_det_dlg').dialog('open');
+				}
+				else
+				{
+						product_det(prod_det,'imei');
+				}
+				$('.ui-dialog-title').html('IMEI : '+v);
+				},'json');
+		 	}
+		 	else
+		 	{
 			$("#searchform").submit();
 		}
+		}
 	});
+	
+	//Search Submit events
 	$("#searchtrigh").click(function(){
 		if($("#searchbox").val()=="Search...")
 		{
 			alert("inpput!!!");return;
 		}
-		$("#searchkeyword").val($("#searchbox").val());
-		$("#searchform").submit();
+		var v=$(this).val();
+		$("#searchkeyword").val(v);
+		$partner_srch=0;
+		prod_cnt='';
+		//Condition for search type ---1.Barcode,2.IMEI
+		if($('input[name="srch_opt"]:checked').val()==1)
+		{
+			$.post(site_url+'/admin/jx_prd_srch_bybarcode',{chr:v},function(resp){
+			var prod_det=resp.p_det;	
+			if(resp.status == 'error')//If response status is error[barcode not found]
+			{
+				$('#prd_det_dlg').html('<div class="page_alert_wrap">No Details Found</div>');
+					$('#prd_det_dlg').dialog('open');
+			}
+			else
+			{
+					product_det(prod_det,'barc',is_partner);
+			}
+				$('.ui-dialog-title').html('Barcode : '+v);
+			},'json');
+	 	}
+	 	//Condition for search type ---1.Barcode,2.IMEI
+	 	else if($('input[name="srch_opt"]:checked').val()==2)
+		{
+			$.post(site_url+'/admin/jx_prd_srch_byimei',{chr:v},function(resp){
+			var prod_det=resp.p_det;	
+				if(resp.status == 'error')//If response status is error[imei not found]
+			{
+				$('#prd_det_dlg').html('<div class="page_alert_wrap">No Details Found</div>');
+					$('#prd_det_dlg').dialog('open');
+			}
+			else
+			{
+					if(resp.partner_srch == 1)
+						partner_srch=1;
+						
+					product_det(prod_det,'imei',is_partner);
+				}
+				$('.ui-dialog-title').html('IMEI : '+v);
+			},'json');
+	 	}
+		else
+	 	{
+	 		$("#searchform").submit();
+	 	}
 	});
 
 	var data_request = null;
@@ -213,6 +300,105 @@ $(function(){
 			$("#searchkeyword").val(srch_val);
 	});
 	
+	//Function to append data for barcode,imei search
+	function product_det(prod_det,srch_type,is_partner_srch)
+	{
+				$.each(prod_det,function(i,p){
+					//pname+=p.product_name;
+					prod_cnt+='<div class="cont">';
+					prod_cnt+='		<h4 class="title"><a target="_blank" href="'+site_url+'/admin/product/'+p.product_id+'">'+p.product_name+'</a></h4>';
+					prod_cnt+='		<div class="img_blk">';
+					prod_cnt+='			<img src="'+p.image_url+'">';
+			prod_cnt+='			<div class="serial_numb_blk">';
+			prod_cnt+='				<div class="sales">';
+			prod_cnt+='					<div><span>30 day Sales : </span><b>'+p.sales+' Qty</b></div>';
+			prod_cnt+='				</div>';
+			prod_cnt+='			</div>';
+					prod_cnt+='		</div>';
+					prod_cnt+='		<div class="desc_blk">';
+			prod_cnt+='			<div><span>Stock :</span><b>'+p.stock+'</b></div>';
+			prod_cnt+='			<div><span>MRP :</span><b>'+p.mrp+'</b></div>';
+			//prod_cnt+='			<div><span>Mem. Price :</span><b>'+p.member_price+'</b></div>';
+			prod_cnt+='			<div><span>Brand :</span><b><a target="_blank" href="'+site_url+'/admin/viewbrand/'+p.brandid+'">'+p.brand_name+'</a></b></div>';
+			prod_cnt+='			<div><span>Category :</span><b><a target="_blank" href="'+site_url+'/admin/viewcat/'+p.catid+'">'+p.cat_name+'</a></b></div>';
+			
+			//Stock Details 
+			prod_cnt+='				<h4 style="margin-top:4%; ">Stock Details :</h4>';
+			prod_cnt+='				<table class="datagrid fl_left" width="100%">';
+			prod_cnt+='					<thead>';
+			prod_cnt+='						<th>Barcode</th>';
+			prod_cnt+='						<th>MRP</th>';
+			prod_cnt+='						<th>Rackbin</th>';
+			prod_cnt+='						<th>Stock</th>';
+			prod_cnt+='					</thead>';
+			prod_cnt+='					<tbody>';
+			$.each(p.stk_det,function(i,d){
+				if(d.s > 0)
+				{
+					prod_cnt+='						<tr>';
+					prod_cnt+='							<td>';
+					if(d.pbarcode)
+						prod_cnt+=''+d.pbarcode;
+					else
+						prod_cnt+='n/a';	
+					prod_cnt+='							</td>';
+					prod_cnt+='							<td>'+format_indianprice(d.mrp)+'</td>';
+					prod_cnt+='							<td>'+d.rbname+'</td>';
+					prod_cnt+='							<td>'+d.s+'</td>';
+					prod_cnt+='						</tr>';
+				}
+				
+			});
+			prod_cnt+='					</tbody>';
+			prod_cnt+='				</table>';
+			
+			//Linked Deals 
+			prod_cnt+='				<h4 style="margin-top:4%; display: inline-block;">Linked Deals :</h4>';
+			prod_cnt+='					<table class="datagrid"  width="100%">';
+			prod_cnt+='						<thead><th>Deal Name</th><th>Deal Type</th><th>FSN</th><th>ASN</th></thead><tbody>';
+					$.each(p.deal_det,function(i,d){
+				prod_cnt+='						<tr><td><a target="_blank" href="'+site_url+'/admin/deal/'+d.dealid+'">'+d.name+'</a></td>';
+				if(d.is_pnh ==1)
+					prod_cnt+='						<td>PNH</td>';
+				else
+					prod_cnt+='						<td>SNP</td>';	
+				
+				prod_cnt+='						<td>'+d.fsin+'</td><td>'+d.asin+'</td></tr>';
+					});
+			prod_cnt+='				</tbody></table>';
+			
+			if(srch_type == 'imei' && is_partner_srch==0)
+			{
+				//Vendor,grn details
+				prod_cnt+='				<h4 style="margin-top:4%; display: inline-block;">Vendor Details :</h4>';
+				prod_cnt+='				<table class="datagrid"  width="100%">';
+				prod_cnt+='						<thead><th>Vendor Name</th><th>GRN ID</th><th>Intake On</th></thead><tbody>';
+				prod_cnt+='						<tr>';
+				prod_cnt+='							<td><a target="_blank" href="'+site_url+'/admin/vendor/'+p.vendor_det.vendor_id+'">'+p.vendor_det.vendor_name+'</a></td>';
+				prod_cnt+='							<td><a target="_blank" href="'+site_url+'/admin/viewgrn/'+p.vendor_det.grn_id+'">'+p.vendor_det.grn_id+'</a></td> <td>'+p.vendor_det.created_on+'</td>';
+				prod_cnt+='						</tr>';
+				prod_cnt+='				</tbody></table>';
+				
+				//Invoice Details
+				prod_cnt+='				<h4 style="margin-top:4%; display: inline-block;">Invoice Details :</h4>';
+				prod_cnt+='				<table class="datagrid"  width="100%">';
+				prod_cnt+='						<thead><th>Franchise</th><th>Invoice No</th><th>Shipped On</th><th>Delivered On</th></thead><tbody>';
+				prod_cnt+='						<tr>';
+				prod_cnt+='							<td><a target="_blank" href="'+site_url+'/admin/pnh_franchise/'+p.invoice_det.franchise_id+'">'+p.invoice_det.franchise_name+'</a></td>';
+				prod_cnt+='							<td><a target="_blank" href="'+site_url+'/admin/invoice/'+p.invoice_det.invoice_no+'">'+p.invoice_det.invoice_no+'</a></td><td>'+p.invoice_det.shipped_on+'</td><td>'+p.invoice_det.delivered_on+'</td>';
+				prod_cnt+='						</tr>';
+			
+				prod_cnt+='				</tbody></table>';	
+			}
+			
+			
+			prod_cnt+='		</div>';
+			prod_cnt+='			<div class="more"><a target="_blank" href="'+site_url+'/admin/product/'+p.product_id+'">More Info >></a></div>';
+					prod_cnt+='</div>';
+				});	
+				$('#prd_det_dlg').html(prod_cnt);
+			$('#prd_det_dlg').dialog('open');
+	 	}
 	
 	$("#suggestions").css({ 'box-shadow' : '#888 5px 10px 10px', // Added when CSS3 is standard
 		'-webkit-box-shadow' : '#888 5px 10px 10px', // Safari
@@ -232,16 +418,17 @@ $(function(){
 			
 			if(data_request)
 				data_request.abort();
-			
+			if($('input[name="srch_opt"]:checked').val()==0)
+			{
 			data_request = $.post(site_url+'/admin/jx_searchbykwd', {kwd: ""+inputString+""}, function(data) { // Do an AJAX call
 				$('#suggestions').html(data); // Fill the suggestions box
 			});
+			}
 		}
 	 });
 	 
 	 $('#searchresults .viewall').live('click',function(){
 	 	$("#searchform").submit();
 	 });
-	
 });
 /**  Header scripts ends  **/

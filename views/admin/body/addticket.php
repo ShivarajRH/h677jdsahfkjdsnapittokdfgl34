@@ -13,14 +13,28 @@ if($this->uri->segment(3))
 <tr><td>Mobile :</td><td><input type="text" class="inp" name="mobile" size=20 value="<?=$trans?$trans['mobile']:""?>"></td></tr>
 <tr><td>Transaction ID :</td><td><input type="text" class="inp" name="transid" value="<?=$trans?$trans['transid']:""?>"></td></tr>
 <tr><td>Type :</td><td><select name="type">
-<option value="0">Query</option>
-<option value="1">Order Issue</option>
-<option value="2">Bug</option>
-<option value="3">Suggestion</option>
-<option value="4">Common</option>
-<option value="5">PNH Returns</option>
-<option value="6">Courier Followups</option>
+	<option value="0">Query</option>
+	<option value="1">Order Issue</option>
+	<option value="2">Bug</option>
+	<option value="3">Suggestion</option>
+	<option value="4">Common</option>
+	<option value="5">PNH Returns</option>
+	<option value="6">Courier Followups</option>
+	<!--new services-->
+	<option value="10">Request</option>
+	<option value="11">Complaint</option>
 </select></td></tr>
+<tr>
+	<td>Related To :</td><td><select name="related_to">
+		<!--new services-->
+		<option value="0">Not specific</option>
+		<option value="1">Product</option>
+		<option value="2">Payment</option>
+		<option value="3">Shipment</option>
+		<option value="4">Insurance</option>
+		<option value="5">Technical</option>
+	</select></td>
+</tr>
 <tr><td>Medium :</td><td><select name="medium">
 <option value="0">Email</option>
 <option value="1">Phone</option>

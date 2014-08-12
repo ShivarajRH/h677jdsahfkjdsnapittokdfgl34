@@ -16,7 +16,7 @@
     $order_status_arr[3]='Cancelled';
     $order_status_arr[4]='Returned';
     
-    $cond = '';
+    $cond = $order_cond = '';
    if($menuid!=0) {
         $cond .= ' and deal.menuid='.$menuid;
     }
@@ -147,7 +147,7 @@
             $str_total_invoice="Disabled from batch value ";
 		}
 
-                $total_results=$total_results_all=$total_results_shipped=$total_results_unshipped=$total_results_cancelled='';
+                $total_results=$total_results_all=$total_results_shipped=$total_results_unshipped=$total_results_cancelled=$total_results_removed='';
 
                 $sql_ttl_q = "select transid,status,ord_amt,batch_status,ifnull(amt1,amt2) as amt from (
 								SELECT a.transid,a.status,t.batch_enabled as batch_status,SUM((i_orgprice)*a.quantity) as ord_amt,
@@ -176,6 +176,25 @@
                 
                 foreach($order_ttls_res->result_array() as $ord_ttl_s)
                 {
+                
+                // get transaction distinct menuids
+                $trans_menu_res = $this->db->query("select distinct d.id as menuid,d.name  as menu_name,e.id as brandid,e.name as brand_name
+                		from king_orders a join king_dealitems b on a.itemid = b.id
+                		join king_deals c on c.dealid = b.dealid
+                		join pnh_menu d on d.id=c.menuid
+                		join king_brands e on e.id = c.brandid
+															where a.transid = ? 
+                			 						",$ord_ttl_s['transid']);
+                
+                if($trans_menu_res->num_rows())
+                {
+                	foreach($trans_menu_res->result_array() as $t_order_item_menu)
+                	{
+                		$fil_menulist[$t_order_item_menu['menuid']] = $t_order_item_menu['menu_name'];
+                		$fil_brandlist[$t_order_item_menu['brandid']] = $t_order_item_menu['brand_name'];
+                	}
+                }
+                	
                 	$total_orders_bystatus['all']['total'][0] += $ord_ttl_s['ord_amt'];
                 	$total_orders_bystatus['all']['total'][1] += $ord_ttl_s['amt'];
                 	$total_orders_bystatus['all']['trans'][] = $ord_ttl_s['transid'];
@@ -275,8 +294,7 @@
                         $k = 0;$slno=1; $total_amount=0;
 						$total_inv_amount=0;
                         foreach($res->result_array() as $o) {
-                                $fil_menulist[$o['menuid']] = $o['menu_name'];
-                                $fil_brandlist[$o['brandid']] = $o['brand_name'];
+                                
                             
                                     $trans_ttl_orders = 0;// and sd.packed = 1  and sd.shipped = 1 
                                     $sql_inner="select e.invoice_no,sd.packed,sd.shipped,e.invoice_status,sd.shipped_on,a.status,a.id,a.itemid,b.name,a.quantity,i_orgprice,i_price,i_discount,i_coup_discount 
@@ -300,9 +318,9 @@
                             $orders=$this->erpm->getordersfortransid($o['transid']); $order=$orders[0];
                             
                             
-							$trans_created_by = @$this->db->query("select username from king_admin a join king_transactions b on a.id = b.trans_created_by where transid = ? ",$o['transid'])->row()->username;
-								if($trans_created_by) 
-									$trans_created_by .= '<br><br> by <b>'.($trans_created_by).'</b>';
+                            $trans_created_by = @$this->db->query("select username from king_admin a join king_transactions b on a.id = b.trans_created_by where transid = ? ",$o['transid'])->row()->username;
+                            if($trans_created_by) 
+                                    $trans_created_by = '<br><br> by <b>'.($trans_created_by).'</b>';
 		
 		
 //                           echo '<pre>';print_r($order); die();
@@ -335,8 +353,12 @@
                                 $trans_order_status_amt = $this->db->query($sql_trans_ttls,$o['transid']);
                                 
                                 $ostatus = '';
-                                foreach($trans_order_status_amt->result_array() as $to_row)
-                                	$ostatus .= '<div><span class="span_count_wrap">'.$order_status_arr[$to_row['STATUS']].'(<b>'.($to_row['totals']).'</b>) : <b>Rs. <span style="">'.(format_price($to_row['amt'])).'</span></b></span></div>';
+                                foreach($trans_order_status_amt->result_array() as $to_row) {
+                                        $ttl_trans_cost = $this->erpm->trans_fee_insu_value($o['transid'],$to_row['amt']);
+                                        $ttl_trans_cost = format_price($ttl_trans_cost);
+                                        
+                                	$ostatus .= '<div><span class="span_count_wrap">'.$order_status_arr[$to_row['STATUS']].'(<b>'.($to_row['totals']).'</b>) : <b>Rs. <span style="">'.($ttl_trans_cost).'</span></b></span></div>';
+                                }
                                 
                             $resonse.='
                             <td>'.round($o['amount'],2).' '.$batch_enabled.' <br> '.$ostatus .' </td>
@@ -359,12 +381,14 @@
                                                 $processed_oids = array();
                                                 
                                                 foreach($o_item_list as $o_item) {
+                                                	
                                                         if(!isset($processed_oids[$o_item['id']]))
                                                                 $processed_oids[$o_item['id']] = 1;
                                                         else
                                                                 continue;
 
                                                         $ord_status_color = '';
+                                                        $invoice_block='';
                                                         $is_shipped = 0;
                                                         $is_cancelled = ($o_item['status']==3)?1:0;
                                                         if($is_cancelled)
@@ -375,7 +399,6 @@
                                                         {
                                                                 
                                                                 $ship_dets = array(); 
-                                                                $invoice_block='';
                                                                 $is_shipped = ($o_item['shipped'])?1:0;;
                                                                 if($o_item['shipped'] && $o_item['invoice_status'])
                                                                 {

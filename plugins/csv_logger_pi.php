@@ -72,6 +72,16 @@ class csv_logger_pi
 	}
 	
 	/**
+	 * funtion to get the csv file
+	 * @param unknown_type $filename
+	 */
+	function get()
+	{
+		$csv=$this->build_csv($this->csv_data);
+		return $csv;
+	}
+	
+	/**
 	 * function to force download csv file
 	 */
 	function download($filename='')

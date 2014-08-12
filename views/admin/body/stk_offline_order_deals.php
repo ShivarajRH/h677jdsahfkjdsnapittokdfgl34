@@ -19,7 +19,11 @@ $has_fid=1;
 $fdetails=$this->db->query("select * from pnh_m_franchise_info where franchise_id=?",$fid)->row_array();
 $franid=$fdetails['franchise_id'];
 $acc_statement = $this->erpm->get_franchise_account_stat_byid($franid);
-$pending_payment = format_price($acc_statement['pending_payment']);
+$shipped_tilldate = $acc_statement['shipped_tilldate'];
+$paid_tilldate = $acc_statement['paid_tilldate'];
+$acc_adjustments_val = $acc_statement['acc_adjustments_val'];
+$credit_note_amt = $acc_statement['credit_note_amt'];
+$pending_payment =format_price($shipped_tilldate-($paid_tilldate+$acc_adjustments_val+$credit_note_amt),2);
 $uncleared_payment = format_price($acc_statement['uncleared_payment']);
 $fran_crdet = $this->erpm->get_fran_availcreditlimit($franid);
 $current_balance = $fran_crdet[3];
@@ -60,6 +64,11 @@ $fran_status_arr[3]="Temporary Suspension";
 				
 			<b class="level_wrapper" style="margin-left:2px;background-color:<?php echo $fran_exp['f_color'];?>;">
 					 <?php echo $fran_exp['f_level'];?>
+			</b>
+			|
+			price type:
+			<b class="level_wrapper" style="margin-left:2px;background-color:#CC0099;">
+					 <?php echo $fdetails['price_type']==1?'Member price':'Offer Price';?>
 			</b>
 		</span>
 		<div class="filters_wrap"><img class="search_img_wrap" src="<?php echo base_url().'images/search_icon.png'?>">
@@ -132,7 +141,7 @@ $fran_status_arr[3]="Temporary Suspension";
 		</div>
 	<div id="cus_jq_alpha_sort_wrap"></div>
 		
-	<div id="cart_prod_div" title="<?php echo $fdetails['franchise_name']?>" width="100%">
+	<div id="cart_prod_div" title="<?php echo $fdetails['franchise_name']?>" width="100%" style="display:none;">
 		
 			<h5><div class="fran_bal" width="100%">
 							<div  width="50%">
@@ -165,6 +174,7 @@ $fran_status_arr[3]="Temporary Suspension";
 		<div id="cart_items">
 			<form method="post" id="order_form" autocomplete="off">
 				<input type="checkbox" id="redeem_r" name="redeem" value="1" style="display:none;">
+				<input type="checkbox" id="disable_batch" name="disable_batch" value="1" style="display:none;">
 				<input type="hidden" id="redeem_p" name="redeem_points" value="0" style="display:none;">
 				<input type="hidden" name="frannote" value="" style="display:none;">
 				<input type="hidden"  name="offr_sel_type"  class="offr_sel_type" value="" style="display:none;">
@@ -197,7 +207,7 @@ $fran_status_arr[3]="Temporary Suspension";
 						<input  type="hidden" class="mid" name="mid_entrytype" size=18 value="<?php echo $mid_entrytype?>">
 							<thead>
 								<tr>
-									<th width="3%">Sno</th><th style="text-align:left !important">Product Name</th><th width="10%">MRP<br>(Rs)</th><th width="6%">Offer price/<br>DP price<br>(Rs)</th>
+									<th width="3%">Sno</th><th style="text-align:left !important">Product Name</th><th width="10%">MRP<br>(Rs)</th><th width="6%"><?php echo $f['price_type']==0?"Offer price/<br>DP price<br>(Rs)":"<b>Member Price (Rs)"?></th>
 									<th width="8%">Discount <br>(Rs)</th><th width="8%">Landing Price<br>(Rs)</th>
 									<th width="9%">Qty</th>
 									<th width="7%">Sub Total <br> (Rs)</th><th width="3%">Actions</th>
@@ -237,6 +247,14 @@ $fran_status_arr[3]="Temporary Suspension";
 									</td>
 								</tr>
 							</tbody>
+							</table>
+						</div>
+						
+						<div>
+							<table>
+								<tr><td style="vertical-align: top;"><b>Disable Batch :</b><input type="checkbox" name="disable_batch" value="1"> &nbsp;&nbsp;
+								    <b>Reason : </b><textarea name="batch_disablereason" id="batch_disablereason" vlaue=" " ></textarea></td>
+								</tr>
 							</table>
 						</div>
 				</div>
@@ -327,7 +345,7 @@ $fran_status_arr[3]="Temporary Suspension";
 		<div id="ordered_log_dlg" >
 			<div id="order_log_dlg_wrap"></div>
 		</div>
-		<div id="inv_transitlogdet_dlg" title="Shipment Transit Log">
+		<div id="inv_transitlogdet_dlg" title="Shipment Transit Log" style="display:none;">
 			<h3 style="margin:3px 0px;"></h3>
 			<div id="inv_transitlogdet_tbl">
 				
@@ -368,21 +386,48 @@ $fran_status_arr[3]="Temporary Suspension";
 						<div>%super_sch%</div>
 						<!--<div class="blue">%has_insurance%</div>-->
 						<?php
-							$menus_range=$this->db->query('select * from pnh_member_insurance_menu order by id asc');
+							$menus_range_res=$this->db->query('SELECT mim.id,mim.menu_id,m.name AS menu_name,mim.greater_than,mim.less_than,mim.insurance_value,mim.insurance_margin,mim.is_active,mim.created_on FROM pnh_member_insurance_menu mim
+                                                                                            JOIN pnh_menu m ON m.id = mim.menu_id
+                                                                                            WHERE mim.is_active = 1 ORDER BY mim.id ASC');
 						?>
 						<div class="">%opt_insurance%</div>
 						<div class="opt_wrap">
 						<div class="blue">%has_insurance%</div>
-							 <div class="tooltip_description" style="display:none" title="Insurance Details">
-									<b>New Customer :</b> 
-									<table border='1' width="100%" style="margin-bottom:10px">
+							 <div class="tooltip_description" style="display:none; width:750px !important;" title="Insurance Details">
+								 <div style="display:block;">
+									<b>Existing Customer :</b> 
+									<table class="datagrid" border='0' width="100%">
 										<tr>
 											<th width="50%">Price Range</th>
 											<th width="50%">Insurance Cost</th>
 										</tr>
-									<?php foreach($menus_range->result_array() as $m){ ?>
 										<tr>
-										<td><b>Rs. <?=$m['greater_than']?> -- Rs <?=$m['less_than']?> </b></td>
+											<td>Any Price</td>
+											<td align="center"><b>
+													<?php
+													if($menus_range_res->num_rows()) {
+														$menus_range = $menus_range_res->result_array();
+														$margin_val = $menus_range[0]['insurance_margin'];
+													} else
+														$margin_val = 0;
+													echo $margin_val.'% on bill';
+													?>
+												</b>
+											</td>
+										</tr>
+									</table>
+									
+									<b>New Customer :</b> 
+									<table class="datagrid" border='0' width="100%" style="margin-bottom:10px;width:350px;">
+										<tr>
+											<th width="50%"><span class="small">Menu Name</span></th>
+											<th width="30%"><span class="small">Price Range (Rs)</span></th>
+											<th width="10%"><span class="small">Insurance Cost (Rs)</span></th>
+										</tr>
+									<?php foreach($menus_range_res->result_array() as $m){ ?>
+										<tr>
+										<td><span class="small"><?=$m['menu_name']?></td>
+										<td><?=$m['greater_than']?> -- <?=$m['less_than']?></td>
 										<td align="center"><b><?=$m['insurance_value']?></b></td>
 										</tr>
 									<?php
@@ -390,17 +435,7 @@ $fran_status_arr[3]="Temporary Suspension";
 									?>
 									
 									</table>
-									<b>Existing Customer :</b> 
-									<table border='1' width="100%">
-										<tr>
-											<th width="50%">Price Range</th>
-											<th width="50%">Insurance Cost</th>
-										</tr>
-										<tr>
-											<td><b>Any Price </b></td>
-											<td align="center"><b>2% on bill</b></td>
-										</tr>
-									</table>						      
+								</div>									
 						    </div>	
 						</div>
 					</div>
@@ -441,7 +476,7 @@ $fran_status_arr[3]="Temporary Suspension";
 		</tbody> 
 	</table>
 
-	<div id="franchise_note" Title="Franchise Note for the Pending Amount">
+	<div id="franchise_note" Title="Franchise Note for the Pending Amount" style="display:none;">
 		<div width="100%">
 			<div style="float:left;margin: 5px;"><b>Pending Amount : </b><b style="color:#CD0000;font-size: 16px;">Rs.<?php echo $pending_payment;?></b></div>
 			<div style="float:right;margin: 5px;"><b>Uncleared Amount : </b><b>Rs.<?php echo $uncleared_payment;?>&nbsp;<a href="javascript:void(0)" onclick="view_uncleardrecipts(<?php echo $franid?>)" style="font-size: 11px;color: blue;">view</a></b></div>
@@ -455,7 +490,7 @@ $fran_status_arr[3]="Temporary Suspension";
 			</table>
 		</form>
 	</div>
-	<div id="franlogin_div" title="StoreKing Offline Order">
+	<div id="franlogin_div" title="StoreKing Offline Order" style="display:none;">
 		<div class="stk_ordr_inpwrap"><b>State : <span class="red_star">*</span></b><select class="fran_det chzn-select" data-placeholder="Choose State" name="sel_state" id="sel_state" style="width: 250px;">
 														<option value="">Select State</option>
 														<?php $states=$this->db->query("select state_id,state_name from pnh_m_states group by state_id order by state_name asc ")->result_array();
@@ -470,9 +505,9 @@ $fran_status_arr[3]="Temporary Suspension";
 		<div class="signin" style="display:none;float:right;"><input type="button" value="Proceed" onclick='load_franchise_cart_page()' class="button button-rounded button-action"></div>
 	</div>
 
-	<div id="mid_det" title="Member Details"><div id="mem_det"></div></div>
+	<div id="mid_det" title="Member Details" style="display:none;"><div id="mem_det"></div></div>
 	
-	<div id="authentiacte_blk" title="Franchisee Authentacation" ><div id="franchise_det"></div></div>
+	<div id="authentiacte_blk" title="Franchisee Authentacation" style="display:none;"><div id="franchise_det"></div></div>
 
 	<div id="change_member_blk" title="Member Details" style="display:none;">
 		<div width="100%">
@@ -483,7 +518,7 @@ $fran_status_arr[3]="Temporary Suspension";
 		</div>
 	</div>
 
-	<div id="uncleared_receipts_div" Title="Uncleared Amount Details">
+	<div id="uncleared_receipts_div" Title="Uncleared Amount Details" style="display:none;">
 		<table  class="datagrid nofooter" id="uncleared_receipt_tbl" width="100%">
 			<h4>Uncleared Amount : <b>Rs.<?php echo $uncleared_payment;?></h4>
 			<thead><th>Cheque no</th><th>Cheque Amount (Rs)</th><th>Cheque Date</th><th>Bank Name</th></thead>
@@ -491,7 +526,7 @@ $fran_status_arr[3]="Temporary Suspension";
 		</table>
 	</div>
 
-	<div id="quick_viewdiv" title="Quick View">
+	<div id="quick_viewdiv" title="Quick View" style="display:none;">
 		<table id="qvk_prod_temp">
 			<tbody>	</tbody>
 		</table>
@@ -504,13 +539,14 @@ $fran_status_arr[3]="Temporary Suspension";
 						<img alt="" height="100" src="<?=IMAGES_URL?>items/small/%qvk_image%.jpg">
 						<h4>PNH ID : %qvk_pid%</h4>
 						<input class="pids" type="hidden" name="pid[]" value="%qvk_pid%">
-					</div> 
+					</div>
 					  <div class="qvk_productguide_wrap" >
 					  		<h3><a href="<?=site_url("admin/pnh_deal")?>/%qvk_pid%" target="_blank">%qvk_pname%</a></h3>
                             %blink_last_avail_qty%
 						  	<h5>Stock : %qvk_stk%</h5>
 						  	<span class="mrp_bkgrnd_wrap">MRP : <b>Rs. %qvk_mrp%</b></span>
-						  	<span class="ofrp_bkgrnd_wrap">Offer Price : <b>Rs. %qvk_price%</b></span>
+						  	<!-- <span class="ofrp_bkgrnd_wrap">Offer Price : <b>Rs. %qvk_price%</b></span> -->
+						  	<span class="ofrp_bkgrnd_wrap"><?php echo $f['price_type']==0?"Offer price":"<b>Member Price (Rs)"?> :<b>%qvk_price%</b></span>
 						  	<span class="disc_bkgrnd_wrap">Discount : <b> %qvk_mrgn%%</b></span>
 						  	<span class="lndpric_bkgrnd_wrap">Landing Cost : <b>Rs. %qvk_lcost% </b></span>
 						  	
@@ -519,16 +555,16 @@ $fran_status_arr[3]="Temporary Suspension";
 			</tr>
 		</tbody>
 	</table>
-	<div id="product_priceqoute" title="Product Price Quote">
+	<div id="product_priceqoute" title="Product Price Quote" style="display:none;">
 		<form id="price_quoteform"  method="post" data-validate="parsley">
 			<table class="datagrid nofooter" id="prod_pricequote">
-				<thead><th>Product</th><th width="8%">MRP</th><th width="8%">Offer Price(Rs)</th><th width="12%">Discount(Rs)</th><th width="16%">Landing Price(Rs)</th><th width="16%">franchise price?</th></thead>
+				<thead><th>Product</th><th width="8%">MRP</th><th width="8%"><?php echo $f['price_type']==0?"Offer price(Rs)":"<b>Member Price (Rs)"?></th><th width="12%">Discount(Rs)</th><th width="16%">Landing Price(Rs)</th><th width="16%">franchise price?</th></thead>
 				<tbody></tbody>
 			</table>
 		</form>
 	</div>
-	<div id="franchise_quickview"  title="Franchisee Info"><div id="fran_qvkview"></div></div>
-	<div id="insurance_option" title="Payable Insurance" >
+	<div id="franchise_quickview"  title="Franchisee Info" style="display:none;"><div id="fran_qvkview"></div></div>
+	<div id="insurance_option" title="Payable Insurance" style="display:none;">
 		
 		<p><b>Would you like to have insurance?</b>
 			<span><input type="radio" value="1"   name="insurance_srn" class="insurance_srn">Yes</span>
@@ -588,7 +624,36 @@ $fran_status_arr[3]="Temporary Suspension";
 		</div>
 	</div>
 </div>
+
+<div title="Similar Products" id="similar_products_div" style="display:none;">
+<input type="hidden" id="selected_catid" value="" type="text">
+<h3><span id="category"></span>&nbsp;&nbsp;&nbsp;<span id="ttl_products" style="text-align: center;"></span></h3></br>
+</br>
+	<span style="float: right;margin-top: -40px;" id="brand_prod_disp">
+			<b>Brands</b> :
+			<select name="brand_prod_disp">
+			<option value="0">Select brand</option>
+			</select>
+	</span>
 	
+	<span style="float: left;margin-top: -40px;">
+			<b>Filter Products</b> :
+			<select name="filter_disc"  id="filter_disc">
+				<option value="0">Between 25% </option>
+				<option value="10">Between 10% </option>
+			</select>
+	</span>
+	
+	<div style="overflow-y: auto;height:250px;">
+	<table class="datagrid" width="100%" id="similar_products_cont" >
+		<thead><th>Slno</th><th>PNH ID</th><th>Deal Name</th><th width="8%">Stock</th><th width="10%">Brand</th><th width="15%">Category</th><th>MRP</th><th>DP/Offer price</th><th style="text-align: center;">Actions</th></thead>
+		<tbody>
+		
+		</tbody>
+	</table>
+	</div>
+</div>
+
 </div>
 <style>
     .attributes_block {
@@ -606,7 +671,7 @@ $fran_status_arr[3]="Temporary Suspension";
 </style>
 <script>
 $('.othrs_proofname').hide();
-
+$("#similar_products_div").hide();
 $("#crd_insurence_type").live('change',function()
 {
 	if($(this).val()==4)
@@ -741,10 +806,11 @@ $("#quick_viewdiv").dialog({
         .position({ my: 'center', at: 'center', of: window });
 		$("#qvk_prod_temp tbody").html("");
 		$(".ui-dialog-titlebar .ui-dialog-titlebar-close").css({"display":"none"});
-                $('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
+        $('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
 		$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').addClass('add_to_cartbtn');
 		$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({"float":"right","background":"tomato","color":"white"});
 		$('.ui-dialog-buttonpane').find('button:contains("Price Query")').css({"float":"left"});
+		$('.ui-dialog-buttonpane').find('button:contains("Sold Out")').css({"float":"right","background":"Black","color":"Red"});
 	
 		var dlg=$(this);
 		
@@ -774,16 +840,26 @@ $("#quick_viewdiv").dialog({
 			template=template.replace(/%attr_list%/g,attr_det);
 			template=template.replace(/%blink_last_avail_qty%/g,last_avail_qty);
 			$("#qvk_prod_temp tbody").html(template);
-			if(!p.allow_order.length && p.is_sourceable==0 )
+			if( p.max_ord_qty==0)
+			{
+				
+				$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').css({'display':'none'});
+				$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({'display':'none'});
+				$('.ui-dialog-buttonpane').find('button:contains("Sold Out")').css({'display':'block'});
+			}
+			else if(p.allow_order==0 || p.publish==0)
 			{
 				$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').css({'display':'none'});
 				$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({'display':'block'});
+				$('.ui-dialog-buttonpane').find('button:contains("Sold Out")').css({'display':'none'});
 			}
-			if(p.is_sourceable==1 )
+			else			
 			{
 				$('.ui-dialog-buttonpane').find('button:contains("Add to cart")').css({'display':'block'});
 				$('.ui-dialog-buttonpane').find('button:contains("Product Disabled")').css({'display':'none'});
+				$('.ui-dialog-buttonpane').find('button:contains("Sold Out")').css({'display':'none'});
 			}
+			 
 			
 		});
 	
@@ -802,6 +878,9 @@ $("#quick_viewdiv").dialog({
 			'Price Query':function(){
 				pricenotmatch_product(p.pid);
 			}, 
+
+			'Sold Out':function(){
+			},
 	}
 	
 });
@@ -855,6 +934,10 @@ $("#quick_viewdiv").dialog({
 				tmpl += '		<div class="brands_bychar_list">';
 				tmpl += '			<div class="Brands_bychar_list_head"></div>';
 				tmpl += '			<div class="Brands_bychar_list_content"></div>';
+				tmpl += '		</div>';
+				tmpl += '		<div class="sub_category_list">';
+				tmpl += '			<div class="sub_category_list_head"></div>';
+				tmpl += '			<div class="sub_category_list_content"></div>';
 				tmpl += '		</div>';
 				
 				tmpl += '		<div class="jq_alpha_sort_overview_content"></div>';
@@ -918,13 +1001,13 @@ function endisable_sel(act,brandid,catid)
 		
 	}
 },'json');
-	deallist_bycat(brandid,catid,0,pre_selected_fid,dealid);
+	deallist_bycat(brandid,catid,0,pre_selected_fid,dealid,'');
 }
 
 
 $(function(){
 	
-	$('#cus_jq_alpha_sort_wrap').jqSuAlphaSort({title:"List of Categories",overview_title:"List of Deals",'char_click':function(chr,ele){ cat_bychar(chr)},'item_click':function(catid,ele){ deallist_bycat(0,catid,0,pre_selected_fid,0)},'item_click_bybrand':function(brandid,ele){ deallist_bycat(brandid,0,0,pre_selected_fid,0)}});
+	$('#cus_jq_alpha_sort_wrap').jqSuAlphaSort({title:"List of Categories",overview_title:"List of Deals",'char_click':function(chr,ele){ cat_bychar(chr)},'item_click':function(catid,ele){ deallist_bycat(0,catid,0,pre_selected_fid,0,'')},'item_click_bybrand':function(brandid,ele){ deallist_bycat(brandid,0,0,pre_selected_fid,0,'')}});
 		$(".jq_alpha_sort_alphalist_char a").click(function() {
 	      $(".jq_alpha_sort_alphalist_char a").removeClass("jq_alpha_active");
 	      $(this).addClass("jq_alpha_active");
@@ -935,7 +1018,7 @@ $(function(){
 	    height: '100px',
 	});
 	$('.jq_alpha_sort_alphalist_vend_head').html('<div class="alphabet_header_wrap"><span><a id="cat_lab" class="cat_lst_tab">Category List</a></span><span><a id="brand_lab" style="margin-right:0px !important" class="brand_lst_tab">Brand List</a></span> <input type="text" name="search_name" class="search_blk inp" placeholder="Search by Name" ><img style="margin-top: 7px;" src="<?php echo base_url().'images/search_icon.png'?>"></div>');
-	deallist_bycat(0,0,2,pre_selected_fid,0);
+	deallist_bycat(0,0,0,pre_selected_fid,0,'src');
 	$('.brand_lst_tab').addClass('selected_alpha_list');
 	
 });
@@ -965,14 +1048,34 @@ $('.Brands_bychar_list_content_listdata').live("click",function(){
 	  {
 	  	$('.selected_class').removeClass('selected_class');
 	  	$(this).addClass('selected_class');
-	  	deallist_bycat(brandid,catid,0,pre_selected_fid,0);
+	  	deallist_bycat(brandid,catid,0,pre_selected_fid,0,'');
 	  	
 	  }
 	  else
 	  { 
-	  	deallist_bycat(0,catid,0,pre_selected_fid,0);
+	  	deallist_bycat(0,catid,0,pre_selected_fid,0,'');
 	  }
 		 $('.left_filter_wrap').show();
+});
+
+$('.sub_category_list_content_listdata').live("click",function(){
+	var brandid =$(this).attr('bid')*1;
+	var catid =$(this).attr('cid')*1;
+	
+		$(this).toggleClass("selected_class");
+	  	if($(this).hasClass('selected_class'))
+	  	{
+	  		$('.selected_class').removeClass('selected_class');
+	  		$(this).addClass('selected_class');
+	  	 	deallist_bycat(brandid,catid,0,pre_selected_fid,0,'');
+	  	 	//filter_deallist($(this).text(),'brand');
+	  	}
+	  	else
+	  	{ 
+	  		deallist_bycat(0,catid,0,pre_selected_fid,0,'');
+		  	//filter_deallist('','all');
+	  	}
+		$('.left_filter_wrap').show();
 });
 
 $('.all').live('click',function(){
@@ -980,24 +1083,24 @@ $('.all').live('click',function(){
 	var brandid =$(this).attr('brandid')*1;
 	$('.all').addClass("selected_type");
 	if(catid !=0 && brandid == 0)
-		deallist_bycat(0,catid,0,pre_selected_fid,0);
+		deallist_bycat(0,catid,0,pre_selected_fid,0,'');
 	else if(catid ==0 && brandid != 0)
-		deallist_bycat(brandid,0,0,pre_selected_fid,0);
+		deallist_bycat(brandid,0,0,pre_selected_fid,0,'');
 	else if(catid !=0 && brandid != 0)
-		deallist_bycat(brandid,catid,0,pre_selected_fid,0);
+		deallist_bycat(brandid,catid,0,pre_selected_fid,0,'');
 	else
-		deallist_bycat(0,0,0,pre_selected_fid,0);
+		deallist_bycat(0,0,0,pre_selected_fid,0,'');
 });
 
 $('.latest_sold').live('click',function(){
 	var catid =$(this).attr('catid')*1;
 	var brandid =$(this).attr('brandid')*1;
 	if(catid !=0 && brandid == 0)
-		deallist_bycat(0,catid,1,pre_selected_fid,0);
+		deallist_bycat(0,catid,1,pre_selected_fid,0,'');
 	else if(catid ==0 && brandid != 0)
-		deallist_bycat(brandid,0,1,pre_selected_fid,0);
+		deallist_bycat(brandid,0,1,pre_selected_fid,0,'');
 	else	
-	deallist_bycat(brandid,catid,1,pre_selected_fid,0);
+	deallist_bycat(brandid,catid,1,pre_selected_fid,0,'');
 	$('.latest').addClass("selected_type");
 });
 
@@ -1005,11 +1108,11 @@ $('.latest_added').live('click',function(){
 	var catid =$(this).attr('catid')*1;
 	var brandid =$(this).attr('brandid')*1;
 	if(catid !=0 && brandid == 0)
-		deallist_bycat(0,catid,3,pre_selected_fid,0);
+		deallist_bycat(0,catid,3,pre_selected_fid,0,'');
 	else if(catid ==0 && brandid != 0)
-		deallist_bycat(brandid,0,3,pre_selected_fid,0);
+		deallist_bycat(brandid,0,3,pre_selected_fid,0,'');
 	else	
-	deallist_bycat(brandid,catid,3,pre_selected_fid,0);
+	deallist_bycat(brandid,catid,3,pre_selected_fid,0,'');
 	$('.latest').addClass("selected_type");
 });
 
@@ -1018,11 +1121,11 @@ $('.most').live('click',function(){
 	var catid =$(this).attr('catid')*1;
 	var brandid =$(this).attr('brandid')*1;
 	if(catid !=0 && brandid == 0)
-		deallist_bycat(0,catid,2,pre_selected_fid,0);
+		deallist_bycat(0,catid,2,pre_selected_fid,0,'');
 	else if(catid ==0 && brandid != 0)
-		deallist_bycat(brandid,0,2,pre_selected_fid,0);
+		deallist_bycat(brandid,0,2,pre_selected_fid,0,'');
 	else	
-		deallist_bycat(brandid,catid,2,pre_selected_fid,0);
+		deallist_bycat(brandid,catid,2,pre_selected_fid,0,'');
 	$('.most').addClass("selected_type");
 	
 });
@@ -1030,7 +1133,7 @@ $('.most').live('click',function(){
 $('.cat_lst_tab').live('click',function(){
 	$('#cat_lab').val('1');
 	$('#brand_lab').val('0');
-	deallist_bycat(0,0,0,pre_selected_fid);
+	deallist_bycat(0,0,0,pre_selected_fid,'src');
 	
 	$(".jq_alpha_sort_alphalist_char a:eq(0)").trigger('click');
 	$('.cat_lst_tab').removeClass("selected_alpha_list");
@@ -1038,10 +1141,12 @@ $('.cat_lst_tab').live('click',function(){
 });
 
 $('.brand_lst_tab').live('click',function(){
-	deallist_bycat(0,0,0,pre_selected_fid,0);
+	deallist_bycat(0,0,0,pre_selected_fid,0,'src');
 	$('#cat_lab').val('0');
 	$('#brand_lab').val('1');
-	$(".jq_alpha_sort_alphalist_char a:eq(0)").trigger('click');
+	$(".jq_alpha_sort_alphalist_char a:eq(1)").trigger('click');
+	$('.jq_alpha_sort_alphalist_itemlist ').html('<b>Loading ....</b>');
+	
 	$('.brand_lst_tab').removeClass("selected_alpha_list");
 	$('.cat_lst_tab').addClass("selected_alpha_list");
 });
@@ -1049,12 +1154,24 @@ $('.brand_lst_tab').live('click',function(){
 
 $('select[name="publish_wrap"]').live('change',function(){
 	var v=$(this).val();
-	published_deals(v);
+	var brandid=$('.publish_wrap').attr('brandid');
+	var catid=$('.publish_wrap').attr('catid');
+	var type=$('.publish_wrap').attr('type');
+	
+	if(v==1)
+		v='src';
+	else if(v==0)
+		v='unsrc';
+	else if(v==2)
+		v='all';	
+	published_deals(brandid,catid,type,v);
 });
 
-function published_deals(v)
+function published_deals(brandid,catid,type,v)
 {
+	deallist_bycat(brandid,catid,type,pre_selected_fid,0,v);
 	//filter_deallist('','all');
+	/*
 	if(v != 'all')
 	{
 		var i=1;
@@ -1085,7 +1202,7 @@ function published_deals(v)
 			publish=$(this).html();
 			trele.show();
 		});
-	}
+	}*/
 }
 
 function tgl_menubar(ele)
@@ -1115,7 +1232,7 @@ function filter_deallist(tag,by)
 	var publish_status = $('select[name="publish_wrap"]').val();
 	$(".sk_deal_filter_wrap").each(function(){
 	var bc_sel = '';//($('.Brands_bychar_list_content_listdata.selected_class').length?($('.Brands_bychar_list_content_listdata.selected_class').text()):0);
-			
+		
 			search_text=$(this).attr('pnh_id')+' '+$(this).attr('name')+' '+$(this).attr('brand')+' '+$(this).attr('category');
 			var row_stat = 1;
 			if(publish_status != $(this).attr('publish') && (publish_status != 'all'))
@@ -1160,22 +1277,41 @@ function filter_deallist(tag,by)
 
 $('input[name="srch_deals"]').live('keyup',function(){
 	filter_deallist($(this).val(),'search');
+	search_othr_deal();
+	$('.src_deals').hide();
+	$('.unsrc_deals').hide();
 });
 
 $('input[name="search_name"]').live('keyup',function(){
-	var chr=$('input[name="search_name"]').val();
 	
+	var chr=$('input[name="search_name"]').val();
+	var i=0; 
 	$(".jq_alpha_sort_alphalist_itemlist_divwrap").each(function(){
 		name=$(this).attr('name');
 		if(name.match(chr,'ig'))
 			{
 				$(this).show();
+				
 			}
 		else
 			{
 				$(this).hide();
+				
 			}
+		if(i == 0)
+		{
+			if(!$('#brand_lab').hasClass('selected_alpha_list'))
+			{
+				search(1,0);
+			}
+				
+			else if(!$('#cat_lab').hasClass('selected_alpha_list'))
+			{
+				search(0,1);
+			}
+		}		
 	});
+	
 });
 
 $('input[name="deal_name"]').live('keyup',function(){
@@ -1199,7 +1335,7 @@ $('.stock_det_close').live("click",function(){
 	$('.stock_det_'+id).hide();
 });
 
-function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
+function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid,publish)
 {
 	//$('.jq_alpha_sort_overview_content').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
 	
@@ -1222,6 +1358,40 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 				});
 			}
 			$('.Brands_bychar_list_content').html(brand_linkedcat_html);
+		});
+		
+		$.getJSON(site_url+'/admin/jx_get_subcategories/'+catid,'',function(resp){
+			var subcat_linkedcat_html='';
+			var i=0;
+			var title='';
+			if(resp.status=='error')
+			{
+				$('.sub_category_list_head').html('<h4>NO Sub categories Found</h4>');
+			}
+			else
+			{
+				
+				subcat_linkedcat_html+='';
+				$.each(resp.subcat_list,function(i,b){
+					if(b.subcat.length != 0)
+					{
+						$.each(b.subcat,function(a,k){
+							$('.sub_category_list_head').html('<h4>List of Sub Categories for '+b.name+'</h4>');
+							subcat_linkedcat_html+='<a class="sub_category_list_content_listdata" cid="'+k.id+'" bid="'+brandid+'">'+k.name+'</a>';
+							
+						});
+						
+					}else
+					{
+						$('.sub_category_list_head').html("");
+					}
+				});
+				$('.sub_category_list').show();
+				$('.sub_category_list_content').html(subcat_linkedcat_html);
+			}
+			
+			
+			
 		});
 	}else if(catid == 0 && brandid!=0)
 	{
@@ -1250,85 +1420,147 @@ function deallist_bycat(brandid,catid,type,pre_selected_fid,dealid)
 		else
 			$('.sk_deal_container').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
 
-	$.post(site_url+'/admin/jx_deallist_bycat',{brandid:brandid,catid:catid,type:type,pre_selected_fid:pre_selected_fid,dealid:dealid},function(resp){
+	$.post(site_url+'/admin/jx_deallist_bycat',{brandid:brandid,catid:catid,type:type,pre_selected_fid:pre_selected_fid,dealid:dealid,publish:publish},function(resp){
 		$('.sk_deal_container').css('opacity','1');
 		if(resp.status == 'error')
 			{
 				$('.sk_deal_container').html('<div class="page_alert_wrap">No Deals Found</div>');
+				$('.total_wrap').hide();
+				$('.src_deals').hide();
+				$('.unsrc_deals').hide();
 				return false;
 		    }
 			else
 			{
-				var enable='checked="checked"';
-				var d_lst = '';
-				d_lst+='<div class="sk_deal_filter_blk_wrap"><span>';
+				if(resp.ttl_deals != 0)
+				{
+					var enable='checked="checked"';
+					var d_lst = '';
+					
+					$('.total_wrap').show();
+					$('.src_deals').show();
+					$('.unsrc_deals').show();
+					
+					d_lst+='<div class="sk_deal_filter_blk_wrap"><span>';
+					
+					d_lst+='</span>';
+					d_lst+='<span class="left_filter_mrp_wrap">DP Filter : <input type="text" class="inp" id="f_from" size=4> to <input type="text" class="inp" id="f_to" size=4> <button type="button" style="margin-top:-5px" class="button button-rounded button-action button-tiny" onclick="filter_deals_bymrp()">Filter</button></span>';
+					d_lst+='<span class="publish_wrap" brandid='+resp.brandid+' catid='+resp.catid+' type='+resp.type+'><b>Available :</b> <select name="publish_wrap"><option value="all">Choose</option><option value="2">All</option><option value="1" selected="selected">Yes</option><option value="0">No</option></select></span>';
+					d_lst+='<span class="left_filter_wrap"><span class="filter_opts"><a class="most" href="javascript:void(0)" val="2"  brandid="'+brandid+'" catid="'+catid+'">Most Sold</a></span><span><a href="javascript:void(0)" class="latest_sold" val="1" brandid="'+brandid+'" catid="'+catid+'" >Latest Sold</a></span><span><a href="javascript:void(0)" class="latest_added" val="3" brandid="'+brandid+'" catid="'+catid+'" >Latest Added</a></span><span><a href="javascript:void(0)" val="0" class="all" brandid="'+brandid+'" catid="'+catid+'" style="border-right:none !important;width:24.2%">Clear</a></span></span></div>';
+					d_lst+='<div class="sk_deal_filter_blk_wrap"><span class="total_wrap">Showing '+resp.ttl_deals+' / '+resp.deals_lst.total_rows+' Deals</span>';
+					d_lst+='<span class="src_deals" style="color:green">Sourceable Deals : '+resp.deals_lst.src_deals+'</span>';
+					d_lst+='<span class="unsrc_deals" style="color:red">Not Sourceable Deals : '+resp.deals_lst.unsrc_deals+'</span></div>';
+					d_lst+='<div class="sk_deal_container">';
+					d_lst+='<table class="sk_deal_blk_wrap" cellpadding="0" cellspacing="0" width="99%">'
+					d_lst+='<thead><tr>';
+					d_lst+='<th width="6%">PNH ID</th><th>Deal Name</th><th width="13%"></th><th width="8%">Stock</th><th width="10%" style="">Brand</th><th width="15%">Category</th><th width="6%">MRP</th><th width="10%">DP/Offer Price</th><th>Member Price</th><th width="1%" style="align:center;">Actions<br />';
+					d_lst+='</th></tr></thead>';
+					var tmp_tbl_list = '';
+				 	$.each(resp.deals_lst.deals,function(i,d){
+				 		if(d.publish==1)
+				 		{
+				 			var tbl_list = '';
+								tbl_list+='<tr style="" class="sk_deal_filter_wrap pnhid_'+d.pnh_id+' deals_'+d.catid+'" publish="'+d.publish+'"  mrp="'+d.orgprice+'" pnh_id="'+d.pnh_id+'" name="'+d.name+'" ref_id="'+d.itemid+'" brand="'+d.brand+'" category="'+d.category+'" dp="'+d.price+'" publish="'+d.publish+'" total_rows="'+resp.deals_lst.total_rows+'">';
+								tbl_list+='		<td><span>'+d.pnh_id+'</span></td>';
+								tbl_list+='		<td><span class="deal_title"><a target="_blank" href="'+site_url+'/admin/pnh_deal/'+d.itemid+'">'+d.name+'</a><div class="stock_det_'+d.itemid+'"></div></td>';
+								tbl_list+='		<td><span><a href="javascript:void(0)" onclick="view_similar_products('+d.itemid+')" style="font-size:9px;color:#000;"><b>view similar products</b></a></span></td>';
+								tbl_list+='		<td><a href="javascript:void(0)" ref_id="'+d.itemid+'" dealid="'+d.itemid+'" class="tgl_stock_combo deal_stock"></a></td>';
+								tbl_list+='		<td><span><a target="_blank" href="'+site_url+'/admin/viewbrand/'+d.brandid+'">'+d.brand+'</a></span></td>';
+								tbl_list+='		<td><span><a target="_blank" href="'+site_url+'/admin/viewcat/'+d.catid+'">'+d.category+'</a></span></td>';
+								tbl_list+='		<td><span class="mrp">'+d.orgprice+'</span></td>';
+								tbl_list+='		<td align="justify"><span>'+d.price+'</span></td>';
+								tbl_list+='		<td align="justify"><span>'+d.member_price+'</span></td>';
+								tbl_list+='		<td align="center"><span class="prod_'+d.pnh_id+'"><a href="javascript:void(0)" onclick="quikview_product('+d.pnh_id+')" class="button button-rounded button-tiny quicklook_btn" >Quick Look</a></span></td>';
+			 					tbl_list+='</tr>';
+			 					
+			 					tmp_tbl_list += tbl_list;
+			 					d_lst += tbl_list;
+				 		}
+						else if(d.publish==0)
+				 		{
+				 			var tbl_list = '';
+								tbl_list+='<tr style="" class="sk_deal_filter_wrap pnhid_'+d.pnh_id+' deals_'+d.catid+'" publish="'+d.publish+'" mrp="'+d.orgprice+'" pnh_id="'+d.pnh_id+'" name="'+d.name+'" ref_id="'+d.itemid+'" brand="'+d.brand+'" category="'+d.category+'" dp="'+d.price+'" publish="'+d.publish+'" total_rows="'+resp.deals_lst.total_rows+'">';
+								tbl_list+='		<td><span>'+d.pnh_id+'</span></td>';
+								tbl_list+='		<td><span class="deal_title"><a target="_blank" href="'+site_url+'/admin/pnh_deal/'+d.itemid+'">'+d.name+'</a><div class="stock_det_'+d.itemid+'"></div></td>';
+								tbl_list+='		<td><span><a href="javascript:void(0)" onclick="view_similar_products('+d.itemid+')" style="font-size:9px;color:#000;"><b>view similar products</b></a></span></td>';
+								tbl_list+='		<td><a href="javascript:void(0)" ref_id="'+d.itemid+'" dealid="'+d.itemid+'" class="tgl_stock_combo deal_stock"></a></td>';
+								tbl_list+='		<td><span><a target="_blank" href="'+site_url+'/admin/viewbrand/'+d.brandid+'">'+d.brand+'</a></span></td>';
+								tbl_list+='		<td><span><a target="_blank" href="'+site_url+'/admin/viewcat/'+d.catid+'">'+d.category+'</a></span></td>';
+								tbl_list+='		<td><span class="mrp">'+d.orgprice+'</span></td>';
+								tbl_list+='		<td align="justify"><span>'+d.price+'</span></td>';
+								tbl_list+='		<td align="justify"><span>'+d.member_price+'</span></td>';
+								tbl_list+='		<td align="center"><span class="prod_'+d.pnh_id+'"><a href="javascript:void(0)" onclick="quikview_product('+d.pnh_id+')" class="button button-rounded button-tiny quicklook_btn" >Quick Look</a></span></td>';
+			 					tbl_list+='</tr>';
+			 					
+			 					tmp_tbl_list += tbl_list;
+			 					d_lst += tbl_list;
+				 		}	
+			 					
+					});
+					
+					d_lst+='</table>';
+					d_lst+='</div>';
+	
+					
+					if(dealid)
+						$('.jq_alpha_sort_overview_content .sk_deal_container tbody').prepend(tmp_tbl_list);
+					else
+						$('.jq_alpha_sort_overview_content').html(d_lst);
+	
+					// Call the plugin
+					$(".jq_alpha_sort_overview_content .deal_stock").dealstock();
 				
-				d_lst+='</span>';
-				d_lst+='<span class="left_filter_mrp_wrap">DP Filter : <input type="text" class="inp" id="f_from" size=4> to <input type="text" class="inp" id="f_to" size=4> <button type="button" style="margin-top:-5px" class="button button-rounded button-action button-tiny" onclick="filter_deals_bymrp()">Filter</button></span>';
-				d_lst+='<span class="publish_wrap"><b>Available :</b> <select name="publish_wrap"><option value="all">Choose</option><option value="1">Yes</option><option value="0">No</option></select></span>';
-				d_lst+='<span class="left_filter_wrap"><span class="filter_opts"><a class="most" href="javascript:void(0)" val="2"  brandid="'+brandid+'" catid="'+catid+'">Most Sold</a></span><span><a href="javascript:void(0)" class="latest_sold" val="1" brandid="'+brandid+'" catid="'+catid+'" >Latest Sold</a></span><span><a href="javascript:void(0)" class="latest_added" val="3" brandid="'+brandid+'" catid="'+catid+'" >Latest Added</a></span><span><a href="javascript:void(0)" val="0" class="all" brandid="'+brandid+'" catid="'+catid+'" style="border-right:none !important;width:24.2%">Clear</a></span></span>';
-				d_lst+='<span class="total_wrap">Total Deals : '+resp.ttl_deals+'</span>';
-				d_lst+='</div>';
-				d_lst+='<div class="sk_deal_container">';
-				d_lst+='<table class="sk_deal_blk_wrap" cellpadding="0" cellspacing="0" width="99%">'
-				d_lst+='<thead><tr>';
-				d_lst+='<th width="6%">PNH ID</th><th>Deal Name</th><th width="8%">Stock</th><th width="10%" style="">Brand</th><th width="15%">Category</th><th width="6%">MRP</th><th width="10%">DP/Offer Price</th><th width="1%" style="align:center;">Actions<br />';
-				d_lst+='</th></tr></thead>';
-				var tmp_tbl_list = '';
-			 	$.each(resp.deals_lst,function(i,d){
-			 		
-						var tbl_list = '';
-							tbl_list+='<tr style="" class="sk_deal_filter_wrap pnhid_'+d.pnh_id+' deals_'+d.catid+'"  mrp="'+d.orgprice+'" pnh_id="'+d.pnh_id+'" name="'+d.name+'" ref_id="'+d.itemid+'" brand="'+d.brand+'" category="'+d.category+'" dp="'+d.price+'" publish="'+d.publish+'" >';
-							tbl_list+='		<td><span>'+d.pnh_id+'</span></td>';
-							tbl_list+='		<td><span class="deal_title"><a target="_blank" href="'+site_url+'/admin/pnh_deal/'+d.itemid+'">'+d.name+'</a><div class="stock_det_'+d.itemid+'"></div></td>';
-							tbl_list+='		<td><a href="javascript:void(0)" ref_id="'+d.itemid+'" dealid="'+d.itemid+'" class="tgl_stock_combo deal_stock"></a></td>';
-							tbl_list+='		<td><span><a target="_blank" href="'+site_url+'/admin/viewbrand/'+d.brandid+'">'+d.brand+'</a></span></td>';
-							tbl_list+='		<td><span><a target="_blank" href="'+site_url+'/admin/viewcat/'+d.catid+'">'+d.category+'</a></span></td>';
-							tbl_list+='		<td><span class="mrp">'+d.orgprice+'</span></td>';
-							tbl_list+='		<td align="justify"><span>'+d.price+'</span></td>';
-							tbl_list+='		<td align="center"><span class="prod_'+d.pnh_id+'"><a href="javascript:void(0)" onclick="quikview_product('+d.pnh_id+')" class="button button-rounded button-tiny quicklook_btn" >Quick Look</a></span></td>';
-		 					tbl_list+='</tr>';
-		 					
-		 					tmp_tbl_list += tbl_list;
-		 					d_lst += tbl_list;
-		 					
-				});
-				
-				d_lst+='</table>';
-				d_lst+='</div>';
-
-				
-				if(dealid)
-					$('.jq_alpha_sort_overview_content .sk_deal_container tbody').prepend(tmp_tbl_list);
-				else
-					$('.jq_alpha_sort_overview_content').html(d_lst);
-
-				// Call the plugin
-				$(".jq_alpha_sort_overview_content .deal_stock").dealstock();
-			
-				$("#sel_cat").chosen();
-				if(resp.type == 1)
+					$("#sel_cat").chosen();
+					if(resp.type == 1)
+					{
+						$('.most').removeClass('selected_type');
+						$('.latest_added').removeClass('selected_type');
+						$('.latest_sold').addClass('selected_type');
+					}else if(resp.type == 0)
+					{
+						$('.latest_sold').removeClass('selected_type');
+						$('.latest_added').removeClass('selected_type');
+						$('.most').removeClass('selected_type');
+					}
+					else if(resp.type == 2)
+					{
+						$('.most').addClass('selected_type');
+						$('.latest_sold').removeClass('selected_type');
+						$('.latest_added').removeClass('selected_type');
+					}
+					else if(resp.type == 3)
+					{
+						$('.most').removeClass('selected_type');
+						$('.latest_sold').removeClass('selected_type');
+						$('.latest_added').addClass('selected_type');
+					}
+					if(resp.publish == 'src')
+					{
+						$('.unsrc_deals').hide();
+					}
+					else if(resp.publish == 'unsrc')
+					{
+						$('.src_deals').hide();
+					}
+					if(dealid == 0)
+					{
+						$('.total_wrap').show();
+						$('.src_deals').show();
+						$('.unsrc_deals').show();
+					}
+					else
+					{
+						$('.total_wrap').hide();
+						$('.src_deals').hide();
+						$('.unsrc_deals').hide();
+					}
+				}else
 				{
-					$('.most').removeClass('selected_type');
-					$('.latest_added').removeClass('selected_type');
-					$('.latest_sold').addClass('selected_type');
-				}else if(resp.type == 0)
-				{
-					$('.latest_sold').removeClass('selected_type');
-					$('.latest_added').removeClass('selected_type');
-					$('.most').removeClass('selected_type');
-				}
-				else if(resp.type == 2)
-				{
-					$('.most').addClass('selected_type');
-					$('.latest_sold').removeClass('selected_type');
-					$('.latest_added').removeClass('selected_type');
-				}
-				else if(resp.type == 3)
-				{
-					$('.most').removeClass('selected_type');
-					$('.latest_sold').removeClass('selected_type');
-					$('.latest_added').addClass('selected_type');
+					$('.sk_deal_container').html('<div class="page_alert_wrap">No Deals Found</div>');
+					$('.total_wrap').hide();
+					$('.src_deals').hide();
+					$('.unsrc_deals').hide();
+					return false;
 				}
 			}
 	},'json');	
@@ -1397,10 +1629,13 @@ function cat_bychar(ch)
 }   
 
 $('.Brands_bychar_list_content').hide();
+$('.sub_category_list_content').hide();
 $(".Brands_bychar_list_head span").live("click",function() {
 	var $this = $(this);
     $('.Brands_bychar_list_content').slideToggle(200, function () {
         $this.text($(this).is(':visible') ? 'Hide' : 'Show');
+    });
+    $('.sub_category_list_content').slideToggle(200, function () {
     });
     $(".Brands_bychar_list_head").show();
 });
@@ -1423,19 +1658,33 @@ function filter_deals_bymrp()
 	
 	
 	var valid_dp=[];
+	var i=0;
+	var pub=0;
+	var unpub=0;
+	var total_rows=0;
 	$(".sk_deal_filter_wrap").each(function(){
 		$(this).show();
 		dp=parseInt($(this).attr('dp')*1);
+		publish=$(this).attr('publish');
+		total_rows=$(this).attr('total_rows');
 		if(dp>=from && dp<=to)
 		{
 				valid_dp.push(dp);
 				$(this).show();
+				++i;
+				if(publish==1)
+					++pub;
+				else if(publish==0)
+					++unpub;
 		}
 		else
 		{
 				$(this).hide();
 		}
 	});
+	$('.total_wrap').html("Showing "+i+" / "+total_rows+" Deals" );
+	$('.src_deals').html("Sourceable Deals : "+pub);
+	$('.unsrc_deals').html("Not Sourceable Deals : "+unpub);
 	if(valid_dp.length == 0)
 	{
 		$('.sk_deal_container').html('<div class="page_alert_wrap">No Deals Found between Rs. '+from+' to Rs. '+to+'</div>');
@@ -1656,7 +1905,7 @@ var ppids=[];
 									template=template.replace(/%dspmrp%/g,'none');
 								else
 									template=template.replace(/%dspmrp%/g,'block');
-								
+
 								if(p.key_member==0)
 									template=template.replace(/%key_mem%/g,'none');
 								else
@@ -1701,16 +1950,22 @@ var ppids=[];
 								template=template.replace(/%newmrp%/g,p.mrp);
 								template=template.replace(/%mrp%/g,p.mrp);
 								template=template.replace(/%price%/g,p.price);
+
+							/*	if(p.price_type==0)
+									template=template.replace(/%price%/g,p.price);
+								else
+									template=template.replace(/%price%/g,p.member_price);
+								*/				
 								template=template.replace(/%lcost%/g,p.lcost);
 								template=template.replace(/%stock%/g,p.stock);
 								template=template.replace(/%confirm_stock%/g,p.confirm_stock);
-								template=template.replace(/%margin_amt%/g,Math.ceil(p.price-p.lcost));
+								template=template.replace(/%margin_amt%/g,Math.round(p.price-p.lcost));
 								template=template.replace(/%lcl_distribtor_mrgn%/g,p.local_distbtr_margin);
 								template=template.replace(/%cart_qty%/g,p.svd_cartqty);
 								
 								template=template.replace(/%ttllcost%/g,format_number(p.svd_cartqty*p.lcost));
 								
-								if(p.max_allowed_qty*1 == 0)
+								if(p.max_allowed_qty*1 == 0 && p.mp_mem_max_qty*1 == 0)
 								{
 									template=template.replace(/%max_oqty%/g,500);
 									template=template.replace(/%max_ord_qty%/g,"");
@@ -1726,8 +1981,8 @@ var ppids=[];
         								template=template.replace(/%has_insurance%/g,"Insurance : <span style='font-size:11px;color:#000;' onmouseover='view_insu_details(this);'>Yes</span> ");
 									if(p.insurance_value!=null && p.insurance_margin!=null && p.key_member==0)
 											template=template.replace(/%opt_insurance%/g,"<input type='checkbox' style='margin-top:-1px' name='opt_insurance[]' class='opt_insurance' value='"+p.pid+"'> <span style='font-size:11px;color:#000;float:right;'>: Opting Insurance</span> ");
-                                                                        else
-                                                                                template=template.replace(/%opt_insurance%/g," ");	
+									else
+											template=template.replace(/%opt_insurance%/g," ");	
 								
 								}
 								else
@@ -1740,13 +1995,13 @@ var ppids=[];
 									if(p.imei_disc.scheme_type==0)
 										var imei=p.imei_disc.credit_value;
 									else
-										var imei=(p.lcost*p.imei_disc.credit_value)/100 ;
+										var imei=(p.price*p.imei_disc.credit_value)/100 ;
 										
 									template=template.replace(/%imei_sch_disc%/g,"<span style='font-size:11px;' class='tip_popup imei_wrap' title='On IMEI Activation'><b>IMEI Activation: </b>(Rs."+format_number(imei)+") </span> ");
 								}
 								if(p.key_imei_disc!=0)
 								{
-									var key_mem_imei=(p.lcost*p.key_imei_disc)/100 ;
+									var key_mem_imei=(p.price*p.key_imei_disc)/100 ;
 										template=template.replace(/%imei_sch_disc%/g,"<span style='font-size:11px;' class='tip_popup imei_wrap' title='On IMEI Activation'><b>IMEI Activation: </b>(Rs."+format_number(key_mem_imei)+") </span> ");
 									
 								}
@@ -1776,6 +2031,20 @@ var ppids=[];
 						$("#cart_prod_temp thead").show();
 
 						//check for has insurance deal in cart and is new member
+						
+						$('#cart_prod_temp .attr').unbind('change').change(function(){  
+										var attr_pstk  = parseInt($('option:selected',this).attr('stk'));
+										var c_trele = $(this).parents('tr:first');
+											$('input[name="qty[]"]',c_trele).attr('pmax_ord_qty',attr_pstk);
+											if(attr_pstk)
+												$('input[name="qty[]"]',c_trele).val(1);
+											else
+												$('input[name="qty[]"]',c_trele).val(0);
+											$('.max_qty_wrap',c_trele).html("/ ("+attr_pstk+" Qty)");
+
+						}).trigger('change');
+
+
 						
 						if(has_insurance_dl>0 && data.new_mem==0)
 							$('.show_insurance').show();
@@ -1867,7 +2136,7 @@ $("#cart_prod_temp .qty").live("change",function(){
 	
 	$(".qty",p).val(qty_e);
 	var sub_total = parseFloat( $(".lcost",p).text())*parseInt($(".qty",p).val() ) ;
-	$(".stotal",p).html( format_number( sub_total ) );
+	 $(".stotal",p).html( format_number( sub_total ) );
 
 	 if(selected_mid==0)
 	 {
@@ -1930,6 +2199,7 @@ $("#order_form").submit(function(){
 	ppids=[];
 	qty=[];
 	menuids=[];
+	allowed_qty=[];
 	
 	$("#cart_prod_div .stotal").each(function(){
 		total+=parseFloat($(this).html());
@@ -1942,10 +2212,6 @@ $("#order_form").submit(function(){
         });
 	total = format_number(total);
 	
-	$("#cart_prod_div .pids").each(function(){
-		ppids.push($(this).val());
-	});
-	
 	$("#cart_prod_div .menuids").each(function(){
 		menuids.push($(this).val());
 	});
@@ -1953,10 +2219,32 @@ $("#order_form").submit(function(){
 	$("#cart_prod_div .qty").each(function(){
 		qty.push($(this).val());
 	});
+
+	$("#cart_prod_div .max_qty_wrap").each(function(){
+		allowed_qty.push($(this).val());
+	});
+	
+	$("#cart_prod_div .pids").each(function(){
+		ppids.push($(this).val());
+		p=$(this).parents("tr").get(0);
+		var qty_e = $(".qty",p).val()*1;
+		var qty_m = $(".qty",p).attr('pmax_ord_qty')*1;
+		if(qty_e > qty_m)
+		{
+			qty_e = qty_m;
+			$('.qty').trigger('change');
+			$(".qty",p).val(qty_e);
+			
+			alert("Error : Maximum "+qty_m+" Qty can be Ordered ");
+			return false;
+		}
+	});
 	
 	if(ppids.length==0)
 	{alert("There are no products in the Cart");return false;}
 	
+	if(total==0)
+	{alert("Cart value can't be Rs.0");return false;}	
 		var menu_qty=qty;
 		var menuid=menuids;
 		var min_ord=500;
@@ -1970,6 +2258,19 @@ $("#order_form").submit(function(){
 		
 		var stk_confirm_prods_checked = $('input[name="confirm_stock"]:checked').length;
 
+		var disable_batch_checked = $('input[name="disable_batch"]:checked').length;
+
+		if(disable_batch_checked)
+		{
+			$("#disable_batch").val(disable_batch_checked);
+			
+			if($("#batch_disablereason").val().length==0)
+			{
+				alert("Please input reason for Batch Disabling");
+				return false;
+			}
+		}
+
 		if(stk_confirm_prods != stk_confirm_prods_checked && stk_confirm_prods > 0)
 		{
 			alert("Please verify whether stock for the footwear is available?");
@@ -1982,11 +2283,11 @@ $("#order_form").submit(function(){
 			var menu_qty=qty[i];
 		/*	if(menu_qty>1  && menu_id  == 112)
 			
-			{
+				{
 			
-				alert("More than 1 qty of Electronics Item for 1 member can't be processed");
-				return false;
-			}
+					alert("More than 1 qty of Electronics Item for 1 member can't be processed");
+					return false;
+				}
 **/
 			if(mid==0 && menu_id != 112)
 			{
@@ -2036,7 +2337,7 @@ $("#order_form").submit(function(){
 					alert("ERROR!\n\n"+resp.msg);
 					return false;
 				}
-		
+			
 				if($('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length==0 && resp.new_mem==1 && selected_mid!=0)
 				{
 					if(confirm("No Insurance selected. Do you want to Continue ? "))
@@ -2078,7 +2379,7 @@ $("#order_form").submit(function(){
 						$('.offr_sel_type').val('2');
 						$('.offerd_type').val('2');
 						$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
-					 return false;	
+					 	return false;	
 				}
 
 			 	if(resp.new_mem==0 && $('.opt_insurance').length!=0 && $('input[name="opt_insurance[]"]:checked').length!=0 && selected_mid!=0)
@@ -2092,7 +2393,7 @@ $("#order_form").submit(function(){
 				{
 			 		$('.offr_sel_type').val(0);
 			 		
-			 		$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
+				 		$("#insurance_option").data({'insuranceids':insuranceids,'order_det':resp}).dialog('open');
 				 	 return false;
 				}
 		 	 	if(resp.new_mem==1 && resp.has_insurance==0 && resp.total > min_ord && selected_mid!=0)
@@ -2718,7 +3019,7 @@ function search_othr_deal()
 		minLength: 2,
 		select:function(event, ui ){
 			if(!$('.pnhid_'+ui.item.id).length)
-				deallist_bycat(0,0,0,pre_selected_fid,ui.item.id);
+				deallist_bycat(0,0,0,pre_selected_fid,ui.item.id,'');
 		}
 	});
 }
@@ -2990,7 +3291,7 @@ $("#ship_log_dlg" ).dialog({
 	// ajax request fetch task details
    $.post(site_url+'/admin/jx_franchise_shipment_log_bydate',{sel_date:$(this).data('sel_date'), sel_mnth:$(this).data('sel_mnth'), sel_year:$(this).data('sel_year'), fid:$(this).data('fid'), ship_date:$(this).data('ship_date')},function(result){
    if(result.status == 'failure')
-    {
+	{
 		 $('#ship_log_dlg_wrap').html('No Shipments on '+ship_date);
 		 return false;
     }
@@ -3250,6 +3551,214 @@ $("#franchise_quickview").dialog({
 			}
 	});
 
+	function search(b_search,c_search)
+	{
+		
+		$('input[name="search_name"]').autocomplete({
+			source:site_url+'/admin/jx_search_json/'+b_search+'/'+c_search+'/'+pre_selected_fid,
+			minLength: 2,
+			
+				select:function(event, ui ){
+					if(b_search==1)
+					{
+						//$('.jq_alpha_sort_alphalist_itemlist').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
+						deallist_bycat(ui.item.id,0,0,pre_selected_fid,'');
+					}else if(c_search==1)
+					{
+						//$('.jq_alpha_sort_alphalist_itemlist').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
+						deallist_bycat(0,ui.item.id,0,pre_selected_fid,'');
+					}
+					
+				}
+				
+		});
+		$('.src_deals').hide();
+		$('.unsrc_deals').hide();
+	}
+
+
+
+	function add_tocart(pid)
+	{
+		
+		
+		$.post("<?=site_url("admin/jx_add_deal_tocart")?>",{pid:pid,fid:pre_selected_fid,mid:<?php echo $mid;?>},function(resp){
+
+			if(resp.mid_status =='error')
+			{
+				if(confirm(resp.message))
+					 mem_reg(pre_selected_fid);
+				 return false;
+			}
+			if(resp.status=='success')
+			{
+				$("span.prod_"+pid).html('<a href="javascript:void(0)" onclick="remove_prod_frmcart('+pid+')" class="button button-rounded button-tiny remove_cart_btn" title="Remove From Cart" align="center">REMOVE</a>');
+				$("span.similarprod_"+pid).html('<a href="javascript:void(0)" onclick="remove_frmcart('+pid+')" class="button button-rounded button-tiny remove_cart_btn" title="Remove From Cart" align="center">REMOVE</a>');
+				$("#item_count_in_cart_top_displayed").html(resp.ttl_cart_item);
+			
+			}else if(resp.status=='error')
+			{
+				alert(resp.message);
+				
+			}else
+			{
+				$('.cart-container').trigger('click');
+			}
+		},'json');
+
+		
+	}
+
+	function remove_frmcart(pid)
+	{
+		if(confirm("Are you sure want to remove product from cart?"))
+		{
+			$.post("<?=site_url("admin/jx_update_tocart")?>",{pid:pid,fid:pre_selected_fid,mid:<?php echo $mid;?>},function(resp){
+				if(resp.status=='success')
+				{
+					$("#item_count_in_cart_top_displayed").html(resp.ttl_cart_item);
+					$("span.similarprod_"+pid).html('<a href="javascript:void(0)" onclick="add_tocart('+pid+')" class="button button-rounded button-tiny add_cart_btn" >Add to Cart</a>');
+					$("span.prod_"+pid).html('<a href="javascript:void(0)" onclick="quikview_product('+pid+')" class="button button-rounded button-tiny quicklook_btn" >Quick Look</a>');
+					
+				}else
+				{
+					alert(resp.message);
+				}
+			},'json');
+		}
+		return false;
+	}
+	
+	function view_similar_products(itemid)
+	{
+		$("#similar_products_div").data('itemid',itemid).dialog("open");
+		$('select[name="brand_prod_disp"]').html("");
+		$("#similar_prod_itemid").val(itemid);
+	}
+var similar_item_list = [];
+	$("#similar_products_div").dialog({
+		modal:true,
+		autoOpen:false,
+		width:'1000',
+		height:'600',
+		open:function(){
+			var dlg=$(this);
+			$('.ui-dialog-buttonpane .ui-dialog-buttonset').css({"display":"block","float":"none"});
+			$('.ui-dialog-buttonpane').find('button:contains("Close")').css({"float":"right"});
+			$("#similar_products_cont tbody").html(" ");
+			$("#category").html(" ");
+			$("#ofr_price_range").html("");
+
+			$.post(site_url+"admin/get_similar_products",{itemid:dlg.data('itemid')},function(resp){
+				$("#category").html("Category : "+resp.cat_det.name);
+				$("#selected_catid").val(resp.cat_det.catid);
+				var similarproductlist_html='';
+
+				similar_item_list = new Array();
+				
+				similar_allitem_list = new Array();
+
+					if(resp.status=='error' || resp.itemids.length==0)
+					{
+						alert("No Deals found");
+						$("#similar_products_div").dialog('close');
+
+					}else
+					{
+						$.each(resp.itemids,function(i,a){
+
+							if(similar_item_list[a.perc] == undefined)
+								similar_item_list[a.perc] = new Array();
+	
+							if(similar_item_list[a.perc][a.catid] == undefined)
+								similar_item_list[a.perc][a.catid] = new Array();
+							
+							similar_item_list[a.perc][a.catid][a.itemid] = a;
+
+							if(similar_item_list[0] == undefined)
+								similar_item_list[0] = new Array();
+	
+							if(similar_item_list[0][a.catid] == undefined)
+								similar_item_list[0][a.catid] = new Array();
+
+							similar_item_list[0][a.catid][a.itemid] = a;	
+						});
+					}
+						$('#filter_disc').val(0).trigger('change');
+					
+			},'json');
+		},
+
+		buttons:{
+			'Close':function(){
+				$(this).dialog('close');
+			}
+		}
+	});
+					
+
+$('select[name="brand_prod_disp"]').live( "change",function(){
+	var sel_brand_id = $(this).val();
+	if(sel_brand_id == 0)
+		$('#similar_products_cont tbody tr').show();
+	else
+	{
+		$('#similar_products_cont tbody tr').hide();
+		$('#similar_products_cont tbody tr.brand_'+sel_brand_id).show();
+	}
+});
+
+$("#similar_products_cont .deal_stock2").each(function(){
+	var trele=$(this).parents('tr:first');
+	publish=$(this).html();
+	if(publish == 'In Stock')
+		var s=1;
+	else
+		var s=0;
+});
+
+$("#filter_disc").live("change",function(){
+	var perc_val = $(this).val();
+	var sel_catid = $("#selected_catid").val();
+
+	$("#similar_products_cont tbody").html(" ");
+	var similarproductlist_html = '';
+		
+	$('select[name="brand_prod_disp"]').html("<option value='0'>Select Brand</option>");
+	
+ 	slno=1;
+		for(var i in similar_item_list[perc_val][sel_catid])
+		{
+			itemdet = similar_item_list[perc_val][sel_catid][i];
+		
+			if(!$('select[name="brand_prod_disp"] option#brand_'+itemdet.brandid).length)
+			{
+				if(itemdet.brandid != undefined)
+				{
+					$('select[name="brand_prod_disp"]').append('<option id="brand_'+itemdet.brandid+'" value="'+itemdet.brandid+'">'+itemdet.brand_name+'</option>');
+				}
+			} 
+			
+			if(itemdet.itemid != undefined)
+			{
+				similarproductlist_html+="<tr class=brand_"+itemdet.brandid+">";
+				similarproductlist_html+="<td>"+slno+"</td>";
+				similarproductlist_html+="<td>"+itemdet.pnh_id+"</td>";
+				similarproductlist_html+="<td><span class='deal_title'><a target='_blank' href="+site_url+"/admin/pnh_deal/"+itemdet.itemid+">"+itemdet.name+"</a></span></td>";
+				similarproductlist_html+='<td><a href="javascript:void(0)" ref_id="'+itemdet.itemid+'" dealid="'+itemdet.itemid+'" class="tgl_stock_combo deal_stock2"></a></td>';
+				similarproductlist_html+='<td><span style="font-size:11px;color:blue;"><a target="_blank" href="'+site_url+'/admin/viewbrand/'+itemdet.brandid+'">'+itemdet.brand_name+'</a></span></td>';
+				similarproductlist_html+='<td><span style="font-size:11px;color:blue;"><a target="_blank" href="'+site_url+'/admin/viewcat/'+itemdet.catid+'">'+itemdet.cat_name+'</a></span></td>';
+				similarproductlist_html+="<td>"+itemdet.orgprice+"</td>";
+				similarproductlist_html+="<td align='justify'>"+itemdet.price+"</td>";
+				similarproductlist_html+='<td align="center"><span class="similarprod_'+itemdet.pnh_id+'"><a href="javascript:void(0)" onclick="add_tocart('+itemdet.pnh_id+')" class="button button-rounded button-tiny add_cart_btn" >Add to Cart</a></span></td>';
+				similarproductlist_html+= "</tr>";
+			}
+			slno++;
+		}
+		$("#similar_products_cont tbody").html(similarproductlist_html);
+
+		$("#similar_products_cont tbody .deal_stock2").dealstock();
+});
 </script>
 <style>
 
@@ -3260,10 +3769,7 @@ margin-top: 13px;
 padding: 2px 0 0 6px;
 font-weight: bold;
 }
-.key_mem_det
-{
 
-}
 .make_blink { 
     margin-right: 50px;
     padding: 4px 1px 4px 40px;
@@ -3314,5 +3820,13 @@ font-weight: bold;
           opacity: 0;
         }
       }
+	  .tooltip_description {
+		width: 710px !important;
+		display:block;
+	  }
+	  .jquery-gdakram-tooltip .content {
+		  	width: 710px;
+	  }
+	  .small { font-size: 11px; }
 </style>
 <?php

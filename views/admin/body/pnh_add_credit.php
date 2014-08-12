@@ -13,15 +13,15 @@
 		<form id="add_franchise_credits" action="<?php echo site_url('admin/pnh_process_add_credit')?>" method="post">
 			<table class="datagrid" id="franchise_list_tbl" >
 				<thead>
-					<th><b>FranchaiseID</b></th>
-					<th><b>Name</b></th>
-					<th><b>Available</b></th>
-					<th><b>Last Credited</b></th>
-					<th><b>Credited By</b></th>
-					<th><b>Credited On</b></th>
-					<th><b>New Credit</b></th>
+					<th width="100"><b>FranchaiseID</b></th>
+					<th width="300"><b>Franchise Name</b></th>
+					<th width="200"><b>Last Credited Details</b></th>
+					<th width="80"><b>Pending Amount</b></th>
+					<th width="80"><b>Uncleared Amount</b></th>
+					<th width="80"><b>Open Order Amount</b></th>
+					<th width="200"><b>New Credit</b></th>
 					<th><b>Reason</b></th>
-					<th>&nbsp;</th>
+					<th width="80">&nbsp;</th>
 				</thead>
 				<tbody>
 					
@@ -113,12 +113,16 @@ $(function(){
 							var fdet_html = '<tr>';
 								fdet_html += 	'<td>'+fdet.pnh_franchise_id+'</td>';
 								fdet_html += 	'<td><a target="_blank" href="'+site_url+'/admin/pnh_franchise/'+fdet.franchise_id+'">'+fdet.franchise_name+'</a></br></br><b>Contact Number:</b>&nbsp;'+fdet.login_mobile1+','+fdet.login_mobile2+'</br></br><b>Territory|Town:</b>&nbsp;'+fdet.territory_name+' | '+fdet.town_name+'</td>';
-								fdet_html += 	'<td>'+fdet.available_limit+'</td>';
-								fdet_html += 	'<td>'+fdet.credit_added+'</td>';
-								fdet_html += 	'<td>'+fdet.credit_given_by_name+'</td>';
-								fdet_html += 	'<td>'+fdet.created_on+'</td>';
-								fdet_html += 	'<td align="center" sty><input type="hidden" name="fid[]" value="'+fdet.franchise_id+'" /> <span style="font-size:13px;">Rs '+fdet.new_credit_limit+' &plus;</span> <input cr_limit="'+fdet.new_credit_limit+'" type="text" size="5" class="add_credit" value="0" name="new_credit['+fdet.franchise_id+']"> <span class="preview_added_credit"></span> </td>';
-								fdet_html += 	'<td><textarea class="add_credit_reason" name="new_credit_reason['+fdet.franchise_id+']"></textarea></td>';
+								fdet_html += 	'<td align="left">';
+								fdet_html += 	'	<div> Amount : '+fdet.credit_added+'</div>';
+								fdet_html += 	'	<div> Credit by : '+fdet.credit_given_by_name+'</div>';
+								fdet_html += 	'	<div> Credited On : '+fdet.created_on+'</div>';
+								fdet_html += 	'</td>';
+								fdet_html += 	'<td>'+fdet.pending_amount+'</td>';
+								fdet_html += 	'<td>'+fdet.uncleared_amount+'</td>';
+								fdet_html += 	'<td>'+fdet.open_order_amount+'</td>';
+								fdet_html += 	'<td align="left"><input type="hidden" name="fid[]" value="'+fdet.franchise_id+'" /> <span style="font-size:13px;">Rs '+fdet.credit_limit+' &plus;</span> <input cr_limit="'+fdet.credit_limit+'" type="text" size="5" class="add_credit" value="0" name="new_credit['+fdet.franchise_id+']"> <br> <span class="preview_added_credit"></span> </td>';
+								fdet_html += 	'<td width="300"><textarea class="add_credit_reason" style="width:98%;height:80px;" name="new_credit_reason['+fdet.franchise_id+']"></textarea></td>';
 								fdet_html += 	'<td><a href="javascript:void(0)" onclick="rmvsel_row(this)" pnh_fid="'+fdet.pnh_franchise_id+'" style="color:#cd0000">Remove</a></td>';
 								fdet_html += '</tr>';
 							$("#franchise_list_grid table tbody").append(fdet_html);

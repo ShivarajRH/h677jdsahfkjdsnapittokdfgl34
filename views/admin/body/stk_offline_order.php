@@ -14,12 +14,12 @@
 		<div class="mid_blk" style="background-color:#FAFAFA;padding-left: 100px;margin: 20px 0px;"><b>Member Id</b>  <input type="radio" value="1" name="mtype" checked="checked"> <b>Member Mobno</b><input type="radio" value="2" name="mtype"></div>
 		<div class="stk_ordr_inpwrap mid_blk m_blk"><b> Id<span class="red_star">*</span>	 : </b><input style="font-size:120%" maxlength="8"  type="text" class="mid" name="mid" size=18 ></div>
 		<div class="stk_ordr_inpwrap mmob_blk"><b> Mobno : <span class="red_star">*</span></b><input style="font-size:120%" maxlength="10"  type="text" class="mid" name="mid" size=18 ></div>
-		<div class="reg_blk" style="float:right;font-weight: bold;"><a href="javascript:void(0)" onclick="mem_reg()">Register</a></div>
+		<div class="reg_blk" style="float:right;font-weight: bold;"><a href="javascript:void(0)" onclick="mem_reg()" class="button button-action button-tiny">Register</a></div>
 		<div id="signin" style="display:none;"><input type="button" value="Proceed" onclick='load_franchise_cart_page()' class="button button-rounded button-action"></div>
 		</div>
-	<div id="mid_det" title="Member Details"><div id="mem_fran"></div></div>
-	<div id="authentiacte_blk" title="Franchisee Authentication" ><div id="franchise_det"></div></div>
-	<div id="franchise_quickview"  title="Franchisee Info"><div id="fran_qvkview"></div></div>
+	<div id="mid_det" title="Member Details" style="display: none;"><div id="mem_fran"></div></div>
+	<div id="authentiacte_blk" title="Franchisee Authentication" style="display: none;"><div id="franchise_det"></div></div>
+	<div id="franchise_quickview"  title="Franchisee Info" style="display: none;"><div id="fran_qvkview"></div></div>
 	 <div id="reg_mem_dlg" title="Instant Member Registration" style="display:none;">
 		<form id="reg_mem_frm" action="<?php echo site_url('admin/jx_reg_newmem')?>" method="post">
 			<input type="hidden" name="franchise_id" value="" id="memreg_fid">
@@ -37,7 +37,7 @@
 					<td><input type="text" name="mem_dob" value="" id="dob" placeholder="YYYY-MM-DD"></td>
 				</tr>
 				<tr>
-					<td style="text-align: right;"><b>Gender</b><span class="red_star">*</span> : </td>
+					<td style="text-align: right;"><b>Gender</b> : </td>
 					<td><input  type="radio" name="gender" value="0">Male <input type="radio" name="gender" value="1">Female  <?php echo form_error('gender','<span class="error_msg">','</span>');?></td>
 				</tr>
 				<tr>
@@ -235,7 +235,7 @@ $( "#authentiacte_blk" ).dialog({
 	open:function(){
 	dlg = $(this);
 	$.post("<?=site_url("admin/pnh_jx_loadfranchisebyid")?>",{fid:$("#sel_fid").val()},function(data){
-			$("#franchise_det").html(data).show();
+		$("#franchise_det").html(data).show();
 		});
 		$(".stk_offlinecard").show();
 	},

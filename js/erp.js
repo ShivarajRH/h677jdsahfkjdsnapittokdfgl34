@@ -421,6 +421,7 @@ function get_unixtimetodatetime(utime)
 
 /** This prototype function allows you to reset all form input types
  * $("#formname").clearForm();
+ *	@author Shivaraj
  */
 $.fn.clearForm = function() {
   return this.each(function() {
@@ -437,10 +438,12 @@ $.fn.clearForm = function() {
 };
 
 /** This prototype function allows you to remove even array from array 
-   var arr = [1,2,[1,1], 'abc']; 
-   arr.remove([1,1]);console.log(arr) //[1, 2, 'abc']
-   arr.remove(1); console.log(arr) //[2, [1,1], 'abc']
-   arr.remove('abc'); console.log(arr) //[1, 2, [1,1]]*/
+  * var arr = [1,2,[1,1], 'abc']; 
+  * arr.remove([1,1]);console.log(arr) //[1, 2, 'abc']
+  * arr.remove(1); console.log(arr) //[2, [1,1], 'abc']
+  * arr.remove('abc'); console.log(arr) //[1, 2, [1,1]]
+  * @author Shivaraj
+  */
 Array.prototype.remove = function(x) { 
     for(i in this){
         if(this[i].toString() == x.toString()){
@@ -452,6 +455,7 @@ Array.prototype.remove = function(x) {
 /**
  * This function allows you to remove decimal point to 2 digits, also preserver integer numbers
  * 5.386823 => 5.39
+ * @author Shivaraj
  */
 function format_number(num,decimal) { //decimal is optional
     var deci = (decimal === undefined || decimal === null ) ? 0 : decimal;
@@ -461,16 +465,72 @@ function format_number(num,decimal) { //decimal is optional
     return parseFloat(final_num);
 }
 
+/**
+ * This function allows you to display value into indian currency style
+ * 123456789.50 ===> 12,34,56,789.50
+ *  @author Suresh
+ */
+function format_indianprice(value){
+	value=value.toString();
+	var afterPoint = '';
+	if(value.indexOf('.') > 0)
+	   afterPoint = value.substring(value.indexOf('.'),value.length);
+	else
+		afterPoint = '.00';	   
+	value = Math.floor(value);
+	value=value.toString();
+	var lastThree = value.substring(value.length-3);
+	var otherNumbers = value.substring(0,value.length-3);
+	if(otherNumbers != '')
+	    lastThree = ',' + lastThree;
+	var res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree + afterPoint;
+	return res;
+}
 
 //============================================<< JQUERY TRIM FUNCTION START >>===================================
-    $.ltrim = function( str ) {
-        return str.replace( /^\s+/, "" );
+/**
+ * This prototype function to trim left spaces of string variable
+ * @param {string} str
+ * @author Shivaraj
+ * @returns {String}
+ */
+$.ltrim = function( str ) {
+	return str.replace( /^\s+/, "" );
+};
+/**
+ * This prototype function to trim right spaces of string variable
+ * @param {string} str
+ * @author Shivaraj
+ * @returns {String}
+ */
+$.rtrim = function( str ) {
+	return str.replace( /\s+$/, "" );
+};
+//============================================<< JQUERY TRIM FUNCTION ENDS >>===================================
+
+//============================================<< UCFIRST FUNCTION START >>===================================
+/**
+ * This prototype function capitalize the every word first charecters-similar to ucfirst() in php
+ * @usage $.ucfirst("firstname lastname") => Firstname Lastname
+ * @author Shivaraj
+ * @param {type} str
+ * @returns {String}
+ */
+$.ucfirst = function(str) {
+        var text = str;
+        var parts = text.split(' '),
+            len = parts.length,
+            i, words = [];
+        for (i = 0; i < len; i++) {
+            var part = parts[i];
+            var first = part[0].toUpperCase();
+            var rest = part.substring(1, part.length);
+            var word = first + rest;
+            words.push(word);
+        }
+        return words.join(' ');
     };
-    $.rtrim = function( str ) {
-        return str.replace( /\s+$/, "" );
-    };
-//============================================<< JQUERY TRIM FUNCTION START >>===================================
-  
+//============================================<< UCFIRST FUNCTION ENDS >>===================================
 $(function(){
 	$('#fgt_pwd_dlg').dialog({
 			width:'auto',

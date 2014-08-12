@@ -56,8 +56,8 @@ class Reservation extends Voucher {
      * Get Ungrouped transaction details 
      * @param type $territory_id  int
      */
-    function jx_terr_batch_group_status($territory_id) {
-        
+    function jx_terr_batch_group_status($territory_id)
+    {
         $user=$this->auth(ORDER_BATCH_PROCESS_ROLE|OUTSCAN_ROLE|INVOICE_PRINT_ROLE);
         
         $cond='';
@@ -83,7 +83,7 @@ class Reservation extends Voucher {
                                 order by tr.init asc",GLOBAL_BATCH_ID); //,array($assigned_menuids)
                                 
                                         
-//        echo '<pre>'.$this->db->last_query(); die();
+        //echo '<pre>'.$this->db->last_query().'</pre>'; 
         if($rslt->num_rows() > 0) {
             $bc_userids = array();
             $arr_menus=array();

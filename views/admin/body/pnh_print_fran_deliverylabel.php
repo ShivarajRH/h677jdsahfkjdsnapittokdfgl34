@@ -5,7 +5,21 @@
 				<a href="javascript:void(0)" onclick="window.print()">Print</a>
 			</span>	
 		<?php	
+			
 			foreach($fr_details as $details){
+				
+				if(isset($details['man_id']))
+				{
+					$man_amt = $this->db->query("	select sum(amt) as amt from (
+													select (b.mrp-b.discount-credit_note_amt)*invoice_qty as amt
+														from pnh_franchise_account_summary a 
+														join king_invoice b on a.invoice_no = b.invoice_no 
+														join shipment_batch_process_invoice_link c on c.invoice_no = b.invoice_no 
+														join pnh_m_manifesto_sent_log d on d.manifesto_id = c.inv_manifesto_id
+														where d.id = ?       
+													group by b.id) as g 
+												",$details['man_id'])->row()->amt;
+				}
 		?>
 		<style>
 		body{font-family: arial;margin:5%;font-size: 125%;line-height: 1.3em;}
@@ -13,6 +27,12 @@
 		</style>
 		<div align="center" style="page-break-after: always">
 			<br >
+			<br >
+			<?php if(isset($details['man_id'])) {?>
+			<div style="font-size: 16px;">
+				<b>ManifestoID </b>:# <?php echo $details['man_id']; ?> | <b>Amount </b>:Rs <?php echo round($man_amt); ?> 
+			</div>
+			<?php } ?>
 			<h1 style="font-size:260%;line-height: 100%"><?php echo $details['franchise_name']; ?></h1>
 			
 			<?php
@@ -79,7 +99,7 @@
 		
 		<div class="container">
 		<div style="float:left;width:100%">
-			<h2>Franchise Delivary Label</h4>
+			<h2>Franchise Delivery Label</h4>
 		 </div>
 		 <table width="100%">
 		 	<tr>

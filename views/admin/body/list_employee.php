@@ -55,11 +55,10 @@
 			<?php if($emp_list){?>
 			<table class="datagrid datagridsort" width="100%" cellspacing="5">
 				<thead>
-					<th>Employee Name</th>
-					<th>Territory</th>
-					<th>Mobile</th>
-					
-
+					<th width="30%">Employee Name</th>
+					<th width="45%">Territory / Department</th>
+					<th width="20%">Mobile</th>
+					<th width="15%">Emp Type</th>
 				</thead>
 				<tbody>
 					<?php 
@@ -67,52 +66,69 @@
 				foreach($emp_list as $emp_det){
 	          ?>
 					<tr>
-						<td width="50%">
-						<?php echo '<b>'.ucwords($emp_det['name']).'</b><br>';?>
-						<?php if($emp_det['job_title']<=5 && $emp_det['job_title2']==0){?>
-						<?php echo ucwords($emp_det['role_name'].'<br>');?>
-							<?php } else{?>
-						<?php echo ucwords($emp_det['fc']).'<br>';?>
-						<?php }?>
-						<?php $assigned_emp_det= $this->erpm->get_working_under_det($emp_det['employee_id']); 
-						if($assigned_emp_det)
-						echo 'Reports to:'.$assigned_emp_det['name'].'<br>';
-						else 
-						echo $assigned_emp_det='';
+						<td>
+							<?php echo '<b>'.ucwords($emp_det['name']).'</b><br>';?>
+							<?php if($emp_det['job_title']<=5 && $emp_det['job_title2']==0){?>
+							<?php echo ucwords($emp_det['role_name'].'<br>');?>
+								<?php } else{?>
+							<?php echo ucwords($emp_det['fc']).'<br>';?>
+							<?php }?>
+							<?php $assigned_emp_det= $this->erpm->get_working_under_det($emp_det['employee_id']); 
+							if($assigned_emp_det)
+							echo 'Reports to:'.$assigned_emp_det['name'].'<br>';
+							else 
+							echo $assigned_emp_det='';
 						?>
 						</td>
-						<?php if($emp_det['job_title']<= 2){
-						$terr_list=$this->db->query("select * from pnh_m_territory_info")->result_array();
-						$town_list=$this->db->query("select * from pnh_towns")->result_array();
-					}
-					else
-					{
-						$terr_list = $this->erpm->get_assigned_territory_det($emp_det['employee_id']);
-						$town_list = $this->erpm->get_assigned_town_det($emp_det['employee_id']);;
-					}
-					?>
-
 						<td><?php 
-					foreach ($terr_list as $assigned_terr)
-						echo $assigned_terr['territory_name'].', ';
-					 
-					?>
-						<?php echo '<br>';?>
-						<?php 
-					if($emp_det['job_title']==5){
-					foreach ($town_list as $assigned_twn) 
-						echo $assigned_twn['town_name'].', ';
-					}
-					else if($emp_det['job_title']==4) 
-						echo "All Towns Of ".$assigned_terr['territory_name'].', ';
-					else 
-						echo "All Towns"
-					?></td>
+						if($emp_det['emp_type'] == "1")
+						{
+							//echo '<b>Department : </b>';
+							$dept_det = $this->employee->get_dept_det_byemp($emp_det['employee_id']);
+							
+							if($dept_det)
+								echo $dept_det['dept_name'];
+							else echo '--';
+						}
+						elseif($emp_det['emp_type'] == 2)
+						{
+								if($emp_det['job_title']<= 2){
+									$terr_list=$this->db->query("select * from pnh_m_territory_info")->result_array();
+									$town_list=$this->db->query("select * from pnh_towns")->result_array();
+								}
+								else
+								{
+									$terr_list = $this->erpm->get_assigned_territory_det($emp_det['employee_id']);
+									$town_list = $this->erpm->get_assigned_town_det($emp_det['employee_id']);;
+								}
+						
+								foreach ($terr_list as $assigned_terr)
+									echo $assigned_terr['territory_name'].', ';
+
+								?>
+									<?php echo '<br>';?>
+									<?php 
+								if($emp_det['job_title']==5){
+								foreach ($town_list as $assigned_twn) 
+									echo $assigned_twn['town_name'].', ';
+								}
+								else if($emp_det['job_title']==4) 
+									echo "All Towns Of ".$assigned_terr['territory_name'].', ';
+								else 
+									echo "All Towns";
+						}
+						?>
+						</td>
 					
 						<td><?php echo $emp_det['contact_no']?>
 							<?php echo '<br>';?>
-							<a href="<?php echo site_url('admin/edit_employee'.'/'.$emp_det['employee_id'])?>">Edit</a> 
-							<a href="<?php echo site_url('admin/view_employee'.'/'.$emp_det['employee_id'])?>">View</a>
+							<a href="<?php echo site_url('admin/edit_employee'.'/'.$emp_det['employee_id'])?>" class="button button-tiny button-flat-action">Edit</a> 
+							<a href="<?php echo site_url('admin/view_employee'.'/'.$emp_det['employee_id'])?>" class="button button-tiny button-flat-primary">View</a>
+						</td>
+						<td><?php 
+								$emp_type_arr = array(1=>"Office Emp",2=>"Field Emp");
+								echo $emp_type_arr[$emp_det['emp_type']];
+							?>
 						</td>
 					</tr>
 					<?php 

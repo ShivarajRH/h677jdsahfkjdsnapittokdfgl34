@@ -79,7 +79,7 @@
 {
 	display: none;
 }
-.mod_widget_small .mod_widget_sub .mod_widget_content ul
+.mod_widget_small .mod_widget_sub .mod_widget_content ul,.mod_widget_content_insu ul
 {
 	margin-top: 8px;
 	list-style-type:none;
@@ -160,7 +160,11 @@
 	margin:0px !important;
 	height:auto !important;
 }
+a.button {
+    color: #FFFFEF !important;
+}
 </style>
+
 <script>
 $(function()
 {
@@ -168,6 +172,7 @@ $(function()
 	$('.border_content_right_blk').jScrollPane();
 	$('.border_content_left_blk').jScrollPane();
 	$('.mod_widget_content').jScrollPane();
+//	$('.mod_widget_content_insu').jScrollPane();
 });
 </script>
 
@@ -179,8 +184,13 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 ?>
 <div class="container outer_blk">
 	<!----------------------------------Page Title--------------------------->
-	<h2> Member - <?=$salutation[$u['salute']]?>. <?="{$u['first_name']} {$u['last_name']}"?></h2>
-	
+        <div class="heading_block">
+            <h2 style="float:left;"> Member - <?=$salutation[$u['salute']]?>. <?="{$u['first_name']} {$u['last_name']}"?>
+                    <a style="margin-left: 10px; font-size: 12px;" class="" href="<?=site_url("admin/pnh_editmember/".$u['pnh_member_id']); ?>" target="_blank" >Edit</a>
+        </h2>
+            <div style="float:right;"><a class="button button-tiny button-royal" href="<?=site_url().'/admin/pnh_sms_log_member/'.$u['pnh_member_id'];?>" target="_blank">View SMS Log</a></div>
+        </div>
+        <div class="clear">&nbsp;</div>
 	<!-- Member details -->
 	<div class="mod_widget_small">
 		<div class="mod_widget_title">
@@ -287,12 +297,22 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 	<div class="fl_left mod_widget_row" style="">
 		<!----------------------------------Basic information block--------------------------->
 		<div class="mod_widget_small">
+                        
 			<div class="mod_widget_title">
-				<div class="heading_wrap"><img src="<?php echo base_url().'images/home2.png'?>">Basic Details
+				<div class="heading_wrap">
+					<img src="<?php echo base_url().'images/home2.png'?>">Basic Details
 				</div>
 			</div>
-			<div class="mod_widget_content max_height_wrap">
-				<ul class="content_head">
+                        <div class="block_det">
+                            
+                            <div class="tab_view tab_view_inner">
+                                    <ul>
+                                            <li><a href="#mem_det">Member Details</a></li>
+                                            <li><a href="#insurance_det">Linked Insurances Data</a></li>
+                                    </ul>
+                                    <div id="mem_det">
+                                            <div  class="mod_widget_content_insu" style="overflow-y: auto; width: 613px; height: 220px;">
+                                        <ul class="content_head ">
 					<li>
 						<span class="row_label">Name : </span>
 						<span class="value"><?=$salutation[$u['salute']]?>. <?="{$u['first_name']} {$u['last_name']}"?></span> 
@@ -302,6 +322,10 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 						 <span class="value"><?=$u['mobile']?></span>
 					</li>
 					<li>
+                                                                 <span class="row_label">Mobile Network: </span>
+                                                                 <span class="value"><?=$u['mobile_network']?></span>
+                                                        </li>
+                                                        <li>
 						<span class="row_label">DOB : </span>
 						<span class="value"><?=format_date($u['dob']);?></span> 
 					</li>
@@ -327,7 +351,57 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 					</li>
 				</ul>
 			</div>
+                                    </div>
+                                    
+                                    <div id="insurance_det">
+                                            <div  class="mod_widget_content_insu" style="overflow-y: auto;width: 613px; height: 220px;">
+<?php
+                                            $insurance_det = $this->db->query("SELECT * FROM pnh_member_insurance mi WHERE `mid`= ? ORDER BY mi.sno DESC",$u['pnh_member_id']);
+                                            if($insurance_det->num_rows() > 0)
+                                            {
+                                                ?>
+                                                <table width="100%">
+                                                <?php // echo $this->db->last_query()."<br>";
+//                                                print_r($insurance_det->result_array());
+                                                
+                                                foreach($insurance_det->result_array() as $i=>$insurance)
+                                                {
+?>
+                                                    <tr>
+                                                        <td width="100%">
+                                                        <div class="snippet content_head" style="margin">
+                                                                        <span class="row_label"><?=++$i;?>) Name : </span>
+                                                                    <span class="value"><?=$insurance['first_name']." ".$insurance['last_name'];?></span>
+                                                                    
+                                                                    <span class="row_label">Mobile : </span>
+                                                                    <span class="value"><?=$insurance['mob_no']?></span>
+                                                                    
+                                                                    <span class="row_label">Address : </span>
+                                                                    <span class="value"><?=$insurance['proof_address']?>, <?=$insurance['city']?> - <?=$insurance['pincode']?></span>
+                                                                    
 		</div>
+                                                        </td>
+                                                    </tr>
+<?php
+                                                }
+                                                ?>
+                                                </table>
+<?php
+                                            }
+                                            else
+                                            {
+?>
+                                                <span>No Insurances Given</span>
+<?php
+                                            }
+?>
+                                    </div>
+                            </div>
+                    </div>
+		</div>
+		</div>
+                    
+                    
 		<!----------------------------------Offers Log block--------------------------->
 		<div class="mod_widget_large">
 			<div class="mod_widget_title">
@@ -337,10 +411,13 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 			</div>
 			<div class="mod_widget_content ">
 				<?php 
-	                $offers_q = $this->db->query("select * from pnh_member_offers a join pnh_member_info b on b.pnh_member_id=a.member_id where member_id=?  and a.offer_type != 0 ",$u['pnh_member_id']);
+	                $offers_q = $this->db->query("SELECT a.*,f.franchise_name FROM pnh_member_offers a 
+                                                            JOIN pnh_member_info b ON b.pnh_member_id=a.member_id 
+                                                            JOIN pnh_m_franchise_info f ON f.franchise_id=a.franchise_id
+                                                            WHERE member_id=?  AND a.offer_type != 0 ",$u['pnh_member_id']);
 	                if($offers_q->num_rows())
                		 {
-               	?>
+?>
 				<table class="datagrid" width="100%">
 					<tbody>
 						<tr>
@@ -353,30 +430,25 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
                             <td><b>Status</b></td>
 						</tr>
 						<?php
-	                        
 	                        $offers = $offers_q->result_array();
                                 $arr_offer_type = array(1=>"Recharge",2=>"Insurance",3=>"N/A or Not Opted");
-	                        $arr_offer_status = array(0=>"Not Processed",1=>"Processed");
+                                                $arr_offer_status = array(0=>"Not Processed",1=>"Ready to Process",2=>"Processed");
 	                        
 	                        foreach($offers as $i=>$offer) {
-	                        		$franch=$this->db->query("select a.franchise_id,b.franchise_name from pnh_member_offers a 
-											join pnh_m_franchise_info b on b.franchise_id=a.franchise_id
-											where a.franchise_id='".$offer['franchise_id']."'")->row_array(); 
-						?>
+?>
                         <tr>
                             <td><?=++$i;?></td>
-                            <td><?=format_datetime_ts($offer['created_on']);?></td>
-                            <td><?=$offer['transid_ref'];?></td>
-                            <td><a href="<?=site_url("/admin/pnh_franchise/".$franch['franchise_id']);?>" target="_blank"><?=$franch['franchise_name'];?></a></td>
+                                                        <td><?=format_datetime($offer['created_on']);?></td>
+                                                        <td><a href="<?=site_url("/admin/trans/".$offer['transid_ref']);?>" target="_blank"><?=$offer['transid_ref'];?></a></td>
+                                                        <td><a href="<?=site_url("/admin/pnh_franchise/".$offer['franchise_id']);?>" target="_blank"><?=$offer['franchise_name'];?></a></td>
                             <td><?=$arr_offer_type[$offer['offer_type']];?></td>
                             <td><?= ( $offer['offer_value'] == 0 ) ? 'Free' : "Rs. ".formatInIndianStyle($offer['offer_value']);?></td>
                             <td><?=$arr_offer_status[$offer['process_status']];?></td>
                         </tr>
-	                        <!--<div style="padding:4px 5px;border-bottom:1px solid #DDDDDD;">Rs. <?=formatInIndianStyle($offer['offer_value']);?> worth of <?=$arr_offer_type[$offer['offer_type']];?> given</div>-->
-	                	<?php   
+<?php   
 							}
 	                    	} 
-	                    ?>
+?>
 					</tbody>
 				</table>
 			</div>
@@ -568,15 +640,36 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 </div>
 
 <style>
-.mod_widget_small .mod_widget_content li {
+    .snippet {
+        margin: 8px 7px;
+        padding: 5px 7px;
+        line-height: 1.5em;
+        background-color: #EDEEE6;
+        float: left;
+        clear: right;
+        width: 91%;
+    }
+    #mem_det .content_head li { line-height:1.9em; }
+    .mod_widget_content_insu {
+                             background: #fafafa;}
+    .mod_widget_content_insu li {
+            border-top:1px dotted #f7f7f7;
+            background: #fcfcfc;
+            margin: 0px;
+            padding: 6px;
+            overflow: hidden;
+            margin: 2px 0px;
+            height: auto;
+    }
+    .mod_widget_content li {
 	margin: 0px;
 	padding: 6px;
-	clear: both;
+	/*clear: both;*/
 	overflow: hidden;
 	background: #FFF;
 	margin: 2px 0px;
 	height: auto;
-}
+    }
 .content_head span.row_label {
 float: left;
 font-size: 12px;
