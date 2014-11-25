@@ -44,8 +44,12 @@ if(!defined("APL_VER"))
 
 <link type="text/css" rel="stylesheet" href="<?=base_url()?>/min/index.php?g=erp_css&<?php echo strtotime(date('Y-m-d'));?>&1=1">
 <link type="text/css" rel="stylesheet" href="<?=base_url()?>/min/index.php?g=jqplot_css&<?php echo strtotime(date('Y-m-d'));?>&1=1">
+<link type="text/css" rel="stylesheet" href="<?=base_url()?>/min/index.php?g=datatable_css&<?php echo strtotime(date('Y-m-d'));?>&1=1">
+
+
 <script type="text/javascript" src="<?=base_url()?>/min/index.php?g=erp_js&<?php echo strtotime(date('Y-m-d'));?>&1=1"></script>
 <script type="text/javascript" src="<?=base_url()?>/min/index.php?g=jqplot_js&<?php echo strtotime(date('Y-m-d'));?>&1=1"></script>
+<script type="text/javascript" src="<?=base_url()?>/min/index.php?g=datatable_js&<?php echo strtotime(date('Y-m-d'));?>&1=1"></script>
 
 
 <style>

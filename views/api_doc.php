@@ -343,6 +343,7 @@
 					<br><b>Params</b> : franchise_id=<b>FRANCHISE ID</b>
 					<br><b>Params</b> : mobile_no=<b>MOBILENO</b>
 					<br><b>Params</b> : member_name=<b>MEMBER NAME</b>
+					<br><b>Params</b> : image=<b>MEMBER PROFILE PIC</b>
 					<br><b>Response Type </b> : JSON
 					<br><b>Response On Error </b> : {'status':"error","error_code"=>"2008","error_msg","Mobile no already registered"}
 				</code>
@@ -790,6 +791,38 @@
 					Function to create order via api 
 				</p>
 			</div>
+			<div class="api_det">
+				<h4>Franchisee Requesting OTP</h4>
+				<code>
+					<?php echo site_url('api/request_franchise_otp')?>
+					<br><b>Type</b> : POST
+					<br><b>Params</b> : franchise_mobno=<b>FRANCHISEEE MOBILENO</b> OR <b>TAB Sim number</b>
+					<br><b>Response Type </b> : JSON
+					<br><b>Success Response </b> : {"status":"success","response":{"status":"success","franchise_id":"108","franchise_name":"A1 FANCY STORE","login_mobile":"9740503800","OTP_Number":"8346","valid_till":"21\/08\/2014 05:10 pm"}}
+					<br><b>Error Response </b> : {"status":"error","error_code":2003,"error_msg":"Invalid franchise mobile number"}}
+					<p class="api_desc">
+						function franchisee requsting one time password
+					</p>
+				</code>
+			</div>
+			
+			<div class="api_det">
+				<h4>Validating Franchisee OTP</h4>
+				<code>
+					<?php echo site_url('api/validate_franchise_otp')?>
+					<br><b>Type</b> : POST
+					<br><b>Params</b> : franchise_mobno=<b>FRANCHISEEE MOBILENO</b> OR <b>TAB Sim number</b>
+					<br><b>Params</b> : otpno=<b>OTP number</b> 
+					<br><b>Response Type </b> : JSON
+					<br><b>Success Response </b> : {"status":"success","response":{"status":"success","franchise_id":"108","franchise_name":"A1 FANCY STORE","login_mobile":"9740503800"}}
+					<br><b>Error Response </b> : {"status":"error","error_code":2003,"error_msg":"Invalid franchise mobile number"}}
+					<br><b>Error Response </b> : {"status":"error","error_code":2003,"error_msg":"Invalid OTP number\/OTP number is Expired","response":{"error_code":2003,"error_msg":"Invalid OTP number\/OTP number is Expired"}}
+					
+					<p class="api_desc">
+						function to validate franchise mobno and franchisee OTP
+					</p>
+				</code>
+			</div>
 			
 			<div class="api_det">
 				<h4>Store Franchise Search Keywords</h4>
@@ -911,39 +944,7 @@
 				</code>
 			</div>
 			
-			<div class="api_det">
-				<h4>Get service request list</h4>
-				<code>
-					<?php echo site_url('api/get_services_req_list')?>
-					<br><b>Type</b> : POST
-					<br><b>Params</b> : authkey=<b>AUTHKEY</b>
-					<br><b>Params</b> : franchise_id=<b>FRANCHISEEE ID</b>
-					<br><b>Params</b> : transid=<b>TRANS ID</b>
-					<br><b>Params</b> : orderids=<b>ORDER ID</b>
-					<br><b>Response Type </b> : JSON
-					<br><b>Response </b> : {"status":"success","response":"cancelled orderids:'',transid:''"}
-					<p class="api_desc">
-						function cancels the orders
-					</p>
-				</code>
-			</div>
 			
-			<div class="api_det">
-				<h4>Get Member Price Details</h4>
-				<code>
-					<?php echo site_url('api/cancel_order')?>
-					<br><b>Type</b> : POST
-					<br><b>Params</b> : authkey=<b>AUTHKEY</b>
-					<br><b>Params</b> : franchise_id=<b>FRANCHISEEE ID</b>
-					<br><b>Params</b> : transid=<b>TRANS ID</b>
-					<br><b>Params</b> : orderids=<b>ORDER ID</b>
-					<br><b>Response Type </b> : JSON
-					<br><b>Response </b> : {"status":"success","response":"cancelled orderids:'',transid:''"}
-					<p class="api_desc">
-						function cancels the orders
-					</p>
-				</code>
-			</div>
 			<!-- ===============< BLOCKS END >=========-->
 			
 		</div>

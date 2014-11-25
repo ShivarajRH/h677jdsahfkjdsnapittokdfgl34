@@ -142,7 +142,6 @@ $(function(){
 			 $(this).addClass("selected");
 		else
 			 $(this).removeClass("selected");
-
 	});
 	$("ul.menu ul li").hover(function(){
 		if($(".submenuright",$(this)).length==0)

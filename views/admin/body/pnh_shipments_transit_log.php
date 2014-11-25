@@ -308,37 +308,6 @@ $("#sms_manual_dlg").dialog({
 		}
 	
 });
-//=================< ADD SHIPMENT REMARKS LOGIC STARTS >=========================================
-$('#dlg_add_remarks_blk').dialog({
-	width:'660'
-	,height:'auto'
-	,autoOpen:false
-	,modal:true,
-	open:function(){
-		var dlg = $(this);
-		//refcont = $(this).data('ref_container');
-		var updated_by='';
-		//,'width':refcont.width()
-		//$('div[aria-describedby="inv_transitlogdet_dlg"]').css({'top':(refcont.offset().top+15+refcont.height())+'px','left':refcont.offset().left});
-		//dlg.html('<div align="center"><img src="'+base_url+'/images/loading.gif'+'" ></div>');
-	}
-	,buttons: {
-		"Submit":function() {
-			alert("Submit");
-			return false;
-		}
-		,"Cancel":function() {
-			$(this).dialog("close");
-		}
-	}
-});
-	
-function add_transit_remarks(ele,invno)
-{
-	$('#dlg_add_remarks_blk').data({'invno':invno,'ref_container':$(ele).parents('.show_invoice:first')});//.dialog('open').dialog("option","title","Add Remarks");
-}
-
-//=================< ADD SHIPMENT REMARKS LOGIC ENDS >=========================================
 </script>
 <style>
 .page_action_buttonss
@@ -349,27 +318,3 @@ background: #F6F6F6;
 }
 
 </style>
-
-<!--===========================================< Dialog Box html Code STARTS >=========================================== -->
-<div  style="display:none;">
-	
-	<div id="dlg_add_remarks_blk">
-		<h3 class="resp_title"></h3>
-		<form id="update_inputs_form" method="post" target="_blank">
-			<table width="100%" class="datagrid">
-				<tr>
-					<td>Remarks</td>
-					<td><input type="hidden" name="invoice_no" class="invoice_no" value="">
-						<textarea rows="6" cols="16" placeholder="Please enter shipment remarks" name="remarks" id="remarks"></textarea>
-					</td>
-				</tr>
-				<tr>
-					<td></td>
-					<td>&nbsp;</td>
-				</tr>
-			</table>
-		</form>
-	</div>
-	
-</div>
-<!--===========================================< Dialog Box html Code ENDS >===========================================-->

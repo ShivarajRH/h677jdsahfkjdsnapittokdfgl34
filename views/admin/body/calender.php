@@ -383,8 +383,10 @@
 		
 		<div id="view_remarks_posted_via_sms">
 		</div>
+		<div id="view_remarks_reply_sms">
+		</div>
 		<div class="status st_msg">
-		<div class="label"><b>Remarks :</b>
+		<div ><b>Remarks :</b>
 		<br/>
 		<textarea name="msg" id="view_task_reason" style="height:60px; width:98%;"col="25"></textarea>
 		</div>
@@ -591,6 +593,7 @@ function switchView(view) {
 			$('#view_task_assigned_town').val("");
 			$('#view_task_assigned_franchise').val("");
 			$('#view_task_assigned_type').val("");
+			$('#view_task_reason').val("");
 			
 		
 			$('#view_sales_target_frlist').hide();
@@ -615,7 +618,9 @@ function switchView(view) {
 					$('#view_task_assigned_to').val(result.task.assignedto_byrole_name);
 					$('#view_task_assigned_phno').val(result.task.contact_no);
 					$('#view_task_status').val(result.task.status);
-					$('#view_task_reason').val(result.task.reason);
+					//$('#view_task_reason').val(result.task.reason);
+					//$('#view_remarks_reply_sms').html(result.task.reason);
+					
 					$('#view_task_assigned_town').val(result.task.town_name);
 					$('#view_task_assigned_type').val(result.task.task_name);
 					$('#view_task_type_list').html("");
@@ -623,11 +628,18 @@ function switchView(view) {
 					var task_type_arr = result.task.task_type.split(',');
 					$('#view_task_typelistdetblck').html("");
 					$('#view_remarks_posted_via_sms').html("");
+					$('#view_remarks_reply_sms').html('');
 
 					$('#view_emp_permalink').attr('href',site_url+'/admin/view_employee/'+result.task.assigned_to);
-					
 
-						if(result.task_sms_remarks != undefined)
+					if(result.task.reason != undefined)
+					{
+						var remark_reson ="";
+						   remark_reson ='<div><table class="datagrid"><thead><th>Remarks Reason</th></thead><tbody><tr><td>'+result.task.reason+'</td></tr></table></div>';
+						   $('#view_remarks_reply_sms').html(remark_reson);
+					}
+
+						if(result.task_remarks_sms != undefined)
 						{
 							var remarks_via_sms_table='';
 								remarks_via_sms_table='<div><h4>Remarks Via SMS</h4><table class="datagrid"><thead><th>Task</th><th>SMS</th><th>Posted By</th><th>Posted On</th></thead><tbody>';
@@ -699,7 +711,7 @@ function switchView(view) {
 						$('#view_task_stdate').attr('disabled',true);
 						$('#view_task_due_date').attr('disabled',true);
 						$('.st_weekly_sales_target').attr('disabled',true);
-						$('#view_task_typelistdetblck textarea').attr('disabled', true).Screen.showCursor = false;
+						$('#view_task_typelistdetblck textarea').attr('disabled', true);
 					
 						//$('#view_task_reason').	attr('readonly',false);
 					}
@@ -710,7 +722,7 @@ function switchView(view) {
 					 	$('#view_task_due_date').attr('disabled',true);
 						$('#view_task_status').	attr('disabled',true);
 						$('.st_weekly_sales_target').attr('disabled',true);
-						$('#view_task_typelistdetblck textarea').attr('disabled', true).Screen.showCursor = false;
+						$('#view_task_typelistdetblck textarea').attr('disabled', true);
 					
 						$(".ui-dialog-buttonpane button:contains('Update')").button().hide();
 						
@@ -936,7 +948,7 @@ function switchView(view) {
 	}
     else if($(this).val()=="3")
 	{
-		 $(".st_msg").show();
+		 $(".st_msg").hide();
 	}
     if($(this).val()=="1")
 	{

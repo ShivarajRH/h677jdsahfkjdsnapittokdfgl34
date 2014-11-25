@@ -15,42 +15,14 @@ h2
 {
     display: none;
 }
-.view_imei
-{
-	 color: #008000;
-     margin: 0 2px;
-}
-#grn input[type="text"]:focus,#grn select:focus,#grn a:focus{
-	font-weight:bolder !important;
-	font-size: 110% !important; 
-	border:1px solid blue !important;
-	display: inline-block;
-	width: auto;
-	height: auto;
-}
-.row_error_inp
-{
-	color:red;
-	font-weight:bold;
-}
-.cancel_prd
-{
-	 float: left;
-    margin-left: 79px;
-    margin-top: 10px;
-    width: 100%;
-}
-.load_cont
-{
-	font-size: 13px;
-    text-align: center;
-    margin-top: 15px;
-}
+
 </style>
 
 <div class="container">
 	<h2>
 		<span class="page_title"></span>
+		<span class="is_doa_po_wrap blink" style="display:none">
+		</span>
 	</h2>
 	<span class="cancel_stock">
 		<input type="button" class="button button-caution button-rounded button-tiny cursor form_cancel" value="Cancel Intake" style="padding:0px;">
@@ -115,7 +87,7 @@ h2
 									<td><input type="text" name="invno[]" class="inp inv_inp_blk"></td>
 									<td><input type="text" name="invdate[]" class="inp inv_inp_datepick_blk datepick"></td>
 									<td><input size=7 type="text" class="inp invamount inv_inp_amount" name="invamount[]"></td>
-									<td><input type="file" name="scan_0" class="scan_file"></td>
+									<td><input type="file" name="scan_0" id="scan_0" class="scan_file"></td>
 									<td><span class="addrow_tooltip" title="Add New Invoice Details"><a href="javascript:void(0)" onclick='cloneinvoice()'><div class="button button-tiny_wrap cursor">+</div></a></span></td>
 								</tr>
 							</tbody>
@@ -230,7 +202,7 @@ h2
 							<input type="text" disabled="" class="inp sub_ttl subttl_%prodid%" size=3 value="0" >
 						</td>
 						<td>
-							<div class="ex_dt"  style="text-align: right">Exp : <input type="text" name="expiry_date%pid%[]" class="inp exp_date" placeholder=""></div>
+							<div class="ex_dt"  style="text-align: right">Exp : <input type="text" name="expiry_date%pid%[]" class="inp exp_date" placeholder="yyyy-mm"></div>
 							<div class="self_life_blk">Self Life : <input type="text" class="inp self_life" name="self_life%pid%[]" value="%self_life%"></div>
 							<div>has offer : <input type="checkbox" class="has_offer" value="0"></div>
 							<div>			<select name="offer_stkid%pid%[]" class="offer_list">==offers==</select></div>
@@ -253,7 +225,7 @@ h2
 					<td><input type="text" name="invno[]" class="inp inv_inp_blk" class="invno"></td>
 					<td><input type="text" name="invdate[]" class="inp invdate inv_inp_datepick_blk datepick%dpi%" class=""></td>
 					<td><input size=7 type="text" class="inp invamount inv_inp_amount" name="invamount[]" class=""></td>
-					<td><input type="file" name="scan_%dpi%"></td>
+					<td><input type="file" name="scan_%dpi%" class="scan_file" onchange="checkfile()"></td>
 					<td align="center">
 						<a href="javascript:void(0)" onclick="removeInvoiceRow(this)"><div class="button button-tiny_wrap cursor"><img width="6px" height="6px" style="margin-top: 4px" src="<?php echo base_url().'images/remove.png'?>"></div></a>
 					</td>
@@ -593,6 +565,21 @@ function loadpo(pids)
 {
 	$("#po_loading").show();
 	$(".venl"+$("#grn_vendor").val()).show();
+	var doa_po=[];
+	$.post('<?=site_url('admin/jx_chk_isdoapo')?>',{p:pids},function(resp){
+		if(resp.status != 'error')
+		{
+			$.each(resp.doa_pos,function(i,p){
+				if(p.is_doa_po == 1)
+				{
+					doa_po.push(p.po_id);
+				}
+			});
+			$('.is_doa_po_wrap').html("DOA PO : "+doa_po);
+			$('.is_doa_po_wrap').show();
+		}
+		
+	},'json');	
 	$.post('<?=site_url('admin/jx_grn_load_po')?>',{p:pids},function(data){
 		pois=$.parseJSON(data);
 		g_rows="";
@@ -702,11 +689,20 @@ function loadpo(pids)
 		
 		$('#grn .datagrid tbody tr').each(function(){
 			var trele=$(this);
-			$('.exp_date',this).datepicker({
-				onSelect: function(dateText, inst) {
+			/*
+			$('.exp_date',this).datepicker( {
+		        changeMonth: true,
+		        changeYear: true,
+		        showButtonPanel: true,
+		        dateFormat: 'yy-mm',
+		        onClose: function(dateText, inst) { 
+		            var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
+		            var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
+		            $(this).datepicker('setDate', new Date(year, month, 1));
 			       $('.self_life',trele).select();
 			    }
 			});
+		    */
 			if($(this).attr('has_serialno') == 0)
 			{
 				$('.imei_scanned_div',$(this)).hide();
@@ -715,7 +711,7 @@ function loadpo(pids)
 			{
 				$('.imei_scanned_div',$(this)).show();
 			}
-			
+			/*
 			if($(this).attr('self_life') == '-1')
 			{
 				$('.ex_dt',this).hide();
@@ -726,7 +722,7 @@ function loadpo(pids)
 				$('.ex_dt',this).show();
 				$('.self_life_blk',this).show();
 			}
-				
+			*/	
 		});
 		scanned_rows();
 		Tipped.create('.addrow_tooltip',{
@@ -893,6 +889,14 @@ $('.prod_mrp').live('change',function(){
 		}
 		else
 		{
+			mrp_perc=po_mrp/10;
+			mrp_perc=po_mrp-mrp_perc;
+			if(mrp < mrp_perc)
+			{
+				$('.row_error_inp',trele).html('<span>MRP cannot be lesser than 10% of old MRP</span>');
+				$('.prod_mrp',trele).val("");
+				return false;
+			}
 			// compute new pprice
 			new_pprice = (mrp*pprice)/po_mrp;
 			$('.pprice',trele).val(new_pprice);
@@ -978,6 +982,18 @@ $(".datagrid .iqty").live("change",function(){
 			}
     	}
 });
+
+$('.scan_file').live('change',function(){
+		
+		if(this.files[0].size>2097152)
+		{
+			alert("File Size should not exceed 2 MB");
+			var trele=$(this).parents('tr:first');
+			$('.scan_file',trele).addClass('max_size');
+			$('.max_size').val("");
+			return false;
+		}
+});		
 
 $(".inv_inp_blk").live("change",function(){
 	/*
@@ -1301,7 +1317,6 @@ $("#apply_grn_form").submit(function(){
 	}
 	
 	
-		
 	$('.invoice_tab tbody tr',this).each(function(){
 		var trele=$(this).parents('tr:first');
 		var inv_no =$('.inv_inp_blk',trele).val(); 
@@ -1521,6 +1536,7 @@ $('.add_product_row').live('click',function(e){
 								    }
 								});
 								//alert($(this).attr('self_life'));
+								/*
 								if($(this).attr('self_life') == -1)
 								{
 									
@@ -1533,7 +1549,7 @@ $('.add_product_row').live('click',function(e){
 									$('.ex_dt',this).show();
 									$('.self_life_blk',this).show();
 								}
-									
+								*/	
 							});
 							
 							if(trele_has_serialno != 1)
@@ -1953,6 +1969,7 @@ function process_edit_validation(cb) {
     var iqty = $('.iqty', edt_trele).val() * 1;
     var ivat = $('.vat_prc', edt_trele).val() * 1;
     var imrp = $('.prod_mrp', edt_trele).val() * 1;
+    var exp = $('.exp_date', edt_trele).val();
     var has_bc = $('.bcode_upd', edt_trele).attr('bcode').length;
 	var bc_scanned = edt_trele.hasClass('bcode_scanned');
 	
@@ -1961,13 +1978,29 @@ function process_edit_validation(cb) {
 			if (rqty) {
 		        if (iqty) {
 		            if (ivat) {
-		                if (imrp) {
+		                if (imrp){
+			                if (exp){
+			                		var validformat=/^\d{4}\-\d{2}$/ //Basic check for format validity
+									var returnval=false
+									if (!validformat.test(exp))
+									{
+										alert("Invalid Date Format. Please give in yyyy-mm format and submit again.")
+										$('.exp_date', edt_trele).addClass('error_inp');
+									}
+									else
+									{ //Detailed check for valid date ranges
 		                	edt_trele.addClass('processed_mode');
 		                	$('#srch_barcode').select();
+									}
+								}else{
+			                	 	$('.exp_date', edt_trele).addClass('error_inp');
+			                 }
 		                } else {
 		                    $('.prod_mrp', edt_trele).addClass('error_inp');
 		                }
-		            } else {
+		            	} 
+		            	else 
+		            	{
 		                $('.vat_prc', edt_trele).addClass('error_inp');
 		            }
 		        } else {

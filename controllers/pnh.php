@@ -1,30 +1,8 @@
 <?php
+error_reporting(E_ALL);
+include APPPATH.'/controllers/sms_api.php';
 
-class Pnh extends Controller{
-
-	private $logid=0;
-	private $fid=0;
-	private $is_executive = 0;
-
-	function __construct()
-	{
-		parent::__construct();
-		if(empty($_POST))
-			$_POST=$_GET;
-		$this->load->model("erpmodel","erpm");
-		$this->load->model("reservation_model","reservations");
-	}
-
-	function pdie($msg)
-	{
-		if($msg)
-			echo $msg;
-		$ob=ob_get_contents();
-		
-		$this->db->query("insert into pnh_sms_log(msg,franchise_id,reply_for,created_on) values(?,?,?,?)",array($ob,$this->fid,$this->logid,time()));
-		ob_flush();
-		die;
-	}
+class Pnh extends Sms_api{
 
 	function auth($from,$msg,$call='')
 	{
@@ -33,10 +11,40 @@ class Pnh extends Controller{
 		$this->logid=$logid=$this->db->insert_id();
 		$from=substr($from,1);
 		$from=trim($from);
-
+		
 		if(empty($from) || strlen($from)<10)
 			$this->pdie("Invalid mobile number");
 
+		//check if mobno reg as franchise
+		$fran_res=$this->db->query("select * from pnh_m_franchise_info where login_mobile1=? or login_mobile2=?",array($from,$from));
+		if($fran_res->num_rows())
+		{
+			$this->is_franchise = 1;
+			$is_franchise=1;
+		}
+		
+		//check if mobno reg as employee
+		$employee_res=$this->db->query("SELECT * FROM m_employee_info WHERE  contact_no LIKE ? ",'%'.$from.'%');
+		
+		if($employee_res->num_rows())
+		{
+			$this->is_executive = 1;
+			$is_executive=1;
+		}
+		
+		$member_res=$this->db->query("select * from pnh_member_info where mobile=?",$from);
+		if($member_res->num_rows())
+		{
+			$this->is_reg_member = 1;
+			$is_member=$this->is_reg_member;
+		}
+		
+		if($this->is_franchise && $this->is_executive)
+			$this->franemp_auth=1;
+		else
+			$this->franemp_auth=0;
+		
+	
 		$fran=$this->db->query("select * from pnh_m_franchise_info where login_mobile1=? or login_mobile2=?",array($from,$from))->row_array();
 
 		if($call == 'bank')
@@ -46,6 +54,7 @@ class Pnh extends Controller{
 		{
 			$fran_ex=$this->db->query("SELECT * FROM m_employee_info WHERE  contact_no LIKE ? AND (job_title>=4 or job_title2 in (6,7))",'%'.$from.'%')->row_array();
 		}
+		
 		$membr=$this->db->query("select * from pnh_member_info where mobile=?",$from)->row_array();
 		// check if both are blank
 		if(empty($fran) && empty($fran_ex) && empty($membr))
@@ -54,9 +63,6 @@ class Pnh extends Controller{
 			exit;
 		}
 		
-		if(!empty($fran) && !empty($fran_ex))
-			$this->pdie("Sorry, franchise and pnh employee has same mobile nos.");
-
 		if(!empty($fran))
 		{
 			if($fran['is_suspended']==1)
@@ -65,7 +71,8 @@ class Pnh extends Controller{
 			$this->fid=$fran['franchise_id'];
 			$this->db->query("update pnh_sms_log set franchise_id=? where id=? limit 1",array($fran['franchise_id'],$logid));
 			return $fran;
-		}else if(!empty($fran_ex))
+		}
+		else if(!empty($fran_ex))
 		{
 			$this->is_executive = 1;
 			return $fran_ex;
@@ -83,47 +90,74 @@ class Pnh extends Controller{
 	{
 
 		ob_start();
-			
 		$msg=$this->input->post("Body");
 		$from=$this->input->post("From");
 		
 		$msg = preg_replace('/\s+/',' ',trim($msg));
+		$msg_parts=explode(" ",$msg);
+		$msg_param=strlen($msg_parts[1]);
+		
 		
 		list($call)=explode(" ",$msg);
 		$call=strtolower($call);
 
-		$fran=$this->auth($from, $msg,$call);
 
+		//to check for a formated output
+		$fran=$this->auth($from,$msg,$call);
+		if (strpos($call,'fmt:') !== false)
+		{
+ 			$output_type=1;  //Formated output
+  			$call=str_ireplace('fmt:','', $call);
+  			$call=trim($call);
+  			$this->process_formatted_sms($from,$msg,$fran);
+  			die();
+  			
+  		}
+  		else 
+		{
+			$output_type=0;  //Normal output
+		}
+		
+		$this->output_type=$output_type;
+	
+
+		
 		$from=substr($from,1);
 
-		if($this->is_executive)
+		if($call == 'order')
 		{
-			if($call == 'paid' || $call == 'p' || $call == 'ship' || $call == 'new' || $call == 'existing' || $call == 't'|| $call == 'd'|| $call == 'r' || $call == 'e'|| $call == 'm' || $call == 'bank' || $call=='lr')
+			$msg=str_ireplace("order","",$msg);
+			$this->createOrder($from,$msg,$fran);
+			die();
+		}
+		
+		if($call == 'paid' || $call == 'existing' || $call == 'ship' || $call == 'new')
+		{
+			$this->executive_sms_log($from,$msg,$call);
+			die();
+		}
+		elseif($call=='m')
 			{
-				if($call == 'bank')
-					$this->chk_pnh_bank($from,$msg);
-				else if($call == 'm')
+			if($this->is_franchise || $this->franemp_auth )
+			{
+				if($msg_param>=8)
+				{
+				$this->reg_new_mem($from,$msg,$fran);
+					die();
+				}
+				else 
+				{
 					$this->manifesto_pickup($from,$msg,$call);
-				else if($call == 't')
-					$this->task_sms_log($from,$msg,$call);
-				else if($call == 'd')
-					$this->driver_sms($from,$msg,$call);
-				else if($call == 'r')
-					$this->returnd_invoice_frm_driver($from,$msg,$call);
-				else if($call == 'e')
-					$this->invoice_frm_driver_toex($from,$msg,$call);
-				else if($call=='lr')
-					$this->update_lr_number($from,$msg,$call);
-				else if($call=='p')
-					$this->price_details($from,$msg,$call);
-				else
-					$this->executive_sms_log($from,$msg,$call);
+					die();
+				}
+			}
+			elseif($this->is_executive && !$this->franemp_auth && !$this->is_franchise)
+			{
+				$this->manifesto_pickup($from,$msg,$call);die();
+			}
 			}
 			else
-				$this->pdie("Invalid Message");
-
-		}else{
-
+		{
 			switch($call)
 			{
 				case 'bal':
@@ -161,19 +195,58 @@ class Pnh extends Controller{
 				case 'chm';
 				$this->is_mbr_regd($from,$msg,$fran);
 				break;
+				case 'login':
+					$this->chk_sms_login($from,$msg,$fran);
+					break;
 				case 'fb':
-						$this->process_memrating($from,$msg,$fran);
-						break;
+                                        $this->process_memrating($from,$msg,$fran);
+                                        break;
+				case 'm':
+					$this->manifesto_pickup($from,$msg,$call);
+					break;
+				case 't':
+					$this->task_sms_log($from,$msg,$call);
+					break;
+				case'd':
+					$this->driver_sms($from,$msg,$call);
+					break;
+				case 'r':
+					$this->returnd_invoice_frm_driver($from,$msg,$call);
+					break;
+				case 'e':
+					$this->invoice_frm_driver_toex($from,$msg,$call);
+					break;
+				case 'lr':
+					$this->update_lr_number($from,$msg,$call);
+					break;
+				case 'p':
+					$this->price_details($from,$msg,$call);
+					break;
+				case 'fb':
+					$this->process_memrating($from,$msg,$fran);
+					break;
+				case 't':
+					$this->task_sms_log($from,$msg,$call);
+					break;
+				case 'otp':
+					$this->request_otp($from,$msg,$call);
+					break;
+				case 'otpval';
+					$this->validate_otp($from,$msg,$call);
+					break;
 				default :
 					$this->createOrder($from,$msg,$fran);
 					break;
 			}
+		
 		}
-		$this->pdie(false);
+		
 	}
 
 	function recent($from,$msg)
 	{
+		if($this->is_franchise || $this->franemp_auth)
+		{
 		$fran=$this->db->query("select * from pnh_m_franchise_info where (login_mobile1=? and login_mobile1!=0) or (login_mobile2=? and login_mobile2!=0)",array($from,$from))->row_array();
 		$orders=$this->db->query("select t.transid,t.amount,o.status,o.time,o.actiontime from king_transactions t join king_orders o on o.transid=t.transid where t.franchise_id=? group by o.transid order by o.sno desc,o.status desc limit 5",$fran['franchise_id'])->result_array();
 		$stat=array("Confirmed","Confirmed","Shipped","Cancelled");
@@ -181,10 +254,14 @@ class Pnh extends Controller{
 			$this->pdie("No orders made by you");
 		foreach($orders as $o)
 			echo "{$o['transid']} Rs {$o['amount']} ".($o['actiontime']==0?date("jS M",$o['time']):date("jS M",$o['actiontime']))." {$stat[$o['status']]}\n";
+		}else
+			$this->pdie("Invalid Message");
 	}
 
 	function status($from,$msg)
 	{
+		if($this->is_franchise)
+		{
 		$inp=explode(" ",$msg);
 		if(count($inp)<2)
 			$this->pdie("No Order ID provided");
@@ -196,18 +273,20 @@ class Pnh extends Controller{
 		if(isset($order['transid']))
 		{
 			if($order['status']==3)
-				$this->pdie("Your order {$order['transid']} was cancelled on ".date("d/m/y",$order['actiontime']));
+					$this->pdie("Your order {$order['transid']} is cancelled on ".date("d/m/y",$order['actiontime'])." For more details contact Storeking Toll Free Customer Care no-".TOLL_FREE_NUMBER);
 			else if($order['status']==2)
-				$this->pdie("Your order {$order['transid']} was shipped on ".date("d/m/y",$order['actiontime']));
+					$this->pdie("Your order {$order['transid']} is shipped on ".date("d/m/y",$order['actiontime'])." For more details contact Storeking Toll Free Customer Care no-".TOLL_FREE_NUMBER);
 			else if($order['status'] == 0 || $order['status'] == 1)
-				$this->pdie("Your order {$order['transid']} is confirmed and is yet to be shipped");
+				{
+					$shipping_date=date('d/m/y', strtotime("+2 days"));
+					$this->pdie("Your order {$order['transid']} is confirmed and will be shipped on $shipping_date For more details contact Storeking Toll Free Customer Care no-".TOLL_FREE_NUMBER);
+				}
 		}else
 		{
 			$this->pdie("Invalid Orderno $transid entered.");
 		}
-				
-		
-		
+		}else
+			$this->pdie("Invalid Message");
 	}
 
 	function stock_check($from,$msg)
@@ -236,16 +315,22 @@ class Pnh extends Controller{
 
 	function balance($from,$msg)
 	{
-		$fran=$this->db->query("select franchise_id from pnh_m_franchise_info where (login_mobile1=? and login_mobile1!=0) or (login_mobile2=? and login_mobile2!=0)",array($from,$from))->row_array();
+		if($this->is_franchise || $this->franemp_auth)
+		{
+			$fran=$this->db->query("select franchise_id,franchise_name from pnh_m_franchise_info where (login_mobile1=? and login_mobile1!=0) or (login_mobile2=? and login_mobile2!=0)",array($from,$from))->row_array();
 		$acc_statement = $this->erpm->get_franchise_account_stat_byid($fran['franchise_id']);
 		$shipped_tilldate = $acc_statement['shipped_tilldate'];
 		$paid_tilldate = $acc_statement['paid_tilldate'];
 		$acc_adjustments_val = $acc_statement['acc_adjustments_val'];
 		$credit_note_amt = $acc_statement['credit_note_amt'];
 		$balance=format_price($shipped_tilldate-($paid_tilldate+$acc_adjustments_val+$credit_note_amt),2);
-		$sms_msg="Dear Franchise, your current balance is Rs '.$balance";
-		//echo 'Dear Franchise, your current balance is Rs '.$balance;
+			//$sms_msg="Dear Franchise, your current balance is Rs '.$balance";
+			$sms_msg="Dear [{$fran['franchise_name']}] Your current balance is Rs<$balance>. For more details contact StoreKing Toll Free Customer Care no".TOLL_FREE_NUMBER;
+
 		$this->erpm->pnh_sendsms($from,$sms_msg,$fran['franchise_id'],0,0);
+	}
+		else
+			$this->pdie("Invalid Message");
 	}
 
 	/**
@@ -258,7 +343,10 @@ class Pnh extends Controller{
 
 	function price_details($from,$msg,$fran)
 	{
-		
+		if($this->is_franchise || $this->franemp_auth || $this->is_executive)
+		{
+		if($this->output_type==1)
+			$msg=str_ireplace("fmt:","", $msg);
 
 		$fran=@$this->db->query("select * from pnh_m_franchise_info where (login_mobile1=? and login_mobile1!=0) or (login_mobile2=? and login_mobile2!=0) and is_suspended=0",array($from,$from))->row()->franchise_id;
 		$fid=$fran;
@@ -269,38 +357,62 @@ class Pnh extends Controller{
 		}
 		
 		if(empty($fran) && empty($mid))
+		{
+			if($this->output_type==0)
 			$this->pdie("Not Authorized");
-		
+			else
+				$this->pdie("0||Not Authorized",0);
+		}
 		$frags=trim($msg);
 		
 		$frags=explode(" ",$frags);
 		
 		if(count($frags)<2)
+		{
+			if($this->output_type==0)
 			$this->pdie("Product ID is not entered. Please check your msg");
-		
+			else
+				$this->pdie("0||Product ID is not entered. Please check your msg",0);
+		}
 		$pid=$pnhid=$frags[1];
 
+		$is_valid_pid=$this->db->query("select 1 as valid from king_dealitems where pnh_id=?",$pid)->row()->valid;
+		
+		if(empty($is_valid_pid))
+		{
+			if($this->output_type==0)
+				$this->pdie("There is no product with entered PID $pid -StoreKing Team");
+			else
+				$this->pdie("0||PROD_INVALID -StoreKing Team");
+		}
 		$deal=$this->db->query("select group_concat(distinct p.product_id) as product_id,d.menuid,b.name as brand,c.name as cat,i.id,i.is_combo,i.pnh_id as pid,i.live,i.orgprice as mrp,i.price,i.member_price,i.name,i.pic,d.publish,p.is_sourceable,i.has_insurance,CONCAT(print_name,'-',pnh_id) AS print_name,group_id from king_dealitems i join king_deals d on d.dealid=i.dealid  left join king_brands b on b.id = d.brandid join king_categories c on c.id = d.catid LEFT JOIN `m_product_deal_link` l ON l.itemid=i.id LEFT JOIN m_product_info p ON p.product_id=l.product_id LEFT JOIN m_product_group_deal_link gl ON gl.itemid=i.id where pnh_id=? and is_pnh=1",$pid)->row_array();
 		
 		$productid=$deal['product_id'];
 		
 		$itemid=$deal['id'];
-
+		
 		$price_type=$this->erpm->get_fran_pricetype($fid);
 		
 		$mpricetype='';
-		if($price_type==1)
+		
+		$member_price_det=$this->erpm->get_memberprice($deal['id'],$fid);
+		if($member_price_det['status'] == 'success')
 		{
-			$deal['price']=$deal['member_price'];
-			$price_type='MP';
-			$mpricetype='Member Price';
+			if($member_price_det['price_type']==1)
+			{
+				$deal['price']=$member_price_det['price'];
+				$price_type='MP';
+				$mpricetype='Member Price';
+			}
+			else 
+			{
+				$deal['price']=$member_price_det['price'];
+				$price_type='DP/OP';
+				$mpricetype='Offer Price';
+			}
 		}
-		else 
-		{
-			$deal['price']=$deal['price'];
-			$price_type='DP/OP';
-			$mpricetype='Offer Price';
-		}
+		else
+			$this->pdie("0||MP - Invalid pid given - StoreKing Team");
 		
 		$product_size_stkdet='';
 	
@@ -321,14 +433,14 @@ class Pnh extends Controller{
 		if($deal['group_id']!=null || $deal['group_id']!=0 && !empty($avail))
 		{
 			$product_size_stkdet='';
-			
+				
 			$avail_stat ='Availability:';
-			
+				
 			$sql="SELECT pg.group_name,p.product_id,REPLACE(p.product_name,pg.group_name,'') as product_name,gpl.qty,p.is_sourceable AS src
-											FROM m_product_group_deal_link gpl 
-											JOIN products_group_pids g ON g.group_id = gpl.group_id 
-											JOIN m_product_info p ON p.product_id = g.product_id 
-											JOIN products_group pg ON pg.group_id=g.group_id
+			FROM m_product_group_deal_link gpl
+			JOIN products_group_pids g ON g.group_id = gpl.group_id
+			JOIN m_product_info p ON p.product_id = g.product_id
+			JOIN products_group pg ON pg.group_id=g.group_id
 			WHERE itemid = $itemid ";
 				
 		}else
@@ -348,14 +460,12 @@ class Pnh extends Controller{
 		{
 			foreach($group_prods->result_array() as $gp)
 			{
-				
+
 				$is_src=$gp['src']==1?'Yes':'No';
 				$product_size_stkdet.=str_ireplace('-Size :','',$gp['product_name']).'-'.$is_src.',';
-			
+
 			}
 		}
-		if(empty($deal))
-			$this->pdie("There is no product with entered PID $pid -StoreKing Team");
 
 		if($fran == 'p')
 		{
@@ -363,10 +473,8 @@ class Pnh extends Controller{
 		}
 		else if(!empty($fran))
 		{
-			
 			$margin=$this->erpm->get_pnh_margin($fran,$pid);
 
-			
 			if($deal['is_combo']=="1")
 				$discount=$deal['price']/100*$margin['combo_margin'];
 			else
@@ -376,35 +484,53 @@ class Pnh extends Controller{
 		}
 		$mrp=$deal['mrp'];
 
-	
 		if(!empty($fran))
-			$cost="$price_type:Rs ".$deal['price'];
+		{
+				$mrp=$deal['mrp'];
+				$cost="Price:Rs ".$deal['price'];
+		}
 		else
+		{
+			if($this->output_type==0)
 			$cost='MRP:Rs '.$deal['mrp'] . ' '.$mpricetype.":Rs ".$deal['price'];
+			else
+			{
+				$cost=$deal['mrp'];
+				$lcost=$deal['price'];
+			}
+		}
+
+
+		$product_size_stkdet = !$product_size_stkdet?'':$product_size_stkdet;
 
 		$name=ucfirst($deal['name']);
 
 		if(!empty($fran) && $allow_for_fran!=0 && empty($mid))
 		{
-			
-			$sms_msg= "Thanks for your enquiry !{$name} - {$avail_stat} {$product_size_stkdet}\n {$cost},Landing:Rs {$lcost} -For more details contact us '".TOLL_FREE_NUMBER."'";
-		//	echo $sms_msg;
+			if($this->output_type==0)
+					$sms_msg= "Thanks for your enquiry !{$name} is {$avail_stat} {$product_size_stkdet}\n {$cost},Landing:Rs {$lcost} -For more details contact us '".TOLL_FREE_NUMBER."'";
+			else
+					$sms_msg= "1||$pid||$mrp||$cost||$avail_stat||$product_size_stkdet||product";
 		}
 		if(!empty($fran) && $allow_for_fran==0 && empty($mid))
 		{
-			
-			$sms_msg= "Thanks for your enquiry ! -{$name} {$avail_stat} {$product_size_stkdet} \n {$cost},Landing:Rs {$lcost} -For more details contact us'".TOLL_FREE_NUMBER."'";
-		//	echo $sms_msg;
+			if($this->output_type==0)
+					$sms_msg= "Thanks for your enquiry !{$name} is {$avail_stat} {$product_size_stkdet} \n {$cost},Landing:Rs {$lcost} -For more details contact us'".TOLL_FREE_NUMBER."'";
+			else
+					$sms_msg= "1||$pid||$mrp||$cost||$avail_stat||$product_size_stkdet||product";
 		}
 		if(!empty($mid) && empty($fran))
 		{
 			
 			$fran=$mid['franchise_id'];
-			$sms_msg="Thanks for your enquiry !{$name}-{$avail_stat} {$product_size_stkdet} \n $cost -StoreKing Team";
+				$sms_msg="Thanks for your enquiry !{$name} is {$avail_stat} {$product_size_stkdet} \n $cost -StoreKing Team";
 		//	echo $sms_msg;
 		}
-		$this->erpm->pnh_sendsms($from,$sms_msg,$fran,0,0);
-
+		
+			//$this->erpm->pnh_sendsms($from,$sms_msg,$fran,0,0);
+			$this->pdie($sms_msg,1);
+		}else
+			$this->pdie("Invalid Message");
 	}
 
 	/**
@@ -412,6 +538,8 @@ class Pnh extends Controller{
 	 */
 	function process_memrating($from,$msg,$fran)
 	{
+		if($this->is_reg_member)
+		{	
 		//E.g: FB {5}
 		$frags=explode(" ",trim($msg) );
 
@@ -420,28 +548,28 @@ class Pnh extends Controller{
 			$this->pdie("Invalid entry Please enter a number in the following format FB<SPACE>[1 to ".MAX_RATE_VAL."]. Ex:FB 4");
 		}
 
-		$rate_value = $frags[1];
+                $rate_value = $frags[1];
 
-		if(!is_numeric($rate_value))
+                if(!is_numeric($rate_value))
 			$this->pdie("Invalid entry Please enter a number in the following format FB<SPACE>[1-".MAX_RATE_VAL."]. Ex:FB 4");
-		// if rate value is greater than max_rate_val then take max_rate_val
-		if($rate_value > MAX_RATE_VAL)
-			$rate_value = MAX_RATE_VAL;
-
-		// if rate value is less than 1 then take 1
-		if($rate_value < 1)
-			$this->pdie("Invalid number Please enter a number in the following format FB<SPACE>[1-".MAX_RATE_VAL."]. Ex:FB 4");
+                // if rate value is greater than max_rate_val then take max_rate_val
+                if($rate_value > MAX_RATE_VAL)
+                    $rate_value = MAX_RATE_VAL;
                 
-		if( $this->db->query("SELECT COUNT(*) AS t FROM pnh_member_info WHERE mobile= ?",$from)->row()->t == 0 )
+                // if rate value is less than 1 then take 1
+                if($rate_value < 1)
+					$this->pdie("Invalid number Please enter a number in the following format FB<SPACE>[1-".MAX_RATE_VAL."]. Ex:FB 4");
+                
+                if( $this->db->query("SELECT COUNT(*) AS t FROM pnh_member_info WHERE mobile= ?",$from)->row()->t == 0 )
 		{
-			$this->pdie("Unregistered Member, please register with storeking.");
+                    $this->pdie("Unregistered Member, please register with storeking.");
 		}
 
-		$mem_set = $this->db->query("SELECT GROUP_CONCAT('\'',mo.sno,'\'') AS snos 
-											FROM pnh_member_offers mo
-											JOIN pnh_member_info mi ON mi.pnh_member_id = mo.member_id
-											WHERE mo.feedback_status=0 AND mo.delivery_status=1 AND mi.mobile=? ",$from);
-		if($mem_set->row()->snos == null)
+                $mem_set = $this->db->query("SELECT GROUP_CONCAT('\'',mo.sno,'\'') AS snos 
+                                                    FROM pnh_member_offers mo
+                                                    JOIN pnh_member_info mi ON mi.pnh_member_id = mo.member_id
+                                                    WHERE mo.feedback_status=0 AND mo.delivery_status=1 AND mi.mobile=? ",$from);
+                if($mem_set->row()->snos == null)
 		{
                     $this->pdie("No Offers found or Order is waiting for delivery - StoreKing.");
 		}
@@ -452,6 +580,8 @@ class Pnh extends Controller{
         }
         $this->db->query("UPDATE pnh_member_offers SET feedback_status = 1,feedback_value=? WHERE sno IN (".$snos.") ",$rate_value);
         $this->pdie("Thank you for your valuable feedback.");
+		}else
+			$this->pdie("Invalid Message");
 	}
 
 
@@ -726,7 +856,8 @@ class Pnh extends Controller{
         
 	function cancelOrder($from,$msg)
 	{
-
+		if($this->is_franchise || $this->franemp_auth)
+		{
 		$fran=$this->db->query("select * from pnh_m_franchise_info where (login_mobile1=? and login_mobile1!=0) or (login_mobile2=? and login_mobile2!=0)",array($from,$from))->row_array();
 		if(empty($fran))
 		{
@@ -744,7 +875,7 @@ class Pnh extends Controller{
 		if($this->db->query("select 1 from king_orders where transid=? and status=2",$transid)->num_rows()!=0)
 			$this->pdie("Order $transid is already invoiced and cannot be cancelled");
 		if($this->db->query("select 1 from king_orders where transid=? and status=1",$transid)->num_rows()!=0)
-			$this->pdie("Order $transid is already shipped and cannot be cancelled");
+				$this->pdie("The $transid is already shipped and hence cannot be cancelled");
 		$this->erpm->do_trans_changelog($transid,"PNH Order cancelled through SMS");
 		$this->db->query("update king_orders set status=3 where transid=?",$transid);
 		$this->erpm->do_trans_changelog($transid,"PNH Order cancelled through SMS");
@@ -772,11 +903,13 @@ class Pnh extends Controller{
 		$acc_adjustments_val = $acc_statement['acc_adjustments_val'];
 		$credit_note_amt = $acc_statement['credit_note_amt'];
 		$nbalance=format_price($shipped_tilldate-($paid_tilldate+$acc_adjustments_val+$credit_note_amt),2);
-		$sms_msg="Order $transid is cancelled and Rs {$trans['amount']} is credited back to your account. Your new balance is Rs $nbalance";
-		
+			//$sms_msg="Order $transid is cancelled and Rs {$trans['amount']} is credited back to your account. Your new balance is Rs $nbalance";
+			$sms_msg="Order $transid is cancelled successfully.";
 		$this->erpm->pnh_sendsms($mem_mob,"Hi $mem_name Sorry to inform you ! your order[$transid] has been Cancelled. Please contact your ($fran_name-$from) for any queries.",$fran_id,$mid,0);
 			
 		$this->pdie($sms_msg);
+		}else
+			$this->pdie('Invalid Message');
 		
 	}
 
@@ -791,18 +924,25 @@ class Pnh extends Controller{
 
 	function executive_sms_log($from,$msg,$type)
 	{
-		//$from=trim($from);
+		if($this->is_executive || $this->franemp_auth)
+		{
 		$emp_id = $this->db->query('select employee_id from m_employee_info where is_suspended=0 AND job_title2>=4 and contact_no like ? ','%'.$from.'%')->row()->employee_id;
+		if($emp_id)
 		$this->db->query('insert into pnh_executive_accounts_log(emp_id,type,msg,sender,reciept_status,logged_on)values(?,?,?,?,0,now())',array($emp_id,$type,$msg,$from));
-		//$this->pdie("Message updated successfully");
-
+		else 
+			$this->pdie("Not Authorized");
+		}else
+			$this->pdie("Invalid Message");
 	}
 
 	function task_sms_log($from,$msg)
 	{
-
+		if($this->is_executive || $this->franemp_auth)
+		{
 		$emp_id=$this->db->query('select employee_id,name from m_employee_info where is_suspended=0 AND contact_no like ? ','%'.$from.'%')->row()->employee_id;
 
+			if(empty($emp_id))
+				$this->pdie("Not Authorized");
 		// check if user is alloted with this task, if not throw back error msg.
 		$taskid=$this->db->query("select ref_no from pnh_m_task_info where is_active=1 and task_status<3 and assigned_to=?",$emp_id)->result_array();
 		if($taskid)
@@ -844,12 +984,17 @@ class Pnh extends Controller{
 				$this->pdie("Task Remarks is missing.");
 			}
 		}
+		}else
+			$this->pdie("Invalid Message");
 	}
 	function call_sms($from,$msg,$fran)
 	{
+		if($this->is_executive || $this->franemp_auth)
+		{
 		$fran=$this->db->query("select * from pnh_m_franchise_info where (login_mobile1=? and login_mobile1!=0) or (login_mobile2=? and login_mobile2!=0) and is_suspended=0",array($from,$from))->row_array();
 		$this->db->query('insert into pnh_sms_log(sender,msg,franchise_id,type,created_on)values(?,?,?,"CALL",unix_timestamp(now()))',array($from,$msg,$fran['franchise_id']));
-		//$this->pdie("Call request placed successfully");
+		}else 
+			$this->pdie("Invalid Message");
 	}
 
 	/**
@@ -861,7 +1006,8 @@ class Pnh extends Controller{
 
 	function driver_sms($from,$msg,$fran)
 	{
-
+		if($this->is_executive || $this->franemp_auth)
+		{
 		$emp_id=$this->db->query("select employee_id from m_employee_info where is_suspended=0 AND (job_title=5 or job_title2 in (6,7)) and contact_no like ? ",'%'.$from.'%')->row()->employee_id;
 		if(empty($emp_id))
 			$this->pdie("Invalid Account in Action,Please process with the registered driver mobile.");
@@ -1038,6 +1184,8 @@ class Pnh extends Controller{
 				$this->pdie($resp_msg);
 
 		}
+		}else
+			$this->pdie("Invalid Message");
 	}
 	/**
 	 * Invoice returned from driver
@@ -1047,6 +1195,8 @@ class Pnh extends Controller{
 	 */
 	function returnd_invoice_frm_driver($from,$msg,$fran_ex)
 	{
+		if($this->is_executive)
+		{
 		$from=trim($from);
 		$emp_id=$this->db->query("select employee_id from m_employee_info where is_suspended=0 AND (job_title=5 or job_title2 in (6,7)) and contact_no like ? ",'%'.$from.'%')->row()->employee_id;
 		if(empty($emp_id))
@@ -1186,6 +1336,8 @@ class Pnh extends Controller{
 			
 		if($resp_msg)
 			$this->pdie($resp_msg);
+		}else
+			$this->pdie("Invalid Message");
 			
 	}
 
@@ -1513,6 +1665,8 @@ class Pnh extends Controller{
 	 */
 	function chk_pnh_bank($from,$msg)
 	{
+		if($this->is_executive || $franemp_auth==1 || $this->is_franchise)
+		{
 		list($call,$bank_short_code)=explode(" ",$msg);
 		$bank_short_code = strtolower($bank_short_code);
 
@@ -1534,6 +1688,8 @@ class Pnh extends Controller{
 			$resp_msg = 'Please Check you bank short code, available short codes ['.implode('|',array_keys($bank_det_arr)).']';
 
 		$this->pdie($resp_msg);
+		}else
+			$this->pdie("Invalid Message");
 
 	}
 
@@ -1748,30 +1904,48 @@ class Pnh extends Controller{
 	 */
 	function reg_new_mem($from,$msg)
 	{
+		if($this->is_franchise || $this->franemp_auth)
+		{ 
+		if($this->output_type==1)
+			$msg=str_ireplace('FMT:',"", $msg);
+			
 		if(empty($from) || strlen($from)<10)
 			$this->pdie("Invalid mobile number");
 		$fran=$this->db->query("select * from pnh_m_franchise_info where (login_mobile1=? and login_mobile1!=0) or (login_mobile2=? and login_mobile2!=0) and is_suspended=0",array($from,$from))->row_array();
 		if(empty($fran))
+		{
+			if($this->output_type==0)
 			$this->pdie("Invalid mobile number");
 		else
+				$this->pdie("0||MOB_INVALID");
+		}
+		else
 			list($call,$mbr_id)=explode(" ",$msg);
-		$msg=trim(str_ireplace('m',"",$msg));
-		$member_id_arr=explode(" ",$msg);
+	
 
-		$membr_mobno = @trim($member_id_arr[0]);
-		$membr_name=@trim($member_id_arr[1]);
+			$member_id_arr=explode(" ",$msg);
+			$membr_mobno = @trim($member_id_arr[1]);
+			$membr_name=@trim($member_id_arr[2]);
 		$ttl_regmemstr=sizeof($member_id_arr);
-
-		if($ttl_regmemstr!=2)
+			if($ttl_regmemstr==2)
 		{
 			$this->credit_on_imei_newmem($from,$msg,$fran);
 			exit;
 		}
 		if(empty($membr_mobno))
+		{
+			if($this->output_type==0)
 			$this->pdie("Please enter Member Mobile number");
+			else
+				$this->pdie("0||Please enter Member Mobile number");
+		}
 		if(empty($membr_name))
+		{
+			if($this->output_type==0)
 			$this->pdie("Member Name is Missing");
-
+			else
+				$this->pdie("0||Member Name is Missing");
+		}
 		$membr_id=$this->erpm->_gen_uniquememberid(); 			//generate random member id
 		//check if the generated memberid is already registered
 		$is_membr_id_valid=$this->db->query("SELECT * from pnh_member_info WHERE pnh_member_id=?",$membr_id)->row_array();
@@ -1781,10 +1955,20 @@ class Pnh extends Controller{
 			$is_membr_mobno_unique=$this->db->query("select * from pnh_member_info where mobile like ?","%$membr_mobno%");
 			
 		if(strlen($membr_mobno)!=10)
+		{
+			if($this->output_type==0)
 			$this->pdie("Invalid member mobile number");
+			else
+				$this->pdie("0||MOB_INVALID");
+		}
 		if($is_membr_mobno_unique->num_rows()!=0)
+		{
+		
+			if($this->output_type==0)
 			$this->pdie("This mobile no $membr_mobno is already registered");
-			
+			else
+				$this->pdie("0||MEM_ALREG",1);
+		}
 		if($this->db->query("select 1 from pnh_member_info where pnh_member_id=?",$membr_id)->num_rows()==0)
 		{
 			$this->db->query("insert into king_users(name,is_pnh,createdon) values(?,1,?)",array("PNH Member: $membr_id",time()));
@@ -1799,24 +1983,28 @@ class Pnh extends Controller{
 			$this->db->insert('pnh_member_info',$inp_data);
 			if($this->db->affected_rows()>=1)
 			{
-                                //==================< Member REGISTER SMS >====================
-                                $fran_type = $this->erpm->fran_menu_type($fran['franchise_id']);
-                                if($fran_type['menu_type'] == 'electonics')
-                                {
-                                    //order menu having electronics
-                                    $mem_msg = "Hi $membr_name, Welcome to StoreKing - Hurry up!! Get Free Insurance on the 1st Electronic* product you buy. Your Member ID is $membr_id. Offer Valid only after Registration fee Of Rs ".PNH_MEMBER_FEE."/- is paid to Storeking Franchisee.";
-                                }
-                                else
-                                {
-                                    $mem_msg = "Hi $membr_name,Welcome to StoreKing - Hurry up!! Get Free Talk Time worth Rs.".PNH_MEMBER_FREE_RECHARGE." on your 1st purchase above Rs ".MEM_MIN_ORDER_VAL.".Don't forget your Member ID is $membr_id.Offer Valid only after Registration fee Of Rs ".PNH_MEMBER_FEE."/- is paid to Storeking Franchisee.";
-                                }
+				//==================< Member REGISTER SMS >====================
+				$fran_type = $this->erpm->fran_menu_type($fran['franchise_id']);
+				if($fran_type['menu_type'] == 'electonics')
+				{
+					//order menu having electronics
+					$mem_msg = "Hi $membr_name, Welcome to StoreKing - Hurry up!! Get Free Insurance on the 1st Electronic* product you buy. Your Member ID is $membr_id. Offer Valid only after Registration fee Of Rs ".PNH_MEMBER_FEE."/- is paid to Storeking Franchisee.";
+				}
+				else
+				{
+					$mem_msg = "Hi $membr_name,Welcome to StoreKing - Hurry up!! Get Free Talk Time worth Rs.".PNH_MEMBER_FREE_RECHARGE." on your 1st purchase above Rs ".MEM_MIN_ORDER_VAL.".Don't forget your Member ID is $membr_id.Offer Valid only after Registration fee Of Rs ".PNH_MEMBER_FEE."/- is paid to Storeking Franchisee.";
+				}
 				$this->erpm->pnh_sendsms($membr_mobno,$mem_msg,$fran['franchise_id'],$membr_id,0);
 				
-				$this->pdie("Hello {$fran['franchise_name']}, Congrats!! $membr_name $membr_mobno has been Registered Successfully and has been assigned Member ID: $membr_id. Please make sure Registration fee of Rs ".PNH_MEMBER_FEE."/- has been collected. -StoreKing Team");
+				if($this->output_type==1)
+					$this->pdie("1||$membr_id||$membr_name||$membr_mobno||MEM_REG_OK");
+				else
+					$this->pdie("Hello {$fran['franchise_name']}, Congrats!! $membr_name $membr_mobno has been Registered Successfully and has been assigned Member ID: $membr_id. Please make sure Registration fee of Rs ".PNH_MEMBER_FEE."/- has been collected. -StoreKing Team");
 
 			}
 		}
-
+		}else
+			$this->pdie("Invalid Message");;
 	}
 
 	/**
@@ -1826,30 +2014,129 @@ class Pnh extends Controller{
 	 */
 	function is_mbr_regd($from,$msg)
 	{
+		if($this->is_franchise || $this->franemp_auth)
+		{
+		if($this->output_type == 1)
+			$msg=str_ireplace('fmt:', "", $msg);
+		
 		if(empty($from) || strlen($from)<10)
+		{
+			if($this->output_type==0)
 			$this->pdie("Invalid mobile number");
+			else 
+				$this->pdie("0||Invalid mobile number",0);
+		}
 		$fran=$this->db->query("select * from pnh_m_franchise_info where (login_mobile1=? and login_mobile1!=0) or (login_mobile2=? and login_mobile2!=0) and is_suspended=0",array($from,$from))->row_array();
 		if(empty($fran))
+		{
+			if($this->output_type==0)
 			$this->pdie("Invalid mobile number");
+			else
+				$this->pdie("0||Invalid mobile number",1);
+		}
 		list($call,$mbrmob)=explode(" ",$msg);
 		$membr_mobno=@trim($mbrmob);
 		if(empty($membr_mobno)|| strlen($membr_mobno)<10)
+		{
+			if($this->output_type == 0)
 			$this->pdie("Please enter a valid mobile number");
-
+			else 
+				$this->pdie("0||Please enter a valid mobile number",1);
+		}
 		//check is member registerd
 		$is_membr_regd=$this->db->query("select *,date(from_unixtime(created_on)) as reg_on from pnh_member_info where mobile=? limit 1",$membr_mobno)->row_array();
 
 		if($is_membr_regd)
 		{
+			$membr_id = $is_membr_regd['pnh_member_id'];
 			$mbr_name=$is_membr_regd['first_name'].''.$is_membr_regd['last_name'];
+			$membr_mobno = $is_membr_regd['mobile'];
+			$membr_points = $is_membr_regd['points'];
+
+
 			//$reg_on=$is_membr_regd['reg_on'];
 			$reg_on=date("d M Y",$is_membr_regd['created_on']);
+			if($this->output_type == 0)
+			{
 			$this->pdie("Yes,$mbr_name is  member with Store King from ".$reg_on );
+			}
+			else 
+			{
+				$this->pdie("1||$membr_id||$mbr_name||$membr_mobno||$membr_points||MEM_REG_OK");
+			}
+			//$this->pdie("1||Yes,$mbr_name is  member with Store King from ".$reg_on,1 );
 		}
 		else
+		{
+			if($this->output_type == 0)
 			$this->pdie("No,not Registered");
-
+			else 
+				$this->pdie("0||No,not Registered",1);
+		}
+		}else
+			$this->pdie("Invalid Message");
 	}
+	
+	/**
+	 * function to check for valid login details 
+	 * @param unknown_type $from
+	 * @param unknown_type $msg
+	 */
+	function chk_sms_login($from,$msg)
+	{
+		if(($this->is_franchise || $this->franemp_auth) && $this->output_type == 1 )
+		{
+			if($this->output_type == 1)
+				$msg=str_ireplace('fmt:', "", $msg);
+	
+			if(empty($from) || strlen($from)<10)
+			{
+				if($this->output_type==0)
+					$this->pdie("Invalid mobile number");
+				else
+					$this->pdie("0||Invalid mobile number",0);
+			}
+			
+			$empid='';
+			$franchise_id='';
+			
+			$msg_parts = explode(' ',$msg);
+			$username = @$msg_parts[1];
+			$password = @$msg_parts[2];
+			$userdet = $this->apim->is_valid_login($username,$password);
+			
+			$r_msg = array();
+			if($userdet)
+			{
+				$franchise_id=$userdet['franchise_id'];
+				// generate authkey
+				$authkey = $this->apim->gen_authkey($userdet['user_id']);
+				
+				if($franchise_id)
+				{
+					$fran_det = $this->franchise_model->get_franchise_details($franchise_id);
+					$resp_det = array('authkey'=>$authkey,'user_id'=>$userdet['user_id'],'emp_id'=>$empid,'franchise_name'=>$fran_det['franchise_name'],'franchise_mobno'=>$fran_det['login_mobile1'],'franchise_id'=>$franchise_id);
+					$r_msg[] = 1;
+					$r_msg[] = $authkey;
+					$r_msg[] = $fran_det['franchise_id'];
+					$r_msg[] = $fran_det['franchise_name'];
+					$r_msg[] = $fran_det['login_mobile1'];
+					$r_msg[] = 'LOGIN';
+				}
+			}else
+			{
+				$r_msg[] = 0;
+				$r_msg[] = 'Please enter valid username and password';
+			}
+			
+			if($this->output_type == 1)
+				$this->pdie(implode('||',$r_msg),1);
+			
+		}else
+			$this->pdie("Invalid Message");
+	}
+	
+	
 	/**Prepaid coupon activating SMS---START
 	 * function to allot coupen to members/customers by sms
 	* @param unknown_type $from
@@ -1857,6 +2144,8 @@ class Pnh extends Controller{
 	*/
 	function fran_alloting_voucher_tomem($from,$msg,$fran)
 	{
+		if($this->is_franchise || $this->franemp_auth)
+		{
 		if(empty($from) || strlen($from)<10)
 			$this->pdie("Invalid mobile number");
 		$fran=$this->db->query("select * from pnh_m_franchise_info where (login_mobile1=? and login_mobile1!=0) or (login_mobile2=? and login_mobile2!=0) and is_suspended=0",array($from,$from))->row_array();
@@ -1876,6 +2165,7 @@ class Pnh extends Controller{
 		$memname=@trim($voucher_act_det[4]);
 		$valid_memdet=0;
 		$new_mem=0;
+		$fran_name=$fran['franchise_name'];
 		if(empty($voucher_slno))
 			$this->pdie("Invalid Syntax.Enter Voucher slno.");
 		if(empty($member_phno))
@@ -1967,9 +2257,9 @@ class Pnh extends Controller{
 							{
 									
 								$is_membr_valid=$this->db->query("select * from pnh_member_info where mobile=?",$member_phno)->row_array();
-								$mid=$is_membr_valid['pnh_member_id'];
-								$this->db->query("update pnh_t_voucher_details set is_activated=1,member_id=?,activated_on=now(),status=3 where voucher_serial_no = ? and franchise_id=?",array($mid,$v_slno,$fran['franchise_id']));
-								$this->db->query("insert into pnh_voucher_activity_log(voucher_slno,franchise_id,member_id,transid,debit,credit,status)values(?,?,?,?,?,?,0)",array($v_slno,$fran['franchise_id'],$mid,0,0,$v_cusvalue));
+									$memid=$is_membr_valid['pnh_member_id'];
+									$this->db->query("update pnh_t_voucher_details set is_activated=1,member_id=?,activated_on=now(),status=3 where voucher_serial_no = ? and franchise_id=?",array($memid,$v_slno,$fran['franchise_id']));
+									$this->db->query("insert into pnh_voucher_activity_log(voucher_slno,franchise_id,member_id,transid,debit,credit,status)values(?,?,?,?,?,?,0)",array($v_slno,$fran['franchise_id'],$memid,0,0,$v_cusvalue));
 							}
 
 							array_push($updated_voucher['valid'],$voucher_res['voucher_serial_no']);
@@ -2020,7 +2310,7 @@ class Pnh extends Controller{
 					$this->erpm->pnh_sendsms($member_phno,"Sample order sms is [Productid]*[Qty],[Productid]*[Qty] " .implode(',',$updated_voucher['valid_scratchcode']). " enter your product & qty and forward to ".EXOTEL_MOBILE_NO.".",$member_phno,0,1);
 
 					//$this->pdie("Voucher  ".implode(',',$updated_voucher['valid'])." is alloted to member successfully.Happy Franchising");
-					$this->erpm->pnh_sendsms($from,"Voucher  ".implode(',',$updated_voucher['valid'])." is alloted to member successfully.Happy Franchising",$from,0,2);
+						$this->erpm->pnh_sendsms($from,"Dear $fran_name ".implode(',',$updated_voucher['valid'])." is alloted to < $memid > successfully.Happy Franchising",$from,0,2);
 				}
 			}
 			else
@@ -2041,6 +2331,8 @@ class Pnh extends Controller{
 				}
 			}
 		}
+		}else
+			$this->pdie("Invalid Message");
 	}
 	/**
 	 * function to place order of prepaid menu via SMS by customer/member
@@ -3198,8 +3490,15 @@ class Pnh extends Controller{
 
 	function createOrder($from,$msg)
 	{
+		//error_reporting(E_ALL);
+
+		if($this->output_type==1)
+		{
+			$msg=str_ireplace("fmt:","",$msg);
+			$msg=trim($msg);
+		}
 		
-		$is_fran=$this->db->query("select * from pnh_m_franchise_info where login_mobile1=? or login_mobile2=? and  is_suspended=0",array($from,$from))->row_array();
+		$is_fran=$this->db->query("SELECT f.*,tw.town_name,tr.territory_name FROM pnh_m_franchise_info f JOIN pnh_towns tw ON tw.id=f.town_id JOIN pnh_m_territory_info tr ON tr.id=f.territory_id where login_mobile1=? or login_mobile2=? and  is_suspended=0",array($from,$from))->row_array();
 
 		$is_mem=@$this->db->query("select * from pnh_member_info where mobile=?",$from)->row_array();
 		
@@ -3219,12 +3518,17 @@ class Pnh extends Controller{
 		{ 
 			@$this->price_details($from,$msg);
 			die;
-		} 
+		}
 		
 		$ordr_frm_usr=0;
 
 		if(empty($is_fran) && empty($is_mem))
+		{
+			if($this->output_type==0)
 			$this->pdie("Not Authorized to use this Format, please refer manual");
+			else
+				$this->pdie("0||Not Authorized to use this Format, please refer manual",0);
+		}
 		if(($is_fran && $is_mem) || ($is_fran && !$is_mem))
 		{
 			$fran=$is_fran;
@@ -3243,7 +3547,8 @@ class Pnh extends Controller{
 			$fran_mobile=$fran['login_mobile1'];
 			$ordr_frm_usr=1;
 		}
-
+		$is_consolidated = $fran['is_consolidated_payment'];
+		$fran_billingtype=$fran['billing_type'];
 		$tmp_code = @$tmp_var[0];
 
 		$tmp_code_arr= @$tmp_var[1];
@@ -3264,32 +3569,42 @@ class Pnh extends Controller{
 
 				$this->create_prepaidorder($from,$msg,$membr);
 			}
-			else{
+			else
+			{
+				if($this->output_type==0)
 				$this->pdie("Your not authorized");
+				else
+					$this->pdie("0||Your not authorized",0);
+
 			}
 			die();
 		}
 		
-	$msg=str_replace("* ","*",$msg);
+		$msg=str_replace("* ","*",$msg);
 		$msg=str_replace(" *","*",$msg);
 
 		$payload=explode(" ",$msg);
 		
 		if(empty($payload) )
+		{
+			if($this->output_type==0)
 			$this->pdie("Invalid syntax");
+			else
+				$this->pdie("0||Invalid syntax",0);
+		}
 		$npayload=array();
 			
 		foreach($payload as $k=>$p)
 		{
 			if($k>0)
 			{
-			if($p{0}=="2" || $p{0}=="9" || $p{0}=="7" || $p{0}=="8")
-				$mid=$p;
-			else if(@$p{0}=="3")
-				$this->member_register($from, $msg);
-			else
-				$npayload[]=$p;
-		}
+				if($p{0}=="2" || $p{0}=="9" || $p{0}=="7" || $p{0}=="8")
+					$mid=$p;
+				else if(@$p{0}=="3")
+					$this->member_register($from, $msg);
+				else
+					$npayload[]=$p;
+			}
 			else
 				$npayload[]=$p;
 			
@@ -3304,7 +3619,7 @@ class Pnh extends Controller{
 			if(stripos($p,",")===false)
 			{
 				$npayload[]=$p;
-				continue;
+					continue;
 			}
 			$npp=explode(",",$p);
 			foreach($npp as $np)
@@ -3313,7 +3628,10 @@ class Pnh extends Controller{
 		$payload=$npayload;
 		if(!isset($mid))
 		{
-			$this->pdie("No Member ID available");
+			if($this->output_type==0)
+				$this->pdie("No Member ID available");
+			else
+				$this->pdie("0||No Member ID available");
 		}
 		$items=array();
 		foreach($payload as $p)
@@ -3331,14 +3649,18 @@ class Pnh extends Controller{
 		$itemnames=array();
 	
 		
-		//print_r($items);exit;
 		
 		if(empty($msg))
 		{
 			if($ordr_frm_usr==1)
 				$this->erpm->pnh_sendsms($mem_mob,"Sorry !! .Please use the following format to place your Order.ProductID *Qty,ProductID *Qty ",$fran['franchise_id'],$mid,0);
 			else
+			{
+				if($this->output_type==0)
 				$this->pdie("Sorry !! .Please use the following format to place your Order.ProductID *Qty,ProductID *Qty ");
+				else
+					$this->pdie("0||Sorry !! .Please use the following format to place your Order.ProductID *Qty,ProductID *Qty");
+			}
 		}
 
 		$total=$o_total=0;$d_total=0;;
@@ -3354,8 +3676,11 @@ class Pnh extends Controller{
 		{
 			if($item['pid']!=0)
 			{
+				
 				$prod=$this->db->query("select i.*,d.publish,d.menuid,p.is_sourceable from king_dealitems i join king_deals d on d.dealid=i.dealid JOIN `m_product_deal_link` l ON l.itemid=i.id JOIN m_product_info p ON p.product_id=l.product_id where i.is_pnh=1 and i.pnh_id=? and i.pnh_id!=0",$item['pid'])->row_array();
 				//echo $this->db->last_query();die();
+				
+				
 				if(empty($prod))
 					$this->pdie("There is no product with ID : ".$item['pid']);
 				
@@ -3368,11 +3693,11 @@ class Pnh extends Controller{
 				
 				if($avail_det[0][0]['stk']==0 && $prod['is_sourceable']==0)
 				{
-					
-					$mem_sms = "Thank you for your Order. We regret to inform you that the Product {$item['pid']}[{$avail_det[0][0]['product_name']}] is out of stock, Please resend the SMS with an other product ID. For more details Visit your nearest StoreKing franchise.";
+					if($this->output_type==0)
+						$mem_sms = "Thank you for your Order. We regret to inform you that the Product {$item['pid']}[{$avail_det[0][0]['product_name']}] is out of stock, Please resend the SMS with an other product ID. For more details Visit your nearest StoreKing franchise.";
+					else
+						$mem_sms ="0||Thank you for your Order. We regret to inform you that the Product {$item['pid']}[{$avail_det[0][0]['product_name']}] is out of stock, Please resend the SMS with an other product ID. For more details Visit your nearest StoreKing franchise.";
 					$this->erpm->pnh_sendsms($from,$mem_sms,$fran['franchise_id'],0,0);
-					
-					//$this->pdie($mem_sms);
 				}
 	
 				$items[$i]['mrp']=$prod['orgprice'];
@@ -3398,73 +3723,104 @@ class Pnh extends Controller{
 				else
 					$items[$i]['discount']=$items[$i]['price']/100*$margin['margin'];
 				
+				$pnh_membrid=$this->db->query("select pnh_member_id from pnh_member_info where mobile=? or pnh_member_id=?",array($mid,$mid))->row()->pnh_member_id;
+					
 				
-				if($fran_price_type==1 )
-				{
-					$pnh_membrid=$this->db->query("select pnh_member_id from pnh_member_info where mobile=? or pnh_member_id=?",array($mid,$mid))->row()->pnh_member_id;
+					
+					
 					//============
 					$member_price_det=$this->erpm->get_memberprice($prod['id'],$fran['franchise_id'],$pnh_membrid);
 				
 					if($member_price_det['status'] == 'success')
 					{
-						$fran_price_type=$member_price_det['price_type'];
+						//$fran_price_type=$member_price_det['price_type'];
 						$max_ord_qty=$member_price_det['max_ord_qty'];
 						
-						if($fran_price_type)
+						if($member_price_det['price_type']==1)
 						{
-						$member_price = $member_price_det['member_price'];
-						$logref_id = $member_price_det['logref_id'];
+							$price = $member_price_det['price'];
+							$logref_id = $member_price_det['logref_id'];
 							$other_price=$member_price_det['offer_price'];
+							$mp_is_loyalty_point=$member_price_det['mp_is_loyalty_point'];
+							if($member_price_det['mp_is_loyalty_point'] == '1')
+							{
+								$mp_loyalty_points=$member_price_det['mp_loyalty_points'];
+								$mp_ttl_loyalty_points +=$mp_loyalty_points;
+							}
 						}
 						else
 						{
+							$mp_loyalty_points=0;
 							$logref_id=0;
-							$member_price = $member_price_det['offer_price'];
+							$price = $member_price_det['price'];
 							$other_price = $member_price_det['member_price'];
-					}
-					
 						}
-			
+
+					}
+					else
+						$this->pdie("0||MP - Invalid pid given - StoreKing Team");
+
 					//============
 					if($prod['is_combo']=="1")
 					{
-						$items[$i]['discount']=$member_price/100*$margin['combo_margin'];
+						$items[$i]['discount']=$price/100*$margin['combo_margin'];
 					}
 					else
 					{
-						$items[$i]['discount']=$member_price/100*$margin['margin'];
+						$items[$i]['discount']=$price/100*$margin['margin'];
 					}
 				
-					$d_total+=($member_price-$items[$i]['discount'])*$items[$i]['qty'];
-					$o_total+=$member_price*$items[$i]['qty'];
-					$items[$i]['other_price']=$prod['price'];
-					$items[$i]['price']=$member_price;
-					$items[$i]['logref_id']=$logref_id;
-						
-				}
-				
-				else
-				{
-					$max_ord_qty = $this->erpm->get_maxordqty_pid($fran['franchise_id'],$prod['pnh_id'],0);
+					//$d_total+=($price-$items[$i]['discount'])*$items[$i]['qty'];
 					
-					$items[$i]['other_price']=$prod['member_price'];
-					$d_total+=($items[$i]['price']-$items[$i]['discount'])*$items[$i]['qty'];
-					$o_total+=$items[$i]['price']*$items[$i]['qty'];
-					$items[$i]['logref_id']=0;
-				}
-	
+					$items[$i]['other_price']=$prod['price'];
+					$items[$i]['price']=$price;
+					$items[$i]['logref_id']=$logref_id;
+					$items[$i]['mp_loyalty_points']=($mp_loyalty_points);
+					$items[$i]['is_memberprice']=$member_price_det['price_type'];
+					
+					
+					if($is_consolidated==1 && $fran_billingtype==1)
+						$d_total+=($items[$i]['price'])*$items[$i]['qty'];
+					else
+						$d_total+=($items[$i]['price']-$items[$i]['discount'])*$items[$i]['qty'];
+
+					/* if($fran_billingtype==1)
+					{
+						if($is_consolidated==1)
+
+							$d_total+=($items[$i]['price'])*$items[$i]['qty'];
+						else
+							$d_total+=($items[$i]['price']-$items[$i]['discount'])*$items[$i]['qty'];
+					}
+					else 
+					{
+						if($is_consolidated)
+							$d_total+=$items[$i]['other_price']*$items[$i]['qty'];
+						else
+							$d_total+=($items[$i]['price']-$items[$i]['discount'])*$items[$i]['qty'];
+					}*/
+					$o_total+=$price*$items[$i]['qty'];
+				
+				
 				if($max_ord_qty==0)
 				{
-					$this->pdie($prod['name']."is sold out");
+					if($this->output_type==0)
+						$this->pdie($prod['name']."is sold out");
+					else
+						$this->pdie("0||{$prod['name']} is sold out");
 				}
 				
 				if($items[$i]['qty']>$max_ord_qty)
 				{
-					$this->pdie($prod['name']." maximum order qty is ".$max_ord_qty);
+					if($this->output_type==0)
+						$this->pdie($prod['name']." maximum order qty is ".$max_ord_qty);
+					else
+						$this->pdie("0||".$prod['name']."maximum order qty is ".$max_ord_qty);
 				}
 				
 				$commision+=$items[$i]['discount']*$items[$i]['qty'];
 				$menu_ofr_pricevalue[$prod['menuid']][]=$items[$i]['price']*$items[$i]['qty'];
+				$loyalty_pntvalue=@$prod['loyality_pntvalue'];
 	
 				$itemids[]=$prod['id'];
 				$itemnames[]=$prod['name'];
@@ -3476,8 +3832,19 @@ class Pnh extends Controller{
 		$ship_itemids=implode(',',$itemids);
 		$delivered_in=$this->db->query("SELECT shipsin FROM king_dealitems WHERE id IN ($ship_itemids) ORDER BY shipsin DESC LIMIT 1")->row()->shipsin;
 		if($d_total<=0)
+		{
+			if($this->output_type==0)
 			$this->pdie("Sorry !!.. Invalid Format. Please contact our Toll Free number ".TOLL_FREE_NUMBER." for more information.");
-
+			else
+				$this->pdie("0||Sorry !!.. Invalid Format. Please contact our Toll Free number ".TOLL_FREE_NUMBER." for more information.");
+		}else if($d_total<500)
+		{
+			if($this->output_type==0)
+				$this->pdie("Dear $fran_name, Minumum order value should be Rs 500 - StoreKing Team");
+			else
+				$this->pdie("Dear $fran_name, Minumum order value should be Rs 500 - StoreKing Team");
+		}
+		
 		foreach($menu_ofr_pricevalue as $i=>$t)
 		{
 			$menu_ttlval[$i]=array_sum($t);
@@ -3494,20 +3861,71 @@ class Pnh extends Controller{
 
 		foreach($itemids as $i=>$itemid)
 		 if(!in_array($itemid,$avail))
+		 {
+		 	if($this->output_type==0)
 			$this->pdie("$itemnames[$i] is sold out");
-		
+		 	else
+		 		$this->pdie("0||$itemnames[$i] is sold out");
+		 }
 		$fran_crdet = $this->erpm->get_fran_availcreditlimit($fran['franchise_id']);
-		$fran['balance'] = $fran_crdet[3];
-		if($fran['balance']<$d_total && $ordr_frm_usr==0 )
-			$this->pdie("Insufficient balance! Balance in your account Rs {$fran['current_balance']} Total order amount : Rs $d_total");
+		 $is_consolidated=$fran['is_consolidated_payment'];
 		
+		$used_credit=$fran_crdet[6]; //pending amount+[confirmed open order]+[unconfirmed open order]
+		$min_credit=$fran_crdet[0];
+		$max_credit=$fran_crdet[5];
+		 $pending_pmts=$fran_crdet[1];
+		 $uncleared_pmts=$fran_crdet[4];
+			
+		$avail_min_credit=$min_credit-$used_credit;
+		$avail_max_credit=$max_credit-$used_credit;
+		
+		$fran['balance'] = $fran_crdet[3];
+
+		if($d_total<$avail_min_credit)
+		{
+			$is_tmp_order=0;
+		}
+		 elseif($d_total<=$avail_max_credit)
+		{
+			$is_tmp_order=1;
+		}
+		
+		 if($fran['opt_maxcreditlimit']==1)
+		 {
+		 	
+		 	if($avail_max_credit<$d_total)
+		 	{
+		 		if($this->output_type==0)
+		 			$this->pdie("Insufficient balance! Balance in your account Rs {$fran['balance']} Total order amount : Rs $d_total");
+		 		else
+		 			$this->pdie("0||Total order amount : Rs $d_total||NO_CREDIT",1);
+		 	}
+		 }else
+		 {
+		
+		 	if($avail_min_credit<$d_total)
+		 	{
+		 		if($this->output_type==0)
+		 			$this->pdie("Insufficient balance! Balance in your account Rs {$fran['current_balance']} Total order amount : Rs $d_total");
+		 		else
+		 			$this->pdie("0||Total order amount : Rs $d_total||NO_CREDIT",1);
+		 	}
+		 }
+		 
+		 
 		if($this->db->query("select 1 from pnh_member_info where pnh_member_id=? or mobile=?",array($mid,$mid))->num_rows()==0)
 		{
 			if(strlen($mid)!=10)
 			{
-				echo "Please input valid mobile number";
+		 		if($this->output_type==0)
+		 		{
 				$this->pdie("Please input valid mobile number");
 				die();
+		 		}else
+		 		{
+		 			$this->pdie("0||MOB_INVALID",1);
+		 				
+		 		}
 			}
 			$mem_mobno=$mid;
 			$membr_id=$this->erpm->_gen_uniquememberid();
@@ -3515,14 +3933,17 @@ class Pnh extends Controller{
 			$userid=$this->db->insert_id();
 			$this->db->query("insert into pnh_member_info(pnh_member_id,user_id,mobile,franchise_id,created_on)values(?,?,?,?,?)",array($membr_id,$userid,$mid,$fid,time()));
 
+		 	if($this->output_type==0)
 			$fran_msg= "Hello ".$is_fran['franchise_name'].", Congrats!! [$mem_name $mid] has been Registered Successfully and has been assigned Member ID: $membr_id. Please make sure Registration fee of Rs ".PNH_MEMBER_FEE."/- has been collected.";
+		 	else
+		 		$fran_msg="1||$membr_id||$mem_name||$mem_mobno||MEM_REG_OK";
+		 	
 			$this->erpm->pnh_sendsms($is_fran['login_mobile1'],$fran_msg,$fid,0,'MEM_REG');
 
 			// ============< New Member Register SMS >===================
 			$fran_type = $this->erpm->fran_menu_type($fid);
 			if($fran_type['menu_type'] == 'electonics')
 			{
-				#$mem_msg= "Hi $mem_name, Welcome to StoreKing - Hurry up!! Get Free Insurance on the 1st Electronic* product you buy. Your Member ID is $membr_id.Please deposit Rs".PNH_MEMBER_FEE."/- Registration fee with Storeking Franchisee to avail this offer";
 				$mem_msg = "Hi $mem_name, Welcome to StoreKing - Hurry up!! Get Free Insurance on the 1st Electronic* product you buy. Your Member ID is $membr_id Offer Valid only after Registration fee Of Rs ".PNH_MEMBER_FEE."/- is paid to Storeking Franchisee.";
 			}
 			else
@@ -3530,20 +3951,72 @@ class Pnh extends Controller{
 				$mem_msg = "Hi $mem_name,Welcome to StoreKing - Hurry up!! Get Free Talk Time worth Rs.".PNH_MEMBER_FREE_RECHARGE." on your 1st purchase above Rs ".MEM_MIN_ORDER_VAL.".Don't forget your Member ID is $membr_id.Offer Valid only after Registration fee Of Rs ".PNH_MEMBER_FEE."/- is paid to Storeking Franchisee.";
 			}
 			$this->erpm->pnh_sendsms($mem_mobno,$mem_msg,$fid,$membr_id,'MEM_REG');
+		 	 
+		 
 		}
 		else
 			$userid=$this->db->query("select user_id from pnh_member_info where pnh_member_id=? or mobile=?",array($mid,$mid))->row()->user_id;
 	
+		
 		$transid=strtoupper("PNH".random_string("alpha",3).$this->p_genid(5));
+		$trans_created_by=$this->db->query("select id from king_admin where name='SMS' and username='SMS'")->row()->id;
+		
+
+		$updated_by=$trans_created_by;
+		
+		//==========< Member Fee >=========
+		// Check member is newly registered member by member orders
+		$new_member = $this->erpm->chk_is_new_member($mid,$is_tmp_order);
+		
+		$member_type=$this->member_model->member_type($mid);
+		
+		$pnh_member_fee=0;
+		$mem_fee_applicable = 0;
+		if($new_member == 1 && $member_type==1 )
+		{
+			$pnh_member_fee=PNH_MEMBER_FEE;
+			$fee_det = array($mid,$transid,'',$pnh_member_fee,1,$updated_by);
+			$this->db->query("insert into pnh_member_fee (member_id,transid,invoice_no,amount,status,created_on,created_by) VALUES(?,?,?,?,?,now(),?)",$fee_det);
+		}
+		else if($new_member == 0 ) {
+			$pnh_member_fee = 0;
+			$mem_fee_applicable = 0;
+		}
+		//==========< End Member Fee >=========
+		
+		
+		
 		if($ordr_frm_usr==0)
-			$this->db->query("insert into king_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id) values(?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran['franchise_id']));
-		else
-			$this->db->query("insert into user_order_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id) values(?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran['franchise_id']));
+		 {
+		 	if($is_tmp_order==0)
+				$this->db->query("insert into king_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,trans_created_by,pnh_member_fee,billing_type,is_consolidated_payment) values(?,?,?,?,?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran['franchise_id'],$trans_created_by,$pnh_member_fee,$fran_billingtype,$is_consolidated));
+			else
+		 		$this->db->query("insert into king_tmp_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,trans_created_by,pnh_member_fee,billing_type,is_consolidated_payment) values(?,?,?,?,?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran['franchise_id'],$trans_created_by,$pnh_member_fee,$fran_billingtype,$is_consolidated));
+		 }
+		 else
+			$this->db->query("insert into user_order_transactions(transid,amount,paid,mode,init,actiontime,is_pnh,franchise_id,trans_created_by,pnh_member_fee,billing_type,is_consolidated_payment) values(?,?,?,?,?,?,?,?,?,?,?,?)",array($transid,$d_total,$d_total,3,time(),time(),1,$fran['franchise_id'],$trans_created_by,$pnh_member_fee,$fran_billingtype,$is_consolidated));
 
 		foreach($items as $item)
 		{
 			if($item['pid']!=0)
 			{
+		 		// check if belongs to split invoice condiciton config
+		 		$split_order=$this->db->query("SELECT i.*,d.publish,c.loyality_pntvalue FROM king_dealitems i JOIN king_deals d ON d.dealid=i.dealid JOIN pnh_menu c ON c.id = d.menuid WHERE i.is_pnh=1 AND  i.pnh_id=? AND i.pnh_id!=0 AND c.id IN(112,118,122)",$item['pid'])->row_array();
+		 		//$split_order = 0;
+		 		if($split_order)
+		 		{
+		 			$ttl_qty = $item['qty'];
+		 			$p_qty = 1;
+		 		}else
+		 		{
+		 			$ttl_qty = 1;
+		 			$p_qty = $item['qty'];
+		 		}
+		 		for($qi=0;$qi<$ttl_qty;)
+		 		{
+		 		
+			 		$qi = $qi+$p_qty;
+			 		$item['qty'] = $p_qty;
 				$inp=array("id"=>$this->p_genid(10),"transid"=>$transid,"userid"=>$userid,"itemid"=>$item['itemid'],"brandid"=>"");
 				$inp["brandid"]=$this->db->query("select d.brandid from king_dealitems i join king_deals d on d.dealid=i.dealid where i.id=?",$item['itemid'])->row()->brandid;
 				$inp["bill_person"]=$inp['ship_person']=$fran['franchise_name'];
@@ -3553,7 +4026,7 @@ class Pnh extends Controller{
 				$inp['bill_phone']=$inp['ship_phone']=$fran['login_mobile1'];
 				$inp['bill_email']=$inp['ship_email']=$fran['email_id'];
 				$inp['bill_state']=$inp['ship_state']=$fran['state'];
-				$inp['quantity']=$item['qty'];
+			 		$inp['quantity']=$p_qty;
 				$inp['time']=time();
 				$inp['ship_landmark']=$inp['bill_landmark']=$fran['locality'];
 				$inp['bill_country']=$inp['ship_country']="India";
@@ -3562,21 +4035,35 @@ class Pnh extends Controller{
 				$inp['i_discount']=$item['mrp']-$item['price'];
 				$inp['i_coup_discount']=$item['discount'];
 				$inp['i_tax']=$item['tax'];
-				$inp['is_memberprice']=$fran_price_type;
+		 		$inp['is_memberprice']=$item['is_memberprice'];
 				$inp['other_price']=$item['other_price'];
 				$inp['mp_logid']=$item['logref_id'];
 				$inp['member_id']=$pnh_membrid;
+		 		$inp['mp_loyalty_points']=($item['mp_loyalty_points']*$p_qty);
+		 		$inp['is_consolidated_payment']=$is_consolidated;
+		 		$inp['billing_type']=$fran_billingtype;
+			 		if($split_order)
+			 		{
+			 			$inp['is_ordqty_splitd']=1;
+			 		}
 				$m_inp=array("transid"=>$transid,"itemid"=>$item['itemid'],"mrp"=>$item['mrp'],"price"=>$item['price'],"base_margin"=>$item['margin']['base_margin'],"sch_margin"=>$item['margin']['sch_margin'],"bal_discount"=>$item['margin']['bal_discount'],"qty"=>$item['qty'],"final_price"=>$item['price']-$item['discount']);
 				if($ordr_frm_usr==0)
 				{
-					$this->db->insert("king_orders",$inp);
 					$this->db->insert("pnh_order_margin_track",$m_inp);
+		 				
+		 			if($is_tmp_order==0)
+		 				$this->db->insert("king_orders",$inp);
+		 			else
+		 				$this->db->insert("king_tmp_orders",$inp);
+
 				}
 				else
 				{
 					$this->db->insert("king_user_orders",$inp);
 					$this->db->insert("user_order_margin_track",$m_inp);
 				}
+		 		
+		 		}
 			}
 		}
 		if($ordr_frm_usr==0)
@@ -3586,8 +4073,15 @@ class Pnh extends Controller{
                         
                         // =================< Franchise SMS >=============================
 		//	echo "Your order is placed successfully! Total order amount :Rs $d_total. Amount deducted is Rs $d_total. Your order ID is $transid Balance in your account Rs $balance";
-			$this->erpm->sendsms_franchise_order($transid,$d_total);
 
+		 	if($this->output_type==1)
+		 	{
+		 		$this->erpm->sendsms_franchise_order($transid,$d_total,$o_total,$is_tmp_order,1);
+		 	}
+		 	else
+		 	{
+		 		$this->erpm->sendsms_franchise_order($transid,$d_total,$o_total,$is_tmp_order,0);
+		 	}
 
 			$points=$this->db->query("select points from pnh_loyalty_points where amount<? order by amount desc limit 1",$d_total)->row_array();
 			if(!empty($points))
@@ -3608,7 +4102,19 @@ class Pnh extends Controller{
 			//do packing process
 			$ttl_num_orders=count($items);
 			$batch_remarks="StoreKing Order placed through SMS by $from";
-			$updated_by=$userid;
+			
+
+
+		 	//===============<Send confirmed credit order mail >====================
+		 	$to = 'Credit@storeking.in';
+			$subj="Unconfirmed Credit Orders:{$is_fran['franchise_name']}";
+			$cc = "support@storeking.in";
+			$msg_body="Unconfirmed Credit Order [<a href='http://snapittoday.com/admin/unconfirmed_order_list/{$transid}'>$transid</a>] from {$is_fran['franchise_name']}  {$is_fran['town_name']} {$is_fran['territory_name']} Of order total Rs.$d_total <br> <b>Uncleared Payment : Rs.{$uncleared_pmts} </b><br><b>Pending Payment: Rs.{$pending_pmts}</b>";
+			$message='<div style="margin-top:25px;border:1px solid #999;"><div style="background:#eee;padding:3px;font-size:13px;font-weight:bold;">Unconfirmed Credit Orders from :</div><div style="padding:5px">'.$msg_body."<br> -StoreKing Customer Support</div></div>";
+			if($is_tmp_order==1)
+				$this->erpm->_notifybymail($to,$subj,$message,"Support",'support@snapittoday.com',$cc);
+	
+		 	//===============<Send confirmed credit order mail >====================
 
 			// Process to batch this transaction
 //			$this->reservations->do_batching_process($transid,$ttl_num_orders,$batch_remarks,$updated_by);
@@ -3635,6 +4141,12 @@ class Pnh extends Controller{
 
 			}
 		}
+		 
+		
+		 //===============<Raise Po IF Billing is B2C type>====================
+		 if($fran_billingtype==1 && $is_tmp_order==0)
+		 	$this->erpm->raise_po_mps($transid);
+		 //===============<Raise Po IF Billing is B2C type>====================
 		if($ordr_frm_usr==1)
 		{
 			
@@ -3652,6 +4164,98 @@ class Pnh extends Controller{
 
 			$this->erpm->pnh_sendsms($fran['login_mobile1'],$fran_msg,$fran['franchise_id'],0,'MEM_ORDER');
 			echo $fran['login_mobile1'],$fran_msg,$fran['franchise_id'];
+		 }
+	}
+	/**
+	 * function to request otp
+	 * @param unknown_type $from
+	 * @param unknown_type $msg
+	 * @param unknown_type $fran
+	 * @author roopa<roopashree@storeking.in>
+	 */
+	function request_otp($from,$msg,$fran)
+	{
+		if($this->is_franchise || $this->franemp_auth)
+		{
+			$fran_det=$this->db->query("select franchise_id,franchise_name from pnh_m_franchise_info where login_mobile1=? or login_mobile2=?",array($from,$from))->row_array();
+			$fid=$fran_det['franchise_id'];
+			$ins_data=array();
+			$otp_number=substr(number_format(time() * mt_rand(),0,'',''),0,6);
+			$valid_till=time()+OTP_VALIDITY;
+			$ins_data['valid_till']=$valid_till;
+			$ins_data['fid']=$fran_det['franchise_id'];
+			$ins_data['otp_no']=$otp_number;
+			$ins_data['logged_on']=time();
+			$valid_till=format_datetime_ts($valid_till);
+			$this->db->insert('t_franchise_otp',$ins_data);
+			if($this->output_type==0)	
+				$otp_sms="Dear {$fran_det['franchise_name']} your One Time password,OTP number is :$otp_number";
+			else 
+				$otp_sms="1||{$fran_det['franchise_name']}||$otp_number||OTP_NO";
+				
+			$this->erpm->pnh_sendsms($from,$otp_sms,$fid,'OTP_NO');
+			$this->pdie($otp_sms,0);
+		}
+		else
+		{
+			if($this->output_type == 0)
+				$this->pdie("Invalid Request");
+			else
+				$this->pdie("0||Invalid Request");
+		}
+	}
+	
+	/**
+	 * function to validate otp[one time password]
+	 * @param unknown_type $from
+	 * @param unknown_type $msg
+	 * @param unknown_type $fran
+	 *  @author roopa<roopashree@storeking.in>
+	 */
+	function validate_otp($from,$msg,$fran)
+	{
+		if($this->is_franchise || $this->franemp_auth)
+		{
+			$fran_det=$this->db->query("select franchise_id,franchise_name from pnh_m_franchise_info where login_mobile1=? or login_mobile2=?",array($from,$from))->row_array();
+			$fid=$fran_det['franchise_id'];
+				
+			$msg_arr=explode(' ',$msg);
+			$otpno=$msg_arr[1];
+			
+			if(empty($otpno))
+			{
+				if($this->output_type==1)
+					$this->pdie("0||Please enter valid OTP number");
+				else
+					$this->pdie("Please enter valid OTP number");
+			}
+			else
+			{
+				$is_valid_otp=$this->db->query("select * from t_franchise_otp where fid=? and otp_no=? and valid_till >= ? order by id desc limit 1",array($fran_det['franchise_id'],$otpno,time()));
+				if($is_valid_otp->num_rows())
+				{
+					if($this->output_type==1)
+						$msg="1||{$fran_det['franchise_name']}||$fid||$from";
+					else
+						$msg="Updated successfully";
+				}
+				else 
+				{
+					if($this->output_type==1)
+						$msg="0||Invalid OTP number/OTP number is Expired";
+					else
+						$msg="Invalid OTP number/OTP number is Expired";
+				}
+				
+				$this->pnh_sendsms($from,$msg,$fran['franchise_id'],0,0);
+			}
+		}
+		else
+		{
+			if($this->output_type == 0)
+				$this->pdie("Invalid Request");
+			else
+				$this->pdie("0||Invalid Request");
 		}
 	}
 

@@ -41,7 +41,10 @@ $(function(){
 <div class="container page_wrap" style="">
 <?php
 	$fid=$this->uri->segment(3);
+	
 	$acc_statement = $this->erpm->get_franchise_account_stat_byid($f['franchise_id']);	
+	$avail_creditlimit=$this->erpm->get_fran_availcreditlimit($f['franchise_id']);
+	$used_credit=$avail_creditlimit[6];
 	$net_payable_amt = $acc_statement['net_payable_amt'];
 	$credit_note_amt = $acc_statement['credit_note_amt'];
 	$shipped_tilldate = $acc_statement['shipped_tilldate'];
@@ -79,7 +82,7 @@ $(function(){
 ?>
 
 <div class="page_topbar_left">
-	<div style="width:55%;float:left; margin-bottom: 9px;">
+	<div style="float: left; margin-bottom: 9px; width: 70%;">
 		
 		<?php 
 			$fran_status_arr=array();
@@ -111,19 +114,19 @@ $(function(){
 		<?php $price_type=$fran['price_type'];?>
 		
 		<?php 
-			if($this->erpm->auth(PNH_FRANCHISE_EDIT,true))
-			{
+			if($this->erpm->auth(PNH_ADD_CREDIT,true))
+			{ if($f['franchise_type'] == 0 ){
 		?> 
 			<span class="fran_suspendlink paid_unmark_wrapper" onclick="mark_pricetype(<? echo $f['franchise_id'].','.$price_type?>)">
 					<?php echo $fran['price_type']==1?'[Change to offr price]':'[Change to mem. price]' ;?>
 			</span>
 		
-		<?php }?>		
+		<?php } }?>
 		|
 			<b style="font-size: 11px;">consolidated payment</b>
 			<?php $is_consolidated=$f['is_consolidated_payment']?>
 		<?php 
-			if($this->erpm->auth(PNH_FRANCHISE_EDIT,true))
+			if($this->erpm->auth(PNH_ADD_CREDIT,true))
 			{
 		?>	
 			<span class="fran_suspendlink paid_unmark_wrapper" onclick="mark_consolidated_pmt(<? echo $f['franchise_id'].','.$is_consolidated?>)">
@@ -131,29 +134,26 @@ $(function(){
 			</span>
 		<?php }?>		
 			
-		<?php $pmt_amt=$this->db->query("SELECT IFNULL(SUM(amount),0) AS amt FROM t_invoice_credit_notes  WHERE invoice_no IN (SELECT  DISTINCT i.invoice_no FROM king_invoice i JOIN king_transactions t ON t.transid=i.transid WHERE invoice_status=1 AND t.franchise_id=?) AND payment_id=0", $f['franchise_id'])->row()->amt;?>	
+		<?php //$pmt_amt=$this->db->query("SELECT IFNULL(SUM(amount),0) AS amt FROM t_invoice_credit_notes  WHERE invoice_no IN (SELECT  DISTINCT i.invoice_no FROM king_invoice i JOIN king_transactions t ON t.transid=i.transid JOIN pnh_t_receipt_reconcilation r ON r.invoice_no=i.invoice_no #AND unreconciled<=0 WHERE invoice_status=1 AND t.franchise_id=?)  AND is_credit_processed=0", $f['franchise_id'])->row()->amt;?>	
+		<?php $pmt_amt=$this->db->query("SELECT IFNULL(SUM(amount),0) AS amt FROM t_invoice_earnings  WHERE invoice_no IN (SELECT  DISTINCT i.invoice_no FROM king_invoice i JOIN king_transactions t ON t.transid=i.transid  WHERE invoice_status=1 AND t.franchise_id=?)  AND is_credit_processed=0", $f['franchise_id'])->row()->amt;?>
 			
 		<?php if($pmt_amt){?>
-			<b style="font-size: 11px;">Make payment</b>
-			
-			
-			<!--  <span class="fran_suspendlink paid_unmark_wrapper" onclick="make_payment(<? echo $f['franchise_id']?>)")>Rs.<?php echo $pmt_amt;?></span>-->
-			<a  target="_blank" class="fran_suspendlink paid_unmark_wrapper" href="<?php echo site_url("admin/make_payment/{$fid}")?>">Rs.<?php echo $pmt_amt;?></a>
-			
+			<b style="font-size: 11px;">Earning</b>
+			<a target="_blank" class="fran_suspendlink paid_unmark_wrapper" href="<?php echo site_url("admin/view_trade_discount_invoices/{$fid}")?>">Rs.<?php echo $pmt_amt;?></a>
 			<?php }?>
-		
-		<h2 class="franch_header_wrap"><?php echo $f['franchise_name']?>
+			
+		<!--  <h2 class="franch_header_wrap"><?php echo $f['franchise_name']?>
 			<?php 
-				if($this->erpm->auth(PNH_FRANCHISE_EDIT,true))
+				if($this->erpm->auth(PNH_ADD_CREDIT,true))
 				{
 			?> 
 				<a style="margin-left: 10px; font-size: 12px;" href="<?php echo site_url('admin/pnh_edit_fran'.'/'.$f['franchise_id'])?>">(edit)
 					</a>
-			<?php }?>		
-		</h2>
+			<?php }?>
+		</h2>-->
 	</div>
 	
-	<div style="float:right;width:40%;margin-bottom: 6px;">
+	<div style="">
 		<ul class="actions_wrap" style="">
 			<li>
 				<a class="fran_suspendlink" target="_blank" style="float: none" href="<?=site_url("admin/pnh_quotes/{$f['franchise_id']}")?>">
@@ -170,30 +170,102 @@ $(function(){
 					<a  class="fran_suspendlink" href="javascript:void(0)" onclick="reson_forunsuspension(<?=$f['franchise_id']?>)" >Unsuspend Account</a>
 				</li>
 			<?php }?>
-			
+			<?php $opt_maxcredit=$f['opt_maxcreditlimit']; ?>
 			<li><a class="fran_suspendlink" target="_blank" style="float: none" href="<?=site_url("admin/pnh_sms_log/{$f['franchise_id']}")?>">SMS Log</a></li>
 		</ul>
 	</div>
-	
-	
-	<div style="margin-top: 10px;float:left">
-		
-	</div>	
-<?php if($this->erpm->auth(FINANCE_ROLE,true) || $this->erpm->auth(CALLCENTER_ROLE,true)){ ?>
-	<div class="dash_bar_right" style="background: tomato">
+	<div style="text-align: right;width: 100%;" class="fl_right">
+		<h2 class="franch_header_wrap fl_left "><?php echo $f['franchise_name']?>
+			<?php 
+				if($this->erpm->auth(PNH_ADD_CREDIT,true))
+				{
+			?> 
+				<a style="margin-left: 10px; font-size: 12px;" href="<?php echo site_url('admin/pnh_edit_fran'.'/'.$f['franchise_id'])?>">(edit)
+					</a>
+			<?php }?>		
+		</h2>
+		<?php if($this->erpm->auth(FINANCE_ROLE,true) || $this->erpm->auth(CALLCENTER_ROLE,true)){ ?>
+			<div class="dash_bar_right" style="background: tomato;margin-top:16px;">
 		Pending Payment : <span>Rs <?=format_price($shipped_tilldate-($paid_tilldate+$acc_adjustments_val+$credit_note_amt),2)?></span>
 	</div>
-<?php } ?>
+		<?php } ?>
 	
-	<div class="dash_bar_right">
+		<div class="dash_bar_right" style="margin-top:16px;">
 		UnCleared Payments : <span>Rs <?=format_price($uncleared_payment,2)?></span>
 	</div>
 	
-<?php if($this->erpm->auth(FINANCE_ROLE,true) || $this->erpm->auth(CALLCENTER_ROLE,true)){ ?>
-	<div class="dash_bar_right">
-		Credit Limit : <span>Rs <?=format_price($f['credit_limit'])?></span>
+		<?php if($this->erpm->auth(FINANCE_ROLE,true) || $this->erpm->auth(CALLCENTER_ROLE,true)){ ?>
+			<div class="dash_bar_right" style="margin-top:16px;">
+		<?php $pending_amt=$shipped_tilldate-($paid_tilldate+$acc_adjustments_val+$credit_note_amt);?>
+		Available Credit Limit : <span>Rs <?=format_price(($f['max_credit_limit']-($used_credit)),2)?></span>
 	</div>
+	
+			<div class="dash_bar_right" style="margin-top:16px;">
+		Max Credit Limit : <span>Rs <?=format_price($f['max_credit_limit'])?></span>
+	</div>
+	
+	<div class="dash_bar_right" style="margin-top:16px;cursor: pointer;">
+	<?php $security_deposit_det=$this->db->query("SELECT s.franchise_id,s.bank_name,s.cheque_no,DATE_FORMAT(s.cheque_date,'%d/%m/%Y') AS cheque_date,DATE_FORMAT(s.collected_on,'%d/%m/%Y') AS collected_on,s.amount,DATE_FORMAT(created_on,'%d/%m/%Y') AS created_on,a.name AS createdby 
+													FROM pnh_m_fran_security_cheques s
+													LEFT JOIN king_admin a ON a.id=s.created_by
+													WHERE s.franchise_id=?
+													GROUP BY cheque_no order by s.created_on desc limit 1",$f['franchise_id']);
+													
+			//echo $this->db->last_query();exit;
+			if($security_deposit_det->num_rows())
+			{
+				
+				$deposit_det='';
+				$deposit_det.='<table>';
+				$secu_deposit_val=0;
+				foreach($security_deposit_det->result_array() as $s)
+				{
+					$secu_deposit_val+=$s['amount'];
+					$deposit_det.='<tr>';
+					$deposit_det.='<td>Cheque Date</td>';
+					$deposit_det.='<td>:</td>';
+					$deposit_det.='<td>'.$s['cheque_date'].'</td>';
+					$deposit_det.='</tr>';
+					$deposit_det.='<tr>';
+					$deposit_det.='<td>Value</td>';
+					$deposit_det.='<td>:</td>';
+					$deposit_det.='<td>'.format_price($secu_deposit_val).'</td>';
+					$deposit_det.='</tr>';
+					$deposit_det.='<tr>';
+					$deposit_det.='<td>Bank</td>';
+					$deposit_det.='<td>:</td>';
+					$deposit_det.='<td>'.$s['bank_name'].'</td>';
+					$deposit_det.='</tr>';
+					$deposit_det.='<tr>';
+					$deposit_det.='<td>Collected On</td>';
+					$deposit_det.='<td>:</td>';
+					$deposit_det.='<td>'.$s['collected_on'].'</td>';
+					$deposit_det.='</tr>';
+					$deposit_det.='<tr>';
+					$deposit_det.='<tr>';
+					$deposit_det.='<td>Created By</td>';
+					$deposit_det.='<td>:</td>';
+					$deposit_det.='<td>'.$s['createdby'].'</td>';
+					$deposit_det.='</tr>';
+					$deposit_det.='<tr>';
+					$deposit_det.='<td>Created On</td>';
+					$deposit_det.='<td>:</td>';
+					$deposit_det.='<td>'.$s['created_on'].'</td>';
+					$deposit_det.='</tr>';
+					$deposit_det.='</table>';
+	?>
+		<?php }}?>
+		Security Deposit :  <?php if($security_deposit_det->num_rows()){?>
+			<span class="tip_popup" title="<?php echo $deposit_det; ?>" ><?='Yes'?></span>
+		<?php }else{?>
+		<?php echo '<b>No</b><a href="javascript:void(0)" onclick="load_add_security_cheque_dlg()" style="font-size: 12px;"><b>Add security cheque</b></a>'?>
+		<?php }?>
+		
+		
+	</div>
+	
 	<?php } ?>
+	</div>	
 </div>
 
 
@@ -222,6 +294,9 @@ $(function(){
 			<li><a href="#status_log">Status Log</a></li>
 			<li><a href="#analytics" class="analytics">Analytics</a></li>
 			<li><a href="#ship_log" class="ship_log">Shipped &amp; Delivered Log</a></li>
+			<?php if($f['franchise_type'] == 2) {?>
+			<li><a href="#rf_det">Linked RF</a></li>
+			<?php }?>
 			<!--<li><a href="<?=site_url("admin/pnh_addfranchise/$fid")?>">SMS Log</a></li>-->
 		</ul>
 	
@@ -267,6 +342,7 @@ $(function(){
 					<li><a href="#live_suspn">Unsuspended Log</a></li>
 					<li><a href="#price_type">PriceType Change Log</a></li>
 					<li><a href="#payment_type">Consolidated Payment type Change Log</a></li>
+					<li><a href="#max_credit_update_log">Max credit Update Log</a></li>				
 				</ul>
 				
 				<?php $log_res=$this->db->query("SELECT l.*,a.name FROM franchise_suspension_log l JOIN king_admin a ON a.id=suspended_by WHERE franchise_id=? AND suspension_type IN(0,1,2,3)",$f['franchise_id'])?>
@@ -373,6 +449,30 @@ $(function(){
 						</tr>
 							<?php }?>
 					</table>
+				</div>
+				<?php }else{
+					echo '<div align="center">No data found</div>';
+				}?>
+				<?php $pnh_max_credit_limit_updlog=$this->db->query("SELECT IF(STATUS=0,'No','Yes') AS maxcreditlimit,a.name,l.reason,DATE_FORMAT(created_on,'%d/%m/%Y %h:%i %p') AS created_on FROM pnh_max_credit_update_log l 
+																	JOIN king_admin a ON a.id=l.created_by WHERE franchise_id=? ORDER BY created_on DESC LIMIT 20",$fid);
+				if($pnh_max_credit_limit_updlog->num_rows()){
+				?>
+					
+				<div id="max_credit_update_log">
+					<table class="datagrid">
+						<thead>
+							<th>Opted for Max credit Limit</th><th>Reason</th><th>Updated On</th><th>Updated By</th>
+						</thead>
+							<?php foreach($pnh_max_credit_limit_updlog->result_array() as $p){?>
+						<tr>
+							<td align="center"><?php echo $p['maxcreditlimit']?></td>
+							<td><?php echo $p['reason']?></td>
+							<td><?php echo $p['created_on']?></td>
+							<td><?php echo $p['name']?></td>
+						</tr>
+							<?php }?>
+					</table>
+				
 				</div>
 				<?php }else{
 					echo '<div align="center">No data found</div>';
@@ -717,6 +817,97 @@ $(function(){
 	<?php }?>
 	<!-- IMEI slno log END-->
 	
+	<!-- RF BLOCK START -->
+	<?php if($f['franchise_type']==2){
+		error_reporting(E_ALL);
+		$linked_rfids=$this->db->query("SELECT ifnull(GROUP_CONCAT(franchise_id),0) AS rfids FROM pnh_m_franchise_info WHERE assigned_rmfid=? AND franchise_type=1",$f['franchise_id'])->row()->rfids;
+		if($linked_rfids!=0)
+		{
+		$ttl_rf_orders= $this->db->query("SELECT COUNT(1) AS l FROM king_transactions WHERE franchise_id IN ($linked_rfids)")->row()->l;
+		$ttl_rf_ordrval=$this->db->query("SELECT SUM(amount) AS l FROM king_transactions WHERE franchise_id IN ($linked_rfids)")->row()->l;
+		$rfpending_amt=0;
+		$ref_det=$this->db->query("SELECT f.franchise_id,f.franchise_name,f.territory_id,f.town_id,tr.territory_name,tw.town_name
+									FROM pnh_m_franchise_info f
+									JOIN pnh_m_territory_info tr ON tr.id=f.territory_id
+									JOIN pnh_towns tw ON tw.id=f.town_id
+									WHERE assigned_rmfid=? AND franchise_type=1",$f['franchise_id']);
+		if($ref_det->num_rows())
+		{
+			foreach($ref_det->result_array() as $rf)
+			{
+				
+				$avail_creditlimit =$this->erpm->get_franchise_account_stat_byid($rf['franchise_id']);
+				$credit_note_amt = $avail_creditlimit['credit_note_amt'];
+				$shipped_tilldate = $avail_creditlimit['shipped_tilldate'];
+				$paid_tilldate = $avail_creditlimit['paid_tilldate'];
+				$acc_adjustments_val = $avail_creditlimit['acc_adjustments_val'];
+				$rfpending_amt+=$shipped_tilldate-($paid_tilldate+$acc_adjustments_val+$credit_note_amt);
+			}
+		}
+		
+	}
+	?>
+	<div id="rf_det">
+	<?php if($linked_rfids!=0){?>
+		<div class="module_cont_block">
+			<div class="module_cont_block_grid_total fl_left" style="padding:5px;">
+					<span class="stat total">Total Rural Franchises : <b><?php echo  $ttl_rfs*1 ;?></b></span> 
+			</div>
+			
+			<div class="module_cont_block_grid_total fl_right" style="padding:5px;">
+			<span class="stat total " >Total Orders : <b style="background: #95DB95;padding:3px 6px;border-radius:3px;"><?php echo $ttl_rf_orders?></b>&nbsp;&nbsp;</span>
+				<span class="stat total " >Orders : <b style="background: #95DB95;padding:3px 6px;border-radius:3px;"><?php echo 'Rs '.format_price($ttl_rf_ordrval)?></b>&nbsp;&nbsp;</span>
+				<span class="stat total " >Pending Amt : <b style="background: #F39381;padding:3px 6px;border-radius:3px;"><?php echo 'Rs '.format_price($rfpending_amt)?></b>&nbsp;&nbsp;</span>
+			</div>
+			<div class="module_cont_block_grid" style="clear:both">
+						<table class="datagrid" width="100%">
+							<thead>
+								<th>Sno</th>
+								<th>Franchise Name</th>
+								<th>Territerry</th>
+								<th>Town</th>
+								<th>Total Orders</th>
+								<th>Uncleared Payments</th>
+								<!-- <th>Credit Limit</th>
+								<th>Available Credit Limit</th> -->
+								<th>Pending Payment</th>
+							</thead>
+							<tbody>
+							<?php if($ref_det){$i=1;foreach($ref_det->result_array() as $rf) {?>
+							<tr>
+								<td><?=$i;?></td>
+								<td><a class="link" target='_blank' href="<?php echo site_url("admin/pnh_franchise/{$rf['franchise_id']}")?>"><?=$rf['franchise_name'] ?></a></td>
+								<td><?=$rf['territory_name'] ?></td>
+								<td><?=$rf['town_name'] ?></td>
+								<td><?php echo $this->db->query("SELECT COUNT(1) AS l FROM king_transactions WHERE franchise_id=? ",$rf['franchise_id'])->row()->l;?></td>
+								<?php 	
+										$accnt_stat=$this->erpm->get_franchise_account_stat_byid($rf['franchise_id']);
+										$credit_note_amt = $accnt_stat['credit_note_amt'];
+										$shipped_tilldate = $accnt_stat['shipped_tilldate'];
+										$paid_tilldate = $accnt_stat['paid_tilldate'];
+										$acc_adjustments_val = $accnt_stat['acc_adjustments_val'];
+										$uncleared_payment = $accnt_stat['uncleared_payment'];
+										$rf_pendingamt=$shipped_tilldate-($paid_tilldate+$acc_adjustments_val+$credit_note_amt);
+								?>
+								<td><?=format_price($uncleared_payment,2); ?></td>
+								<td><?=format_price($rf_pendingamt,2);?></td>
+								
+							</tr>
+							<?php $i++;}}?>
+							</tbody>
+						</table>	
+					</div>
+					<div class="module_cont_grid_block_pagi">
+					</div>	
+				
+		</div>
+		<?php }else{?>
+		<div style="align:center"><b>No RF Linked</b></div>
+		<?php }?>
+	</div>
+	<?php }?>
+	<!-- RF BLOCK END -->
+	
 	<!-- START of name block -->	
 		<div id="name">
 	 		<table width="100%" cellpadding="0" cellspacing="0">
@@ -728,7 +919,9 @@ $(function(){
 									<tr>
 										<td class="label">FID </td><td><b><?=$f['pnh_franchise_id']?></b></td>
 									</tr>
-							
+									<tr>
+										<td class="label">Franchise Type</td><td><b><?php $franchise_types=$this->config->item("franchise_type"); echo $franchise_types[$f['franchise_type']]; ?></b></td>
+									</tr>
 									<?php if($f['is_lc_store']){?><tr><td>Type </td><td><b><?=$f['is_lc_store']?"LC Store":"Franchise"?> </b></td></tr><?php }?>
 										<?php if($f['login_mobile1']){?>
 											<tr><td class="label">Mobile </td>
@@ -787,7 +980,20 @@ $(function(){
 									<?php if($f['lat']){?><tr><td class="label">Latitude</td><td><b><?=$f['lat']?></b></td></tr><?php }?>
 									<?php if($f['long']){?><tr><td class="label">Longitude</td><td><b><?=$f['long']?></b></td></tr><?php }?>
 									<tr><td class="label">Registered</td><td><b><?php echo format_date(date('Y-M-d H:i:s',$f['created_on']))?></b></td></tr>
-									<tr><td class="label">Store Type</td><td><b><?php echo $fran_store_type?></b></td></tr>
+									<tr><td class="label">Billing Type</td><td><?php echo $f['billing_type']==1?'<b>B2C</b>':'<b>B2B</b>' ?>&nbsp;&nbsp;<a href="javascript:void(0)" onclick="change_billingtype(<?php echo $f['franchise_id'] ?>)">Change</a></td></tr>
+									<?php if($f['franchise_type']==1)		{
+										$assigned_rmfid=$f['assigned_rmfid'];
+										$rmf=$this->db->query("select franchise_name from pnh_m_franchise_info where franchise_id=?",$assigned_rmfid)->row()->franchise_name;
+									?>
+										<tr>
+											<td class="label">Assigned RMF</td>
+											<?php if($assigned_rmfid!=0){?>
+												<td><a href="<?php echo site_url("admin/pnh_franchise/{$assigned_rmfid}")?>" target="_blank"><?php echo $rmf ;?></a></td>
+											<?php }else{?>
+											<td><?php echo 'No RMF Linked' ?></td>
+											<?php }?>
+										</tr>
+									<?php }?>
 								</table>
 							</div>
 						</div>
@@ -796,6 +1002,12 @@ $(function(){
 							<ul>
 								<li><a href="#activity">Activity</a></li>
 								<li><a href="#alloted_menu">Alloted Menu</a></li>		
+								<?php if($f['franchise_type']==2){?>
+									<li><a href="#alloted_rf">Alloted RF Franchises</a></li>
+								<?php }?>
+								<?php if($f['is_consolidated_payment'] == 1){?>
+									<li><a href="#outpmt_config">Trade Payment Config</a></li>
+								<?php }?>
 							</ul>	
 							<div id="activity">
 								<table width="100%">
@@ -812,12 +1024,7 @@ $(function(){
 							</div>
 							
 							<div id="alloted_menu">
-								<?php 
-									if($this->erpm->auth(PNH_FRANCHISE_EDIT,true))
-									{
-								?>	
 								<a class="edit_wrapper" style="font-size: 11px;color: blue;" href="<?php echo site_url("admin/pnh_edit_fran/{$f['franchise_id']}#v_shop")?>" style="float: right;margin-left: 12px;">Add/Edit</a>
-								<?php } ?>
 								<?php
 									if($fran_menu)
 									{ 
@@ -834,7 +1041,40 @@ $(function(){
 									}
 								?>
 							</div>
+							<?php if($f['franchise_type']==2){?>
+							<div id="alloted_rf">
+							<a class="edit_wrapper" style="font-size: 11px;color: blue;" href="<?php echo site_url("admin/pnh_edit_fran/{$f['franchise_id']}#v_pnh_details")?>" style="float: right;margin-left: 12px;">Add/Edit</a>
+								<?php if($rf_fids){?>
+								
+										<ol start="1">
+											<?php foreach($rf_fids as $rf){?>
+												<li><?php echo $rf['franchise_name'] ?></li>
+											<?php }?>
+										</ol>
+								
+								<?php }else
+									{
+										echo '<b>No RF linked</b>';
+									}
+							?>
+							</div>
+							<?php }?>
+							<?php if($f['is_consolidated_payment'] == 1){?>
+							<div id="outpmt_config">
+								<?php 
+									$pmt_cylces=$this->config->item("payment_cycle");
+		
+									$pmt_mode=$this->config->item("payment_mode");
+								?>
+								<table cellspacing="5">
+									<tr><td><b>Payment Mode</b></td><td><b>:</b></td><td><b><?php echo $pmt_mode[$f['payment_mode']]?$pmt_mode[$f['payment_mode']]:'NA'?></b></td></tr>
+									<tr><td><b>Payment Cycle</b></td><td><b>:</b></td><td><b><?php echo $pmt_cylces[$f['payment_cycle']]?$pmt_cylces[$f['payment_cycle']]:'NA'?></b></td></tr>
+									<tr><td><b>Consolidated Payment</b></td><td><b>:</b></td><td><b><?php echo $f['is_consolidated_payment']==1?'Yes':'No'?></b></td></tr>
+								</table>
 						</div>	
+						<?php }?>
+						</div>	
+						
 					</td>
 					
 					<td valign="top">
@@ -1105,7 +1345,7 @@ $(function(){
 												<li><a href="#super_sch_expired">Expired</a></li>
 											</ol>
 											<div id="super_sch_active" class="tab_view_inner">
-												<?php $t=$this->db->query("SELECT s.*,a.name AS admin,b.name AS brand,c.name AS category,s.menu_id,i.name AS menuname FROM pnh_super_scheme s  LEFT OUTER JOIN king_brands b ON b.id=s.brand_id LEFT OUTER JOIN king_categories c ON c.id=s.cat_id JOIN king_admin a ON a.id=s.created_by  JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id  JOIN pnh_menu i ON i.id=s.menu_id WHERE s.franchise_id=? AND ? between s.valid_from and s.valid_to AND is_active=1 GROUP BY s.id ORDER BY id DESC ",array($fran['franchise_id'],time()));
+												<?php $t=$this->db->query("SELECT s.*,a.name AS admin,b.name AS brand,c.name AS category,s.menu_id,i.name AS menuname FROM pnh_super_scheme s  LEFT OUTER JOIN king_brands b ON b.id=s.brand_id LEFT OUTER JOIN king_categories c ON c.id=s.cat_id JOIN king_admin a ON a.id=s.created_by  JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id  JOIN pnh_menu i ON i.id=s.menu_id WHERE s.franchise_id=? AND ? between s.valid_from and s.valid_to AND s.is_active=1 GROUP BY s.id ORDER BY id DESC ",array($fran['franchise_id'],time()));
 												
 												if($t->num_rows()){
 												$super_sch=	$t->result_array();
@@ -1135,7 +1375,7 @@ $(function(){
 												<?php }?>
 											</div>
 											<div id="super_sch_expired" class="tab_view_inner">
-												<?php $t=$this->db->query("SELECT s.*,a.name AS admin,b.name AS brand,c.name AS category,s.menu_id,i.name AS menuname FROM pnh_super_scheme s  LEFT OUTER JOIN king_brands b ON b.id=s.brand_id LEFT OUTER JOIN king_categories c ON c.id=s.cat_id JOIN king_admin a ON a.id=s.modified_by  JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id  JOIN pnh_menu i ON i.id=s.menu_id WHERE s.franchise_id=?  AND is_active=0 GROUP BY s.id ORDER BY id DESC limit 10",$fran['franchise_id']);
+												<?php $t=$this->db->query("SELECT s.*,a.name AS admin,b.name AS brand,c.name AS category,s.menu_id,i.name AS menuname FROM pnh_super_scheme s  LEFT OUTER JOIN king_brands b ON b.id=s.brand_id LEFT OUTER JOIN king_categories c ON c.id=s.cat_id JOIN king_admin a ON a.id=s.modified_by  JOIN `pnh_franchise_menu_link` m ON m.fid=s.franchise_id  JOIN pnh_menu i ON i.id=s.menu_id WHERE s.franchise_id=?  AND s.is_active=0 GROUP BY s.id ORDER BY id DESC limit 10",$fran['franchise_id']);
 												if($t->num_rows()){
 												$super_sch=	$t->result_array();
 												?>
@@ -1298,6 +1538,7 @@ $(function(){
 			<div class="tab_view">
 				  <ol>
 				  		<li><a href="#asset_type">Asset Type</a></li>
+						<li><a href="#comboplanmdetail">Combo plan member detail</a></li>
 				  </ol>
 				  <div id="asset_type">
 				  	<table>
@@ -1306,7 +1547,44 @@ $(function(){
 				  		<tr><td><b>Accessory :</b></td><td><?php echo $fran_asset_info['accessory_name']?></td></tr>
 				  	</table>
 				  </div>
+			   <div id="comboplanmdetail">
+			        <div id="members" Title="Members Details">
+							<div>
+								<div class="dash_bar">
+									Total Members Plans : <span><?=$this->db->query("select count(f.franchise_id) as membercnt from pnh_m_franchise_info f
+																						join m_member_plan_link l on f.franchise_id=l.sub_franchise_id
+																							where f.franchise_id=?",$f['franchise_id'])->row()->membercnt?>
+									</span>
+								</div>
+								<?php $plandetail = $this->db->query("select p.plan_name,count(s.plan_id) as plancnt from pnh_m_franchise_info f
 			  
+														join m_member_plan_link l on f.franchise_id=l.sub_franchise_id
+													    join m_member_subscription_plan_schemes s on s.id = l.sub_plan_id
+												        join m_member_subscription_plans p on p.id = s.plan_id where f.franchise_id=? group by s.plan_id",$f['franchise_id'])->result_array();
+									foreach($plandetail as $pd){	?>	        
+											<div class="dash_bar">
+												<?php echo $pd['plan_name']; ?> : <span><?php echo $pd['plancnt']; ?></span>
+											</div>
+								         <?php } ?>
+							</div>
+						</div>
+				  <table id="memberplan_table" class="display" cellspacing="0" width="100%">
+			     <thead>
+						<tr>
+							<th>Member ID</th>
+							<th>Member Name</th>
+							<th>Mobile No</th>
+							<th>Plan Type</th>
+							<th>Plan Amount</th>
+							<th>Started Month</th>
+							<th>End Month</th>
+							<th>Status</th>
+							<th>Action</th>
+					
+						</tr>
+				</thead>
+				</table>
+				  </div>
 			 
 			</div>
 		
@@ -1391,6 +1669,32 @@ $(function(){
 										<option value="2">With Executive</option>
 								</select></td>
 							</tr>
+							
+							<tr class="inst_payment" id="transit_type">
+								<td class="">Payment For</td><td> :</td>
+								<td>
+									<select name="payment_for" id="payment_for" onchange="return fn_payment_for_change(this);">
+											<option value="0">My Invoices</option>
+<?php
+											if($fran['franchise_type']=='2')
+											{
+?>
+												<option value="1">RF Invoices</option>
+<?php
+											}
+?>
+									</select>
+									<div class="hide" style="padding:5px;">
+										<label for="rf_franchise_list" style="padding:5px;">Select Rural Franchise : </label>
+										<div>
+											<select class="rf_franchise_list" id="rf_franchise_list">
+												<option value="00">Choose</option>
+
+											</select>
+										</div>
+									</div>
+								</td>
+							</tr>
 							<tr class="inst inst_name">
 								<td class="label">Bank name </td><td>:</td>
 								<td><input type="text" name="bank" size=30></td>
@@ -1466,13 +1770,14 @@ $(function(){
 						<li><a href="#pending" onclick="load_receipts(this,'pending',0,<?=$f['franchise_id']?>,100)" class="pending_receipt">Pending</a></li>
 						<li><a href="#processed" onclick="load_receipts(this,'processed',0,<?=$f['franchise_id']?>,100)">Processed</a></li>
 						<li><a href="#realized" onclick="load_receipts(this,'realized',0,<?=$f['franchise_id']?>,100)">Realized</a></li>
-						<li><a href="#cancelled" onclick="load_receipts(this,'cancelled',0,<?=$f['franchise_id']?>,100)">Cancelled/Bounced</a></li>
+						<li><a href="#cancelled" onclick="load_receipts(this,'cancelled',0,<?=$f['franchise_id']?>,100)">Cancelled</a></li>
+						<li><a href="#bounced" onclick="load_receipts(this,'bounced',0,<?=$f['franchise_id']?>,100)">Bounced</a></li>
 						<li><a href="#acct_stat" onclick="load_receipts(this,'acct_stat',0,<?=$f['franchise_id']?>,100)">Account Correction</a></li>
 						<?php if($this->erpm->auth(FINANCE_ROLE,true)){ ?>
 						<li><a href="#security_cheques" >Security Cheque Details</a></li>
 						<li><a href="#unreconcile" onclick="load_receipts(this,'unreconcile',0,<?=$f['franchise_id']?>,10)">Un-Reconciled</a></li>
-						<?php if($fran_det['is_consolidated_payment']==1)?>
-							<li><a href="#out_pmt" onclick="load_receipts(this,'out_pmt',0,<?=$f['franchise_id']?>,10)">Out Payment Info</a></li>
+						<?php if($f['is_consolidated_payment']==1)?>
+							<li><a href="#out_pmt" onclick="load_receipts(this,'out_pmt',0,<?=$f['franchise_id']?>,10)">Trade Discount Payment Info</a></li>
 						<?php } ?>
 					</ul>
 					
@@ -1532,6 +1837,10 @@ $(function(){
 				</div>
 				
 				<div id="cancelled">
+					<div class="tab_content"></div>
+				</div>
+				
+				<div id="bounced">
 					<div class="tab_content"></div>
 				</div>
 				
@@ -1595,19 +1904,73 @@ $(function(){
 					</td>
 				</tr>
 				
+			<?php }?>	
 				<tr>
 					<td>&nbsp;</td>
 				</tr>
+				
+				<tr>
+				<?php if($this->erpm->auth(PNH_ADD_CREDIT,true)){
+						if($f['opt_maxcreditlimit']==1){
+					?>
+					<td>
+						<div>
+							<fieldset>
+								<legend><b>Give Maximum Credit</b></legend>
+								<form method="post" class="max_credit_form" action="<?=site_url("admin/pnh_give_max_credit")?>">
+									<input type="hidden" name="reason" class="maxcrd_reason"> <input type="hidden" name="fid" value="<?=$f['franchise_id']?>">
+									Enhance credit limit : Rs
+									<?=$f['max_credit_limit']?>
+									+ <input type="text" class="inp" size=4 name="max_crd_limit"> <input
+										type="submit" value="Add Max Credit">
+								</form>
+							
+								<div >
+								<table class="datagrid" width="100%">
+									<thead><th>Credit Added</th><th>New credit limit</th><th>Reason</th><th>Added On</th><th>Added By</th></thead>
+									<?php $max_cred_res=$this->db->query("select c.*,a.name as admin
+																			from pnh_t_max_credit_info c
+																			join king_admin a on a.id=c.credit_given_by
+																			where franchise_id=? order by id desc",$fid)->result_array();?>
+									<tbody>
+									<?php if($max_cred_res){foreach($max_cred_res as $m){?>
+									<tr>
+									<td><?=$m['credit_added'] ?></td>
+									<td><?=$m['new_credit_limit'] ?></td>
+									<td><?=$m['reason'] ?></td>
+									<td><?=format_datetime_ts($m['created_on']) ?></td>
+									<td><?=$m['admin']?></td>
+									</tr>
+									<?php }}?>
+									</tbody>
+								</table>
+								</div>
+							
+								<form method="post" class="max_credit_form" action="<?=site_url("admin/pnh_give_max_credit")?>">
+									
+									<input type="hidden" name="reason" class="maxcrd_reason"> 
+									<input type="hidden" name="reduce" value="1"> 
+										<input type="hidden" name="fid" value="<?=$f['franchise_id']?>"> Reduce Max credit limit
+									: Rs
+									<?=$f['max_credit_limit']?>
+									- <input type="text" class="inp" size=4 name="max_crd_limit"> <input type="submit" value="Reduce Max Credit">
+								</form>
+							</fieldset>
+						
+						</div>
+					
+					</td>
+				<?php } }?>
+				</tr>
+			<?php if($this->erpm->auth(PNH_EXECUTIVE_ROLE|CALLCENTER_ROLE,true)){?>		
 				
 				<tr>
 					<td>
 						<div>
 							<fieldset>
 								<legend><b>Give Credit</b></legend>
-								<form method="post" class="credit_form"
-									action="<?=site_url("admin/pnh_give_credit")?>">
-									<input type="hidden" name="reason" class="c_reason"> <input
-										type="hidden" name="fid" value="<?=$f['franchise_id']?>">
+								<form method="post" class="credit_form" action="<?=site_url("admin/pnh_give_credit")?>">
+									<input type="hidden" name="reason" class="c_reason"> <input type="hidden" name="fid" value="<?=$f['franchise_id']?>">
 									Enhance credit limit : Rs
 									<?=$f['credit_limit']?>
 									+ <input type="text" class="inp" size=4 name="limit"> <input
@@ -1955,7 +2318,8 @@ $(function(){
 								<li><a class="batch_closed" href="javascript:void(0)" onclick="load_franchise_orders('batch_closed')">Disabled from Batch</a></li>
 								<li><a class="product_enquired" href="javascript:void(0)" onclick="load_franchise_orders('product_enquired')">Product Enquired</a></li>
 								<li><a class="fran_prodpricequote" href="javascript:void(0)" onclick="load_franchise_orders('fran_prodpricequote')">Franchise Price Quote</a></li>
-								
+								<li><a class="unconfrmd_crdtorders" href="javascript:void(0)" onclick="load_franchise_orders('unconfrmd_crdtorders')">UnConfirmed Orders without Credit</a></li>
+								<li><a class="rejected_crdtorders" href="javascript:void(0)" onclick="load_franchise_orders('rejected_crdtorders')">Rejected Orders without Credit</a></li>
 							</ol>
 						</div>
 					</div>
@@ -2296,17 +2660,49 @@ $(function(){
         <!-- ============================================<<Consolidated payment Start>>====================================== -->
           <div id="mark_consolidated_pmt" style="display: none;">
 			<form action="<?php echo site_url('admin/upd_consolidated_pmt')?>" data-validate="parsley" id="mark_consolidated_pmt_form" method="post">
-				<table width="100%">
+				<table width="100%" cellspacing="5">
 					<tr><td><input type="hidden" name="cpmt_fid" value=""> <input type="hidden" name="cpmt_flag" value="<?php echo $is_consolidated?>"></td></tr>
-					<tr><td valign="top"><b>Remarks : </b></td><td><textarea name="consolidated_pmt_reason" style="width: 334px; height: 80px;" value="" data-required="true"></textarea></td></tr>
+					<tr>
+						<td><b>Payment Cycle</b></td><td><b>:</b></td>
+						<td>
+							<select name="pmt_cycle" id="pmt_cycle" data-required="true">
+								<option value=" ">Choose</option>
+								<?php $pmt_cylces=$this->config->item("payment_cycle");
+									  if($pmt_cylces)
+									  {
+									  	foreach($pmt_cylces as $p=>$pcycl){?>
+									  	<option value="<?=$p ?>" <?php echo $p==$fran['payment_cycle']?'selected':""; ?>><?=$pcycl ?></option>
+									 <?php  }}?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td><b>Payment Mode</b></td><td><b>:</b></td>
+						<td>
+							<select name="pmt_mode" id="pmt_mode" data-required="true">
+								<option value=" ">Choose</option>
+								<?php $pmt_mode=$this->config->item("payment_mode");
+									  if($pmt_mode)
+									  {
+									  	foreach($pmt_mode as $pm=>$pmode){?>
+									  	<option value="<?=$pm ?>" <?php echo $pm==$fran['payment_mode']?'selected':"";?>><?=$pmode ?></option>
+									 <?php  }}?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td valign="top"><b>Remarks</b></td>
+						<td><b>:</b></td>
+						<td><textarea name="consolidated_pmt_reason" style="width: 334px; height: 80px;" value="" data-required="true"></textarea></td>
+					</tr>
 				</table>
 			</form>
 		</div>
 		
-		<div id="makepayment_div" style="display:none;" title="Make Payment">
+			<!--<div id="makepayment_div" style="display:none;" title="Make Payment">
 		<div style="margin:10px 0"><b>Total Payment Amount : </b><span id="ttl_pmt_amt"><b></b></span></div>
-		<form action="<?php echo site_url('admin/make_payment')?>" method="post">
-		<!--  <div style="float:right;margin:10px 0;">From :<input type="text" id="frm_dt"> To :<input type="text" id="to_dt"></div>-->
+		<form action="<?php echo site_url('admin/make_payment_depr')?>" method="post">
+		<div style="float:right;margin:10px 0;">From :<input type="text" id="frm_dt"> To :<input type="text" id="to_dt"></div>
 			<table class="datagrid" width="100%" id="payment_tbl">
 			<input type="hidden" name="cpmt_fid" value="<?php echo $fid ;?>" >
 			<input type="hidden" name="cpmt_invno" class="cpmt_invno" value="" >
@@ -2324,8 +2720,16 @@ $(function(){
 			</form>
 			<div class="pagination_links" style="display:none;float: right;"></div>
 			
-		</div>
+		</div>-->
 	<!-- ============================================<<Consolidated payment End>>====================================== -->
+        <div id="fran_maxcreditlimit" style="display: none;">
+        	<form action="<?php echo site_url('admin/mark_maxcreditlimit')?>"data-validate="parsley" id="mark_max_creditlimit_form" method="post">
+		        <table width="100%">
+		        	<tr><td><input type="hidden" name="fid" value=""> <input type="hidden" name="status" value=""></td></tr>
+		        	<tr><td>Reason :</td><td><textarea name="reason" style="width: 334px; height: 80px;" data-required="true"></textarea></td></tr>
+		        </table>
+	        </form>
+        </div>
         
 </div>
 
@@ -3729,8 +4133,6 @@ $("#pnh_membersch").dialog({
 														+'<td>'+b.orderd_on+'</td>'
 														+'<td>'+b.is_imei_activated+'</td>'
 														+'<td>'+b.credit_value+''+resp.imei_cre_type[b.scheme_type]+'</td>'
-														
-														
 														+'<td>'+b.imei_activation_credit+'</td>'
 														+'<td>'+b.imei_activated_on+'</td>'
 													+'</tr>';
@@ -4276,10 +4678,10 @@ $("#pnh_membersch").dialog({
 																				error_str.push("Please enter bankname");
 																			if(!f_schq_no.length)
 																				error_str.push("Please cheque no");
-																			if(!f_schq_date.length)
+																		/*	if(!f_schq_date.length)
 																				error_str.push("Please cheque date");
 																			if(!f_schq_amt.length)
-																				error_str.push("Please cheque amount(Rs)");
+																				error_str.push("Please cheque amount(Rs)");*/
 																			if(!f_schq_colon.length)
 																				error_str.push("Please enter cheque collected date");
 																			
@@ -4297,6 +4699,7 @@ $("#pnh_membersch").dialog({
 																						
 																						$('#security_cheques table tbody').append('<tr><td>'+($('#security_cheques table tbody tr').length+1)+'</td><td>'+f_schq_no+'</td><td>'+f_schq_bankname+'</td><td>'+f_schq_date+'</td><td>'+f_schq_amt+'</td><td>'+f_schq_colon+'</td></tr>');
 																						dlg.dialog('close');
+																						location.reload();
 																					}
 																				},'json');
 																			}
@@ -4413,8 +4816,8 @@ $("#pnh_membersch").dialog({
 		$("#mark_consolidated_pmt").dialog({
 			modal:true,
 			autoOpen:false,
-			width:467,
-			height:220,
+			width:564,
+			height:335,
 			open:function()
 			{
 				var dlg=$(this);
@@ -4446,6 +4849,113 @@ $("#pnh_membersch").dialog({
 				}
 		}
 	});
+$(".max_credit_form").submit(function(){
+	if(!is_integer($("input[name=max_crd_limit]",$(this)).val()))
+	{
+		alert("Enter a number");
+		return false;
+	}
+	reason=prompt("Please mention a resaon");
+	if(reason.length==0)
+		return false;
+	$(".maxcrd_reason",$(this)).val(reason);
+	return true;
+});
+
+function reson_formaxcreditlimit(fid,flag)
+{
+	$("#fran_maxcreditlimit").data({'franchiseid':fid,'status':flag}).dialog("open");
+}
+
+$("#fran_maxcreditlimit").dialog({
+	modal:true,
+	autoOpen:false,
+	width:467,
+	height:220,
+	open:function()
+	{
+		var dlg=$(this);
+		if(dlg.data('status'))
+		{
+			var reset_status_val=0;
+			$('#fran_maxcreditlimit').dialog('option', 'title','Disable Max Credit Limit reason');
+		}
+		else
+		{
+			var reset_status_val=1;
+			$('#fran_maxcreditlimit').dialog('option', 'title','Enable Max Credit Limit reason');
+		}
+		$('input[name="status"]').val(reset_status_val);
+		$('input[name="fid"]').val(dlg.data('franchiseid'));
+	
+	},
+	buttons:{
+	'submit':function(){
+		var pt_form=$("#mark_max_creditlimit_form",this);
+		if(pt_form.parsley('validate'))
+			pt_form.submit();
+
+		},
+	'cancel':function()
+	{
+		$(this).dialog('close');
+	}
+
+}
+
+});
+
+function change_billingtype(fid)
+{
+	
+	if(confirm("Are you sure want to modify Billing type?"))
+		location="<?=site_url("admin/change_bilingtype/{$fran['franchise_id']}")?>";
+}
+
+
+var orders_val ;
+   	 orders_val = $('#memberplan_table').DataTable({
+	    	"processing": true,
+			"serverSide": true,
+			"iDisplayLength" : 50,//pagination count
+			"bAutoWidth": true,
+			"bDeferRender": true,
+			"dom": '<"clear">iprftp',
+			"sAjaxSource": site_url+"admin/jx_fetch_franchimembersplan_detail",		
+			"oLanguage": {"sProcessing": "<img src='"+site_url+"/images/jx_loading.gif'>" ,"sSearch": "Members Search: "}, //for loding image
+			"fnServerData": function(sSource, aoData, fnCallback,oSettings )
+             {
+				aoData.push( { "name": "franchiseid", "value": "<?=$f['franchise_id']?>" } );
+				oSettings.jqXHR = $.ajax
+	              ({
+	               'dataType': 'json',
+	                'type'    : 'POST',
+	                'url'     : sSource,
+	                'data'    : aoData,
+	                "success" : function(response) { fnCallback(response); }
+	              });
+	                	
+         },
+"columns": [  							
+				{ "data": "memberid" },
+				{ "data": "memname" },
+				{ "data": "memmobile" },
+				{ "data": "planname"},
+				{ "data": "planamount" },
+				{ "data": "statdate" },
+				{ "data": "enddate" },
+				{ "data": "status" },
+				{ "data": "action" }							        											        
+		], 
+"order": [[0, 'asc']],
+"columnDefs": [
+				{
+				    "targets": [8],
+				    "visible": true,
+				    "searchable": false,
+				    "orderable":false
+				}]
+});
 </script>
 
 <style type="text/css">
@@ -4460,8 +4970,73 @@ $("#pnh_membersch").dialog({
     var f_created_on = "<?php echo date('m/d/Y',$f['created_on'])?>";
     var franchise_name = "<?php echo $f['franchise_name']?>";
 // ]]>
+
+
+    jQuery(document).ready(function() {
+     	Tipped.create('.tip_popup',{
+     	 skin: 'black',
+     	  hook: 'topleft',
+     	  hideOn: false,
+     	  closeButton: true,
+     	 	opacity: .5,
+     	 	hideAfter: 200,
+    	 });
+     });
 </script>
 <script type="text/javascript" src='<?=base_url()."/js/pnh_franchise_reconcile.js"; ?>'></script>
  
+ <style>
+ 
+ .ui-tooltip, .arrow:after {
+background: black;
+border: 2px solid white;
+}
+.ui-tooltip {
+padding: 10px 20px;
+color: white;
+border-radius: 20px;
+font:12px "Helvetica Neue", Sans-Serif;
+
+box-shadow: 0 0 7px black;
+}
+.arrow {
+width: 70px;
+height: 16px;
+overflow: hidden;
+position: absolute;
+left: 50%;
+margin-left: -35px;
+bottom: -16px;
+}
+.arrow.top {
+top: -16px;
+bottom: auto;
+}
+.arrow.left {
+left: 20%;
+}
+.arrow:after {
+content: "";
+position: absolute;
+left: 20px;
+top: -20px;
+width: 125px;
+height: 125px;
+box-shadow: 6px 5px 9px -9px black;
+-webkit-transform: rotate(45deg);
+-moz-transform: rotate(45deg);
+-ms-transform: rotate(45deg);
+-o-transform: rotate(45deg);
+tranform: rotate(45deg);
+}
+.arrow.top:after {
+bottom: -20px;
+top: auto;
+}
+.tip_popup_font
+{
+font-size: 12px;
+}
+ 
+ </style>
 <?php
-	

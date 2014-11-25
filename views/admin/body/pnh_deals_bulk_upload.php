@@ -13,7 +13,7 @@ Upload file : <input type="file" name="deals"><input type="submit" value="Upload
 <h4 style="margin:0px;">Template</h4>
 <div style="max-width:900px;overflow:auto">
 <table class="datagrid noprint">
-<?php $template=array("Deal Name","Print Name","Tagline","Category (ID)","Brand (ID)","MRP","Offer Price","Store Price","NYP Price","Gender Attribute","Image ID","Tax","Max allowd qty","Bill On Order Price[0,1]","Description","Products","Products Group","keywords","Menu (ID)","Ships In","Publish"); ?>
+<?php $template=array("Deal Name","Print Name","Tagline","Category (ID)","Brand (ID)","MRP","Offer Price","Store Price","NYP Price","Gender Attribute","Image ID","Tax","Max allowd qty","Bill On Order Price[0,1]","Description","Products","Products Group","Is Group","Is Combo","keywords","Menu (ID)","Ships In","Publish"); ?>
 <thead>
 <tr>
 <?php foreach($template as $t){?><th><?=$t?></th><?php }?>

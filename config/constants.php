@@ -42,6 +42,8 @@ define('APP_DOMAIN_LINK',"snapittoday.com");
 define('IMAGES_URL',"http://static.snapittoday.com/");
 define('ERP_IMAGES_URL',"http://static.snapittoday.com/erp_images/");
 define('ERP_PHYSICAL_IMAGES',"images/erp_images/");
+define('RESOURCE_IMAGES',"resources/returns_images/");
+define('SNDBOX_RESOURCE_IMAGES',"http://sndev13.snapittoday.com/resources/returns_images/");
 
 define('FB_APPID','127409457364009');
 define('FB_SECRET','d85747b3cf547800c8653de33d0770ad');
@@ -76,7 +78,7 @@ define("TOLL_FREE_NUMBER",'1800 200 1996');
 
 define('HTTP_IS_AJAX', isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
 
-define('GLOBAL_BATCH_ID', 5833); // 7000
+define('GLOBAL_BATCH_ID', 7000);
 
 // Default member recharge value
 define('PNH_MEMBER_FREE_RECHARGE',100);
@@ -84,6 +86,8 @@ define('PNH_MEMBER_FREE_RECHARGE',100);
 define("MAX_RATE_VAL",5);
 // member minimum order value
 define("MEM_MIN_ORDER_VAL",500);
+
+define("MIN_INSURANCE_PRODUCT_VALUE",5000);
 
 // member minimum order value
 define("API_USER_ID",60);
@@ -97,5 +101,16 @@ define("QUANTITY_CONST",2);
 
 //Reorder qty Default value
 define("REORDER_QTY",60);
+
+//OTP validity 
+define("OTP_VALIDITY",86400);
+
+//SMS API Constants
+define("MEM_REG_OK","MEMBER Registered Successfully");
+define("MEM_ALREG","MEMBER Already Registered");
+define("MOB_INVALID","Invalid Mobile no");
+define("PROD_INVALID","Invalid Product ID");
+define("NO_CREDIT","You dont have enough credit to place this order");
+define("MARKET_PLACE_SELLER_PROFIT_VAL",10);
 /* End of file constants.php */
 /* Location: ./system/application/config/constants.php */

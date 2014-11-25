@@ -174,3 +174,24 @@ padding: 0px !important;
 border: none !important;
 font-size: 12px;
 color: #00F !important;}
+
+.filters_block .filter label {
+    display: inline-block;
+    font-size: 12px;
+    margin-right: 10px;
+    text-align: right;
+    width: 120px;
+} 
+.filters_block .filter select {
+    font-size: 12px;
+    margin-top: 5px;
+    width: 180px;
+}  
+.filters_block .filter
+{
+	padding: 2px;
+}
+.stk_det
+{
+	color:red;
+}

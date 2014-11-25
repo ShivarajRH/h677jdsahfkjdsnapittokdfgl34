@@ -1,7 +1,6 @@
 <?php 
 	$user=$this->session->userdata("admin_user");
 ?>
-
 <script>
 $(function(){
 	$("select").val(0);
@@ -22,7 +21,6 @@ $(function(){
 	});
 });
 </script>
-
 <style>
 div.nextprev
 {
@@ -53,7 +51,7 @@ div.nextprev img
 	-moz-border-radius:10px;
 	padding: 10px;
 	float: left;
-	width: 695px;
+	width: 832px;
 	font-family:arial;
 }
 .admhotellinks span
@@ -287,7 +285,7 @@ div.nextprev img
 					</div>	
 			
 					<div style="font-size:13px;float:left;margin-left: 20px;margin-top: 0px;padding: 4px;">
-		<div><label style=" font-family:arial;">ItemID : </label><label style="font-weight: bold;font-size: 13px;font-family: arial;padding: 0px;"><?=$item->id?></label></div>
+						<div><label style=" font-family:arial;">ItemID : </label><label style="font-weight: bold;font-size: 13px;font-family: arial;padding: 0px;"><?=$item->id?></label></div>
 						<div><label style=" font-family:arial;">Menu : </label><label style="font-weight: bold;font-size: 13px;font-family: arial;padding: 0px;"><?=$deal->menu?></label></div>
 						<div style="margin-left: 0px;"><span style="font-family: arial;font-size: 12px;">MRP : </span><span style="font-weight: bold;font-family: arial;padding: 0px;">Rs. <?=$dealitem->orgprice?></span></div>
 						<div style="margin-left: 0px;"><span style="font-family: arial;font-size: 12px;">Offer Price : </span><span style="font-weight: bold;font-family: arial;padding: 0px;">Rs. <?=$dealitem->price?></span></div>
@@ -304,6 +302,7 @@ div.nextprev img
 						<div style="margin-left: 0px;"><span style="font-family: arial;font-size: 12px;">Sold : </span><span style="font-weight: bold;font-family: arial;padding: 0px;"><?=$dealitem->available?></span></div>
 						<div style="margin-left: 0px;"><span style="font-family: arial;font-size: 12px;">Stock : </span><span style="font-weight: bold;font-family: arial;padding: 0px;"><?php $stock=0; $s=$this->db->query("select available from king_stock where itemid=?",$item->id)->row_array(); if(!empty($s)) $stock=$s['available'];?><?=$stock?></span></div>
 						<div style="margin-left: 0px;"><span style="font-family: arial;font-size: 12px;">Cashback : Rs </span><span style="font-weight: bold;font-family: arial;padding: 0px;"><?=$this->db->query("select cashback from king_dealitems where id=?",$item->id)->row()->cashback?></span></div>
+						
 				    </div>
 				    
 				    <div style="float:left;margin-left:10px;">
@@ -333,6 +332,37 @@ div.nextprev img
 				    	<?php }?>
 				    </div>
 				</div>
+				
+				<div style="margin-left: 0px;">
+							<span style="font-family: arial;font-size: 12px;font-weight: bold;">Partners Linked : </span>
+							<ol style="font-family: arial;padding: 0px; margin-left: 20px; ">
+							<?php 
+								$deal_partner_res=$this->db->query("SELECT p.name FROM `m_partner_deal_link` pdl
+										JOIN partner_info p ON p.id=pdl.partner_id
+										WHERE pdl.itemid=? AND pdl.partner_ref_no!=''
+										ORDER BY p.name ASC",$item->id);
+									if($deal_partner_res->num_rows())
+									{
+										
+							?>
+									
+							<?php
+										foreach($deal_partner_res->result_array() as $deal_partner)
+										{
+							?>
+										<li><?=$deal_partner['name'];?></li>
+							<?php
+										}
+									}
+									else
+									{
+							?>
+										<li>Partners Not Linked.</li>
+							<?php
+									}
+							?>
+							</ol>
+				</div> 
 			</div>
 			
 			
@@ -367,17 +397,18 @@ div.nextprev img
 					</td>
 						<td><?=$p['qty']?></td>
 						<td><?=$p['mrp']?></td>
-					<td><?=$p_stock?></td>
+						<td><?=$p_stock?></td>
 					</tr>
 				<?php } }?>
 				</tbody>
 			</table>
 			
-			<a href="<?=site_url("admin/update_partner_deal_prices/{$item->id}")?>" style="float:right;">View/Update partner prices</a><br />
 			
-			<a href="javascript:void(0)" class="deal_ord_det" item_id="<?=$item->id?>" item_name="<?=$deal->tagline;?>"  style="float:right;">View Order Details</a>
+			<a href="<?=site_url("admin/update_partner_deal_prices/{$item->id}")?>" style="float:right;" class="button button-tiny button-rounded button-action" >View/Update partner prices</a><br />
 			
-			<?php if($user['usertype']==1){?><a href="<?=site_url("admin/activityfordeal/{$deal->dealid}")?>" style="float:right;clear:both;font-size:13px;">View Changelog</a><?php }?>
+			<a href="javascript:void(0)" class="deal_ord_det button button-tiny button-rounded button-primary" item_id="<?=$item->id?>" item_name="<?=$deal->tagline;?>"  style="float:right;">View Order Details</a>
+			
+			<?php if($user['usertype']==1){?><a href="<?=site_url("admin/activityfordeal/{$deal->dealid}")?>" style="float:right;clear:both;font-size:13px;" class="button button-tiny button-rounded button-default">View Changelog</a><?php }?>
 		</div>
 	<?php 
 		}

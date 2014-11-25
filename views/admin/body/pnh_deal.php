@@ -290,7 +290,39 @@ ul.tabs li.active
 		<div>
 		<?php $d=$deal;  ?>
 		
+		
 		<div class="prd_active_wrap">
+			
+			<?php if($is_limited_stk){
+					if($d_stk>0)
+					{
+			?>			
+					<span class="notifications red" style="margin-right: 4px">Limited Stock : <span style="font-size: 14px"><?=$d_stk ?></span> </span>			
+			<?php			
+					}else if($d_stk==0)
+					{
+			?>
+					<span class="notifications red" style="margin-right: 4px">OUT OF STOCK</span> </span>	
+			<?php			
+					}			
+			?>	
+			<?php	
+			}else {
+				if($d_stk>0)
+					{
+			?>	
+						<span class="notifications green" style="margin-right: 4px">IN STOCK : <span style="font-size: 14px"><?=$d_stk ?></span> </span>
+			<?php
+					}else if($d_stk==0)
+					{
+			?>
+						<span class="notifications red" style="margin-right: 4px">OUT OF STOCK</span> </span>
+			<?php			
+					}
+				}				
+			?>
+		
+			<!--
 			<?php if($deal_stk != '0'){ ?>
 				<span class="notifications green" style="margin-right: 4px">Stock : <span style="font-size: 14px"><?=$deal_stk ?></span> </span>
 			<?php }else{ ?>	
@@ -303,7 +335,7 @@ ul.tabs li.active
 				<span class="notifications green">Sourceble</span>
 			<?php }else{ ?>	
 				<span class="notifications red">Not Sourceble</span>
-			<?php } ?>
+			<?php } ?>-->
 		</div>
 
 		</div>
@@ -353,8 +385,16 @@ ul.tabs li.active
 									<tr><td>Tagline :</td><td><?=$deal['tagline']?></td></tr>
 									<tr><td>MRP :</td><td>Rs <?=$deal['orgprice']?></td></tr>
 									<tr><td><b>Offer price/Dealer Price </b>:</td><td>Rs <?=$deal['price']?></td></tr>
-									<tr><td><b>Member Price </b>:</td><td>Rs <?=$deal['member_price']?></td></tr>
-									<tr><td><b>Member Price Max order qty </b>:</td><td><?=$deal['mp_mem_max_qty']?></td></tr>
+									<tr><td><b>Member Price (MP)</b>:</td><td>Rs <?=$deal['member_price']?></td></tr>
+									<tr><td><b>MP Max order qty </b>:</td><td><?=$deal['mp_mem_max_qty']?></td></tr>
+									<?php
+									if($deal['mp_is_offer']==1)
+									{?>
+									<tr><td><b>MP deep discount price </b>:</td><td>Rs <?=$deal['mp_offer_price'];?></td></tr>
+									<tr><td><b>MP Is big offer </b>:</td><td><?=($deal['mp_is_big_offer']==1)?'Yes':'No'; ?></td></tr>
+									<?php
+									}
+									?>
 									<tr><td>Store price :</td><td>Rs <?=$deal['store_price']?></td></tr>
 									<tr><td>NYP price :</td><td>Rs <?=$deal['nyp_price']?></td></tr>
 									

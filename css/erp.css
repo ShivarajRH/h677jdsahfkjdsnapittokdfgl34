@@ -1366,3 +1366,13 @@ display: none;z-index: 999}
 {
 	margin:5px 0px;
 }
+.block_notify {
+	background: #95DB95;
+	padding: 3px 6px;
+	border-radius: 3px;
+	width: auto;
+	float: left;
+	margin-top: 7px;
+	color: white;
+	font-size: 13px;
+}

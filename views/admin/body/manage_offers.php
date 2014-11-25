@@ -229,6 +229,7 @@
 			<tbody></tbody>
 		</table>
 	</div>
+
 </div>
  <!--===========================================< Dialog Box html Code ENDS >===========================================-->
 <script type="text/javascript" src="<?=base_url()?>/min/index.php?g=offers_js&<?php echo strtotime(date('Y-m-d'));?>&1=1"></script>

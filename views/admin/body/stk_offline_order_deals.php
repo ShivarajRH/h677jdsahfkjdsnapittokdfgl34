@@ -1,3 +1,6 @@
+<?php
+	error_reporting(E_ALL);
+?>
 <link type="text/css" rel="stylesheet" href="<?=base_url()?>/css/stock_intake.css">
 <link type="text/css" rel="stylesheet" href="<?=base_url()?>/css/plot.css">
 <link type="text/css" rel="stylesheet" href="<?=base_url()?>/css/deals.css">
@@ -7,8 +10,6 @@
 <script type='text/javascript' src="<?php echo base_url().'js/fullcalendar.min.js'?>"></script>
 <script type='text/javascript' src="<?php echo base_url().'js/jquery.tooltip.js'?>"></script>
 <link rel='stylesheet' type='text/css' href="<?php echo base_url().'css/sk_franchise.css'?>">
-
-
 <?php 
 $has_fid=0;
 $fid=$this->uri->segment(3); 
@@ -54,7 +55,7 @@ $fran_status_arr[2]="Payment Suspension";
 $fran_status_arr[3]="Temporary Suspension";
 ?>
 <div class="container">
-	<div style="position:absolute;top:0px;right:7px;"><a href="javascript:void(0)" class="ttl_menu_btn" onclick='tgl_menubar(this)'>Show Menu</a></div>
+	<div style="position:absolute;top:0px;right:315px;"><a href="javascript:void(0)" class="ttl_menu_btn" onclick='tgl_menubar(this)'>Show Menu</a></div>
 		<h2 style="float: left;margin:0px;"><a href="<?php echo site_url("admin/pnh_franchise/$franid")?>" target="_blank"><?php echo $fdetails['franchise_name']?></a></h2>&nbsp;<a href="javascript:void(0)" style="font-size:11px;" id="change_fran">change franchise</a>
 		<span style="font-size: 11px;align:center;">
 			Status:
@@ -670,6 +671,7 @@ $fran_status_arr[3]="Temporary Suspension";
     }
 </style>
 <script>
+var min_insurance_product_val = 5000; //'<?php echo MIN_INSURANCE_PRODUCT_VALUE;?>';
 $('.othrs_proofname').hide();
 $("#similar_products_div").hide();
 $("#crd_insurence_type").live('change',function()
@@ -1979,7 +1981,7 @@ var ppids=[];
 								{
 									has_insurance_dl++;
         								template=template.replace(/%has_insurance%/g,"Insurance : <span style='font-size:11px;color:#000;' onmouseover='view_insu_details(this);'>Yes</span> ");
-									if(p.insurance_value!=null && p.insurance_margin!=null && p.key_member==0)
+									if(p.insurance_value!=null && p.insurance_margin!=null && p.key_member==0 && p.price>=min_insurance_product_val)
 											template=template.replace(/%opt_insurance%/g,"<input type='checkbox' style='margin-top:-1px' name='opt_insurance[]' class='opt_insurance' value='"+p.pid+"'> <span style='font-size:11px;color:#000;float:right;'>: Opting Insurance</span> ");
 									else
 											template=template.replace(/%opt_insurance%/g," ");	
@@ -2035,12 +2037,17 @@ var ppids=[];
 						$('#cart_prod_temp .attr').unbind('change').change(function(){  
 										var attr_pstk  = parseInt($('option:selected',this).attr('stk'));
 										var c_trele = $(this).parents('tr:first');
+										var cur_max_ord_qty  = parseInt( $('.max_qty_wrap ',c_trele).html() );
+										
 											$('input[name="qty[]"]',c_trele).attr('pmax_ord_qty',attr_pstk);
 											if(attr_pstk)
 												$('input[name="qty[]"]',c_trele).val(1);
 											else
 												$('input[name="qty[]"]',c_trele).val(0);
-											$('.max_qty_wrap',c_trele).html("/ ("+attr_pstk+" Qty)");
+											
+											if(cur_max_ord_qty > attr_pstk ) {
+												$('.max_qty_wrap',c_trele).html("/ ("+attr_pstk+" Qty)");
+											}
 
 						}).trigger('change');
 
@@ -2343,7 +2350,7 @@ $("#order_form").submit(function(){
 					if(confirm("No Insurance selected. Do you want to Continue ? "))
 					{
 						$(".new_member").val(1);
-						if(total>=10000)
+						if(total>=min_insurance_product_val )
 							{
 							$('.offr_sel_type').val(1);
 							submit_order++;
@@ -3720,7 +3727,6 @@ $("#similar_products_cont .deal_stock2").each(function(){
 $("#filter_disc").live("change",function(){
 	var perc_val = $(this).val();
 	var sel_catid = $("#selected_catid").val();
-
 	$("#similar_products_cont tbody").html(" ");
 	var similarproductlist_html = '';
 		

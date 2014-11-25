@@ -10,7 +10,7 @@ $(document).ready(function() {
 		,changeYear:true
 	});
 	
-	load_tickets();
+	load_tab_content(1);
 });
 
 $( "#manage_tickets_tab" ).tabs({
@@ -36,7 +36,6 @@ $('.pagination_link a').live('click',function(e){
 	e.preventDefault();
 	load_tickets($(this).attr('href'));
 });
-
 
 function showtickets()
 {
@@ -66,7 +65,7 @@ function change_related_to(elt)
 
 function load_tickets(pagi_url)
 {
-	var colcount=12;
+	var colcount=16;
 	var source = $(".source").val(); //$("#related_to").val();
 	var date_from = $("#ds_range").val();
 	var date_to = $("#de_range").val();
@@ -106,7 +105,7 @@ function load_tickets(pagi_url)
 				var status_msg='';
 				switch( tkt.status ) {
 					case "0":
-						status_msg='Unassigned';
+						status_msg='Pending';
 						break;
 					case "1":
 						status_msg='Opened';
@@ -122,26 +121,28 @@ function load_tickets(pagi_url)
 						break;
 				}
 				
-				
-				var user_det ='--';
-				if(tkt.user != null) {
-					user_det ='<a href="'+site_url+'/admin/user/'+tkt.user_id+'" >\n\
-							'+tkt.user;
+				var user_det='';
+				if(tkt.source==1)
+					user_det=tkt.req_mem_name;
+				else {
+					if(tkt.name!=null && tkt.name!='' )
+						user_det=''+tkt.name+'';
 				}
-				else if(tkt.user != tkt.name && tkt.name != null && tkt.name != "") {
-					
-							user_det =' '+tkt.name+'</a>';
-				} 
-				else if(tkt.name != '') {
-					user_det =tkt.name;
-				}
-				
+			
 				/*var user='--';
 				if(tkt.franchise_name!=null)
 					user = tkt.franchise_name;
 				else if(tkt.user!=null)
 					user=tkt.user;*/
 				
+				
+				var franchise_name='--';
+				if(tkt.franchise_name!='' && tkt.franchise_name!=null)
+					franchise_name='<a href="'+site_url+'/admin/pnh_franchise/'+tkt.franchise_id+'" target="_blank">'+tkt.franchise_name+'</a>';
+				
+				var created_by='--';
+				if(tkt.created_by!=null && tkt.created_by!='')
+					created_by=tkt.created_by;
 				
 				var email='--';
 				if(tkt.email!='')
@@ -156,6 +157,7 @@ function load_tickets(pagi_url)
 					<td>'+tkt.created_on+'</td>\n\
 					<td>'+tkt.updated_on+'</td>\n\
 					<td><a class="link" href="'+site_url+'/admin/ticket/'+tkt.ticket_id+'">TK'+tkt.ticket_no+'</a></td>\n\
+					<td>'+franchise_name+'</td>\n\
 					<td>'+user_det+'</td>';
 						
 					//===============			
@@ -206,40 +208,42 @@ function load_tickets(pagi_url)
 					
 				
 					var assignedto = tkt.assignedto;
-					if(assignedto == null)
-						assignedto = 'Unassinged';
+					if(tkt.assignedto == null)
+						assignedto = '--';
 					
 					var depts = '';
 					if(tkt.dept_dets!=null) {
 						depts = tkt.dept_dets;
-						/*var dept_arr = tkt.dept_dets.slice(',');
-						print(dept_arr);
-						$.each(dept_arr,function(i,dept_a) {
+						//var dept_arr=new Array();
+						//var dept_arr = (tkt.dept_dets).slice(',');
+						//print(dept_arr);
+						/*$.each(dept_arr,function(i,dept_a) {
 							print(dept_a);
 							var dept = dept_a.slice(':');
 							depts += ','+dept[1];
 						});*/
 					}
+					//<td>'+depts+'</td>\n\
+					
 					var from_app='ERP / Web';
 					if(tkt.from_app==1)
 						from_app='Mobile / API';
-					/*
-					<td>'+status_msg+'</td>\n\
-								<td>'+depts+'</td>\n\
-					*/			
-			  
-					htmldata +='<td>'+type_msg+'</td>\n\
+					
+					
+								
+					htmldata +='<td>'+status_msg+'</td>\n\
+								<td>'+type_msg+'</td>\n\
 								<td>'+related_to_name+'</td>\n\
 								<td>'+pririty_msg+'</td>\n\
 								<td>'+assignedto+'</td>\n\
+								<td>'+depts+'</td>\n\
 								<td>'+from_app+'</td>\n\
 								<td>'+email+'</td>\n\
 								<td>'+transid+'</td>\n\
+								<td>'+created_by+'</td>\n\
 						</tr>';
 			});
-			if(rdata.pagination != undefined) {
-				$(".pagination_link").html(rdata.pagination);
-			}
+			
 			$(".pg_msg").html(rdata.pg_msg);
 			$(".ttl_tickets").html(rdata.ttl_tickets);
 			//ttl_unassinged ttl_open ttl_inprogress ttl_closed
@@ -248,6 +252,10 @@ function load_tickets(pagi_url)
 			$(".ttl_inprogress").html(rdata.ttl_inprogress);
 			$(".ttl_closed").html(rdata.ttl_closed);
 			$(".avg_resolve_time").html(rdata.avg_resolve_time);
+			
+			if(rdata.pagination != undefined) {
+				$(".pagination_link").html(rdata.pagination);
+			}
 		}
 		else
 		{	

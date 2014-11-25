@@ -119,15 +119,23 @@ class Employee_model extends Model
 	 * @param type $dept_ids comma seperated dept_id
 	 * @return boolean Array/Bool
 	 */
-	function get_emp_det_by_deptids($dept_ids)
+	function get_emp_det_by_deptids($dept_ids,$flag=0)
 	{
+		$cond='';
+		if($flag==1)
+			$cond.=" AND job_title=9 ";
+		else
+			$cond.=" AND job_title=9 AND emp.email !='' ";
+		
+		$deptids=explode(',',$dept_ids);
+		$dept_ids="'".implode("','",$deptids)."'";
+			
 		$emp_det_res = $this->db->query("SELECT emp.employee_id,emp.name,emp.email,emp.contact_no
 			FROM m_departments dt
 			JOIN m_employee_dept_link edl ON edl.dept_id = dt.id
 			JOIN m_employee_info emp ON emp.employee_id = edl.employee_id
-			WHERE dt.id IN (?) AND job_title=9 and emp.email !='' 
-			HAVING emp.employee_id IS NOT NULL ",$dept_ids);
-		
+			WHERE dt.id IN ($dept_ids) $cond
+			HAVING emp.employee_id IS NOT NULL ");
 		if($emp_det_res->num_rows())
 		{
 			return $emp_det_res->result_array();
@@ -200,7 +208,7 @@ class Employee_model extends Model
 	 * @author Shivaraj <shivaraj@storeking.in>_Jul_12_2014
 	 * @param type $_POST data
 	 */
-	function do_depts_request_assign($_POST)
+	function do_depts_request_assign()
 	{
 		//echo "<pre>";print_r($_POST);echo '</pre>';
 		$userid =  $this->input->post("userid");
@@ -251,10 +259,11 @@ class Employee_model extends Model
 					
 		$dept_ids = '';
 		$dept_det = $this->employee->get_deptids_by_request_type($related_to);
+		
 		if(!$dept_det)
 		{
 			//$this->_output_handle('json',false,array('error_code'=>2009,'error_msg'=>"This request not linked to any departments or Invalid request id") );
-			$output['error']="This request not linked to any departments or Invalid request id";
+			$output['error']="We have received your ticket request. \nNotice: Email notification not sent to corresponding departments!";
 		}
 		else
 		{
@@ -264,7 +273,8 @@ class Employee_model extends Model
 			$link = '<a href="'.site_url("admin/ticket/".$ticket_id).'">TK'.$ticket_no.'</a>';
 			// SEND EMAIL/SMS
 			// =============================================
-			$emp_det_res = $this->employee->get_emp_det_by_deptids($dept_ids);
+			$emp_det_res = $this->employee->get_emp_det_by_deptids($dept_ids,1);
+			
 			if($emp_det_res) 
 			{
 				foreach($emp_det_res as $emp_det) {
@@ -276,13 +286,15 @@ class Employee_model extends Model
 				$filename = base_url()."/resources/templates/template_request_foremail.html";
 				$body_msg =  file_get_contents($filename);
 				$body_msg = str_replace("%%requested_on%%",date("d/M/Y H:i:s e",time()) , $body_msg);
-				$body_msg = str_replace("%%requested_by%%", $franchise_name , $body_msg);
+				$body_msg = str_replace("%%requested_by%%", $franchise_name.'  '.$req_mem_name , $body_msg);
 				$body_msg = str_replace("%%tkt_status%%",$tkt_status , $body_msg);
 				$body_msg = str_replace("%%request_type%%",$type_name , $body_msg);
 				$body_msg = str_replace("%%description%%",$desc , $body_msg);
 				$body_msg = str_replace("%%link%%",$link , $body_msg);
 
-				$subj = "[TK{$ticket_no}] Storeking Customer Support";//'New '.$type_name." request from ".$franchise_name." (TK".$ticket_no.') - '.word_wrap($desc,'20');
+				//$subj = "[TK{$ticket_no}] Storeking Customer Support";//'New '.$type_name." request from ".$franchise_name." (TK".$ticket_no.') - '.word_wrap($desc,'20');
+				$subj = "Product Request - {$franchise_name} - TK{$ticket_no}";
+				$arr_emails[] = 'support@snapittoday.com';
 				$this->erpm->_notifybymail($arr_emails,$subj,$body_msg);
 
 				// ================< SEND DEPT EMAILS ENDS >=============================

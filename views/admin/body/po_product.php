@@ -884,7 +884,7 @@ function addproduct(id,name,mrp,require)
 	$('#show_submit').show();
 	if(!id)
 		return;
-	
+	var vid='<?php echo $vendor_id ?>';
 	require = (typeof require === "undefined") ? "" : require;
 	$("#po_prod_list").hide();
 	if($.inArray(id,added_po)!=-1)
@@ -991,7 +991,13 @@ function addproduct(id,name,mrp,require)
 			}
 			vendors="";
 			$.each(o.vendors,function(i,v){
+				if(v.vendor_id==vid)
+				{
+					vendors=vendors+'<option value="'+v.vendor_id+'" selected="selected">'+v.vendor+'</option>';
+				}else
+				{
 				vendors=vendors+'<option value="'+v.vendor_id+'">'+v.vendor+'</option>';
+				}
 			});
 	
 			
@@ -1077,17 +1083,17 @@ function addproduct(id,name,mrp,require)
 	
 			$('#pprods tbody tr.loading_row_data').remove();
 			$('#pprods tbody tr:last .discount').trigger('change');
-			
-	
+			$('.vendor').val(vid).trigger('select');
 		}
 	});
+	
 }
 
 var search_timer=0;
 var jHR=0;
 
 $('input[name="srch_prod"]').autocomplete({
-	source:site_url+'/admin/jx_searchproducts_json',
+	source:site_url+'/admin/jx_searchproducts_json/',
 	minLength: 2,
 	select:function(event, ui ){
 			addproduct(ui.item.id ,ui.item.label,ui.item.mrp);

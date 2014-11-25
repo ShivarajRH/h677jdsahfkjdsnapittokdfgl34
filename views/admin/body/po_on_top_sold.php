@@ -1,133 +1,3 @@
-<div class="container">
-	<h2>Top Sold Products</h2>
-	<div class="fl_right print">
-			<!-- Print Button -->
-			<a class="button button-tiny button-rounded" href="javascript:void(0)" onclick="print_products_summary(0)" >Print</a>
-			<!-- Export CSV Button -->
-			<a class="button button-tiny button-rounded" href="javascript:void(0)" onclick="print_products_summary(1)" >Export CSV</a>
-		</div>	
-	<div class="filters">
-		<a href="javascript:void(0)" class="show_all">Show all sales</a>
-		<div class="fl_right brand"><b></b>
-			<!-- Filter for place po products--> 
-			<select  id="sel_po">
-				<option value="0">Choose</option>
-				<option value="1">All</option>
-				<option value="2">Place PO's</option>
-			</select>
-		</div>	
-		<div class="fl_right brand">
-		<!-- Filter products by vendors-->			
-			<b>Vendors :</b> <select name="vendors" id="sel_vendor">
-					<option value="0">Choose</option>
-					<?php foreach($vendors as $v) { ?>
-						<option value="<?=$v['vendor_id']?>"><?=$v['vendor_name']?></option>
-					<?php } ?>
-					</select>
-		</div>	
-		<div class="fl_right brand">
-		<!-- Filter products by brands-->			
-			<b>Brands :</b> <select name="brand" id="sel_brand">
-					<option value="0">Choose</option>
-					<?php foreach($brands as $b) { ?>
-						<option value="<?=$b['id']?>"><?=$b['name']?></option>
-					<?php } ?>
-					</select>
-		</div>	
-		
-		<div class="fl_right cat">
-		<!-- Filter products by Categories-->	
-			<b>Categories :</b> <select name="cat" id="sel_cat">
-				<option value="0">Choose</option>
-				<?php foreach($categories as $c) { ?>
-					<option value="<?=$c['id']?>"><?=$c['name']?></option>
-				<?php } ?>
-				</select>
-		</div>
-		
-		<div class="fl_right menu">
-			<!-- Filter products by Menu-->
-			<b>Menu :</b> <select name="" id="sel_menu">
-				<option value="0">Choose</option>
-				<?php foreach($menu as $m) { ?>
-					<option value="<?=$m['id']?>"><?=$m['name']?></option>
-				<?php } ?>
-				<?php foreach($snp_menu as $sm) { ?>
-					<option value="<?=$sm['id']?>"><?=$sm['name']?></option>
-				<?php } ?>
-				</select>
-		</div>
-		
-		<div class="fl_right Territory">
-			<!-- Filter products by Territory-->
-			<b>Territory :</b> <select name="sel_terr" id="sel_terr">
-				<option value="0">Choose</option>
-				<?php foreach($terr as $t) { ?>
-					<option value="<?=$t['id']?>"><?=$t['territory_name']?></option>
-				<?php } ?>
-			</select>
-		</div>
-		
-		<div class="fl_right state">
-			<!-- Filter products by State-->
-			<b>State :</b> <select name="sel_state" id="sel_state">
-				<option value="0">Choose</option>
-				<?php foreach($states as $s) { ?>
-					<option value="<?=$s['state_id']?>"><?=$s['state_name']?></option>
-				<?php } ?>
-			</select>
-		</div>	
-	</div>
-	
-	<!--Container to load Products --> 
-	<table class="datagrid" width="100%">
-		<thead>
-			<tr>
-				<th>Sl.No</th>
-				<th>Product</th>
-				<th>Menu</th>
-				<th>MRP</th>
-				<th>Offer Price</th>
-				<th><span class="total_sold">Sold in 60 days</span></th>
-				<th>Current Stock</th>
-				<th>Expected Stock</th>
-				<th>PO Action <br /> <input type="checkbox" class="all">
-			</tr>
-		</thead>
-		<tbody>
-		</tbody>
-	</table>
-	
-	<!-- Place Purchase button Order for less Stock Products -->
-	<div class="submit fl_right"><button type="submit" class="button button-action place_po ">Place PO</button></div>
-	<div style="display:none">
-		<!-- Modal for PO products selected display-->
-		<div id="dlg_openpolist" title="Open PO List"></div>
-	</div>
-	
-	<form id="place_po_form" action="<?=site_url("admin/po_product_bytopsold")?>" method="post">
-		<input type="hidden" name="po_arr" class="prd_arr" value="">
-	</form>
-	
-	<div id="place_po_dlg" title="Place Po">
-		<h5>Total of  <span id="prd_ttl"></span> Products selected</h5>
-		<div class="place_po_blk"></div>
-		<!--
-		<div class="fl_left" style="margin-top:15px"><b>Choose Vendor :</b> 
-			<select name="cat" id="sel_vendor">
-				<option value="0">Choose</option>
-				<?php foreach($vendors as $v) { ?>
-					<option value="<?=$v['vendor_id']?>"><?=$v['vendor_name']?></option>
-				<?php } ?>
-				</select>
-		</div>-->
-	</div>
-	<div id="change_status_dlg" title="PO">
-		<div class="prd_dets"></div>
-		<b style="vertical-align: top">Remarks :</b>  <textarea name="remarks" class="remarks" placeholder="Please enter minimum 20 characters"></textarea>
-		
-	</div>	
-</div>
 
 <style>
 .row_select
@@ -154,37 +24,37 @@ h2
 #sel_menu
 {
 	margin-right: 20px;
-    width: 100px;
+   
 }
 #sel_cat 
 {
    margin-right: 20px;
-   width: 100px;
+  
 }
 #sel_terr 
 {
    margin-right: 20px;
-   width: 100px;
+   
 }
 #sel_state 
 {
    margin-right: 20px;
-   width: 100px;
+   
 }
 #sel_po
 {
-	margin-left: 20px;
-    margin-right: 20px;
-    width: 100px;
+    
+    margin-right: 15px;
+    
 }
 #sel_brand
 {
-	width: 100px;
+	
 	margin-right: 20px;
 }
 #sel_vendor
 {
-	width: 100px;
+	
 }
 .sort_po
 {
@@ -217,12 +87,208 @@ h2
 {
 	margin: 10px 2px;
 }
-.show_all,.show_60day_sales
+.show_all,.show_filterd_sales
 {
 	float: right;
     margin: 4px 0;
 }
+.filters_block .filter select {
+    font-size: 12px;
+    margin-top: 5px;
+    width: 180px;
+}  
+.filters_block .filter label {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: bold;
+    margin-right: 10px;
+    text-align: right;
+    width: 71px;
+} 
+select {
+    width: 177px;
+}
+#sel_brand_chzn
+{
+	margin:10px 0;
+} 
+.chzn-container
+{
+	font-size: 10px;
+} 
+.btn-adjst
+{
+	display: block;
+    margin: 17px 7px;
+}
+#sel_po
+{
+	width:70px;
+}
+.filters_block .filter
+{
+	min-height: 88px;
+}
 </style>
+<div class="container">
+	<div class="filters_block fl_left" style="width:100%">
+		<h2 class="fl_left">Top Sold Products</h2>
+			<div class="filter fl_right" style="float:right !important;min-height: 32px !important;">
+				<label style="width:148px">Stock Unavailable Report :</label>
+				<input type="text"  id="sel_po" placeholder="Enter Quantity">
+				<a class="button button-tiny button-rounded" href="javascript:void(0)" onclick="print_products_summary(1,1)" >Export</a>
+			</div>
+			<!-- Export CSV Button -->
+			<a class="button button-tiny button-rounded fl_right btn-adjst" href="javascript:void(0)" onclick="print_products_summary(1,0)" >Export CSV</a>
+			<!-- Print Button -->
+			<a class="button button-tiny button-rounded fl_right btn-adjst" href="javascript:void(0)" onclick="print_products_summary(0,0)" >Print</a>
+		</div>	
+	<div class="filters_block">
+		<div class="filter">
+			<label>State :</label>
+				<select name="sel_state" id="sel_state">
+					<option value="0">Choose</option>
+					<?php foreach($states as $s) { ?>
+						<option value="<?=$s['state_id']?>"><?=$s['state_name']?></option>
+					<?php } ?>
+				</select>
+			</br>
+			
+			<label>Territory :</label>
+			<select name="sel_terr" id="sel_terr">
+				<option value="0">Choose</option>
+				<?php foreach($terr as $t) { ?>
+					<option value="<?=$t['id']?>"><?=$t['territory_name']?></option>
+				<?php } ?>
+			</select>
+			<br />
+			<label>Menu :</label>
+			<select name="" id="sel_menu">
+				<option value="0">Choose</option>
+				<?php foreach($menu as $m) { ?>
+					<option value="<?=$m['id']?>"><?=$m['name']?></option>
+				<?php } ?>
+				<?php foreach($snp_menu as $sm) { ?>
+					<option value="<?=$sm['id']?>"><?=$sm['name']?></option>
+				<?php } ?>
+			</select>
+		</div>
+		<div class="filter">
+			<label>Category :</label>
+			<select name="cat" id="sel_cat">
+				<option value="0">Choose</option>
+				<?php foreach($categories as $c) { ?>
+					<option value="<?=$c['id']?>"><?=$c['name']?></option>
+				<?php } ?>
+			</select>
+			</br>
+			<label style="vertical-align: top;margin-top: 15px;">Brand :</label>
+			<select name="brand[]" id="sel_brand" multiple="true" style="margin: 10px 0;">
+				<?php foreach($brands as $b) { ?>
+					<option value="<?=$b['id']?>"><?=$b['name']?></option>
+				<?php } ?>
+			</select>
+		</div>
+	 	
+	 	<div class="filter">
+			<label>Show :</label>
+			<select name="sales" id="sel_sales">
+				<option value="60">60 day sales</option>
+				<option value="30">30 day sales</option>
+				<option value="7">7 day sales</option>
+				<option value="all">Overall sales</option>
+			</select>
+			<br />
+			
+			<span class="pagi_filter">
+			<label>From/To :</label>
+			<select name="filter_start" id="sel_from_start">
+				<option value="0">1-200</option>
+				<option value="200">201-400</option>
+				<option value="400">401-600</option>
+				<option value="600">601-800</option>
+				<option value="800">801-1000</option>
+			</select>
+			</span>	
+		</div>
+		
+		<div class="filter">
+	 		<label>Type :</label>
+			<select name="sel_state" id="sel_type">
+				<option value="all">All</option>
+				<option value="1">SK</option>
+				<option value="0">SIT</option>
+			</select>
+			</br>
+			<!--
+	 		<label>Place :</label>
+				<select  id="sel_po">
+					<option value="0">Choose</option>
+					<option value="1">All</option>
+					<option value="2">Place PO's</option>
+				</select>
+			</br>
+		-->
+			<label>Vendors :</label>
+			<select name="vendors" id="sel_vendor">
+				<option value="0">Choose</option>
+				<?php foreach($vendors as $v) { ?>
+					<option value="<?=$v['vendor_id']?>"><?=$v['vendor_name']?></option>
+				<?php } ?>
+			</select>
+		</div>
+	 </div>		
+	<!--Container to load Products --> 
+	<table class="datagrid" width="100%">
+		<thead>
+			<tr>
+				<th>Sl.No</th>
+				<th>Product</th>
+				<th>Menu</th>
+				<th>MRP</th>
+				<th>Offer Price</th>
+				<th><span class="total_sold">Sold in 60 days</span></th>
+				<th>Current Stock</th>
+				<th>Expected Stock</th>
+				<th width="140px" style="text-align: center !important">PO Action  <br /><a class="select_all">Select All<input type="checkbox" class="all"></a><a class="po_act">All PO<input type="checkbox" class="po_all"></a></th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+	
+	<!-- Place Purchase button Order for less Stock Products -->
+	<div class="submit fl_right"><button type="submit" class="button button-action place_po ">Place PO</button></div>
+	<div style="display:none">
+		<!-- Modal for PO products selected display-->
+		<div id="dlg_openpolist" title="Open PO List"></div>
+	</div>
+	
+	<form id="place_po_form" action="<?=site_url("admin/po_product_bytopsold")?>" method="post">
+		<input type="hidden" name="po_arr" class="prd_arr" value="">
+		<input type="hidden" name="vendor" class="vid_selected" value="">
+	</form>
+	
+	<div id="place_po_dlg" title="Place Po">
+		<h5>Total of  <span id="prd_ttl"></span> Products selected</h5>
+		<div class="place_po_blk"></div>
+		<!--
+		<div class="fl_left" style="margin-top:15px"><b>Choose Vendor :</b> 
+			<select name="cat" id="sel_vendor">
+				<option value="0">Choose</option>
+				<?php foreach($vendors as $v) { ?>
+					<option value="<?=$v['vendor_id']?>"><?=$v['vendor_name']?></option>
+				<?php } ?>
+				</select>
+		</div>-->
+	</div>
+	<div id="change_status_dlg" title="PO">
+		<div class="prd_dets"></div>
+		<b style="vertical-align: top">Remarks :</b>  <textarea name="remarks" class="remarks" placeholder="Please enter minimum 20 characters"></textarea>
+		
+	</div>	
+</div>
+
 <script>
 
 $(function(){
@@ -232,8 +298,9 @@ $(function(){
 	brand_arr=[];
 	cat_arr=[];
 	menu_arr=[];
+	$('#sel_brand').chosen(); 
 	$('table.datagrid tbody').html('<tr><td colspan="9"><div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
-	product_list(0,0,0,0);
+	product_list(0,0,0,0,0,0,60,'all',0,0);
 })
 po_product_arr=[];	
 pid_arr=[];
@@ -299,9 +366,13 @@ $('#sel_cat').live('change',function(){
 	var vendor=$('#sel_vendor').val();
 	var state=$('#sel_state').val();
 	var terr=$('#sel_terr').val();
+	var type=$('#sel_type').val();
+	var days=$('#sel_sales').val();
+	var start=$('#sel_from_start').val();
+	$('.pagi_filter').show();
 	$("#sel_brand").html("Loading ...");
 	$('table.datagrid tbody').html('<tr><td colspan="9"><div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
-	$.getJSON(site_url+'/admin/jx_load_allbrandsbycat/'+cat,'',function(resp){
+	$.getJSON(site_url+'/admin/jx_load_allbrandsbycat/'+cat+'/'+menu,'',function(resp){
 		var brand_html='';
 		if(resp.status=='error')
 		{
@@ -317,8 +388,12 @@ $('#sel_cat').live('change',function(){
 		$("#sel_brand").html(brand_html).trigger("liszt:updated");
 		//$(".recharge_town_filter").trigger('change');
  	});
- 	
-	product_list(menu,cat,brand,vendor);
+ 	if(cat==0)
+	{
+		$('#sel_sales').val(60);
+		days=$('#sel_sales').val();
+	}
+	product_list(menu,cat,brand,vendor,terr,state,days,type,start,vendor);
 	
 });
 
@@ -330,6 +405,10 @@ $('#sel_menu').live('change',function(){
 	var vendor=$('#sel_vendor').val();
 	var state=$('#sel_state').val();
 	var terr=$('#sel_terr').val();
+	var type=$('#sel_type').val();
+	var days=$('#sel_sales').val();
+	var start=$('#sel_from_start').val();
+	$('.pagi_filter').show();
 	$("#sel_cat").html("Loading ...");
 	$("#sel_brand").html("Loading ...");
 	$('table.datagrid tbody').html('<tr><td colspan="9"><div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
@@ -364,7 +443,12 @@ $('#sel_menu').live('change',function(){
 		}
 		$("#sel_brand").html(brand_html).trigger("liszt:updated");
 	});
-	product_list(menu,cat,brand,vendor);
+	if(menu==0)
+	{
+		$('#sel_sales').val(60);
+		days=$('#sel_sales').val();
+	}
+	product_list(menu,cat,brand,vendor,terr,state,days,type,start,vendor);
 	
 });
 
@@ -376,8 +460,76 @@ $('#sel_brand').live('change',function(){
 	var vendor=$('#sel_vendor').val();
 	var state=$('#sel_state').val();
 	var terr=$('#sel_terr').val();
+	var days=$('#sel_sales').val();
+	var type=$('#sel_type').val();
+	var start=$('#sel_from_start').val();
 	$('table.datagrid tbody').html('<tr><td colspan="9"><div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
-	product_list(menu,cat,brand,vendor);
+	if(brand)
+	{
+		$('.pagi_filter').hide();
+	}else
+	{
+		$('#sel_sales').val(60);
+		days=$('#sel_sales').val();
+		$('.pagi_filter').show();
+	}
+	
+	if(brand=='')
+	{
+		$('.pagi_filter').show();
+	}
+	
+	product_list(menu,cat,brand,vendor,terr,state,days,type,start,vendor);
+});
+
+//Day sales
+$('#sel_sales').live('change',function(){
+	var brand=$('#sel_brand').val();
+	var menu=$('#sel_menu').val();
+	var cat=$('#sel_cat').val();
+	var vendor=$('#sel_vendor').val();
+	var state=$('#sel_state').val();
+	var terr=$('#sel_terr').val();
+	var days=$('#sel_sales').val();
+	var type=$('#sel_type').val();
+	var start=$('#sel_from_start').val();
+	$('.pagi_filter').show();
+	if(!brand)
+		brand=0;
+	if(days==60)
+		$('span.total_sold').html("Sold in 60 days");
+	else if(days==30)
+		$('span.total_sold').html("Sold in 30 days");
+	else if(days==7)
+		$('span.total_sold').html("Sold in 1 Week");
+	else if(days=='all')
+	{
+		$('span.total_sold').html("Total sold");
+		if(brand==0 && cat==0 && menu==0)
+		{
+			alert("Please Choose either Menu,Category or Brand before proceed");
+			return false;
+		}
+	}
+					
+	$('table.datagrid tbody').html('<tr><td colspan="9"><div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
+	product_list(menu,cat,brand,vendor,terr,state,days,type,start,vendor);
+});
+
+//start sales
+$('#sel_from_start').live('change',function(){
+	var brand=$('#sel_brand').val();
+	var menu=$('#sel_menu').val();
+	var cat=$('#sel_cat').val();
+	var vendor=$('#sel_vendor').val();
+	var state=$('#sel_state').val();
+	var terr=$('#sel_terr').val();
+	var days=$('#sel_sales').val();
+	var type=$('#sel_type').val();
+	var start=$('#sel_from_start').val();
+	$('.pagi_filter').show();
+	$('table.datagrid tbody').html('<tr><td colspan="9"><div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
+	product_list(menu,cat,brand,vendor,terr,state,days,type,start,vendor,vendor);
 });
 
 //Vendor change event -- to get brands asigned for a vendor
@@ -388,36 +540,31 @@ $('#sel_vendor').live('change',function(){
 	var cat=$('#sel_cat').val();
 	var state=$('#sel_state').val();
 	var terr=$('#sel_terr').val();
-	//product_list(menu,cat,brand,vendor);
-	$.post('<?=site_url('admin/jx_getbrandsforvendor_json')?>',{vid:vendor},function(json){
-		data=$.parseJSON(json);
-		if(data)
-		{
-			$.each(data,function(i,b){
-				$('.prd_row').each(function(){
-				 	 var brandid=$(this).attr('brandid');
-				 	if(brandid == b.id)
-				 	{
-				 		$(this).show();
-				 	}else
-				 	{
-				 		$(this).hide();
-				 	}
-				 		
-				 });
-			});
-		}
-	});	
+	var days=$('#sel_sales').val();
+	var type=$('#sel_type').val();
+	var start=$('#sel_from_start').val();
+	
+	if(vendor==0)
+		$('.pagi_filter').show();
+					 	else
+		$('.pagi_filter').hide();	
+	
+	$('table.datagrid tbody').html('<tr><td colspan="9"><div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
+	product_list(menu,cat,brand,vendor,terr,state,days,type,start,vendor);
 });
 
 //state change event
 $('#sel_state').live('change',function(){
 	var state=$(this).val();
+	var terr=$('#sel_terr').val();
 	var brand=$('#sel_brand').val();
 	var menu=$('#sel_menu').val();
 	var cat=$('#sel_cat').val();
-	
-	
+	var vendor=$('#sel_vendor').val();
+	var days=$('#sel_sales').val();
+	var type=$('#sel_type').val();
+	var start=$('#sel_from_start').val();
+	$('.pagi_filter').show();
 	//product_list(menu,cat,brand,vendor);
 	$.getJSON(site_url+'admin/jx_load_all_territories_bystate/'+state,{},function(resp){
 		var terr_html='';
@@ -434,7 +581,23 @@ $('#sel_state').live('change',function(){
 		}
 		$("#sel_terr").html(terr_html).trigger("liszt:updated");
 	});	
-	
+	product_list(menu,cat,brand,vendor,terr,state,days,type,start,vendor);
+});
+
+//state change event
+$('#sel_type').live('change',function(){
+	var state=$('#sel_state').val();
+	var terr=$('#sel_terr').val();
+	var brand=$('#sel_brand').val();
+	var menu=$('#sel_menu').val();
+	var cat=$('#sel_cat').val();
+	var vendor=$('#sel_vendor').val();
+	var days=$('#sel_sales').val();
+	var type=$('#sel_type').val();
+	var start=$('#sel_from_start').val();
+	$('.pagi_filter').show();
+	$('table.datagrid tbody').html('<tr><td colspan="9"><div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
+	product_list(menu,cat,brand,vendor,terr,state,days,type,start,vendor);
 });
 
 $('#sel_terr').live('change',function(){
@@ -444,39 +607,12 @@ $('#sel_terr').live('change',function(){
 	var vendor=$('#sel_vendor').val();
 	var state=$('#sel_state').val();
 	var terr=$(this).val();
+	var type=$('#sel_type').val();
+	var days=$('#sel_sales').val();
+	var start=$('#sel_from_start').val();
+	$('.pagi_filter').show();
 	$('table.datagrid tbody').html('<tr><td colspan="9"><div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
-	product_list(menu,cat,brand,vendor,terr,state);
-});
-
-$('.show_all').live('click',function(){
-	var brand=$('#sel_brand').val();
-	var menu=$('#sel_menu').val();
-	var cat=$('#sel_cat').val();
-	var vendor=$('#sel_vendor').val();
-	var state=$('#sel_state').val();
-	var terr=$('#sel_terr').val();
-	if(brand == 0)
-	{
-		alert("Please Choose brand..");
-		return false;
-	}		
-	$('table.datagrid tbody').html('<tr><td colspan="9"><div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
-	$('.show_all').removeClass('show_all').addClass('show_60day_sales').html("Show 60day sales");
-	$('.total_sold').html('Total Sold');
-	product_list(menu,cat,brand,vendor,terr,state,'all');
-});
-
-$('.show_60day_sales').live('click',function(){
-	var brand=$('#sel_brand').val();
-	var menu=$('#sel_menu').val();
-	var cat=$('#sel_cat').val();
-	var vendor=$('#sel_vendor').val();
-	var state=$('#sel_state').val();
-	var terr=$('#sel_terr').val();
-	$('table.datagrid tbody').html('<tr><td colspan="9"><div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div></td></tr>');
-	$('.show_60day_sales').removeClass('show_60day_sales').addClass('show_all').html("Show all sales");
-	$('.total_sold').html('Sold in 60 days');
-	product_list(menu,cat,brand,vendor,terr,state,'');
+	product_list(menu,cat,brand,vendor,terr,state,days,type,start,vendor);
 });
 
 //change sourceable/not sourceable status of a product
@@ -563,46 +699,78 @@ function change_status(pid,pname,pstatus,remarks)
 }
 
 //Function to append products based on menu,category,brand,vendor etc filter value
-function product_list(menu,cat,brand,vendor,terr,state,show_all)
+function product_list(menu,cat,brand,vendor,terr,state,days,type,start,vendor)
 {
-	$.post('<?=site_url('admin/jx_top_sold_byqty')?>',{menu:menu,cat:cat,brand:brand,vendor:vendor,terr:terr,state:state,show_all:show_all},function(data){
+	$.post('<?=site_url('admin/jx_top_sold_byqty')?>',{menu:menu,cat:cat,brand:brand,vendor:vendor,terr:terr,state:state,days:days,type:type,sales_type:'total',start:start,vid:vendor},function(data){
 		if(data.prd_list)
 		{
 			html='';
-			k=1;
+			k=parseInt(data.start)+1;
+			c='';
+			console.log(brand);
+			console.log(vendor);
+			if(brand!=null || vendor!=0)
+					k=1;
+			
 			$.each(data.prd_list,function(i,p){
 				
 				if(p.is_sourceable == 1)
 				{
 					var s='Sourceable';
 					var background = 'background-color:rgba(170, 255, 170, 0.8)';
+					
 				}else if(p.is_sourceable == 0)
 				{
 					var s='Not Sourceable';
 					var background = 'background-color:rgb(255, 170, 170)';
 				}
 				
+				if(pid_arr.indexOf(p.product_id)==-1)
+				{
+					$('.sel_prd',this).attr('checked',true);
+					 var c='';
+				}
+				else
+				  var c='row_select';
 				
-				html +='<tr class="prd_row" cur_stk="'+p.stk+'" exp_stk="'+p.exp_stk+'" brandid="'+p.brandid+'" product_id="'+p.product_id+'">';
+				html +='<tr class="prd_row '+c+'" cur_stk="'+p.stk+'" exp_stk="'+p.exp_stk+'" brandid="'+p.brandid+'" product_id="'+p.product_id+'" product_name="'+p.product_name+'">';
 				html +='<td>'+(k++)+'</td>';
 				html +='<td><a target="_blank"  style="font-size:14px;margin:1px 0 2px;display:block;display:inline:block;text-decoration:none;" href="'+site_url+'/admin/product/'+p.product_id+'">'+p.product_name+' <b class="src_blk_'+p.product_id+'"><span class="status" style="'+background+'">'+s+'</span></b></a><br />';
-				html +='<b>PNH ID :</b> <a target="_blank" style="margin-right:15px;color:green">'+p.pnh_id+'</a>';
+				html +='<b>PNH ID :</b> <a target="_blank" href="'+site_url+'/admin/pnh_deal/'+p.pnh_id+'" style="margin-right:15px;color:green">'+p.pnh_id+'</a>';
 				html +='<b>Brand :</b> <a target="_blank" style="margin-right:15px;color:green" href="'+site_url+'/admin/viewbrand/'+p.brandid+'">'+p.brandname+'</a>';
-				html +='<b>Category :</b> <a target="_blank" style="margin-right:15px;color:green" href="'+site_url+'/admin/viewcat/'+p.cat_id+'">'+p.cat_name+'</a><b class="change_stat_'+p.product_id+'"><a style="font-size:10px;margin:-12px 0 2px;display:inline:block;text-decoration:none;float:right" class="change_status" product_id="'+p.product_id+'" product_name="'+p.product_name+'" sourceable="'+p.is_sourceable+'" href="javascript:void(0)">Change Status</a></b></td>';
+				html +='<b>Category :</b> <a target="_blank" style="margin-right:15px;color:green" href="'+site_url+'/admin/viewcat/'+p.cat_id+'">'+p.cat_name+'</a>';
+				if(p.is_combo==1)
+				{
+					html +='<span style="color:red;font-size:11px;">Combo Product</span>';
+				}
+				html +='<b class="change_stat_'+p.product_id+'"><a style="font-size:10px;margin:-12px 0 2px;display:inline:block;text-decoration:none;float:right" class="change_status" product_id="'+p.product_id+'" product_name="'+p.product_name+'" sourceable="'+p.is_sourceable+'" href="javascript:void(0)">Change Status</a></b></td>';
 				html +='<td>'+p.menu+'</td>';
 				html +='<td>'+p.mrp+'</td>';
 				html +='<td>'+p.offer_price+'</td>';
-				html +='<td>'+p.sold_in_60+'</td>';
+				html +='<td>'+p.sold_qty+'</td>';
 				html +='<td align="center"><b>'+p.stk+'</b></td>';
+				if(days!='all')
 				html +='<td align="center"><b>'+p.exp_stk+'</b><br />';
+				else
+					html +='<td align="center"><b>N/A</b><br />';	
 				html +='<b>Open PO :<a href="javascript:void(0)" onclick="load_openpolist('+p.product_id+')" >'+p.po_qty+'</b></a><br />';
-				html +='Required Stock :<b>'+p.pending_order+'</b></td>';
+				html +='Req. Stock :<b>'+p.pending_order+'</b></td>';
 				
 				if(parseInt(p.exp_stk) > parseInt(p.stk))
+				{
+					if(pid_arr.indexOf(p.product_id)==-1)
+					{
 					html +='<td align="center"><input type="checkbox" pid="'+p.product_id+'" product_name="'+p.product_name+'" class="sel_prd"></td>';
-				else
-					html +='<td align="center"></td>';
+					}
+					else
+					{
+						html +='<td align="center"><input type="checkbox" pid="'+p.product_id+'" product_name="'+p.product_name+'" class="sel_prd" checked></td>';
+					}
+				}
 					
+				else
+					html +='<td align="center"><span class="po_chk_'+p.product_id+'" product_id="'+p.product_id+'"></span></td>';
+				  	
 				html +='</tr>';
 				
 			});
@@ -659,17 +827,64 @@ $('.all').live('click',function(){
 		var trEle=$(this).parents('tr:first');
 		var chk=$(this).attr('checked');
 		if(chk == 'checked')
-		{
 			trEle.addClass('row_select');
-			var pid=$(this).attr('pid');
-			var pname=$(this).attr('product_name');
-			
-			if($.inArray([pid,pname], po_product_arr) === -1) 
-			 	po_product_arr.push([pid,pname]);
-		}
 		else
 			trEle.removeClass('row_select');
 	});
+	
+	$('.sel_prd').each(function(){
+		var trEle=$(this).parents('tr:first');
+		var chk=$(this).attr('checked');
+		if(chk == 'checked')
+		{
+			//trEle.addClass('row_select');
+			var pid=$(this).attr('pid');
+			var pname=$(this).attr('product_name');
+			if($.inArray(pid, pid_arr) === -1)
+			{
+				po_product_arr[pid] = pname;
+				pid_arr.push(pid);
+			} 
+		}
+		else
+		{
+			var pid=$(this).attr('pid');
+			var pname=$(this).attr('product_name');
+			//trEle.removeClass('row_select');
+			var i = pid_arr.indexOf(pid);
+			if(i != -1) {
+				pid_arr.splice(i, 1);
+				delete po_product_arr[pid];
+			}
+		}
+	});
+});
+
+//Checkbox check and uncheck all action 
+$('.po_all').live('click',function(){
+	if($('.po_all').attr('checked'))
+	{
+		$('.prd_row').each(function(){
+			 var pid=$(this).attr('product_id');
+			 var pname=$(this).attr('product_name');
+			 $('.po_chk_'+pid).html('<input type="checkbox" pid="'+pid+'" product_name="'+pname+'" class="sel_prd">');
+		});
+	}	
+	else
+	{
+		$('.prd_row').each(function(){
+			var pid=$(this).attr('product_id');
+			 var rpid=$('.po_chk_'+pid).attr('product_id');
+			 var trEle=$('.po_chk_'+pid).parents('tr:first');
+			 trEle.removeClass('row_select');
+			 var i = pid_arr.indexOf(rpid);
+				if(i != -1) {
+					pid_arr.splice(i, 1);
+					delete po_product_arr[rpid];
+				}
+			 $('.po_chk_'+pid).html("");
+		});
+	}
 });
 
 //Checkbox action for place po option
@@ -682,11 +897,24 @@ $('.sel_prd').live('click',function(){
 		var pid=$(this).attr('pid');
 		var pname=$(this).attr('product_name');
 		
-		if($.inArray([pid,pname], po_product_arr) === -1) 
-		 	po_product_arr.push([pid,pname]);
+		if($.inArray(pid, pid_arr) === -1)
+		{
+			po_product_arr[pid] = pname;
+			///po_product_arr.push([pid,pname]);
+			pid_arr.push(pid);
+		} 
 	}
 	else
+	{
+		var pid=$(this).attr('pid');
+		var pname=$(this).attr('product_name');
 		trEle.removeClass('row_select');	
+		var i = pid_arr.indexOf(pid);
+		if(i != -1) {
+			pid_arr.splice(i, 1);
+			delete po_product_arr[pid];
+			}
+	}
 });
 
 //Action on place po button pressed
@@ -707,14 +935,15 @@ $('#place_po_dlg').dialog({
 		dlg = $(this);
 		var k=0;
 		var selected_product_ids=[];
-		pid_html='';
-		$.each(po_product_arr,function(i,p){
-			k++;
-			selected_product_ids.push(p[0]);
-			pid_html+='<div ><span style="margin-right:7px;">'+k+'</span><a target="_blank" href="'+site_url+'/admin/product/'+p[0]+'">'+p[1]+'</a>';
-			pid_html+='</div>';
+		//pid_html='';
+		var pid_html = '';
+		for (var x in po_product_arr) {
+		  if (po_product_arr.hasOwnProperty(x)) {
+		   pid_html+='<div ><span style="margin-right:7px;">'+(++k)+'</span><a target="_blank" href="'+site_url+'/admin/product/'+x+'">'+po_product_arr[x]+'</a></div>';
+		   selected_product_ids.push(x)	;
+		  }
+			}
 			
-		});
 		$('.place_po_blk').html(pid_html);
 		$('.prd_arr').val(selected_product_ids);
 		$('#prd_ttl').html(k);
@@ -724,20 +953,47 @@ $('#place_po_dlg').dialog({
 			$('#place_po_dlg').dialog('close');
 		},
 		'Proceed':function(){
+			if(po_product_arr.length)
+			{
+				 $('.vid_selected').val($('#sel_vendor').val());
 			 $('#place_po_form').submit();
+		}
+			else
+			{
+				alert("Please Choose product before proceed");
+				return false;
+			}
 		}
 	}
 });
 
 //Function to print summary and CSV export
-function print_products_summary(type)
+function print_products_summary(type,stk_type)//type===>print/export ,,,   stk_type===> all products/ qty selected products
 {
 	var menuid =$('#sel_menu').val();
 	var catid =$('#sel_cat').val();
 	var brandid =$('#sel_brand').val();
 	var terrid =$('#sel_terr').val();
 	var stateid =$('#sel_state').val();
-	window.open(site_url+'/admin/print_top_product_summary/'+menuid+'/'+catid+'/'+brandid+'/'+type+'/'+terrid+'/'+stateid);
+	var menu_type=$('#sel_type').val();
+	var days=$('#sel_sales').val();
+	var start=$('#sel_from_start').val();
+	var vendor=$('#sel_vendor').val();
+	var stk_qty=$('#sel_po').val();
+	
+	if(!stk_qty)
+		stk_qty=0;
+	
+	if(stk_type==1)
+	{
+		if(stk_qty==0)
+		{
+			alert("Please Choose Qty before export");return false;
+		}
+	}	
+	if(!brandid)
+		brandid=0;
+	window.open(site_url+'/admin/print_top_product_summary/'+menuid+'/'+catid+'/'+brandid+'/'+type+'/'+stk_type+'/'+stk_qty+'/'+vendor+'/'+terrid+'/'+stateid+'/'+days+'/'+'total'+'/'+menu_type+'/'+start);
 }
 
 //Function call to display open PO details for a product

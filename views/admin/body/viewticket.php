@@ -8,14 +8,17 @@
 	<tr>
 		<th>Priority</th>
 		<th>Ticket No</th>
+		<th>Franchise</th>
 		<th>User</th>
 		<th>Email</th>
 		<th>Mobile</th>
 		<th>Transaction</th>
 		<th>Status</th>
 		<th>Type</th>
+		<th>Notify Depts</th>
 		<th>Assigned To</th>
 		<th>From APP/Web</th>
+		<th>Created by</th>
 		<th>Created on</th>
 		<th>Last activity on</th>
 		</tr>
@@ -37,17 +40,34 @@
 		</div>
 		</td>
 		<td><a href="<?=site_url("admin/ticket/{$ticket['ticket_id']}")?>">TK<?=$ticket['ticket_no']?></a></td>
-		<td>
-		<?php if($ticket['user_id']){?>
-			<a href="<?=site_url("admin/user/{$ticket['user_id']}")?>">
-					<?=$ticket['user']; ?>
-					<?php 
+		<td align="center">
+<?php 
+			$franchise_name='--';
+			if($ticket['franchise_name']!='' && $ticket['franchise_name']!=null)
+				$franchise_name='<a href="'.site_url('/admin/pnh_franchise/'.$ticket['franchise_id']).'" target="_blank">'.$ticket['franchise_name'].'</a>';
+
+			echo $franchise_name;
+?>
+		</td>
+		<td align="center">
+<?php 
+		
+		$user_det='';
+		if($ticket['source']==1)
+			$user_det=$ticket['req_mem_name'];
+		else {
+			if($ticket['name']!=null && $ticket['name']!='' )
+				$user_det=''.$ticket['name'].'';
+		}
+		echo $user_det;
+		
+		/*if($ticket['user_id']){
+					$ticket['user'];
 					if($ticket['user']!=$ticket['name'] && $ticket['name']!="")
-						echo "/ {$ticket['name']}";
-					?>
-			</a>
-		<?php } 
-			  else echo $ticket['name']; ?>
+						echo " <br> {$ticket['name']}";
+		}
+		else echo $ticket['name']; */
+?>
 		</td>
 		<td><?=$ticket['email']?></td>
 		<td><?=$ticket['mobile']?>
@@ -62,7 +82,7 @@
 		</td>
 		<td><?php switch($ticket['status']){
 			case 0:
-				echo 'Unassigned';
+				echo 'Pending';
 				break;
 			case 1:
 				echo 'Opened';
@@ -128,19 +148,33 @@
 				<input type="hidden" name="action" value="2">
 				<select name="type">
 
-				<?php if($ticket['type']>=5 || $ticket['type']>6){ 
+				<?php 
+				
+					
+				if($ticket['type']>=5 || $ticket['type']>6)
+				{
 					$statuss=array();
 					$statuss[7]="In Transit";
 					$statuss[8]="Received";
 					$statuss[9]="Not Received";
 					$statuss[10]="Request";
 					$statuss[11]="Complaint";
+					
 					foreach($statuss as $i=>$s){
 						?>
 						<option value="<?=$i?>"><?=$s?></option>
 				<?php }
 					}else{
-						$statuss=array("Query","Order Issue","Bug","Suggestion","Common",'PNH Returns','Courier Followups'); 
+						$statuss[0]="Query";
+						$statuss[1]="Order Issue";
+						$statuss[2]="Bug";
+						$statuss[3]="Suggestion";
+						$statuss[4]="Common";
+//						$statuss[5]="PNH Returns";
+						$statuss[6]="Courier Followups";
+						$statuss[10]="Request";
+						$statuss[11]="Complaint";
+						
 						foreach($statuss as $i=>$s){?>
 							<option value="<?=$i?>"><?=$s?></option>
 				<?php	}
@@ -151,6 +185,7 @@
 		</div>
 
 		</td>
+		<td><?=$ticket['dept_dets'];?></td>
 		<td><?=ucfirst($ticket['assignedto']);?>
 		<a href="javascript:void(0)" onclick='$(this).hide();$("#assign").show();' class="button button-primary button-tiny">
 			<?php if(!$ticket['assigned_to']){?>
@@ -168,6 +203,15 @@
 		if($ticket['from_app'] == 1)
 			$from_app='Mobile / API';
 		echo $from_app; ?></td>
+		<td>
+<?php
+		$created_by='--';
+		if($ticket['created_by']!=null && $ticket['created_by']!='')
+			$created_by=$ticket['created_by'];
+		
+		echo $created_by;
+?>
+		</td>
 		<td><?=$ticket['created_on']?></td>
 		<td><?=$ticket['updated_on']?></td>
 		</tr>

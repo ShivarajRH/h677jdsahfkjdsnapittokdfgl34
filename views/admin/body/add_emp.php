@@ -3,7 +3,7 @@
 	<h1 class="mainbox-title">Add & Manage Employees</h1>
 	
 	
-	<form id="formID" enctype="multipart/form-data" action="<?php echo site_url('admin/process_addemployee')?>" method="post">
+	<form id="formID" enctype="multipart/form-data" action="<?php echo site_url('admin/process_addemployee')?>" method="post" onsubmit="return validate_formdata(this)">
 			
          <table cellspacing="5" cellpadding="2" width="100%">
          <tr>
@@ -240,7 +240,7 @@
 							</td>
 						</tr>
 						
-						<tr class="inst towns" class="emp_others">
+						<tr class="inst towns" class="emp_others hide">
 								<td class="label">Towns :<span class="red_star">*</span></td>
 								<td><select class="chzn-select" style="width: 200px;" name="town[]" multiple="multiple">
 								     <option value="0">Choose</option>
@@ -262,7 +262,7 @@
 	</div>
 
 <style>
-	.manageListOptions{
+.manageListOptions{
 	font-weight:bold;
 	font-size:14px;
 	cursor:pointer;
@@ -278,7 +278,141 @@
 <script type="text/javascript">
 
 $('#contactList').manageList();
+		
+var sel_role_id =0;
+// ====================< CHANGE EVENTS >===============================
+// 1 Role change
+$('select[name="role_id"]').change(function(){
+	$('select[name="assigned_under_id"]').html('');
+	 sel_role_id = $(this).val();
+		$.getJSON(site_url+'/admin/get_superior_names/'+sel_role_id,'',function(resp){
+			if(resp.status == 'error'){
+				//alert(resp.message);
+			}else{
+				var emp_list_html = '<option value="">Choose</option>';
+					$.each(resp.emp_list,function(i,itm){
+						emp_list_html += '<option value="'+itm.employee_id+'">'+itm.name+'</option>';
+					});
+					$('select[name="assigned_under_id"]').html(emp_list_html);
+			}
+		});
+});
+// 2 Assigned Under change
+$('select[name="assigned_under_id"]').change(function(){
 
+	$('select[name="territory[]"]').html('');
+	var sel_sup_id = $(this).val();
+
+
+		$.getJSON(site_url+'/admin/suggest_territories/'+sel_sup_id,'',function(resp){
+			if(resp.status == 'error'){
+				alert(resp.message);
+			}else{
+				var terr_list_html = '';
+
+
+					$.each(resp.terr_list,function(i,itm){
+						terr_list_html += '<option value="'+itm.id+'">'+itm.territory_name+'</option>';
+					});
+					$('select[name="territory[]"]').html(terr_list_html);
+
+					$('#'+$('select[name="territory[]"]').attr('id')+'_chzn').remove();
+
+
+					if(sel_role_id > 3)
+					{
+						$('select[name="territory[]"]').attr({'id':'','class':'','multiple':false}).val('').chosen();
+					}
+					else
+					{
+						$('select[name="territory[]"]').attr({'id':'','class':'','multiple':true}).val('').chosen();
+					}
+
+
+					$('select[name="territory[]"]').trigger('change');
+			}
+		});
+});
+// 3 Territory change
+$('select[name="territory[]"]').change(function(){
+
+	$('select[name="town[]"]').html('').trigger("liszt:updated");
+	
+	if(sel_role_id > 3){
+		sel_sup_id = 0;
+		var sel_territory_id = $(this).val();
+		$.getJSON(site_url+'/admin/suggest_towns/'+sel_territory_id,'',function(resp){
+		  if(resp.status == 'error'){
+			  alert(resp.message);
+		  }else{
+			  var town_list_html = '';
+
+				  $.each(resp.town_list,function(i,itm){
+					  town_list_html += '<option value="'+itm.town_id+'">'+itm.town_name+'</option>';
+				  });
+				  $('select[name="town[]"]').html(town_list_html).trigger("liszt:updated");
+		  }
+	  });
+	}
+});
+// 4 Job title change
+$(".inst_type").change(function(){
+	  $(".inst").hide();
+	  $('#assigned_under').show();
+	  $("#all_territory").hide();
+	  if($(this).val()<="5")
+	  {
+		  $('.inst select').html('').val('').trigger("liszt:updated");
+
+		  if($(this).val()=="3")
+		  {
+		   $(".territory").show();
+
+		  }
+		  else if($(this).val()=="4")
+		  {		
+			   $(".territory").show();
+		  }
+
+		  else if($(this).val()=="5")
+		  {
+			  $(".territory").show();
+			  $(".towns").show();
+		  }
+	  }
+
+	  if($(this).val()>="6" && $(this).val()!="8")
+	  {
+		  //$(".inst").hide();
+		  $('#assigned_under').hide();
+		  $("#all_territory").show();
+		  $(".towns").show();
+	  }
+
+}).val("0").change();
+
+// 5 Contact no update
+$("#contact_no").live('change', function(){
+	mobok1=0;
+	if(!is_mobile($(this).val()))
+	{
+		alert("invalid mobile number");
+		return;
+	}
+	$.post("<?=site_url("admin/jx_checkcontact")?>",{contact_no:$(this).val()},function(data){
+		if(data=="1")
+		{	
+			mobok1=1;
+			$("#mob1_error").html("Ok").css("color","green");
+			//alert('Ok');
+		}
+		else
+			$("#mob1_error").html("This mobile number is already in the system").css("color","red");
+			//alert('Already a Employee exists with given login mobile');
+	});
+});
+
+// 6 on change has login
 $('input[name="has_login"]').change(function(){
 	if($(this).attr('checked'))
 	{
@@ -288,186 +422,99 @@ $('input[name="has_login"]').change(function(){
 		$('#login_details_blk').hide();
 	}
 }).trigger('change');
-							
-		
-var sel_role_id =0;
-	$('select[name="role_id"]').change(function(){
-		$('select[name="assigned_under_id"]').html('');
-		 sel_role_id = $(this).val();
-			$.getJSON(site_url+'/admin/get_superior_names/'+sel_role_id,'',function(resp){
-				if(resp.status == 'error'){
-					alert(resp.message);
-				}else{
-					var emp_list_html = '<option value="">Choose</option>';
-						$.each(resp.emp_list,function(i,itm){
-							emp_list_html += '<option value="'+itm.employee_id+'">'+itm.name+'</option>';
-						});
-						$('select[name="assigned_under_id"]').html(emp_list_html);
-				}
-			});
-	});
 
-		$('select[name="assigned_under_id"]').change(function(){
-			
-			$('select[name="territory[]"]').html('');
-			var sel_sup_id = $(this).val();
-				 
-				
-				$.getJSON(site_url+'/admin/suggest_territories/'+sel_sup_id,'',function(resp){
-					if(resp.status == 'error'){
-						alert(resp.message);
-					}else{
-						var terr_list_html = '';
-						 
-							
-							$.each(resp.terr_list,function(i,itm){
-								terr_list_html += '<option value="'+itm.id+'">'+itm.territory_name+'</option>';
-							});
-							$('select[name="territory[]"]').html(terr_list_html);
-							
-							$('#'+$('select[name="territory[]"]').attr('id')+'_chzn').remove();
-
-
-							if(sel_role_id > 3)
-							{
-								$('select[name="territory[]"]').attr({'id':'','class':'','multiple':false}).val('').chosen();
-							}
-							else
-							{
-								$('select[name="territory[]"]').attr({'id':'','class':'','multiple':true}).val('').chosen();
-							}
-							
-							
-							$('select[name="territory[]"]').trigger('change');
-					}
-				});
-		});
-			
-      $('select[name="territory[]"]').change(function(){
-          
-          $('select[name="town[]"]').html('').trigger("liszt:updated");
-          if(sel_role_id > 3){
-				sel_sup_id = 0;
-		var sel_territory_id = $(this).val();
-			$.getJSON(site_url+'/admin/suggest_towns/'+sel_territory_id,'',function(resp){
-				if(resp.status == 'error'){
-					alert(resp.message);
-				}else{
-					var town_list_html = '';
-					
-						$.each(resp.town_list,function(i,itm){
-							town_list_html += '<option value="'+itm.town_id+'">'+itm.town_name+'</option>';
-						});
-						$('select[name="town[]"]').html(town_list_html).trigger("liszt:updated");
-				}
-			});
-          }
-	});
-
-  $(".inst_type").change(function(){
-		$(".inst").hide();
-		$('#assigned_under').show();
-		$("#all_territory").hide();
-		if($(this).val()<="5")
-		{
-			$('.inst select').html('').val('').trigger("liszt:updated");
-			
-			if($(this).val()=="3")
-			{
-	         $(".territory").show();
-	       
-	        }
-			else if($(this).val()=="4")
-			{		
-				 $(".territory").show();
-			}
-	
-			else if($(this).val()=="5")
-			{
-				$(".territory").show();
-				$(".towns").show();
-		    }
-		}
-
-		if($(this).val()>="6" && $(this).val()!="8")
-		{
-			//$(".inst").hide();
-			$('#assigned_under').hide();
-			$("#all_territory").show();
-			$(".towns").show();
-		} 
-			
-		
-	}).val("0").change();
-
-
+// ====================< CHANGE EVENTS >===============================
 									  
-	$('#add_contact').click(function(e){
-		e.preventDefault();
-		$('#add_contact').append('<li><input type="text" name="contact_no[]" value=""> <a href="javascript:void(0)" class="remove_btn">X</a></li>');
-		  $('.remove_btn').unbind('click').click(function(e){
-			  e.preventDefault();
-			  $(this).parent().remove();
-		  });
-		});
+$('#add_contact').click(function(e){
+	e.preventDefault();
+	$('#add_contact').append('<li><input type="text" name="contact_no[]" value=""> <a href="javascript:void(0)" class="remove_btn">X</a></li>');
+	  $('.remove_btn').unbind('click').click(function(e){
+		  e.preventDefault();
+		  $(this).parent().remove();
+	  });
+});
 
-	$(function () {
-		$("#txtDate").datepicker({
-		changeMonth: true,
-		changeYear: true,
-		yearRange: '1970:1995'
-		});
-
-		$(".chzn-select").chosen({no_results_text: "No results matched"}); 
-
+$(function () {
+	$("#txtDate").datepicker({
+	changeMonth: true,
+	changeYear: true,
+	yearRange: '1970:1995'
 	});
 
-	$("#contact_no").live('change', function(){
-		mobok1=0;
-		if(!is_mobile($(this).val()))
-		{
-			alert("invalid mobile number");
-			return;
-		}
-		$.post("<?=site_url("admin/jx_checkcontact")?>",{contact_no:$(this).val()},function(data){
-			if(data=="1")
-			{	
-				mobok1=1;
-				$("#mob1_error").html("Ok").css("color","green");
-				//alert('Ok');
-			}
-			else
-				$("#mob1_error").html("This mobile number is already in the system").css("color","red");
-				//alert('Already a Employee exists with given login mobile');
-		});
-	});
+	$(".chzn-select").chosen({no_results_text: "No results matched"}); 
+
+});
+
 	
-	//=========================== Employee type CODE STARTS >===============================
-	function fn_emp_type_operation(emp_type) {
-		if(emp_type == '1')
-		{
-			$(".emp_others").hide();
-			$("#emp_office").show();
-		}
-		else
-		{
-			$(".emp_others").show();
-			$("#emp_office").hide();
-		}
+//=========================== Employee type CODE STARTS >===============================
+function fn_emp_type_operation(emp_type) {
+	if(emp_type == '1')
+	{
+		$(".emp_others").hide();
+		$("#emp_office").show();
 	}
-	
-	$(document).ready(function() {
+	else
+	{
+		$(".emp_others").show();
+		$("#emp_office").hide();
+	}
+}
 
-		var emp_type = $('input[name="emp_type"]:radio:checked').val();
-		fn_emp_type_operation(emp_type);
+$(document).ready(function() {
+
+	var emp_type = $('input[name="emp_type"]:radio:checked').val();
+	fn_emp_type_operation(emp_type);
+
+});
+
+$('input[name="emp_type"]:radio').change(function(e) {
+	var emp_type = $(this).val();
+	fn_emp_type_operation(emp_type);
+}).trigger("change");
+//=========================== Employee type CODE ENDS >===============================	
+	function validate_formdata(elt)
+	{
+		var username=$("input[name='username']",$(elt)).val();
+		var name=$("input[name='name']",$(elt)).val();
+		var email=$("input[name='email']",$(elt)).val();
+		var elt_roles=$(".roles:checked",$(elt));
+		var err=0;
+		var err_msg=[];
 		
-	});
-
-	$('input[name="emp_type"]:radio').change(function(e) {
-		var emp_type = $(this).val();
-		fn_emp_type_operation(emp_type);
-	}).trigger("change");
-	//=========================== Employee type CODE ENDS >===============================	
+		if(username != undefined )
+		{
+			if(username=='' || !is_nospace(username) )
+			{
+				err_msg.push("Username is required OR Invalid username.");
+				err=1;
+			}
+		}
+		if(name=='')
+		{
+			err_msg.push("Name is required.");
+			err=1;
+		}
+		if(email=='' || !is_email(email))
+		{
+			err_msg.push("Email is empty OR Invalid Email.");
+			err=1;
+		}
+		if(elt_roles.length==0)
+		{
+			err_msg.push("Assign atleast one role.");
+			err=1;
+		}
+		
+		if(err==1){
+			var mstr='Please check following errors:\n';
+			$.each(err_msg,function(i,msg) {
+				mstr +="\n"+(++i)+". "+msg;
+			});
+			alert(mstr);
+			return false;
+		}
+		return true;
+	}
 </script>
 
 <style>

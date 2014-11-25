@@ -1,0 +1,91 @@
+/*
+ * Manage Product inner styles
+ */
+.dataTables_wrapper .dataTables_processing {
+	overflow: hidden;
+	display: none;
+	/*  position: fixed;
+    z-index: 1000; */
+	top: 125px;
+	left: 0;
+	height: 110%;
+	width: 200%;
+	background: rgba(255, 255, 255, .8) 50% 50% no-repeat;
+}
+
+td.details-control {
+	background: url('../images/details_open.png') no-repeat center center;
+	cursor: pointer;
+}
+
+tr.shown td.details-control {
+	background: url('../images/details_close.png') no-repeat center center;
+}
+/*
+td.stock-detail {
+	background: url('../images/details_open.png') no-repeat center center;
+	cursor: pointer;
+}
+
+tr.shown-stock td.stock-detail {
+	background: url('../images/details_close.png') no-repeat center center;
+}*/
+
+div.DTTT_container {
+	float: right;
+	margin-bottom: 0px !important;
+	padding: 7px;
+}
+
+div.toolbar {
+	float: right;
+	margin-bottom: 0px !important;
+	padding: 7px;
+}
+
+.dataTables_wrapper .dataTables_filter {
+	padding-top: 10px;
+}
+
+.form-filter {
+	width: 300px;
+	height: 20px;
+}
+
+.dataTables_info {
+	font-size: 18px;
+}
+
+div.FixedHeader_Cloned th,div.FixedHeader_Cloned td {
+	background-color: white !important;
+}
+
+.dataTables_wrapper input[type="text"],.dataTables_wrapper select,.dataTables_wrapper textarea
+	{
+	width: 100px;
+}
+div.FixedHeader_Cloned input[type="text"],.FixedHeader_Cloned select,.FixedHeader_Cloned textarea {
+	width: 100px;
+}
+
+.button-tiny {
+    font-size: 12px;
+    height: 22.4px;
+    line-height: 22.4px;
+    padding: 0 17.92px;
+}
+.button-actions {
+    background: -moz-linear-gradient(center top , #B8860B, #8B6508) repeat scroll 0 0 #FFB90F;
+    border-color: #8B6508;
+    color: white;
+    text-shadow: 0 -1px 1px rgba(19, 28, 0, 0.35);
+}
+
+.button-actions:hover {
+  background-color: #FFB90F;
+  background: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #a0e800), color-stop(100%, #6b9c00));
+  background: -webkit-linear-gradient(top, #FFB90F, #8B6508);
+  background: -moz-linear-gradient(top, #FFB90F, #8B6508);
+  background: -o-linear-gradient(top, #FFB90F, #8B6508);
+  background: linear-gradient(top, #FFB90F, #8B6508);
+}

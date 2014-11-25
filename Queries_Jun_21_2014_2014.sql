@@ -1,24 +1,18 @@
 #Jun_21_2014
-
 SELECT * FROM m_employee_dept_link WHERE employee_id=? AND is_active=?;
-
 DESC king_invoice
 DESC shipment_batch_process_invoice_link
-
 # deal_member_price_changelog -- imp
 # deal_price_changelog
-
 #=============================================================
 #Jun_23_2014
 ALTER TABLE `deal_member_price_changelog` ADD COLUMN `mp_is_offer` TINYINT(11) DEFAULT 0 NULL AFTER `old_mp_max_order_qty`, ADD COLUMN `mp_offer_from` DATETIME NULL AFTER `mp_is_offer`, ADD COLUMN `mp_offer_to` DATETIME NULL AFTER `mp_offer_from`; 
 ALTER TABLE `king_dealitems` ADD COLUMN `mp_is_offer` TINYINT(11) NULL AFTER `mp_max_order_qty`, ADD COLUMN `mp_offer_from` DATETIME NULL AFTER `mp_is_offer`, ADD COLUMN `mp_offer_to` DATETIME NULL AFTER `mp_offer_from`; 
 #=============================================================
-
 # Jun_23_2014
 #===============================================
 ALTER TABLE `m_vendor_api_templates` ADD COLUMN `attr3` VARCHAR (255)  NULL  AFTER `attr2`, ADD COLUMN `attr4` VARCHAR (255)  NULL  AFTER `attr3`, ADD COLUMN `attr5` VARCHAR (255)  NULL  AFTER `attr4`, ADD COLUMN `attr6` VARCHAR (255)  NULL  AFTER `attr5`, ADD COLUMN `attr7` VARCHAR (255)  NULL  AFTER `attr6`, ADD COLUMN `attr8` VARCHAR (255)  NULL  AFTER `attr7`,CHANGE `purchase_cost` `purchase_cost` VARCHAR (255)  NULL  COLLATE latin1_swedish_ci; 
 ALTER TABLE `m_vendor_api_datalog` ADD COLUMN `attr3` VARCHAR (255)  NULL  AFTER `attr2`, ADD COLUMN `attr4` VARCHAR (255)  NULL  AFTER `attr3`, ADD COLUMN `attr5` VARCHAR (255)  NULL  AFTER `attr4`, ADD COLUMN `attr6` VARCHAR (255)  NULL  AFTER `attr5`, ADD COLUMN `attr7` VARCHAR (255)  NULL  AFTER `attr6`, ADD COLUMN `attr8` VARCHAR (255)  NULL  AFTER `attr7`,CHANGE `purchase_cost` `purchase_cost` VARCHAR (255)  NULL  COLLATE latin1_swedish_ci;
-
 CREATE TABLE `m_vendor_attributes_link` (                                                   
     `id` BIGINT(20) NOT NULL AUTO_INCREMENT,                                                  
     `vendor_id` INT(11) DEFAULT NULL,                                                         
@@ -29,36 +23,29 @@ CREATE TABLE `m_vendor_attributes_link` (
     PRIMARY KEY (`id`)                                                                        
   );
 #=====================================
- 
 SELECT * FROM king_dealitems WHERE id='2234525859';
 SELECT * FROM deal_member_price_changelog WHERE itemid='2234525859';
-
 `m_vendor_info`
 `m_vendor_api_resources`
 `m_vendor_api_access`
 `m_vendor_api_templates`
 `m_vendor_attributes_link`
-
 #===========================================
 # Jun_23_2014
 INSERT INTO `king_admin` (`user_id`, `name`, `username`, `password`, `usertype`, `access`, `brandid`, `fullname`, `email`, `createdon`, `modifiedon`) VALUES ('0ec7bd10ef5d2c99e7121241f8f12d1f', 'Franchise/API', 'franchise', 'dc21afd02d0c2edb2bee3ead8da23e1f', '1', '0', '0', '', 'franchise@storeking.in', '2014-06-23 18:19:21', '2014-06-23 18:19:23'); 
 #===========================================
-
 SELECT a.id,a.itemid,a.old_mrp,a.new_mrp,a.old_price,a.new_price,a.reference_grn,a.created_by,a.created_on,b.username AS logged_by,mp.old_member_price,mp.new_member_price FROM deal_price_changelog a 
 JOIN deal_member_price_changelog mp ON mp.itemid = a.itemid 
 LEFT JOIN king_admin b ON a.created_by = b.id 
 WHERE a.itemid='8575333269' ORDER BY a.id DESC
-
+#===
 SELECT * FROM king_dealitems WHERE id='8575333269';
-
 `m_employee_roles`
-
 #===========================================
 # Jun_24_2014
 ALTER TABLE `m_employee_roles` CHANGE `emp_status` `emp_role_status` TINYINT(11) DEFAULT 1 NULL;
 #===========================================
 # Jun_25_2014
-
 SELECT di.pnh_id,di.id,di.name,di.orgprice,di.price,di.member_price,di.mp_max_qty,di.mp_max_order_qty,di.mp_is_offer,di.mp_offer_from,di.mp_offer_to
 	,di.live,dl.publish,e.product_id,e.is_sourceable
 	FROM king_deals dl 
@@ -66,14 +53,9 @@ SELECT di.pnh_id,di.id,di.name,di.orgprice,di.price,di.member_price,di.mp_max_qt
 	LEFT JOIN m_product_deal_link c ON c.itemid = di.id AND c.is_active = 1
 	LEFT JOIN m_product_info e ON e.product_id = c.product_id      
 	WHERE di.is_pnh = 1  
-
 	ORDER BY di.name# LIMIT 0,100
-	
 DESC king_deals;
-
 SELECT price_type FROM pnh_m_franchise_info WHERE franchise_id = '59';
-
-
 mp_offer_note
 #===========================================
 # Jun_25_2014
@@ -83,46 +65,29 @@ ALTER TABLE `deal_member_price_changelog` CHANGE `is_active` `is_active` TINYINT
 # Jun_26_2014
 ALTER TABLE `deal_member_price_changelog` CHANGE `new_mp_max_qty` `new_mp_max_qty` INT(10) UNSIGNED DEFAULT 0 NOT NULL, CHANGE `old_mp_max_qty` `old_mp_max_qty` INT(10) UNSIGNED DEFAULT 0 NOT NULL, CHANGE `new_mp_max_order_qty` `new_mp_max_order_qty` INT(10) UNSIGNED DEFAULT 0 NOT NULL, CHANGE `old_mp_max_order_qty` `old_mp_max_order_qty` INT(10) UNSIGNED DEFAULT 0 NOT NULL;
 #===========================================
-
 UPDATE deal_member_price_changelog SET mp_offer_note = 'Test1',modified_on='2014-06-25 20:44:31',modified_by='37' WHERE is_active=1 AND itemid = '9797188692'  LIMIT 1
-
 SELECT * FROM deal_member_price_changelog WHERE itemid='9797188692'
-
 UPDATE deal_member_price_changelog SET mp_offer_note = 'Test10001894',modified_on='2014-06-25 21:23:19',modified_by='37' WHERE is_active=1 AND itemid = '891544930349'  LIMIT 1
-
 SELECT * FROM king_dealitems WHERE id='891544930349'
 SELECT * FROM deal_member_price_changelog WHERE itemid='891544930349'
-
 SELECT * FROM `deal_member_price_changelog`;
-
 #Jun_26_2014
-
 UPDATE king_dealitems di
-
 SET offer_price=\
-
 SELECT * FROM deal_member_price_changelog WHERE itemid='2624864542'
-
 UPDATE `king_dealitems` SET `member_price` = '4543', `mp_max_qty` = '10', `mp_max_order_qty` = '1', `mp_is_offer` = '1', `mp_offer_from` = '20142014-06-26', `mp_offer_to` = '20142014-06-30'
 			, `mp_offer_note` = 'Bake N store very good price' WHERE `id` = '2624864542';
-
 SELECT mpl.* FROM deal_member_price_changelog mpl WHERE mpl.itemid='2234525859' ORDER BY mpl.id DESC
-
 INSERT INTO `deal_member_price_changelog` (`itemid`, `mp_offer_note`, `created_on`, `created_by`) VALUES ('2234525859', 'Test1', '2014-06-26 12:44:57', '37')
-
 UPDATE deal_member_price_changelog SET `mp_offer_note` = 'Test1',`modified_on`='2014-06-26 12:48:02',`modified_by`='37' WHERE `is_active`=1 AND itemid = '2234525859'  LIMIT 1
-
 UPDATE `king_dealitems` SET `member_price` = '1400', `mp_max_qty` = '11', `mp_max_order_qty` = '1', `mp_is_offer` = '1', `mp_offer_from` = '2014-06-25', `mp_offer_to` = '2014-06-30', `mp_offer_note` = 'Test1' WHERE `id` = '2234525859'
-
 #=============================================
 #Jun_26_2014
 ALTER TABLE `king_dealitems` CHANGE `mp_max_qty` `mp_frn_max_qty` INT(10) DEFAULT 0 NULL, CHANGE `mp_max_order_qty` `mp_mem_max_qty` INT(10) DEFAULT 0 NULL;
 ALTER TABLE `deal_member_price_changelog` CHANGE `new_mp_max_qty` `new_mp_frn_max_qty` INT(10) UNSIGNED DEFAULT 0 NOT NULL, CHANGE `old_mp_max_qty` `old_mp_frn_max_qty` INT(10) UNSIGNED DEFAULT 0 NOT NULL, CHANGE `new_mp_max_order_qty` `new_mp_mem_max_qty` INT(10) UNSIGNED DEFAULT 0 NOT NULL, CHANGE `old_mp_max_order_qty` `old_mp_mem_max_qty` INT(10) UNSIGNED DEFAULT 0 NOT NULL;
 ALTER TABLE `king_dealitems` CHANGE `mp_frn_max_qty` `mp_frn_max_qty` INT(10) DEFAULT 0 NOT NULL;
 #=============================================
-
 SELECT * FROM deal_member_price_changelog;
-
 SELECT i.max_allowed_qty,i.billon_orderprice,i.gender_attr,d.catid,d.brandid,d.tagline,i.nyp_price,i.pnh_id,i.id,i.dealid,b.name AS brand,c.name AS category,
 			  i.name,i.pic,i.orgprice,i.price,i.store_price,d.description,d.publish,e.name AS created_by,f.name AS mod_name,i.created_on,i.modified_on,
 			  d.menuid,m.name AS menu_name,i.has_insurance,i.member_price,i.mp_frn_max_qty,i.mp_mem_max_qty
@@ -137,44 +102,31 @@ SELECT i.max_allowed_qty,i.billon_orderprice,i.gender_attr,d.catid,d.brandid,d.t
 			  		
 SELECT mpl.* FROM deal_member_price_changelog mpl WHERE mpl.itemid='9215926271'
 ORDER BY mpl.id DESC
-
 DESC deal_price_changelog
-
 #2
 UPDATE deal_member_price_changelog SET is_active=0,modified_on='1145',modified_by='11' WHERE itemid = '1'  LIMIT 1
 #3
 INSERT INTO `deal_member_price_changelog` (`itemid`, `new_member_price`, `old_member_price`, `new_mp_frn_max_qty`, `old_mp_frn_max_qty`, `new_mp_mem_max_qty`, `old_mp_mem_max_qty`, `mp_is_offer`, `mp_offer_from`, `mp_offer_to`, `mp_offer_note`, `created_by`, `created_on`, `is_active`) 
 VALUES ('9217252483', '1145', '0.00', '11', NULL, '1', '0', '1', '2014-06-26', '2014-06-28', '0', '37', '2014-06-26 18:41:16', '1')
-
 SELECT * FROM deal_member_price_changelog WHERE itemid='2749173323';
 SELECT * FROM king_dealitems WHERE id='2749173323'
-
 DESC king_dealitems;
-
 SELECT * FROM king_dealitems WHERE id ='9217252483';
-
 UPDATE deal_member_price_changelog SET is_active=0,modified_on=?,modified_by=? WHERE itemid = '';
-
 SELECT * FROM deal_member_price_changelog WHERE itemid='9217252483';
 SELECT * FROM king_dealitems WHERE id='2749173323'
-
 SELECT * FROM `m_dept_request_types` ORDER BY id;
-
 ALTER TABLE `m_client_category_link` ADD COLUMN `main_category` VARCHAR (255)  NULL  AFTER `client_category`;
 ALTER TABLE `m_vendor_api_templates` ADD COLUMN `spec26` VARCHAR (255)  NULL  AFTER `spec25`, ADD COLUMN `spec27` VARCHAR (255)  NULL  AFTER `spec26`, ADD COLUMN `spec28` VARCHAR (255)  NULL  AFTER `spec27`, ADD COLUMN `spec29` VARCHAR (255)  NULL  AFTER `spec28`, ADD COLUMN `spec30` VARCHAR (255)  NULL  AFTER `spec29`, ADD COLUMN `spec31` VARCHAR (255)  NULL  AFTER `spec30`, ADD COLUMN `spec32` VARCHAR (255)  NULL  AFTER `spec31`, ADD COLUMN `spec33` VARCHAR (255)  NULL  AFTER `spec32`, ADD COLUMN `spec34` VARCHAR (255)  NULL  AFTER `spec33`, ADD COLUMN `spec35` VARCHAR (255)  NULL  AFTER `spec34`, ADD COLUMN `spec36` VARCHAR (255)  NULL  AFTER `spec35`, ADD COLUMN `spec37` VARCHAR (255)  NULL  AFTER `spec36`, ADD COLUMN `spec38` VARCHAR (255)  NULL  AFTER `spec37`, ADD COLUMN `spec39` VARCHAR (255)  NULL  AFTER `spec38`, ADD COLUMN `spec40` VARCHAR (255)  NULL  AFTER `spec39`, ADD COLUMN `spec41` VARCHAR (255)  NULL  AFTER `spec40`, ADD COLUMN `spec42` VARCHAR (255)  NULL  AFTER `spec41`, ADD COLUMN `spec43` VARCHAR (255)  NULL  AFTER `spec42`, ADD COLUMN `spec44` VARCHAR (255)  NULL  AFTER `spec43`, ADD COLUMN `spec45` VARCHAR (255)  NULL  AFTER `spec44`, ADD COLUMN `spec46` VARCHAR (255)  NULL  AFTER `spec45`, ADD COLUMN `spec47` VARCHAR (255)  NULL  AFTER `spec46`, ADD COLUMN `spec48` VARCHAR (255)  NULL  AFTER `spec47`, ADD COLUMN `spec49` VARCHAR (255)  NULL  AFTER `spec48`, ADD COLUMN `spec50` VARCHAR (255)  NULL  AFTER `spec49`, ADD COLUMN `spec51` VARCHAR (255)  NULL  AFTER `spec50`, ADD COLUMN `spec52` VARCHAR (255)  NULL  AFTER `spec51`, ADD COLUMN `spec53` VARCHAR (255)  NULL  AFTER `spec52`, ADD COLUMN `spec54` VARCHAR (255)  NULL  AFTER `spec53`, ADD COLUMN `spec55` VARCHAR (255)  NULL  AFTER `spec54`, ADD COLUMN `spec56` VARCHAR (255)  NULL  AFTER `spec55`, ADD COLUMN `spec57` VARCHAR (255)  NULL  AFTER `spec56`, ADD COLUMN `spec58` VARCHAR (255)  NULL  AFTER `spec57`, ADD COLUMN `spec59` VARCHAR (255)  NULL  AFTER `spec58`, ADD COLUMN `spec60` VARCHAR (255)  NULL  AFTER `spec59`,CHANGE `spec25` `spec25` VARCHAR (255)  NULL  COLLATE latin1_swedish_ci;
 ALTER TABLE `m_vendor_api_datalog` ADD COLUMN `spec26` VARCHAR (255)  NULL  AFTER `spec25`, ADD COLUMN `spec27` VARCHAR (255)  NULL  AFTER `spec26`, ADD COLUMN `spec28` VARCHAR (255)  NULL  AFTER `spec27`, ADD COLUMN `spec29` VARCHAR (255)  NULL  AFTER `spec28`, ADD COLUMN `spec30` VARCHAR (255)  NULL  AFTER `spec29`, ADD COLUMN `spec31` VARCHAR (255)  NULL  AFTER `spec30`, ADD COLUMN `spec32` VARCHAR (255)  NULL  AFTER `spec31`, ADD COLUMN `spec33` VARCHAR (255)  NULL  AFTER `spec32`, ADD COLUMN `spec34` VARCHAR (255)  NULL  AFTER `spec33`, ADD COLUMN `spec35` VARCHAR (255)  NULL  AFTER `spec34`, ADD COLUMN `spec36` VARCHAR (255)  NULL  AFTER `spec35`, ADD COLUMN `spec37` VARCHAR (255)  NULL  AFTER `spec36`, ADD COLUMN `spec38` VARCHAR (255)  NULL  AFTER `spec37`, ADD COLUMN `spec39` VARCHAR (255)  NULL  AFTER `spec38`, ADD COLUMN `spec40` VARCHAR (255)  NULL  AFTER `spec39`, ADD COLUMN `spec41` VARCHAR (255)  NULL  AFTER `spec40`, ADD COLUMN `spec42` VARCHAR (255)  NULL  AFTER `spec41`, ADD COLUMN `spec43` VARCHAR (255)  NULL  AFTER `spec42`, ADD COLUMN `spec44` VARCHAR (255)  NULL  AFTER `spec43`, ADD COLUMN `spec45` VARCHAR (255)  NULL  AFTER `spec44`, ADD COLUMN `spec46` VARCHAR (255)  NULL  AFTER `spec45`, ADD COLUMN `spec47` VARCHAR (255)  NULL  AFTER `spec46`, ADD COLUMN `spec48` VARCHAR (255)  NULL  AFTER `spec47`, ADD COLUMN `spec49` VARCHAR (255)  NULL  AFTER `spec48`, ADD COLUMN `spec50` VARCHAR (255)  NULL  AFTER `spec49`, ADD COLUMN `spec51` VARCHAR (255)  NULL  AFTER `spec50`, ADD COLUMN `spec52` VARCHAR (255)  NULL  AFTER `spec51`, ADD COLUMN `spec53` VARCHAR (255)  NULL  AFTER `spec52`, ADD COLUMN `spec54` VARCHAR (255)  NULL  AFTER `spec53`, ADD COLUMN `spec55` VARCHAR (255)  NULL  AFTER `spec54`, ADD COLUMN `spec56` VARCHAR (255)  NULL  AFTER `spec55`, ADD COLUMN `spec57` VARCHAR (255)  NULL  AFTER `spec56`, ADD COLUMN `spec58` VARCHAR (255)  NULL  AFTER `spec57`, ADD COLUMN `spec59` VARCHAR (255)  NULL  AFTER `spec58`, ADD COLUMN `spec60` VARCHAR (255)  NULL  AFTER `spec59`,CHANGE `spec25` `spec25` VARCHAR (255)  NULL  COLLATE latin1_swedish_ci;
 ALTER TABLE `m_vendor_product_link` CHANGE `vendor_group_no` `vendor_group_no` VARBINARY (255)  NULL ;                           
-
-
 #Jun_27_2014
-
 SELECT price_type FROM pnh_m_franchise_info WHERE franchise_id=? LIMIT 1
 
 SELECT price_type 
 FROM pnh_m_franchise_info f
 JOIN pnh_member_info m ON m.franchise_id = f.franchise_id
 WHERE pnh_member_id='22222222' LIMIT 1;
-
 #=======< New >===============
 SELECT i.id AS itemid,i.price,i.member_price,i.mp_frn_max_qty,i.mp_mem_max_qty,i.mp_is_offer,i.mp_offer_from,i.mp_offer_to,i.mp_offer_note
 ,mpl.id AS logref_id,a.username AS created_by
@@ -185,27 +137,18 @@ WHERE i.id='3527475588'; #'1737458672' and mpl.is_active=1; #9217252483
 #=======< New >===============
 SELECT i.price FROM king_dealitems i WHERE i.id='1737458672' #//'9217252483';
 #=======< New >===============
-
 DESC king_dealitems;
-
 DESC deal_member_price_changelog
-
 SELECT `status` FROM pnh_t_receipt_info WHERE receipt_id='7664'
-
 0:Pending
-
 SELECT * FROM deal_member_price_changelog WHERE itemid='9217252483'
-
 -- // get total orders for that price
 SELECT o.i_price,o.is_memberprice,FROM_UNIXTIME(o.time) AS `time`,DATE_FORMAT(FROM_UNIXTIME(o.time),'%Y-%m-%d') AS `date`,CURDATE() AS d
 FROM king_orders o 
 JOIN king_transactions tr ON tr.transid=o.transid
 WHERE o.itemid='3527475588' AND o.status !=3  AND DATE_FORMAT(FROM_UNIXTIME(o.time),'%Y-%m-%d') = '2014-05-10' #and o.is_member_price=1 and o.member_id='' AND o.i_price='1869' # and tr.franchise_id=? AND UNIX_TIMESTAMP() BETWEEN unix_timestamp() AND 
  ORDER BY o.time DESC
-
 `pnh_franchise_account_summary`
-
-
 DESC king_orders
 DESC king_dealitems
 SELECT o.i_price,o.is_memberprice,FROM_UNIXTIME(o.time) FROM king_orders o 
@@ -215,8 +158,6 @@ SELECT o.i_price,o.is_memberprice,FROM_UNIXTIME(o.time) FROM king_orders o
 
 `time`
 actiontime
-
-
 
 ALTER TABLE `king_orders` ADD COLUMN `mp_change_logid` BIGINT(11) DEFAULT 0 NULL AFTER `is_memberprice`; 
 #=========================
@@ -2194,3 +2135,2792 @@ SELECT COUNT(*) AS is_rechrge_gv FROM pnh_member_offers mo
 SELECT * FROM pnh_member_offers mo WHERE mo.member_id='21111111';
 
 SELECT * FROM king_orders WHERE id='9514723899';
+
+#Aug_12_2014
+
+SELECT * FROM m_partner_deal_link;
+m_partner_deal_link
+m_partner_deal_price;
+#ALTER TABLE `m_partner_deal_link` CHANGE `id` `id` INT(11) NOT NULL AUTO_INCREMENT, CHANGE `asin` `partner_ref_no` VARCHAR(255) CHARSET utf16 COLLATE utf16_general_ci NULL, CHANGE `fsin` `partner_id` INT(11) NULL;
+#ALTER TABLE `m_partner_deal_link` CHANGE `asin` `partner_ref_no` VARCHAR(255) CHARSET utf16 COLLATE utf16_general_ci NULL, CHANGE `fsin` `partner_id` INT(11) NULL;
+#INSERT INTO `m_partner_deal_link` (`itemid`, `asin`, `fsin`, `created_by`, `created_on`) VALUES ('2616472368', 'az111', 'fb111', '37', '2014-08-12');
+
+#==========================
+#Aug_12_2014
+DROP TABLE `m_partner_deal_link`;
+
+CREATE TABLE `m_partner_deal_link` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `itemid` BIGINT(20) DEFAULT NULL,
+  `partner_ref_no` VARCHAR(255) DEFAULT NULL,
+  `partner_id` INT(11) DEFAULT NULL,
+  `created_by` INT(11) DEFAULT NULL,
+  `created_on` DATETIME DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+#id	itemid		partner_ref_no	partner_id	created_by	created_on
+#1	2616472368	az111		7		37		2014-08-12 20:10:26
+ALTER TABLE `partner_info` ADD COLUMN `partner_sku_text` VARCHAR(20) NULL AFTER `trans_mode`;
+#==========================
+
+SELECT * 
+FROM m_partner_deal_link prl
+JOIN king_dealitems di ON di.id=prl.itemid
+WHERE 1 AND prl.itemid='' OR prl.partner_ref_no='ASN345546546' OR di.name LIKE '%Himalaya Baby Cream - 100ml%';
+
+#===============================
+#Aug_13_29014
+SELECT prl.id,prl.partner_ref_no,prl.itemid,prl.partner_id,di.name,di.dealid,di.orgprice AS mrp,di.price,di.member_price,di.pic,di.is_group
+	FROM m_partner_deal_link prl
+	JOIN king_dealitems di ON di.id=prl.itemid
+	WHERE 1  AND prl.itemid='AWS743894' OR prl.partner_ref_no='AWS743894' OR di.name LIKE 'AWS743894';
+	
+SELECT * FROM m_product_deal_link;
+
+
+SELECT prl.id,prl.partner_ref_no,prl.itemid,prl.partner_id,di.name,di.dealid,di.orgprice AS mrp,di.price,di.member_price,di.pic,di.is_group
+	,GROUP_CONCAT(pdl.product_id) AS product_ids,COUNT(DISTINCT pdl.id) AS num_prdt
+	FROM m_partner_deal_link prl
+	JOIN king_dealitems di ON di.id=prl.itemid
+	JOIN m_product_deal_link pdl ON pdl.itemid=di.id AND pdl.is_active=1
+	#WHERE 1  AND prl.itemid='AWS743894' OR prl.partner_ref_no='AWS743894' OR di.name LIKE 'AWS743894'
+	GROUP BY prl.itemid;
+	
+SELECT * FROM king_dealitems WHERE is_combo=1 LIMIT 10;
+
+#==========================
+#Aug_13_2014
+ALTER TABLE `partner_info` ADD COLUMN `partner_rackbinid` VARCHAR(20) NULL AFTER `partner_sku_text`;
+#Aug_14_2014
+ALTER TABLE king_orders ADD COLUMN lens_item_orderdet VARCHAR(255) DEFAULT '';
+ALTER TABLE king_dealitems ADD COLUMN lens_type VARCHAR(255) DEFAULT '' AFTER has_power;
+#==========================
+
+SELECT DISTINCT transid,COUNT(*) AS t,partner_reference_no FROM king_transactions 
+WHERE 1
+#and partner_reference_no = ?
+AND partner_id = 7
+GROUP BY transid;
+
+SELECT * FROM king_orders WHERE transid='PNHIYR69167'
+
+SELECT * 
+FROM king_transaction tr
+JOIN ON 
+
+DESC 
+king_orders
+
+SELECT di.pnh_id,f.franchise_id,o.member_id#,f.price_type,di.name,o.quantity,o.i_orgprice,o.i_price,di.member_price
+FROM king_transactions tr
+JOIN  king_orders o ON o.transid=tr.transid
+JOIN pnh_m_franchise_info f ON f.franchise_id=tr.franchise_id
+JOIN king_dealitems di ON di.id=o.itemid
+WHERE f.price_type=1 AND tr.transid='PNH88722';
+
+
+#Aug_16_2014
+
+
+#==========================Confirm orders on credit Limit approval==============================================================#
+#author roopa #11_august_2014
+/*[4:07:43 PM][84 ms]*/ ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `max_credit_limit` DOUBLE DEFAULT 0 NULL AFTER `is_consolidated_payment`;
+/*[5:18:44 PM][385 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `redeem_value` DOUBLE DEFAULT 0 NULL AFTER `partner_reference_no`; 
+ /*[5:21:56 PM][310 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `is_memberprice` TINYINT DEFAULT 0 NULL AFTER `redeem_value`, ADD COLUMN `other_price` DOUBLE DEFAULT 0 NULL AFTER `is_memberprice`, ADD COLUMN `mp_logid` BIGINT(11) NULL AFTER `other_price`, ADD COLUMN `mp_loyalty_points` BIGINT(11) NULL AFTER `mp_logid`, ADD COLUMN `s_consolidated_payment` TINYINT(1) DEFAULT 0 NULL AFTER `mp_loyalty_points`, ADD COLUMN `is_ordqty_splitd` TINYINT(1) DEFAULT 0 NULL AFTER `s_consolidated_payment`, ADD COLUMN `pnh_member_fee` DOUBLE DEFAULT 0 NULL AFTER `is_ordqty_splitd`, ADD COLUMN `insurance_amount` DOUBLE DEFAULT 0 NULL AFTER `pnh_member_fee`; 
+ /*[5:23:13 PM][417 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `billon_orderprice` TINYINT DEFAULT 0 NULL AFTER `insurance_amount`; 
+ /*[5:23:40 PM][341 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `member_id` BIGINT(11) NULL AFTER `billon_orderprice`; 
+ /*[5:24:31 PM][58 ms]*/ ALTER TABLE `king_tmp_orders` CHANGE `s_consolidated_payment` `is_consolidated_payment` TINYINT(1) DEFAULT 0 NULL; 
+ /*[12:38:42 PM][44 ms]*/ 
+
+CREATE TABLE `king_tmp_transactions` (
+  `id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `transid` CHAR(18) NOT NULL,
+  `orderid` BIGINT(20) UNSIGNED NOT NULL,
+  `amount` DOUBLE UNSIGNED NOT NULL,
+  `paid` DOUBLE UNSIGNED NOT NULL,
+  `mode` TINYINT(3) UNSIGNED NOT NULL,
+  `voucher_payment` TINYINT(3) DEFAULT '0',
+  `cod` DOUBLE UNSIGNED NOT NULL,
+  `ship` DOUBLE UNSIGNED NOT NULL,
+  `giftwrap_charge` DOUBLE DEFAULT '0',
+  `response_code` INT(10) UNSIGNED NOT NULL,
+  `msg` TEXT NOT NULL,
+  `payment_id` VARCHAR(50) NOT NULL,
+  `pg_transaction_id` VARCHAR(50) NOT NULL,
+  `is_flagged` VARCHAR(10) NOT NULL,
+  `init` BIGINT(20) UNSIGNED NOT NULL,
+  `actiontime` INT(10) UNSIGNED NOT NULL,
+  `status` TINYINT(3) UNSIGNED NOT NULL,
+  `is_pnh` TINYINT(1) NOT NULL,
+  `franchise_id` INT(10) UNSIGNED NOT NULL,
+  `credit_days` INT(11) DEFAULT '0',
+  `order_for` INT(11) NOT NULL DEFAULT '0',
+  `pnh_member_fee` DOUBLE DEFAULT '0',
+  `credit_remarks` VARCHAR(255) DEFAULT NULL,
+  `batch_enabled` TINYINT(1) NOT NULL DEFAULT '1',
+  `admin_trans_status` TINYINT(3) DEFAULT '0',
+  `priority` TINYINT(1) NOT NULL,
+  `priority_note` VARCHAR(200) NOT NULL,
+  `note` TEXT NOT NULL,
+  `offline` TINYINT(1) NOT NULL,
+  `status_backup` TINYINT(1) DEFAULT NULL,
+  `partner_reference_no` VARCHAR(100) NOT NULL,
+  `partner_id` INT(10) UNSIGNED NOT NULL,
+  `trans_created_by` INT(11) DEFAULT '0',
+  `trans_grp_ref_no` BIGINT(11) DEFAULT '0',
+  `is_memberprice` TINYINT(1) DEFAULT '0',
+  `approval_status` TINYINT(1) DEFAULT '0' COMMENT '0: Waiting FOR approval,1: Approved,2: Rejected',
+  `approved_by` INT(11) DEFAULT '0',
+  `approved_on` BIGINT(20) DEFAULT '0',
+  `rejected_by` INT(11) DEFAULT '0',
+  `rejected_on` BIGINT(20) DEFAULT '0',
+  `remarks` TEXT,
+  PRIMARY KEY (`id`),
+  KEY `transid` (`transid`),
+  KEY `franchise_id` (`franchise_id`),
+  KEY `trans_created_by` (`trans_created_by`)
+); 
+ /*[7:15:31 PM][680 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `has_insurance` TINYINT(1) DEFAULT 0 NULL AFTER `pnh_member_fee`; 
+ ========================
+ #============ PO IS_DOA,Return_id column structure  =========================
+#Aug_08_2014-Suresh
+ALTER TABLE `t_po_info` ADD COLUMN `is_doa_po` TINYINT (1) DEFAULT '0' NULL  AFTER `paf_id`;
+ALTER TABLE `t_po_info` ADD COLUMN `return_id` BIGINT (11)  NULL  AFTER `is_doa_po`;
+#============ PO IS_DOA,Return_id column structure  =========================
+
+ALTER TABLE `pnh_invoice_returns_product_service` ADD COLUMN `job_sheet_no` BIGINT (11)  NULL  AFTER `sent_to`;
+ALTER TABLE `pnh_invoice_returns_product_service` ADD COLUMN `sent_with` VARCHAR (255)  NULL  AFTER `sent_on`;
+ALTER TABLE `pnh_invoice_returns_product_service` ADD COLUMN `doa_copy_no` BIGINT (11)  NULL  AFTER `service_return_on`;
+ALTER TABLE `pnh_invoice_returns_product_service` ADD COLUMN doa_copy_filepath VARCHAR (255)  NULL  AFTER doa_copy_no;
+
+
+ALTER TABLE `t_imei_no` ADD COLUMN `is_doa` TINYINT (1) DEFAULT '0' NULL  AFTER `is_imei_activated`;
+ALTER TABLE `pnh_invoice_returns_product_link` ADD COLUMN `doa_po_id` BIGINT (11)  NULL  AFTER `condition_type`
+
+SELECT * FROM partner_info 
+
+ALTER TABLE partner_info CHANGE partner_rackbinid partner_rackbin_id INT(11) DEFAULT 0   
+
+UPDATE partner_info  SET partner_rackbin_id = 0
+
+
+SELECT * FROM t_stock_info WHERE product_id = 4299
+
+SELECT * FROM king_transactions WHERE transid='AMZ25889';
+
+SELECT * FROM king_orders WHERE transid='AMZ25889';
+
+SELECT price FROM king_dealitems WHERE id='9142873414'
+
+
+SELECT in.invoice_no,in.mrp,item.nlc,item.phc,ordert.*,
+							item.service_tax_cod,item.name,IF(LENGTH(item.print_name),item.print_name,item.name) AS print_name,in.invoice_no,
+							brand.name AS brandname,
+							in.tax AS tax,
+							in.discount,
+							in.phc,in.nlc,
+							in.service_tax,
+							item.pnh_id,f.offer_text,f.immediate_payment,
+							in.invoice_qty AS quantity,
+							ordert.member_id  AS alloted_mem_id,ordert.has_insurance,ordert.insurance_amount
+						FROM king_orders AS ordert
+						JOIN king_dealitems AS item ON item.id=ordert.itemid 
+						JOIN king_deals AS deal ON deal.dealid=item.dealid 
+						LEFT JOIN king_brands AS brand ON brand.id=deal.brandid 
+						LEFT JOIN pnh_m_offers f ON f.id= ordert.offer_refid
+						#left join pnh_member_offers mo on mo.transid_ref = ordert.transid 
+						JOIN king_invoice `in` ON in.transid=ordert.transid AND in.order_id=ordert.id  
+						WHERE in.invoice_no='20142054538' #or split_inv_grpno = ''
+
+SELECT * FROM king_invoice WHERE invoice_no='20142054538';
+
+
+SELECT d.catid,d.menuid,d.brandid,t.is_pnh,i_discount,i_coup_discount,i.tax,t.is_pnh,o.transid,o.id,o.itemid,i_orgprice,i_price,t.cod,t.ship,o.quantity,SUM(i.orgprice*o.quantity) AS mrp_amt,SUM(i.price*o.quantity) AS price_amt,o.other_price,o.is_memberprice 
+										FROM king_orders o 
+										JOIN king_dealitems i ON i.id=o.itemid 
+										JOIN king_transactions t ON t.transid = o.transid
+										JOIN king_deals d ON d.dealid = i.dealid 
+										WHERE o.id IN ('4631839997')
+										GROUP BY o.id ORDER BY o.sno ASC;
+										
+SELECT * FROM `t_reserved_batch_stock` WHERE batch_id='8579';
+
+SELECT * FROM shipment_batch_process_invoice_link WHERE invoice_no='20142054538';
+
+SELECT * FROM t_stock_info WHERE stock_id='297206'
+
+SELECT order_id,mrp,inv_qty,ROUND(mrp*a_disc_perc,2) AS disc FROM (
+	SELECT a.id,order_id,a.product_id,mrp,((qty+extra_qty)-release_qty) AS inv_qty,(i_discount+i_coup_discount) AS a_disc,((i_discount+i_coup_discount)/i_orgprice) AS a_disc_perc 
+		FROM t_reserved_batch_stock a
+		JOIN t_stock_info b ON a.stock_info_id = b.stock_id
+		JOIN king_orders c ON c.id = a.order_id 
+		WHERE p_invoice_no = '' AND a.status = 1 AND a.order_id = ''
+	) AS g;
+	
+
+ #Aug_18_2014
+ 
+SELECT * FROM king_transactions WHERE partner_id='7';
+
+SELECT * FROM m_partner_deal_link
+
+SELECT * FROM t_partner_transfer_request;
+
+#===================================================
+ALTER TABLE `king_tmp_orders` ADD COLUMN `has_insurance` TINYINT(1) DEFAULT 0 NULL AFTER `pnh_member_fee`;
+ ALTER TABLE `king_tmp_orders` ADD COLUMN `approval_status` TINYINT(1) DEFAULT 0 NULL AFTER `member_id`; 
+
+ /*[12:00:26 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,NULL,NULL,NULL,'4cecb21b44628b17c436739bf6301af2','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'0','1',NULL,NULL); 
+/*[12:01:17 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,NULL,'SMS','SMS','4cecb21b44628b17c436739bf6301af2','','0','0','0','','franchise@storeking.in',NULL,NULL,NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+/*[12:02:52 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,NULL,NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+/*[12:03:03 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,'',NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+/*[12:03:11 PM][90 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,'',NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52','2014-08-18 12:03:08'); 
+ 
+// Partner FBA ORDER IMPORT CHANGES
+ALTER TABLE `t_trans_invoice_marker` ADD COLUMN `partner_id` INT (5) DEFAULT '0' NULL  AFTER `id`;
+INSERT INTO `t_trans_invoice_marker`(`id`,`partner_id`,`transid`,`invoice_no`,`is_pnh`,`created_on`)VALUES(NULL,'7','','10700000000','0',NOW());
+#================================================
+
+SELECT * FROM `partner_info`;
+SELECT * FROM `m_rack_bin_info`;
+
+
+SELECT * FROM partner_deal_prices WHERE itemid = ? AND partner_id = ? AND partner_price != 0 ;
+
+# Aug_19_2014
+
+/*[12:00:26 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,NULL,NULL,NULL,'4cecb21b44628b17c436739bf6301af2','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'0','1',NULL,NULL); 
+/*[12:01:17 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,NULL,'SMS','SMS','4cecb21b44628b17c436739bf6301af2','','0','0','0','','franchise@storeking.in',NULL,NULL,NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+/*[12:02:52 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,NULL,NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+/*[12:03:03 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,'',NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+/*[12:03:11 PM][90 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,'',NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52','2014-08-18 12:03:08'); 
+ CREATE TABLE `pnh_t_max_credit_info` (
+  `id` BIGINT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `franchise_id` INT(11) DEFAULT NULL,
+  `credit_added` DOUBLE DEFAULT NULL,
+  `new_credit_limit` DOUBLE DEFAULT NULL,
+  `credit_given_by` INT(11) DEFAULT NULL COMMENT 'executive id',
+  `reason` VARCHAR(200) NOT NULL,
+  `created_by` INT(11) DEFAULT NULL,
+  `modified_by` INT(11) DEFAULT NULL,
+  `created_on` BIGINT(20) DEFAULT NULL,
+  `modified_on` BIGINT(20) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+ 
+ SELECT * FROM m_product_deal_link;
+ 
+ 
+ SELECT * FROM king_transactions WHERE transid='AMZ43772';
+ 
+ SELECT * FROM m_rack_bin_info;
+ 
+ SELECT * FROM partner_info
+ 
+ #Aug_20_2014
+ /*[4:23:27 PM][463 ms]*/ ALTER TABLE `pnh_member_info` ADD COLUMN `mem_image_url` VARCHAR(255) NULL AFTER `voucher_bal_validity`; 
+//Franchise OTP TABLE
+CREATE TABLE `t_franchise_otp` (
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `fid` BIGINT(20) DEFAULT NULL,
+  `otp_no` BIGINT(20) DEFAULT NULL,
+  `logged_on` BIGINT(20) DEFAULT NULL,
+  `valid_till` BIGINT(20) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
+#Aug_21_2014
+
+SELECT IFNULL(SUM(available_qty),0) AS s FROM t_stock_info t JOIN m_rack_bin_info rb ON rb.id = t.rack_bin_id WHERE product_id='3035'  AND t.rack_bin_id = 120;
+
+SELECT * FROM pnh_member_insurance
+
+SELECT offer_type,insurance_id,created_on FROM pnh_member_offers WHERE insurance_id!='' ORDER BY offer_type DESC LIMIT 5000; #where offer_type=;
+
+SELECT * FROM support_tickets;
+
+SELECT * FROM user_access_roles;
+#====================================
+#Aug_22_2014
+UPDATE `user_access_roles` SET `user_role` = 'UPDATE_PRODUCT_DEAL_ROLE' , `const_name` = 'UPDATE_PRODUCT_DEAL_ROLE' WHERE `id` = '18';
+#ALTER TABLE `pnh_api_franchise_cart_info` ADD COLUMN `cartid` BIGINT(20) NULL AFTER `updated_on`;
+ALTER TABLE `king_transactions` ADD COLUMN `api_cartid` VARCHAR(100) DEFAULT '0' NULL AFTER `trans_grp_ref_no`;
+ALTER TABLE king_orders ADD COLUMN lens_package_id INT(11) DEFAULT 0 AFTER is_consolidated_payment;
+ALTER TABLE king_orders ADD COLUMN lens_package_price DOUBLE DEFAULT 0 AFTER lens_package_id;
+#====================================
+
+SELECT pid,qty,attributes FROM pnh_api_franchise_cart_info WHERE franchise_id='498' AND STATUS=1;
+
+SELECT * FROM pnh_api_franchise_cart_info ORDER BY id DESC;
+
+SELECT * FROM pnh_member_info WHERE (pnh_member_id = '22222222' OR mobile = '22222222')
+
+/*[6:51:45 PM][648 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `insurance_id` BIGINT(20) DEFAULT 0 NULL AFTER `approval_status`; 
+/*[6:52:17 PM][585 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `imei_scheme_id` BIGINT(20) DEFAULT 0 NULL AFTER `insurance_id`; 
+/*[6:52:47 PM][600 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `imei_reimbursement_value_perunit` DOUBLE NULL AFTER `imei_scheme_id`; 
+/*[6:53:18 PM][575 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `loyality_point_value` DOUBLE NULL AFTER `imei_reimbursement_value_perunit`; 
+
+SELECT * FROM king_transactions WHERE transid='PNH28181'
+
+SELECT * FROM king_transactions WHERE transid='PNH69156'
+
+SELECT * FROM king_transactions WHERE transid='PNH27948'; # 752409140877
+
+172155140878
+SELECT * FROM king_transactions WHERE transid='PNH12928';#'PNH68953'; # 752409140877
+
+SELECT * FROM king_transactions ORDER BY id DESC LIMIT 10;
+
+SELECT COUNT(*) AS t FROM king_transactions WHERE api_cartid='172155140878';
+
+PNH12928;
+
+#Aug_25_2014
+
+SELECT prl.id,prl.partner_ref_no,prl.itemid,prl.partner_id,di.name,di.dealid,di.orgprice AS mrp,di.price,di.member_price,CONCAT('".IMAGES_URL."items/small/',di.pic,'.jpg') AS image_url,di.is_group,di.pnh_id
+	,GROUP_CONCAT(pdl.product_id) AS product_ids,COUNT(DISTINCT pdl.id) AS num_prdt
+	,p.name AS partner_name,trans_prefix,p.partner_rackbinid,p.trans_mode
+	FROM m_partner_deal_link prl
+	JOIN partner_info p ON p.id = prl.partner_id
+	JOIN king_dealitems di ON di.id=prl.itemid
+	JOIN m_product_deal_link pdl ON pdl.itemid=di.id AND pdl.is_active=1
+	WHERE 1  AND prl.itemid='AWS743894' OR prl.partner_ref_no='AWS743894' OR di.name LIKE '%AWS743894%' 
+	GROUP BY prl.itemid;
+	
+SELECT * FROM partner_info
+SELECT * FROM m_partner_deal_link;
+
+AWS743894, ASN345546546, ASN3455465434, AZ89856567899, AMZQDZ49537
+
+SELECT SUM(available_qty)  AS t
+	FROM t_stock_info  a
+	JOIN m_storage_location_info b ON b.location_id = a.location_id
+	JOIN m_rack_bin_info c ON c.id = a.rack_bin_id
+	WHERE product_id='5274' AND c.is_damaged=0
+	HAVING t >=0;
+	
+SELECT SUM(a.available_qty) AS s,a.mrp,
+									a.location_id,a.rack_bin_id,
+									CONCAT(c.rack_name,c.bin_name) AS rbname,c.is_damaged,
+									IFNULL(product_barcode,'') AS pbarcode,
+									a.stock_id,DATE_FORMAT(a.expiry_on, '%d-%m-%Y') AS expiry_on,offer_note     
+									FROM t_stock_info  a 
+									JOIN m_storage_location_info b ON b.location_id = a.location_id 
+									JOIN m_rack_bin_info c ON c.id = a.rack_bin_id  
+									WHERE product_id='5274' AND c.is_damaged=0
+									GROUP BY a.mrp,pbarcode,a.location_id,a.rack_bin_id 
+									HAVING s >=0 
+									ORDER BY a.mrp ASC;
+									
+#Aug_26_2014
+									
+#=================================================================
+#Aug_26_2014
+ALTER TABLE `king_invoice` CHANGE `discount` `discount` DECIMAL(10,2) UNSIGNED NULL;
+#=================================================================
+
+
+SELECT * FROM king_dealitems WHERE is_combo=1;
+normal deal:
+AWS743894, ASN345546546, ASN3455465434, AZ89856567899, AMZQDZ49537
+Combo deals:
+5365274322
+4996556468
+8317261816
+
+SELECT * FROM m_partner_deal_link;
+
+SELECT SUM(available_qty)  AS t,product_id
+	FROM t_stock_info  a
+	JOIN m_storage_location_info b ON b.location_id = a.location_id
+	JOIN m_rack_bin_info c ON c.id = a.rack_bin_id
+	WHERE product_id IN ('5313','5323','5333','5351','5319') AND c.is_damaged=0
+	HAVING t >0
+
+
+SELECT * FROM m_partner_deal_link;
+
+
+#Aug_27_2014
+
+normal deal:
+AWS743894, ASN345546546, ASN3455465434, AZ89856567899, AMZQDZ49537
+Combo deals:
+5365274322
+4996556468
+8317261816
+
+
+
+SELECT * FROM m_partner_deal_link;
+
+SELECT * FROM t_partner_transfer_request;
+
+#===============================
+#Aug_27_2014
+ALTER TABLE king_invoice ADD COLUMN partner_invno VARCHAR(50) DEFAULT '';
+ALTER TABLE king_invoice ADD COLUMN partner_invdate VARCHAR(50) DEFAULT '';
+# Coupans table
+CREATE TABLE `king_coupons` (                                
+	`id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,          
+	`code` CHAR(12) NOT NULL,                                  
+	`type` TINYINT(3) UNSIGNED NOT NULL,                       
+	`value` INT(10) UNSIGNED NOT NULL,                         
+	`brandid` VARCHAR(200) NOT NULL,                           
+	`catid` VARCHAR(200) NOT NULL,                             
+	`mode` TINYINT(3) UNSIGNED NOT NULL,                       
+	`userid` BIGINT(20) UNSIGNED NOT NULL,                     
+	`itemid` BIGINT(20) UNSIGNED NOT NULL,                     
+	`status` TINYINT(3) UNSIGNED NOT NULL,                     
+	`min` INT(10) UNSIGNED NOT NULL,                           
+	`used` INT(10) UNSIGNED NOT NULL,                          
+	`unlimited` TINYINT(1) NOT NULL,                           
+	`referral` BIGINT(20) UNSIGNED NOT NULL,                   
+	`created` BIGINT(20) UNSIGNED NOT NULL,                    
+	`expires` BIGINT(20) UNSIGNED NOT NULL,                    
+	`lastused` BIGINT(20) UNSIGNED NOT NULL,                   
+	`gift_voucher` TINYINT(1) NOT NULL,                        
+	`remarks` VARCHAR(255) DEFAULT NULL,                       
+	PRIMARY KEY (`id`),                                        
+	UNIQUE KEY `code` (`code`),                                
+	KEY `brandid` (`brandid`),                                 
+	KEY `catid` (`catid`),                                     
+	KEY `itemid` (`itemid`)                                    
+      );
+#Partner stk transfer log table-Shivaraj
+CREATE TABLE `t_partner_transfer_request`( `id` BIGINT(20) NOT NULL AUTO_INCREMENT, `transfer_id` VARCHAR(50), `reference_no` VARCHAR(50), `itemid` VARCHAR(50), `product_id` INT(50), `stock_id` INT(50), `transfer_qty` INT(11), `from_loc` VARCHAR(20), `to_loc` VARCHAR(20), `from_rackbin` VARCHAR(20), `to_rackbin` VARCHAR(20), `barcode` VARCHAR(20), `mrp` DOUBLE(10,2), `transfer_remarks` TEXT, `transfer_exp_date` DATETIME, `type` INT(5), `created_by` INT(11), `created_on` DATETIME, PRIMARY KEY (`id`) );
+#===============================
+
+
+
+
+SELECT * FROM king_transactions 
+#where transid='AMZ47174'
+ORDER BY id DESC LIMIT 35;
+
+SELECT * FROM partner_deal_prices WHERE itemid = '6228731442' AND partner_id = '7' AND partner_price != 0;
+
+shipment_batch_process_invoice_link;
+#suresh Aug 25 2014
+ALTER TABLE `king_dealitems` ADD COLUMN `powered_by` VARCHAR (100)  NULL  AFTER `has_insurance`;
+#author Suresh #21_august_2014
+CREATE TABLE `pnh_invoice_returns_images` (  `id` INT (11) NOT NULL AUTO_INCREMENT , `return_id` BIGINT (20) , `invoice_no` BIGINT (20) , `pic` CHAR (50) , `created_on` DATETIME , PRIMARY KEY ( `id`))  
+#==========================Return Shipment Track table structure==============================================================#
+CREATE TABLE `t_shipment_tracking_info` (  `id` INT (11) NOT NULL AUTO_INCREMENT , `invoice_no` BIGINT (20) , `product_id` INT (11) , `return_id` BIGINT (20) ,`return_prod_id` BIGINT (20) , `status` TINYINT (1) DEFAULT '0', `transit_type` TINYINT (1) DEFAULT '1', `courier_name` VARCHAR (255) , `courier_awb` VARCHAR (255) , `emp_name` VARCHAR (255) , `emp_phno` VARCHAR (255) , `remarks` VARCHAR (255) , PRIMARY KEY ( `id`));  
+ALTER TABLE `t_shipment_tracking_info` ADD COLUMN `order_id` BIGINT (20)  NULL  AFTER `invoice_no`;
+#==========================Return Shipment Track table structure==============================================================#
+
+#==========================PO table structure==============================================================#
+ALTER TABLE `t_po_info` ADD COLUMN `credit_days` INT (11) DEFAULT '0' NULL  AFTER `payment_status`;
+#==========================PO table structure==============================================================#
+/*[12:00:26 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,NULL,NULL,NULL,'4cecb21b44628b17c436739bf6301af2','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'0','1',NULL,NULL); 
+
+partner_transfer_request
+
+
+DESC partner_info 
+
+#author Suresh #21_august_2014
+CREATE TABLE `pnh_invoice_returns_images` (  `id` INT (11) NOT NULL AUTO_INCREMENT , `return_id` BIGINT (20) , `invoice_no` BIGINT (20) , `pic` CHAR (50) , `created_on` DATETIME , PRIMARY KEY ( `id`))  
+
+#Aug_30_2014
+
+SELECT * FROM king_dealitems WHERE is_combo=1;
+SELECT * FROM m_partner_deal_link;
+
+2762354616
+5521651316
+3471838221
+#-==============================
+#Aug_30_2014
+ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `tab_simno` VARCHAR(50) NULL AFTER `max_credit_limit`;
+#-==============================
+
+SELECT * FROM m_product_deal_link WHERE itemid = 5365274322;
+
+DESC t_partner_transfer_request
+
+=>t_partner_stock_transfer=>transfer_id,partner_id,partner_transfer_no,transfer_remarks,scheduled_transfer_date,transfer_status,transfer_date,transfer_by
+=>t_partner_stock_transfer_product_link=>id,transfer_id,itemid,product_id,from_stock_info_id,to_stock_info_id,product_transfer_qty,item_transfer_qty,transfer_status = 0
+
+SELECT * FROM m_product_deal_link
+SELECT * FROM t_imei_no
+SELECT * FROM m_partner_deal_link
+
+SELECT prl.id,prl.partner_ref_no,prl.itemid,prl.partner_id,di.name,di.dealid,di.orgprice AS mrp,di.price,di.member_price,CONCAT('http://static.snapittoday.com/items/small/',di.pic,'.jpg') AS image_url,di.is_group,di.pnh_id
+	,GROUP_CONCAT(pdl.product_id) AS product_ids
+	,p.name AS partner_name,trans_prefix,p.partner_rackbinid,p.trans_mode
+	FROM m_partner_deal_link prl
+	JOIN partner_info p ON p.id = prl.partner_id
+	JOIN king_dealitems di ON di.id=prl.itemid
+	LEFT JOIN m_product_deal_link pdl ON pdl.itemid=di.id #AND pdlmax_credit_limit.is_active=1
+	LEFT JOIN t_imei_no imei ON imei.product_id=pdl.product_id #and imei.status=1
+	WHERE 1  AND prl.itemid='8904132422957' OR prl.partner_ref_no='8904132422957' OR di.name LIKE '%8904132422957%' OR imei.imei_no='8904132422957' 
+	GROUP BY prl.itemid;
+	
+
+normal deal:
+AWS743894, ASN345546546, ASN3455465434, AZ89856567899, AMZQDZ49537
+Combo deals:
+5365274322
+4996556468
+8317261816
+
+#Aug_
+SELECT credit_limit,max_credit_limit,opt_maxcreditlimit FROM pnh_m_franchise_info WHERE franchise_id ='59';
+
+ALTER TABLE king_tmp_orders ADD COLUMN `order_product_id` BIGINT(11) DEFAULT '0' AFTER `itemid`;
+ALTER TABLE king_tmp_orders ADD COLUMN `order_from_vendor` INT(11) DEFAULT NULL AFTER order_product_id;
+ALTER TABLE king_tmp_orders ADD COLUMN `vendor_order_ref_id` INT(11) DEFAULT NULL AFTER order_from_vendor;
+ALTER TABLE king_tmp_orders ADD COLUMN `lens_item_orderdet` TEXT DEFAULT NULL AFTER vendor_order_ref_id;
+ALTER TABLE king_tmp_orders ADD COLUMN `lens_package_id` INT(11) DEFAULT '0' AFTER lens_item_orderdet;
+ALTER TABLE king_tmp_orders ADD COLUMN `customer_prescrption` TEXT DEFAULT NULL AFTER lens_package_id;
+ALTER TABLE king_tmp_orders ADD COLUMN `lens_package_price` DOUBLE DEFAULT '0' AFTER customer_prescrption; 
+
+#-==============================
+#Sep_01_2014
+ALTER TABLE `pnh_api_franchise_cart_info` ADD COLUMN `partner_id` INT(11) NULL AFTER `cartid`, `ref_itemid` BIGINT(20) NULL AFTER `pid`;
+#-==============================
+
+SELECT COUNT(*) AS ttl FROM pnh_api_franchise_cart_info WHERE STATUS=1 AND partner_id=0;
+
+SELECT * FROM pnh_api_franchise_cart_info WHERE user_id='37',partner_id='7' AND ref_itemid='1669462818' AND AND STATUS=1
+SELECT d.menuid FROM king_dealitems i JOIN king_deals d ON d.dealid=i.dealid LEFT JOIN king_brands b ON b.id = d.brandid JOIN king_categories c ON c.id = d.catid WHERE i.id='1669462818'
+SELECT has_insurance FROM king_dealitems i JOIN king_deals d ON d.dealid=i.dealid LEFT JOIN king_brands b ON b.id = d.brandid JOIN king_categories c ON c.id = d.catid WHERE i.id='1669462818';
+
+SELECT * FROM king_tmp_orders;
+DESC king_tmp_orders;
+
+SELECT i.id AS itemid,i.pnh_id,i.name,i.price,i.orgprice,i.store_price,i.pic,i.member_price FROM `pnh_api_franchise_cart_info` c
+		JOIN king_dealitems i ON i.id=c.ref_itemid
+		JOIN king_deals d ON d.dealid=i.dealid
+		WHERE c.partner_id='7' AND c.status=1 AND c.user_id='37'
+		
+
+SELECT * FROM pnh_api_franchise_cart_info WHERE partner_id=7;
+
+#Sep_02-2014
+SELECT i.id AS itemid,i.pnh_id,i.name,i.price,i.orgprice,i.store_price,i.pic,i.member_price FROM `pnh_api_franchise_cart_info` c
+		JOIN king_dealitems i ON i.id=c.ref_itemid
+		JOIN king_deals d ON d.dealid=i.dealid
+		WHERE c.partner_id='7' AND c.status=1 AND c.user_id='37'
+		
+SELECT i.id AS itemid,i.is_group,d.menuid,b.name AS brand,c.name AS cat,i.id,i.is_combo,i.pnh_id AS pid,i.live,i.orgprice AS mrp,i.price,i.name,i.pic,d.publish,p.is_sourceable,i.has_insurance,i.member_price,i.mp_mem_max_qty,i.shipsin
+	FROM king_dealitems i
+	JOIN king_deals d ON d.dealid=i.dealid AND 1
+	JOIN king_brands b ON b.id = d.brandid
+	JOIN king_categories c ON c.id = d.catid
+	LEFT JOIN `m_product_deal_link` l ON l.itemid=i.id AND l.is_active = 1
+	LEFT JOIN m_product_info p ON p.product_id=l.product_id
+	LEFT JOIN `m_product_group_deal_link` g ON g.itemid=i.id AND l.is_active = 1
+	LEFT JOIN `products_group_pids` q ON q.product_id=l.product_id
+	WHERE i.id='1997493726';
+	
+	
+	
+SELECT * FROM king_dealitems WHERE id = 1997493726;
+
+SELECT  COUNT(*) AS t FROM king_transactions WHERE partner_reference_no = '171-0078995-0129955' AND partner_id = '7'
+
+SELECT  * FROM king_transactions WHERE partner_reference_no = '171-0078995-0129955' AND partner_id = '7';
+SELECT  * FROM king_transactions WHERE partner_reference_no = '402-6522048-8174718' AND partner_id = '7';
+
+#-==============================
+#Sep_02_2014
+-- -- ALTER TABLE `king_orders` ADD COLUMN `partner_price` DOUBLE DEFAULT 0 NULL AFTER `partner_order_id`;
+-- -- ALTER TABLE `king_orders` DROP COLUMN `partner_price`;
+#-==============================
+
+SELECT * FROM partner_info;
+
+#Sep_03_2014
+
+UPDATE pnh_api_franchise_cart_info SET STATUS=0 WHERE user_id='37',partner_id='7' AND ref_itemid='1997493726';
+
+SELECT IFNULL(GROUP_CONCAT(smd.special_margin),0) AS sm,0 AS stock,i.is_combo,i.is_group,d.publish,d.brandid,d.catid,i.orgprice,
+					i.price,i.name,i.pic,i.pnh_id,i.id AS itemid,i.member_price,i.live AS allow_order,
+					b.name AS brand,c.name AS category 
+				FROM king_deals d 
+				JOIN king_dealitems i ON i.dealid=d.dealid 
+				JOIN king_brands b ON b.id=d.brandid 
+				JOIN king_categories c ON c.id=d.catid 
+				LEFT JOIN pnh_special_margin_deals smd ON i.id = smd.itemid  AND smd.from <= UNIX_TIMESTAMP() AND smd.to >=UNIX_TIMESTAMP()
+				
+				 JOIN m_product_deal_link pdl ON pdl.itemid=i.id AND pdl.is_active=1  
+				 WHERE i.is_pnh=0 AND d.catid='1023'
+				 GROUP BY i.id ORDER BY d.publish DESC
+				 
+SELECT * FROM m_product_deal_link;
+
+SELECT * FROM t_partner_stock_transfer;
+SELECT * FROM t_partner_stock_transfer_product_link;
+DESC t_partner_stock_transfer
+DESC t_partner_stock_transfer_product_link
+DESC pnh_api_franchise_cart_info
+
+SELECT tf.transfer_id,tf.partner_id,tf.partner_transfer_no,tf.transfer_remarks,DATE_FORMAT(tf.scheduled_transfer_date,'%b/%d/%Y %H:%i:%s %p') AS scheduled_transfer_date,tf.transfer_status,DATE_FORMAT(tf.transfer_date,'%b/%d/%Y %H:%i:%s %p') AS transfer_date,tf.transfer_by,a.username 
+FROM t_partner_stock_transfer tf 
+JOIN king_admin a ON a.id=tf.transfer_by										
+ORDER BY transfer_id DESC;
+										
+UPDATE pnh_api_franchise_cart_info SET STATUS=0,updated_on=NOW() WHERE partner_id=? AND user_id=?
+#-==============================
+
+ (
+	SELECT o.i_price,SUM(o.quantity) AS quantity,o.is_memberprice,FROM_UNIXTIME(o.time) FROM king_orders o
+	JOIN king_transactions tr ON tr.transid=o.transid
+	JOIN deal_member_price_changelog mplog ON mplog.id = o.mp_logid AND mplog.is_active=1
+	WHERE o.status !=3 AND o.is_memberprice=1  AND o.itemid='76827952824' AND tr.franchise_id='108' AND DATE_FORMAT(FROM_UNIXTIME(o.time),'%Y-%m-%d') = 'CURDATE()'
+	HAVING quantity IS NOT NULL 
+	ORDER BY o.time DESC
+)
+UNION
+(
+	SELECT o.i_price,SUM(o.quantity) AS quantity,o.is_memberprice,FROM_UNIXTIME(o.time) FROM king_tmp_orders o
+	JOIN king_tmp_transactions tr ON tr.transid=o.transid
+	JOIN deal_member_price_changelog mplog ON mplog.id = o.mp_logid AND mplog.is_active=1
+	WHERE o.status !=3 AND o.is_memberprice=1  AND o.itemid='76827952824' AND tr.franchise_id='108' #AND DATE_FORMAT(FROM_UNIXTIME(o.time),'%Y-%m-%d') = 'CURDATE()'
+		HAVING quantity IS NOT NULL 
+	ORDER BY o.time DESC
+)
+
+SELECT * FROM king_orders ORDER BY id DESC
+76827952824
+PNHVDU64433
+SELECT * FROM king_transactions WHERE transid='PNHVDU64433'
+fid: 108
+
+#Sep_04_2014
+
+DESC t_partner_stock_transfer
+DESC t_partner_stock_transfer_product_link
+
+
+SELECT GROUP_CONCAT(itemid) AS itemids FROM t_partner_stock_transfer_product_link WHERE transfer_status=0 AND is_active=1 AND transfer_id=1;
+
+SELECT tpl.* FROM t_partner_stock_transfer tp JOIN t_partner_stock_transfer_product_link tpl ON tpl.transfer_id=tp.transfer_id AND tpl.is_active=1 WHERE tp.is_active=1 AND tp.transfer_id=1
+
+SELECT MAX(p_invoice_no)+1 AS p_invoice_no FROM t_trans_proforma_invoice_marker WHERE is_pnh =0;
+
+SELECT COUNT(DISTINCT b.id) AS total 
+		FROM king_transactions a 
+		JOIN king_orders b ON a.transid = b.transid
+		JOIN m_product_deal_link l ON b.itemid=l.itemid AND l.is_active = 1 
+		WHERE #b.status = 0  and #l.product_id='5392' or 
+		b.itemid='1218529724';
+
+SELECT itemid FROM king_orders
+
+SELECT COUNT(DISTINCT b.id) AS total 
+	FROM king_transactions a 
+	JOIN king_orders b ON a.transid = b.transid
+	JOIN m_product_deal_link l ON b.itemid=l.itemid AND l.is_active = 1 
+	WHERE b.status = 0  AND b.itemid='1218529724'
+	
+SELECT pnh_id FROM king_dealitems WHERE id=1218529724;
+=>10005509
+
+SELECT * FROM t_partner_stock_transfer_product_link
+t_partner_stock_transfer
+
+#Sep_05_2014
+
+DESC king_orders
+DESC `proforma_invoices`;
+SELECT * FROM proforma_invoices
+
+#========================
+SELECT tpl.item_transfer_qty,i.tax,i.orgprice,i.price,i.is_pnh
+	FROM t_partner_stock_transfer_product_link tpl 
+	JOIN king_dealitems i ON i.id=tpl.itemid 
+	
+	WHERE tpl.id IN ('1')
+	GROUP BY tpl.id ORDER BY tpl.id ASC;
+	
+SELECT SUM(i.orgprice*o.item_transfer_qty) AS ttl_mrp,SUM(i.price*o.item_transfer_qty) AS ttl_price
+	FROM t_partner_stock_transfer_product_link o 
+	JOIN king_dealitems i ON i.id=o.itemid 
+	JOIN t_partner_stock_transfer t ON t.transfer_id=o.transfer_id
+	WHERE o.transfer_id=4;
+	
+UPDATE t_partner_stock_transfer_product_link SET transfer_status=1,modified_on=NOW() WHERE id=1 AND transfer_id = 1 LIMIT 1
+
+SELECT * FROM t_partner_stock_transfer_product_link
+
+#ALTER TABLE `t_partner_transfer_request` ADD COLUMN `transfer_item_qty` INT(50) NULL AFTER `itemid`, CHANGE `product_id` `product_id` BIGINT(11) NULL, CHANGE `stock_id` `stock_id` BIGINT(11) NULL, CHANGE `from_loc` `from_loc` INT(11) NULL, CHANGE `to_loc` `to_loc` INT(11) NULL, CHANGE `from_rackbin` `from_rackbin` INT(11) NULL, CHANGE `to_rackbin` `to_rackbin` INT(11) NULL;
+#ALTER TABLE `t_partner_stock_transfer` CHANGE `transfer_status` `transfer_status` INT(10) DEFAULT 0 NULL;
+#ALTER TABLE `t_partner_stock_transfer_product_link` CHANGE `transfer_status` `transfer_status` TINYINT(1) DEFAULT 0 NULL COMMENT 'is transfer success';
+#ALTER TABLE `t_partner_stock_transfer` CHANGE `transfer_id` `transfer_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT 'unique transferid', ADD PRIMARY KEY (`transfer_id`);
+#ALTER TABLE `t_partner_stock_transfer` ADD COLUMN `is_active` INT(10) DEFAULT 1 NULL AFTER `transfer_status`;
+#ALTER TABLE `snapitto_erpsndx_jul_04_2014`.`t_partner_stock_transfer_product_link` ADD COLUMN `is_active` TINYINT(1) DEFAULT 1 NULL AFTER `transfer_status`;
+#ALTER TABLE `t_partner_stock_transfer_product_link` ADD COLUMN `modified_by` INT(10) NULL AFTER `is_active`, ADD COLUMN `modified_on` DATETIME NULL COMMENT 'status updated on' AFTER `modified_by`;
+#ALTER TABLE `t_partner_stock_transfer_product_link` CHANGE `transfer_status` `transfer_status` TINYINT(1) DEFAULT 0 NULL COMMENT '0:pending,1:reserved,2:packed,3:cancelled,4:shipped';
+
+
+SELECT COUNT(*) AS ttl_cart_itm FROM pnh_api_franchise_cart_info WHERE user_id='37' AND `status`=1 AND partner_id=7;
+SELECT * FROM pnh_api_franchise_cart_info WHERE user_id='37' AND `status`=1 AND partner_id=7 AND ref_itemid='7796336415';
+
+#Sep_06_2014
+
+
+DESC king_dealitems
+DESC king_deals
+DESC t_partner_stock_transfer
+DESC t_partner_stock_transfer_product_link;
+
+SELECT * FROM t_partner_stock_transfer;
+SELECT * FROM t_partner_stock_transfer_product_link;
+SELECT * FROM t_shipment_tracking_info;
+
+SELECT c.transid,e.franchise_id,e.franchise_name,a.return_id,a.invoice_no,return_by,a.returned_on,IF(r.return_id,1,0) AS in_transit,r.courier,r.awb, FROM_UNIXTIME(r.logged_on) AS logged_on,b.name AS handled_by_name,a.status,r.status AS transit_status,r.ticket_id,IFNULL(s.ticket_no,'n/a') AS ticket_no,r.emp_phno,r.emp_name,r.transit_mode
+FROM pnh_invoice_returns a
+LEFT JOIN king_admin b ON a.handled_by = b.id
+JOIN king_invoice c ON c.invoice_no = a.invoice_no
+JOIN king_transactions d ON d.transid = c.transid
+JOIN pnh_m_franchise_info e ON e.franchise_id = d.franchise_id
+LEFT JOIN pnh_t_returns_transit_log r ON r.return_id=a.return_id 
+#LEFT JOIN m_employee_info em ON em.employee_id=r.empid 
+#LEFT JOIN m_courier_info cr ON cr.courier_id=r.courier_id 
+LEFT JOIN support_tickets s ON s.ticket_id=r.ticket_id 
+WHERE a.return_id= '593';
+
+SELECT * FROM pnh_t_returns_transit_log
+
+DESC `t_partner_stock_transfer_product_link`
+DESC `m_product_deal_link`
+SELECT * FROM m_product_deal_link
+SELECT * FROM `t_partner_stock_transfer_product_link`
+
+SELECT mn.name AS menu,bd.name AS brand,ct.name AS category
+ FROM king_dealitems di
+JOIN king_deals dl ON dl.dealid=di.dealid
+JOIN king_dealitems i ON i.dealid=dl.dealid 
+LEFT JOIN king_menu mn ON mn.id=dl.menuid
+JOIN king_categories ct ON ct.id=dl.catid
+JOIN king_brands bd ON bd.id=dl.brandid
+WHERE di.id=2616472368
+
+DESC t_reserved_batch_stock
+
+
+SELECT stock_id,product_id,available_qty 
+	FROM t_stock_info a 
+	JOIN m_rack_bin_info b ON a.rack_bin_id = b.id AND is_damaged = 0 
+	WHERE product_id = 98 
+
+
+SELECT stl.id AS tp_id,stl.transfer_id,stl.itemid,stl.item_transfer_qty,orgprice AS deal_mrp ,stl.product_id,stl.product_transfer_qty FROM t_partner_stock_transfer_product_link stl JOIN m_product_deal_link pdl ON pdl.itemid=stl.itemid JOIN king_dealitems di ON di.id = pdl.itemid WHERE stl.transfer_id = 1 AND stl.itemid = '9998389588' AND stl.transfer_status = 0 GROUP BY stl.product_id 1	
+
+SELECT * FROM t_partner_reserved_batch_stock WHERE transfer_id = 1 
+SELECT * FROM t_partner_stock_transfer_product_link WHERE transfer_id = 1 
+
+DESC t_stock_info 
+
+#ALTER TABLE t_partner_stock_transfer_product_link ADD COLUMN batched_on DATETIME DEFAULT '0000-00-00 00:00:00';
+#ALTER TABLE t_partner_stock_transfer_product_link ADD COLUMN batched_by INT(11) DEFAULT 0 ;
+
+SELECT u.name AS username,l.*,pi.p_invoice_no,ci.invoice_no AS c_invoice_no,i.invoice_no,ptrbs.transfer_id FROM t_stock_update_log l LEFT OUTER JOIN king_invoice i ON i.id=l.invoice_id LEFT OUTER JOIN t_client_invoice_info ci ON ci.invoice_id=l.corp_invoice_id LEFT OUTER JOIN proforma_invoices PI ON pi.id=l.p_invoice_id LEFT OUTER JOIN t_partner_reserved_batch_stock ptrbs ON ptrbs.id=l.transfer_id LEFT OUTER JOIN king_admin u ON u.id=l.created_by WHERE l.product_id=? 
+
+
+#Sep_08_2014
+
+SELECT * FROM m_partner_deal_link
+
+
+SELECT * FROM m_partner_deal_link;
+#12243
+SELECT IFNULL(GROUP_CONCAT(smd.special_margin),0) AS sm,0 AS stock,i.is_combo,i.is_group,d.publish,d.brandid,d.catid,i.orgprice,
+					i.price,i.name,i.pic,i.pnh_id,i.id AS itemid,i.member_price,i.live AS allow_order,
+					b.name AS brand,c.name AS category,p.name AS partner_name,is_pnh
+				FROM king_deals d 
+				JOIN king_dealitems i ON i.dealid=d.dealid 
+					JOIN m_partner_deal_link pdl ON pdl.itemid=i.id 
+					LEFT JOIN partner_info p ON p.id=pdl.partner_id
+				JOIN king_brands b ON b.id=d.brandid 
+				JOIN king_categories c ON c.id=d.catid 
+				LEFT JOIN pnh_special_margin_deals smd ON i.id = smd.itemid  AND smd.from <= UNIX_TIMESTAMP() AND smd.to >=UNIX_TIMESTAMP()
+				 WHERE d.catid='170'
+				 GROUP BY i.id ORDER BY d.publish DESC;
+#1224353452345
+SELECT IFNULL(GROUP_CONCAT(smd.special_margin),0) AS sm,0 AS stock,i.is_combo,i.is_group,d.publish,d.brandid,d.catid,i.orgprice,
+					i.price,i.name,i.pic,i.pnh_id,i.id AS itemid,i.member_price,i.live AS allow_order,
+					b.name AS brand,c.name AS category,p.name AS partner_name
+				FROM king_deals d 
+				JOIN king_dealitems i ON i.dealid=d.dealid 
+				 JOIN m_partner_deal_link pdl ON pdl.itemid=i.id 
+							JOIN partner_info p ON p.id=pdl.partner_id
+				JOIN king_brands b ON b.id=d.brandid 
+				JOIN king_categories c ON c.id=d.catid 
+				LEFT JOIN pnh_special_margin_deals smd ON i.id = smd.itemid  AND smd.from <= UNIX_TIMESTAMP() AND smd.to >=UNIX_TIMESTAMP()
+				 
+				 WHERE AND d.catid='438' AND d.brandid='97944987' 
+				 GROUP BY i.id ORDER BY d.publish DESC
+#jfghjkdsakjfghjkdsafg
+SELECT tfl.id,tfl.itemid,tfl.item_transfer_qty,tfl.transfer_status 
+	,di.name AS deal_name,dl.catid,dl.brandid,dl.menuid,mn.name AS menu,ct.name AS category,bd.name AS brand
+	,IFNULL(a.username,'--na--') AS username,tfl.modified_on
+	FROM t_partner_stock_transfer_product_link tfl
+	JOIN king_dealitems di ON di.id=tfl.itemid
+	JOIN king_deals dl ON dl.dealid=di.dealid
+		LEFT JOIN king_menu mn ON mn.id=dl.menuid
+		LEFT JOIN king_categories ct ON ct.id=dl.catid
+		LEFT JOIN king_brands bd ON bd.id=dl.brandid
+	LEFT JOIN king_admin a ON a.id=tfl.modified_by
+	WHERE tfl.transfer_id=2 ORDER BY tfl.id ASC;
+	
+SELECT * FROM m_partner_deal_link;
+SELECT * FROM t_partner_stock_transfer_product_link WHERE transfer_id=2;
+
+#ALTER TABLE `snapitto_erpsndx_jul_04_2014`.`t_partner_stock_transfer` ADD COLUMN `modified_by` INT(10) NULL AFTER `transfer_by`, ADD COLUMN `modified_on` DATETIME NULL AFTER `modified_by`; 
+
+SELECT tfl.id,tfl.itemid,tfl.item_transfer_qty,tfl.transfer_status 
+	,di.name AS deal_name
+	FROM t_partner_stock_transfer_product_link tfl
+	JOIN king_dealitems di ON di.id=tfl.itemid
+	WHERE tfl.transfer_id=1 ORDER BY tfl.item_transfer_qty ASC;
+	
+SELECT * FROM `t_partner_stock_transfer`
+SELECT * FROM `t_partner_stock_transfer_product_link`;
+SELECT * FROM `t_partner_reserved_batch_stock`;
+3642-pid
+201195-stkid
+#324234
+SELECT stock_id,product_id,location_id,rack_bin_id,CONCAT(location_id,'-',rack_bin_id) AS rbid,product_barcode,SUM(available_qty) AS s,mrp FROM t_stock_info 
+WHERE product_id=3642 
+GROUP BY rbid,mrp,product_barcode,stock_id 
+HAVING SUM(available_qty)>=0 ORDER BY mrp ASC
+#===
+SELECT rstk.transfer_id,rstk.product_id,rstk.stock_info_id,rstk.itemid,rstk.qty,rstk.extra_qty,rstk.release_qty,rstk.status
+	,stk.location_id,stk.rack_bin_id,stk.mrp,stk.available_qty,stk.product_barcode
+FROM `t_partner_reserved_batch_stock` rstk
+JOIN t_stock_info stk ON stk.product_id=rstk.product_id AND stk.stock_id=rstk.stock_info_id
+WHERE rstk.transfer_id=4
+
+SELECT * FROM t_stock_info
+DESC t_stock_info
+SELECT * FROM t_imei_no
+SELECT * FROM t_reserved_batch_stock
+
+SELECT * FROM t_partner_reserved_batch_stock WHERE transfer_id=3
+SELECT * FROM t_imei_no WHERE product_id=3642;
+
+SELECT a.imei_no,b.mrp,b.product_barcode,b.location_id,b.rack_bin_id,b.stock_id
+	FROM t_imei_no a 
+	LEFT JOIN t_stock_info b ON a.stock_id = b.stock_id AND `status`=0 
+	WHERE a.product_id=3642;
+	
+#prd pending
+SELECT SUM(pstk.qty) AS partner_pending_stk,SUM(rs.qty) AS pnh_pending_stk
+	FROM t_partner_reserved_batch_stock pstk
+	LEFT JOIN t_reserved_batch_stock rs ON rs.product_id=pstk.product_id AND rs.status=0
+	WHERE pstk.status=0 AND pstk.itemid='5381136649'
+	
+SELECT tfl.id,tfl.itemid,tfl.item_transfer_qty,tfl.transfer_status 
+	,di.name AS deal_name
+	#,concat('".IMAGES_URL."items/small/',di.pic,'.jpg') as image_url
+	,di.orgprice AS mrp,di.price
+	FROM t_partner_stock_transfer_product_link tfl
+	JOIN king_dealitems di ON di.id=tfl.itemid
+	JOIN t_partner_reserved_batch_stock rstk ON rstk.transfer_id=tfl.transfer_id
+	WHERE tfl.transfer_id='4'
+	GROUP BY tfl.transfer_id
+	ORDER BY tfl.id ASC
+	
+SELECT * FROM m_product_info;
+#Sep_09_2014
+#============new==========
+SELECT si.stock_id,SUM(pstk.qty) AS s,si.mrp,si.location_id,si.rack_bin_id,CONCAT(ri.rack_name,ri.bin_name) AS rbname,ri.is_damaged,IFNULL(si.product_barcode,'') AS pbarcode
+FROM t_partner_reserved_batch_stock pstk
+JOIN t_stock_info si ON si.stock_id=pstk.stock_info_id
+JOIN m_rack_bin_info ri ON ri.id = si.rack_bin_id
+WHERE pstk.`status`=0 AND pstk.product_id=98
+HAVING SUM(pstk.qty)>=0;
+#===========
+SELECT * FROM m_partner_deal_link;
+
+#ifnull(group_concat(smd.special_margin),0) as sm,
+#left join pnh_special_margin_deals smd on i.id = smd.itemid  and smd.from <= unix_timestamp() and smd.to >=unix_timestamp()
+SELECT 0 AS stock,i.is_combo,i.is_group,d.publish,d.brandid,d.catid,i.orgprice,
+					i.price,i.name,i.pic,i.pnh_id,i.id AS itemid,i.member_price,i.live AS allow_order,
+					b.name AS brand,c.name AS category,p.name AS partner_name
+				FROM king_deals d 
+				JOIN king_dealitems i ON i.dealid=d.dealid 
+				  JOIN m_partner_deal_link pdl ON pdl.itemid=i.id 
+				LEFT JOIN partner_info p ON p.id=pdl.partner_id
+						
+				JOIN king_brands b ON b.id=d.brandid 
+				JOIN king_categories c ON c.id=d.catid 
+
+				 WHERE d.catid='170'
+				 GROUP BY i.id ORDER BY d.publish DESC
+				 
+
+SELECT SUM(a.available_qty) AS s,a.mrp
+	,a.location_id,a.rack_bin_id, CONCAT(c.rack_name,bin_name) AS rbname,c.is_damaged
+	,IFNULL(a.product_barcode,'') AS pbarcode
+	,a.stock_id,DATE_FORMAT(a.expiry_on, '%d-%m-%Y') AS expiry_on,a.offer_note 
+FROM t_stock_info a 
+JOIN m_storage_location_info b ON b.location_id = a.location_id 
+JOIN m_rack_bin_info c ON c.id = a.rack_bin_id 
+LEFT JOIN t_partner_reserved_batch_stock pstk ON pstk.product_id=a.product_id AND pstk.stock_info_id=a.stock_id AND pstk.status=0 
+WHERE a.product_id='98' GROUP BY a.mrp,pbarcode,a.location_id,a.rack_bin_id 
+HAVING SUM(a.available_qty)>=0 ORDER BY a.mrp ASC
+
+
+SELECT SUM(available_qty) AS s,mrp, a.location_id,a.rack_bin_id, CONCAT(c.rack_name,bin_name) AS rbname,c.is_damaged, IFNULL(product_barcode,'') AS pbarcode, a.stock_id,DATE_FORMAT(a.expiry_on, '%d-%m-%Y') AS expiry_on,offer_note FROM t_stock_info a 
+JOIN m_storage_location_info b ON b.location_id = a.location_id 
+JOIN m_rack_bin_info c ON c.id = a.rack_bin_id 
+WHERE product_id='98' GROUP BY mrp,pbarcode,a.location_id,a.rack_bin_id HAVING SUM(available_qty)>=0 ORDER BY mrp ASC
+
+
+SELECT di.live,di.is_combo,di.is_group,dl.publish,dl.brandid,dl.catid,di.orgprice
+	,di.price,di.name,di.pic,di.pnh_id,di.id AS itemid,di.member_price,di.live AS allow_order,
+	b.name AS brand,c.name AS category,p.name AS partner_name
+FROM m_partner_deal_link pdl
+JOIN king_dealitems di ON di.id=pdl.itemid
+JOIN king_deals dl ON dl.dealid=di.dealid
+JOIN king_brands b ON b.id=dl.brandid 
+JOIN king_categories c ON c.id=dl.catid 
+JOIN partner_info p ON p.id=pdl.partner_id
+
+8901526206773
+
+12312313
+
+SELECT live FROM king_dealitems WHERE id=5146282584
+
+SELECT product_id,sync_product_src FROM m_product_info WHERE sync_product_src = 1 ORDER BY product_id LIMIT 50000
+
+SELECT di.is_combo,di.is_group,dl.publish,dl.brandid,dl.catid,di.orgprice
+								,di.price,di.name,di.pic,di.pnh_id,di.id AS itemid,di.member_price,di.live AS allow_order,
+								b.name AS brand,c.name AS category,p.name AS partner_name
+							FROM m_partner_deal_link pdl
+							JOIN king_dealitems di ON di.id=pdl.itemid
+							JOIN king_deals dl ON dl.dealid=di.dealid
+							JOIN king_brands b ON b.id=dl.brandid 
+							JOIN king_categories c ON c.id=dl.catid 
+							JOIN partner_info p ON p.id=pdl.partner_id
+							WHERE 1  AND dl.catid='170' AND dl.brandid='41487638'  AND dl.publish=1
+							 GROUP BY di.id ORDER BY dl.publish DESC
+
+SELECT * FROM t_imei_no
+#Search by barcode							 
+SELECT i.pnh_id,i.dealid,i.id,i.name,i.is_pnh,d.brandid,d.catid  
+FROM king_dealitems i 
+JOIN king_deals d ON d.dealid=i.dealid
+LEFT JOIN m_product_deal_link pdl ON pdl.itemid=i.id
+LEFT JOIN t_imei_no ime ON ime.product_id=pdl.product_id
+LEFT JOIN t_stock_info stk ON stk.product_id=pdl.product_id
+WHERE ((i.name LIKE '%".$q."%' OR i.pnh_id = '911239254888409' OR i.id='911239254888409' OR ime.imei_no='911239254888409' OR stk.product_barcode='8901138511487') AND i.pnh_id > 0) GROUP BY i.pnh_id;
+
+SELECT * FROM m_partner_deal_link pdl
+JOIN m_product_deal_link prod ON prod.itemid=pdl.itemid
+#join t_imei_no ime on ime.product_id=prod.product_id
+LEFT JOIN t_stock_info stk ON stk.product_id=prod.product_id
+
+bcode:
+8901138511494
+8901138511487
+
+SELECT i.pnh_id,i.dealid,i.id,i.name,i.is_pnh,d.brandid,d.catid
+FROM king_dealitems i 
+JOIN king_deals d ON d.dealid=i.dealid
+LEFT JOIN m_product_deal_link pdl ON pdl.itemid=i.id
+LEFT JOIN t_stock_info stk ON stk.product_id=prod.product_id 
+WHERE ((i.name LIKE '%8901138511494 %'  OR ime.imei_no='8901138511494 '  OR stk.product_barcode='8901138511494 '  OR i.pnh_id = '8901138511494 '  OR i.id = '8901138511494 ' ) AND i.pnh_id > 0 ) GROUP BY i.pnh_id LIMIT 10;
+
+SELECT i.pnh_id,i.dealid,i.id,i.name,i.is_pnh,d.brandid,d.catid
+FROM king_dealitems i 
+JOIN king_deals d ON d.dealid=i.dealid
+LEFT JOIN m_product_deal_link pdl ON pdl.itemid=i.id
+LEFT JOIN t_imei_no ime ON ime.product_id=pdl.product_id  LEFT JOIN t_stock_info stk ON stk.product_id=prod.product_id 
+WHERE ((i.name LIKE '%8901138511487 %'  OR ime.imei_no='8901138511487 '  OR stk.product_barcode='8901138511487 '  OR i.pnh_id = '8901138511487 '  OR i.id = '8901138511487 ' ) AND i.pnh_id > 0 ) GROUP BY i.pnh_id LIMIT 10
+
+SELECT * FROM t_partner_stock_transfer
+SELECT * FROM t_partner_stock_transfer_product_link WHERE transfer_id='7';
+
+SELECT * FROM king_dealitems WHERE live=1;
+
+
+(
+	SELECT i.itemid,live,di.dealid,d.publish,IF(SUM(stat),1,0) AS new_deal_stat FROM (
+				SELECT itemid,product_id,psrc,stk,SUM(psrc+IF(stk,1,0)) AS stat FROM (
+				SELECT a.itemid,b.product_id,a.qty,a.is_active,c.is_sourceable AS psrc,IFNULL(SUM(available_qty),0) AS stk
+			FROM m_product_group_deal_link a
+			JOIN products_group_pids b ON a.group_id = b.group_id
+			JOIN (SELECT itemid
+			FROM m_product_group_deal_link a
+			JOIN products_group_pids b ON a.group_id = b.group_id
+			WHERE product_id = '6741' AND is_active = 1) AS b ON b.itemid = a.itemid
+			JOIN m_product_info c ON c.product_id = b.product_id
+			LEFT JOIN t_stock_info d ON d.product_id = b.product_id
+				LEFT JOIN m_rack_bin_info rb ON rb.id = d.rack_bin_id 
+						
+			GROUP BY a.itemid,b.product_id,rb.is_damaged 
+				HAVING rb.is_damaged = 0
+			)AS h
+			GROUP BY itemid,product_id ) AS i
+			JOIN king_dealitems di ON di.id = i.itemid
+			JOIN king_deals d ON d.dealid = di.dealid
+			GROUP BY itemid
+	HAVING live != new_deal_stat
+	)
+	UNION(
+	SELECT itemid,dealid,live,publish,IF(IF(is_combo,(ttl_p=ttl_in),IF(is_group,ttl_in,ttl_in) ),1,0) AS new_deal_stat 
+			FROM (
+		SELECT 	i.itemid,live,di.dealid,d.publish,is_combo,is_group,COUNT(*) AS ttl_p,SUM(stat) AS ttl_in
+		FROM (
+				SELECT itemid,product_id,psrc,stk,IF(SUM(psrc+IF(stk,1,0)),1,0) AS stat 
+				FROM (
+					SELECT a.itemid,a.product_id,a.qty,a.is_active,c.is_sourceable AS psrc,(SUM(available_qty)+IFNULL(ven_stock_qty,0)) AS stk
+			FROM m_product_deal_link a
+			JOIN (SELECT itemid FROM m_product_deal_link WHERE product_id = '6741' AND is_active = 1) AS b ON b.itemid = a.itemid
+			JOIN m_product_info c ON c.product_id = a.product_id
+			LEFT JOIN t_stock_info d ON d.product_id = a.product_id
+				LEFT JOIN m_vendor_product_link e ON e.product_id = c.product_id  
+					LEFT JOIN m_rack_bin_info rb ON rb.id = d.rack_bin_id 
+						
+			WHERE a.is_active = 1 
+			GROUP BY a.itemid,a.product_id,rb.is_damaged
+				HAVING rb.is_damaged = 0
+				
+			)AS h
+				JOIN king_dealitems di ON di.id = h.itemid
+				GROUP BY itemid,product_id 
+		) AS i
+			JOIN king_dealitems di ON di.id = i.itemid
+			JOIN king_deals d ON d.dealid = di.dealid
+			GROUP BY itemid
+	) AS k 
+	HAVING live != new_deal_stat
+	)
+	
+#Sep_10_2014
+
+SELECT * FROM t_stock_info WHERE product_id=3642;
+
+SELECT * FROM m_rack_bin_info
+
+#new procurement list
+SELECT rstk.product_id,p.product_name,SUM(rstk.qty) AS qty,CONCAT(rb.rack_name,rb.bin_name) AS rbname,stk.mrp,GROUP_CONCAT(DISTINCT stk.product_barcode) AS barcodes
+FROM t_partner_reserved_batch_stock rstk
+JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+JOIN m_product_info p ON p.product_id=rstk.product_id
+JOIN m_rack_bin_info rb ON rb.id = stk.rack_bin_id  
+WHERE rstk.transfer_id IN ('3','4')
+GROUP BY stk.mrp,stk.rack_bin_id,stk.location_id
+
+SELECT * FROM t_partner_reserved_batch_stock rstk
+WHERE transfer_id IN ('8');
+SELECT * FROM partner_info
+SELECT * FROM t_partner_reserved_batch_stock
+Reserved `status`:::
+0-pending
+1-alloted
+2-reverted/cancelled
+
+SELECT * FROM t_partner_stock_transfer WHERE transfer_id=4
+SELECT * FROM t_partner_stock_transfer_product_link WHERE transfer_id=4
+#
+SELECT rstk.id AS rlog_id,rstk.transfer_id,rstk.product_id,rstk.stock_info_id,rstk.itemid,rstk.qty,rstk.extra_qty,rstk.release_qty,rstk.status
+	,tdl.partner_id,tdl.transfer_remarks,p.partner_rackbinid,stk.location_id,stk.rack_bin_id,stk.mrp,stk.product_barcode
+FROM t_partner_reserved_batch_stock rstk
+JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+JOIN t_partner_stock_transfer tdl ON tdl.transfer_id=rstk.transfer_id
+LEFT JOIN partner_info p ON p.id=tdl.partner_id
+WHERE rstk.status=0 AND rstk.transfer_id=4;
+
+
+	tfl.id,tfl.itemid,tfl.item_transfer_qty,tfl.transfer_status 
+	,di.name AS deal_name
+	,CONCAT('".IMAGES_URL."items/small/',di.pic,'.jpg') AS image_url
+	,di.orgprice AS mrp,di.price,rstk.product_id,p.product_name
+#new updated
+SELECT rstk.product_id,rstk.qty,stk.mrp,rstk.itemid
+	,di.name AS deal_name,p.product_name
+FROM t_partner_reserved_batch_stock rstk
+JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+JOIN king_dealitems di ON di.id=rstk.itemid
+JOIN m_product_info p ON p.product_id=rstk.product_id
+WHERE rstk.transfer_id=8
+
+SELECT * FROM t_stock_info
+DESC t_stock_info
+
+SELECT rstk.transfer_id,rstk.product_id,rstk.stock_info_id,rstk.itemid,rstk.qty,rstk.extra_qty,rstk.release_qty,rstk.status
+		,stk.location_id,stk.rack_bin_id,stk.mrp,stk.available_qty,stk.product_barcode
+	FROM `t_partner_reserved_batch_stock` rstk
+	JOIN t_stock_info stk ON stk.product_id=rstk.product_id AND stk.stock_id=rstk.stock_info_id
+	WHERE rstk.transfer_id=4
+	GROUP BY rstk.product_id
+	
+SELECT rstk.itemid,rstk.stock_info_id
+	,stk.product_barcode,stk.mrp,rstk.qty
+ FROM t_partner_reserved_batch_stock rstk
+ JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+WHERE rstk.product_id=5275 AND rstk.transfer_id=8 AND rstk.stock_info_id=159447;
+
+SELECT * FROM t_partner_reserved_batch_stock;
+SELECT * FROM t_partner_stock_transfer;
+SELECT * FROM t_partner_stock_transfer_product_link WHERE transfer_id=8;
+
+#ALTER TABLE `t_partner_stock_transfer_product_link` ADD COLUMN `packed_on` DATETIME NULL AFTER `batched_by`, ADD COLUMN `packed_by` INT(11) NULL AFTER `packed_on`; 
+
+
+#Sep_11_2014
+SELECT * FROM t_stock_info WHERE stock_id = 0
+
+SELECT transfer_status,	batched_on ,	batched_by ,	modified_on,	modified_by
+	FROM t_partner_stock_transfer_product_link
+
+SELECT * FROM t_partner_stock_transfer;
+SELECT * FROM t_partner_stock_transfer_product_link;
+SELECT * FROM t_partner_reserved_batch_stock;
+stkid:297234
+SELECT * FROM t_stock_info WHERE stock_id=297234;
+
+SELECT * 
+FROM m_partner_deal_link pdl
+JOIN king_dealitems di ON di.id=pdl.itemidk;
+
+
+
+SELECT * FROM king_dealitems WHERE dealid='1638665855';
+=>6484744279
+
+SELECT di.live,di.is_combo,di.is_group,dl.publish,dl.brandid,dl.catid,di.orgprice
+		,di.price,di.name,di.pic,di.pnh_id,di.id AS itemid,di.member_price,di.live AS allow_order,
+		b.name AS brand,c.name AS category,p.name AS partner_name,pdl.partner_id
+	FROM m_partner_deal_link pdl
+	JOIN king_dealitems di ON di.id=pdl.itemid
+	JOIN king_deals dl ON dl.dealid=di.dealid
+	JOIN king_brands b ON b.id=dl.brandid 
+	JOIN king_categories c ON c.id=dl.catid 
+	JOIN partner_info p ON p.id=pdl.partner_id
+	WHERE 1;
+	
+#truncate m_partner_deal_link;1638665855
+
+SELECT id FROM king_dealitems WHERE is_pnh=0;
+
+=>10307
+SELECT * FROM m_partner_deal_link;
+#===================================================
+
+#10307 row(s) affected
+#===================================================
+#INSERT INTO `m_departments` (`name`, `keyword`, `created_on`, `created_by`, `status`) VALUES ('Business Development', 'BD', '2014-09-11 14:05:09', '37', '1'); 
+#INSERT INTO `m_employee_roles` (`role_name`, `short_frm`, `created_on`, `created_by`) VALUES ('Regional Manager', 'RM', '2014-09-11 14:17:18', '37');
+
+#`m_dept_request_types`
+SELECT * FROM m_employee_roles;
+
+SELECT di.dealid,di.live,di.is_combo,di.is_group,dl.publish,dl.brandid,dl.catid,di.orgprice
+								,di.price,di.name,di.pic,di.pnh_id,di.id AS itemid,di.member_price,di.live AS allow_order,
+								b.name AS brand,c.name AS category,p.name AS partner_name,pdl.partner_id
+							FROM m_partner_deal_link pdl
+							JOIN king_dealitems di ON di.id=pdl.itemid
+							JOIN king_deals dl ON dl.dealid=di.dealid
+							JOIN king_brands b ON b.id=dl.brandid 
+							JOIN king_categories c ON c.id=dl.catid 
+							JOIN partner_info p ON p.id=pdl.partner_id
+							WHERE 1  AND pdl.partner_id='7' AND di.is_pnh=0
+							 GROUP BY di.id ORDER BY dl.publish DESC  LIMIT 100
+							 
+SELECT * FROM t_partner_reserved_batch_stock WHERE transfer_id=9;
+
+SELECT * FROM t_stock_info WHERE stock_id IN (162448,149847,232619)
+
+rbid=75,114,84
+
+
+SELECT * FROM t_partner_reserved_batch_stock WHERE transfer_id=11;
+
+SELECT * FROM t_stock_info WHERE stock_id IN (149847,232619)
+
+SELECT * FROM t_partner_stock_transfer WHERE transfer_id=11
+SELECT * FROM t_partner_stock_transfer_product_link WHERE transfer_id=11;
+
+
+SELECT * FROM t_partner_reserved_batch_stock WHERE transfer_id=17;
+
+SELECT * FROM t_stock_info WHERE stock_id IN (244513,295684);
+
+SELECT * FROM t_stock_info WHERE product_id IN (1021,318);
+
+SELECT * FROM t_partner_stock_transfer_product_link WHERE transfer_id='15';
+
+
+SELECT * FROM t_stock_info WHERE product_id IN (1021);
+
+SELECT * FROM m_rack_bin_info;
+
+#Sep_12_2014
+
+SELECT stock_id,product_id,location_id,rack_bin_id,CONCAT(location_id,'-',rack_bin_id) AS rbid,product_barcode,SUM(available_qty) AS s,mrp 
+FROM t_stock_info 
+WHERE product_id='1021' 
+GROUP BY rbid,mrp,product_barcode,stock_id 
+HAVING SUM(available_qty)>=0 
+ORDER BY mrp ASC;
+
+
+SELECT * FROM t_partner_stock_transfer_product_link WHERE transfer_id=18;
+SELECT * FROM t_partner_reserved_batch_stock WHERE transfer_id=18;
+SELECT * FROM t_stock_info WHERE stock_id IN (244513,944,1076,295684,135592,134933)
+SELECT * FROM t_partner_stock_transfer WHERE transfer_id=18;
+
+SELECT * FROM t_partner_stock_transfer st
+JOIN t_partner_stock_transfer_product_link stp ON stp.transfer_id=st.transfer_id
+#join t_partner_reserved_batch_stock prb on prb.transfer_id=st.transfer_id
+WHERE st.transfer_id=18;
+
+SELECT * FROM m_partner_deal_link
+
+#Sep_13_2014
+
+#==========================Franchise allow sms==============================================================#
+#suresh Aug 25 2014
+ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `allow_sms` TINYINT (1) DEFAULT '1' NULL  AFTER `opt_maxcreditlimit`
+#==========================Franchise allow sms=============================================================#
+/*[4:08:58 PM][121 ms]*/ ALTER TABLE `t_invoice_credit_notes` CHANGE `is_credit_processed` `is_credit_processed` TINYINT(1) DEFAULT 0 NULL COMMENT '1:processed 0:processed';
+
+#-==============================
+#Sep_08_2014
+DROP TABLE t_partner_transfer_request;
+DROP TABLE t_partner_stock_transfer;
+# Transfer table
+CREATE TABLE `t_partner_stock_transfer`( `transfer_id` BIGINT COMMENT 'unique transfer_id', `partner_id` INT(11) COMMENT 'related partner id', `partner_transfer_no` VARCHAR(50) COMMENT 'partner unique ref no'
+, `transfer_remarks` TEXT, `is_active` INT(10) DEFAULT 1 NULL, `scheduled_transfer_date` DATETIME COMMENT 'for more info', `transfer_status` INT(10) DEFAULT 0, `transfer_date` DATETIME
+, `transfer_by` INT(10) COMMENT 'created by userid'
+, `modified_by` INT(10) NULL
+, `modified_on` DATETIME NULL 
+, PRIMARY KEY (`transfer_id`) );
+
+#Transfer deal link table
+CREATE TABLE `t_partner_stock_transfer_product_link`( `id` BIGINT NOT NULL AUTO_INCREMENT, `transfer_id` BIGINT(10) COMMENT 'reference transfer_id', `itemid` BIGINT(10), `product_id` INT(100)
+, `from_stock_info_id` INT(100) COMMENT 'old stock id', `to_stock_info_id` INT(100) COMMENT 'new stock id', `product_transfer_qty` INT(10) COMMENT 'each product qty'
+, `item_transfer_qty` INT(10) COMMENT 'overall transfer qty'
+, `transfer_status` TINYINT(1) DEFAULT 0 COMMENT '0:pending,1:reserved,2:packed,3:cancelled,4:shipped'
+,`is_active` TINYINT(1) DEFAULT 1 NULL
+,`modified_by` INT(10) NULL
+,`modified_on` DATETIME NULL COMMENT 'status updated on'
+, batched_on DATETIME DEFAULT '0000-00-00 00:00:00'
+, batched_by INT(11) DEFAULT 0
+, packed_on DATETIME NULL
+, packed_by INT(11) NULL
+, batch_qty INT(10) DEFAULT 0 NULL COMMENT 'batch qty'
+, scanned_qty INT(10) DEFAULT 0 NULL COMMENT 'how many quantity scanned'
+, PRIMARY KEY (`id`) );
+
+# Reserve stock transfer log
+CREATE TABLE `t_partner_reserved_batch_stock` (
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT,
+  `transfer_id` BIGINT(11) DEFAULT '0',
+  `product_id` BIGINT(11) DEFAULT '0',
+  `stock_info_id` BIGINT(11) DEFAULT '0',
+  `itemid` BIGINT(11) DEFAULT '0',
+  `qty` DOUBLE DEFAULT '0',
+  `extra_qty` DOUBLE DEFAULT '0',
+  `release_qty` DOUBLE DEFAULT '0',
+  `reserved_on` DATETIME DEFAULT '0000-00-00 00:00:00',
+  `released_on` DATETIME DEFAULT '0000-00-00 00:00:00',
+  `status` TINYINT(1) DEFAULT '0',
+  PRIMARY KEY (`id`)
+);
+
+#Stock log table updated with transfer id field
+ALTER TABLE t_stock_update_log ADD COLUMN transfer_id BIGINT(11) DEFAULT 0;
+
+#return page fix
+ALTER TABLE `pnh_t_returns_transit_log` ADD COLUMN `emp_name` VARCHAR(255) NULL AFTER `awb`;
+#-==============================
+#Sep_14_2014-Shivaraj - bug fix(_discount cannot be null)
+ALTER TABLE `king_invoice` CHANGE `discount` `discount` DECIMAL(10,2) UNSIGNED DEFAULT 0.00 NULL;
+#
+RENAME TABLE `partner_t_reserved_batch_stock` TO `t_partner_reserved_batch_stock`;
+ALTER TABLE `t_partner_stock_transfer_product_link` CHANGE `batched_on` `batched_on` DATETIME NULL;
+ALTER TABLE `t_partner_reserved_batch_stock` CHANGE `reserved_on` `reserved_on` DATETIME NULL, CHANGE `released_on` `released_on` DATETIME NULL;
+#Add Indexes
+ALTER TABLE `t_partner_reserved_batch_stock` ADD INDEX (`transfer_id`), ADD INDEX (`product_id`), ADD INDEX (`stock_info_id`), ADD INDEX (`itemid`), ADD INDEX (`status`);
+ALTER TABLE `t_partner_stock_transfer` ADD INDEX (`partner_id`), ADD INDEX (`transfer_status`), ADD INDEX (`partner_transfer_no`), ADD INDEX (`is_active`);
+ALTER TABLE `t_partner_stock_transfer_product_link` ADD INDEX (`transfer_id`), ADD INDEX (`itemid`), ADD INDEX (`product_id`), ADD INDEX (`transfer_status`), ADD INDEX (`is_active`);
+ALTER TABLE `m_partner_deal_link` ADD INDEX (`itemid`), ADD INDEX (`partner_ref_no`), ADD INDEX (`partner_id`);
+
+ALTER TABLE `t_invoice_credit_notes` ADD COLUMN `is_credit_processed` TINYINT(1) DEFAULT 0 NULL COMMENT '1:processed 0:processed'; 
+# Franchise_type feature updates
+ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `franchise_type` INT(1) DEFAULT 0 NULL COMMENT '0:Normal,1:RF(rural),2:RMF(rural_master)' AFTER `pnh_franchise_id`;
+#-==============================
+/*[4:08:58 PM][121 ms]*/ ALTER TABLE `t_invoice_credit_notes` ADD COLUMN `is_credit_processed` TINYINT(1) DEFAULT 0 NULL COMMENT '1:processed 0:processed'; 
+
+#==============================
+SELECT * FROM t_partner_reserved_batch_stock 
+WHERE 
+#`status`=0 AND 
+transfer_id='21';
+
+SELECT * FROM t_partner_stock_transfer_product_link WHERE transfer_id=21
+
+SELECT * FROM t_partner_stock_transfer_product_link WHERE transfer_id=? AND itemid=? AND product_id=?;
+
+
+SELECT * FROM t_partner_reserved_batch_stock 
+WHERE 
+#`status`=0 AND 
+transfer_id='17';
+SELECT STATUS FROM t_partner_reserved_batch_stock WHERE transfer_id=17 AND itemid='168595309925' AND product_id='1021'
+HAVING STATUS=2
+
+SELECT MAX(STATUS) AS STATUS FROM t_partner_reserved_batch_stock WHERE transfer_id=18;
+
+SELECT st.transfer_id,st.partner_id,st.partner_transfer_no,st.transfer_remarks,st.transfer_status,st.transfer_by,st.scheduled_transfer_date,st.transfer_date
+										,a.username,p.name AS partner_name
+										FROM t_partner_stock_transfer st
+										JOIN king_admin a ON a.id=st.transfer_by
+										JOIN partner_info p ON p.id=st.partner_id
+										WHERE 1  AND st.transfer_date BETWEEN "2014-09-15 00:00:00  00:00:00" AND "2014-09-15 00:00:00 23:00:00"
+										ORDER BY transfer_id DESC;
+										
+SELECT * FROM 
+m_partner_deal_link pd
+JOIN king_dealitems di ON pd.itemid=di.id
+WHERE di.is_combo=1
+
+SELECT * FROM 
+king_dealitems WHERE is_combo=1;
+
+6717438462
+5192344973
+7185322699
+5265164358
+5521651316
+2212733874
+3471838221
+8731752592
+2382562473
+
+5418217383
+2549746695
+8627278218
+8989884625
+
+# Sep_22_2014
+
+SELECT tr.amount,tr.order_for,di.pnh_id,o.* FROM king_orders o
+JOIN king_transactions tr ON tr.transid=o.transid
+JOIN king_dealitems di ON di.id=o.itemid
+WHERE (o.insurance_id IS NULL OR o.insurance_id='')
+
+#======================================
+SELECT tr.amount,tr.order_for,di.pnh_id,f.is_lc_store,o.*
+FROM king_orders o
+JOIN king_transactions tr ON tr.transid=o.transid
+JOIN king_dealitems di ON di.id=o.itemid
+JOIN pnh_m_franchise_info f ON f.franchise_id=tr.franchise_id
+WHERE tr.is_pnh=1 AND o.has_insurance=1
+ AND (o.insurance_id IS NOT NULL OR o.insurance_id !='')
+ AND tr.transid='PNHVZP78775'
+
+PNHPYD24824
+PNHADY82182
+mul:
+PNHVZP78775
+PNHQZG27464
+PNHLLJ38838
+
+SELECT i.*,d.publish,c.loyality_pntvalue,d.menuid FROM king_dealitems i JOIN king_deals d ON d.dealid=i.dealid JOIN pnh_menu c ON c.id = d.menuid WHERE i.is_pnh=1 AND  i.pnh_id='10029039' AND i.pnh_id!=0;
+
+
+SELECT * FROM king_dealitems WHERE 1
+#and id='3828912355' 
+AND has_insurance=1
+#8423579341
+#7488193851
+
+SELECT * FROM king_deals WHERE dealid=2765499517
+6449568775
+2765499517
+
+# SEP_23_2014
+
+SET @req_mrp=17999;
+SELECT is_serial_required,a.stock_id,a.product_id,IF(IFNULL(c.imei_no,0),COUNT(DISTINCT c.imei_no),available_qty) AS available_qty,a.location_id
+	,GROUP_CONCAT(DISTINCT IFNULL( c.grn_id,0)) AS grn_id,a.rack_bin_id,a.mrp,IF(town_id=f.town_id,1,0) AS town_diff,IF((a.mrp-@req_mrp),1,0) AS mrp_diff
+						FROM t_stock_info a
+						JOIN m_rack_bin_info b ON a.rack_bin_id = b.id AND b.is_damaged=0
+						JOIN m_product_info p ON p.product_id = a.product_id
+						LEFT JOIN t_imei_no c ON c.product_id=a.product_id AND c.status = 0 AND c.order_id = 0 AND a.stock_id = c.stock_id AND reserved_batch_rowid=0
+						LEFT JOIN t_grn_product_link d ON d.grn_id = c.grn_id AND c.product_id = d.product_id
+						LEFT JOIN t_grn_info e ON e.grn_id = d.grn_id
+						LEFT JOIN m_vendor_town_link f ON f.vendor_id = e.vendor_id AND f.brand_id = p.brand_id 
+						WHERE a.mrp > 0 AND a.product_id = '190925' AND available_qty > 0  
+						GROUP BY stock_id,town_diff
+						ORDER BY a.product_id DESC,town_diff DESC,mrp_diff,a.mrp
+						
+						
+SELECT stl.id AS tp_id,stl.transfer_id,stl.itemid,stl.item_transfer_qty,orgprice AS deal_mrp 
+								,stl.product_id,stl.product_transfer_qty
+								FROM t_partner_stock_transfer_product_link stl
+								JOIN m_product_deal_link pdl ON pdl.itemid=stl.itemid
+								JOIN king_dealitems di ON di.id = pdl.itemid 
+								WHERE stl.transfer_id = '23' AND stl.itemid = '8423579341' AND stl.transfer_status = 0 GROUP BY stl.product_id;
+								
+SELECT is_serial_required,a.stock_id,a.product_id,IF(IFNULL(c.imei_no,0),COUNT(DISTINCT c.imei_no),available_qty) AS available_qty,a.location_id,GROUP_CONCAT(DISTINCT IFNULL( c.grn_id,0)) AS grn_id,a.rack_bin_id,a.mrp,IF(town_id=f.town_id,1,0) AS town_diff,IF((a.mrp-17999),1,0) AS mrp_diff
+						FROM t_stock_info a
+						JOIN m_rack_bin_info b ON a.rack_bin_id = b.id AND b.is_damaged=0
+						JOIN m_product_info p ON p.product_id = a.product_id
+						LEFT JOIN t_imei_no c ON c.product_id=a.product_id AND c.status = 0 AND c.order_id = 0 AND a.stock_id = c.stock_id AND reserved_batch_rowid=0
+						LEFT JOIN t_grn_product_link d ON d.grn_id = c.grn_id AND c.product_id = d.product_id
+						LEFT JOIN t_grn_info e ON e.grn_id = d.grn_id
+						LEFT JOIN m_vendor_town_link f ON f.vendor_id = e.vendor_id AND f.brand_id = p.brand_id 
+						WHERE a.mrp > 0 AND a.product_id = '190925' AND available_qty > 0  
+						GROUP BY stock_id,town_diff
+						ORDER BY a.product_id DESC,town_diff DESC,mrp_diff,a.mrp;
+						
+						
+						
+#Sep_23_2014
+ALTER TABLE m_vendor_product_link ADD COLUMN vendor_site_link VARCHAR(1024) DEFAULT '';
+
+`deal_member_price_changelog`;
+`deal_price_changelog`;
+
+l_pnh_deal_member_price_change
+
+SELECT COUNT(*) AS t FROM t_imei_no WHERE imei_no = '84375824375' AND order_id != 0 AND STATUS = 1
+
+#UPDATE t_imei_no SET is_returned=0,STATUS=1 WHERE imei_no='84375824375' AND STATUS = 0 LIMIT 1;
+
+SELECT GROUP_CONCAT(id) AS reserved_batch_rowids FROM t_reserved_batch_stock WHERE product_id=190925
+#98769,101359,103837,105355
+SELECT * FROM t_reserved_batch_stock WHERE product_id=190925 AND STATUS=0;
+
+#update t_imei_no set reserved_batch_rowid=0 where product_id=190925 and reserved_batch_rowid in(98769,101359,103837,105355)
+
+SELECT * FROM t_imei_no WHERE product_id=190925
+
+SELECT * FROM t_imei_update_log;
+
+SELECT * FROM king_deals WHERE dealid='3515129668'
+
+SELECT is_pnh FROM king_dealitems WHERE dealid='3515129668'
+#itemid=376219611919
+
+SELECT is_pnh FROM king_dealitems WHERE id IN (1535213983,2215134531)
+SELECT is_pnh FROM king_dealitems WHERE is_pnh=0;
+
+SELECT di.dealid,di.live,di.is_combo,di.is_group,dl.publish,dl.brandid,dl.catid,di.orgprice
+								,di.price,di.name,di.pic,di.pnh_id,di.id AS itemid,di.member_price,di.live AS allow_order,
+								b.name AS brand,c.name AS category,p.name AS partner_name,pdl.partner_id
+							FROM m_partner_deal_link pdl
+							JOIN king_dealitems di ON di.id=pdl.itemid
+							JOIN king_deals dl ON dl.dealid=di.dealid
+							JOIN king_brands b ON b.id=dl.brandid 
+							JOIN king_categories c ON c.id=dl.catid 
+							JOIN partner_info p ON p.id=pdl.partner_id
+							WHERE 1  AND dl.catid='1030' AND pdl.partner_id='7' AND di.is_pnh=0
+							 GROUP BY di.id ORDER BY dl.publish DESC;
+#=====================================================							
+#update king_dealitems di
+#join m_partner_deal_link pdl on di.id=pdl.itemid
+#set di.is_pnh=0
+#=>10314 row(s) affected
+
+SELECT * FROM king_dealitems di WHERE dealid IN (6449568775,2392527971,9189975456)
+
+SELECT a.imei_no,b.mrp,b.product_barcode,b.location_id,b.rack_bin_id,b.stock_id
+		FROM t_imei_no a 
+		LEFT JOIN t_stock_info b ON a.stock_id = b.stock_id AND STATUS=0 
+		WHERE a.product_id='8679';
+		
+
+
+SELECT di.dealid,di.live,di.is_combo,di.is_group,dl.publish,dl.brandid,dl.catid,di.orgprice
+								,di.price,di.name,di.pic,di.pnh_id,di.id AS itemid,di.member_price,di.live AS allow_order,
+								b.name AS brand,c.name AS category,p.name AS partner_name,pdl.partner_id
+							FROM m_partner_deal_link pdl
+							JOIN king_dealitems di ON di.id=pdl.itemid
+							JOIN king_deals dl ON dl.dealid=di.dealid
+							JOIN king_brands b ON b.id=dl.brandid 
+							JOIN king_categories c ON c.id=dl.catid 
+							JOIN partner_info p ON p.id=pdl.partner_id
+							WHERE 1  AND pdl.partner_id='7' AND di.is_pnh=0
+							 GROUP BY di.id ORDER BY dl.publish DESC
+							 
+SELECT * FROM king_dealitems WHERE id=8423579341;
+
+#SEP_24_2014
+
+SELECT di.dealid,di.live,di.is_combo,di.is_group,dl.publish,dl.brandid,dl.catid,di.orgprice
+								,di.price,di.name,di.pic,di.pnh_id,di.id AS itemid,di.member_price,di.live AS allow_order,
+								b.name AS brand,c.name AS category,p.name AS partner_name,pdl.partner_id
+							FROM m_partner_deal_link pdl
+							 JOIN king_dealitems di ON di.id=pdl.itemid
+							 JOIN king_deals dl ON dl.dealid=di.dealid
+							 JOIN king_brands b ON b.id=dl.brandid 
+							 JOIN king_categories c ON c.id=dl.catid 
+							LEFT JOIN partner_info p ON p.id=pdl.partner_id
+							WHERE 1  AND pdl.partner_id='7' AND di.is_pnh=0 AND pdl.itemid='376219611919'
+							 GROUP BY di.id ORDER BY dl.publish DESC 
+							 
+
+SELECT * FROM king_dealitems WHERE id IN (376219611919)
+SELECT * FROM king_deals WHERE dealid='3515129668'
+
+SELECT * FROM king_brands
+
+SELECT *,FROM_UNIXTIME(created_on) FROM t_imei_no WHERE imei_no=243571234854325
+							 
+SELECT * FROM king_dealitems
+iid:379437927161, did:5193963534
+SELECT * FROM king_deals WHERE dealid='5193963534';
+
+#====================
+#SEP_24_2014
+ALTER TABLE `partner_info` ADD INDEX (`partner_rackbinid`);
+#====================
+
+SELECT tr.amount,tr.order_for,di.pnh_id,f.is_lc_store,o.*
+	FROM king_orders o
+	JOIN king_transactions tr ON tr.transid=o.transid
+	JOIN king_dealitems di ON di.id=o.itemid
+	JOIN pnh_m_franchise_info f ON f.franchise_id=tr.franchise_id
+	WHERE tr.is_pnh=1 AND di.has_insurance=1
+	 AND tr.transid='PNH81913';
+	 
+#SEP_25_2014
+
+SELECT stk.* FROM t_imei_no ime
+JOIN t_stock_info stk ON stk.stock_id=ime.stock_id
+WHERE ime.imei_no = '243571234854325';
+
+#=== MP discount price feature update ============
+ALTER TABLE king_dealitems DROP COLUMN mp_discount_price 
+ALTER TABLE deal_member_price_changelog DROP COLUMN mp_discount_price 
+#SEP_25_2014-Shivaraj
+ALTER TABLE `king_dealitems` ADD COLUMN `mp_discount_price` DECIMAL(10,2) DEFAULT 0 NOT NULL AFTER `mp_offer_to`;
+ALTER TABLE `deal_member_price_changelog` ADD COLUMN `mp_discount_price` DECIMAL(10,2) DEFAULT 0 NOT NULL AFTER `mp_offer_to`;
+CREATE TABLE `m_apk_store_banners` (
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT,
+  `store_id` INT(11) DEFAULT '0',
+  `banner_name` VARCHAR(255) DEFAULT NULL,
+  `banner_link` VARCHAR(2024) DEFAULT NULL,
+  `is_active` TINYINT(1) DEFAULT '0',
+  `created_on` DATETIME DEFAULT NULL,
+  `created_by` INT(11) DEFAULT '0',
+  `modified_on` DATETIME DEFAULT NULL,
+  `modified_by` INT(11) DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=MYISAM;
+#==============================
+
+SELECT i.id AS itemid,i.member_price,i.mp_max_allow_qty,i.mp_frn_max_qty,i.mp_mem_max_qty,i.mp_is_offer,i.mp_offer_from,i.mp_offer_to,i.mp_discount_price,i.mp_offer_note
+									,mpl.id AS logref_id,a.username AS created_by,mpl.created_on
+									,IF(i.mp_offer_to IS NULL,i.mp_offer_to,IF(i.mp_offer_to > NOW(),1,0) ) AS validity
+									FROM king_dealitems i
+									LEFT JOIN deal_member_price_changelog mpl ON mpl.itemid=i.id AND mpl.is_active=1
+									LEFT JOIN king_admin a ON a.id=mpl.created_by
+									WHERE i.id='9451668128';
+#====new get valid imei
+SELECT imei.* FROM t_imei_no imei
+JOIN t_stock_info stk ON stk.stock_id=imei.stock_id
+JOIN m_rack_bin_info rb ON rb.id=stk.rack_bin_id AND rb.is_damaged=0
+WHERE imei.stock_id !=0 AND stk.rack_bin_id NOT IN (SELECT GROUP_CONCAT(partner_rackbinid)  FROM partner_info WHERE partner_rackbinid !=0) AND imei_no =91121190053619500;
+#=>21784
+#=>21768
+
+SELECT * FROM m_rack_bin_info LIMIT 10
+SELECT * FROM partner_info;
+
+#==Alloted to partner rackbin
+SELECT COUNT(*) FROM t_imei_no imei
+JOIN t_stock_info stk ON stk.stock_id=imei.stock_id
+JOIN m_rack_bin_info rb ON rb.id=stk.rack_bin_id AND rb.is_damaged=0
+ JOIN partner_info p ON p.partner_rackbinid=stk.rack_bin_id
+WHERE stk.rack_bin_id=120
+
+SELECT GROUP_CONCAT(IF(partner_rackbinid!=0,partner_rackbinid,'') ) FROM partner_info
+SELECT GROUP_CONCAT(DISTINCT partner_rackbinid) FROM partner_info;
+
+SELECT * FROM t_imei_no WHERE stock_id!=0 LIMIT 10;
+
+SELECT rstk.id AS rlog_id,rstk.transfer_id,rstk.product_id,rstk.stock_info_id,rstk.itemid,rstk.qty,rstk.extra_qty,rstk.release_qty,rstk.status
+		,tdl.partner_id,tdl.transfer_remarks,tdpl.id AS plogid
+	FROM t_partner_reserved_batch_stock rstk
+	JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+	JOIN t_partner_stock_transfer tdl ON tdl.transfer_id=rstk.transfer_id
+	JOIN t_partner_stock_transfer_product_link tdpl ON tdpl.product_id=rstk.product_id AND tdpl.transfer_id=rstk.transfer_id
+	LEFT JOIN partner_info p ON p.id=tdl.partner_id
+	WHERE rstk.status=0 AND rstk.transfer_id='30' GROUP BY rstk.stock_info_id;
+	
+#===========================================
+#SEP_26_2014-Shivaraj-IMEI table product link id update
+#ALTER TABLE `t_imei_no` ADD COLUMN `transfer_prod_link_id` BIGINT(11) DEFAULT 0 NULL AFTER `ref_credit_note_id`; 
+ALTER TABLE `t_imei_update_log` ADD COLUMN `transfer_prod_link_id` BIGINT(11) DEFAULT 0 NULL AFTER `cancelled_on`; 
+ALTER TABLE `t_partner_reserved_batch_stock` ADD COLUMN `tp_id` BIGINT(11) DEFAULT 0 NULL AFTER `itemid`;
+#ALTER TABLE `t_imei_no` DROP COLUMN `transfer_prod_link_id`; 
+#===========================================
+
+SELECT rstk.itemid,rstk.stock_info_id,stk.rack_bin_id,stk.location_id
+	,stk.product_barcode,stk.mrp,rstk.qty,CONCAT(rb.rack_name,'-',rb.bin_name) AS rbname,di.name AS deal,p.product_name
+	,rstk.tp_id,imei.imei_no
+	FROM t_partner_reserved_batch_stock rstk
+	JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+	JOIN m_rack_bin_info rb ON rb.id = stk.rack_bin_id
+	JOIN m_product_info p ON p.product_id=rstk.product_id
+	JOIN king_dealitems di ON di.id=rstk.itemid
+
+	LEFT JOIN t_imei_update_log imei ON  imei.transfer_prod_link_id=rstk.tp_id AND imei.transfer_prod_link_id!=0
+	
+	WHERE rstk.transfer_id='31' AND rstk.itemid='376219611919' AND rstk.product_id='8679' GROUP BY rstk.id;
+	
+SELECT * FROM t_imei_update_log WHERE transfer_prod_link_id IN (58,59)
+
+SELECT imei.imei_no,imei.logged_on FROM t_imei_update_log imei WHERE imei.transfer_prod_link_id=58
+
+SELECT * FROM pnh_member_info WHERE pnh_member_id='22034351';
+
+INSERT INTO pnh_menu_margin_track(menu_id,default_margin,default_mp_margin,balance_discount,balance_amount,loyality_pntvalue,rf_mp_margin,rmf_commission,rf_commission,created_by,created_on)
+VALUES('143534534543534534512','55555','55555','5550','5550','0.5','0','','','37',1411726307)
+
+#================
+ALTER TABLE `pnh_menu_margin_track` CHANGE `rmf_commssion` `rmf_commission` DOUBLE DEFAULT 0 NULL;
+#===========
+
+SELECT * FROM t_invoice_credit_notes WHERE invoice_no='20141027242'
+id	TYPE	grp_no	franchise_id	invoice_no	amount	is_active	ref_id	payment_id	created_on	modified_on	created_by	modified_by	is_credit_processed
+14965	1	0	500	20141027242	498.8005	0	0	0	2014-09-26 16:40:47	\N	37	0	1
+
+SELECT * FROM t_invoice_credit_notes WHERE invoice_no='20141030909';
+
+INSERT INTO `m_partner_deal_link` (`itemid`, `partner_ref_no`, `partner_id`, `created_by`, `created_on`) VALUES ('8322469195', 'AS8322469195', '7', '37', '2014-09-26 18:42:04');
+
+#==================================================
+#SEP_27_2014
+ALTER TABLE `deal_member_price_changelog` CHANGE `mp_discount_price` `mp_offer_price` DECIMAL(10,2) DEFAULT 0.00 NOT NULL;
+ALTER TABLE `king_dealitems` CHANGE `mp_discount_price` `mp_offer_price` DECIMAL(10,2) DEFAULT 0.00 NOT NULL; 
+
+ALTER TABLE `king_dealitems` ADD COLUMN `mp_is_big_offer` TINYINT(1) DEFAULT 0 NOT NULL AFTER `mp_discount_price`;
+ALTER TABLE `deal_member_price_changelog` ADD COLUMN `mp_is_big_offer` TINYINT(1) DEFAULT 0 NOT NULL AFTER `mp_discount_price`;
+#==================================================
+
+SELECT * FROM deal_member_price_changelog WHERE itemid='6776968436'; //'2323347653'
+SELECT * FROM king_dealitems WHERE id='6776968436';
+
+SELECT c.id,pnh_id AS pid,a.name,orgprice AS mrp,member_price AS price,ROUND(((orgprice-member_price)/orgprice)*100) AS disc,CONCAT('http://static.snapittoday.com/items/small/',b.pic,'.jpg') AS pimg_link,a.mp_offer_to
+		FROM king_dealitems a
+		JOIN king_deals b ON a.dealid = b.dealid
+		JOIN pnh_menu_group_link c ON c.menu_id = b.menuid
+		WHERE is_pnh=1 AND group_id = ? AND publish = 1 AND live = 1 AND a.mp_is_offer=1 AND a.mp_is_big_offer = 1 AND UNIX_TIMESTAMP() BETWEEN UNIX_TIMESTAMP(a.mp_offer_from) AND UNIX_TIMESTAMP(a.mp_offer_to)
+		GROUP BY a.id
+	LIMIT 30;
+	
+#=============================
+#SEP_29_2014
+SELECT * FROM m_product_deal_link WHERE pnh_id IN (10005486,10005393,10044952,10005988,10029039,15734868)
+
+#Convert to SIT deals
+SELECT * FROM king_dealitems WHERE pnh_id IN (10005486,10005393,10044952,10005988,10029039,15734868)
+
+sno	id	dealid	nlc	phc	shc	rsp	shipsin	shipsto	itemcode	model	price	size_chart	member_price	mp_frn_max_qty	mp_mem_max_qty	mp_max_allow_qty	mp_is_offer	mp_offer_from	mp_offer_to	mp_offer_price	mp_is_big_offer	mp_offer_note	mp_logid	store_price	nyp_price	billon_orderprice	gender_attr	ratings	reviews	snapits	buys	loves	fcp	orgprice	viaprice	agentcom	NAME	print_name	quantity	available	pic	tagline	description1	description2	slots	url	live	private	tellurprice	b2b	tax	service_tax	service_tax_cod	bp_expires	cod	groupbuy	sizing	gender_men	gender_women	gender_unisex	gender_kids	favs	min_cart_value	max_allowed_qty	is_featured	cashback	bodyparts	is_pnh	pnh_id	is_combo	temp_loc	move_as_product	tmp_dealid	tmp_itemid	created_on	created_by	modified_on	modified_by	description	created	modified	hs18_itemid	hs18_sku_code	tmp_pnh_itemid	tmp_pnh_dealid	is_group	has_insurance	powered_by	free_frame	has_power	lens_type
+126599	2547651425	3392644375	0	0	0	0	48-72 hrs				7649	\N	7649.00	1	1	10	\N	\N	\N	0.00	0		0	9000	0	1		0	0	0	0	0	0	9000	0	0	Nokia X (Green)		0	0	30e5oh3d4o6jkn0						1	0	0	0	550	0	0	0	0	1	0	0	0	0	0	0	0	5	0	0	0	1	10044952	0	\N	0	\N	\N	2014-03-14 13:56:02	21	2014-03-14 13:56:45	21		1394785562	1394785605	\N	\N	\N	\N	0	1	\N	0	0	
+
+SELECT GROUP_CONCAT(id) FROM king_dealitems WHERE pnh_id IN (10005486,10005393,10044952,10005988,10029039,15734868)
+2471189723,1222449289,2558145287,2688412527,2547651425,2673935284
+
+UPDATE king_dealitems SET is_pnh=0,pnh_id=0 WHERE pnh_id IN (10005486,10005393,10044952,10005988,10029039,15734868);
+
+SELECT * FROM king_dealitems WHERE is_pnh=0
+
+
+SELECT * FROM `m_partner_deal_link`;
+
+#=============== CONVERT TO SIT DEAL ==========================
+#1 get the itemids
+SELECT GROUP_CONCAT(id) FROM king_dealitems WHERE pnh_id IN (10005486,10005393,10044952,10005988,10029039,15734868)
+2471189723,1222449289,2558145287,2688412527,2547651425,2673935284
+
+#2 into partner deal link table
+INSERT INTO `m_partner_deal_link` (`itemid`, `partner_ref_no`, `partner_id`, `created_by`, `created_on`) VALUES 
+('1222449289', 'AS1222449289', '7', '37', '2014-09-29 16:07:22')
+,('2558145287', 'AS2558145287', '7', '37', '2014-09-29 16:07:22')
+,('2688412527', 'AS2688412527', '7', '37', '2014-09-29 16:07:22')
+,('2547651425', 'AS2547651425', '7', '37', '2014-09-29 16:07:22')
+,('2673935284', 'AS2673935284', '7', '37', '2014-09-29 16:07:22');
+
+#3 Reset as sit deal-menuid=6
+UPDATE king_deals d 
+JOIN king_dealitems di ON di.dealid=d.dealid
+SET di.is_pnh=0,di.pnh_id=0,d.menuid=6
+WHERE di.id IN(2471189723,1222449289,2558145287,2688412527,2547651425,2673935284);
+
+#=============== CONVERT TO SIT DEAL ==========================
+
+SELECT * FROM king_dealitems di
+JOIN king_deals d ON d.dealid=di.dealid
+WHERE di.id IN(2471189723,1222449289,2558145287,2688412527,2547651425,2673935284);
+
+UPDATE king_deals d 
+JOIN king_dealitems di ON di.dealid=d.dealid
+SET di.is_pnh=0,di.pnh_id=0,d.menuid=6,d.menuid2=0
+WHERE di.id IN(2471189723,1222449289,2558145287,2688412527,2547651425,2673935284);
+
+#SEP_30_2014
+
+SELECT rstk.itemid,rstk.stock_info_id,stk.rack_bin_id,stk.location_id
+		,stk.product_barcode,stk.mrp,rstk.qty,CONCAT(rb.rack_name,'-',rb.bin_name) AS rbname,di.name AS deal,p.product_name,rstk.tp_id
+		,GROUP_CONCAT(imlog.imei_no) AS imei_no
+	 FROM t_partner_reserved_batch_stock rstk
+	 JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+	 JOIN m_rack_bin_info rb ON rb.id = stk.rack_bin_id
+	 JOIN m_product_info p ON p.product_id=rstk.product_id
+	 JOIN king_dealitems di ON di.id=rstk.itemid
+	 JOIN t_imei_update_log imlog ON imlog.product_id=rstk.product_id AND imlog.stock_id=rstk.stock_info_id
+	WHERE rstk.transfer_id='33' AND rstk.itemid='2471189723' AND rstk.product_id='155705' GROUP BY rstk.id 	
+#imlog.transfer_prod_link_id=rstk.tp_id# and 
+itmid:2471189723, prdid:155705
+
+SELECT * FROM t_imei_update_log WHERE transfer_prod_link_id=62
+
+SELECT GROUP_CONCAT(imei.imei_no) AS imei_nos
+FROM t_imei_update_log imei 
+WHERE imei.transfer_prod_link_id='59' AND imei.transfer_prod_link_id!=0;
+
+SELECT stp.transfer_id,stp.itemid,stp.item_transfer_qty 
+FROM t_partner_stock_transfer_product_link stp
+JOIN t_partner_stock_transfer st ON st.transfer_id=stp.transfer_id
+WHERE st.transfer_id = '34' AND stp.transfer_status = 0 AND st.transfer_status=0 AND st.is_active=1 
+GROUP BY stp.itemid;
+
+#UPDATE t_partner_stock_transfer SET is_active=0,transfer_status=3,modified_by='35',modified_on='37' WHERE transfer_id='2014-09-30 16:53:37'
+
+SELECT * FROM (
+	SELECT tr.amount,tr.order_for,di.pnh_id,f.is_lc_store,di.has_insurance
+	,o.id,o.itemid,o.brandid,o.bill_person,o.quantity,o.status,o.shipped,o.time,o.i_orgprice AS mrp,o.i_price AS price,o.is_memberprice,o.mp_logid
+	FROM king_orders o
+	JOIN king_transactions tr ON tr.transid=o.transid
+	JOIN king_dealitems di ON di.id=o.itemid
+	JOIN pnh_m_franchise_info f ON f.franchise_id=tr.franchise_id
+	WHERE tr.is_pnh=1 
+	 AND (o.insurance_id IS NULL OR o.insurance_id ='')
+	 AND tr.transid='PNH59314'
+ )
+ AS g
+ WHERE g.has_insurance=1;
+ #=============================
+ SELECT * FROM king_orders WHERE transid='PNH59314';
+  SELECT * FROM king_orders WHERE transid='PNH93356';
+ #======================
+ SELECT i.*,d.publish,c.loyality_pntvalue,d.menuid 
+	 FROM king_dealitems i 
+	 JOIN king_deals d ON d.dealid=i.dealid 
+	 JOIN pnh_menu c ON c.id = d.menuid 
+	 WHERE i.is_pnh=1 AND  i.pnh_id=? AND i.pnh_id!=0;
+	 
+SELECT c.id,pnh_id AS pid,a.name,orgprice AS mrp,a.mp_offer_price AS price,ROUND(((orgprice-member_price)/orgprice)*100) AS disc,IFNULL(v.main_image,CONCAT('".IMAGES_URL."/items/small/',b.pic,'.jpg')) AS pimg_link,IFNULL(v.main_image,CONCAT('".IMAGES_URL."/items/',b.pic,'.jpg')) AS main_pimg_link,a.mp_offer_to
+		FROM king_dealitems a
+		JOIN king_deals b ON a.dealid = b.dealid
+		JOIN pnh_menu_group_link c ON c.menu_id = b.menuid
+		LEFT JOIN m_vendor_product_images v ON v.item_id=a.id
+		WHERE is_pnh=1 AND group_id = '1' AND publish = 1 AND live = 1 AND a.mp_is_offer=1 AND a.mp_is_big_offer = 1 AND UNIX_TIMESTAMP() BETWEEN UNIX_TIMESTAMP(a.mp_offer_from) AND UNIX_TIMESTAMP(a.mp_offer_to)
+		GROUP BY a.id
+	LIMIT 30;
+	
+SELECT DISTINCT o.userid,o.*, p.name AS deal,p.dealid,p.url,u.name AS username,r.offer_text,r.immediate_payment,b.name AS brand,c.name AS cat_name,r.is_active,kv.invoice_no
+				FROM king_orders o 
+				JOIN king_dealitems p ON p.id=o.itemid
+				LEFT OUTER JOIN king_users u ON u.userid=o.userid
+				LEFT OUTER JOIN pnh_member_info i ON i.pnh_member_id=o.member_id
+				LEFT OUTER JOIN pnh_m_offers r ON r.id=o.offer_refid
+				LEFT OUTER JOIN king_brands b ON b.id=r.brand_id
+				LEFT OUTER JOIN king_categories c ON c.id=r.cat_id
+				LEFT OUTER JOIN king_invoice kv ON kv.order_id=o.id AND kv.invoice_status = 1 
+				WHERE o.transid='PNH59314' GROUP BY o.id
+				
+SELECT * FROM king_transactions WHERE transid='PNH59314';
+
+SELECT di.*,d.menuid FROM king_dealitems di
+JOIN king_deals d ON d.dealid = di.dealid
+ WHERE id=2243849623;
+ 
+ SELECT * FROM pnh_member_offers WHERE member_id= '21111152' AND transid_ref='PNH33862' AND order_id='1542925176'; # and insurance_id =
+ 
+ 
+ SELECT * FROM pnh_member_offers WHERE transid_ref='PNH59314';
+ 
+ SELECT * FROM pnh_member_info WHERE pnh_member_id=21111152;
+#=======================================
+SELECT h.itemid,publish,live,product_id,lqty,aqty,dqty,is_sourceable,IF(SUM(ttl_l)=SUM(is_sourceable),0,1)*!is_group AS is_limited_stk,IF(SUM(ttl_l)=SUM(pstk),1,0) AS STATUS,is_combo,is_group,(MIN(dqty)) AS d_stk,IFNULL(SUM(o.quantity),0) AS oqty	
+	FROM (
+	SELECT g.itemid,product_id,lqty,aqty,is_sourceable,(FLOOR(aqty/lqty)) AS dqty,ttl_l,pstk,is_combo,is_group,publish,live
+	FROM (
+	SELECT a.itemid,a.product_id,b.is_sourceable,a.qty AS lqty,is_damaged,SUM(c.available_qty) AS aqty,
+	COUNT(DISTINCT a.product_id) AS ttl_l,
+	IF(a.qty<=SUM(c.available_qty),1,0) AS pstk
+	FROM m_product_deal_link a 
+	JOIN m_product_info b ON a.product_id = b.product_id  
+	LEFT JOIN t_stock_info c ON c.product_id = b.product_id 
+	LEFT JOIN m_rack_bin_info rb ON rb.id = c.rack_bin_id 
+	WHERE itemid IN ('9971227223') AND a.is_active = 1  
+	GROUP BY a.product_id,a.itemid,is_damaged
+	HAVING (is_damaged = 0 OR is_damaged IS NULL)
+	) AS g 
+	JOIN king_dealitems di ON di.id = g.itemid 
+	JOIN king_deals d ON d.dealid = di.dealid
+	GROUP BY itemid,product_id 
+	) AS h
+	LEFT JOIN king_orders o ON o.itemid = h.itemid AND o.status = 0 
+	GROUP BY h.itemid,IF(is_group,product_id,1) 
+ #=======================================
+ 
+ SELECT free_frame,has_power,i.id AS item_id,i.size_chart,pnh_id AS pid,i.is_group,i.gender_attr,i.id AS itemid,i.name,d.tagline,c.name AS category,m.name AS menu,d.menuid AS menu_id,
+					d.catid AS category_id,mc.name AS main_category,c.type AS main_category_id,b.name AS brand,d.brandid AS brand_id,i.member_price,
+					i.orgprice AS mrp,i.store_price,i.is_combo,i.powered_by,
+					IFNULL(v.main_image,CONCAT('http://static.snapittoday.com/items/',d.pic,'.jpg')) AS image_url,
+					d.description,i.shipsin AS ships_in,d.keywords,i.live AS is_stock,d.publish AS is_enabled,
+					IFNULL(v.main_image,CONCAT('http://static.snapittoday.com/items/small/',d.pic,'.jpg')) AS small_image_url, 
+					i.has_insurance,d.publish,i.price,i.mp_offer_from
+					
+					,i.mp_offer_to
+					
+					,IF(UNIX_TIMESTAMP() BETWEEN UNIX_TIMESTAMP(i.mp_offer_from) AND UNIX_TIMESTAMP(i.mp_offer_to),1,0) AS mp_offer_validity,i.mp_offer_price
+					
+					FROM king_deals d 
+					JOIN king_dealitems i ON i.dealid=d.dealid 
+					JOIN king_brands b ON b.id=d.brandid 
+					JOIN king_categories c ON c.id=d.catid 
+					LEFT OUTER JOIN pnh_menu m ON m.id=d.menuid 
+					LEFT OUTER JOIN king_categories mc ON mc.id=c.type 
+					LEFT JOIN m_vendor_product_images v ON v.item_id=i.id  
+					WHERE is_pnh=1 AND i.pnh_id ='1645585' AND i.pnh_id!=0
+					ORDER BY d.sno ASC;
+					
+
+SELECT COUNT(*) AS offers FROM pnh_member_offers mo
+	JOIN pnh_member_info mif ON mif.pnh_member_id=mo.member_id
+	WHERE mif.user_id='98877' AND mo.transid_ref='PNH69863'
+	GROUP BY mif.user_id
+	
+
+	
+SELECT orgprice,price,is_group,is_pnh,member_price FROM king_dealitems WHERE id='1619369786'
+DESC king_dealitems
+	
+SELECT * FROM deal_member_price_changelog WHERE itemid='8392632691';
+
+mp_max_allow_qty,mp_frn_max_qty,mp_mem_max_qty
+
+SELECT orgprice,price,is_group,is_pnh,member_price,mp_max_allow_qty,mp_frn_max_qty,mp_mem_max_qty
+	FROM king_dealitems WHERE id=8392632691
+	
+	SELECT orgprice,price,is_group,is_pnh,member_price,mp_max_allow_qty,mp_frn_max_qty,mp_mem_max_qty,mp_logid
+													FROM king_dealitems WHERE id=8392632691
+													
+/*
+//						$mp_log_set=0;
+//						$mp_log_res=$this->db->query("SELECT * FROM deal_member_price_changelog WHERE itemid=?",$itemid);
+//						if($mp_log_res->num_rows())
+//							$mp_log_set=1;
+*/
+
+
+9877387993
+
+
+
+#=============== CONVERT TO SIT DEAL ==========================
+#1 get the itemids
+SELECT GROUP_CONCAT(id) FROM king_dealitems WHERE pnh_id IN (10005486,10005393,10044952,10005988,10029039,15734868)
+2471189723,1222449289,2558145287,2688412527,2547651425,2673935284
+
+#2 into partner deal link table
+INSERT INTO `m_partner_deal_link` (`itemid`, `partner_ref_no`, `partner_id`, `created_by`, `created_on`) VALUES 
+('1222449289', 'AS1222449289', '7', '37', '2014-09-29 16:07:22')
+,('2558145287', 'AS2558145287', '7', '37', '2014-09-29 16:07:22')
+,('2688412527', 'AS2688412527', '7', '37', '2014-09-29 16:07:22')
+,('2547651425', 'AS2547651425', '7', '37', '2014-09-29 16:07:22')
+,('2673935284', 'AS2673935284', '7', '37', '2014-09-29 16:07:22');
+
+#3 Reset as sit deal-menuid=6
+UPDATE king_deals d 
+JOIN king_dealitems di ON di.dealid=d.dealid
+SET di.is_pnh=0,di.pnh_id=0,d.menuid=6
+WHERE di.id IN(2471189723,1222449289,2558145287,2688412527,2547651425,2673935284);
+
+#=============== CONVERT TO SIT DEAL ==========================
+
+SELECT di.dealid,di.live,di.is_combo,di.is_group,dl.publish,dl.brandid,dl.catid,di.orgprice
+		,di.price,di.name,di.pic,di.pnh_id,di.id AS itemid,di.member_price,di.live AS allow_order,
+		b.name AS brand,c.name AS category,p.name AS partner_name,pdl.partner_id,GROUP_CONCAT(plnk.product_id) AS product_ids
+	FROM m_partner_deal_link pdl
+	JOIN king_dealitems di ON di.id=pdl.itemid
+	JOIN king_deals dl ON dl.dealid=di.dealid
+	JOIN king_brands b ON b.id=dl.brandid 
+	JOIN king_categories c ON c.id=dl.catid 
+	JOIN partner_info p ON p.id=pdl.partner_id
+	JOIN m_product_deal_link plnk ON plnk.itemid=di.id AND plnk.is_active=1
+	WHERE 1  AND di.is_pnh=0;
+	
+
+	
+SELECT * FROM pnh_member_offers WHERE transid_ref IN('PNHJXN39517','PNHUPT29312')
+-- Update as 1 for delivery_status
+
+
+SELECT * FROM `m_partner_deal_link` WHERE itemid='952320082997';
+
+SELECT * FROM king_dealitems di
+LEFT JOIN m_partner_deal_link pdl ON pdl.itemid!=di.id
+WHERE di.is_pnh=0 AND di.pnh_id=0 AND pdl.itemid!=di.id;
+
+SELECT * FROM `m_partner_deal_link` WHERE itemid='327746349439';
+
+SELECT * FROM king_dealitems di
+WHERE di.is_pnh=0 AND di.pnh_id=0 AND di.id NOT IN (SELECT itemid FROM m_partner_deal_link pdl);
+
+SELECT * FROM `m_partner_deal_link` WHERE itemid='1113412718';
+
+SELECT * FROM m_partner_deal_link WHERE itemid='1113412718' AND partner_id='7'
+
+SELECT 1 FROM m_partner_deal_link WHERE itemid='1113412718' AND partner_id=7
+
+SELECT GROUP_CONCAT(p.name) AS partner_names FROM `m_partner_deal_link` pdl
+JOIN partner_info p ON p.id=pdl.partner_id
+	WHERE pdl.itemid='1113412718' AND pdl.partner_ref_no!=''
+	#GROUP BY pdl.partner_id
+	ORDER BY p.name ASC ;
+	
+SELECT *,CONCAT(rb.rack_name,'',rb.bin_name) AS rack_name FROM t_imei_no i
+JOIN t_stock_info stk ON stk.stock_id=i.stock_id
+JOIN m_rack_bin_info rb ON rb.id=stk.rack_bin_id AND rb.is_active=1
+WHERE i.product_id='206954' AND i.imei_no='353070061934390';
+
+SELECT i.*,CONCAT(rb.rack_name,'',rb.bin_name) AS rack_name  FROM t_imei_no i
+JOIN t_stock_info stk ON stk.stock_id=i.stock_id
+JOIN m_rack_bin_info rb ON rb.id=stk.rack_bin_id AND rb.is_active=1
+WHERE i.product_id='206954'  AND STATUS=0 AND i.reserved_batch_rowid=0 AND DATE(FROM_UNIXTIME(i.created_on)) BETWEEN "2012-01-01" AND "2014-10-10"  GROUP BY i.imei_no ORDER BY i.created_on DESC LIMIT 0,25
+
+SELECT *,FROM_UNIXTIME(created_on) FROM t_imei_no WHERE STATUS=1 ORDER BY created_on DESC;
+
+
+SELECT COUNT(*) AS t 
+FROM t_imei_no i 
+WHERE i.product_id='263142' AND STATUS=1 
+#and i.reserved_batch_rowid!=0 
+AND DATE(FROM_UNIXTIME(i.created_on)) BETWEEN "2012-08-01" AND "2014-10-11" 
+ORDER BY i.created_on DESC
+
+SELECT i.*,CONCAT(rb.rack_name,'',rb.bin_name) AS rack_name,stk.mrp  FROM t_imei_no i
+	LEFT JOIN t_stock_info stk ON stk.stock_id=i.stock_id
+	LEFT JOIN m_rack_bin_info rb ON rb.id=stk.rack_bin_id AND rb.is_active=1
+	WHERE i.product_id='263142'  AND STATUS=1 AND i.reserved_batch_rowid!=0 AND DATE(FROM_UNIXTIME(i.created_on)) BETWEEN "2012-08-01" AND "2014-10-11"  GROUP BY i.imei_no ORDER BY stk.stock_id ASC,rb.is_damaged ASC,i.created_on DESC LIMIT 0,25
+	
+
+#===NEW SOLD BY AMAZON
+SELECT IFNULL(SUM(o.quantity*l.qty),0) AS s 
+FROM m_product_deal_link l
+JOIN king_orders o ON o.itemid=l.itemid 
+JOIN m_partner_deal_link pl ON pl.itemid=l.itemid
+WHERE 
+o.time > (UNIX_TIMESTAMP()-(24*60*60*60) ) AND o.time < UNIX_TIMESTAMP() AND l.product_id='4993' AND partner_id!=0 AND partner_id!=''
+			
+
+
+SELECT * FROM  m_product_deal_link l
+
+SELECT SUM(available_qty) AS s,mrp,
+	a.location_id,a.rack_bin_id,
+	CONCAT(c.rack_name,bin_name) AS rbname,c.is_damaged,
+	IFNULL(product_barcode,'') AS pbarcode,
+	a.stock_id,a.expiry_on,offer_note     
+	FROM t_stock_info  a 
+	JOIN m_storage_location_info b ON b.location_id = a.location_id 
+	JOIN m_rack_bin_info c ON c.id = a.rack_bin_id 
+	JOIN 
+	WHERE product_id='4993' 
+	GROUP BY mrp,pbarcode,a.location_id,a.rack_bin_id 
+	HAVING SUM(available_qty)>=0 
+	ORDER BY mrp ASC;
+	
+SELECT IFNULL(SUM(t.available_qty),0) AS current_stock  
+FROM t_stock_info t JOIN m_rack_bin_info rb ON t.rack_bin_id = rb.id  
+WHERE t.product_id = '8966' AND rb.is_damaged=0;
+
+
+SELECT IFNULL(SUM(o.quantity*l.qty),0) AS s FROM m_product_deal_link l 
+JOIN king_orders o ON o.itemid=l.itemid 
+JOIN m_partner_deal_link pl ON pl.itemid!=o.itemid
+WHERE l.product_id='8966' AND o.time < UNIX_TIMESTAMP()
+
+
+SELECT * FROM pnh_m_franchise_info WHERE franchise_id='460'
+
+SELECT * FROM pnh_franchise_account_summary WHERE invoice_no=20141027252
+unreconcile:2538 
+cr unreconcile: 2537.88
+SELECT * FROM king_invoice WHERE invoice_no=20141027252
+
+# --- action_type=1 invoice debit amount
+# --- action_type=7 invoice credit note amount
+
+SELECT * FROM pnh_t_receipt_reconcilation WHERE invoice_no=20141027254
+
+
+SELECT * FROM pnh_franchise_account_summary WHERE invoice_no=20141027254
+unreconcile:31144.42 
+cr unreconcile: 1888.78
+
+#==============available partner stock================
+SELECT SUM(stk.available_qty) AS available_qty FROM t_stock_info stk
+JOIN m_product_info p ON p.product_id=stk.product_id
+JOIN partner_info pt ON pt.partner_rackbinid=stk.rack_bin_id
+WHERE stk.available_qty >0 AND stk.product_id='4426'
+#==============available partner stock================
+SELECT * FROM pnh_m_franchise_info WHERE franchise_id='460'
+"franchise_id"	"pnh_franchise_id"	"franchise_type"	"franchise_name"	"	address						"	"locality"	"taluk"	"hobli"	"city"		"postcode"	"state"		"territory_id"	"town_id"	"class_id"	"is_lc_store"	"is_sch_enabled"	"sch_discount"	"sch_discount_start"	"sch_discount_end"	"security_deposit"	"current_balance"	"credit_limit"	"last_credit"	"login_mobile1"	"login_mobile2"	"app_version"	"email_id"		"assigned_to"	"no_of_employees"	"store_name"		"store_area"	"lat"			"long"			"store_open_time"	"store_close_time"	"store_tin_no"	"store_pan_no"	"store_service_tax_no"	"store_reg_no"	"own_rented"	"internet_available"	"website_name"	"business_type"	"security_question"	"security_answer"	"security_question2"	"security_answer2"	"security_custom_question"	"security_custom_question2"	"is_prepaid"	"created_by"	"modified_by"	"created_on"	"modified_on"	"is_suspended"	"suspended_on"	"suspended_by"	"reason"	"purchase_limit"	"new_credit_limit"	"price_type"	"is_consolidated_payment"	"max_credit_limit"	"billing_type"	"tab_simno"	"opt_maxcreditlimit"	"assigned_rmfid"	"allow_sms"
+"460"		"34538671"		"0"			"Praveen Communication"	"Belgaum, No.6, Hanuman Mandir Complex,Near Kapileswar Talav,"	"Belgaum"	\N	\N	"Belgaum"	"590001"	"Karanataka"	"14"		 "212"		"2"		"0"		"0"				"0"	"0"			"0"			 "12500"		 "-123252.501"		 "274000"	"19300"		"9035255585"	""		"0"		"hello@storeking.in"	"0"		"2"			"Praveen Communication"	"400"		"12.9694992850562"	"77.59423840625"	"05:00:00"		"05:00:00"		"AApplied"	""		""			""		 "0"		""			""		"Retail"	"0"			"Praveen"		"1"			"Belgaum"		""				""				"0"		"16"		"23"		"1393481686"	"1393495578"	"0"		"0"		"0"		\N		"0"			"0"			"1"		"1"				"0"			"0"		\N		"0"			"0"			"1"
+
+
+SELECT * FROM m_town_territory_link WHERE employee_id=88;
+SELECT * FROM m_employee_info WHERE employee_id=88;
+
+SELECT * FROM king_admin 
+
+
+SELECT * FROM t_imei_update_log
+
+SELECT * FROM t_imei_no WHERE product_id=132979 AND STATUS=0 AND imei_no=911304152875682
+SELECT * FROM t_stock_info WHERE product_id=132979
+136705
+163232
+
+#=======:::::Member fee issue revert::::===========
+pnh_member_fee
+king_orders
+king_transactions
+pnh_franchise_account_summary
+
+DESC king_dealitems
+DESC deal_member_price_changelog
+
+
+SELECT SUM(pstk.qty) AS partner_pending_stk,SUM(rs.qty) AS pnh_pending_stk
+FROM t_partner_reserved_batch_stock pstk
+LEFT JOIN t_reserved_batch_stock rs ON rs.product_id=pstk.product_id AND rs.status=0
+WHERE pstk.status=0  AND a.partner_id != 0 AND pstk.itemid=367511493147;
+
+DESC t_partner_reserved_batch_stock;
+DESC t_reserved_batch_stock;
+
+
+SELECT rstk.itemid,rstk.stock_info_id,stk.rack_bin_id,stk.location_id
+	,stk.product_barcode,stk.mrp,rstk.qty,CONCAT(rb.rack_name,'-',rb.bin_name) AS rbname,di.name AS deal
+	FROM t_partner_reserved_batch_stock rstk
+	JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+	JOIN m_rack_bin_info rb ON rb.id = stk.rack_bin_id
+	JOIN king_dealitems di ON di.id=rstk.itemid
+	WHERE rstk.transfer_id='60' AND rstk.itemid='5398916139' AND rstk.product_id='145603' GROUP BY rstk.id
+	
+SELECT * FROM king_admin
+b343ef440fded01538c145094a034cea
+b343ef440fded01538c145094a034cea
+SELECT MD5('shivaraj');
+
+SELECT VALUE FROM m_config_params WHERE NAME = 'ALLOWED_IP_ADDR'
+
+115.115.231.126,59.90.238.133,59.90.238.134,223.227.116.252,223.227.101.3,171.78.247.9,223.227.72.191
+
+SELECT SUM(pstk.qty) AS partner_pending_stk
+	,SUM(rs.qty) AS pnh_pending_stk
+	FROM t_partner_reserved_batch_stock pstk
+	LEFT JOIN t_reserved_batch_stock rs ON rs.product_id=pstk.product_id  AND rs.status=0
+	WHERE pstk.status=0 AND pstk.itemid='367511493147'
+	GROUP BY pstk.id,rs.id;
+	
+-- #	group by pstk.product_id;
+
+SELECT 55
+
+SELECT pstk.*,SUM(pstk.qty) AS partner_pending_stk FROM t_partner_reserved_batch_stock pstk	WHERE pstk.status=0 AND pstk.itemid='367511493147'
+
+SELECT * FROM t_reserved_batch_stock
+DESC t_partner_reserved_batch_stock
+
+DESC t_reserved_batch_stock;
+
+SELECT * FROM t_reserved_batch_stock WHERE product_id='4743' AND STATUS=0;
+
+SELECT (pstk.qty) AS partner_pending_stk
+	,(rs.qty) AS pnh_pending_stk
+	FROM t_stock_info stk
+	LEFT JOIN t_partner_reserved_batch_stock pstk ON pstk.stock_info_id=stk.stock_id AND pstk.status=0
+	LEFT JOIN t_reserved_batch_stock rs ON rs.stock_info_id=stk.stock_id AND rs.status=0
+	WHERE pstk.itemid='367511493147'
+	GROUP BY pstk.product_id
+	
+#Global
+SELECT * FROM m_product_deal_link pdl
+LEFT JOIN t_reserved_batch_stock rs ON rs.product_id=pdl.product_id AND rs.status=0
+LEFT JOIN  t_partner_reserved_batch_stock pstk ON pstk.product_id=pdl.product_id AND pstk.status=0
+WHERE pdl.itemid='367511493147' AND pdl.is_active=1
+
+#1
+SELECT SUM(rs.qty) AS pnh_pending_stk FROM m_product_deal_link pdl
+JOIN t_reserved_batch_stock rs ON rs.product_id=pdl.product_id AND rs.status=0
+WHERE pdl.itemid='367511493147' AND pdl.is_active=1
+GROUP BY pdl.product_id;
+
+#2
+SELECT (pstk.qty) AS partner_pending_stk FROM m_product_deal_link pdl
+JOIN  t_partner_reserved_batch_stock pstk ON pstk.product_id=pdl.product_id AND pstk.status=0
+WHERE pdl.itemid='367511493147' AND pdl.is_active=1
+GROUP BY pdl.product_id
+
+SELECT * FROM pnh_t_receipt_info WHERE receipt_id=9158;
+
+
+SELECT IFNULL(SUM(g.pnh_pending_stk),0) AS ttl_sum FROM (
+	(
+		SELECT SUM(rs.qty) AS pnh_pending_stk FROM m_product_deal_link pdl
+		JOIN t_reserved_batch_stock rs ON rs.product_id=pdl.product_id AND rs.status=0
+		WHERE pdl.is_active=1 AND pdl.itemid='837658718365'
+		GROUP BY pdl.product_id
+	)
+UNION
+	(
+		SELECT SUM(pstk.qty) AS partner_pending_stk FROM m_product_deal_link pdl
+		JOIN  t_partner_reserved_batch_stock pstk ON pstk.product_id=pdl.product_id AND pstk.status=0
+		WHERE  pdl.is_active=1 AND pdl.itemid='837658718365'
+		GROUP BY pdl.product_id
+	)
+) AS g
+
+SELECT 70+55;
+
+SELECT IFNULL(SUM(g.pnh_pending_stk),0) AS ttl_sum FROM (
+	(
+	SELECT SUM(rs.qty) AS pnh_pending_stk FROM m_product_deal_link pdl
+	JOIN t_reserved_batch_stock rs ON rs.product_id=pdl.product_id
+	WHERE pdl.is_active=1 AND pdl.itemid='570419904665' AND rs.status=0
+	GROUP BY pdl.itemid
+	)
+	UNION
+	(
+	SELECT SUM(pstk.qty) AS partner_pending_stk FROM m_product_deal_link pdl
+	JOIN  t_partner_reserved_batch_stock pstk ON pstk.product_id=pdl.product_id AND pstk.status=0
+	WHERE  pdl.is_active=1 AND pdl.itemid='570419904665'
+	GROUP BY pdl.itemid
+	)
+) AS g;
+
+
+SELECT * FROM t_reserved_batch_stock
+
+SELECT IFNULL(SUM(o.quantity),0) AS s 
+	FROM m_product_deal_link l
+	JOIN king_orders o ON o.itemid=l.itemid 
+	JOIN m_partner_deal_link pl ON pl.itemid=l.itemid
+	WHERE o.status=2 
+		AND o.time > (UNIX_TIMESTAMP()-(60*60*24*60) ) AND pl.partner_id IS NOT NULL AND pl.partner_id!=0
+		AND o.time < UNIX_TIMESTAMP('2014-09-02 17:15:54')
+	AND l.product_id='2602';
+	
+	#=>84=>
+	
+SELECT i.*,p.product_name FROM t_po_product_link i JOIN m_product_info p ON p.product_id=i.product_id 
+WHERE p.product_id=2602 AND i.po_id=10123
+#i.po_id=? and i.is_active=1 
+
+SELECT DISTINCT * FROM king_orders
+DESC m_partner_deal_link;
+DESC m_product_deal_link;
+SELECT DISTINCT partner_id,itemid FROM m_partner_deal_link GROUP BY partner_id
+SELECT * FROM m_partner_deal_link
+
+SELECT SUM(o.quantity*l.qty) AS ttl_p_qty,GROUP_CONCAT(pl.partner_id),pl.itemid 
+FROM m_partner_deal_link pl
+JOIN king_orders o ON o.itemid=pl.itemid
+JOIN m_product_deal_link l ON l.itemid=o.itemid
+WHERE o.status=2 
+AND o.time BETWEEN (UNIX_TIMESTAMP()-(60*60*24*60) ) AND UNIX_TIMESTAMP('2014-09-02 17:15:54')
+AND l.product_id='2602'
+
+
+SELECT IFNULL(SUM(o.quantity*l.qty),0) AS ttl_p_qty
+FROM m_partner_deal_link pl
+JOIN king_orders o ON o.itemid=pl.itemid
+JOIN m_product_deal_link l ON l.itemid=o.itemid
+WHERE o.status=2 
+AND o.time BETWEEN (UNIX_TIMESTAMP()-(60*60*24*60) ) AND UNIX_TIMESTAMP('2014-09-02 17:15:54')
+AND l.product_id='2602';
+
+
+SELECT IFNULL(SUM(o.quantity*l.qty),0) AS s FROM m_product_deal_link l JOIN king_orders o ON o.itemid=l.itemid WHERE l.product_id=? AND o.time>".(time()-(24*60*60*60)).' and o.time < ?"
+
+
+SELECT IFNULL(SUM(o.quantity*l.qty),0) AS ttl_p_qty,GROUP_CONCAT(pl.partner_id) AS pids,GROUP_CONCAT(pl.itemid) AS itms,DATE_FORMAT('%Y-%m-%d',o.time) AS crdn
+	FROM m_partner_deal_link pl
+	JOIN king_orders o ON o.itemid=pl.itemid
+	JOIN m_product_deal_link l ON l.itemid=o.itemid
+	WHERE o.status=2 
+	AND o.time BETWEEN (UNIX_TIMESTAMP()-(60*60*24*60) ) AND UNIX_TIMESTAMP('2014-09-02 17:15:54')
+	#AND o.time > (UNIX_TIMESTAMP()-(60*60*24*60) ) AND o.time < UNIX_TIMESTAMP('2014-09-02 17:15:54')
+	#AND DATE(FROM_UNIXTIME(o.time)) > (DATE_ADD(CURDATE(),INTERVAL - 60 DAY))
+	AND l.product_id='2126'
+	
+	
+SELECT IFNULL(SUM(o.quantity*l.qty),0) AS ttl_p_qty,GROUP_CONCAT(pl.partner_id) AS pids,GROUP_CONCAT(pl.itemid) AS itms,DATE_FORMAT('%Y-%m-%d',o.time) AS crdn
+	FROM m_partner_deal_link pl
+	JOIN king_orders o ON o.itemid=pl.itemid
+	JOIN m_product_deal_link l ON l.itemid=o.itemid
+	WHERE o.status=2 
+	AND o.time BETWEEN (UNIX_TIMESTAMP()-(60*60*24*60) ) AND UNIX_TIMESTAMP('2014-09-02 17:15:54')
+	AND l.product_id='2126'
+#++++++++++++++++++++++++++++++++++++++++++++++++++++
+SELECT dl.product_id, IFNULL(SUM(o.quantity*dl.qty),0) AS ttl_part_sold
+	FROM m_product_deal_link dl
+	JOIN king_orders o ON dl.itemid=o.itemid		
+	JOIN king_transactions t ON t.transid = o.transid
+	WHERE o.status=2 AND partner_id > 0
+	AND o.time BETWEEN (UNIX_TIMESTAMP()-(60*60*24*60) ) AND UNIX_TIMESTAMP('2014-09-02 17:15:54')
+	AND dl.product_id='2602'
+	GROUP BY dl.product_id
+#++++++++++++++++++++++++++++++++++++++++++++++++++++	
+	
+SELECT o.* FROM king_orders o
+JOIN king_transactions t ON t.transid = o.transid
+WHERE o.itemid IN (SELECT itemid FROM m_product_deal_link WHERE product_id = 2602) AND t.partner_id > 0 AND o.time BETWEEN (UNIX_TIMESTAMP()-(60*60*24*60) ) AND UNIX_TIMESTAMP('2014-09-02 17:15:54') AND o.status = 2
+
+SELECT * FROM m_product_deal_link WHERE itemid = 7384723488;
+
+SELECT  * FROM king_orders o WHERE DATE(FROM_UNIXTIME(o.time)) >= DATE('2014-09-02 17:15:54' - INTERVAL 2 MONTH) LIMIT 4;
+
+SELECT  * FROM king_orders o WHERE FROM_UNIXTIME(o.time) > (DATE_ADD('2014-09-02 17:15:54', INTERVAL -2 MONTH)) LIMIT 4;
+
+SELECT '2014-09-02 17:15:54',SUBDATE('2014-09-02 17:15:54',INTERVAL 2 MONTH) FROM king_orders o WHERE FROM_UNIXTIME(o.time) BETWEEN SUBDATE('2014-09-02 17:15:54',INTERVAL 2 MONTH) AND '2014-09-02 17:15:54'  LIMIT 4;
+
+SELECT '2014-09-02 17:15:54',FROM_UNIXTIME(UNIX_TIMESTAMP()-(60*60*24*60) ) FROM king_orders o WHERE o.time BETWEEN (UNIX_TIMESTAMP()-(60*60*24*60) ) AND UNIX_TIMESTAMP('2014-09-02 17:15:54')  LIMIT 4;
+
+
+SELECT IFNULL(SUM(stk.available_qty),0) AS available_qty FROM t_stock_info stk
+	JOIN m_product_info p ON p.product_id=stk.product_id
+	JOIN partner_info pt ON pt.partner_rackbinid=stk.rack_bin_id
+	WHERE stk.available_qty >0 AND stk.product_id=2602 AND stk.created_on < NOW()
+
+DESC t_stock_info;
+
+DESC m_product_group_deal_link;
+
+SELECT pgo.product_id, IFNULL(SUM(o.quantity*l.qty),0) AS ttl_part_sold
+	FROM m_product_group_deal_link l
+	JOIN king_orders o ON l.itemid=o.itemid		
+	JOIN products_group_orders pgo ON pgo.order_id = o.id 
+	JOIN king_transactions t ON t.transid = o.transid
+	WHERE o.status=2 AND t.partner_id > 0
+	AND FROM_UNIXTIME(o.time) BETWEEN SUBDATE('2014-09-02 17:15:54',INTERVAL 2 MONTH) AND '2014-09-02 17:15:54'
+	AND pgo.product_id=2602
+	GROUP BY pgo.product_id
+	
+	
+	
+SELECT IFNULL(SUM(o.quantity*l.qty),0) AS s 
+	FROM m_product_group_deal_link l 
+	JOIN king_orders o ON o.itemid=l.itemid 
+	JOIN products_group_orders pgo ON pgo.order_id = o.id 
+	WHERE pgo.product_id=? AND FROM_UNIXTIME(o.time) BETWEEN SUBDATE(?,INTERVAL 2 MONTH) AND ?;
+
+SELECT * FROM `pnh_users`;
+
+#===========================
+# Oct_20_2014
+ALTER TABLE `pnh_users` CHANGE `franchise_id` `reference_id` BIGINT(20) NULL COMMENT 'franchise_id,m_fid';
+#===========================
+
+# Pending ord qty
+SELECT IFNULL(SUM(o.quantity*l.qty),0) AS s 
+FROM m_product_deal_link l 
+JOIN king_orders o ON o.itemid=l.itemid 
+WHERE l.product_id='2602' AND o.status = 0 AND FROM_UNIXTIME(o.time) < ('2014-09-02 17:15:54');
+
+# Pending ord qty
+SELECT IFNULL(SUM(g.pnh_pending_stk),0) AS ttl_sum FROM (
+(
+	SELECT SUM(rs.qty) AS pnh_pending_stk FROM m_product_deal_link pdl
+	JOIN t_reserved_batch_stock rs ON rs.product_id=pdl.product_id AND rs.status=0
+	WHERE pdl.is_active=1 AND pdl.itemid=?
+	GROUP BY pdl.product_id
+)
+UNION
+(
+	SELECT SUM(pstk.qty) AS partner_pending_stk FROM m_product_deal_link pdl
+	JOIN  t_partner_reserved_batch_stock pstk ON pstk.product_id=pdl.product_id AND pstk.status=0
+	WHERE  pdl.is_active=1 AND pdl.itemid=?
+	GROUP BY pdl.product_id
+)
+) AS g
+#================
+SELECT SUM(rs.qty) AS pnh_pending_stk 
+	FROM m_product_deal_link pdl
+	JOIN t_reserved_batch_stock rs ON rs.product_id=pdl.product_id AND rs.status=0
+	WHERE pdl.is_active=1 AND pdl.product_id=2602
+	#AND pdl.itemid=?
+	GROUP BY pdl.product_id
+	
+
+SELECT * FROM pnh_member_insurance WHERE sno=2712
+SELECT * FROM pnh_member_offers WHERE insurance_id=2712;
+
+mem_receipt_amount=8820
+
+#UPDATE `pnh_member_insurance` SET `mem_receipt_amount` = '8820' , `status_ship` = '1' , `status_deliver` = '1' WHERE `sno` = '2712';
+
+#UPDATE `pnh_member_offers` SET `delivery_status` = '1' WHERE `sno` = '4059'; 
+#UPDATE `pnh_member_offers` SET `delivery_status` = '1' WHERE insurance_id=2712;
+
+
+SELECT mi.*,a.username,mo.transid_ref AS transid,mo.process_status,mo.delivery_status,o.id AS orderid,f.franchise_name,i.invoice_no,IFNULL(imei.imei_no,nonsk_imei.nonsk_imei_no) AS imei_no
+														FROM pnh_member_insurance mi
+														JOIN pnh_member_offers mo ON mo.insurance_id = mi.sno
+														LEFT JOIN king_admin a ON a.id = mi.created_by
+														JOIN pnh_m_franchise_info f ON f.franchise_id = mi.fid
+														JOIN king_orders o ON o.id = mi.order_id AND o.status != 3
+														JOIN king_invoice i ON i.order_id = mi.order_id 
+														LEFT JOIN t_imei_no imei ON imei.order_id = o.id
+														LEFT JOIN non_sk_imei_insurance_orders nonsk_imei ON nonsk_imei.order_id=o.id
+														WHERE mi.sno IN (2712) 
+														GROUP BY mi.sno;
+														
+														
+-- UPDATE `pnh_member_insurance` SET `created_by` = '37' WHERE `sno` = '2712'; 
+-- UPDATE `pnh_member_offers` SET `created_by` = '37' WHERE `sno` = '4059';
+
+UPDATE king_tmp_orders SET approval_status=0 WHERE transid='PNH41918';
+UPDATE king_tmp_transactions SET approval_status=0 WHERE transid='PNH41918';
+
+SELECT billing_type FROM king_tmp_orders WHERE transid='PNH41918';
+SELECT billing_type FROM king_tmp_transactions WHERE transid='PNH41918';
+#=====================================================
+# Oct_21_2014 - Shivaraj temp order table billing type added
+ALTER TABLE `king_tmp_orders` ADD COLUMN `billing_type` TINYINT(1) DEFAULT 0 NOT NULL AFTER `order_imei_nos`; 
+#=====================================================
+SELECT billing_type FROM king_orders WHERE transid='PNH41918';
+
+SELECT * FROM king_transactions WHERE transid='PNH49218';
+SELECT * FROM king_orders WHERE transid='PNH49218';
+SELECT 501+220;
+
+
+SELECT IFNULL(SUM(g.pqty),0) AS ttl_sum FROM (
+	(
+		SELECT SUM(o.quantity) AS pqty 
+		FROM king_orders o
+		LEFT JOIN king_invoice i ON i.id = o.id AND i.invoice_status = 1 
+		WHERE o.itemid='570419904665' AND o.status=1 AND i.id IS NULL
+		GROUP BY o.itemid
+	)
+	UNION
+	(
+		SELECT SUM(stp.item_transfer_qty) AS pqty 
+		FROM t_partner_reserved_batch_stock rs
+		JOIN t_partner_stock_transfer_product_link stp ON stp.id=rs.tp_id
+		WHERE  rs.itemid='570419904665' AND rs.status=0
+		GROUP BY rs.itemid
+	)
+) AS g;
+
+#========================
+	SELECT SUM(stp.item_transfer_qty) AS pqty 
+		FROM t_partner_reserved_batch_stock rs
+		JOIN t_partner_stock_transfer_product_link stp ON stp.id=rs.tp_id
+		WHERE  rs.itemid='570419904665' AND rs.status=0
+		GROUP BY rs.itemid
+#========================
+DESC t_reserved_batch_stock;
+DESC t_partner_stock_transfer_product_link;
+
+SELECT SUM(o.quantity) AS pnh_pending_stk 
+	FROM king_orders o
+	LEFT JOIN king_invoice i ON i.id = o.id AND i.invoice_status = 1 
+	WHERE o.itemid='570419904665' AND o.status=1 AND i.id IS NULL
+GROUP BY o.itemid;
+
+SELECT IFNULL(SUM(g.pqty),0) AS ttl_sum FROM (
+	(
+		SELECT SUM(o.quantity) AS pqty 
+		FROM king_orders o
+		LEFT JOIN king_invoice i ON i.id = o.id AND i.invoice_status = 1 
+		WHERE o.status=1 AND i.id IS NULL AND o.itemid='570419904665'
+		GROUP BY o.itemid
+	)
+	UNION
+	(
+		SELECT SUM(stp.item_transfer_qty) AS pqty 
+		FROM t_partner_reserved_batch_stock rs
+		JOIN t_partner_stock_transfer_product_link stp ON stp.id=rs.tp_id
+		WHERE  rs.status=0 AND rs.itemid='570419904665'
+		GROUP BY rs.itemid
+	)
+) AS g
+
+#=======================================
+SELECT SUM(o.quantity) AS pqty 
+	FROM king_orders o
+	LEFT JOIN king_invoice i ON i.id = o.id AND i.invoice_status = 1 
+	WHERE o.status=1 AND i.id IS NULL AND o.itemid='570419904665'
+	GROUP BY o.itemid
+	
+	
+SELECT SUM(o.quantity) AS pqty 
+	FROM king_orders o
+	#join m_product_deal_link pdl on pdl.itemid
+	WHERE o.status=0 AND o.itemid='570419904665'
+	GROUP BY o.itemid
+	
+SELECT SUM(o.quantity) AS pqty 
+	FROM king_orders o
+	WHERE o.status=0 AND o.itemid='570419904665'
+	GROUP BY o.itemid;
+	
+SELECT SUM(stp.item_transfer_qty) AS pqty 
+	FROM t_partner_reserved_batch_stock rs
+	JOIN t_partner_stock_transfer_product_link stp ON stp.id=rs.tp_id
+	WHERE  rs.status=0 AND rs.itemid='570419904665'
+	GROUP BY rs.itemid;
+	
+SELECT IFNULL(SUM(stp.product_transfer_qty),0) AS pqty FROM `t_partner_stock_transfer_product_link` stp 
+WHERE stp.is_active=1 AND stp.transfer_status=0 AND stp.itemid='570419904665';
+
+SELECT IFNULL(SUM(stp.product_transfer_qty),0) AS pqty FROM `t_partner_stock_transfer_product_link` stp 
+JOIN t_partner_stock_transfer st ON st.transfer_id=stp.transfer_id
+WHERE stp.is_active=1 AND st.transfer_status=0 AND stp.itemid='8178248576' 
+GROUP BY stp.itemid;
+
+SELECT * FROM user_roles;
+
+
+SELECT rstk.itemid,rstk.stock_info_id,stk.rack_bin_id,stk.location_id
+		,stk.product_barcode,stk.mrp,rstk.qty,CONCAT(rb.rack_name,'-',rb.bin_name) AS rbname,di.name AS deal
+	 FROM t_partner_reserved_batch_stock rstk
+	 JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+	 JOIN m_rack_bin_info rb ON rb.id = stk.rack_bin_id
+	 JOIN king_dealitems di ON di.id=rstk.itemid
+	WHERE rstk.transfer_id=72 AND rstk.itemid=? AND rstk.product_id=? GROUP BY rstk.id;
+	
+
+SELECT * FROM m_product_deal_link WHERE is_active=1 AND itemid=1534367354
+
+
+
+
+SELECT rstk.itemid,rstk.product_id
+	#,sum(rstk.qty) as qty
+	,stk.mrp,rstk.stock_info_id
+#	,replace(group_concat(DISTINCT stk.product_barcode),',','_') as barcodes
+	,tpl.item_transfer_qty,tpl.product_transfer_qty
+		,di.name AS deal_name,p.product_name,rstk.itemid
+		,CONCAT('".IMAGES_URL."items/small/',di.pic,'.jpg') AS image_url
+	FROM t_partner_reserved_batch_stock rstk
+	JOIN t_partner_stock_transfer_product_link tpl ON tpl.id=rstk.tp_id
+	JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+	JOIN king_dealitems di ON di.id=rstk.itemid
+	LEFT JOIN m_product_deal_link plnk ON plnk.product_id=rstk.product_id AND plnk.is_active=1 AND plnk.itemid=rstk.itemid 
+	LEFT JOIN m_product_info p ON p.product_id=rstk.product_id
+
+	WHERE rstk.transfer_id=44 AND di.is_combo=0
+	GROUP BY rstk.itemid;
+	
+	# 1132698749,1138258732,1534367354(3),5398916139,8178248576
+	
+	
+	
+	
+	
+
+SELECT * FROM t_partner_reserved_batch_stock WHERE transfer_id=46; 
+#status=2 to 0
+
+SELECT * FROM t_partner_stock_transfer WHERE transfer_id=46;
+is_active=0 TO 1& transfer_status=4 TO 1
+
+SELECT * FROM t_partner_stock_transfer_product_link WHERE transfer_id=46;
+is_active=0 TO 1& transfer_status=3 TO 1
+
+
+
+
+UPDATE king_dealitems SET is_combo=1 WHERE id IN 
+	(
+	SELECT GROUP_CONCAT(DISTINCT di.id) AS ids
+			FROM king_dealitems di
+			JOIN m_product_deal_link pdl ON pdl.itemid=di.id AND is_active=1
+			WHERE di.is_pnh=0 AND di.is_combo=0
+			GROUP BY di.id
+			HAVING COUNT(pdl.id)>1
+	) LIMIT 1;
+	
+	109
+	
+
+	
+	
+	UPDATE king_dealitems SET is_combo=1 WHERE id IN ("ids","71285566","92582258","1117277256","1436985411","1534367354","1545464937","1689849416","1919368174","2233648463","2355413918","2389454177","2918855168","2923861289","3325123443","3458614718","3497889759","3548447123","3775776282","3964753145","4237219959","4255458551","4267622626","4433418749","4435316747","4473186336","4496985952","4538715487","4571437882","4642918232","4655437436","4661652713","4691273841","4864363851","4875181848","4894396924","4895128433","4912219181","4921282626","4938284156","5144691532","5286776628","5587678674","5775147649","5979985574","6226274251","6323744289","6357495271","6358391828","6367695596","6411155229","6627147564","6651327969","6756216317","7166683139","7371185156","7496977454","7511132574","7658799767","7682184646","7725246775","7843393485","8392598126","8679914893","8961583398","9354195826","9489376857","9631112761","9632248965","9667734985","9669839466","9759725223","9967258716","9997196734","144376456641","147558652386","158776324557","163914287641","175984391915","176277296278","176885419757","183887657973","194156217112","246689223143","263193342979","281927371834","334885286949","362154297753","365247235342","415724242474","475833627568","478898394577","494278777366","526578668728","535544455512","538579337458","548147443639","613272623146","643972438356","742967126383","777465364296","789426157159","838438424868","843817188145","846346952192","848648293822","876661682894","911617958266","936519245463","951198426659")
+	
+#Oct_29_2014
+
+#drop table m_member_subscription_plan_schemes,m_member_subscription_plans,m_member_plan_link,m_franchise_combo_preference_link,m_franchise_combo_preference,m_combo_categories
+#	,m_member_family_list,m_member_feedback_link,m_member_subscription_plan_orderlist;
+	
+#NEWWW
+SELECT COUNT(DISTINCT o.transid) AS t FROM king_orders o WHERE 1 AND o.status != 3 AND o.userid='163427'
+
+SELECT COUNT(DISTINCT o.transid) AS t FROM king_tmp_orders o WHERE 1 AND o.approval_status != 2 AND o.userid='163427'
+
+SELECT DISTINCT transid AS t FROM king_orders o WHERE 1 AND o.status != 3 AND o.userid='163427'
+
+SELECT DISTINCT transid AS t FROM king_tmp_orders o WHERE 1 AND o.approval_status != 2 AND o.userid='163427'
+SELECT * FROM king_tmp_orders o WHERE 1 AND o.approval_status != 2 AND o.userid='163427'
+DESC king_tmp_orders
+
+SELECT * FROM king_tmp_orders o WHERE transid='PNHULE27785';
+
+SELECT IFNULL(partner_ref_no,'N/A') AS `asin`  
+	FROM m_partner_deal_link a 
+	JOIN king_dealitems b ON b.id = a.itemid 
+	WHERE a.itemid = '9232662758' AND a.partner_id = 7;
+	
+
+SELECT user_id FROM  pnh_member_info WHERE mobile='1011111111'
+	
+
+SELECT COUNT(DISTINCT o.transid) AS t 
+FROM king_orders o 
+WHERE 1 
+AND o.status != 3 
+AND o.userid=163430
+
+163430
+
+SELECT COUNT(DISTINCT o.transid) AS t 
+FROM king_tmp_orders o 
+LEFT JOIN king_orders mo ON mo.userid=o.userid
+WHERE 1 AND o.approval_status != 2 AND mo.status !=3 AND o.userid=163432
+
+DESC king_orders
+DESC king_tmp_orders
+#
+
+SELECT DISTINCT GROUP_CONCAT(mo.transid),GROUP_CONCAT(o.status),COUNT(o.transid) AS t 
+FROM king_tmp_orders o 
+LEFT JOIN king_orders mo ON mo.userid=o.userid AND o.approval_status=1 AND mo.status !=3
+WHERE 1 AND o.approval_status != 2 AND o.userid=163432
+
+SELECT id,STATUS,transid,userid FROM king_orders WHERE transid IN ('','PNH73454','PNH72194')
+
+SELECT mo.status,o.transid AS t 
+FROM king_tmp_orders o 
+LEFT JOIN king_orders mo ON mo.userid=o.userid AND mo.status !=3 AND mo.transid=o.transid
+WHERE 1 AND o.approval_status != 2 AND o.userid=163432
+
+SELECT * FROM king_tmp_orders o WHERE 
+
+
+
+SELECT (g.trans) AS t FROM (
+(
+	SELECT DISTINCT o.transid AS trans FROM king_tmp_orders o WHERE 1 AND o.approval_status != 2 AND o.userid=163432
+)
+UNION
+(
+	SELECT DISTINCT o.transid AS trans FROM king_orders o WHERE 1 AND o.status != 3 AND o.userid=163432
+) 
+)AS g
+
+
+SELECT COUNT(DISTINCT o.transid) AS t,GROUP_CONCAT(DISTINCT o.transid) AS trans FROM king_tmp_orders o WHERE 1 AND o.approval_status != 2 AND o.userid=163432 
+	AND transid NOT IN (SELECT DISTINCT o.transid AS trans FROM king_orders o WHERE 1 AND o.status = 3 AND o.userid=163432)
+	
+SELECT COUNT(DISTINCT o.transid) AS t,GROUP_CONCAT(DISTINCT o.transid) AS trans FROM king_tmp_orders o WHERE 1 AND o.approval_status != 2 AND o.userid=163432 
+	AND o.transid NOT IN (SELECT DISTINCT o.transid AS trans FROM king_orders o WHERE 1 AND o.status = 3 AND o.userid=163432)
+	
+SELECT * FROM pnh_franchise_account_summary WHERE invoice_no=20141031953
+
+SELECT (18900+50+100)-2230.2
+
+16669.8=>16819.8
+
+
+SELECT COUNT(*) AS is_offer_gvn FROM pnh_member_offers mo
+	LEFT JOIN king_tmp_orders o ON o.id=mo.order_id AND o.status!=3
+	WHERE mo.offer_type=1 AND mo.offer_type NOT IN (0,2,3) AND mo.process_status!=1 AND mo.member_id=22039099
+	HAVING is_offer_gvn IS NOT NULL
+
+SELECT offer_type FROM pnh_member_offers WHERE member_id=22039097;
+
+# Oct_31_2014
+
+SELECT * FROM pnh_member_info m WHERE m.member_fee_is_added=1 AND pnh_member_id=22039099
+
+member_fee_collected
+member_fee
+
+member_fee_invoice
+
+SELECT * FROM king_users
+SELECT * FROM pnh_member_info WHERE  pnh_member_id=22039099;
+
+#===============================
+#Oct_31_2014 - Shivaraj - Member fee flag in member table
+ALTER TABLE `pnh_member_info` ADD COLUMN `member_fee_collected` TINYINT(1) DEFAULT 0 NULL AFTER `voucher_bal_validity`
+ALTER TABLE `pnh_member_info` ADD COLUMN `member_fee` FLOAT NULL AFTER `member_fee_collected`, ADD COLUMN `member_fee_invoice` VARCHAR(50) NULL AFTER `member_fee`;
+#===============================
+
+SELECT * FROM  pnh_member_info WHERE user_id=163432
+22039099
+user_id,pnh_member_id,first_name,mobile,email,member_fee_collected
+
+SELECT i.pnh_id,partner_id,d.catid,d.menuid,d.brandid,t.is_pnh,i_discount,i_coup_discount,i.tax,o.transid,o.id,o.itemid,i_orgprice,i_price,t.cod,t.ship,o.quantity,SUM(i.orgprice*o.quantity) AS mrp_amt,SUM(i.price*o.quantity) AS price_amt,o.other_price,o.is_memberprice,t.franchise_id,o.billing_type,o.userid,o.member_id
+										FROM king_orders o 
+										JOIN king_dealitems i ON i.id=o.itemid 
+										JOIN king_transactions t ON t.transid = o.transid
+										JOIN king_deals d ON d.dealid = i.dealid 
+										WHERE o.id IN ('6224617261')
+										GROUP BY o.id ORDER BY o.sno ASC
+										
+SELECT * FROM king_invoice LIMIT 20
+
+UPDATE pnh_member_info SET member_fee_is_added=?,member_fee=?,member_fee_invoice=? WHERE member_id=?
+
+UPDATE pnh_member_info SET member_fee_invoice='' WHERE member_fee_collected=1 AND pnh_member_id=0
+
+SELECT user_id,pnh_member_id,first_name,mobile,email,member_fee_collected,member_fee FROM  pnh_member_info WHERE user_id=163432
+
+SELECT id,transid,order_id,invoice_no FROM king_invoice WHERE invoice_no=1 AND invoice_status=1
+
+SELECT * FROM pnh_member_info WHERE pnh_member_id=22039099; #21111111;
+
+#1
+UPDATE pnh_member_info SET member_fee_collected=1,member_fee='50',member_fee_invoice='' WHERE pnh_member_id=22039099;
+#2
+UPDATE pnh_member_info SET member_fee_invoice='0000' WHERE member_fee_collected=1 AND pnh_member_id=22039099;
+#3
+UPDATE pnh_member_info SET member_fee_collected=0,member_fee_invoice='',member_fee=0 WHERE member_fee_collected=1 AND member_fee_invoice='0000' AND pnh_member_id=22039099;
+
+
+# Nov_03
+
+SELECT h.itemid,publish,live,product_id,lqty,aqty,dqty,is_sourceable,IF(SUM(ttl_l)=SUM(is_sourceable),0,1)*!is_group AS is_limited_stk,IF(SUM(ttl_l)=SUM(pstk),1,0) AS STATUS,is_combo,is_group,(MIN(dqty)) AS d_stk,IFNULL(SUM(o.quantity),0) AS oqty	
+										FROM (
+											SELECT g.itemid,product_id,lqty,aqty,is_sourceable,(FLOOR(aqty/lqty)) AS dqty,ttl_l,pstk,is_combo,is_group,publish,live
+											FROM (
+												SELECT a.itemid,a.product_id,b.is_sourceable,a.qty AS lqty,is_damaged,SUM(c.available_qty) AS aqty,
+												COUNT(DISTINCT a.product_id) AS ttl_l,
+												IF(a.qty<=SUM(c.available_qty),1,0) AS pstk
+												FROM m_product_deal_link a 
+												JOIN m_product_info b ON a.product_id = b.product_id  
+												LEFT JOIN t_stock_info c ON c.product_id = b.product_id 
+												LEFT JOIN m_rack_bin_info rb ON rb.id = c.rack_bin_id 
+												LEFT JOIN  partner_info pt ON pt.partner_rackbinid=c.rack_bin_id AND pt.partner_rackbinid!=0
+												WHERE itemid IN ('1693695852') AND a.is_active = 1 AND pt.id=7
+												GROUP BY a.product_id,a.itemid,is_damaged
+												#having (is_damaged = 0 or is_damaged is null)
+											) AS g 
+											JOIN king_dealitems di ON di.id = g.itemid 
+											JOIN king_deals d ON d.dealid = di.dealid
+											GROUP BY itemid,product_id 
+										) AS h
+										LEFT JOIN king_orders o ON o.itemid = h.itemid AND o.status = 0 
+										GROUP BY h.itemid,IF(is_group,product_id,1)
+
+"itemid"	"publish"	"live"	"product_id"	"lqty"	"aqty"	"dqty"	"is_sourceable"	"is_limited_stk"	"status"	"is_combo"	"is_group"	"d_stk"	"oqty"
+"1693695852"	"1"	"1"	"4520"	"2"	"1"	"0"	"1"	"0"	"0"	"0"	"0"	"0"	"0"
+"1693695852"	"1"	"1"	"4520"	"2"	"1"	"0"	"1"	"0"	"0"	"0"	"0"	"0"	"0"
+
+SELECT * FROM partner_info pt
+LEFT JOIN t_stock_info st ON st.rack_bin_id=pt.partner_rackbinid
+LEFT JOIN m_rack_bin_info rb ON rb.id = pt.partner_rackbinid
+WHERE pt.partner_rackbinid!=0 AND  pt.id=7 AND st.product_id=4520
+
+SELECT partner_id FROM  king_transactions;
+
+SELECT IFNULL(SUM(g.pqty),0) AS ttl_sum FROM (
+(
+	SELECT SUM(o.quantity) AS pqty 
+	FROM king_orders o
+	JOIN king_transactions tr ON tr.transid=o.transid
+	WHERE o.status=0 AND o.itemid='1113412718'  AND tr.partner_id != 0 
+	GROUP BY o.itemid
+)
+UNION
+(
+	SELECT IFNULL(SUM(stp.item_transfer_qty),0) AS pqty FROM `t_partner_stock_transfer_product_link` stp 
+	JOIN t_partner_stock_transfer st ON st.transfer_id=stp.transfer_id
+	WHERE stp.is_active=1 AND st.transfer_status=0 AND stp.itemid='1113412718'
+	GROUP BY stp.itemid
+)
+) AS g;
+
+
+SELECT h.itemid,publish,live,product_id,lqty,aqty,dqty,is_sourceable,IF(SUM(ttl_l)=SUM(is_sourceable),0,1)*!is_group AS is_limited_stk,IF(SUM(ttl_l)=SUM(pstk),1,0) AS STATUS,is_combo,is_group,(MIN(dqty)) AS d_stk,IFNULL(SUM(o.quantity),0) AS oqty	
+FROM (
+	SELECT g.itemid,product_id,lqty,aqty,is_sourceable,(FLOOR(aqty/lqty)) AS dqty,ttl_l,pstk,is_combo,is_group,publish,live
+	FROM (
+		SELECT a.itemid,a.product_id,b.is_sourceable,a.qty AS lqty,is_damaged,SUM(c.available_qty) AS aqty,
+		COUNT(DISTINCT a.product_id) AS ttl_l,
+		IF(a.qty<=SUM(c.available_qty),1,0) AS pstk
+		FROM m_product_deal_link a 
+		JOIN m_product_info b ON a.product_id = b.product_id  
+		LEFT JOIN t_stock_info c ON c.product_id = b.product_id 
+		LEFT JOIN m_rack_bin_info rb ON rb.id = c.rack_bin_id 
+		
+		WHERE itemid IN ('1113412718') AND a.is_active = 1  
+		GROUP BY a.product_id,a.itemid,is_damaged
+		 HAVING (is_damaged = 0 OR is_damaged IS NULL) 
+	) AS g 
+	JOIN king_dealitems di ON di.id = g.itemid 
+	JOIN king_deals d ON d.dealid = di.dealid
+	GROUP BY itemid,product_id 
+) AS h
+LEFT JOIN king_orders o ON o.itemid = h.itemid AND o.status = 0 
+GROUP BY h.itemid,IF(is_group,product_id,1);
+#=======================================================
+#Nov_03_2014
+ALTER TABLE `t_partner_stock_transfer` ADD COLUMN `transfer_option` TINYINT(11) DEFAULT 1 NULL COMMENT '1:to partner,2:from partner' AFTER `partner_id`;
+ALTER TABLE `t_partner_reserved_batch_stock` ADD COLUMN `transfer_option` TINYINT(11) DEFAULT 1 NULL COMMENT '1:to partner,2:from partner' AFTER `transfer_id`;
+#ALTER TABLE `t_partner_stock_transfer_product_link` ADD COLUMN `transfer_option` TINYINT(11) DEFAULT 1 NULL COMMENT '1:to partner,2:from partner' AFTER `transfer_id`;
+#=======================================================
+SELECT * FROM t_partner_stock_transfer WHERE transfer_id=47;
+
+
+SELECT is_serial_required,a.stock_id,a.product_id,IF(IFNULL(c.imei_no,0),COUNT(DISTINCT c.imei_no),available_qty) AS available_qty,a.location_id
+,GROUP_CONCAT(DISTINCT IFNULL( c.grn_id,0)) AS grn_id,a.rack_bin_id,a.mrp,IF(town_id=f.town_id,1,0) AS town_diff,IF((a.mrp-185),1,0) AS mrp_diff
+									FROM t_stock_info a
+									JOIN m_rack_bin_info b ON a.rack_bin_id = b.id AND b.is_damaged=0
+									JOIN m_product_info p ON p.product_id = a.product_id
+									LEFT JOIN t_imei_no c ON c.product_id=a.product_id AND c.status = 0 AND c.order_id = 0 AND a.stock_id = c.stock_id AND reserved_batch_rowid=0
+									LEFT JOIN t_grn_product_link d ON d.grn_id = c.grn_id AND c.product_id = d.product_id
+									LEFT JOIN t_grn_info e ON e.grn_id = d.grn_id
+									LEFT JOIN m_vendor_town_link f ON f.vendor_id = e.vendor_id AND f.brand_id = p.brand_id 
+								WHERE a.mrp > 0 AND a.product_id = '4447' AND available_qty > 0  
+								GROUP BY stock_id,town_diff
+								ORDER BY a.product_id DESC,town_diff DESC,mrp_diff,a.mrp;
+								
+								
+SELECT * FROM t_partner_reserved_batch_stock WHERE transfer_id=117; 
+#status=2 to 1
+
+SELECT * FROM t_partner_stock_transfer WHERE transfer_id=117;
+is_active=0 TO 1& transfer_status=4 TO 1
+
+SELECT * FROM t_partner_stock_transfer_product_link WHERE transfer_id=117;
+is_active=0 TO 1& transfer_status=3 TO 1
+
+
+SELECT * FROM t_partner_reserved_batch_stock WHERE transfer_id=117; 
+#status=1
+
+SELECT * FROM t_partner_stock_transfer WHERE transfer_id=117;
+#is_active=1& transfer_status=1
+
+SELECT * FROM t_partner_stock_transfer_product_link WHERE transfer_id=117;
+#is_active=1& transfer_status=1
+

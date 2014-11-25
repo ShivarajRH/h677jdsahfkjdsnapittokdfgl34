@@ -15,6 +15,13 @@
 {
 	margin:10px 0;
 }
+.recently_added
+{
+	color: blue;
+    cursor: pointer;
+    margin-right: 15px;
+    text-decoration: underline;
+}
 </style>
 <!-- Container -->
 <div class="container">
@@ -81,6 +88,18 @@ function endisable_sel(act,brandid,catid)
 	$('#change_status_dlg').data("pro_data",{'pids': ids,'status': act,'brandid' : brandid,'catid' : catid}).dialog('open');
 }
 
+$(".end_of_life").live("change",function(){
+	var brandid=$(this).attr('brandid');
+	var catid=$(this).attr('catid');
+	if($(".end_of_life").attr("checked"))
+	{
+		product_list(brandid,catid,0,'',0,1);
+	}else
+	{
+		product_list(brandid,catid,0,'',0,0);
+	}
+});
+
 $("#change_status_dlg" ).dialog({
 		modal:true,
 		autoOpen:false,
@@ -123,7 +142,7 @@ function change_status(brandid,catid,pid,pstatus,remarks)
 		}else
 		{
 			alert("Product status successfully changed");
-				product_list(brandid,catid,0,'');
+				product_list(brandid,catid,0,'',0,0);
 		}
 	},'json');
 }
@@ -189,7 +208,7 @@ function change_status(brandid,catid,pid,pstatus,remarks)
 
 $(function(){
 	// Call plugin
-	$('#cus_jq_alpha_sort_wrap').jqSuAlphaSort({title:"List of Categories",overview_title:"List of Deals",'char_click':function(chr,ele){ cat_bychar(chr)},'item_click':function(catid,ele){ product_list(0,catid,0,'')},'item_click_bybrand':function(brandid,ele){ product_list(brandid,0,0,'')}});
+	$('#cus_jq_alpha_sort_wrap').jqSuAlphaSort({title:"List of Categories",overview_title:"List of Deals",'char_click':function(chr,ele){ cat_bychar(chr)},'item_click':function(catid,ele){ product_list(0,catid,0,'',0,0)},'item_click_bybrand':function(brandid,ele){ product_list(brandid,0,0,'',0,0)}});
 		$(".jq_alpha_sort_alphalist_char a").click(function() {
 	      // remove classes from all
 	      $(".jq_alpha_sort_alphalist_char a").removeClass("jq_alpha_active");
@@ -201,7 +220,7 @@ $(function(){
 	 $(".jq_alpha_sort_alphalist_char a:eq(0)").trigger('click');
  
 	$('.jq_alpha_sort_alphalist_vend_head').html('<div class="alphabet_header_wrap"><span><a id="cat_lab" class="cat_lst_tab">Category List</a></span><span><a id="brand_lab" style="margin-right:0px !important" class="brand_lst_tab">Brand List</a></span> <input type="text" name="search_name" class="search_blk inp" placeholder="Search by Name" ><img style="margin-top: 7px;" src="<?php echo base_url().'images/search_icon.png'?>"></div>');
-	product_list(0,0,0,'');
+	product_list(0,0,0,'',0,0);
 	$('.brand_lst_tab').addClass('selected_alpha_list');
 	
 });
@@ -225,12 +244,12 @@ $('.Brands_bychar_list_content_listdata').live("click",function(){
 	  	{
 	  		$('.selected_class').removeClass('selected_class');
 	  		$(this).addClass('selected_class');
-	  	 	product_list(brandid,catid,0,'');
+	  	 	product_list(brandid,catid,0,'',0,0);
 	  	 	//filter_deallist($(this).text(),'brand');
 	  	}
 	  	else
 	  	{ 
-		  	product_list(0,catid,0,'');
+		  	product_list(0,catid,0,'',0,0);
 	  		//filter_deallist('','all');
 	  	}
 		$('.left_filter_wrap').show();
@@ -240,7 +259,7 @@ $('.Brands_bychar_list_content_listdata').live("click",function(){
 $('.cat_lst_tab').live('click',function(){
 	$('#cat_lab').val('1');
 	$('#brand_lab').val('0');
-	product_list(0,0,0,'');
+	product_list(0,0,0,'',0,0);
 	
 	$(".jq_alpha_sort_alphalist_char a:eq(0)").trigger('click');
 	$('.cat_lst_tab').removeClass("selected_alpha_list");
@@ -249,7 +268,7 @@ $('.cat_lst_tab').live('click',function(){
 
 //Function to display brands on list click
 $('.brand_lst_tab').live('click',function(){
-	product_list(0,0,0,'');
+	product_list(0,0,0,'',0,0);
 	$('#cat_lab').val('0');
 	$('#brand_lab').val('1');
 	//$('.brands_bychar_list').html('');
@@ -278,7 +297,7 @@ $('select[name="sourceable_wrap"]').live('change',function(){
 
 function published_deals(b,c,v)
 {
-	product_list(b,c,0,v);
+	product_list(b,c,0,v,0,0);
 	/*
 	filter_deallist('','all');
 	return ;
@@ -322,7 +341,7 @@ $('input[name="check_status"]').live("click",function(){
 		    }
 			else
 			{
-				product_list(brandid,catid,$('.filter_opts .selected_type').attr('val'),'');			
+				product_list(brandid,catid,$('.filter_opts .selected_type').attr('val'),'',0,0);			
 			}
 		});
 	}
@@ -362,7 +381,6 @@ $('input[name="search_name"]').live('keyup',function(){
 	});
 	
 });
-
 
 function filter_deallist(tag,by)
 {
@@ -417,7 +435,7 @@ function search_othr_products()
 		minLength: 2,
 		select:function(event, ui ){
 			if(!$('.prdid_'+ui.item.id).length)
-				product_list(0,0,ui.item.id,'');
+				product_list(0,0,ui.item.id,'',0,0);
 		}
 	});
 }
@@ -427,8 +445,10 @@ $('.stock_det_close').live("click",function(){
 	$('.stock_det_'+id).hide();
 });
 
-function product_list(brandid,catid,pid,src)
+function product_list(brandid,catid,pid,src,type,is_life_ended)
 {
+	//type==0  ======> All Products
+	//type==1  ======> Recently added
 	$('input[name="srch_product"]').val('');
 	
 	//$('.jq_alpha_sort_overview_content').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
@@ -476,7 +496,7 @@ function product_list(brandid,catid,pid,src)
 
 	$('.sk_deal_container').html('<div class="page_alert_wrap"><img src="'+base_url+'/images/jx_loading.gif'+'"></div>');
 	
-	$.post(site_url+'/admin/jx_product_list',{brandid:brandid,catid:catid,pid:pid,src:src},function(resp){
+	$.post(site_url+'/admin/jx_product_list',{brandid:brandid,catid:catid,pid:pid,src:src,type:type,show_prd_closed:is_life_ended},function(resp){
 		//$('.sk_deal_container').css('opacity','1');
 		//$('.sk_deal_container').css('opacity','1');
 		if(resp.status == 'error')
@@ -496,13 +516,21 @@ function product_list(brandid,catid,pid,src)
 				var d_lst = '';
 				d_lst+='<div class="sk_deal_filter_blk_wrap">';
 				
-				d_lst+='<span class="left_filter_mrp_wrap">MRP Filter : ';
+				d_lst+='<span class="left_filter_mrp_wrap">';
+				if(is_life_ended==1)
+				{
+					d_lst+='<span class="sourceable_wrap" brandid='+brandid+' catid='+catid+'>Products Closed : <input type="checkbox" class="end_of_life" brandid="'+brandid+'" catid="'+catid+'" style="width:0px !important;height:0px !important" checked></span>';
+				}else
+				{
+					d_lst+='<span class="sourceable_wrap" brandid='+brandid+' catid='+catid+'>Products Closed : <input type="checkbox" class="end_of_life" brandid="'+brandid+'" catid="'+catid+'" style="width:0px !important;height:0px !important" ></span>';
+				}
+				
 				d_lst+='<span class="sourceable_wrap" brandid='+brandid+' catid='+catid+'>Sourceable : <select name="sourceable_wrap"><option value="all">Choose</option><option value="2">All</option><option value="1">Yes</option><option value="0">No</option></select></span>';
-				d_lst+='<input type="text" class="inp" id="f_from" size=4> to';
-				d_lst+=' <input type="text" class="inp" id="f_to" size=4> <button type="button" style="margin-top:-5px" class="button button-rounded button-action button-tiny" onclick="filter_deals_bymrp()">Filter</button>';
+				d_lst+='<span class="sourceable_wrap">MRP Filter : <input type="text" class="inp" id="f_from" size=4> to';
+				d_lst+=' <input type="text" class="inp" id="f_to" size=4> <button type="button" style="margin-top:-5px" class="button button-rounded button-action button-tiny" onclick="filter_deals_bymrp()">Filter</button></span>';
 				d_lst+='</div>';
 				d_lst+='<div class="sk_deal_filter_blk_wrap">';
-				d_lst+='  <div class="fl_right">Mark : <button type="button" class="src_btn" value="1" brandid="'+brandid+'" catid="'+catid+'">Sourceable</button><button type="button" class="src_btn" value="0" brandid="'+brandid+'" catid="'+catid+'">Not Sourceable</button></span></div>';
+				d_lst+='<div class="fl_right"><span class="recently_added" brandid='+brandid+' catid='+catid+' style="display:none">Recently Added</span> Mark : <button type="button" class="src_btn" value="1" brandid="'+brandid+'" catid="'+catid+'">Sourceable</button><button type="button" class="src_btn" value="0" brandid="'+brandid+'" catid="'+catid+'">Not Sourceable</button></span></div>';
 				d_lst+='<span class="ttl_deals_wrap total_wrap" style="float:left">Showing '+resp.ttl_prds+' / '+resp.ttl_rows+' products</span>';
 				d_lst+='<span class="src_deals" style="color:green">Sourceable Products : '+resp.src_prds+'</span>';
 				d_lst+='<span class="unsrc_deals" style="color:red">Not Sourceable Products : '+resp.unsrc_prds+'</span></div>';
@@ -594,10 +622,16 @@ function product_list(brandid,catid,pid,src)
 					$('.src_deals').hide();
 					$('.unsrc_deals').hide();
 				}
+				
+				if(brandid==0 && catid==0)
+				{
+					$('.recently_added').show();
+				}
 			}
 	},'json');	
 	
 }
+
 function cat_bychar(ch)
 {
 	if($('#cat_lab').val() == 1)
@@ -730,14 +764,20 @@ function search(b_search,c_search)
 			select:function(event, ui ){
 				if(b_search==1)
 				{
-					product_list(ui.item.id,0,0,'');
+					product_list(ui.item.id,0,0,'',0,0);
 				}else if(c_search==1)
 				{
-					product_list(0,ui.item.id,0,'');
+					product_list(0,ui.item.id,0,'',0,0);
 				}
 			}
 	});
 }
+
+$('.recently_added').live('click',function(){
+	brandid=$(this).attr('brandid');
+	catid=$(this).attr('catid');
+	product_list(brandid,catid,0,'',1,0);
+});
 
 </script>
 <?php

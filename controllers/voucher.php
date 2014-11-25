@@ -2735,6 +2735,95 @@ Please use your points for your next purchase in one of the StoreKing retailer i
 		redirect('admin/viewpo/'.$po_id,'refresh');
 	}
 	
+	/**
+	 * function to update bulk partner item refnos via csv
+	 */
+	function bulk_update_partner_deals()
+	{
+		$this->erpm->auth(DEAL_MANAGER_ROLE);
+		$data['page'] = 'bulk_update_partnerdeals';
+		$this->load->view('admin',$data);
+	
+	}
+	
+	/**
+	 * fucntion to process bulk partner item refnos via csv 
+	 */
+	function process_update_partnerdeals()
+	{
+		$this->erpm->auth(DEAL_MANAGER_ROLE);
+		//	error_reporting(E_ALL);
+		//	print_r($_POST);
+		if($_POST['submit'])
+		{
+			if($_FILES['pd_data_file']['tmp_name'])
+			{
+		
+				$user_det = $this->erpm->auth();
+				$userid = $user_det['userid'];
+				$total_available = 0;
+				$total_updated = 0;
+				$f=fopen($_FILES['pd_data_file']['tmp_name'],"r");
+				$i=-1;
+				$valid_templ = 1;
+				while(($data=fgetcsv($f))!==false)
+				{
+					$i++;
+		
+					if(!$valid_templ)
+						break;
+		
+					if($i==0)
+					{
+						$data_heads = array_values($data);
+		
+						if($data_heads[0] != 'Slno')
+							$valid_templ = 0;
+						if($data_heads[1] != 'PartnerID')
+							$valid_templ = 0;
+						if($data_heads[2] != 'ItemID')
+							$valid_templ = 0;
+						if($data_heads[3] != 'Refno')
+							$valid_templ = 0;
+						continue;
+					}
+		
+					$total_available ++;
+		
+					$partner_id = $data[1]*1;
+					$itemid = $data[2]*1;
+					$partner_item_refno = $data[3];
+					
+					$valid_data = 1;
+					
+		
+					if(!$valid_data)
+						continue;
+		
+					if($this->db->query("select count(*) as t from m_partner_deal_link where itemid = ? and partner_id = ?",array($itemid,$partner_id))->row()->t)
+					{
+						$inp = array($partner_item_refno,$userid,$partner_id,$itemid);
+						$this->db->query("update m_partner_deal_link set partner_ref_no = ?,modified_on = now(),modified_by = ? where partner_id = ? and itemid = ? ",$inp) or die(mysql_error());
+					}else
+					{
+						$inp = array($partner_item_refno,$userid,$partner_id,$itemid);
+						$this->db->query("insert into m_partner_deal_link (partner_ref_no,created_by,created_on,partner_id,itemid) values (?,?,now(),?,?)",$inp)  or die(mysql_error());
+					}
+					
+					$total_updated += 1;
+				}
+		
+				if($valid_templ)
+					$this->session->set_flashdata("erp_pop_info","Total $total_updated/$total_available Deals updated");
+				else
+					$this->session->set_flashdata("erp_pop_info","Invalid Template uploaded");
+			}else
+			{
+				$this->session->set_flashdata("erp_pop_info","No file uploaded");
+			}
+			redirect('admin/bulk_update_partner_deals','refresh');
+		}
+	}
 
 	/**
 	 * function to update bulk member price via csv  
@@ -2837,4 +2926,224 @@ Please use your points for your next purchase in one of the StoreKing retailer i
 		}
 	}
 
+	
+	function allot_menus()
+	{
+		$f_list_res = $this->db->query("select franchise_id from pnh_m_franchise_info ");
+		foreach($f_list_res->result_array() as $f_det)
+		{
+			$fid = $f_det['franchise_id'];
+			$this->db->query("update pnh_franchise_menu_link set status = 0 where fid = ? ",$fid)  or die(mysql_error()); 
+			$this->db->query("insert into pnh_franchise_menu_link(fid, menuid, status, is_sch_enabled, sch_discount_start, sch_discount_end, created_by, created_on, modified_on, modified_by, sch_discount)(select $fid,id,1,0,0,0,6,now(),0,0,0 from pnh_menu where status = 1 );") or die(mysql_error());
+		}
+	}
+	
+	/**
+	 * function to import vendor product stock file 
+	 */
+	function imp_vendor_prod_stock()
+	{
+		error_reporting(E_ALL);
+		// allowed only for super admin 
+		$user_det = $this->erpm->auth(true);
+		
+		// process imported file and update to 
+		// vendor product link for stock and 
+		// relavent deals publish and live status.
+		
+		$vendor_id = $this->input->post('vendor_id');
+		
+		if($_FILES['vendor_stk_file']['tmp_name'])
+		{
+			$userid = $user_det['userid'];
+			$total_available = 0;
+			$total_updated = 0;
+			$f=fopen($_FILES['vendor_stk_file']['tmp_name'],"r");
+			$i=-1;
+			$valid_templ = 1;
+			while(($data=fgetcsv($f))!==false)
+			{
+				$i++;
+				
+				if(!$valid_templ)
+					break;
+		
+				if($i==0)
+				{
+					$data_heads = array_values($data);
+		
+					if($data_heads[0] != 'sku')
+						$valid_templ = 0;
+					if($data_heads[1] != 'mrp')
+						$valid_templ = 0;
+					if($data_heads[2] != 'special_price')
+						$valid_templ = 0;
+					if($data_heads[3] != 'storeking_price')
+						$valid_templ = 0;
+					if($data_heads[4] != 'qty')
+						$valid_templ = 0;
+					if($data_heads[5] != 'procurement_time')
+						$valid_templ = 0;
+					
+					continue;
+				}
+		
+				$total_available ++;
+		
+				$sku = $data[0];
+				$mrp = $data[1]*1;
+				$offer_price = $data[2]*1;
+				$purchase_price = $data[3];
+				$qty = $data[4];
+				$delivery_tat = $data[5];
+		
+				$valid_data = 1;		
+		
+				if(!$valid_data)
+					continue;
+				
+				// log data to table
+
+				
+				
+				$vp_det_res = $this->db->query("select * from m_vendor_product_link where vendor_product_code = ?  and vendor_id = ?",array($sku,$vendor_id));
+				if($vp_det_res->num_rows())
+				{
+					$vp_det = $vp_det_res->row_array();
+					
+					// update vendor_stock and pricing details  
+					$inp = array($mrp,$purchase_price,$qty,$delivery_tat,$userid,$vendor_id,$sku);
+					$this->db->query("update m_vendor_product_link
+														set mrp = ?,
+															purchase_price = ?,
+															ven_stock_qty = ?,
+															delivery_tat = ?,
+															modified_on = now(),
+															modified_by = ?
+														where vendor_id = ?
+														and vendor_product_code = ? 
+									",$inp) or die(mysql_error());
+					
+					// update king_deals
+					$total_updated += 1;
+				}
+			}
+			
+			if($valid_templ)
+				$this->session->set_flashdata("erp_pop_info","Total $total_updated/$total_available Deals updated");
+			else
+				$this->session->set_flashdata("erp_pop_info","Invalid Template uploaded");
+		}else
+		{
+			$this->session->set_flashdata("erp_pop_info","No file uploaded");
+		}
+		redirect('admin/vendor/'.$vendor_id,'refresh');
+	}
+
+	function jx_getmenubytype($type=0)
+	{
+		$this->erpm->auth();
+		$output = $valarr= array();
+		$cond = '';
+		if(!$type)
+			$output['menu_list']=$this->db->query("SELECT id,name from king_menu ")->result_array();
+		else
+			$output['menu_list']=$this->db->query("SELECT id,name from pnh_menu ")->result_array();
+	
+		echo json_encode($output);
+	}
+	
+	/**
+	 * Function to remove duplicate rows
+	 * @author Suresh
+	 * 
+	 */
+	Function jx_remove_stock_duplicates()
+	{
+		//check_stock_status=1
+		$product_det=$this->db->query("select product_id from m_product_info where check_stock_status=1");
+		//$product_det=$this->db->query("select product_id from m_product_info where product_id=8700");
+		
+		if($product_det->num_rows())
+		{
+		//Product_details
+			foreach($product_det->result_array() as $p)
+		{
+			//Check for duplicate entry
+			$stk_duplicate_det=$this->db->query("select count(stock_id) as stk_cnt,group_concat(stock_id ORDER BY stock_id ASC) as stock_ids from t_stock_info 
+													where product_id=?
+													group by product_id,location_id,rack_bin_id,expiry_on,mrp,product_barcode
+														order by stock_id asc",$p['product_id']);
+																
+				if($stk_duplicate_det->num_rows())	
+				{
+					foreach($stk_duplicate_det->result_array() as $s)
+			{
+				//If duplicates found
+				if($s['stk_cnt']>1)
+				{
+							//Get sum of quantities of duplicate stock 0
+							$stk_qty=$this->db->query("select ifnull(sum(available_qty),0) as qty from t_stock_info where stock_id in (".$s['stock_ids'].") and available_qty>0")->row()->qty;
+							
+							$stk_negative_qty_res=$this->db->query("select * from t_stock_info where stock_id in (".$s['stock_ids'].") and available_qty<0");
+							
+							if($stk_negative_qty_res->num_rows())
+							{
+								foreach($stk_negative_qty_res->result_array() as $n)
+								{
+									$this->db->query("insert into t_stock_negative_qty_log(pid,stock_id,qty)values(?,?,?)",array($p['product_id'],$n['stock_id'],$n['available_qty']));
+								}
+							}
+							
+					$stk_id_arr=array();
+					$stk_ids=$s['stock_ids'];
+					
+					$stk_id_arr=explode(",",$stk_ids);	
+					
+					$valid_stkid=0;//Variable to store valid stock id
+					foreach($stk_id_arr as $i=>$s)
+					{
+						if($i==0)//Conside first duplicate row is valid and update quantity and assign stock id to valid_stkid
+						{
+							$this->db->query("Update t_stock_info set available_qty=? where stock_id=?",array($stk_qty,$s));
+							$valid_stkid=$s;
+						}
+						else 
+						{
+							//Logic to update duplicate stock_id with valid_stkid in all dependent tables
+							$action_remarks=$s.' replaced by '.$valid_stkid;
+									
+									//Table t_imei_no
+									$this->erpm->tbl_t_imei_no($p['product_id'],$valid_stkid,$s,$action_remarks);
+							
+							//Table t_reserved_batch_stock
+									$this->erpm->tbl_t_reserved_batch_stock($p['product_id'],$valid_stkid,$s,$action_remarks);
+							
+							//Table t_imei_update_log
+									$this->erpm->tbl_t_imei_update_log($p['product_id'],$valid_stkid,$s,$action_remarks);
+							
+							//Table t_grn_product_link
+									$this->erpm->tbl_t_grn_product_link($p['product_id'],$valid_stkid,$s,$action_remarks);
+							
+							//Table t_stock_update_log
+									$this->erpm->tbl_t_stock_update_log($p['product_id'],$valid_stkid,$s,$action_remarks);
+							
+							//Table t_partner_reserved_batch_stock
+									$this->erpm->tbl_t_partner_reserved_batch_stock($p['product_id'],$valid_stkid,$s,$action_remarks);
+							
+							//Once after update delete duplicate row
+							$this->db->query("DELETE FROM t_stock_info
+												WHERE stock_id=?",$s);
+									$remarks=$s.' duplicate entry removed';
+									$this->db->query("insert into t_stock_duplicate_clear_log(pid,old_stock_id,new_stock_id,table_name,action)values(?,?,?,?,?)",array($p['product_id'],$s,$valid_stkid,'t_stock_info',$remarks));					
+						}
+					}
+				}
+			}										
+				}	
+				//Update check stock status
+				$this->db->query("Update m_product_info set check_stock_status=0 where product_id=?",$p['product_id']);											
+			}
+		}
+	}
 }

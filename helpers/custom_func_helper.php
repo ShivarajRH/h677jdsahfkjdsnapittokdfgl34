@@ -200,7 +200,7 @@ if(!function_exists("match_in_list"))
 	}
 		
 	/**
-	 * Function to Convert slash format date to general format
+	 * Function to Convert slash format date to general format for db insertion
 	 * @author Shivaraj <shivaraj@storeking.in>_Jul_01_2014
 	 * @param type $date
 	 * @example 01/Jul/2014 14:00 TO 2014-07-01 14:00:00

@@ -85,3 +85,30 @@ $config['shipment_status'][3]='Delivered';
 $config['shipment_status'][4]='Marked for Return';
 $config['shipment_status'][5]='Pickup';
 
+/** 
+ * Franchise Types-Shivaraj_sep_13_2014
+ */ 
+$config['franchise_type']=array();
+$config['franchise_type'][0]='Normal Franchise';
+$config['franchise_type'][1]='Rural Franchise';
+$config['franchise_type'][2]='Rural Master Franchise';
+
+/**
+ * Franchisee Payment Cycle types-Roopashree_oct_28_2014
+ */
+
+$config['payment_cycle']=array();
+$config['payment_cycle'][0]='Weekly';
+$config['payment_cycle'][1]='Bi Monthly';
+$config['payment_cycle'][2]='Monthly';
+
+/**
+ * Franchisee outpayment Mode -Roopashree_oct_28_2014
+ */
+
+$config['payment_mode']=array();
+$config['payment_mode'][0]='Cash';
+$config['payment_mode'][1]='Cheque';
+$config['payment_mode'][2]='DD';
+$config['payment_mode'][3]='NFT';
+$config['payment_mode'][4]='Credit Mode';

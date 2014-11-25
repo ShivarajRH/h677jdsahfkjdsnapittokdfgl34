@@ -368,14 +368,18 @@ var sel_role_id ='';
 			
 		}else{
 			$('tr.assign_under').show();
-			if(sel_role_id == 5)
+			if(sel_role_id == 4)
+			{
+				$('tr.towns').hide();
+			}
+			else if(sel_role_id == 5)
 			{
 				$('tr.towns').show();
 			}else
 			{
 				$('tr.towns').hide();
 			}
-
+			
 			if(sel_role_id == 6)
 			{
 				$('tr.assign_under').hide();
@@ -384,7 +388,7 @@ var sel_role_id ='';
 			
 				$.getJSON(site_url+'/admin/get_superior_names/'+sel_role_id,'',function(resp){
 					if(resp.status == 'error'){
-						alert(resp.message);
+						//alert(resp.message);
 					}else{
 						var emp_list_html = '<option value="">Choose</option>';
 							$.each(resp.emp_list,function(i,itm){

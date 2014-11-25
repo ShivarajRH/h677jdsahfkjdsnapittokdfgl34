@@ -69,6 +69,9 @@
 			if($i['status']!=0)
 				$p_processed[$i['order_id']]=$b['p_invoice_no'];
 	}
+	
+	$partner_id=$tran['partner_id'];
+	
 ?>
 
 <div class="container transaction">
@@ -127,12 +130,12 @@ Prepaid Voucher used : <?=$c?>
 <h2 style="margin: 3px 0px;margin-bottom: 10px;">Order Transaction : <?=$tran['transid']?></h2>
 <div class="clear"></div>
 <table class="datagrid" width="100%">
-<thead><tr><th>Transaction ID</th><th>User</th><th>Mode</th><?php if($tran['is_pnh']){?> <th>Payment Days</th><th>Price Type</th> <?php } ?><th>Amount</th><th>Paid</th><th>Refund</th><th>Payment</th><th style="text-align:center">Status</th><th>Ordered On</th><th>Created By</th><th>Completed on</th></tr></thead>
+<thead><tr><th>Transaction ID</th><th>User</th><th>Billing Type</th><th>Mode</th><?php if($tran['is_pnh']){?> <th>Payment Days</th><th>Price Type</th> <?php } ?><th>Amount</th><th>Paid</th><th>Refund</th><th>Payment</th><th style="text-align:center">Status</th><th>Ordered On</th><th>Created By</th><th>Completed on</th></tr></thead>
 
 <tbody>
 <tr>
 <td><?=$tran['transid']?></td>
-<td width="300">
+<td width="250">
 <?php 
 $allotted_memids = array();
 foreach ($orders as $o){
@@ -164,6 +167,8 @@ $is_pnh = $tran['is_pnh'];
 
 <?php }?>
 </td>
+<?php $billing_type=$this->db->query("select billing_type from king_orders where transid=?",$transid)->row()->billing_type;?>
+<td width="200"><?php echo $billing_type==1?'<b>B2C</b>':'<b>B2B</b>';?>&nbsp;<?php echo $tran['is_consolidated_payment']==1?'<b>[is consolidated]</b>':'';?></td>
 <td><?php switch($tran['mode']){
 case 0:
 	echo 'PAYMENT GATEWAY';break;
@@ -203,8 +208,8 @@ default:
     }
 ?>
 		
-<!--<td>Rs <?=$tran['amount']?></td>-->
-<td>Rs <?=$paid?></td>
+<td>Rs <?=$tran['amount']?></td>
+<!--<td>Rs <?=$paid?></td>-->
 
 
 <td>Rs <?php //echo $tran['paid']?> <?=$paid?><?php if($tran['mode']==0){?><br><a style="font-size:70%" href="<?=site_url("admin/callcenter/trans/{$tran['transid']}")?>">check PG details</a><?php }?></td>
@@ -299,12 +304,14 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
 </form>
 </div>
 
- <?php
-	$offers_q = $this->db->query("select a.*,b.first_name,b.user_id from pnh_member_offers a 
+<?php
+	if($tran['is_pnh'])
+	{
+		$offers_q = $this->db->query("select a.*,b.first_name,b.user_id from pnh_member_offers a 
 										join pnh_member_info b on b.pnh_member_id=a.member_id 
 										where a.transid_ref=?",$order['transid']);// and a.offer_type not in (0,3) ;
-    if($offers_q->num_rows())
-    { ?>
+		if($offers_q->num_rows())
+		{ ?>
 <div style="margin:5px 0px;padding:5px;border:1px solid #f7f7f7;">
    
         <h4>Offers</h4>
@@ -337,8 +344,10 @@ Email : <input type="text" name="email" value="<?=$order['ship_email']?>" size=3
         </table>
 </div>
 <?php
-        } ?>
+        }
 
+	}
+?>
 </div>
 </td>
 <td width="10%" align="center">
@@ -676,7 +685,39 @@ $allow_qty_chng = 0;
 
         }
 ?>
-        <td><?php echo $insurance_amount; ?></td>    
+	<td>
+			<?php echo $insurance_amount; ?>
+			<!--Opt Insurance-->
+			<?php 
+			if($this->erpm->auth(true,true))
+			{
+			$ofr_det_res=$this->db->query("SELECT * FROM pnh_member_offers WHERE transid_ref=? AND order_id=?",array($transid,$o['id']));
+			if($ofr_det_res->num_rows()==0)
+			{
+				$itm_det=$this->db->query("SELECT di.*,d.menuid FROM king_dealitems di JOIN king_deals d ON d.dealid = di.dealid WHERE id=?",array($o['itemid']))->row_array();
+				
+				$offer_res=$this->db->query("SELECT COUNT(*) AS offers FROM pnh_member_offers mo
+													JOIN pnh_member_info mif ON mif.pnh_member_id=mo.member_id
+													WHERE mif.user_id=? AND mo.transid_ref!=?
+													GROUP BY mif.user_id",array($o['userid'],$transid));
+				$free_offer=1;
+				if($offer_res->num_rows())
+				{
+					$free_offer=0;
+				}
+				
+				if($itm_det['has_insurance']==1 && $o['status']==0)
+				{
+?>
+		
+					<br><a onclick="return fn_opt_insurance_for_deal(this);" o_qty="<?=$o['quantity']?>" pnh_id="" itemid="<?=$o['itemid']?>" order_id="<?=$o['id'];?>" o_price="<?=$o['i_price']?>" transid="<?=$transid;?>" franchise_id="<?=$tran['franchise_id'];?>" mid="<?=$o['member_id'];?>" userid="<?=$o['userid'];?>" pnh_member_fee="<?=$pnh_member_fee;?>" free_offer="<?=$free_offer;?>" class="button button-tiny button-rounded">Opt Insurance</a>
+<?php
+					}
+				}
+			}
+			?>
+			<!--Opt Insurance-->
+	</td>
 	<td class="nowrap">
 	<?php if($o['quantity']>1){?>Rs  <?=(($o['i_price']-$o['i_coup_discount']))?> x <?=$o['quantity']?><?php }?>
 	<div>Rs<?php if($is_prepaid){?> <?=(($o['i_price']-$o['i_coup_discount'])*$o['quantity']);}else{?> <?=(($o['i_orgprice']-($o['i_discount']+$o['i_coup_discount']))*$o['quantity']);}?></div>
@@ -686,10 +727,19 @@ $allow_qty_chng = 0;
 	<td>
 		<?php foreach($prods as $p)
 		{
+			$join_cond='';
+			$cond=" AND b.is_damaged!=1 ";
+			if($partner_id==7)
+			{
+				$join_cond.=" LEFT JOIN partner_info pt ON pt.partner_rackbinid=a.rack_bin_id AND pt.partner_rackbinid!=0 ";
+				$cond.=" AND pt.id=".$partner_id;
+			}
+			
 			 $s=$this->db->query("select sum(available_qty) as s 
 							from t_stock_info a 
 							join m_rack_bin_info b on a.location_id = b.location_id and a.rack_bin_id = b.id 
-							where product_id = ? and b.is_damaged!=1",$p)->row()->s; 
+							$join_cond
+							where product_id = ? $cond ",$p)->row()->s;
 			if(!$s) $s=0;?>
 				<div align="center">
 					<span><?=$s?></span>
@@ -723,6 +773,7 @@ $allow_qty_chng = 0;
 	{
 		$alloted_imei_det = $this->db->query("select * from t_imei_no where order_id = ? ", $o['id'])->row_array();
 	}
+	
 	if($non_sk_imei_res->num_rows())
 	{
 		$non_sk_imei_res=$non_sk_imei_res->row_array();
@@ -978,7 +1029,7 @@ $allow_qty_chng = 0;
 <div class="clear">
 <h4 style="padding-top:10px;">Commission details</h4>
 <table class="datagrid">
-<thead><Tr><th>Sno</th><th width="250">Product Name</th><th>MRP</th><th><?php echo $fran_price_type;?></th><th>Menu Margin (A)</th><th>Scheme discount (B)</th><th>IMEI Margin (C)</th><th>Balance Discount (D)</th><th>Voucher Margin (E)</th><th width="100">Total Discount (A+B+C+D+E)</th><th>Unit Price</th><th>Order Qty</th><th>Order price</th><th>Redeem value</th></Tr></thead>
+<thead><Tr><th>Sno</th><th width="250">Product Name</th><th>MRP</th><th><?php echo $fran_price_type;?></th><th>Menu Discount (A)</th><th>Scheme discount (B)</th><th>IMEI Discount (C)</th><th>Balance Discount (D)</th><th>Voucher Discount (E)</th><th width="100">Total Discount (A+B+C+D+E)</th><th>Unit Price</th><th>Order Qty</th><th>Order price</th><th>Redeem value</th></Tr></thead>
 <tbody>
 <?php $i=1; foreach($this->db->query("SELECT p.*,i.name,o.imei_reimbursement_value_perunit,o.i_orgprice AS mrp,o.i_price AS price,c.loyality_pntvalue,o.redeem_value,i_coup_discount
 										FROM pnh_order_margin_track AS p 
@@ -1179,4 +1230,287 @@ background-color: orange !important;
 }
 /*================< INSURANCE RELATED STYLES >========================*/
 </style>
+<!--Insurance related code changes-->
+				<style>
+					/************************ Insurance details form css ***********************************/
+					.ui-widget {
+						font-family: arial;
+					}
+					#insurance_option span
+					{
+						margin-top:5px;
+					}
+					.form_label_wrap
+					{
+						float: left;
+						font-size: 13px;
+						font-weight: bold;
+						height: 30px;
+						text-align: right;
+						width: 30%;
+					}
+					.form_input_wrap
+					{
+						float: right;
+						text-align: left;
+						width: 70%;
+						height: 30px;
+						font-size: 11px;
+						font-weight: bold;
+					}
+					.form_input_wrap .max_width
+					{
+						width:40% !important;
+					}
+					.block-name {
+					padding: 4px 5px;
+					background-color: aliceblue;
+					text-align: center;
+					}
+					.clear {
+						list-style: none;
+						clear: both;
+						float: none !important;
+					}
+					/*.notification_blk {
+						display:none;float:right;padding:4px;margin-top:23px;background: #f1f1f1;font-size: 16px;
+					}
+					.hide { display:none; }
+					textarea,input { padding: 2px 4px; }
+					.process_status {
+						margin:20px;
+					}*/
+				</style>
+				<div  style="display:none;">
+					<div id="dlg_update_member_insurance_details">
+						<h4 style="background-color:#F6F6F6;padding:5px;text-align:center;">Member Insurance Details</h4>
+						<!--<div id="insurance_option" title="Member Insurance Details" >-->
+								<div id="crdet_insurance_blk insurance_option" title="Member Insurance Details">
+
+									<div id="member_info_bloc">
+											<form id="crdet_insurance" data-validate="parsley" method="post">
+													<span class="form_label_wrap">Itemid:</span>
+													<span class="form_input_wrap"><input class="max_width" type="text" name="itemid" id="itemid" value="" max-width="12" data-required="true" readonly="true"></span>
+													
+													<span class="form_label_wrap">OrderID:</span>
+													<span class="form_input_wrap"><input class="max_width" type="text" name="order_id" id="order_id" value="" max-width="12" data-required="true" readonly="true"></span>
+													
+													<span class="form_label_wrap">Order Qty:</span>
+													<span class="form_input_wrap"><input class="max_width" type="text" name="o_qty" id="o_qty" value="" max-width="5" data-required="true" readonly="true"></span>
+													
+													<span class="form_label_wrap">Order Price:</span>
+													<span class="form_input_wrap"><input class="max_width" type="text" name="o_price" id="o_price" value="" max-width="5" data-required="true" readonly="true"></span>
+													
+													<input class="max_width" type="hidden" name="transid" id="transid" value="" max-width="12" data-required="true">
+													<input class="max_width" type="hidden" name="userid" id="userid" value="" max-width="12" data-required="true">
+													<input class="max_width" type="hidden" name="member_id" id="member_id" value="" max-width="12" data-required="true">
+													<input class="max_width" type="hidden" name="franchise_id" id="franchise_id" value="" max-width="12" data-required="true">
+													<input class="max_width" type="hidden" name="pnh_member_fee" id="pnh_member_fee" value="" max-width="12" data-required="true">
+													<input class="max_width" type="hidden" name="free_offer" id="free_offer" value="" max-width="12" data-required="true">
+													<!-- ===================< Member Details >==================== -->
+													<div class="clear block-name">Member Details</div>
+
+													<span class="form_label_wrap">Mobile <b class="red_star">*</b>: </span>
+													<span class="form_input_wrap"><input class="max_width" type="text" name="membermob" id="membermob" value="" maxlength="10" data-required="true"></span>
+
+													<span class="form_label_wrap">First Name :</span>
+													<span class="form_input_wrap">
+														<input class="max_width" type="text" name="memberfname" id="memberfname" value="" data-required="true">
+													</span>
+
+													<span class="form_label_wrap">Last Name :</span>
+													<span class="form_input_wrap"><input class="max_width" type="text" name="i_memberlname" id="i_memberlname" value="" ></span>
+
+
+													<!-- ===================< Insurance Details >==================== -->
+													<div class="clear block-name">Insurance Details</div>
+
+													<span class="form_label_wrap">Proof Type :</span>
+													<span class="form_input_wrap">
+															<select name="crd_insurence_type" class="max_width" id="crd_insurence_type">
+																		<option value="">Select</option>
+																		<?php $insurance_types=$this->db->query("select * from insurance_m_types order by name asc")->result_array();
+																				if($insurance_types){
+																				foreach($insurance_types as $i_type){
+																		?>
+																				<option value="<?php echo $i_type['id']?>"><?php echo $i_type['name']?></option>
+																		<?php }}?>
+																		<option value="others">Others</option>
+															</select>
+													</span>
+													<span class="othrs_proofname form_label_wrap">Proof Name <b class="red_star">*</b>:</span>
+													<span class="othrs_proofname form_input_wrap"><input class="max_width" type="text" name="proof_name" id="proof_name" value=""></span>
+
+													<span class="form_label_wrap">Proof Id :</span>
+													<span class="form_input_wrap"><input class="max_width" type="text" name="proof_id" id="proof_id" value=""></span>
+
+													<span class="form_label_wrap" style="height:63px !important">Proof Address :</span>
+													<span class="form_input_wrap" style="height:63px !important"><textarea class="max_width" name="crd_insurance_mem_address" id="crd_insurance_mem_address"></textarea></span>
+
+													<span class="form_label_wrap">City  :</span>
+													<span class="form_input_wrap"><input class="max_width" type="text" name="i_member_city" id="i_member_city" value=""></span>
+
+													<span class="form_label_wrap">PinCode :</span>
+													<span class="form_input_wrap"><input class="max_width" type="text" name="i_member_pcode" id="i_member_pcode" value=""></span>
+
+													<span class="form_label_wrap">Retailer Invoice No. :</span>
+													<span class="form_input_wrap"><input class="max_width" type="text" name="i_member_receipt_no" id="i_member_receipt_no" value=""></span>
+
+													<span class="form_label_wrap">Retailer Invoice Amount :</span>
+													<span class="form_input_wrap"><input class="max_width" type="text" name="i_member_receipt_amount" id="i_member_receipt_amount" value=""></span>
+
+													<span class="form_label_wrap">Retailer Invoice Date :</span>
+													<span class="form_input_wrap"><input class="max_width" type="text" name="i_member_receipt_date" id="i_member_receipt_date" value=""></span>
+
+													<span class="form_label_wrap confirm_feedback"></span>
+
+											</form>
+									</div>
+							</div>
+						<!--</div>-->
+					</div>
+				</div>
+			<script>
+			$("#dlg_update_member_insurance_details").dialog({
+				modal:true
+				,autoOpen:false
+				,height:"auto"
+				,width:700
+				,open:function(event,i) {
+						var dlg=$(this);
+						var det = dlg.data("det");
+						
+						$("#transid",dlg).val(det.transid);
+						$("#itemid",dlg).val(det.itemid);
+						$("#order_id",dlg).val(det.order_id);
+						$("#o_qty",dlg).val(det.o_qty);
+						$("#o_price",dlg).val(det.o_price);
+						
+						$("#userid",dlg).val(det.userid);
+						$("#franchise_id",dlg).val(det.franchise_id);
+						$("#pnh_member_fee",dlg).val(det.pnh_member_fee);
+						$("#free_offer",dlg).val(det.free_offer);
+						
+						$.post(site_url+"/admin/jx_get_member_det",{mid:det.mid,userid:det.userid},function(mem) {
+							if(mem.status=='success')
+							{
+								var mdet=mem.i_memdet;
+								$("#member_id",dlg).val(mdet.pnh_member_id);
+								$("#membermob",dlg).val(mdet.mobile);
+								$("#memberfname",dlg).val(mdet.first_name);
+								$("#i_memberlname",dlg).val(mdet.last_name);
+								$("#i_member_city",dlg).val(mdet.city);
+								$("#i_member_pcode",dlg).val(mdet.pincode);
+								$("#crd_insurance_mem_address",dlg).val(mdet.address);
+							}
+							else
+							{
+								alert("Error: "+mem.message);
+								return false;
+							}
+						},'json');
+				}
+				,buttons:{
+						Submit:function(e,j) {
+							var dlg=$(this);
+							var can_edit = dlg.data("can_edit");
+							if(can_edit == 0)
+							{
+								alert("The offers already processed, You cant update insurance details now.");
+								return false;
+							}
+							var mob_no = $("#membermob",dlg).val();
+
+							if( mob_no == '' )
+							{
+								alert("Mobile Number is required.");
+								return false;
+							}
+							if( isNaN(mob_no) )
+							{
+								alert("Invalid mobile number");
+								return false;
+							}
+							if($("#crd_insurence_type",dlg).val()!='')
+							{
+								if($("#proof_id",dlg).val()=='')
+								{
+									alert("Please specify proof id");
+									return false;
+								}
+							}
+							if($("#crd_insurence_type",dlg).val()=='others')
+							{
+								if($("#proof_name",dlg).val()=='') {
+									alert("Please specify proof name");
+									return false;
+								}
+							}
+							
+							//post form input
+							$.post(site_url+"/admin/jx_create_insurance_det",$("#crdet_insurance").serialize(),function(resp) {
+								if(resp.status == 'success')
+								{
+									alert(resp.message);
+									dlg.dialog("close");
+									//load_contents(); //
+									location.href=$(location).attr("href");
+								}
+								else
+								{
+									alert(resp.message);
+								}
+							},'json');
+						}
+						,Cancel:function(d,k) {
+							$(this).dialog("close");
+						}
+				}
+				,title: "Update member insurance details"
+					
+			});
+			function fn_opt_insurance_for_deal(elt)
+			{
+				if(confirm("Do you want to opt insurance for this deal?"))
+				{
+					var e=$(elt);
+					var can_edit=1;
+					var det={};
+					det['mid']=e.attr('mid');
+					det['userid']=e.attr('userid');
+					det['franchise_id']=e.attr('franchise_id');
+					det['transid']=e.attr('transid');
+					det['itemid']=e.attr('itemid');
+					det['order_id']=e.attr('order_id');
+					det['o_qty']=e.attr('o_qty');
+					det['o_price']=e.attr('o_price');
+					det['pnh_member_fee']=e.attr('pnh_member_fee');
+					det['free_offer']=e.attr('free_offer');
+					
+					$("#dlg_update_member_insurance_details").data({"can_edit":can_edit,det:det}).dialog("open");
+				}
+				return false;
+			}
+			$(window).on("resize scroll",function() {
+				$("#dlg_update_member_insurance_details").dialog("option","position",["center","center"]); 
+			});
+
+			//===================< OTHER TYPE OF PROOF NAME >=======================================
+			$('.othrs_proofname').hide();
+			$("#crd_insurence_type").live('change',function(){
+				if($(this).val()=='others')
+				{
+					$('.othrs_proofname').show();
+				}
+				else
+				{
+					$('.othrs_proofname').hide();
+				}
+			});
+			//===================< END OTHER TYPE OF PROOF NAME >=======================================
+			$("#i_member_receipt_date").datepicker();
+			</script>
+			
+			<!--End Opt Insurance changes-->
+			
 <?php

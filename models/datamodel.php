@@ -1,5 +1,4 @@
 <?php
-
 class Datamodel extends Model
 {
 	protected $get_params=array("type"=>"json","access_token"=>"","lock"=>"","key"=>"");
@@ -247,6 +246,44 @@ class Datamodel extends Model
 		$l=200;
 		
 		return $this->output_deals($this->db->query("select pnh_id as pid,i.gender_attr,i.id as itemid,i.name,d.tagline,c.name as category,m.name as menu,d.menuid as menu_id,d.catid as category_id,mc.name as main_category,c.type as main_category_id,b.name as brand,d.brandid as brand_id,i.orgprice as mrp,i.price as price,i.store_price,i.is_combo,concat('".IMAGES_URL."items/',d.pic,'.jpg') as image_url,d.description,i.shipsin as ships_in,d.keywords from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join pnh_menu m on m.id=d.menuid left outer join king_categories mc on mc.id=c.type where d.publish=1 and is_pnh=1 and d.menuid in (".implode(",",$ques).") order by d.sno asc limit ".(($page-1)*$l).", $l",$catids)->result_array());
+	}
+	
+	function getnewdealsbymenu()
+	{
+		
+		//$this->auth_token();
+		if(!isset($this->uris[3]))
+			return array("error"=>"Required menu_id is missing");
+		
+		$store_id = $this->uris[3];
+		$version_id = $this->uris[4];
+		$menuids=$this->uris[5];
+		
+		$uris = $this->uris;
+		
+		$res = $this->db->query("select a.id as itemid,if(ifnull(c.id,0),0,1) as is_new
+		from king_dealitems a
+		join king_deals b on a.dealid = b.dealid
+		left join m_apk_version_deal_link c on c.item_id = a.id and version_id = (select id from m_apk_version where version = ? )
+		join m_apk_store_menu_link d on d.menu_id = b.menuid
+		where publish = 1 and store_id = ? and b.menuid in (".$menuids.")
+		having is_new = 1 ",array($version_id,$store_id));
+		
+		$itemids = array(9999999999999);
+		if($res->num_rows())
+		{
+			foreach($res->result_array() as $row)
+			{
+				$itemids[] = $row['itemid'];
+			}
+		}
+		
+		$page = isset($uris[6])?$uris[6]:1;
+		
+		$l=200;
+		
+		return $this->output_deals($this->db->query("select pnh_id as pid,i.gender_attr,i.id as itemid,i.name,d.tagline,c.name as category,m.name as menu,d.menuid as menu_id,d.catid as category_id,mc.name as main_category,c.type as main_category_id,b.name as brand,d.brandid as brand_id,i.orgprice as mrp,i.price as price,i.store_price,i.is_combo,concat('".IMAGES_URL."items/',d.pic,'.jpg') as image_url,d.description,i.shipsin as ships_in,d.keywords from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid left outer join pnh_menu m on m.id=d.menuid left outer join king_categories mc on mc.id=c.type where d.publish=1 and is_pnh=1 and i.id in (".implode(",",$itemids).") order by d.sno asc limit ".(($page-1)*$l).", $l")->result_array());
+		
 	}
 	
 	function getdeal()
@@ -582,6 +619,9 @@ class Datamodel extends Model
 				break;
 			case 'getdealsbymenu':
 				$data=$this->dpm->getdealsbymenu();
+				break;
+			case 'getnewdealsbymenu':
+				$data=$this->dpm->getnewdealsbymenu();
 				break;
 			case 'get_pnh_deals_mrp_change_log' :
 				$data=$this->dpm->get_pnh_deals_mrp_change_log();

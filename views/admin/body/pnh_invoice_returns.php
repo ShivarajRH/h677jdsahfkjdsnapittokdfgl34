@@ -1,5 +1,6 @@
 <?php
 	$return_request_cond = $this->config->item('return_request_cond');
+
 ?>
 <div class="container page_wrap">
 	<div class="clearboth">
@@ -83,6 +84,7 @@
 	</div>
 	
 </div>
+
 <style>
 	.leftcont{display: none;}
 	.pagination a{background: #B6AD9E;

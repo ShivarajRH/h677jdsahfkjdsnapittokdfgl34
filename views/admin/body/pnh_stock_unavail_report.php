@@ -2,7 +2,7 @@
 .filter_blk
 {
 	display: inline-block;
-    width: 28%;
+    width: 16%;
 }	
 .filter_blk b
 {
@@ -11,7 +11,7 @@
 
 .order_summ
 {
-	margin:10px 0;
+	margin:19px 0;
 }
 .toggle_act
 {
@@ -27,26 +27,94 @@
 {
 	cursor:pointer;
 }
+.stk
+{
+	cursor:pointer;
+}
+.stk_sugg_blk
+{
+	font-size:9px;
+}
+.selected
+{
+	color:green !important;
+	font-weight:bold;
+}
+.deal_det_blk div
+{
+	margin: 3% 0;
+}
+.deal_det_blk a
+{
+	font-weight: bold;
+}
+.deal_det_blk .deals_sel
+{
+	margin:2%;
+}
+.highlight_row
+{
+	background:#ff9600
+}
+.toggle_date_exceed
+{
+	float: right;
+    margin-right: 12px;
+    margin-top: 4px;
+    cursor:pointer;
+}
 </style>
 <div class="container">
-	<h2>StoreKing Stock Unavailable report </h2>
+	<h2>Stock Unavailable report </h2>
 	<div>
 		<form action="<?php echo site_url('admin/pnh_stock_unavail_report');?>" id="gen_pnh_unavail_report_frm" method="post">
 			<div class="filter_blk">
 					<b>Orders :</b>
-					<select name="date_type" class="chzn-select" data-placeholder="Choose" style="width:250px;"  >
+					<select name="date_type" class="chzn-select" data-placeholder="Choose" style="width:130px;"  >
 						<option value="0">Till Date</option>
 						<option value="1">Date Range</option>
 					</select>
 			</div>
 			<div class="filter_blk">
 					<b>Territory :</b>
-					<select class="chzn-select" data-placeholder="Choose"  name="tids[]" style="width:250px;" >
+					<select class="chzn-select" data-placeholder="Choose"  name="tids[]" style="width:130px;" >
 					</select>
 			</div>
 			<div class="filter_blk">
 					<b>menu :</b>
-					<select class="chzn-select" data-placeholder="Choose"  name="mids[]" style="width:250px;" >
+					<select class="chzn-select" data-placeholder="Choose"  name="mids[]" style="width:130px;" >
+					</select>
+			</div>
+			<div class="filter_blk">
+					<b>Type :</b>
+					<select class="chzn-select" data-placeholder="Choose"  name="menu_type" style="width:130px;" >
+						<option value="-1">All</option>
+						<option value="1">SK</option>
+						<option value="0">SIT</option>
+					</select>
+			</div>
+			<div class="filter_blk">
+					<b>Publish :</b>
+					<select class="chzn-select" data-placeholder="Choose"  name="publish_type" style="width:130px;" >
+						<option value="-1">All</option>
+						<option value="1">Publish</option>
+						<option value="0">Un Publish</option>
+					</select>
+			</div>
+			<!--
+			<div class="filter_blk">
+					<b>Show :</b>
+					<select class="chzn-select" data-placeholder="Choose" name="ship_date_filter" style="width:130px;" >
+						<option value='1'>All Products</option>
+						<option value='2'>Shipment Date Exceed Products</option>
+					</select>
+			</div>-->
+			<div class="filter_blk">
+					<b>Show :</b>
+					<select class="chzn-select" data-placeholder="Choose" name="sourceable" style="width:130px;" >
+						<option value='all'>All</option>
+						<option value='1'>Sourceable</option>
+						<option value='0'>Not Sourceable</option>
 					</select>
 			</div>
 			<div id="ordersby_daterange" class="" style="display: none">
@@ -56,7 +124,7 @@
 			</div>
 			<input type="submit" class="button button-default button-action button-tiny btn-submit" value="Submit" style="display:none"/>
 			<!-- Place Purchase button Order for less Stock Products -->
-			<div class="button button-action button-tiny btn-submit place_po ">Place PO</div>
+			
 		</form>
 		<form id="place_po_form" action="<?=site_url("admin/po_product_bytopsold")?>" method="post">
 			<input type="hidden" name="po_arr" class="prd_arr" value="">
@@ -64,28 +132,23 @@
 		<div id="pnh_unavail_prod_list">
 			<div class="order_summ">
 				<span>Total Products: <b>0</b></span>
-				<div class="fl_right">
-					Sourceable : 
-					<select name="sourceable">
-						<option value='all'>All</option>
-						<option value='1'>Sourceable</option>
-						<option value='0'>Not Sourceable</option>
-					</select>
-				</div>
+				<div class="button button-action button-tiny btn-submit place_po ">Place PO</div>
 				<span class="toggle_act">OpenAll</span>		
+				<a class="toggle_date_exceed toggle_date_exceed_show">Show Ship date exceed products</a>	
 			</div>
 			<table class="datagrid" width="100%" cellpadding="0" cellspacing="0">
 				<thead>
 					<th width="20"><b>#</b></th>
 					<!--<th width="100"><b>Brand</b></th>-->
 					<th ><b>Product</b></th>
-					<th width="90" style="text-align: center"><b>Status</b></th>
-					<th width="50"><b>Offer Price</b></th>
-					<th width="50"><b>Member Price</b></th>
-					<th width="50"><b>Order</b></th>
-					<th width="50"><b>Stock</b></th>
+					<th width="70" style="text-align: center"><b>Offer Price</b></th>
+					<th width="50" style="text-align: center"><b>Member Price</b></th>
+					<th width="50" style="text-align: right"><b>Order</b></th>
+					<th width="50" style="text-align: right"><b>Stock</b></th>
 					<th width="50"><b>Required</b></th>
-					<th width="50" style="text-align: center"><b>PO's</b><br  /><span >Select All<input type="checkbox" class="all"></span></th>
+					<th width="90" style="text-align: center"><b>Status</b></th>
+					<th width="30" style="text-align: center"><b>Deal</b></th>
+					<th width="30" style="text-align: center"><b>PO's</b><br  /><span ><input type="checkbox" class="all"></span></th>
 				</thead>
 				<tbody>
 					
@@ -95,18 +158,21 @@
 		</div>
 		<!-- Place Purchase button Order for less Stock Products -->
 		<div class="button button-action button-tiny btn-submit place_po ">Place PO</div>
+		
+		<!-- PO placing product list modal ------>
 		<div id="place_po_dlg" title="Place Po">
 			<h5>Total of  <span id="prd_ttl"></span> Products selected</h5>
 			<div class="place_po_blk"></div>
-			<!--
-			<div class="fl_left" style="margin-top:15px"><b>Choose Vendor :</b> 
-				<select name="cat" id="sel_vendor">
-					<option value="0">Choose</option>
-					<?php foreach($vendors as $v) { ?>
-						<option value="<?=$v['vendor_id']?>"><?=$v['vendor_name']?></option>
-					<?php } ?>
-					</select>
-			</div>-->
+		</div>
+		
+		<!-- Update Deal status modal ------>
+		<div id="deal_det_dlg" title="Change Deal Status">
+			<div class="deal_det_blk"></div>
+		</div>
+		
+		<!-- Update Expected date modal ------>
+		<div id="exp_shipdate_dlg" title="Update Shipment Date">
+			<div class="ship_blk"></div>
 		</div>
 		
 		<!-- Modal for PO products selected display-->
@@ -150,6 +216,11 @@
 </style>
 
 <script type="text/javascript">
+
+$(function(){
+	
+});
+
 function load_all_franchises(){
 	$('select[name="tids[]"] option').each(function(){
 		$(this).attr('selected','selected');
@@ -230,6 +301,8 @@ function get_franchise_level(d)
 		return '<span style="font-size: 9px;background-color:green;color:#fff;padding:2px 3px;border-radius:3px;">Experienced</span>';
 }
 
+var tesp_data=new Array();
+
 function hndl_pnh_unvail_prod_report_frm()
 {
 	
@@ -254,9 +327,9 @@ function hndl_pnh_unvail_prod_report_frm()
 				$('.order_summ b').html(resp.total);
 				
 				var tbl_html = '';
-				
+				tesp_data=resp.data;
 					$.each(resp.data,function(i,d){
-						tbl_html += '<tr class="avail_report" sourceable="'+d.is_sourceable+'">';
+						tbl_html += '<tr class="avail_report avl_report_'+d.product_id+'" pid="'+d.product_id+'" sourceable="'+d.is_sourceable+'" exp_date="'+d.expected_ship_date+'" curr_date="'+resp.curr_date+'">';
 						tbl_html += '<td>'+((resp.pg*1)+i+1)+'</td>';
 						
 						//d.fran_order_det = 'A:2013-04-16:1:2452345235,B:2013-04-16:1:2452345235,C:2013-04-16:1:2452345235';
@@ -266,6 +339,15 @@ function hndl_pnh_unvail_prod_report_frm()
 						var fran_order_det_html = '<table width="100%" class="subdatagrid" cellpadding=0 cellspacing=0>';
 						var fr_order_list_sorted = new Array();
 							
+							fran_order_det_html += '<tr>';
+							fran_order_det_html += '	<td style="font-weight:bold">Level</td>';
+							fran_order_det_html += '	<td style="font-weight:bold">Name</td>';
+							fran_order_det_html += '	<td style="font-weight:bold">Town</td>';
+							fran_order_det_html += '	<td style="font-weight:bold">Order Date</td>';
+							fran_order_det_html += '	<td style="font-weight:bold">Qty</td>';
+							fran_order_det_html += '	<td style="font-weight:bold">TransID</td>';
+							fran_order_det_html += '	<td style="font-weight:bold;font-size:10px" width="150px">Shipment date expected</td>';
+							fran_order_det_html += '</tr>';
 							
 							$.each(fr_order_list,function(a,b){
 								var c = b.split(':');
@@ -276,7 +358,10 @@ function hndl_pnh_unvail_prod_report_frm()
 								fran_order_det_html += '	<td width="100">'+fmt_date_slash(new Date(c[1]*1000))+'</td>';
 								fran_order_det_html += '	<td width="30">'+c[5]+'</td>';
 								fran_order_det_html += '	<td width="100"><a href="'+site_url+'/admin/trans/'+c[0]+'">'+c[0]+'</a></td>';
-								
+								if(c[8]==0)
+									fran_order_det_html += '	<td><div class="exp_'+c[2]+'" style="color:red"><input type="checkbox" class="update_shipdate_status"  transid="'+c[0]+'" product_id="'+d.product_id+'" orderid="'+c[2]+'"></div></td>';
+								else
+									fran_order_det_html += '	<td><span style="color:red">'+c[8]+'</span></td>';
 								/*if(c[7] != 0)
 								{
 									fran_order_det_html += '	<td width="10">'+(parseInt(c[6])?'<a href="'+site_url+'/admin/viewpo/'+parseInt(c[7])+'" target="_blank">PO'+c[7]+'</a>':'&nbsp;')+'</td>';
@@ -294,25 +379,40 @@ function hndl_pnh_unvail_prod_report_frm()
 						
 						tbl_html += '<td class="row_click" pid="'+d.product_id+'"><a target="_blank" href="'+site_url+'/admin/product/'+d.product_id+'"><b>'+d.product_name+'</b></a>'; 
 						tbl_html += '<span><a href="javascript:void(0)" id="prod_ord_det_'+d.product_id+'" class="prod_ord_det plus">&plus;</a></span><div class="tbl_subgrid_content">'+fran_order_det_html+'</div></td>';
+						
+						tbl_html += '<td align="center"><b>'+d.dp_prc+'<b></td>';
+						tbl_html += '<td align="center"><b>'+d.member_price+'<b></td>';
+						tbl_html += '<td align="right"><b>'+pqty+'<b></td>';
+						tbl_html += '<td align="right"><b><span class="stk stock_'+d.product_id+'" product_id="'+d.product_id+'" style="color:blue;text-decoration:underline">'+d.avail_qty+'<b></span><div class="stk_sugg_blk stock_suggestion_'+d.product_id+'"></div></td>';
+						tbl_html += '<td align="right"><b>'+(pqty-d.avail_qty)+'<b></td>';
 						if(d.is_sourceable == 1)
 							d.is_sourceable='<span style="color:green;text-align:right;">Sourceable</span>';
 						else
 							d.is_sourceable='<span style="color:red;text-align:right;">Not Sourceable</span>';	
 						tbl_html += '<td align="right"><b>'+d.is_sourceable+'<b></td>';
 						
-						tbl_html += '<td align="right"><b>'+d.dp_prc+'<b></td>';
-						tbl_html += '<td align="right"><b>'+d.member_price+'<b></td>';
-						tbl_html += '<td align="right"><b>'+pqty+'<b></td>';
-						tbl_html += '<td align="right"><b>'+d.avail_qty+'<b></td>';
-						tbl_html += '<td align="right"><b>'+(pqty-d.avail_qty)+'<b></td>';
+						tbl_html += '<td align="center"><input type="checkbox" class="change_deal_status" onclick="change_deal_status('+d.product_id+')" product_id="'+d.product_id+'"></td>';
+						
+						
+						//<a target="_blank" href="'+site_url+'/admin/pnh_deal/'+d.itemid+'">'+d.deal_name+'</a>
+						/*
 						if(d.po_id != 0)
 						{
 							//tbl_html += '	<td align="right">'+d.po_id+'</td>';
-							tbl_html += '	<td align="right" width="80><span style="color:green;font-weight:bold"><a href="javascript:void(0)" onclick="load_openpolist('+d.product_id+')" >PO details</a></span></td>';
+							tbl_html += '	<td align="right" width="80><span style="color:green;font-weight:bold"><a href="javascript:void(0)" onclick="load_openpolist('+d.product_id+')" >PO details</a><input type="checkbox" class="sel_prd" pid="'+d.product_id+'" pname="'+d.product_name+'"></span></td>';
 						}
 						else
 						{
 							tbl_html += '	<td align="right" style="color:red" width="80">No PO <input type="checkbox" class="sel_prd" pid="'+d.product_id+'" pname="'+d.product_name+'"></td>';
+						}*/
+						//tbl_html += '	<td align="right" width="80><span style="color:green;font-weight:bold"><a href="javascript:void(0)" onclick="load_openpolist('+d.product_id+')" >PO details</a><input type="checkbox" class="sel_prd" pid="'+d.product_id+'" pname="'+d.product_name+'"></span></td>';
+						if(d.po_qty!=0)
+						{
+							tbl_html += '	<td align="center" width="80"><span style="color:black;font-size:10px;font-weight:bold"><a href="javascript:void(0)" onclick="load_openpolist('+d.product_id+')" style="color:blue;font-size:12px !important;font-weight:bold;text-decoration:underline">'+d.po_qty+' </a></span></td>';
+						}
+						else
+						{
+							tbl_html += '	<td align="center" style="color:red" width="80"><input type="checkbox" class="sel_prd" pid="'+d.product_id+'" pname="'+d.product_name+'"></td>';
 						}
 						tbl_html += '</tr>';
 					});
@@ -323,6 +423,42 @@ function hndl_pnh_unvail_prod_report_frm()
 		},'json');
 	return false;
 }
+
+function show_filter_products()
+{
+	$('.avail_report').each(function(){
+		var curr_date=$(this).attr('curr_date');
+		var exp_date=$(this).attr('exp_date');
+		var pid=$(this).attr('pid');	
+			exp_date_arr=new Array();
+			exp_date_arr=exp_date.split(",");	
+			$.each(exp_date_arr,function(i,e){
+				if(e<curr_date && e!=0) 
+				{
+					//alert('1');
+					$('.avl_report_'+pid).addClass('highlight_row');
+				}
+			});
+		});
+}
+
+$('.stk').live('click',function(){
+	var product_id=$(this).attr('product_id');
+	$('.stock_suggestion_'+product_id).html("Loading.....");
+	$.post(site_url+'/admin/jx_stock_suggestion/'+product_id,{},function(resp){
+		var html='';
+		if(resp.status=='error')
+		{
+			html+='No Stock';
+		}else
+		{
+			$.each(resp.prd_stk_det,function(i,p){
+				html+='<div>'+p.rack_name+'-'+p.bin_name+' : <span style="color:red">'+ p.stock+'</span></div>';
+			});
+		}
+		$('.stock_suggestion_'+product_id).html(html);
+	},'json');
+});
 
 $('.prod_ord_det').live('click',function(e){
 	e.preventDefault();
@@ -353,6 +489,35 @@ $('.toggle_act').live('click',function(e){
 	}
 });
  
+$('.toggle_date_exceed').live('click',function(){
+	if($('.toggle_date_exceed').hasClass('toggle_date_exceed_show'))
+	{
+		show_filter_products();
+		$('.toggle_date_exceed').addClass('toggle_date_exceed_hide').removeClass('toggle_date_exceed_show').text('Hide Ship date exceed products');
+	}
+	else
+	{
+		$('.avail_report').removeClass('highlight_row');
+		$('.toggle_date_exceed').addClass('toggle_date_exceed_show').removeClass('toggle_date_exceed_hide').text('Show Ship date exceed products');
+	}
+});
+
+$('.toggle_ship').live('click',function(e){
+	
+	var text=$(this).text();
+	if(text=='OpenAll')
+	{
+		$('.toggle_act').text('Collapse');
+		$('.prod_ord_det').addClass('minus').removeClass('plus').html('&minus;');
+		$('.prod_ord_det').parent().parent().find('.tbl_subgrid_content').show();
+	}else if(text=='Collapse')
+	{
+		$('.toggle_act').text('OpenAll');
+		$('.prod_ord_det').removeClass('minus').addClass('plus').html('&plus;');
+		$('.prod_ord_det').parent().parent().find('.tbl_subgrid_content').hide();
+	}
+});
+ 
 $('#gen_pnh_unavail_report_frm').submit(function(){
 	reset_form_action()
 	return false;
@@ -368,11 +533,180 @@ $('.row_click').live('click',function(){
 		//$('#prod_ord_det_'+sel_pid).trigger('click'); 
 });
 
+//Function to change deal status
+function change_deal_status(product_id)
+{
+	if($('.change_deal_status:checked').length)
+	{
+		$('#deal_det_dlg').data('product_id',product_id).dialog('open');
+	}
+}
+
+//Function to update Expected date of shipment
+$('.update_shipdate_status').live('click',function(){
+	
+	if($('.update_shipdate_status:checked').length)
+	{
+		var product_id=$(this).attr('product_id');
+		var transid=$(this).attr('transid');
+		var orderid=$(this).attr('orderid');
+		
+		$('#exp_shipdate_dlg').data("pro_data",{'product_id': product_id,'transid': transid,'order_id':orderid}).dialog('open');
+		$('.exp_date').addClass('exp_date_'+orderid);
+		$('.exp_date_'+orderid).datepicker();//{minDate: new Date()}
+		//$('.exp_date_'+orderid).removeClass('hasdatepicker');
+		$('.ui-datepicker').hide();
+	}
+	
+});
+
+
+
+//Dialog to change deals status for a product
+$('#deal_det_dlg').dialog({
+		modal:true,
+		autoOpen:false,
+		width:500,
+		height:450,
+		autoResize:true,
+		open:function(){
+		//$('.ui-dialog-buttonpane').find('button:contains("Update")').addClass('placeorder_btn');
+		var k=0;
+		var pid=$(this).data('product_id');
+		var html = '';
+		
+		$.post(site_url+'/admin/jx_dealsbyproduct_id/'+pid,{},function(resp){
+			
+			$.each(resp.deal_stk_det,function(i,d){
+				html+= '<div>'+(++i)+' . <a href="'+site_url+'/admin/pnh_deal/'+d.id+'" class="prd_deal_'+d.id+'">'+d.name+'</a>';
+				html+= '<input type="checkbox" class="deals_sel" product_id="'+pid+'" dealid="'+d.dealid+'"  itemid="'+d.id+'"></div>';
+			});
+			
+			$('#deal_det_dlg .deal_det_blk').html(html);
+			
+		},'json');
+	},
+	buttons:{
+		
+		'Publish':function(){
+			var d_arr=[];
+			$('.deals_sel:checked').each(function(){
+				var dealids=$(this).attr('dealid');
+				d_arr.push(dealids);
+			});
+			d_arr=d_arr.join(",");
+			act=1;//Publish
+			$.post(site_url+'/admin/jx_change_deal_status',{dealids:d_arr,status:act},function(resp){
+				if(resp.status=='success')
+				{
+					alert(resp.message);
+					$('#deal_det_dlg').dialog('close');
+				}
+				else
+				{
+					alert('Error...Deal Status not Updated');
+				}
+			},'json');
+		},
+		'Un-Publish':function(){
+			 var d_arr=[];
+			$('.deals_sel:checked').each(function(){
+				var dealids=$(this).attr('dealid');
+				d_arr.push(dealids);
+			});
+			d_arr=d_arr.join(",");
+			act=0;//unpublish
+			$.post(site_url+'/admin/jx_change_deal_status',{dealids:d_arr,status:act},function(resp){
+				if(resp.status=='success')
+				{
+					alert(resp.message);
+					$('#deal_det_dlg').dialog('close');
+				}
+				else
+				{
+					alert('Error...Deal Status not Updated');
+				}
+			},'json');
+		},
+		'Cancel':function(){
+			$('#deal_det_dlg').dialog('close');
+		}
+	}
+});  
+
+//Dialog to change deals status for a product
+$('#exp_shipdate_dlg').dialog({
+		modal:true,
+		autoOpen:false,
+		width:500,
+		height:150,
+		autoResize:true,
+		open:function(){
+		//$('.ui-dialog-buttonpane').find('button:contains("Update")').addClass('placeorder_btn');
+		var html = '';
+		
+		var dlgData = $('#exp_shipdate_dlg').data("pro_data");
+		prodid = dlgData.product_id;
+		transid = dlgData.transid;
+		orderid = dlgData.order_id;
+		
+		html+= '<div><b>Expected Date of Shipment: </b><input name="exp_date" class="exp_date"></div>';
+		$('#exp_shipdate_dlg .ship_blk').html(html);
+	},
+	buttons:{
+		
+		'Proceed':function(){
+			var dlgData = $('#exp_shipdate_dlg').data("pro_data");
+			prodid = dlgData.product_id;
+			transid = dlgData.transid;
+			orderid = dlgData.order_id;
+			date =$('.exp_date').val(); 
+			
+			$.post(site_url+'/admin/jx_update_shipment_date',{pid:prodid,transid:transid,oid:orderid,date:date},function(resp){
+				if(resp.status=='success')
+				{
+					$('#exp_shipdate_dlg').dialog('close');
+					$('.exp_'+orderid).html(resp.date);
+					$('#exp_shipdate_dlg .ship_blk').html();
+				}
+				else
+				{
+					alert('whoops!Sorry...Shipment Date not Updated');
+				}
+			},'json');
+		},
+		'Cancel':function(){
+			var dlgData = $('#exp_shipdate_dlg').data("pro_data");
+			prodid = dlgData.product_id;
+			transid = dlgData.transid;
+			orderid = dlgData.order_id;
+			date =$('.exp_date').val();
+			$('#exp_shipdate_dlg .ship_blk').html();
+			$('#exp_shipdate_dlg').dialog('close');
+		}
+	}
+});  
+
+$('.deals_sel').live('click',function(){
+	var itemid=$(this).attr('itemid');
+	if($(this).attr('checked'))
+	{
+		$('.prd_deal_'+itemid).addClass('selected');
+	}else
+	{
+		$('.prd_deal_'+itemid).removeClass('selected');
+	}
+	
+});
+
 
 $(function(){
 	$('select[name="date_type"]').chosen();
 	$('select[name="tids[]"]').chosen();
 	$('select[name="mids[]"]').chosen();
+	$('select[name="menu_type"]').chosen();
+	$('select[name="publish_type"]').chosen();
+	$('select[name="sourceable"]').chosen();
 	
 	$('select[name="date_type"]').change(function(){
 		if($(this).val() == 1)
@@ -403,7 +737,18 @@ $(function(){
 	$('select[name="mids[]"]').change(function(){
 		reset_form_action();
 	});
-		
+	
+	$('select[name="menu_type"]').change(function(){
+		reset_form_action();
+	});
+	
+	$('select[name="publish_type"]').change(function(){
+		reset_form_action();
+	});		
+	
+	$('select[name="ship_date_filter"]').change(function(){
+		reset_form_action();
+	});
 	
 	prepare_daterange('from_date','to_date');
 	$('#gen_stat_frm').submit(function(){
@@ -445,7 +790,7 @@ $('#dlg_openpolist').dialog({'width':800,autoOpen:false,height:600,modal:true,op
 			html += '		</thead>';
 			html += '		<tbody>';
 			$.each(resp.vendor_po_list,function(a,b){
-				html += '		<tr poid="'+b.po_id+'" productid="'+pid+'"><td><input type="checkbox" class="sl_sel_po" value="'+pid+'" po_id="'+b.po_id+'"></td><td>'+(a*1+1)+'</td><td><a target="_blank" href="'+site_url+'/admin/vendor/'+b.vendor_id+'">'+b.vendor_name+'</a></td><td>'+get_unixtimetodate(b.po_date)+'</td><td>'+b.po_id+'</td><td>'+b.qty+'</td><td><a class="inline_trig" style="color:blue;font-weight:bold" target="_blank" href="'+(site_url+'/admin/viewpo/'+b.po_id)+'" >View</a></td></tr>';	
+				html += '		<tr poid="'+b.po_id+'" productid="'+pid+'"><td><input type="checkbox" class="sl_sel_po" value="'+pid+'" po_id="'+b.po_id+'"></td><td>'+(a*1+1)+'</td><td><a target="_blank" href="'+site_url+'/admin/vendor/'+b.vendor_id+'">'+b.vendor_name+'</a></td><td>'+get_unixtimetodate(b.po_date)+'</td><td><a target="_blank" href="'+site_url+'/admin/viewpo/'+b.po_id+'">'+b.po_id+'</a></td><td>'+b.qty+'</td><td><a class="inline_trig" style="color:blue;font-weight:bold" target="_blank" href="'+(site_url+'/admin/viewpo/'+b.po_id)+'" >View</a></td></tr>';	
 			});
 			html += '		</tbody>';
 			html += '	</table>';

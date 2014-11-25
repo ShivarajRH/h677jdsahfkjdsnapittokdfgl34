@@ -364,7 +364,7 @@
 	
 	
 	
-	=========================================
+	#=========================================
 	define("MEM_OFFER_CREATE_DATE",'2014-01-01');
 	
 	$ttl_orders_res=$this->db->query("SELECT COUNT(o.transid) AS l
@@ -373,4 +373,42 @@
 												WHERE mi.pnh_member_id=?
 												AND o.status NOT IN (3) AND mi.created_on > DATE(?)
 												HAVING SUM(o.i_price*o.quantity) >= ?",array($mid,MEM_CREATE_DATE,MEM_MIN_ORDER_VAL));
+	#===============================
+	/*$date_before = "DATE('2014-01-01')";
+			$is_new_member = (!($this->db->query("SELECT COUNT(*) AS t FROM pnh_member_info mi
+														JOIN pnh_member_fee fee ON fee.member_id = mi.pnh_member_id AND fee.status=1
+														JOIN king_orders o ON o.transid = fee.transid AND o.status != 3
+														WHERE mi.created_on > $date_before AND fee.member_id=?",$mid)->row()->t))?1:0;*/
+			/*if($is_new_member) {
+				$pnh_member_fee = PNH_MEMBER_FEE;
+				$mem_fee_applicable = 1;
+			}
+			else {
+				$pnh_member_fee = 0;
+				$mem_fee_applicable = 0;
+			} */
+	
+	
+//					$i['sales_30days']=$this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_deal_link l join king_orders o on o.itemid=l.itemid where l.product_id=? and o.time>".(time()-(24*60*60*30)).' and o.time < ?  ',array($i['product_id'],strtotime($po['created_on'])))->row()->s;
+//					$i['sales_30days'] += $this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_group_deal_link l join king_orders o on o.itemid=l.itemid join products_group_orders pgo on pgo.order_id = o.id where pgo.product_id=? and o.time>".(time()-(24*60*60*30)).' and o.time < ?  ',array($i['product_id'],strtotime($po['created_on'])))->row()->s;
+//					$i['sales_60days']=$this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_deal_link l join king_orders o on o.itemid=l.itemid where l.product_id=? and o.time>".(time()-(24*60*60*60)).' and o.time < ?  ',array($i['product_id'],strtotime($po['created_on'])))->row()->s;
+//					$i['sales_60days'] += $this->db->query("select ifnull(sum(o.quantity*l.qty),0) as s from m_product_group_deal_link l join king_orders o on o.itemid=l.itemid join products_group_orders pgo on pgo.order_id = o.id where pgo.product_id=? and o.time>".(time()-(24*60*60*60)).' and o.time < ?  ',array($i['product_id'],strtotime($po['created_on'])))->row()->s;
+
 ?>
+							
+							<tr class="inst_payment">
+								<td class="">Payment For</td><td> :</td>
+								<td>
+									<select name="transit_type">
+											<option value="0">Self Invoices</option>
+<?php
+											if($fran['franchise_type']=='2')
+											{
+?>
+												<option value="1">RF Invoices</option>
+<?php
+											}
+?>
+									</select>
+								</td>
+							</tr>

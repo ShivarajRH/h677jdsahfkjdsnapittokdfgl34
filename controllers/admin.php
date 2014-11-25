@@ -25,6 +25,8 @@ class Admin extends Erp {
 		$this->load->model("erpmodel","erpm");
 		$this->load->model("reservation_model","reservations");
 		$this->load->model("employee_model","employee");
+		$this->load->model('order_model');
+		$this->load->model('member_model');
 		$this->load->library("email");
 		$this->erpm->loadroles();
 
@@ -2538,11 +2540,29 @@ class Admin extends Erp {
 
 	function invoice($invoice_no,$inv_type='customer')
 	{
+		
 		$this->erpm->auth();
 		
+		$is_b2c_po_invno=$this->db->query("select count(*) as t from t_mps_po_info where invoice_no=?",$invoice_no)->row()->t;
 		
+		if($is_b2c_po_invno)
+		{
+			$select_field=',l.invoice_no as po_invoice,l.seller_id,l.po_id,i.invoiced_on,i.created_on';
+			$join_cond="JOIN t_mps_po_info `i` ON i.transid=ordert.transid AND ordert.id=ordert.id
+						JOIN t_mps_po_product_link l ON l.po_id=i.id AND l.order_id=ordert.id";
+			$where_cond="WHERE (i.invoice_no=? )";
+			$inp=$invoice_no;
+		}
+		else
+		{
+			$select_field='';
+			$join_cond='';
+			$where_cond='where (in.invoice_no=? or split_inv_grpno = ? or ref_dispatch_id = ? )';
+			$inp=array($invoice_no,$invoice_no,$invoice_no);
+		}
 		if(!$this->db->query("select count(*) as t from king_invoice where invoice_no = ? ",$invoice_no)->row()->t)
 		{
+			
 			$inv_bygrpno = $this->db->query("select distinct split_inv_grpno
 					from shipment_batch_process_invoice_link a
 					join proforma_invoices b on a.p_invoice_no = b.p_invoice_no
@@ -2550,12 +2570,12 @@ class Admin extends Erp {
 					where (b.dispatch_id = ? or c.ref_dispatch_id = ? )
 			
 					",array($invoice_no,$invoice_no))->row()->split_inv_grpno;
-			
 			if($inv_bygrpno)
 				$invoice_no = $inv_bygrpno;
 		}
 		
 				 
+		
 		
 //		$batch=$this->db->query("select * from shipment_batch_process_invoice_link where invoice_no=?",$invoice_no)->row_array();
 //		if(!empty($batch) && $batch['packed']==0 && $this->db->query("select invoice_status as s from king_invoice where invoice_no=?",$invoice_no)->row()->s==1)
@@ -2568,21 +2588,27 @@ class Admin extends Erp {
 							in.discount,
 							in.phc,in.nlc,
 							in.service_tax,
-							item.pnh_id,f.*
+							item.pnh_id,f.* $select_field
 						from king_orders as ordert
 						join king_dealitems as item on item.id=ordert.itemid 
 						join king_deals as deal on deal.dealid=item.dealid 
 						left join king_brands as brand on brand.id=deal.brandid
 						left join pnh_m_offers f on f.id= ordert.offer_refid
+						$join_cond
 						join king_invoice `in` on in.transid=ordert.transid and in.order_id=ordert.id  
-						where (in.invoice_no=? or split_inv_grpno = ? or ref_dispatch_id = ? )
+						$where_cond
 						group by in.invoice_no  
 				";
-		$q=$this->db->query($sql,array($invoice_no,$invoice_no,$invoice_no));
+		$q=$this->db->query($sql,$inp);
 	
 		$data['invoice_list']=$orders=$q->result_array();
 		$is_pnh=$this->db->query("select is_pnh as p from king_transactions where transid=?",$orders[0]['transid'])->row()->p;
-	 	if($is_pnh==1)	
+		if($is_b2c_po_invno)
+		{
+			
+			$data['page']="../../body/b2c_poinvoice";
+		}
+	 	elseif($is_pnh==1 && !$is_b2c_po_invno)	
 		{
 			
 			$data['page']="../../body/pnh_invoice";

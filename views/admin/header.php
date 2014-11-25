@@ -39,15 +39,15 @@
 	$subs["streams"] = "Streams";
 	$subs["manage"] = "Manage";
 	
-	$menu["prod"]=array("products"=>"Products","products_group"=>"Products Group","categories"=>"Categories","brands"=>"Brands","prods_bulk_upload"=>"Product bulk upload","products_group_bulk_upload"=>"Products group bulk upload","export_data"=>"Export Data","prod_mrp_update"=>"MRP Update","product_price_changelog"=>"Price Changelog","product_src_changelog"=>"Product Sourceable ChangeLog","list_deals_nsrc_prod"=>"Deals - Products not sourceable");
+	$menu["prod"]=array("products"=>"Products","products_group"=>"Products Group","categories"=>"Categories","brands"=>"Brands","prods_bulk_upload"=>"Product bulk upload","products_group_bulk_upload"=>"Products group bulk upload","export_data"=>"Export Data","prod_mrp_update"=>"Product Update","product_changelog"=>"Product Changelog");
 	
-	$menu['stock']=array("storage_locs"=>"Storage Locations","rackbins"=>"Rack & Bins","vendors"=>"Vendors","purchaseorders"=>"View POs","purchaseorder"=>"Create PO","apply_grn"=>"Stock Intake","stock_intake_list"=>"Stock Intakes Summary","stock_unavail_report"=>"Stock Unavailability Report","warehouse_summary"=>"Warehouse Summary","unavail_product_ageing_report"=>"Ageing Report");
+	$menu['stock']=array("storage_locs"=>"Storage Locations","rackbins"=>"Rack & Bins","m_seller_list"=>"Marketplace Seller","vendors"=>"Vendors","purchaseorders"=>"View POs","purchaseorder"=>"Create PO","apply_grn"=>"Stock Intake","stock_intake_list"=>"Stock Intakes Summary","stock_unavail_report"=>"Stock Unavailability Report","warehouse_summary"=>"Warehouse Summary","unavail_product_ageing_report"=>"Ageing Report");
 	
-	$menu['front']=array("menu"=>"Menu","deals"=>"Deals","deals_table"=>"Deals table","deals_bulk_upload"=>"Deals Bulk upload","freesamples"=>"Free Samples","variants"=>"Variants","cache_control"=>"Cache Control","activity"=>"Activity","vars"=>"Vars","deal_price_changelog"=>"Price Changelog","partner_deal_prices"=>"Bulk partner deal price update","auto_image_updater"=>"Auto Image updater");
+	$menu['front']=array("menu"=>"Menu","deals"=>"Deals","deals_table"=>"Deals table","deals_bulk_upload"=>"Deals Bulk upload","freesamples"=>"Free Samples","variants"=>"Variants","cache_control"=>"Cache Control","activity"=>"Activity","vars"=>"Vars","deal_price_changelog"=>"Price Changelog","partner_deal_prices"=>"Bulk partner deal price update","bulk_update_partner_deals"=>"Update Partner Deals refno","auto_image_updater"=>"Auto Image updater");
 	$menu["selling"]=array("orders"=>"Orders","order_summary"=>"Order Summary","bulk_cancelorders"=>"Bulk Cancel Orders","partner_orders"=>"Partner Orders","partner_order_import"=>"Partner Order Import","uplaod_partner_settelment_details"=>"Upload partner payment","callcenter"=>"Recent Transaction");
-	$menu['shipment']=array("batch_process"=>"Shipment batch process","pending_batch_process"=>"Pending Shipment batch process","manage_trans_reservations"=>"Manage Transaction Reservations",'update_partnerorder_manifesto'=>"Update HS18 Manifesto","outscan/0"=>"Outscan Order" ,"generate_kfile"=>"Generate kfile","print_franlabels"=>"Print Franchise Delivery Labels","pnh_pending_shipments"=>"PNH Manifesto","update_ship_kfile"=>"Update shipment kfile","courier"=>"Courier","pnh_shipment_sms_notify"=>"PNH Shipment SMS Notification","pnh_ship_log"=>"Ship Log");
+	$menu['shipment']=array("batch_process"=>"Shipment batch process","pending_batch_process"=>"Pending Shipment batch process","manage_trans_reservations"=>"Manage Transaction Reservations",'update_partnerorder_manifesto'=>"Update HS18 Manifesto","outscan/0"=>"Outscan Order" ,"generate_kfile"=>"Generate kfile","print_franlabels"=>"Print Franchise Delivery Labels","pnh_pending_shipments"=>"PNH Manifesto","update_ship_kfile"=>"Update shipment kfile","courier"=>"Courier","pnh_shipment_sms_notify"=>"PNH Shipment SMS Notification","pnh_ship_log"=>"Ship Log","stock_transfer"=>"Partner Stock Transfer");
 	$menu['crm']=array("support"=>"Customer Support/Tickets","users"=>"Site Users","review"=>"Reviews","callcenter"=>"Recent transactions","stock_checker"=>"Stock Checker");
-	$menu['accounting']=array("vouchers"=>"Vouchers","pending_pay_grns"=>"Ready for payment","list_allbanks"=>"Bank Accounts","pending_grns"=>"Unaccounted Stock Intakes","clients"=>"Corporate Clients","client_orders"=>"Corporate Orders","client_invoices"=>"Corporate Invoices","pending_refunds_list"=>"Pending Refunds","partners"=>"Partners","deals_report"=>"Deals Report","pnh_executive_account_log"=>"PNH Executive Paid Log");
+	$menu['accounting']=array("vouchers"=>"Vouchers","pending_pay_grns"=>"Ready for payment","list_allbanks"=>"Bank Accounts","pending_grns"=>"Unaccounted Stock Intakes","clients"=>"Corporate Clients","client_orders"=>"Corporate Orders","client_invoices"=>"Corporate Invoices","pending_refunds_list"=>"Pending Refunds","partners"=>"Partners","deals_report"=>"Deals Report","pnh_executive_account_log"=>"PNH Executive Paid Log","make_payment"=>"Trade Discount Payment");
 	$menu['marketing']=array("featured_newsletter"=>"Newsletter","announcements"=>"Announcements","stats"=>"Stats","coupons"=>"Coupons","cashback_campaigns"=>"Cashback Campaigns","pointsys"=>"Loyalty Points","headtotoe"=>"Head to toe");
 	
 	if($this->erpm->auth(PAF_ROLE,true) && !$this->erpm->auth(true,true) && ($user['access'] == 32768) )
@@ -56,7 +56,7 @@
 		$menu['pnh']=array("pnh_reports"=>"Reports");
 	}else
 	{
-		$menu['pnh']=array("pnh_franchises"=>"Franchises","asset_list"=>"Manage Assets","pnh_class"=>"Admin","pnh_deals"=>"Deals","pnh_members"=>"Members","list_employee"=>"Employees","pnh_special_margins"=>"Special Margins","pnh_receiptsbytype/1"=>"Pending Receipts","pnh_receipt_upd_log"=>"Receipts Update Log","pnh_special_margins"=>"Discounts","pnh_reports"=>"Reports","pnh_voucher_book"=>"Manage Voucher Books");
+		$menu['pnh']=array("pnh_franchises"=>"Franchises","asset_list"=>"Manage Assets","pnh_class"=>"Admin","pnh_deals"=>"Deals","pnh_members"=>"Members","subscriptionplan_members_list"=>"Members Combo Plan","list_employee"=>"Employees","pnh_special_margins"=>"Special Margins","pnh_receiptsbytype/1"=>"Pending Receipts","pnh_receipt_upd_log"=>"Receipts Update Log","pnh_special_margins"=>"Discounts","pnh_reports"=>"Reports","pnh_voucher_book"=>"Manage Voucher Books");
 	}
 	
 	//$menu['pnh']=array("pnh_franchises"=>"Franchises","pnh_class"=>"Admin","pnh_deals"=>"Deals","pnh_members"=>"Members","list_employee"=>"Employees","pnh_special_margins"=>"Special Margins","pnh_offline_order"=>"Place Order",'pnh_invoice_returns'=>"PNH Invoice Returns","pnh_quotes"=>"Franchise Requests","pnh_pending_receipts"=>"Pending Receipts","pnh_comp_details"=>"Company Details","pnh_catalogue"=>"Products Catalogue","pnh_special_margins"=>"Discounts","pnh_add_credits"=>"Add Credit","pnh_gen_statement"=>"Generate Account Statement",'pnh_sales_report'=>"PNH Sales Report","pnh_employee_sales_summary"=>"Employee Sales Summary","export_pnh_sales_report"=>"Export PNH Franchise Sales");
@@ -76,15 +76,17 @@
 	$submenu['list_employee']=array("list_employee"=>"Employees","add_employee"=>"Add Employees","assignment_histroy"=>"Assignment Histroy","roletree_view"=>"Role Tree View","calender"=>"Calender View","manage_routes"=>"Routes","pnh_exsms_log"=>"PNH SMS Log");
 	$submenu['list_allbanks']=array("list_allbanks"=>"List Bank Accounts",'add_bankdetails'=>'Add New Bank');
 	
-	$submenu['products']=array("addproduct"=>"Add Product","products_report"=>"Product report",'get_barcode_info'=>'Add Barcode',"sk_product_deal_report"=>"Products Deals Report");
+	$submenu['products']=array("addproduct"=>"Add Product","products_report"=>"Product report",'get_barcode_info'=>'Add Barcode',"sk_product_deal_report"=>"Products Deals Report","products_list"=>"Manage Products","deals_list"=>"Manage Deals");
+	$submenu['categories']=array("addcat"=>"Add Category", "view_categories_detail"=>"View Category");
 	$submenu['categories']=array("addcat"=>"Add Category");
-	$submenu['brands']=array("addbrand"=>"Add Brand");
+	$submenu['brands']=array("addbrand"=>"Add Brand","add_bulk_brand"=>"Add Brand(Bulk)");
 	$submenu['vendors']=array("addvendor"=>"Add Vendor","vendor_margin_bulk_update"=>"vendor margin bulk update");
 	$submenu['support']=array("addticket"=>"Add Ticket");
 	//$submenu['generate_manifesto']=array("pnh_pending_shipments"=>"Pending shipments for delivery","generate_manifesto"=>"Generate Manifesto","view_manifesto_sent_log"=>"View Driver Sent Log");
 	$submenu['pnh_pending_shipments']=array("outscan/1"=>"Already Packed- Outscan","pnh_pending_shipments"=>"Choose shipments for delivery","view_manifesto_sent_log"=>"Print manifesto ","shipments_transit_log"=>"Shipments Transit log","update_bulk_lrdetails"=>"Bulk Update LR Details","pnh_scan_delivery_akw"=>"Scan delivery acknowledgement","print_invoice_acknowledgementbydate"=>"Manage Acknowledgements");
 	$submenu['courier']=array("towns_courier_priority"=>"Manage Towns Courier Priority");
 	$submenu['uplaod_partner_settelment_details']=array("view_partner_settelment_log"=>"View Settelment Log");
+	$submenu['stock_transfer']=array('stk_partner_select'=>"Create Stock Transfer",'partner_transfer_list'=>"Stock Transfer Summary");
 
 	
 	
@@ -93,15 +95,16 @@
 	$submenu['pnh_reports']=array("pnh_fran_salesbydate"=>"Franchise Montly Sales","packed_list"=>"Packed Summary","outscan_list"=>"Outscan Summary","pnh_gen_statement"=>"Generate Account Statement","pnh_states"=>"States",'pnh_sales_report'=>"PNH Sales Report","pnh_sales_bydeal_report"=>'PNH Sales by Deal Report',"pnh_employee_sales_summary"=>"Employee Sales Summary","pnh_exsms_log"=>"PNH SMS Log","export_salesfortally"=>"Export Sales Report - Tally Import","list_activesuperscheme"=>"super scheme Log","fr_hyg_anlytcs_report"=>"Franchise Hygenie Analytics ","export_pnh_sales_report"=>"Export PNH Franchise Sales");
 	
 	$submenu['pnh_members']=array("pnh_addmember"=>"Add Member");
+	$submenu['subscriptionplan_members_list']=array("manage_subscription_plan"=>"Manage Subscription Plan","member_detail_page"=>"Member Add Plan","addfranchise_comboplan"=>"Franchise add combo Plan","member_feedback_detail"=>"Member add Feedback","combo_plan_categories"=>"Combo Plan Categories","subscriptionplan_members_list"=>"Manage member Plan","franchise_combo_plan_list"=>"Manage Franchise combo Plan","franchise_member_plan_list"=>"Manage Franchise member Plan","fetch_memberplan_orderdetail"=>"Manage Member Plan Order","fetch_memberfeedback_detail"=>"Manage Member Feedback");
 	$submenu['clients']=array("addclient"=>"Add Client");
 	$submenu['client_orders']=array("addclientorder"=>"Add Client Order");
 	
 	if($this->erpm->auth(FINANCE_ROLE,true))
 	{
-		$submenu['pnh_franchises']=array("pnh_addfranchise"=>"Add franchise","orders_status_summary"=>"Order Status Summary","pnh_gen_statement"=>"Generate Account Statement","pnh_quotes"=>"Franchise Requests",'pnh_invoice_returns'=>"Manage Returns","pnh_add_credits"=>"Add Credit","pnh_activation"=>"SMS Alternative Activations","pnh_imei_activation_log"=>'IMEI Activation Log','manage_offers'=>'Manage Member Offers','disable_batch_log'=>'Batch Disabled Log');
+		$submenu['pnh_franchises']=array("pnh_addfranchise"=>"Add franchise","pnh_franchise_bulk_upload"=>"Add Bulk franchise","orders_status_summary"=>"Order Status Summary","pnh_gen_statement"=>"Generate Account Statement","pnh_quotes"=>"Franchise Requests",'pnh_invoice_returns'=>"Manage Returns","pnh_add_credits"=>"Add Credit","pnh_activation"=>"SMS Alternative Activations","pnh_imei_activation_log"=>'IMEI Activation Log','manage_offers'=>'Manage Member Offers','disable_batch_log'=>'Batch Disabled Log',"add_bulk_rf_franchise"=>"Bulk Assign RF Franchise");
 	}else
 	{
-		$submenu['pnh_franchises']=array("pnh_addfranchise"=>"Add franchise","orders_status_summary"=>"Order Status Summary","pnh_quotes"=>"Franchise Requests",'pnh_invoice_returns'=>"Manage Returns","pnh_add_credits"=>"Add Credit","pnh_franchise_activate_imei"=>"Franchise IMEI Activation","pnh_activation"=>"SMS Alternative Activations","pnh_imei_activation_log"=>'IMEI Activation Log','manage_offers'=>'Manage Member Offers');
+		$submenu['pnh_franchises']=array("pnh_addfranchise"=>"Add franchise","orders_status_summary"=>"Order Status Summary","pnh_quotes"=>"Franchise Requests",'pnh_invoice_returns'=>"Manage Returns","pnh_add_credits"=>"Add Credit","pnh_franchise_activate_imei"=>"Franchise IMEI Activation","pnh_activation"=>"SMS Alternative Activations","pnh_imei_activation_log"=>'IMEI Activation Log','manage_offers'=>'Manage Member Offers',"add_bulk_rf_franchise"=>"Bulk Assign RF Franchise");
 	}
 	
 	if($this->erpm->auth(CALLCENTER_ROLE,true))
@@ -113,14 +116,14 @@
 	$submenu['deals']=array("adddeal"=>"Add Deal","pnh_catalogue"=>"Products Catalogue","deal_product_link_update_log"=>"Deal product link updates log");
 	$submenu['asset_list']=array("add_franchise_asset"=>"Add Franchise Asset");
 	
-	$submenu['orders']=array('orders/1'=>'Pending Orders','partial_shipment'=>'Partial Shipment Orders','disabled_but_possible_shipment'=>'Disabled But Possible','product_order_summary'=>'Product Order Summ Last 90 Days','userend_orders'=>'DIY - User Generated Orders');
+	$submenu['orders']=array('orders/1'=>'Pending Orders','partial_shipment'=>'Partial Shipment Orders','disabled_but_possible_shipment'=>'Disabled But Possible','product_order_summary'=>'Product Order Summ Last 90 Days','userend_orders'=>'DIY - User Generated Orders','unconfirmed_order_list'=>'Unconfirmed Credit Orders');
 	
 	$submenu['stock_unavail_report']=array('stock_unavail_report/0/0/0/0'=>'Show All Orders','stock_unavail_report/0/0/0/2'=>'Show Snapittoday Orders','stock_unavail_report/0/0/0/1'=>'Show PNH Orders','pnh_stock_unavail_report'=>'Advanced PNH Unavailable Report');
 	
 	
-	$submenu['warehouse_summary']=array("po_on_top_sold"=>"Top sold Products");
+	$submenu['warehouse_summary']=array("po_on_top_sold"=>"Top sold Products","po_on_new_product_top_sold"=>"Newly Added Top Sold Products");
 	$submenu['purchaseorder']=array("purchaseorder"=>"Vendorwise","po_product"=>"Productwise",'bulk_createpo_byfile'=>"Bulk Create PO");
-	$submenu['pnh_class']=array("list_allmenumargin"=>"Manage Menu","reset_franchise_limit"=>"Reset Franchisee Limit","pnh_class"=>"Class","pnh_less_margin_brands"=>"Less margin brands","pnh_sms_log"=>"SMS Log","pnh_device_type"=>"Device Types","pnh_loyalty_points"=>"Loyalty points","manage_skinsurance_bymenu"=>"Manage Insurance Menu","pnh_states"=>"States","pnh_territories"=>"Territories","pnh_towns"=>"Towns","pnh_app_versions"=>"App Versions","pnh_order_import"=>"Import orders","pnh_member_card_batch"=>"MID card printing batch","pnh_version_price_change"=>"Version price changes","pnh_sms_campaign"=>"SMS Campaign","pnh_tray_management"=>'Tray Management',"pnh_transport_management"=>"Transport Management",'pnh_manage_delivery_hub'=>"Manage Delivery Hubs","pnh_employee_sms_activity_log"=>"Employee activity log","reverse_reconciled_invoice"=>"Reverse Reconciled Invoice","depts_request"=>"Departments");
+	$submenu['pnh_class']=array("list_allmenumargin"=>"Manage Menu","reset_franchise_limit"=>"Reset Franchisee Limit","pnh_class"=>"Class","pnh_less_margin_brands"=>"Less margin brands","pnh_sms_log"=>"SMS Log","pnh_device_type"=>"Device Types","pnh_loyalty_points"=>"Loyalty points","manage_skinsurance_bymenu"=>"Manage Insurance Menu","pnh_states"=>"States","pnh_territories"=>"Territories","pnh_towns"=>"Towns","manage_townslist"=>"Manage State Territory Town","pnh_app_versions"=>"App Versions","pnh_order_import"=>"Import orders","pnh_member_card_batch"=>"MID card printing batch","pnh_version_price_change"=>"Version price changes","pnh_sms_campaign"=>"SMS Campaign","pnh_tray_management"=>'Tray Management',"pnh_transport_management"=>"Transport Management",'pnh_manage_delivery_hub'=>"Manage Delivery Hubs","pnh_employee_sms_activity_log"=>"Employee activity log","reverse_reconciled_invoice"=>"Reverse Reconciled Invoice","depts_request"=>"Departments");
 	$submenu['pnh_special_margins']=array("pnh_special_margins"=>"Special Margins","pnh_sch_discounts"=>"List scheme discounts","pnh_bulk_sch_discount"=>"Add Scheme Discounts","pnh_bulk_offeradd"=>"Manage Offers");
 	$submenu['pnh_deals']=array("pnh_adddeal"=>"Add Deal","pnh_deals"=>"List Deals","pnh_deals_bulk_upload"=>"Deals Bulk upload","pnh_update_description"=>"Update description","pnh_deals_bulk_update"=>"Deals Bulk Update",'pnh_update_dp_price'=>'Update DP Price','member_price_update'=>'Member Price Update','mp_loyaltypoint_config'=>'MP Loyaltypoint Config',"vendor_deal_import"=>"Vendor deal import");
 	$submenu['pnh_voucher_book']=array("pnh_prepaid_menus"=>"Config prepaid menus","pnh_book_template"=>"Manage book template","pnh_voucher_book"=>"Manage Voucher book","pnh_manage_book_allotments"=>"Manage book allotments");

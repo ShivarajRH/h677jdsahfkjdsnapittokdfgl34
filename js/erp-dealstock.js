@@ -1,6 +1,7 @@
 /**
  * @Description: Plugin to show deal stock status
- * @support:shivaraj@storeking.in
+ * @author:Shivaraj<shivaraj@storeking.in>_Jan_02_2014
+ * @last_modify Shivaraj<shivaraj@storeking.in>_Nov_04_2014
  */
 ( function ($) {
     //<!--============================================<< DEAL STOCK PLUGIN SETTINGS START >>===================================-->
@@ -25,16 +26,17 @@
         var POSITION = base.options.position;
         var INTERVAL = base.options.interval;
         var EVENT = base.options.eventname;
+        var TRANSFER_OPTION = base.options.transfer_option;
         
         var ITEMID = base.$el.attr("dealid");
         var DEAL_STATUS = base.options.dl_status;
-        var IS_PNH = 1; //base.$el.attr("is_pnh");
+        var IS_PNH = base.options.is_pnh;//base.$el.attr("is_pnh");
         //function debug(e) { console.log(e); }
         
         base.drawbox = function(e) {
             //debug(e);
                 // plug in as opened
-                $.getJSON(site_url+'/admin/jx_pnh_deal_stock_det/'+ITEMID+"/"+IS_PNH+"/"+DEAL_STATUS,{},function(resp){ // height:'+HEIGHT+'; top:'+TOP+'px;  left:'+LEFT+'px;
+                $.getJSON(site_url+'/admin/jx_pnh_deal_stock_det/'+ITEMID+"/"+IS_PNH+"/"+DEAL_STATUS+"/"+TRANSFER_OPTION,{},function(resp){ // height:'+HEIGHT+'; top:'+TOP+'px;  left:'+LEFT+'px;
                         var HTML_DATA = '<div style="float:left;width:100%" class="'+CLASSNAME+'_block"><div style="width:'+WIDTH+'; background:'+BGCOLOR+'; position: '+POSITION+'; " class="'+CLASSNAME+'">\n\
                                             <span dealid="'+ITEMID+'" class="stock_det_close">X</span>';
                             HTML_DATA += '<table width="100%" border=1 class="datagrid" cellpadding=1 cellspacing=0>';
@@ -101,6 +103,9 @@
         ,eventname: "hover"  // eg: "hover","click"
         ,change:'row' // text or row change the color (tr == row)
 		,dl_status:"all" // eg: 0:Sold out products, 1:In Stock, all: no filter
+		,show_only:false //false:all, 1:InStock, 2:SoldOut deals only
+		,transfer_option:0 //Partner transfer type 1:To partner, 2:From partner, 0: default
+		,is_pnh:1 // get pnh deals 0: SIT deals, 1: PNH deals
     };
 
     // Calling function
@@ -216,6 +221,9 @@
             
         var CHANGE = elt.options.change;
         var DL_STATUS = elt.options.dl_status;
+        var SHOW_ONLY = elt.options.show_only;
+        var TRANSFER_OPTION = elt.options.transfer_option;
+        var IS_PNH = elt.options.is_pnh;
         
         var arr_dealids = [];
         $.each(elt,function(i,elt) {
@@ -224,10 +232,10 @@
         });
 
         // request api
-        var postData = {itemids: "'" +( arr_dealids.join(',') +"'" ), deal_status:DL_STATUS};
+        var postData = {itemids: "'" +( arr_dealids.join(',') +"'" ), deal_status:DL_STATUS,transfer_option:TRANSFER_OPTION};
         //print(postData);
 
-        $.post(site_url+'/admin/jx_pnh_deal_stock_status',postData,function(resp){
+        $.post(site_url+'/admin/jx_pnh_deal_stock_status/0/'+IS_PNH,postData,function(resp){
 
                 $.each(elt,function(ii,ee) {
 
@@ -248,12 +256,28 @@
                                     else
                                     {
                                             HTML_DATA = itemdata.deal_status;
+											
 											if( base.attr("curr_stock") != undefined)
 											{
 												base.attr("curr_stock",itemdata.stock );
 												//if(itemdata.is_group != 1)
 												base.itemrow.find(".stock_msg").html(itemdata.stock);
+												//'false=all, 1=instock,2:soldout
+												if(itemdata.stock <= 0 )
+												{
+													//show only instock
+													if(SHOW_ONLY === 1)
+														base.itemrow.hide();
+
+												}
+												else {
+													if(SHOW_ONLY === 2)
+														base.itemrow.hide();
+												}
 											}
+											
+											
+											
                                             if(CHANGE == 'text')
                                             {
                                                 if(itemdata.deal_status == 'In Stock')

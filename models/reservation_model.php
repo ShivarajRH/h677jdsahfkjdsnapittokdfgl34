@@ -67,7 +67,7 @@ class reservation_model extends Model
 			}
 			//===============< Shipement Address details Ends >========================
 			$field_list = "o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
-                    ,di.name,di.pnh_id,concat('".IMAGES_URL."items/',di.pic,'.jpg') as image_url,di.has_insurance
+                    ,di.name,di.pnh_id,concat('".IMAGES_URL."items/',di.pic,'.jpg') as image_url
                     ,tr.init,tr.actiontime,tr.status tr_status,tr.is_pnh,tr.batch_enabled
                     ,pi.p_invoice_no$ord_addr_fields";
 			if($fields2==1)

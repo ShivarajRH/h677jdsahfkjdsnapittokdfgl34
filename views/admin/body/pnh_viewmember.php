@@ -636,6 +636,66 @@ $expenses=array("&lt; Rs. 2000","Rs 2001 - Rs 5000","Rs 5001 - Rs 10000","&gt; R
 				</div>
 			</div>
 		</div>
+
+		<div class="fl_left mod_widget_row" style="">
+		<!----------------------------------Family Combo's Plan Detail--------------------------->
+		<div class="mod_widget_small">
+		<?php $plandetail=$this->db->query("select p.plan_name,s.plan_amount,s.total_months,l.start_date,l.end_date from m_member_plan_link l join m_member_subscription_plan_schemes s on s.id=l.sub_plan_id join m_member_subscription_plans p on p.id=s.plan_id where l.member_id=?",$u['id'])->row_array();
+		 ?>
+			<div class="mod_widget_title">
+				<div class="heading_wrap"><img src="<?php echo base_url().'images/home2.png'?>">Family combo's plan Detail
+				</div>
+			</div>
+			<div class="mod_widget_content max_height_wrap">
+				<ul class="content_head">
+					<li>
+						<span class="row_label">Plan Type : </span>
+						<span class="value"><?php echo $plandetail['plan_name'];?></span> 
+					</li>
+					<li>
+						 <span class="row_label">Plan Amount : </span>
+						 <span class="value">Rs:<?php echo $plandetail['plan_amount'];?></span>
+					</li>
+					<li>
+						<span class="row_label">Start Date : </span>
+						<span class="value"><?php echo $plandetail['start_date']==0?"na":date("d-m-Y",strtotime($plandetail['start_date']));?></span> 
+					</li>
+					<li>
+						<span class="row_label">End Date : </span>
+						<span class="value"><?php echo $plandetail['end_date']==0?"na":date("d-m-Y",strtotime($plandetail['end_date']));?></span> 
+					</li>
+					<li>
+						<span class="row_label">No of Months: </span>
+						<span class="value"><?php echo $plandetail['total_months'];?></span> 
+					</li>
+				</ul>
+			</div>
+		</div>
+			<div class="mod_widget_large">
+			<?php $fransdetail = $this->db->query("select f.franchise_id,pnh_franchise_id,franchise_name as name,t.territory_name from pnh_m_franchise_info f join pnh_m_territory_info t on t.id=f.territory_id join m_member_plan_link l on f.franchise_id=l.sub_franchise_id  where l.member_id=?",$u['id'])->row_array();?>
+				<div class="mod_widget_title">
+					<div class="heading_wrap">
+						<img src="http://localhost/sk_erp/images/home2.png">Subscription Franchisee Detail
+		 			</div>
+				</div>
+					<div class="mod_widget_content max_height_wrap">
+						<ul class="content_head">
+						<li>
+							<span class="row_label">Franchisee ID : </span>
+							<span class="value"><a href="<?=site_url("admin/pnh_franchise/".$fransdetail['franchise_id'])?>" class="link" target="_blank"><?php echo $fransdetail['pnh_franchise_id'];?></a></span> 
+						</li>
+						<li>
+							 <span class="row_label">Franchisee Name : </span>
+							 <span class="value"><?php echo $fransdetail['name'];?></span>
+						</li>
+						<li>
+							<span class="row_label">Territory : </span>
+							<span class="value"><?php echo $fransdetail['territory_name'];?></span> 
+						</li>
+						
+						</ul>
+					</div>				
+			</div>
 	</div>
 </div>
 

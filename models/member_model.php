@@ -139,4 +139,26 @@ class Member_model extends Model
 		return $output;
 	}
 	
+	/**
+	 * Function to get member type Like, 0:Free member, 1:Paid member
+	 * @author Shivaraj<shivaraj@storeking.in>_Nov_24_2014
+	 * @return int
+	 */
+	function member_type($mid)
+	{
+		$minfo_res=$this->db->query(" SELECT * FROM 
+									pnh_member_info m 
+									JOIN pnh_m_franchise_info f ON f.franchise_id=m.franchise_id
+									WHERE f.franchise_id IN('498','637') AND 
+									m.pnh_member_id=?",$mid);
+		if($minfo_res->num_rows())
+		{
+			$member_type=0;
+		}
+		else
+		{
+			$member_type=1;
+		}
+		return $member_type;
+	}
 }

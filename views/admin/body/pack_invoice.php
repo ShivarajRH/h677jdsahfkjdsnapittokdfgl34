@@ -142,7 +142,7 @@
 			
 			$has_imei_scan = 0;
 			foreach($invoice as $i)
-				{
+			{
 					$consider_for_refund = 0;
 					if($i['is_pnh'])
 					$consider_for_refund = $this->db->query("select consider_mrp_chng from pnh_menu where id = ? ",$i['menuid'])->row()->consider_mrp_chng;
@@ -245,19 +245,19 @@
 			
 			$stk_i=0;
 			foreach($mrp_stock_det as $mrp_rb=>$mrp_list){
-			list($mrp,$l_rb_id) = explode('_',$mrp_rb);
-			$reserv_qty_summ = '';
-			$ttl_reserved_qty = 0;
-			foreach($mrp_list['det'] as $mrp_b)
-				{
-					if($mrp_b['reserv_qty'])
-						{
-							$reserv_qty_summ .= '<div><b>'.$mrp_b['reserv_qty'].'</b><span style="font-size:8px;">('.$mrp_b['rb_name'].')</span></div>';
-							$ttl_reserved_qty += $mrp_b['reserv_qty'];
-						}
-				}
-				if(!round($mrp_list['stk']+$ttl_reserved_qty))
-				continue;
+				list($mrp,$l_rb_id) = explode('_',$mrp_rb);
+				$reserv_qty_summ = '';
+				$ttl_reserved_qty = 0;
+				foreach($mrp_list['det'] as $mrp_b)
+					{
+						if($mrp_b['reserv_qty'])
+							{
+								$reserv_qty_summ .= '<div><b>'.$mrp_b['reserv_qty'].'</b><span style="font-size:8px;">('.$mrp_b['rb_name'].')</span></div>';
+								$ttl_reserved_qty += $mrp_b['reserv_qty'];
+							}
+					}
+					if(!round($mrp_list['stk']+$ttl_reserved_qty))
+					continue;
 		?>
 			<table class="subgrid" cellpadding="0" cellspacing="0" style="border: 0px !important; width: 100%; background: #f9f9f9; font-size: 13px;">
 				<tr>
@@ -275,48 +275,48 @@
 					</div>
 					</td>
 					<td style="vertical-align: middle; width: 30px !important;" width="10">
-					<div class="scan_proditems" style="width: 30px; text-align: center;">
-						<?php 
-							$show_add_btn = 0;
-							$has_reserv_bc_qty = 0; 
-							foreach($mrp_list['det'] as $mrp_b)
-							{
-								if(!($mrp_b[1]+$mrp_b['reserv_qty']))
-								continue;
-									
-								$show_add_btn += (strlen($mrp_b[0])==0)?1:0;
-								$scan_by_bc = 0;
-								if(strlen($mrp_b[0]))
+						<div class="scan_proditems" style="width: 30px; text-align: center;">
+								<?php 
+									$show_add_btn = 0;
+									$has_reserv_bc_qty = 0; 
+									foreach($mrp_list['det'] as $mrp_b)
 									{
-										$has_reserv_bc_qty += 1;
-										$scan_by_bc = 1;
-									}			
-						?>
-							<input rb_id="<?php echo $mrp_b[2].'_'.$mrp_b[3]?>" rb_name="<?php echo $mrp_b['rb_name']?>"
-							dealname="<?php echo addslashes($i['deal'])?>" 
-							itemid="<?php echo $i['itemid']?>"
-							order_id="<?php echo $i['order_id']?>" 
-							consider_for_refund="<?php echo $consider_for_refund;?>"
-							disc="<?php echo $i['discount']?>"
-							ordmrp="<?php echo $i['order_mrp'];?>"
-							stk_info_id="<?php echo $mrp_b['stock_id'] ?>"
-							mrp="<?php echo $mrp ?>"
-							reserv_qty = "<?php echo $mrp_b['reserv_qty'] ?>" 
-							stk="<?php echo $mrp_b[1]+$mrp_b['reserv_qty'];?>" type="hidden"
-							pid="<?php echo $prd_id;?>"
-							name="pbc[<?php echo $i['itemid'].'_'.$prd_id.'_'.($mrp_b[0]?$mrp_b[0]:'BLANK').'_'.$mrp_b['stock_id'].'_'.$i['order_id'];?>]" value="0"
-							class="scan_proditem <?php echo $scan_by_bc?'scan_bybc':'' ?> pbcode_<?php echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?> pbcode_<?php echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?>_<?php echo (double)$mrp;?>_<?php echo $mrp_b[2].'_'.$mrp_b[3];?> pbcode_<?php echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?>_<?php echo (double)$mrp;?>_<?php echo $mrp_b[2].'_'.$mrp_b[3];?>_<?php echo $mrp_b['stock_id'];?>_<?php echo $i['itemid'];?>_<?php echo $i['order_id'];?>"
-							style="width: 20px !important;" />
-						<?php 		
-						}
-							 
-						?>
-							<input mrp="<?php echo $mrp ?>" stk_i="<?php echo $stk_i;?>"
-							itemid="<?php echo $i['itemid']?>" pid="<?php echo $prd_id;?>"
-							title="Scan to update via barcode or click here"
-							class="prod_stkselprev <?php echo !$show_add_btn?'disabled':"";?>"
-							ttl_stk="<?php echo $mrp_list['stk'];?>"
-							onclick="upd_selprodstk(this)" type="button"
+										if(!($mrp_b[1]+$mrp_b['reserv_qty']))
+										continue;
+
+										$show_add_btn += (strlen($mrp_b[0])==0)?1:0;
+										$scan_by_bc = 0;
+										if(strlen($mrp_b[0]))
+										{
+											$has_reserv_bc_qty += 1;
+											$scan_by_bc = 1;
+										}			
+								?>
+									<input rb_id="<?php echo $mrp_b[2].'_'.$mrp_b[3]?>" rb_name="<?php echo $mrp_b['rb_name']?>"
+									dealname="<?php echo addslashes($i['deal'])?>" 
+									itemid="<?php echo $i['itemid']?>"
+									order_id="<?php echo $i['order_id']?>" 
+									consider_for_refund="<?php echo $consider_for_refund;?>"
+									disc="<?php echo $i['discount']?>"
+									ordmrp="<?php echo $i['order_mrp'];?>"
+									stk_info_id="<?php echo $mrp_b['stock_id'] ?>"
+									mrp="<?php echo $mrp ?>"
+									reserv_qty = "<?php echo $mrp_b['reserv_qty'] ?>" 
+									stk="<?php echo $mrp_b[1]+$mrp_b['reserv_qty'];?>" type="hidden"
+									pid="<?php echo $prd_id;?>"
+									name="pbc[<?php echo $i['itemid'].'_'.$prd_id.'_'.($mrp_b[0]?$mrp_b[0]:'BLANK').'_'.$mrp_b['stock_id'].'_'.$i['order_id'];?>]" value="0"
+									class="scan_proditem <?php echo $scan_by_bc?'scan_bybc':'' ?> pbcode_<?php echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?> pbcode_<?php echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?>_<?php echo (double)$mrp;?>_<?php echo $mrp_b[2].'_'.$mrp_b[3];?> pbcode_<?php echo $mrp_b[0]?$mrp_b[0]:$stk_i.'_nobc' ?>_<?php echo (double)$mrp;?>_<?php echo $mrp_b[2].'_'.$mrp_b[3];?>_<?php echo $mrp_b['stock_id'];?>_<?php echo $i['itemid'];?>_<?php echo $i['order_id'];?>"
+									style="width: 20px !important;" />
+										<?php 		
+										}
+
+										?>
+									<input mrp="<?php echo $mrp ?>" stk_i="<?php echo $stk_i;?>"
+									itemid="<?php echo $i['itemid']?>" pid="<?php echo $prd_id;?>"
+									title="Scan to update via barcode or click here"
+									class="prod_stkselprev <?php echo !$show_add_btn?'disabled':"";?>"
+									ttl_stk="<?php echo $mrp_list['stk'];?>"
+									onclick="upd_selprodstk(this)" type="button"
 						<?php echo !$show_add_btn?'disabled':"";?> value="0"></div>
 						</td>
 					</tr>

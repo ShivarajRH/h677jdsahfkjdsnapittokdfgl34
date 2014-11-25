@@ -85,6 +85,7 @@ XX		=>OUTPUT:Hi Karunakar, Congrats !! Your order (PNH28358) is placed successfu
 
 =>Hi [CUSTOMER NAME], Congrats !! Your order ([ORDER_ID]) is placed successfully. Your Order will be delivered within the next [72hrs]. Please make sure you have deposited the amount with your franchise. Also you have earned [value] as Loyalty points for purchase of your products. For more detail contact ([FRANCHISE NAME]-[FRANCHISEE MOBILE NUMBER]). Thanks for Shopping with StoreKing
 	=>Hi %s, Congrats !! Your order (%s) is placed successfully. Your Order will be delivered within the next %s. Please make sure you have deposited the amount with your franchise. Also you have earned %s as Loyalty points for purchase of your products. For more detail contact (%s-%s). Thanks for Shopping with StoreKing
+	
 ===================================================<<< TO FRANCHISE >>>======================================================
 
 
@@ -159,3 +160,5 @@ to fran
 =>The Mobile insurance for your recently purchased Order [ORDER_ID] by [MEMBER_NAME] [98456*****] has been shipped today. Please expect delivery shortly.-Happy Franchising
 	=>The Mobile insurance for your recently purchased Order %s by %s %s has been shipped today. Please expect delivery shortly.-Happy Franchising
 	
+#==================== Credit limit SMS =============================
+ Dear %s, Congratulations! We have received your order with [%s] We shall confirm this to you in a short while based on your acceptable credit Limit!

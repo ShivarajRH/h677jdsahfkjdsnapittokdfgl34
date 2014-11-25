@@ -59,6 +59,73 @@
                                                 </div>
                                             </td>
                                     </tr>
+                                 
+                                  <?php 
+                            		if($pr['in_transit']==0)
+									{
+										if($pr['courier_name'])
+										{
+									?>
+										
+										<tr>	
+											<td><b>Courier Name</b></td>
+											<td><b>:</b></td>
+											<td><?=$pr['courier_name']?></td>
+										</tr>	
+										<tr>	
+											<td><b>Courier AWB</b></td>
+											<td><b>:</b></td>
+											<td><?=$pr['awb']?></td>
+										</tr>
+									<?php	}else if($pr['emp_name'])
+											{
+									?>			
+												<tr>	
+													<td><b>Employee Name</b></td>
+													<td><b>:</b></td>
+													<td><?=$pr['emp_name']?></td>
+												</tr>	
+												<tr>	
+													<td><b>Employee Phno</b></td>
+													<td><b>:</b></td>
+													<td><?=$pr['contact_no']?></td>
+												</tr>
+									<?php			
+											}
+										}	
+	                            	?>   
+                                    
+                                <?php 
+                            		if($pr['in_transit']==1)
+									{?>
+									<tr>	
+										<td><b>Courier Name</b></td>
+										<td><b>:</b></td>
+										<td><?=$pr['courier_name']?></td>
+									</tr>	
+									<tr>	
+										<td><b>Courier AWB</b></td>
+										<td><b>:</b></td>
+										<td><?=$pr['awb']?></td>
+									</tr>
+								<?php	}
+                            	?>
+                            	
+                            	<?php 
+                            		if($pr['in_transit']==2)
+									{?>
+									<tr>	
+										<td><b>Employee Name</b></td>
+										<td><b>:</b></td>
+										<td><?=$pr['emp_name']?></td>
+									</tr>	
+									<tr>	
+										<td><b>Employee Phno</b></td>
+										<td><b>:</b></td>
+										<td><?=$pr['contact_no']?></td>
+									</tr>
+								<?php	}
+                            	?>	
                                 <?php if($pr['modified_on']){?>
                                 <tr><td><b>Transit Status Modified By</b></td><td><b>:</b></td><td><?php echo $pr['modifiedby']?></td></tr>
                                 <tr><td><b>Transit Status Modified On</b></td><td><b>:</b></td><td><?php echo date("g:ia d/m/Y",$pr['modified_on'])?></td></tr>
@@ -443,6 +510,124 @@
 	</table> 
 	
 <?php 
+}else if($type=='bounced')
+{
+?>	
+	<div align="right" class="receipt_pg fl_right">
+		<?php echo $pagination;?>
+	</div>
+	<div class="receipt_totals">Total Receipts:<?php echo $total_records;?>&nbsp;&nbsp;Total value:Rs <?php echo formatInIndianStyle($bounced_ttlvalue['total'])?></div>
+	 <div class="clear"></div>
+	 <table class="datagrid smallheader" width="100%" >
+		<thead>
+			<tr>
+				<th width="250">Receipt Details</th>
+				<Th>Payment Details</Th>
+				<th>Processed Details</th>
+				<th>Bounced Details</th>
+				<th>Status</th>
+			</tr>
+		</thead>
+		<tbody>
+			<?php foreach($bounced_receipts as $bounce){?>
+		<tr>
+			<td>
+				<div id="receipt_det">
+					<table class="datagrid1" >
+							<tr>
+								<td><b>Receipt Id</b></td>
+								<td><b>:</b></td>
+								<td><?php echo $bounce['receipt_id']?>
+								</td>
+							</tr>
+							<tr>
+								<td><b>created on</b></td>
+								<td><b>:</b></td>
+								<td><?php echo date("g:ia d/m/y",$bounce['created_on'])?>
+								</td>
+							</tr>
+
+							<tr>
+								<td><b>created by</b></td>
+								<td><b>:</b></td>
+								<td><b><?=$bounce['admin']?> </b>
+								</td>
+							</tr>
+					</table>
+				</div>
+			</td>
+			<td>
+				<div id="cash_det">
+					<table class="datagrid1" >
+						<tr>
+							<td><?php $modes=array("cash","Cheque","DD","Transfer");?><b>Payment 
+									Mode</b></td>
+							<td><b>:</b></td>
+							<td><?=$modes[$bounce['payment_mode']]?>&nbsp;&nbsp;<b>Rs <?=$bounce['receipt_amount']?>
+							</b></td>
+						</tr>
+						<tr>
+							<td><b>Type</b></td>
+							<td><b>:</b></td>
+							<td><?=$bounce['receipt_type']==0?"Deposit":"Topup"?></td>
+						</tr>
+						<tr>
+							<td><b>Bank</b></td>
+							<td><b>:</b></td>
+							<td><?=$bounce['bank_name']?></td>
+						</tr>
+						<tr>
+							<td><b>Cheque Date</b></td>
+							<td><b>:</b></td>
+							<td><?=$bounce['instrument_date']!=0?date("d/m/Y",$bounce['instrument_date']):""?>
+							</td>
+						</tr>
+						<tr>
+							<td><b>Cheque no</b></td>
+							<td><b>:</b></td>
+							<td><?=$bounce['instrument_no']?></td>
+						</tr>
+						<tr>
+							<td><b>Remarks</b></td>
+							<td><b>:</b></td>
+							<td><?=$bounce['remarks']?></td>
+						</tr>
+					</table>
+		</div>
+		</td>
+		<td>
+			<div>
+				<table class="datagrid1" cellpadding="0" cellspacing="0">
+				<tr><td><b>Bank</b></td><td>:</td><td><?=$bounce['submit_bankname']?></td></tr>
+				<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$bounce['submittedremarks']?></td></tr>
+				<tr><td><b>Deposited On</b></td><td>:</td><td><?=format_date($bounce['submitted_on'])?></td></tr>
+				<tr><td width="80"><b>Deposited By</b></td><td>:</td><td><?=$bounce['submitted_by']?></td></tr>
+				</table>
+			</div>
+		</td>
+		<td>
+			<div>
+				<table class="datagrid1" cellpadding="0" cellspacing="0">
+				<tr><td width="80"><b>Cancel Status</b></td><td><b>:</b></td><td><?php $cstatus=array("Reversed","Return","Bounce");?><?=$cstatus[$bounce['cancel_status']];?></td></tr>
+				<tr><td><b>Cheque Cancelled On</b></td><td><b>:</b></td><td><?=$bounce['cheq_cancelled_on']!=null?format_date($bounce['cheq_cancelled_on']):format_datetime($bounce['modified_on'])?></td></tr>
+				<tr><td><b>Remarks</b></td><td><b>:</b></td><td><?=$bounce['cancel_reason']?$bounce['cancel_reason']:$bounce['reason']?></td></tr>
+				<tr><td><b>Updated By</b></td><td><b>:</b></td><td><?= $bounce['reversed_by']?$bounce['reversed_by']:$bounce['activated_by']?> </td></tr>
+				<tr><td><b>Updated On</b></td><td><b>:</b></td><td><?=$bounce['cancelled_on']!=null?format_datetime_ts($bounce['cancelled_on']):format_date_ts($bounce['modified_on'])?></td></tr>
+				</table>
+			</div>
+		</td>
+			<td><b><?php if($bounce['status']==1) echo 'Activated'; else if($bounce['status']==0) echo 'Pending'; else if($bounce['status']==3) echo 'Reversed'; else echo 'Cancelled';?></b>
+					<?php if($bounce['status']==1 && $bounce['receipt_type']==1){?> <br> <br> 
+					<a class="danger_link"
+					href="<?=site_url("admin/pnh_reverse_receipt/{$bounce['receipt_id']}")?>">reverse</a>
+					<?php }?>
+				</td>
+			</tr>
+			<?php }?>
+		</tbody>
+	</table> 
+	
+<?php 
 }else if($type=='acct_stat')
 {
 ?>
@@ -696,6 +881,7 @@ else if($type=="unreconcile")
 			<thead>
 				<th>Payment Details</th>
 				<th>Amount Details</th>
+				<th>Processed Details</th>
 			</thead>
 			
 			<?php if($paymnt_log){ ?>
@@ -730,6 +916,7 @@ else if($type=="unreconcile")
 									</b>
 									</td>
 								</tr>
+								
 							</table>
 						</div>
 					</td>
@@ -754,6 +941,20 @@ else if($type=="unreconcile")
 						</div>
 					</td>
 					
+						<div id="process_det">
+							<table class="datagrid1">
+								<tr>
+									<td><b>Processed On</b></td><td>:</td><td><?php echo format_date($p['processed_on'])?></td>
+								</tr>
+								<tr>
+									<td>Processed By</td><td>:</td><td><?php echo $p['processed_byname']; ?></td>
+								</tr>
+								<tr>
+									<td>Reference Details</td><td>:</td><td><?php echo $p['reference_txt']?></td>
+								</tr>
+							</table>
+						</div>
+					</td>
 				</tr>
 			
 			</tbody>

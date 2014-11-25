@@ -34,11 +34,11 @@
 					</table>
 					<div style="padding:10px;">
 						<div><b>Returned By </b> : <br><input type="text" class="inp" style="width: 300px;" name="return_by" value=""></div>
-						<div>
+							<div>	
 						<b>Remarks</b> : <br>
 						<textarea rows="5" cols="35" name="return_remarks"></textarea>
+							</div>
 						</div>
-					</div>
 					<div align="right" style="padding:5px 0px;">
 						<input type="submit" value="Submit Return" style="padding:5px 10px;">
 					</div>
@@ -106,6 +106,7 @@ var return_prod_imei_list = new Array();
 						var i = 0; 
 						var is_all_processed = 1;
 							$.each(resp.invdet.itemlist,function(oid,item){
+								//i = 0; 
 								rspan = inv_orders;//*item.product_list.length;
 								cspan = 0;
 								var last_oid = oid;
@@ -118,7 +119,6 @@ var return_prod_imei_list = new Array();
 								
 								$.each(item.product_list,function(k,prod1){
 									$.each(prod1,function(j,prod){
-										console.log(item.product_list);
 										
 										if((parseInt(item.quantity)*parseInt(prod.qty) - parseInt(prod.pen_return_qty)) != 0)
 										{
@@ -149,9 +149,9 @@ var return_prod_imei_list = new Array();
 											rowHtml += '	<td width="200"><input type="checkbox" class="rprod_entry" value="'+prod.product_id+'" name="prod_rcvd_pid['+item.invoice_no+']['+item.order_id+']['+prod.product_id+'][]" > <a target="_blank" href="'+site_url+'/admin/product/'+prod.product_id+'">'+prod.product_name+'</a></td>';
 											rowHtml += '	<td>'+item.quantity+'</td>';
 											rowHtml += '	<td>'+prod.pen_return_qty+'</td>';
-											rowHtml += '	<td><input has_bc="'+(prod.has_barcode)+'" pqty="'+((item.quantity*prod.qty - prod.pen_return_qty) )+'" class="inp rqty" type="text" value="0" disabled size="2" name="prod_rcvd_qty['+item.invoice_no+']['+item.order_id+']['+prod.product_id+'][]" ></td>';
+											rowHtml += '	<td><input has_bc="'+(prod.has_barcode)+'" mrp="'+(prod.mrp)+'" pqty="'+((item.quantity*prod.qty - prod.pen_return_qty) )+'" class="inp rqty" type="text" value="0" disabled size="2" name="prod_rcvd_qty['+item.invoice_no+']['+item.order_id+']['+prod.product_id+'][]" ></td>';
 											rowHtml += '	<td width="250">';
-											rowHtml += '		<ol class="listview" invoice_no="'+item.invoice_no+'" has_bc="'+(prod.has_barcode)+'" is_serial_required="'+prod.is_serial_required+'"  order_id="'+item.order_id+'" product_id="'+prod.product_id+'" style="margin:0px;padding:0px"></ol>';
+											rowHtml += '		<ol class="listview" invoice_no="'+item.invoice_no+'" has_bc="'+(prod.has_barcode)+'" is_serial_required="'+prod.is_serial_required+'"  mrp="'+(prod.mrp)+'" order_id="'+item.order_id+'" product_id="'+prod.product_id+'" style="margin:0px;padding:0px"></ol>';
 											rowHtml += '	</td>';
 											
 											rowHtml += '</tr>';
@@ -198,6 +198,7 @@ var return_prod_imei_list = new Array();
 			var itm_prod_id = olEle.attr('product_id');
 			var itm_inv_no = olEle.attr('invoice_no');
 			var itm_has_bc = olEle.attr('has_bc')*1;
+			var itm_mrp = olEle.attr('mrp');
 			 
 			var itm_has_serial = olEle.attr('is_serial_required')*1;
 			 
@@ -219,6 +220,19 @@ var return_prod_imei_list = new Array();
 						style_code = 'style="display:none"';
 						
 						rowHtml += '					<tr '+style_code+' ><td  >Barcode </td><td><input type="text" class="barcode '+(itm_has_bc?'chk_barcode':'')+' " pid="'+itm_prod_id+'" style="width:200px;font-size:11px;" name="prod_rcvd_pid_bc['+itm_inv_no+']['+itm_ord_id+']['+itm_prod_id+'][]" value="" ><span class="chk_barcode_stat"></span></td></tr>';
+					
+					var itm_m = new Array();
+					itm_m=itm_mrp.split(',');
+					console.log(itm_m);
+					if(itm_m.length)
+					{
+						var product_mrp_list = '';
+							$.each(itm_m,function(a,m){
+								product_mrp_list += '<option value="'+m+'">'+m+'</option>';
+							});
+						rowHtml += '	<tr><td>MRP </td><td><select style="width:200px;font-size:11px;" name="prod_rcvd_pid_mrp['+itm_inv_no+']['+itm_ord_id+']['+itm_prod_id+'][]" >'+product_mrp_list+'</select></td></tr>';	
+					}	
+						
 					if(itm_has_serial)
 					{
 						//rowHtml += '	<tr><td>IMEI NO </td><td><input type="text" style="width:200px;font-size:11px;" name="prod_rcvd_pid_imei['+itm_inv_no+']['+itm_ord_id+']['+itm_prod_id+'][]" value="" ></td></tr>';

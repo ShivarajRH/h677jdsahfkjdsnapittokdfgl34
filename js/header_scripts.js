@@ -200,6 +200,7 @@ $(function(){
 			var v=$(this).val();
 			$("#searchkeyword").val(v);
 			prod_cnt='';
+			partner_srch=0;
 			if($('input[name="srch_opt"]:checked').val()==1)
 			{
 				$.post(site_url+'/admin/jx_prd_srch_bybarcode',{chr:v},function(resp){
@@ -211,8 +212,15 @@ $(function(){
 				}
 				else
 				{
-						product_det(prod_det,'barc');
+						//If it is not a imei search 
+						if(resp.partner_srch == 1)
+							partner_srch=1;
+							
+						product_det(prod_det,'barc',partner_srch);
 				}
+					if(resp.partner_srch == 1)
+						$('.ui-dialog-title').html(v);
+					else
 					$('.ui-dialog-title').html('Barcode : '+v);
 				},'json');
 		 	}
@@ -227,8 +235,15 @@ $(function(){
 				}
 				else
 				{
-						product_det(prod_det,'imei');
+						//If it is not a imei search 
+						if(resp.partner_srch == 1)
+							partner_srch=1;
+						
+						product_det(prod_det,'imei',partner_srch);
 				}
+					if(resp.partner_srch == 1)
+						$('.ui-dialog-title').html(v);
+					else
 				$('.ui-dialog-title').html('IMEI : '+v);
 				},'json');
 		 	}
@@ -245,9 +260,9 @@ $(function(){
 		{
 			alert("inpput!!!");return;
 		}
-		var v=$(this).val();
+		var v=$("#searchbox").val();
 		$("#searchkeyword").val(v);
-		$partner_srch=0;
+		partner_srch=0;
 		prod_cnt='';
 		//Condition for search type ---1.Barcode,2.IMEI
 		if($('input[name="srch_opt"]:checked').val()==1)
@@ -261,8 +276,15 @@ $(function(){
 			}
 			else
 			{
-					product_det(prod_det,'barc',is_partner);
+					//If it is not a imei search 
+					if(resp.partner_srch == 1)
+						partner_srch=1;
+						
+					product_det(prod_det,'barc',partner_srch);
 			}
+				if(resp.partner_srch == 1)
+					$('.ui-dialog-title').html(v);
+				else
 				$('.ui-dialog-title').html('Barcode : '+v);
 			},'json');
 	 	}
@@ -278,11 +300,15 @@ $(function(){
 			}
 			else
 			{
+					//If it is not a imei search 
 					if(resp.partner_srch == 1)
 						partner_srch=1;
 						
-					product_det(prod_det,'imei',is_partner);
+					product_det(prod_det,'imei',partner_srch);
 				}
+				if(resp.partner_srch == 1)
+					$('.ui-dialog-title').html(v);
+				else
 				$('.ui-dialog-title').html('IMEI : '+v);
 			},'json');
 	 	}
@@ -326,10 +352,10 @@ $(function(){
 			prod_cnt+='				<h4 style="margin-top:4%; ">Stock Details :</h4>';
 			prod_cnt+='				<table class="datagrid fl_left" width="100%">';
 			prod_cnt+='					<thead>';
-			prod_cnt+='						<th>Barcode</th>';
-			prod_cnt+='						<th>MRP</th>';
-			prod_cnt+='						<th>Rackbin</th>';
-			prod_cnt+='						<th>Stock</th>';
+			prod_cnt+='						<th width="100">Barcode</th>';
+			prod_cnt+='						<th width="100">MRP</th>';
+			prod_cnt+='						<th width="100">Rackbin</th>';
+			prod_cnt+='						<th width="100">Stock</th>';
 			prod_cnt+='					</thead>';
 			prod_cnt+='					<tbody>';
 			$.each(p.stk_det,function(i,d){
@@ -355,16 +381,29 @@ $(function(){
 			//Linked Deals 
 			prod_cnt+='				<h4 style="margin-top:4%; display: inline-block;">Linked Deals :</h4>';
 			prod_cnt+='					<table class="datagrid"  width="100%">';
-			prod_cnt+='						<thead><th>Deal Name</th><th>Deal Type</th><th>FSN</th><th>ASN</th></thead><tbody>';
-					$.each(p.deal_det,function(i,d){
-				prod_cnt+='						<tr><td><a target="_blank" href="'+site_url+'/admin/deal/'+d.dealid+'">'+d.name+'</a></td>';
-				if(d.is_pnh ==1)
+			prod_cnt+='						<thead><th>Deal Name</th><th width="100">Deal Type</th><th width="200">Partner Ids</th></thead><tbody>';
+			
+			prod_cnt+='						<tr><td><a target="_blank" href="'+site_url+'/admin/deal/'+p.dealid+'">'+p.name+'</a></td>';
+			if(p.is_pnh ==1)
 					prod_cnt+='						<td>PNH</td>';
 				else
 					prod_cnt+='						<td>SNP</td>';	
 				
-				prod_cnt+='						<td>'+d.fsin+'</td><td>'+d.asin+'</td></tr>';
+			prod_cnt+='							<td>';
+			
+			if(p.deal_det.length)
+			{
+				$.each(p.deal_det,function(i,d){
+					prod_cnt+='							'+d.name+' : <b>'+d.partner_ref_no+'</b><br />';
 					});
+			}else
+			{
+				prod_cnt+=' N/A';
+			}
+			
+			prod_cnt+='						</td>';
+			prod_cnt+='					</tr>';
+			
 			prod_cnt+='				</tbody></table>';
 			
 			if(srch_type == 'imei' && is_partner_srch==0)
@@ -372,7 +411,7 @@ $(function(){
 				//Vendor,grn details
 				prod_cnt+='				<h4 style="margin-top:4%; display: inline-block;">Vendor Details :</h4>';
 				prod_cnt+='				<table class="datagrid"  width="100%">';
-				prod_cnt+='						<thead><th>Vendor Name</th><th>GRN ID</th><th>Intake On</th></thead><tbody>';
+				prod_cnt+='						<thead><th>Vendor Name</th><th width="100">GRN ID</th><th width="200">Intake On</th></thead><tbody>';
 				prod_cnt+='						<tr>';
 				prod_cnt+='							<td><a target="_blank" href="'+site_url+'/admin/vendor/'+p.vendor_det.vendor_id+'">'+p.vendor_det.vendor_name+'</a></td>';
 				prod_cnt+='							<td><a target="_blank" href="'+site_url+'/admin/viewgrn/'+p.vendor_det.grn_id+'">'+p.vendor_det.grn_id+'</a></td> <td>'+p.vendor_det.created_on+'</td>';
@@ -382,7 +421,7 @@ $(function(){
 				//Invoice Details
 				prod_cnt+='				<h4 style="margin-top:4%; display: inline-block;">Invoice Details :</h4>';
 				prod_cnt+='				<table class="datagrid"  width="100%">';
-				prod_cnt+='						<thead><th>Franchise</th><th>Invoice No</th><th>Shipped On</th><th>Delivered On</th></thead><tbody>';
+				prod_cnt+='						<thead><th width="100">Franchise</th><th width="100">Invoice No</th><th width="100">Shipped On</th><th width="100">Delivered On</th></thead><tbody>';
 				prod_cnt+='						<tr>';
 				prod_cnt+='							<td><a target="_blank" href="'+site_url+'/admin/pnh_franchise/'+p.invoice_det.franchise_id+'">'+p.invoice_det.franchise_name+'</a></td>';
 				prod_cnt+='							<td><a target="_blank" href="'+site_url+'/admin/invoice/'+p.invoice_det.invoice_no+'">'+p.invoice_det.invoice_no+'</a></td><td>'+p.invoice_det.shipped_on+'</td><td>'+p.invoice_det.delivered_on+'</td>';

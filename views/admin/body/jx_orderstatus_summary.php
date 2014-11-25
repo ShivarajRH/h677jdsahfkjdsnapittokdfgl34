@@ -347,7 +347,7 @@
                                 FROM ( SELECT b.status,SUM((mrp-(discount+credit_note_amt))*a.invoice_qty) AS amt1,SUM(i_orgprice-(i_coup_discount+i_discount)*b.quantity) AS amt2,
                                 COUNT(b.id) AS totals
                                 FROM king_orders b
-                                LEFT JOIN king_invoice a ON a.order_id = b.id
+                                LEFT JOIN king_invoice a ON a.order_id = b.id and a.invoice_status = 1 
                                 WHERE b.transid = ? GROUP BY b.status ) AS g';
                                 
                                 $trans_order_status_amt = $this->db->query($sql_trans_ttls,$o['transid']);

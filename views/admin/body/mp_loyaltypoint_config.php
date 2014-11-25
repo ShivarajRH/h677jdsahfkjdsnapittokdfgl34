@@ -288,9 +288,6 @@
 	});
 	
 	function filter_form_submit() {
-//		var mid = $('select[name="sel_menu"]').val()*1;
-//		var bid = $('select[name="sel_brandid"]').val()*1;
-//		var cid = $('select[name="sel_catid"]').val()*1;
 		load_lp_content('');
 		return false;
 	}
@@ -366,6 +363,9 @@
 			var configid = dlg.data("configid");
 			$('.status_txt_msg',dlg).text("");
 			
+			$(".ui-dialog-buttonpane button:contains('Submit')").button("enable");
+				//.button(this.checked ? "enable" : "disable");
+				//alert(configid);
 			if(configid == "0") {
 				//Disable
 				$(".dlg_is_active",dlg).attr("disabled",true);
@@ -379,9 +379,6 @@
 				$(".dlg_sel_brandid",dlg).val(bid);
 				$(".dlg_sel_catid",dlg).val(catid);
 				$(".dlg_note_template",dlg).text("");
-				if(catid!='0')
-					$(".dlg_sel_catid",dlg).trigger('change');
-				
 				
 				//$(".dlg_is_active",dlg).val(lp.is_active);
 				
@@ -394,9 +391,13 @@
 				$.post(site_url+"/admin/mp_loyaltypoint_config_data_jx/"+configid,{},function(lpconfig) {
 					if(lpconfig.status == 'success') {
 						var lp = lpconfig.lp_config;
+						
 						$(".dlg_sel_menu",dlg).val(lp.menuid);
-						$(".dlg_sel_brandid",dlg).val(lp.brandid);
+						$(".dlg_sel_brandid",dlg).val(lp.brandid);//.trigger('change');
 						$(".dlg_sel_catid",dlg).val(lp.catid);
+						
+						//get_filter_menu_cat_brand_list(lp.menuid,lp.brandid,lp.catid);
+						
 						$(".dlg_note_template",dlg).text(lp.offernote_tmpl);
 						$(".dlg_is_active",dlg).val(lp.is_active);
 						//disable
@@ -422,8 +423,13 @@
 				//Disabled
 				$(".dlg_is_active",dlg).attr("disabled",false);
 				
-				if(dlg_sel_menu == '0' || dlg_sel_brandid=='0' || dlg_sel_catid=='0' || dlg_note_template=='0') {
+				if(dlg_sel_menu == '0' || dlg_sel_brandid=='0' || dlg_sel_catid=='0' ) {
 					alert("All required fields need to be set");
+					return false;
+				}
+				if(dlg_note_template=='')
+				{
+					alert("Please enter Note Template.");
 					return false;
 				}
 				
@@ -581,8 +587,10 @@
 	$('select[name="dlg_sel_catid"]').change(function() {
 		var menuid = $('select[name="dlg_sel_menu"]').val()*1;
 		var bid = $('select[name="dlg_sel_brandid"]').val()*1;
+		var configid = $('select[name="dlg_configid"]').val();
 		var catid = $(this).val();
 		var dlg=$("#dlg_add_lp_config");
+		
 		$.post(site_url+"/admin/mp_loyaltypoint_config_data_jx/0",{menuid:menuid,brandid:bid,catid:catid},function(lpconfig) {
 			if(lpconfig.status == 'success') {
 				var lp = lpconfig.lp_config;
@@ -597,10 +605,32 @@
 				//message
 				$('.status_txt_msg',dlg).text("Already configured.");
 				
-				setTimeout(function() {//print("TEST");
-					$('.status_txt_msg',dlg).delay("5000").html("");
-				},20000);
+				
+				
+				
+				if(configid=='0') {
+					$(".ui-dialog-buttonpane button:contains('Submit')").button("disable");
+					//.button(this.checked ? "enable" : "disable");
+					$('.status_txt_msg',dlg).text("Already configured.");
+//					//$('select[name="dlg_sel_catid"]').trigger("change");
+				}
+				else {
+					$(".ui-dialog-buttonpane button:contains('Submit')").button("enable");
+					//.button(this.checked ? "enable" : "disable");
+					$('.status_txt_msg',dlg).text("");
+//					//$('select[name="dlg_sel_brandid"]').trigger("change");
+					//$('select[name="dlg_sel_menu"]').trigger("change");
+				}
 			}
+			else {
+				$(".dlg_note_template",dlg).text("");
+				$(".ui-dialog-buttonpane button:contains('Submit')").button("enable");
+				$('.status_txt_msg',dlg).text("");
+			}
+			
+			setTimeout(function() {//print("TEST");
+				$('.status_txt_msg',dlg).delay("5000").html("");
+			},20000);
 
 		},'json');
 	});

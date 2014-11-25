@@ -979,8 +979,6 @@ class vendor extends Controller
 							// check and update product sourceablity on the products
 							$this->db->query("update m_product_info set is_sourceable = ?,modified_on=now(),modified_by=? where product_id = ? ",array(($prod['qty']?1:0),$this->api_user,$vp_res->row()->product_id));
 				
-							  
-							
 							$itemdet_res = @$this->db->query("select itemid from m_product_deal_link where product_id = ? ",$vp_res->row()->product_id);
 							if($itemdet_res->num_rows())
 							{

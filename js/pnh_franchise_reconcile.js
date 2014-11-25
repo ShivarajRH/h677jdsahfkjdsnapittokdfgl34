@@ -35,6 +35,11 @@ if(error_msgs.length)
             return err_status;
         }
         
+		function fn_payment_for_change(elt)
+		{
+			alert($(elt).val());
+		}
+		
         var icount=0;
         
         $(".clone_rows_invoice").live("click",function() {
@@ -46,8 +51,11 @@ if(error_msgs.length)
             if( $(".error_status").html() != '' && receipt_amount != '') {
                 return false;
             }
+			
+			var payment_for = $("#payment_for").find(":selected").val();
+			
             // check is this franchise have any unreconciled invoices or debit notes?
-            $.get(site_url+"/admin/jx_chk_reconcile_fran_status/"+franchise_id,{},function(resp) {
+            $.get(site_url+"/admin/jx_chk_reconcile_fran_status/"+franchise_id+'/'+payment_for,{},function(resp) {
                 if(resp.status == 'fail') {
                     alert("Franchise not having any invoices or debit entries.");
                     return false;

@@ -252,7 +252,6 @@ $(".reservation_action_status").dialog({
     modal: true
 });
 
-
 function reallot_stock_for_all_transaction(userid,pg) {
     if(!confirm("Are you sure you want to reserve available stock for all pending or partial transactions?")) {
         return false;
@@ -677,6 +676,7 @@ function show_all_orders() {
 function fail(rdata) {
     console.log(rdata);
 }
+
 function done(data) { }
 function fail(xhr,status) { $('#trans_list_replace_block').print("Error: "+xhr.responseText+" "+xhr+" | "+status);}
 function success(resp) {

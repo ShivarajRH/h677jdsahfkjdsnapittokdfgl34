@@ -11,6 +11,7 @@ if(isset($partner))
 <table cellpadding=5>
 <tr><td>Name :</td><td><input type="text" class="inp" name="name" size=50 value="<?=$p?$p['name']:""?>"></td></tr>
 <tr><td>Transaction Prefix :</td><td><input type="text" size=3 maxlength="3" class="inp" name="trans_prefix" value="<?=$p?$p['trans_prefix']:""?>"></td></tr>
+<tr><td>Product Sku Text :</td><td><input type="text" size=5 class="inp" name="partner_sku_text" value="<?=$p?$p['product_sku_text']:""?>"></td></tr>
 <tr><td>Transaction Mode :</td><td>
 <select name="trans_mode">
 <?php foreach(array("PG","COD","Custom1","Custom2","Custom3","Custom4") as $mv=>$m){?>

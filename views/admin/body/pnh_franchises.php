@@ -22,6 +22,23 @@ Suspended
 Active
 </div> <?php } ?>
 
+<!-- <div class="dash_bar">
+<span><?=$normal_ftype_ttl;?></span>
+ Normal Franchises 
+</div>
+<div class="dash_bar">
+<span><?=$rf_ftype_ttl;?></span>
+ Rural Franchises
+</div>
+<div class="dash_bar">
+<span><?=$rmf_ftype_ttl?></span>
+ Rural Mater Franchises
+</div> -->
+<div class="dash_bar">
+<span><?=$unassigned_rfs_ttl?></span>
+Unassigned RF's
+</div>
+
 <div class="dash_bar_right">
 Generate Print by Territory : <select id="sel_p_terry">
 <option value="0">select</option><?php foreach($this->db->query("select id,territory_name as name from pnh_m_territory_info order by name asc")->result_array() as $t){?>
@@ -39,9 +56,10 @@ Generate Print by Territory : <select id="sel_p_terry">
 <div id="tab_showfranby">
 	<ul>
 		
-		<li><a id="link_franlist_latest20" href="#franlist_latest20" onclick="load_franchisesbysel(1,0,0,0,0)">New Franchises</a></li>
-		<li><a id="link_franlist_regthismonth" href="#franlist_regthismonth" onclick="load_franchisesbysel(2,0,0,0,0)">Registered This Month</a></li>
-		<li><a href="#franlist_all" onclick="load_franchisesbysel(5,0,0,0,0)">All Franchises</a></li>
+		<li><a id="link_franlist_latest20" href="#franlist_latest20" onclick="load_franchisesbysel(1,0,0,0,0,0,-1)">New Franchises</a></li>
+		<li><a id="link_franlist_regthismonth" href="#franlist_regthismonth" onclick="load_franchisesbysel(2,0,0,0,0,0,-1)">Registered This Month</a></li>
+		<li><a href="#franlist_all" onclick="load_franchisesbysel(5,0,0,0,0,0,-1)">All Franchises</a></li>
+		<li><a href="#franlist_all" onclick="load_franchisesbysel(6,0,0,0,0,0,-1)">Unassigned RF's</a></li>
 		<?php /*?>
 		<li><a href="#franlist_suspended" onclick="load_franchisesbysel(4,0,0,0,0,0)">Suspended Franchises</a></li>
 		<?php /*/?>
@@ -109,7 +127,7 @@ $('.datagridsort').tablesorter({sortList:[[0,0]]});
 
 var disp_config_params = {};
 
-function load_franchisesbysel(type,alpha,terr_id,town_id,menuid,pg)
+function load_franchisesbysel(type,alpha,terr_id,town_id,menuid,pg,ftype)
 {
 	var tab_ele = '';
 	if(type == 1)
@@ -122,7 +140,8 @@ function load_franchisesbysel(type,alpha,terr_id,town_id,menuid,pg)
 		tab_ele = $('#franlist_suspended .franlist_holder');
 	else if(type == 5)	
 		tab_ele = $('#franlist_all .franlist_holder');		
-		
+	else if(type == 6)	
+		tab_ele = $('#franlist_all .franlist_holder');
 	//tab_ele.html("Loading...");
 	
 	if($('#jx_frlist',tab_ele).length)
@@ -132,7 +151,7 @@ function load_franchisesbysel(type,alpha,terr_id,town_id,menuid,pg)
 	
 	pg = pg*1;
 	
-	disp_config_params = {'type':type,'alpha':alpha,'terr_id':terr_id,'town_id':town_id,'menuid':menuid,'pg':pg}
+	disp_config_params = {'type':type,'alpha':alpha,'terr_id':terr_id,'town_id':town_id,'menuid':menuid,'pg':pg,'ftype':ftype}
 	
 	$.post(site_url+'/admin/jx_getfranchiseslist',disp_config_params,function(resp){
 		tab_ele.html(resp);
@@ -144,7 +163,7 @@ $('#tab_showfranby').tabs();
 
 function reload_frlist()
 {
-	load_franchisesbysel(disp_config_params.type,disp_config_params.alpha,disp_config_params.terr_id,disp_config_params.town_id,disp_config_params.menuid,disp_config_params.pg);
+	load_franchisesbysel(disp_config_params.type,disp_config_params.alpha,disp_config_params.terr_id,disp_config_params.town_id,disp_config_params.menuid,disp_config_params.pg,disp_config_params.ftype);
 }
 
 $(function(){
@@ -168,6 +187,12 @@ $(function(){
 		reload_frlist();
 	});
 	
+	$('select[name="fil_ftype"]').live('change',function(){
+		disp_config_params.ftype = $(this).val();
+		reload_frlist();
+	});
+
+
 	$('.pagination a').live('click',function(e){
 		e.preventDefault();
 		

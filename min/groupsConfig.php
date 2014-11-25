@@ -41,6 +41,8 @@
 	
 	$min_assets['offers_js'][] = '../js/manage_offers_script.js'; // Shivaraj
 	
+	$min_assets['partner_stk_transfer'][] = '../js/partner_stk_transfer_script.js'; // Shivaraj-Sep_29_2014
+	
 	$min_assets['reservations_js'][] = '../js/manage_trans_reservations_script.js'; // Shivaraj
 	$min_assets['reservations_css'][] = '../css/manage_reservations_style.css';//BY Shivaraj
 	
@@ -63,6 +65,8 @@
 	
 	$min_assets['viewproduct_js'][] = '../js/viewproduct_js.js'; // Shivaraj
 	
+	$min_assets['unconfirmed_orderlist'][] = '../js/unconfirmed_orderlist.js'; //Roopa
+	
 	// =========================< JS CODE ENDS >================================
 	
 	// =========================< CSS CODE STARTS >================================
@@ -81,6 +85,29 @@
 	$min_assets['css'][] = '../css/jquery-ui-timepicker-addon.css';// R
 	$min_assets['css'][] = '../css/erp.css';
 	// =========================< CSS CODE ENDS >================================
+	
+	
+	// =========================< CSS CODE DATATABLES START >================================
+	
+	
+	$min_assets['datatable_css'][] = '../css/datatable/css/jquery.dataTables.css';
+	$min_assets['datatable_css'][] = '../css/datatable/dataTables.tableTools.css';
+	$min_assets['datatable_css'][] = '../css/datatable/datatable.common.css';
+	// =========================< CSS CODE DATATABLES END >================================
+	
+	// =========================< JS CODE DATATABLES START >================================
+	
+	$min_assets['datatable_js'][] = '../js/datatable/jquery.dataTables.js';
+	$min_assets['datatable_js'][] = '../js/datatable/jquery.dataTables.min.js';
+	$min_assets['datatable_js'][] = '../js/datatable/dataTables.tableTools.js';
+	$min_assets['datatable_js'][] = '../js/datatable/jquery.jeditable.js';
+	$min_assets['datatable_js'][] = '../js/datatable/jquery.dataTables.editable.js';
+	$min_assets['datatable_js'][] = '../js/datatable/dataTables.fixedHeader.js';
+	
+	// =========================< JS CODE DATATABLES END >================================
+	
+	
+	
 
 return array(
 
@@ -104,4 +131,9 @@ return array(
 	,'tickets_script' =>$min_assets['tickets_script']
 	
 	,'viewproduct_js' =>$min_assets['viewproduct_js']
+		
+	,'unconfirmed_orderlist_js'=>$min_assets['unconfirmed_orderlist']
+ 	,'datatable_css' =>$min_assets['datatable_css']
+   ,'datatable_js' =>$min_assets['datatable_js']
+	,'partner_stk_transfer'=>$min_assets['partner_stk_transfer']
 );

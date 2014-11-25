@@ -39,6 +39,8 @@
 	/*===========< Default filters style - Shivarj >==============*/
 	.filters_block .filter select { width:180px;margin-top:5px;font-size: 12px; }
 	/*===========< END Default filters style - Shivarj >==============*/
+	.highlight_price { color: #fdfcfa;padding: 4px;background-color: #745FDF;border-radius: 9px; }
+	.big_offer { color: #fdfcfa;padding: 4px;background-color: #F74107;border-radius: 9px; margin: 4px; }
 </style>
 <div class="page_wrap container" style="width: 98%;">
 	<h2 class="page_title">Update Member price</h2>
@@ -93,7 +95,7 @@
 			
 			
 			<div class="filter">
-				<label style="margin-right: 10px;">Show Deep Discounts:</label>	<input type="checkbox" value="1" name="show_deep_disc" class="inp show_deep_disc" onchange="return change_deep_discount(this);"/>
+				<label style="margin-right: 10px;">Show Active Offers:</label>	<input type="checkbox" value="1" name="show_deep_disc" class="inp show_deep_disc" onchange="return change_deep_discount(this);"/>
 				<br>
 				<div class="updt_brand_margin"></div>
 				<div class="mp_end_deep_discount" style="margin-top: 0px;"></div>
@@ -142,7 +144,7 @@
 <!--=========================< DIABLOG BOX CODE STARTS >=========================-->
 <div style="display:none;">
 	<div id="dlg_offer_details_blk">
-		<p>Please select validity date range:</p>
+		<p>Please enter offer details:</p>
 		<table width="100%">
 			<tr>
 				<td>Date From:</td>
@@ -151,6 +153,14 @@
 			<tr>
 				<td>Date To:</td>
 				<td><input type="text" name="offer_to" class="offer_to"></td>
+			</tr>
+			<tr>
+				<td>Offer Price:</td>
+				<td><input type="text" name="offer_price" class="offer_price" size="8"></td>
+			</tr>
+			<tr>
+				<td>Is Big Offer:</td>
+				<td><input type="checkbox" name="mp_is_big_offer" class="mp_is_big_offer" value="1"></td>
 			</tr>
 		</table>
 	</div>
@@ -198,23 +208,40 @@
 	
 	<div id="mp_bulkupdate_percentage_block">
 		
-		<table width="100%">
+		<table width="100%" class="datagrid">
 			<tr>
 				<!--<td>Enter Percentage <span class="req">*</span> :</td>-->
 				<td>Bulk Member Price Percentage :</td><td><input type="text" class="mp_update_percent" style=" width: 80px;"/>%</td>
 			</tr>
-			<tr><td>Default Shipsin Time :</td>
+			<tr><td>a). ALL Franchise Max to Sell :</td>
 				<td>
-						<select tabindex="shipsin22" class="mp_offer_shipsin" style="width:103px;" value="">
+						<input type="text" class="bulk_mp_max_allow_qty" style=" width: 80px;"/>  <small>(Qty)</small>
+				</td>
+			</tr>
+			<tr><td>b). MP Franchise Max :</td>
+				<td>
+						<input type="text" class="bulk_mp_frn_max_qty" style=" width: 80px;"/>  <small>(Qty)</small>
+				</td>
+			</tr>
+			<tr><td>c). MP Member Max :</td>
+				<td>
+						<input type="text" class="bulk_mp_mem_max_qty" style=" width: 80px;"/> <small>(Qty)</small>
+				</td>
+			</tr>
+			<tr><td>Default Shipsin :</td>
+				<td>
+						<select tabindex="shipsin22" class="mp_offer_shipsin" style="width:103px;">
 								<option value="0"> -- Not Set -- </option>
-								<option value="24-48 Hrs" >24-48</option>
-								<option value="48-72 Hrs" >48-72</option>
-								<option value="72-96 Hrs" >72-96</option>
+								<option value="24-48 Hrs" >24-48 Hrs</option>
+								<option value="48-72 Hrs" >48-72 Hrs</option>
+								<option value="72-96 Hrs" >72-96 Hrs</option>
+								<option value="4-5 Days" >4-5 Days</option>
 						</select>
 				</td>
 			</tr>
-			<tr><td><div class="show_update_sts"></div></td></tr>
+			<tr><td></td><td><div class="show_update_sts"></div></td></tr>
 		</table>
+		<p>&nbsp;</p>
 	</div>
 	<div id="dlg_sourceable_status_cng">
 		<table width="100%">

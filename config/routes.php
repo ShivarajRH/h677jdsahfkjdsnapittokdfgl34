@@ -53,8 +53,6 @@ $route['scaffolding_trigger'] = "oeifj8493utr8934j98t3ut89f34h89h3498t83ehfgwet8
 
 
 $route['data_api/(:any)']="data/index/$1";
-
-
 $route['data_api']="data/index";
 
 $route['pnh/(:any)']="pnh/$1";
@@ -92,7 +90,7 @@ $urs=array("viewbycat","viewbycatbrand","viewbybrandcat","viewbybrand","viewbyme
 foreach($urs as $u)
 	$route["$u/(:any)"]="deals/$u/$1";
 
-$route['api/buy/(:any)']="api/buypartitem/$1";
+$route['api/buy/(:any)']="deals/buypartitem/$1";
 $route['headtotoe']="deals/productsforwholebody";
 $route['headtotoe/(:any)']="deals/productsforwholebody/$1";
 

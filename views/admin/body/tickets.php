@@ -66,7 +66,6 @@
 							<option value="4">Urgent</option>
 						</select>
 					</div>
-
 					<div class="filter" id="franchise_filter_block">
 						Franchise : <select id="franchise_id">
 							<option value="0">All</option>
@@ -85,7 +84,6 @@
 							?>
 						</select>
 					</div>
-
 
 					<div class="filter">
 						Date range : <input type="text" size="8" class="inp" id="ds_range" value=""> to <input size="8" type="text" class="inp" id="de_range" value="">
@@ -186,16 +184,18 @@
 					<th width="15" align="center">Created on</th>
 					<th width="15" align="center">Last Activity on</th>
 					<th align="center">Ticket No</th>
-					<th align="center">User / Franchise</th>
+					<th align="center">Franchise</th>
+					<th align="center">User</th>
 					<th align="center">Status</th>
-					<!--<th align="center">Type</th>-->
+					<th align="center">Type</th>
 					<th align="center">Related To</th>
 					<th align="center">Priority</th>
 					<th align="center">Assigned To</th>
-					<!--<th align="center">Linked Depts</th>-->
+					<th align="center">Notify Depts</th>
 					<th align="center">From APP/WEB</th>
 					<th align="center">Email</th>
 					<th align="center">Transaction</th>
+					<th align="center">Created By</th>
 					</tr>
 					</thead>
 					<tbody align="center" width="100%"></tbody>

@@ -130,6 +130,16 @@ Loading...
 				<td align="right">Date of Delivery<span class="red_star">*</span></td>
 				<td align="left"><input type="text"  name="e_dod"  class="datetimepick" style="width: 80px;" value="" readonly="readonly"></td>
 			</tr>
+			<tr>
+				<td align="right">Payment Type<span class="red_star">*</span></td>
+				<td align="left">
+					Prepaid<input type="radio" name="payment_type" value="1">
+					Credit<input type="radio" name="payment_type" value="0"></td>
+			</tr>
+			<tr class="credit_inp" style="display:none">
+				<td align="right">Credit Days<span class="red_star">*</span></td>
+				<td align="left"><input type="text"  name="credit_days"  style="width: 80px;" value="" ></td>
+			</tr>	
 			<tr>	
 				<td align="center">Remarks<span class="red_star">*</span></td>
 				<td style="text-align:right;align:center;"><textarea style="width:350px;height: 100px;" name="remarks"  value=""></textarea></td>
@@ -145,7 +155,7 @@ Loading...
  
 <div style="display:none">
 	<table id="sl_prod_template">
-		<tbody><tr class="brand_%brandid% cat_%catid%" brandid="%brandid%"><td><input type="checkbox" class="sl_sel_prod" value="%pid%"><input type="hidden" class="pid" value="%pid%"></td><td class="psrcstat"><span class="src_stat">%prod_source_stat%</span> <a href=javascript:void(0)" prod_id="%pid%" onclick="upd_prdsourceablestat(this)" nsrc="%prod_source_stat_val%" >Change</a> </td><td>%pid%</td><td class="name" style="width: 400px;text-align: left;"><a  target="_blank" href="<?php echo site_url('admin/product/%pid%')?>">%product%</a></td><td>Rs <span class="mrp">%mrp%</span></td><td class="margin" style="display: none;" >%margin%</td><td>%stock%</td><td ><input type="text" class="i_po_qty" style="width: 40px;" value="%i_po_qty_val%"></td><td class="orders">%orders%</td></tr></tbody>
+		<tbody><tr class="brand_%brandid% cat_%catid%" brandid="%brandid%" stock="%stock%" src="%prod_source_stat_val%"><td><input type="checkbox" class="sl_sel_prod" value="%pid%"><input type="hidden" class="pid" value="%pid%"></td><td class="psrcstat"><span class="src_stat">%prod_source_stat%</span> <a href=javascript:void(0)" prod_id="%pid%" onclick="upd_prdsourceablestat(this)" nsrc="%prod_source_stat_val%" >Change</a> </td><td>%pid%</td><td class="name" style="width: 400px;text-align: left;"><a  target="_blank" href="<?php echo site_url('admin/product/%pid%')?>">%product%</a></td><td>Rs <span class="mrp">%mrp%</span></td><td class="margin" style="display: none;" >%margin%</td><td>%stock%</td><td ><input type="text" class="i_po_qty" style="width: 40px;" value="%i_po_qty_val%"></td><td class="orders">%orders%</td></tr></tbody>
 	</table>
 	<div>
 		<table id="p_clone_template" width="100%">
@@ -157,8 +167,15 @@ Loading...
 						<a target="_blank"   href="<?php echo site_url('admin/product/');?>/%product_id%" >product_name</a>&nbsp;<b>(%product_brand%)</b>
 					</div>
 					<div><b>PNH Product ID:%product_id%</b></div>
-					<br>
-					<div><span style="background-color: #FAFAFA;padding:3px;width:20px;font-weight: bold;color: blue;">Current Stock : %curr_stck%</span></div>
+					
+					<div class="stk_det_wrap_%product_id%"><a href="javascript:void(0)" onclick="load_stk_det(%product_id%)">Stock Details</a></div>
+					<div class="filters_block stkblk_%product_id%" style="display:none">
+						<div class="filter">
+							<label>Current Stock : </label><b>%curr_stck%</b><br />
+							<label>Open Orders Stock : </label><b>%pen_ord_qty%</b><br />
+							<label>Inventory Stock : </label><b>%inventory_qty%</b> 
+						</div>	
+					</div>	
 				</td>
 				<td style="text-align: right"><input type="text" class="mrp calc_pp inp readonly" size="8" name="mrp[]" value=mrpvalue readonly="readonly"></td>
 				<td style="text-align: right">
@@ -183,7 +200,7 @@ Loading...
 						<b id="is_po_raised_%product_id%" style="font-size: 12px;margin-left: 4px"></b>	
 					</div>
 					<div>
-						<span>Required qty : </span>
+						<span>Purchase qty : </span>
 						<span><input type="text" class="inp calc_pp qty" id="prod_qty_%product_id%"  size=4 name="qty[]" value="%require_qty%" style="border:1px solid #000000;width:30px;"></span>
 					</div>
 				</td>
@@ -291,18 +308,28 @@ Loading...
 	</span>
 	
 	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-	<span style="float: right" id="cat_prod_disp">
+	<span style="float: right;margin:0px 10px;" id="cat_prod_disp">
 			<b>Categories</b> :
 			<select name="cat_prod_disp">
 			<option value="0">Select Category</option>
 			</select>
 	</span>
+	
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<span style="float: right;margin:0px 10px;">
+			<b>Sourceable</b> :
+			<select name="prod_src">
+				<option value="-1">All</option>
+				<option value="1">Sourceable</option>
+				<option value="0">Not Sourceable</option>
+			</select>
+	</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 	<br><br>
 	<div class="datagrid_cont">
 	<h3 id="ttl_res"></h3>
 		<table class="datagrid datagridsort" width="100%">
 			<thead>
-				<tr brandid="%brandid%"><th class="not-sortable"><input type="checkbox" class="chk_all"></th><th>Source</th><th>Product ID</th><th>Product</th><th>Mrp</th><th style="display: none;">Margin</th><th>Stock</th><th>PO Qty</th><th>Orders[90 Days]</th></tr>
+				<tr brandid="%brandid%"><th class="not-sortable"><input type="checkbox" class="chk_all"></th><th>Source</th><th>Product ID</th><th>Product</th><th>Mrp</th><th style="display: none;">Margin</th><th>Stock</th><th>PO Qty</th><th>Orders[60 Days]</th></tr>
 			</thead>
 			<tbody></tbody>
 		</table>
@@ -357,7 +384,16 @@ Loading...
 </div>
 
 <script>
-
+function load_stk_det(p){
+	var trele=$(this).parents('tr:first');
+	$('.stkblk_'+p).show();
+	$('.stk_det_wrap_'+p).html('<a href="javascript:void(0)" onclick="hide_stk_det('+p+')">Hide Stock Suggestions</a>');
+}
+function hide_stk_det(p){
+	var trele=$(this).parents('tr:first');
+	$('.stkblk_'+p).hide();
+	$('.stk_det_wrap_'+p).html('<a href="javascript:void(0)" onclick="load_stk_det('+p+')">Show Stock Suggestions</a>');
+}
 $('.pur_unitprice').live('change',function(){
 	var unitprc = parseFloat($(this).val());
 	var trele = $(this).parents('tr:first');
@@ -406,7 +442,32 @@ $('select[name="cat_prod_disp"]').live( "change",function(){
 		$('#sl_products tbody tr').hide();
 		$('#sl_products tbody tr.cat_'+sel_cat_id).show();
 	}
+	
+	$('select[name="prod_src"]').val(1).trigger('change');
 });
+
+$('select[name="prod_src"]').live( "change",function(){
+	var v = $(this).val();
+	var sel_cat_id = $('select[name="cat_prod_disp"]').val();
+	$('#sl_products tbody tr').hide();
+	$('#sl_products tbody tr.cat_'+sel_cat_id).each(function(){
+		var src = $(this).attr('src');
+		if(v==-1)
+		{
+			$(this).show();
+		}else
+		{
+			if(v==src)
+			{
+				$(this).show();
+			}else
+			{
+				$(this).hide();
+			}
+		}
+	});
+});
+
 
 function get_unixtimetodate(utime)
 {
@@ -421,7 +482,16 @@ function get_unixtimetodate(utime)
     return datetime;
 }
 
-
+$('input[name="payment_type"]').click(function(){
+	var v=$(this).val();
+	if(v==0)
+	{
+		$('.credit_inp').show();
+	}else
+	{
+		$('.credit_inp').hide();
+	}
+});
 
 $(".all_po_chk").live("click", function(){
 	if($(this).attr("checked"))
@@ -614,7 +684,27 @@ $("#load_unavail").click(function(){
 }).attr("disabled",false);
 
 $('select[name="stk_prod_disp"]').change(function(){
+	
 	var type = $(this).val();
+	$('select[name="prod_src"]').val(-1);
+	$('#sl_products tbody tr').each(function(){
+		var stk = $(this).attr('stock');
+		if(type==1)
+		{
+			$(this).show();
+		}	
+		else
+		{
+			if(stk==0)
+			{
+				$(this).show();
+			}else
+			{
+				$(this).hide();
+			}		
+		}	
+	});
+	/*
 	if(type == 1)
 		$('#sl_products .datagrid tbody tr').show();
 	else 
@@ -628,6 +718,7 @@ $('select[name="stk_prod_disp"]').change(function(){
 					$('#sl_products .datagrid tbody tr.STOCKNOORDER').show();
 					else if(type == 5)
 						$('#sl_products .datagrid tbody tr.NOSTOCKNOORDER').show();
+	*/					
 });
 
 var added_po=[];
@@ -702,6 +793,12 @@ function addproduct(id,name,mrp,margin,orders,qty,require)
 		template=template.replace(/%brandid%/g,o.brand_id);
 		template=template.replace(/%src%/g,o.is_sourceable);
 		template=template.replace(/%product_brand%/g,o.brand_name);
+		
+		pen_ord_qty=o.pen_ord_qty!=null?o.pen_ord_qty:0;
+		template=template.replace(/%pen_ord_qty%/g,pen_ord_qty);
+		
+		inventory_stock=o.inventory_stock!=null?o.inventory_stock:0;
+		template=template.replace(/%inventory_qty%/g,inventory_stock);
 		
 		var mrgin=$('input[name="margin[]"],tr',this).val()*1;
 	 	var sch_type=$('select[name="sch_type[]"],tr',this).val();
@@ -1015,6 +1112,11 @@ $(function(){
 					alert('"Date of Delivery" is mandatory');
 					return false;
 				}
+				if(!$('input[name="payment_type"]:checked').val())
+				{
+					alert('Please choose Payment Type');
+					return false;
+				}
 				if($('textarea[name="remarks"]').val().length == 0)	
 				{
 					$('textarea[name="remarks"]').addClass('error_inp');
@@ -1192,13 +1294,12 @@ $("#sl_products").dialog({
 											{
 												$('#ttl_res').html('Total Products:'+data.length);
 											$.each(data,function(i,p){
-												if(p.src==1)
-												{
-												if(!$('select[name="cat_prod_disp"] option#cat_'+p.product_cat_id).length){
-													if(p.product_cat_id != undefined){
-													$('select[name="cat_prod_disp"]').append('<option id="cat_'+p.product_cat_id+'" value="'+p.product_cat_id+'">'+p.p_category_name+'</option>');
-													}
-												 }
+												
+													if(!$('select[name="cat_prod_disp"] option#cat_'+p.product_cat_id).length){
+														if(p.product_cat_id != undefined){
+														$('select[name="cat_prod_disp"]').append('<option id="cat_'+p.product_cat_id+'" value="'+p.product_cat_id+'">'+p.p_category_name+'</option>');
+														}
+													 }
 													template=$("#sl_prod_template tbody").html();
 													template=template.replace(/%id%/g,i);
 													template=template.replace(/%pid%/g,p.id);
@@ -1211,14 +1312,15 @@ $("#sl_products").dialog({
 													template=template.replace(/%brandid%/g,bid);
 													template=template.replace(/%prod_source_stat%/g,((p.src==1)?'Yes':'No'));
 													template=template.replace(/%prod_source_stat_val%/g,p.src);
+													/*
 													var po_ord_qty = 0;
 													if(p.pen_ord_qty > p.stock)
 														po_ord_qty = (p.pen_ord_qty-(p.stock+p.order_qty));
 														//po_ord_qty = p.pen_ord_qty-p.stock;
 													else if(p.pen_ord_qty)
 														po_ord_qty = 0; 
-														
-													template=template.replace(/%i_po_qty_val%/g,po_ord_qty<0?0:po_ord_qty);
+													*/	
+													template=template.replace(/%i_po_qty_val%/g,p.pen_ord_qty);
 													$("#sl_products .datagrid tbody").append(template);
 													if(p.src==1)
 														$("#sl_products .datagrid tbody tr:last").addClass("src");
@@ -1239,7 +1341,7 @@ $("#sl_products").dialog({
 																rec_type += ' NOSTOCKNOORDER ';
 										
 													$("#sl_products .datagrid tbody tr:last").addClass(rec_type);
-												}	
+													
 												});
 											$("#sl_products .datagrid").trigger("update");
 											$("table").trigger("sorton",[[[1,1]]]); 
@@ -1250,6 +1352,7 @@ $("#sl_products").dialog({
 											}
 
 											$('select[name="cat_prod_disp"]').trigger('change');
+											$('select[name="prod_src"]').val(1).trigger('change');
 											
 										});
 							},

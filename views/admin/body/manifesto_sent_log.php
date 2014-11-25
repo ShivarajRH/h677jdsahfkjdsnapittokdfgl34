@@ -290,8 +290,13 @@ if($this->db->query("select count(*) as t
 												 */?>
 												 
 										<!-- update vehicle details button and lr number update button-->		
-										<?php }
+										<?php }else{ ?>
 										
+											<!-- Lr No update Link -->
+										<input type="button" value="Update new Lr Number" onclick="show_current_lrnodetails('<?php echo $sent_det['id']; ?>')">
+										<!-- Lr No update Link end -->
+										
+											<?php } 
 										//office pick up det update button
 										if($sent_det['bus_id']!=0 && !$sent_det['office_pickup_empid'] && $sent_det['status']!=1){	
 											$show_lr_update=1;
@@ -400,6 +405,12 @@ if($this->db->query("select count(*) as t
 	</form>
 </div>
 <!-- Update office pick up details modal end-->
+
+<!-- Update Lrno  details modal -->
+<div id="update_lrno_detail" title="Lr No update Detail">
+
+</div>
+<!-- Update Lrno  details end-->
 
 <!-- office pickup list modal -->
 <div id="office_pick_up_det" title="Office pick up list">
@@ -1285,6 +1296,88 @@ $("#update_office_pickup").dialog({
 		}
 	}
 	});
+
+	 
+function show_current_lrnodetails(manifesto_id)
+{
+	$("#update_lrno_detail").data({'manifesto_id':manifesto_id}).dialog('open');
+}
+
+$("#update_lrno_detail").dialog({
+	autoOpen:false,
+	modal:true,
+	height:'200',
+	width:'400',
+	autoResize:true,
+	open:function(){
+		var manifesto=$(this).data('manifesto_id');
+		$.post(site_url+"admin/jx_get_lrno_details",{manifesto_id:manifesto},function(res){
+			$('#clr_number').val(res.lrno);
+		},'json');
+		$("#errormsg").html('');
+		$("#update_lrno_detail").html('');
+		var table_html='';
+		table_html+='<input type="hidden" value="'+manifesto+'" id="manifesto_sent_id" name="manifesto_sent_id"><table class="datagrid" width="100%">';
+		table_html+='	<thead><tr><th colspan="2">Update Lr number <span id="errormsg" style="color:red;"></span></th></tr></thead>';
+		table_html+='	<tbody>';
+		table_html+='       <tr>';
+		table_html+='       	<td>Current Lr number:</td>';
+		table_html+='       	<td><input tye="text" id="clr_number" name="clr_number" ></td>';
+		table_html+='       </tr>';
+		table_html+='       <tr>';
+		table_html+='       	<td>New Lr Number</td>';
+		table_html+='       	<td><input type="text" size:"10" id="nlr_number" name="nlr_number"></td>';
+		table_html+='       </tr>';
+		table_html+='       <tr>';
+		table_html+='	</tbody>';
+		table_html+='</table>';
+		$('#update_lrno_detail').append(table_html);
+	},
+	
+	buttons:{
+		'Submit' : function(){
+			$("#errormsg").html('');
+			 var currlrno  = document.getElementById("clr_number").value;
+			 var newlrno  = document.getElementById("nlr_number").value;
+			 var manifesto  = document.getElementById("manifesto_sent_id").value;
+			if(currlrno=="")
+			{
+				$("#errormsg").html('Current LR no is empty');
+				return;
+			}else if(newlrno=="")
+			{
+				$("#errormsg").html('New LR no is empty');
+				return;
+			}else
+			{
+				 $.ajax ({
+	                 'dataType': 'json',
+	                 'type'    : 'POST',
+	                 'url'     : site_url+"admin/jx_update_manifestlrno",
+	                 'data'    : "manifesot_id="+manifesto+"&currlrno="+currlrno+"&newlrno="+newlrno,
+	                 "success" : function(resp) {
+	                	 if(resp.error==1)
+	                		 {
+	                			 alert("New LR no Updated");
+	                			 $('#update_lrno_detail').dialog('close');
+	                		     //window.location.href = site_url+"admin/view_manifesto_sent_log";                		 
+	                		 
+	                		 } else
+	                		 {
+	                			 $("#errormsg").html('Current LR no is Wrong');
+	                		 }                   	         
+	                 }
+				 });       
+			}
+		},
+		
+		'Close':function(){
+			$(this).dialog('close');
+		}
+	}
+});
+
+
 
 	$("#update_office_pickup_form").submit(function(){
 		var office_pick_up=$("#office_pick_list",this).val();

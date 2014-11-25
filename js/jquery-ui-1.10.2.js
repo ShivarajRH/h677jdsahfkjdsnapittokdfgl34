@@ -6601,6 +6601,7 @@ $.widget( "ui.autocomplete", {
 			collision: "none"
 		},
 		source: null,
+		type: "GET", // added by Shivaraj_Nov_07_2014
 
 		// callbacks
 		change: null,
@@ -6930,12 +6931,14 @@ $.widget( "ui.autocomplete", {
 			};
 		} else if ( typeof this.options.source === "string" ) {
 			url = this.options.source;
+			type = this.options.type;
 			this.source = function( request, response ) {
 				if ( that.xhr ) {
 					that.xhr.abort();
 				}
 				that.xhr = $.ajax({
 					url: url,
+					type: type,
 					data: request,
 					dataType: "json",
 					success: function( data ) {

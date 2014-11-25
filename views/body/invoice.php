@@ -120,8 +120,6 @@ table{
 			$mem_det = $this->db->query("select pnh_member_id as mid,mobile,concat(first_name,' ',last_name) as mem_name from pnh_member_info where user_id=?",$orders[0]['userid'])->row_array();
 		}
 
-
-
 		$batch=$this->db->query("select courier_id,awb from shipment_batch_process_invoice_link where invoice_no=?",$invoice_no)->row_array();
 		$awb=$batch['awb'];
 		$courier=$this->db->query("select courier_name from m_courier_info where courier_id=?",$batch['courier_id'])->row_array();
@@ -310,7 +308,7 @@ table{
 							</td>
 							</tr>
                                                         <?php 
-                                                        if( isset($arr_offer_type[$order['offer_type']]) ) {
+                                                        if( isset($order['offer_type']) && isset($arr_offer_type[$order['offer_type']]) ) {
                                                             ?>
                                                         
                                                             <tr><th>Offers :</th>

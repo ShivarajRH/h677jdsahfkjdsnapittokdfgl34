@@ -6,7 +6,7 @@ $d=$deal;
 ?>
 <div class="container">
 <h2><?php if($d){?>Edit<?php }else{?>Add new<?php }?> PNH Deal</h2>
-<form method="post" id="pnh_add_d_form" enctype="multipart/form-data" autocomplete="off">
+<form method="post" id="pnh_add_d_form" enctype="multipart/form-data" autocomplete="off" onsubmit="return deal_form_submit(this);">
 
 <table cellpadding=5 id="deal">
 <tr><td>Deal Name : </td><td><input type="text" name="name" class="inp" size=50 value="<?=$d?$d['name']:""?>"></td></tr>
@@ -64,7 +64,16 @@ $d=$deal;
 <td>Keywords :</td><td><textarea name="keywords" rows=5 cols=60><?=$d?$d['keywords']:""?></textarea>
 </tr>
 <tr>
-<td>Ships in :</td><td><input type="text" name="shipsin" size="40" value="<?=$d?$d['shipsin']:""?>"></td>
+<td>Ships in :</td><td>
+		<!--<input type="text" name="shipsin" value="<?=$d?$d['shipsin']:""?>">-->
+		<select name="shipsin" class="shipsin" style="width:103px;">
+				<option value="0"> -- Not Set -- </option>
+				<option value="24-48 Hrs" <?=$d? ($d['shipsin']=='24-48 Hrs'?'selected':'')	:""?> >24-48 Hrs</option>
+				<option value="48-72 Hrs" <?=$d? ($d['shipsin']=='48-72 Hrs'?'selected':'')	:""?>>48-72 Hrs</option>
+				<option value="72-96 Hrs" <?=$d? ($d['shipsin']=='72-96 Hrs'?'selected':'')	:""?>>72-96 Hrs</option>
+				<option value="4-5 Days" <?=$d? ($d['shipsin']=='4-5 Days'?'selected':'')	:""?>>4-5 Days</option>
+		</select>
+	</td>
 </tr>
 </table>
 
@@ -263,30 +272,36 @@ function addproductg(id,name,mrp,margin)
 
 
 
-var jHR=0,search_timer=0;
-$(function(){
-
-	$("#pnh_add_d_form").submit(function(){
-
+	//$("#pnh_add_d_form").submit(function(){
+	function deal_form_submit(elt)
+	{
+		
 		if($('.error_inp').length){
 			alert("Invalid prices Entered");
 			return false;
 		}
 		
-		if($(".p_pids",this).length==0 && $(".al_pids",this).length==0)
+		if($(".p_pids",$(elt)).length==0 && $(".al_pids",$(elt)).length==0)
 		{
 			alert("No products or group linked");
 			return false;
 		}
 
-		if($(".p_pids",this).length!=0)
+		if( $(".shipsin",$(elt)).val()=="0")
+		{
+			alert("Please select ships in time");
+			$(".shipsin",$(elt)).focus();
+			return false;
+		}
+		
+		if($(".p_pids",$(elt)).length!=0)
 		{
 			if(!confirm("Are you sure you want to add new deal,with "+$(".p_pids",this).length+" Products Linked"))
 			{
 				return false;
 			}
 		}
-
+		
 		/*if( $("#is_group").is(":checked") && $(".p_pids",$("#pprods_g")).length == 0  ) {
 		    alert("Is group is checked please add some some products for deal");
 		    $("#po_g_search",this).focus();
@@ -294,8 +309,11 @@ $(function(){
 		}*/
 		
 		return true;
-	});
-	
+	}
+
+var jHR=0,search_timer=0;
+$(function(){
+
 	$("#po_search").keyup(function(){
 		q=$(this).val();
 		if(q.length<3)

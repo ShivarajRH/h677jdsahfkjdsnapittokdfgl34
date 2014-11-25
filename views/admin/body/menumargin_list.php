@@ -1,8 +1,8 @@
 <div class="container page_wrap">
 <h2>Manage Menu Margin</h2>
-<table class="datagrid datagridsort"   width="50%" >
+<table class="datagrid datagridsort"   width="100%" >
 <!--<thead><th>Sl no</th><th>Menu</th><th>Menu Margin</th><th width="20%">Loyalty Point Value(1 point value)</th><th>Minimum Balance Discount</th><th>Actions</th></thead>-->
-<thead><th>Sl no</th><th>Menu</th><th>Menu Margin on OP</th><th>Menu Margin on MP</th><th>Actions</th></thead>
+<thead><th>Sl no</th><th>Menu</th><th>Menu Margin on OP</th><th>Menu Margin on MP</th><th>RF MP Margin</th><th>RF Commission</th><th>RMF Commission</th><th>Actions</th></thead>
 <?php $i=1; foreach($menu_list_res->result_array() as $menu_det ){?>
 <tbody>
 	<tr>
@@ -10,6 +10,9 @@
 		<td><?php echo $menu_det['name']?></td>
 		<td><?php echo $menu_det['default_margin'];?> %</td>
 		<td><?php echo $menu_det['default_mp_margin'];?> %</td>
+		<td><?php echo $menu_det['rf_mp_margin'];?> %</td>
+		<td><?php echo $menu_det['rf_commission'];?> %</td>
+		<td><?php echo $menu_det['rmf_commission'];?> %</td>
 		<!--<td ><?php // echo 'Rs '.$menu_det['loyality_pntvalue'] ?></td>-->
 		<!--<td>Amount : <b>Rs <?php // echo formatInIndianStyle($menu_det['min_balance_value'])?></b>-->
 			<!--<p style="margin:3px 0px">Discount: <b><?php // echo $menu_det['bal_discount']?>%</b></p>-->
@@ -52,13 +55,30 @@
 				<td><b>:</b></td>
 				<td><input type="text" size="3px" name="mp_margin" value="">%</td>
 			</tr>
+			<tr>
+				<td><b>RF MP Margin</b></td>
+				<td><b>:</b></td>
+				<td><input type="text" size="3px" name="rf_mp_margin" value="">%</td>
+			</tr>
+			
+			<tr>
+				<td><b>RF Commission</b></td>
+				<td><b>:</b></td>
+				<td><input type="text" size="3px" name="rf_commission" value="">%</td>
+			</tr>
+			
+			<tr>
+				<td><b>RMF Commission</b></td>
+				<td><b>:</b></td>
+				<td><input type="text" size="3px" name="rmf_commission" value="">%</td>
+			</tr>
 		</table>
 		</form>
 	</div>
 	
 	<div id="view_marginupdatelog" title="Margin update Log">
 		<table class="datagrid" id="menumargin_updatelog" width="100%">
-			<thead><th>Menu</th><th>OP Menu Margin(%)</th><th>MP Menu Margin(%)</th><th>Loyality Point(Rs)</th><th>Balance Amount(rs)</th><th>Balance Discount(%)</th><th>Last Updated By</th><th>Updated On</th></thead>
+			<thead><th>Menu</th><th>OP Menu Margin(%)</th><th>MP Menu Margin(%)</th><th>Loyality Point(Rs)</th><th>RF MP Margin</th><th>RF Commission</th><th>RMF Commission</th><th>Balance Amount(rs)</th><th>Balance Discount(%)</th><th>Last Updated By</th><th>Updated On</th></thead>
 			<tbody></tbody>
 		</table>
 	</div>
@@ -73,8 +93,8 @@ function edit_margindetails(id)
 $('#edit_menudiv').dialog({
 modal:true,
 autoOpen:false,
-width:'300',
-height:'250',
+width:'650',
+height:'450',
 open:function(){
 	dlg = $(this);
 	$('#edit_menumargin input[name="menu_id"]',this).val(dlg.data('menuid'));
@@ -83,6 +103,9 @@ open:function(){
 	$('#edit_menumargin input[name="bal_disc"]').val("");
 	$('#edit_menumargin input[name="margin"]').val("");
 	$('#edit_menumargin input[name="loyalty_pntvalue"]').val("");
+	$('#edit_menumargin input[name="rf_mp_margin"]').val("");
+	$('#edit_menumargin input[name="rf_commission"]').val("");
+	$('#edit_menumargin input[name="rmf_commission"]').val("");
 	$.post(site_url+'/admin/jx_load_menumargindet',{menu_id:dlg.data('menuid')},function(result){
 		if(result.status == 'error')
 			alert('No Menu Found');
@@ -94,6 +117,9 @@ open:function(){
 			$('#edit_menumargin input[name="min_bal_val"]').val(result.menu_det.min_balance_value);
 			$('#edit_menumargin input[name="bal_disc"]').val(result.menu_det.bal_discount);
 			$('#edit_menumargin input[name="mp_margin"]').val(result.menu_det.default_mp_margin);
+			$('#edit_menumargin input[name="rf_mp_margin"]').val(result.menu_det.rf_mp_margin);
+			$('#edit_menumargin input[name="rf_commission"]').val(result.menu_det.rf_margin);
+			$('#edit_menumargin input[name="rmf_commission"]').val(result.menu_det.rmf_margin);
 		}
 			
 
@@ -145,7 +171,9 @@ $("#view_marginupdatelog").dialog({
 				+"<td>"+b.loyality_pntvalue+"</td>"
 				+"<td>"+b.balance_amount+"</td>"
 				+"<td>"+b.balance_discount+"</td>"
-				
+				+"<td>"+b.rf_mp_margin+"</td>"
+				+"<td>"+b.rf_commission+"</td>"
+				+"<td>"+b.rmf_commission+"</td>"
 				+"<td>"+b.user+"</td>"
 				+"<td>"+b.updated_on+"</td>"
 				+"</tr>"

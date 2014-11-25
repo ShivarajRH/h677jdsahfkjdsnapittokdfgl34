@@ -9,10 +9,8 @@
 	else
 		$selected_menu = explode(',',$selected_menu);
 	
-	if(!isset($selected_accessories))
-		$selected_accessories=array();
-	else
-		$selected_accessories = explode(',',$selected_accessories);
+	
+	
 
 $sec_q=array("What was your childhood nickname?","In what city were you born?","What is the name of the company of your first job?","In what year was your father born?","What was the name of your elementary / primary school?","What is your mother's maiden name?"," What is your oldest sibling's name?"," Who was your childhood hero?")
 	
@@ -81,6 +79,8 @@ function init_frmap() {
 				<tr><td>Name<span class="red_star">*</span></td><td>:</td><td><input type="text" name="name" class="inp mand" size="40" value="<?=$v?"{$v['franchise_name']}":""?>"></td></tr>
 				<tr><td>Address<span class="red_star">*</span></td><td>:</td><td><input type="text" name="address" class="inp mand" size="50" value="<?=$v?"{$v['address']}":""?>"></td></tr>
 				<tr><td>Locality<span class="red_star">*</span></td><td>:</td><td><input type="text" name="locality" size="30" class="inp mand" value="<?=$v?"{$v['locality']}":""?>"></td></tr>
+				<tr><td>Taluk<span class="red_star"></span></td><td>:</td><td><input type="text" name="taluk" size="30"  value="<?=$v?"{$v['taluk']}":""?>"></td></tr>
+				<tr><td>Hobli<span class="red_star"></span></td><td>:</td><td><input type="text" name="hobli" size="30"  value="<?=$v?"{$v['hobli']}":""?>"></td></tr>
 				<tr><td>City<span class="red_star">*</span></td><td>:</td><td><input type="text" name="city" class="inp mand" value="<?=$v?"{$v['city']}":""?>"></td></tr>
 				<tr><td>State<span class="red_star">*</span></td><td>:</td><td><input type="text" name="state" class="inp mand" value="<?=$v?"{$v['state']}":""?>"></td></tr>
 				<tr><td>Postcode<span class="red_star">*</span></td><td>:</td><td><input type="text" name="postcode" class="inp mand" value="<?=$v?"{$v['postcode']}":""?>"></td></tr>
@@ -92,7 +92,7 @@ function init_frmap() {
 			<table width="100%">
 			<tr><td>Login Mobile 1<span class="red_star">*</span></td><td>:</td><td><input type="text" maxlength="10" class="inp mand loginmob1" name="login_mobile1" value="<?=$v?"{$v['login_mobile1']}":""?>"><span id="mob1_error"></span></td></tr>
 			<tr><td>Login Mobile 2</td><td>:</td><td><input type="text" maxlength="10" class="inp loginmob2" name="login_mobile2" value="<?=$v?"{$v['login_mobile2']}":""?>"><span id="mob2_error"></span></td></tr>
-			<tr><td>Login Email</td><td>:</td><td><input type="text" class="inp mand login_email" name="login_email" size=30 value="<?=$v?"{$v['email_id']}":""?>"></td></tr>
+			<tr><td>Login Email</td><td>:</td><td><input type="text" class="inp login_email" name="login_email" size=30 value="<?=$v?"{$v['email_id']}":""?>"></td></tr>
 			</table>
 			</div>
 
@@ -130,7 +130,7 @@ function init_frmap() {
 					</tr>
 					<tr>
 	
-	<td>Store Type <span class="red_star">*</span>:</td>
+	<td>Store Type :</td>
 	<?php $store_types=$this->db->query("SELECT id,store_name FROM m_apk_store_types ORDER BY store_name ASC");if($store_types){?>
 	<td>
 		<select name="store_type" id="store_type" width="180px">
@@ -196,6 +196,45 @@ function init_frmap() {
 					}?>
 					</div></td>
 					</tr>
+					<tr><td>Franchise Type</td><td>:</td>
+					<td><div>
+							<select name='franchise_type' id="franchise_type">
+							<option value="-1">choose</option>
+							<?php $franchise_types=$this->config->item("franchise_type"); 
+								if($franchise_types) {
+									foreach($franchise_types as $ft=>$ftype) { ?>
+										<option value="<?=$ft;?>" <?php echo ($ft==$v['franchise_type'])?'selected':"";?> ><?=$ftype;?></option>
+							<?php   }
+								} ?>
+							</select>
+					</div></td>
+					</tr>
+						<?php 
+						$rmf_id=$this->db->query("SELECT assigned_rmfid FROM pnh_m_franchise_info WHERE franchise_id=? AND franchise_type=1",$v['franchise_id'])->row()->assigned_rmfid;
+						$rmf_res=$this->db->query("select franchise_id,franchise_name from pnh_m_franchise_info where is_suspended=0 and franchise_type=2");
+						?>
+						<tr id="rmf_bloc">
+							<td id="assign_blocktype">Assigned RMF</td><td>:</td>
+							<td>
+								<select name="assigned_rmfid" id="assigned_rmfid" style="width:200px;" prev_selected_fids="<?=$rmf_id ?>">
+								<?php if($rmf_res)
+								{ 
+									echo '<option value="-1">choose</option>';
+									foreach($rmf_res->result_array() as $rmf){
+									$selected = set_select('assigned_rmfid',$rmf['franchise_id'],($rmf['franchise_id']==$rmf_id));
+									echo '<option value="'.$rmf['franchise_id'].'" '.$selected.' >'.$rmf['franchise_name'].'</option>';
+								?>
+								<?php }}?>
+								</select>
+							</td>
+						</tr>	
+							
+					<?php 
+					$linked_rf_fids=$this->db->query("SELECT GROUP_CONCAT(l.rf_fid) as rf_fids FROM m_rf_rmf_link l  JOIN pnh_m_franchise_info f ON f.franchise_id=l.rf_fid WHERE rmf_fid=? AND is_active=1",$v['franchise_id'])->row()->rf_fids;
+					$rf_res=$this->db->query("select franchise_id,franchise_name from pnh_m_franchise_info where franchise_type=1");	
+					$linked_rf_fid_arr=explode(',',$linked_rf_fids);
+					?>
+					 				
 				</table>
 
 				<table cellpadding=3 style="background:#eee;margin-top:10px;">
@@ -232,23 +271,7 @@ function init_frmap() {
 					<tr><td>Answer</td><td>:</td><td><input type="text" class="inp sec_a" name="sec_a2" size=40 value="<?=$v?$v['security_answer2']:""?>"></td></tr>
 				</table>
 
-				<!--<h3>Device Details <input type="button" id="add_device" value="Add Device"></h3>
-				<table class="datagrid smallheader device_list">
-				<thead><tr><th>Device Serial No</th><th>Device Type</th></tr></thead>
-				<tbody>
-				<tr id="add_device_cont">
-				<td>
-				<input type="text"  name="dev_sno[]"></td>
-				<td><Select name="dev_type">
-				<?php foreach($this->db->query("select id,device_name from pnh_m_device_type order by device_name asc")->result_array() as $t){?>
-				<option value="<?=$t['id']?>"><?=$t['device_name']?></option>
-				<?php }?>
-				</Select>
-				</td>
-				</tr>
-				</tbody>
-				</table>
-				-->
+			
 			</div>
 
 
@@ -372,6 +395,12 @@ color:#fff;
 </style>
 <script>
 
+
+$("#rmf_bloc").hide();
+$("#rf_bloc").hide();
+
+
+
 $(function(){
 	$("#add_device").click(function(){
 		ht=$("#add_device_cont").html();
@@ -437,6 +466,16 @@ $(function(){
 			error=1;
 			validation_report.push('Check login mobile numbers');
 		}
+		if($('#franchise_type').val() == -1)
+		{
+			error=1;
+			validation_report.push('Please select Franchise Type ');
+		}
+		if($("#franchise_type").val() == 1 && $("#assigned_rmfid").val() == -1)
+		{
+			error=1;
+			validation_report.push('Please Assign atleast 1 RMF');
+		}
 		$("input.mand",$(this)).each(function(){
 			if($(this).val().length==0)
 			{
@@ -451,8 +490,8 @@ $(function(){
 			validation_report.push("Please enter security answer");
 			f=false;
 		}
-		
-		if(f && !is_email($(".login_email",$(this)).val()))
+		var login_email=$(".login_email",$(this)).val();
+		if(f && login_email!='' && !is_email(login_email))
 		{
 			error=1;
 			validation_report.push("Please enter valid login email");
@@ -466,13 +505,6 @@ $(function(){
 			f=false;
 		}
 		
-		if($('#store_type').val()==0)
-		{
-			error=1;
-			validation_report.push('Select Store Type');
-			f=false;
-		}
-		
 		if(error)
 		{	var html_cnt='';
 			$.each(validation_report,function(a,b){
@@ -483,7 +515,6 @@ $(function(){
 		}
 		
 		
-
 		//if("input [type="checkbox" name="fran_menu[]")
 		return f;
 	});
@@ -601,6 +632,27 @@ var mobok2=1;
 <?php }?>
 
 $('.tab_view').tabs();
+$("#assigned_rmfid,#assigned_rf").chosen();
+
+$(function(){
+	$("select[name='franchise_type']").live( "change",function(){
+	if($(this).val() == 1)
+	{
+		$("#rmf_bloc").show();
+		$("#rf_bloc").hide();
+	}
+	if($(this).val() == 2)
+	{
+		$("#rmf_bloc").hide();
+		$("#rf_bloc").show();
+	}
+	if($(this).val() == 0)
+	{
+		$("#rmf_bloc").hide();
+		$("#rf_bloc").hide();
+	}
+	}).trigger('change');	
+});
 </script>
 <style>
 #mob1_error,#mob2_error{

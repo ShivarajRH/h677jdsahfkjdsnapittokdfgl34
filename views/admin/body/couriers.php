@@ -22,13 +22,14 @@ h2 {    width: 60%;    float: left; }
 </div>
 <table class="datagrid datagridsort" width="100%">
 <thead>
-    <tr><th>Id</th><th>Courier Name</th><th>Used for</th><th>Enabled for pincodes</th><th>Edit pincodes</th><th>Current AWB</th><th>Remaining AWBs</th><th>Update AWB series</th><th>Actions</th></tr>
+    <tr><th>Id</th><th>Courier Name</th><th>Toll Free Number</th><th>Used for</th><th>Enabled for pincodes</th><th>Edit pincodes</th><th>Current AWB</th><th>Remaining AWBs</th><th>Update AWB series</th><th>Actions</th></tr>
 </thead>
 <tbody class="row_container">
 <?php foreach($couriers as $c){?>
 <tr class="<?=$c['trans_prefix']?>">
 <td><?=$c['courier_id']?></td>
 <td><?=$c['courier_name']?></td>
+<td><?=$c['courier_no']; ?></td>
 <td><?=$c['used_for']?></td>
 
 <td><?=$c['pincodes']?></td>

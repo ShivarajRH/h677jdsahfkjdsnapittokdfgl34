@@ -8,18 +8,26 @@
 
 <div style="margin:20px 0px 40px 40px;">
 <div style="min-width:400px;display:inline-block;padding:10px;background:#eee;border:1px solid #aaa;margin:5px;">
-Choose Partner : <select name="partner">
+Choose Partner : 
+<select name="partner" onchange="return fn_change_partner(this)">
 	<option value="">Choose</option>
-<?php foreach($this->db->query("select * from partner_info order by name asc")->result_array() as $p){?>
-<option value="<?=$p['id']?>"><?=$p['name']?></option>
-<?php }?>
+	<?php foreach($this->db->query("select * from partner_info order by name asc")->result_array() as $p){?>
+	<option value="<?=$p['id']?>" loc="<?=$p['partner_rackbinid']?>"><?=$p['name']?></option>
+	<?php }?>
 </select>
 </div>
 <br>
 <INPUT TYPE="HIDDEN" NAME="ASDSDA">
-Upload partner orders : <input type="file" name="pords"><br><br>
+Upload partner orders : <input type="file" name="pords" id="pords"><br><br>
 <b>Consider Shipping Charges</b> 
 <input type="checkbox" name="cons_ship" value="1" checked="checked"> <br /><br /><br />
+
+<div class="gen_inv_block" style="display: none;">
+<b>Generate Invoice?</b>
+<input type="radio" name="gen_invoice" value="1">Yes 
+<input type="radio" name="gen_invoice" value="0">No <br /><br /><br />
+</div>
+
 <input type="submit" value="Upload & Update">
 </div>
 
@@ -39,14 +47,51 @@ Upload partner orders : <input type="file" name="pords"><br><br>
 </div>
 
 <script>
+	
+
 	$('#frm_partorderimp').submit(function(){
 		if(!$('select[name="partner"]').val())
 		{
 			alert("Choose partner");
 			return false;
 		}
+		
+		if($('.gen_inv_block:visible').length) {
+			if( !$('input[name="gen_invoice"]').is(':checked') )
+			{
+				alert("Do you want to generate Invoice?");
+				return false;
+			}
+		}
+		var pords_file=document.getElementById('pords');
+		if(pords_file.value =='') {
+			alert("Please select file to import.");
+			return false;
+		}
+			
+		if(confirm("Do you want to proceed importing orders?"))
+			return true;
+		return false;
 	});
+
+
 	
+	function fn_change_partner(elt)
+	{
+		var partner_id=$(elt).val();
+		var partner_rackbinid =$('option:selected', elt).attr("loc");
+		
+		// reset field
+		$('input[name="gen_invoice"]').attr("checked",false);
+		
+		if( partner_rackbinid!=0 ) {
+			$(".gen_inv_block").show();
+		}
+		else {
+			$(".gen_inv_block").hide();
+		}
+		return true;
+	}
 </script>
 
 

@@ -98,7 +98,7 @@
 <div id="stck_intake_polist">
 
 <table class="datagrid nofooter" width="100%" id="grn_prod_list">
-<thead><th>Sno</th><th>Product</th><th style="text-align: left">PO ID</th><th  style="text-align: right">Invoiced <br>Qty</th><th  style="text-align: right">Received <br>Qty</th><th  style="text-align: right">MRP</th><th  style="text-align: right">DP Price</th><th  style="text-align: right">Base Price</th><th  style="text-align: right">Tax</th><th  style="text-align: right">Margin</th><th  style="text-align: right">Scheme discount</th><th  style="text-align: right">Purchase Price</th><th  style="text-align: right">SubTotal</th></thead>
+<thead><th>Sno</th><th>Product ID</th><th>Product</th><th style="text-align: left">PO ID</th><th  style="text-align: right">Invoiced <br>Qty</th><th  style="text-align: right">Received <br>Qty</th><th  style="text-align: right">MRP</th><th  style="text-align: right">DP Price</th><th  style="text-align: right">Base Price</th><th  style="text-align: right">Tax</th><th  style="text-align: right">Margin</th><th  style="text-align: right">Scheme discount</th><th  style="text-align: right">Purchase Price</th><th  style="text-align: right">SubTotal</th></thead>
 <?php $sno=0; foreach($prods as $p){
 	$total_inv_qty += $p['invoice_qty'];
 	$total_rcvd_qty += $p['received_qty'];
@@ -107,6 +107,7 @@
 	?>
 <tr>
 <td><?=++$sno?></td>
+<td><?=$p['product_id']?></td>
 <td ><a target="_blank" href="<?php echo site_url('admin/product/'.$p['product_id']) ?>"><?=$p['product_name']?></a></td>
 <td><a href="<?=site_url("admin/viewpo/{$p['po_id']}")?>" target="_blank">PO<?=$p['po_id']?></a></td>
 <td align="right"><?=$p['invoice_qty']?></td>

@@ -1,8 +1,8 @@
 <?php
 /*ini_set('memory_limit','1024M');
-ini_set('max_exection_time','3600');
+ini_set('max_exection_time','3600');*/
 ini_set('display_errors',1);
-error_reporting(E_ALL); */
+error_reporting(E_ALL); 
 /**
  * Api Model Class
  * @author Madhan
@@ -133,18 +133,26 @@ class Api_model extends Model
 	/**
 	 * function for get the franchise basic details
 	 * @param unknown_type $user_id
+	 * last_modified by suresh<suresh.n@storeking.in>
 	 */
 	function get_franchise($fid)
 	{
+		$cond='';
+		
+		//if($town_id)
+		//	$cond.=' a.franchise_id='.$fid.' and t.id='.$town_id.'';
+		//else
+		$cond.=' a.franchise_id='.$fid.'';
+
 		$sql="select a.franchise_id,a.pnh_franchise_id,a.franchise_name,a.address,a.locality,a.city,a.postcode,a.state,a.credit_limit,
-				t.town_name,tt.territory_name,a.login_mobile1,is_prepaid
+				t.id as town_id,t.town_name,tt.territory_name,a.login_mobile1,is_prepaid,a.franchise_type,assigned_rmfid
 					from pnh_m_franchise_info a 
-					join pnh_users b on b.reference_id=a.franchise_id
+					left join pnh_users b on b.reference_id=a.franchise_id
 					join pnh_towns as t on t.id=a.town_id
 					join pnh_m_territory_info tt on tt.id=a.territory_id
-					where a.franchise_id=?";
+					where $cond";
 		
-		$franchise_det_res=$this->db->query($sql,array($fid));
+		$franchise_det_res=$this->db->query($sql);
 		
 		if($franchise_det_res->num_rows())
 		{
@@ -502,7 +510,7 @@ class Api_model extends Model
 							join king_dealitems i on i.dealid=d.dealid
 							join king_orders o on o.itemid=i.id join king_transactions t on t.transid=o.transid';
 			
-				$order_by='order by count(o.id) desc';
+				$order_by='order by a.name asc';
 			
 				$cond.="AND franchise_id=".$fid;
 			}
@@ -821,7 +829,7 @@ class Api_model extends Model
 	
 	function get_deals($brand_id=0,$cat_id=0,$menu_id=0,$start,$limit,$publish,$pids=0,$srch_data=array(),$gender='',$min_price=0,$max_price=0,$fid=0,$sortby,$type='deals')
 	{
-
+		$cond='';
 		//echo $sortby;
 		$cond=' and publish = 1 ';
 		$publish_cond='';
@@ -994,10 +1002,10 @@ class Api_model extends Model
 			if($tag)
 			{
 
-				if($menuid)
-					$cond.=' and m.id in ('.$menuid.') ';
+				/*if($menuid)
+					$cond.=' and m.id in ('.$menuid.') ';*/
 
-				if($this->db->query("select count(*) as t from king_dealitems where pnh_id = ?  ",$tag)->row()->t && is_int($tag))
+				/*if($this->db->query("select count(*) as t from king_dealitems where pnh_id = ?  ",$tag)->row()->t && is_int($tag))
 				{
 					$cond.=' and pnh_id=?  ';
 					$param[]=$tag;
@@ -1006,9 +1014,10 @@ class Api_model extends Model
 					$cond.=' and b.name = ?  ';
 					$param[]=$tag;
 				}else
+				*/
 				{
 
-					/*$cond.=' and (pnh_id=? or  i.name like ? or mc.name like ? or b.name like ? or c.name like ? or d.keywords  like  ? )  ';
+					$cond.=' and (pnh_id=? or  i.name like ? or mc.name like ? or b.name like ? or c.name like ? or d.keywords  like  ? )  ';
 					$param[]=$tag;
 					$param[]='%'.$tag.'%';
 					$param[]='%'.$tag.'%';
@@ -1021,12 +1030,12 @@ class Api_model extends Model
 					foreach($tag_list as $tg)
 					{
 						// check if tag is brand name
-						$bid = @$this->db->query("select * from king_brands where name = ? ",$tg)->row()->id;
+						/*$bid = @$this->db->query("select * from king_brands where name = ? ",$tg)->row()->id;
 							
 						if($bid)
 						{
 							$cond .= ' and d.brandid = '.$bid;
-						}
+						}*/
 						
 						if($tg*1)
 						{
@@ -1039,8 +1048,9 @@ class Api_model extends Model
 							}
 						}
 					}
-					*/ 
 
+					
+					/*
 					if($this->db->query("select count(*) as t from king_dealitems where is_pnh = 1 and  (pnh_id = ? or name = ? )",array($tag*1,$tag))->row()->t)
 					{
 						// recheck - name and id diffs 
@@ -1076,7 +1086,7 @@ class Api_model extends Model
 							$kwd_srch[] = " find_in_set('$tg',concat(pnh_id,',',i.name,',',ifnull(mc.name,''),',',b.name,',',c.name,',',d.keywords)) ";
 							$rel_filter[] =  " if(find_in_set('$tg',concat(pnh_id,',',i.name,',',ifnull(mc.name,''),',',b.name,',',c.name,',',d.keywords)),1,0) ";
 							*/
-							
+					/*
 						}
 						if(count($kwd_srch))
 						{
@@ -1084,6 +1094,7 @@ class Api_model extends Model
 							$rel_filter_tag = ','.implode('+',$rel_filter).' as rel_ttl';
 						}
 					}
+					*/
 
 				}
 
@@ -1091,19 +1102,37 @@ class Api_model extends Model
 
 		}
 
-		
+		$show_instock='';
 		//$cond .= ' and publish = 1 '; 
 		
 		$order_by_cond = '';
 		if($sortby == 'popular')
 		{
-			$order_by_cond = ' total_orders desc ';
+			$order_by_cond = ' total_orders desc, ';
 		}else if($sortby == 'new')
 		{
-			$order_by_cond = ' d_sno desc ';
-		}else
+			$order_by_cond = ' d_sno desc, ';
+		}elseif($sortby == 'recently_sold')
 		{
-			$order_by_cond = ' name asc ';
+			$order_by_cond = ' o.time desc, ';
+		}elseif($sortby == 'max_price')
+		{
+			$order_by_cond = ' price desc, ';
+		}elseif($sortby == 'min_price')
+		{
+			$order_by_cond = 'price asc, ';
+		}
+		elseif($sortby == 'instock')
+		{
+			$show_instock=1;
+		}
+		elseif($sortby == 'soldout')
+		{
+			$show_instock=0;
+		}
+		else
+		{
+			$order_by_cond = ' name asc, ';
 		}
 
 		$price_type = 0;
@@ -1111,7 +1140,7 @@ class Api_model extends Model
 		if($fid)
 			$price_type=$this->erpm->get_fran_pricetype($fid);
 			
-		$last_query='';
+		 
 		if($type == 'total')
 		{
 			 
@@ -1128,8 +1157,7 @@ class Api_model extends Model
 			";
 
 			$deal_list['ttl_deals']=$this->db->query($sql,$param)->row()->total;
-			//echo $this->db->last_query(); exit;
-			$last_query = $this->db->last_query();
+		
 		}else
 		{
 
@@ -1147,17 +1175,16 @@ class Api_model extends Model
 							$cond
 							group by i.id 
 							order by c.name,b.name
+							
 					";
 				
 				$deal_list_res=$this->db->query($sql,$param) or die(mysql_error());
-				$last_query = $this->db->last_query();
+				
 				if($deal_list_res->num_rows())
 				{
 					$deal_list['ttl_deals']=$deal_list_res->num_rows();
 					
-					$group_deal_ids=array();
-					
-					foreach($deal_list_res->result_array() as $i=>$d_det)
+					foreach($deal_list_res->result_array() as $d_det)
 					{
 						
 						$deal_list['cat_list'][$d_det['catid']] = array('id'=>$d_det['catid'],'name'=>$d_det['cat']);
@@ -1165,20 +1192,9 @@ class Api_model extends Model
 						$deal_list['price_list'][] = $d_det['price'];
 						$deal_list['gender_list'][] = $d_det['gender_attr'];
 						
-						//$group_deal_ids=array();
-						// change to in condition before for loop - 500 times 
+					
 						if($d_det['is_group'])
 						{
-							$group_deal_ids[$i]='"'.$d_det['itemid'].'" ';
-						}
-						
-//					}
-					
-						//======================================
-						//echo '<pre>'; print_r($group_deal_ids); die();
-						if( count($group_deal_ids) > 0 ) {
-							$deal_ids=implode(",",$group_deal_ids);
-							
 							$sql_q = "
 										(
 											select l.itemid,p.product_id,concat(group_concat(concat(a.attribute_name,':',v.attribute_value)),',ProductID:',p.product_id) as a
@@ -1187,7 +1203,7 @@ class Api_model extends Model
 												join products_group_attributes a on a.attribute_name_id=p.attribute_name_id
 												join products_group_attribute_values v on v.attribute_value_id=p.attribute_value_id
 												join m_product_info p1 on p1.product_id = p.product_id and p1.is_sourceable = 1
-											where l.itemid in($deal_ids)
+											where l.itemid=?
 											group by p.product_id
 										)
 										union
@@ -1198,22 +1214,13 @@ class Api_model extends Model
 												join m_product_info d on d.product_id = a.product_id
 												join m_product_attributes e on e.pid = d.product_id
 												join m_attributes f on f.id = e.attr_id
-								where b.is_group = 1 and a.itemid in($deal_ids) and a.is_active = 1 and d.is_sourceable = 1 and length(attr_value)  
+											where b.is_group = 1 and a.itemid = ? and a.is_active = 1  and d.is_sourceable = 1 and length(attr_value)  
 											group by a.product_id
-										)
-									";
-								$grp_deal_rslt = $this->db->query( $sql_q ); //array($d_det['itemid'],$d_det['itemid'])
-								//echo '<pre>'.$this->db->last_query().'<br>';
-								
-								if( $grp_deal_rslt->num_rows() ) {
-									
-									foreach( $grp_deal_rslt->result_array() as $p ) {
+										)";
+									foreach($this->db->query($sql_q,array($d_det['itemid'],$d_det['itemid']))->result_array() as $p)
 										$deal_list['attr_list'][]=$p['a'];
-									}
-									
-								}
-							}
-							//======================================
+						}
+					}
 					
 						sort($deal_list['price_list']);
 
@@ -1230,23 +1237,16 @@ class Api_model extends Model
 						$deal_list['gender_list'] = array_filter(array_unique($deal_list['gender_list']));
 						$deal_list['attr_list'] = array_filter(array_unique($deal_list['attr_list']));
 					
-					}
-					
-				}
-				else
-				{
-					$output['error'] ='No refine data found';
-					return $output;
 				}
 			}else if($type == 'deals')
 			{
 				$sql="select free_frame,has_power,pnh_id as pid,i.size_chart,i.id as itemid,i.name,m.name as menu,m.id as menu_id,
 						i.gender_attr,c.name as category,d.catid as category_id,mc.name as main_category,i.member_price,
-						c.type as main_category_id,b.name as brand,d.brandid as brand_id,i.orgprice as mrp,i.price as price,i.store_price,
+						c.type as main_category_id,b.name as brand,d.brandid as brand_id,Round(i.orgprice,0) as mrp,i.price,i.store_price,
 						i.is_combo,ifnull(v.main_image,concat('".IMAGES_URL."items/',d.pic,'.jpg')) as image_url,ifnull(v.main_image,concat('".IMAGES_URL."items/small/',d.pic,'.jpg')) as small_image_url,d.description,i.shipsin as ships_in,d.keywords,
 						count(o.id) as total_orders,
 							(if($price_type,i.price,i.member_price))/orgprice as p_discount,
-						i.sno as d_sno $rel_filter_tag
+						i.sno as d_sno,i.live $rel_filter_tag
 						from king_deals d
 						join king_dealitems i on i.dealid=d.dealid
 						join king_brands b on b.id=d.brandid
@@ -1258,16 +1258,14 @@ class Api_model extends Model
 						left join king_orders o on o.itemid = i.id
 						where  is_pnh=1 $cond
 						group by i.id
-						order by p_discount asc,rel_ttl desc,$order_by_cond
+						order by $order_by_cond p_discount asc,rel_ttl desc
 					limit $start,$limit";
 				
-				$deal_det=$this->db->query($sql,$param) or die(mysql_error());
-				
-				$last_query = $this->db->last_query();
-				if($deal_det->num_rows())
+				$deal_det_res=$this->db->query($sql,$param) or die(mysql_error());
+				$deal_det = array();
+				if($deal_det_res->num_rows())
 				{
-					$deal_det = $deal_det->result_array();
-					
+					$deal_det = $deal_det_res->result_array();
 					foreach($deal_det as $i=>$d)
 					{
 						$itemid=$d['itemid'];
@@ -1288,6 +1286,7 @@ class Api_model extends Model
 						$deal_det[$i]['attributes']=array();
 						$deal_det[$i]['pseller_id'] = "";
 						
+						$is_live=$deal_det[$i]['live'];
 						/*foreach($this->db->query("select group_concat(concat(a.attribute_name,':',v.attribute_value)) as a from m_product_group_deal_link l join products_group_pids p on p.group_id=l.group_id join products_group_attributes a on a.attribute_name_id=p.attribute_name_id join products_group_attribute_values v on v.attribute_value_id=p.attribute_value_id where l.itemid=? group by p.product_id",$itemid)->result_array() as $i2=>$p)
 							$deal_det[$i]['attributes']['attr'.($i2+1)]=$p['a'];
 							*/
@@ -1300,7 +1299,7 @@ class Api_model extends Model
 						$margin = 0;
 						if($fid)
 						{
-							$margin_det=$this->erpm->get_pnh_margin($fid,$d['pid'],$price_type);
+							$margin_det=$this->erpm->get_pnh_margin($fid,$d['pid']);
 								
 							if($d['is_combo'])
 								$margin=$margin_det['combo_margin'];
@@ -1310,42 +1309,32 @@ class Api_model extends Model
 						
 						$lcost=0;
 						$deal_det[$i]['mp_frn_max_qty']=$deal_det[$i]['mp_mem_max_qty']=$member_price_det['member_price']=0;
-						if($price_type==1 )
-						{
 						
-							$member_price_det=$this->erpm->get_memberprice($itemid,$fid,0);
-							if($member_price_det['status'] == 'success')
+						
+						$member_price_det=$this->erpm->get_memberprice($itemid,$fid,0);
+						if($member_price_det['status'] == 'success')
+						{
+							$deal_det[$i]['price_type']=$member_price_det['price_type'];
+							if($member_price_det['price_type'])
 							{
-								$deal_det[$i]['price_type']=$member_price_det['price_type'];
-								if($member_price_det['price_type'])
-								{
-										//echo 3;print_r($member_price_det);die();
-									$deal_det[$i]['mp_frn_max_qty']=@$member_price_det['mp_frn_max_qty']?$member_price_det['mp_frn_max_qty']:0;
-									$deal_det[$i]['mp_mem_max_qty']=@$member_price_det['mp_mem_max_qty']?$member_price_det['mp_mem_max_qty']:0;
-									$deal_det[$i]['price']=@$member_price_det['price']?$member_price_det['member_price']:'';
-									$deal_det[$i]['max_ord_qty']=$member_price_det['max_ord_qty']?$member_price_det['max_ord_qty']:0;
-									$lcost=round($d['member_price']-($d['member_price']/100*$margin),2);
-								}
-								else
-								{
-									$deal_det[$i]['max_ord_qty'] = $this->erpm->get_maxordqty_pid($fid,$deal_det[$i]['pid'],0);
-									$deal_det[$i]['price']=$d['price'];
-									$lcost=round($d['price']-($d['price']/100*$margin),2);
-								}
-							}else
-							{
-								return $member_price_det;
+								//echo 3;print_r($member_price_det);die();
+								$deal_det[$i]['mp_frn_max_qty']=@$member_price_det['mp_frn_max_qty']?$member_price_det['mp_frn_max_qty']:0;
+								$deal_det[$i]['mp_mem_max_qty']=@$member_price_det['mp_mem_max_qty']?$member_price_det['mp_mem_max_qty']:0;
+								$deal_det[$i]['price']=@$member_price_det['price']?round($member_price_det['price'],0):'';
+								$deal_det[$i]['max_ord_qty']=$member_price_det['max_ord_qty']?$member_price_det['max_ord_qty']:0;
+								$lcost=round($member_price_det['price']-($member_price_det['price']/100*$margin),0);
 							}
-							
-						}
-						else
+							else
+							{
+								$deal_det[$i]['max_ord_qty'] = $member_price_det['max_ord_qty'];
+								$deal_det[$i]['price']=round($member_price_det['price'],0);
+								$lcost=round($member_price_det['price']-($member_price_det['price']/100*$margin),0);
+							}
+						}else
 						{
-							$deal_det[$i]['max_ord_qty'] = $this->erpm->get_maxordqty_pid($fid,$deal_det[$i]['pid'],0);
-							$deal_det[$i]['price']=$d['price'];
-							$lcost=round($d['price']-($d['price']/100*$margin),2);
+							return $member_price_det;
 						}
-						
-					
+							
 	
 						$deal_det[$i]['landing_cost']=$lcost;
 						
@@ -1354,30 +1343,70 @@ class Api_model extends Model
 						$avail=$this->erpm->do_stock_check(array($itemid),array(1),true);
 						if(count($avail))
 						{
-							if(isset($avail[$itemid][0]) ) {
 								//print_r($avail_det);exit;
-								if( $avail[$itemid][0]['stk']==0 && $avail[$itemid][0]['status']==0)	
+								if($avail[$itemid][0]['stk']==0 && $avail[$itemid][0]['status']==0)	
 									$deal_det[$i]['availability']=0;
 								else
 									$deal_det[$i]['availability']=1;
-							}
-							else
-								$deal_det[$i]['availability']=0;
 						}
-	
+						
+						//=============< Stock Detail >===============
+						$chk_deal_stk = $this->erpm->check_deal_stock(array($itemid));
+			
+						if($chk_deal_stk->num_rows())
+						{
+							foreach($chk_deal_stk->result_array() as $pstk) {
+								$i_itemid = $pstk['itemid'];
+								$deal_stk['deal_stk_det'][$i_itemid]['is_limited_stk'] = $pstk['is_limited_stk'];
+								$deal_stk['deal_stk_det'][$i_itemid]['d_stk'] = $pstk['d_stk'];
+							}
+							$limited_stk=$deal_stk['deal_stk_det'][$itemid]['is_limited_stk'];
+							$stock_qty=$deal_stk['deal_stk_det'][$itemid]['d_stk'];
+							$deal_det[$i]['is_limited_stk']=$limited_stk;
+							$deal_det[$i]['stock_qty']=$stock_qty;
+							if($stock_qty<=5)
+								$deal_det[$i]['stock_msg']='Last '.$deal_det[$i]['stock_qty'].' stock';
+							else
+								$deal_det[$i]['stock_msg']='Stock : '.$deal_det[$i]['stock_qty'];
+						}else 
+						{
+							$deal_det[$i]['stock_qty'] = 0;
+							$deal_det[$i]['is_limited_stk'] = 0;
+							$deal_det[$i]['stock_msg']='';
+						}
+						//=============< Stock Detail >===============
+						
+						//========< Instock filter >===================
+						if(match_in_list($show_instock,'0,1') )
+						{
+							if($show_instock==1)
+							{
+								if($is_live==0) {
+									unset($deal_det[$i]);	//echo 'NOT AVAILABLE';
+									$i--;
+									continue;
+								}
+							}
+							elseif($show_instock==0)
+							{
+								if($is_live==1) {
+									unset($deal_det[$i]);  //echo 'AVAILABLE';
+									$i--;
+									continue;
+								}
+							}
+						}
+						//========< Instock filter >===================
 					}
 				}
 				else
 				{
-					$output['error'] ='No deals data found';
-					return $output;
+					$deal_det=array();
 				}
 				$deal_list['deals_list']=$deal_det;
 			}
 			
 		}
-		$deal_list['last_query'] = $last_query;
-		$deal_list['type'] = $type;
 		//echo $this->db->last_query();exit;
 		return $deal_list; 
 	}
@@ -1515,12 +1544,13 @@ class Api_model extends Model
 	/**
 	 * function to get the deal info by pid
 	 * @param unknown_type $pid
+	 * @last_modify Shivaraj_Nov_21_2014 member id update
 	 */
-	function get_deal($pid=0,$fid=0)
+	function get_deal($pid=0,$fid=0,$mem_id=0)
 	{
 		$sql="select free_frame,has_power,i.id as item_id,i.size_chart,pnh_id as pid,i.is_group,i.gender_attr,i.id as itemid,i.name,d.tagline,c.name as category,m.name as menu,d.menuid as menu_id,
-					d.catid as category_id,mc.name as main_category,c.type as main_category_id,b.name as brand,d.brandid as brand_id,i.member_price,
-					i.orgprice as mrp,i.price as price,i.store_price,i.is_combo,
+					d.catid as category_id,mc.name as main_category,c.type as main_category_id,b.name as brand,d.brandid as brand_id,round(i.member_price,0) as member_price,
+					round(i.orgprice,0) as mrp,round(i.price,0) as price,i.store_price,i.is_combo,i.powered_by,
 					ifnull(v.main_image,concat('".IMAGES_URL."items/',d.pic,'.jpg')) as image_url,
 					d.description,i.shipsin as ships_in,d.keywords,i.live as is_stock,d.publish as is_enabled,
 					ifnull(v.main_image,concat('".IMAGES_URL."items/small/',d.pic,'.jpg')) as small_image_url, 
@@ -1565,46 +1595,55 @@ class Api_model extends Model
 			$deal_info['attributes']="";
 			$deal_info['p_attr_stk'] = "";
 			$margin_det = array();
+			$deal_info['lens_package_list'] = array();
+			
+			// check if deal is lens and has power status to capture prescriotion info.
+			if($deal_info['has_power'])
+			{
+				$deal_info['lens_package_list'] = $this->db->query("select * from m_lens_package where package_for = 'Full-Rim' ",$itemdet['lens_type'])->result_array();
+			}
+			
 			$margin = 0;
 			if($fid)
 			{
-			$margin_det=$this->erpm->get_pnh_margin($fid,$pid);
+				$margin_det=$this->erpm->get_pnh_margin($fid,$pid);
 			
-			if($deal_info['is_combo'])
-				$margin=$margin_det['combo_margin'];
-			else
-				$margin=$margin_det['margin'];
-			}	
-			if($price_type==1 )
+				if($deal_info['is_combo'])
+					$margin=$margin_det['combo_margin'];
+				else
+					$margin=$margin_det['margin'];
+			}
+			
+			
+			$member_price_det=$this->erpm->get_memberprice($deal_info['item_id'],$fid,$mem_id);
+			if($member_price_det['status'] == 'success')
 			{
-			
-				$member_price_det=$this->erpm->get_memberprice($deal_info['item_id'],$fid,0);
-				if($member_price_det['status'] == 'success')
+				$deal_info['price_type']= $member_price_det['price_type'];
+				if($member_price_det['price_type'])
 				{
-					$deal_info['price_type']= $member_price_det['price_type'];
-					if($member_price_det['price_type'])
-					{
-						$deal_info['offer_note']= @$member_price_det['mp_offer_note'];
-						$deal_info['mp_frn_max_qty']=@$member_price_det['mp_frn_max_qty'];
-						$deal_info['mp_mem_max_qty']=@$member_price_det['mp_mem_max_qty'];
-						$deal_info['price']=@$member_price_det['member_price'];
-						$deal_info['max_ord_qty']=$member_price_det['max_ord_qty'];
-					}else
-					{
-						$deal_info['price']=$member_price_det['offer_price'];
-						$deal_info['max_ord_qty']=$member_price_det['max_ord_qty'];
-					}
+					$deal_info['offer_note']= @$member_price_det['mp_offer_note'];
+					$deal_info['mp_frn_max_qty']=@$member_price_det['mp_frn_max_qty'];
+					$deal_info['mp_mem_max_qty']=@$member_price_det['mp_mem_max_qty'];
+					$deal_info['price']=round(@$member_price_det['price'],0);
+					$deal_info['max_ord_qty']=$member_price_det['max_ord_qty'];
+				}else
+				{
+					$deal_info['price']=round($member_price_det['price'],0);
+					$deal_info['max_ord_qty']=$member_price_det['max_ord_qty'];
 				}
-
-				$lcost=round($deal_info['member_price']-($deal_info['member_price']/100*$margin),2);
 			}
 			else
 			{
-				$deal_info['max_ord_qty'] = $this->erpm->get_maxordqty_pid($fid,$pid,0);
-				$deal_info['price']=$deal_info['price'];
-				$lcost=round($deal_info['price']-($deal_info['price']/100*$margin),2);
+				return false;
 			}
-				
+			
+			$lcost=round($deal_info['price']-($deal_info['price']/100*$margin),0);
+			
+//			$deal_info['max_ord_qty'] = $this->erpm->get_maxordqty_pid($fid,$pid,0);
+//			$deal_info['price']=round($deal_info['price'],0);
+//			$lcost=round($deal_info['price']-($deal_info['price']/100*$margin),0);
+			
+			
 			$deal_info['landing_cost']=$lcost;
 			$avail=$this->erpm->do_stock_check(array($deal_info['item_id']),array(1),true);
 			if(count($avail))
@@ -1615,11 +1654,36 @@ class Api_model extends Model
 				else
 					$deal_info['availability']=1;
 			}
+			//===========< Deal Stock Check >==========
+			$chk_deal_stk = $this->erpm->check_deal_stock(array($deal_info['item_id']));
 			
-			
+			$itemid = $deal_info['item_id'];
+			if($chk_deal_stk->num_rows())
+			{
+				foreach($chk_deal_stk->result_array() as $pstk) {
+					$itemid = $pstk['itemid'];
+					$deal_stk['deal_stk_det'][$itemid]['is_limited_stk'] = $pstk['is_limited_stk'];
+					$deal_stk['deal_stk_det'][$itemid]['d_stk'] = $pstk['d_stk'];
+				}
+				$limited_stk=$deal_stk['deal_stk_det'][$deal_info['item_id']]['is_limited_stk'];
+				$stock_qty=$deal_stk['deal_stk_det'][$deal_info['item_id']]['d_stk'];
+				$deal_info['is_limited_stk']=$limited_stk;
+				$deal_info['stock_qty']=$stock_qty;
+				if($stock_qty<=5)
+					$deal_info['stock_msg']='Last '.$deal_info['stock_qty'].' stock';
+				else
+					$deal_info['stock_msg']='Stock : '.$deal_info['stock_qty'];
+					
+			}else 
+			{
+				$deal_info['stock_qty'] = 0;
+				$deal_info['is_limited_stk'] = 0;
+				$deal_info['stock_msg']='';
+			}
+			//===========< End Deal Stock Check >==========
 			
 			if($deal_info['is_group'])
-				{
+			{
 				/*
 				$sql_q = "
 				(
@@ -1692,6 +1756,13 @@ class Api_model extends Model
 			$deal_info['max_order_qty'] = $deal_info['max_ord_qty']; 
 			
 			$deal_info['description']=htmlspecialchars($deal_info['description']);
+			$asin_res=$this->db->query("SELECT IFNULL(partner_ref_no,'N/A') AS asin  
+											FROM m_partner_deal_link a 
+											JOIN king_dealitems b ON b.id = a.itemid 
+											WHERE a.itemid = ? AND a.partner_id = 7 ",$deal_info['itemid']);
+			$deal_info['asin']=0;
+			if($asin_res->num_rows())
+				$deal_info['asin']=$asin_res->row()->asin;
 			
 			return $deal_info;
 		}else{
@@ -1720,11 +1791,11 @@ class Api_model extends Model
 		$inp['added_on']=cur_datetime();
 		
 		$this->db->insert("pnh_api_franchise_cart_info",$inp);
-		
 		if($this->db->affected_rows())
 			return true;
 		else
 			return false;
+			
 	}
 	
 	/**
@@ -1839,7 +1910,10 @@ class Api_model extends Model
 	 */
 	function remove_to_cart($pid,$fid)
 	{
+		if($pid!=0)
 		$this->db->query("update pnh_api_franchise_cart_info set status=0,updated_on=? where franchise_id=? and pid=? and status=1",array(cur_datetime(),$fid,$pid));
+		else if($pid==0)
+			$this->db->query("update pnh_api_franchise_cart_info set status=0,updated_on=? where franchise_id=? and status=1",array(cur_datetime(),$fid));
 		
 		if($this->db->affected_rows())
 			return true;
@@ -1850,8 +1924,9 @@ class Api_model extends Model
 	/**
 	 * get the cart items
 	 * @param unknown_type $fid
+	 * @last_modify Shivaraj_Nov_21_2014 member id, cart qty update
 	 */
-	function get_cart_items($fid,$pid=0)
+	function get_cart_items($fid,$pid=0,$mem_id=0)
 	{
 		$cond='';
 		$param=array();
@@ -1864,7 +1939,7 @@ class Api_model extends Model
 		
 		
 		
-		$sql="select pid,qty,attributes from pnh_api_franchise_cart_info where franchise_id=? and status=1 $cond";
+		$sql="select id as cartid,pid,qty,attributes from pnh_api_franchise_cart_info where franchise_id=? and status=1 $cond";
 		
 		$cart_item_res=$this->db->query($sql,$param);
 		
@@ -1874,6 +1949,7 @@ class Api_model extends Model
 			
 			foreach($cart_item_det as $i=>$cart)
 			{
+				$deal_det=false;
 				/*
 				//group the attributes
 				if($cart['attributes'])
@@ -1893,9 +1969,58 @@ class Api_model extends Model
 					
 					$cart_item_det[$i]['attributes']=$attr_group;
 				}*/
-				 
 				//get the cart product details
-				$cart_item_det[$i]['deal_deails']=$this->get_deal($cart['pid'],$fid);
+				$deal_det=$this->get_deal($cart['pid'],$fid,$mem_id);
+				
+				if($deal_det)
+				{
+					$qty_cng=false;
+					$cart_item_det[$i]['deal_deails']=$deal_det;
+					
+					$price_type_msg='';
+					if($deal_det['price_type'])
+					{
+						$price_type_msg='Price type is Member Price.';
+					}
+					else
+					{
+						$price_type_msg='Price type is Offer Price.';
+					}
+					
+					if($cart['qty']>$deal_det['max_ord_qty'])
+					{
+						
+						$cart_item_det[$i]['deal_deails']['max_ord_qty']=$deal_det['max_ord_qty'];
+						
+						$cart_item_det[$i]['max_ord_qty_prv']=$cart['qty'];
+						
+						if($deal_det['max_ord_qty'] > 0 )
+						{
+							$cart_item_det[$i]['max_ord_qty_msg']= $price_type_msg.' '.$cart['qty'].' quantity is reduced to '.($deal_det['max_ord_qty']).' quantity for this member.';
+						}
+						else
+						{
+							
+							$cart_item_det[$i]['max_ord_qty_msg']= $price_type_msg.' All quantities Sold Out.';
+						}
+						
+						$qty_cng=true;
+					}
+					elseif($cart['qty']<$deal_det['max_ord_qty']) {
+						$cart_item_det[$i]['max_ord_qty_prv']=$cart['qty'];
+						$cart_item_det[$i]['max_ord_qty_msg']=$price_type_msg;
+					}
+					else {
+						$cart_item_det[$i]['max_ord_qty_prv']=$cart['qty'];
+						$cart_item_det[$i]['max_ord_qty_msg']="";
+					}
+					
+					if($qty_cng)
+					{
+						$this->db->query("update pnh_api_franchise_cart_info set qty=?,updated_on=now() where id=? limit 1",array($deal_det['max_ord_qty'],$cart['cartid']));
+						$cart_item_det[$i]['qty']=$deal_det['max_ord_qty'];
+					}
+				}
 			}
 			return $cart_item_det;
 			
@@ -1924,7 +2049,7 @@ class Api_model extends Model
 			$param[]=$mob_no;
 		}
 		
-		$sql="select * from pnh_member_info where $cond";
+		$sql="select *,DATE_FORMAT(dob,'%d-%m-%Y') AS dob from pnh_member_info where $cond";
 		
 		$mem_det_res=$this->db->query($sql,$param);
 		
@@ -1983,8 +2108,13 @@ class Api_model extends Model
 	 * @param unknown_type $member_name
 	 * @param unknown_type $member_id
 	 * @param unknown_type $mobile_no
+	 * @param unknown_type $dob
+	 * @param unknown_type $city
+	 * @param unknown_type $address
+	 * @param unknown_type $pincode 
+	 * @param unknown_type $email  
 	 */
-	function add_new_member($fid,$member_name,$mobile_no)
+	function add_new_member($fid,$member_name,$mobile_no,$mem_image='',$dob='',$addr='',$city='',$pincode='',$email='')
 	{
 		if($this->db->query("select * from pnh_member_info where mobile=?",$mobile_no)->num_rows()==0)
 		{
@@ -1997,7 +2127,7 @@ class Api_model extends Model
 			
 			$this->db->query("insert into king_users(name,is_pnh,createdon) values(?,1,?)",array($member_name,time()));
 			$userid=$this->db->insert_id();
-			$this->db->query("insert into pnh_member_info(pnh_member_id,user_id,first_name,last_name,mobile,franchise_id,created_by,created_on)values(?,?,?,?,?,?,?,?)",array($membr_id,$userid,$member_name,'',$mobile_no,$fid,0,time()));
+			$this->db->query("insert into pnh_member_info(pnh_member_id,user_id,first_name,last_name,mobile,dob,address,city,pincode,email,franchise_id,created_by,created_on)values(?,?,?,?,?,?,?,?,?,?,?,?,?)",array($membr_id,$userid,$member_name,'',$mobile_no,$dob,$addr,$city,$pincode,$email,$fid,0,time()));
 			return $membr_id;
 		}else
 		{
@@ -2613,17 +2743,17 @@ class Api_model extends Model
 			{
 				$return_det=$return_det_res2->result_array();
 				$output['return_details']=array();
-				foreach($return_det as $d)
+				foreach($return_det as $i=>$d)
 				{
-					if(!isset($output['return_details'][$d['return_id']]))
-						$output['return_details'][$d['return_id']]=array();
+					if(!isset($output['return_details'][$i]))
+						$output['return_details'][$i]=array();
 					
-					$output['return_details'][$d['return_id']]['return_id']=$d['return_id'];
-					$output['return_details'][$d['return_id']]['transid']=$d['transid'];
-					$output['return_details'][$d['return_id']]['invoice_no']=$d['invoice_no'];
-					$output['return_details'][$d['return_id']]['returned_date']=format_datetime($d['returned_on']);
-					$output['return_details'][$d['return_id']]['status']=$d['status'];
-					$output['return_details'][$d['return_id']]['status_config']=$this->config->item('return_request_cond');
+					$output['return_details'][$i]['return_id']=$d['return_id'];
+					$output['return_details'][$i]['transid']=$d['transid'];
+					$output['return_details'][$i]['invoice_no']=$d['invoice_no'];
+					$output['return_details'][$i]['returned_date']=format_datetime($d['returned_on']);
+					$output['return_details'][$i]['status']=$d['status'];
+					$output['return_details'][$i]['status_config']=$this->config->item('return_request_cond');
 					
 					//get the returned prd details
 					$sql="select a.is_packed,a.readytoship,d.franchise_id,e.franchise_name,IF(a.is_refunded=0,'No',IF(a.is_refunded=1,'Yes','na')) AS is_refunded,IF(a.is_shipped=0,'No',IF(a.is_shipped=1,'Yes','na')) AS is_shipped,IF(a.is_stocked=0,'No',IF(a.is_stocked=1,'Yes','na')) AS is_stocked,
@@ -2649,12 +2779,12 @@ class Api_model extends Model
 																	WHERE p.return_id=?
 																	ORDER BY r.created_on desc",$d['return_id']);
 					
-					$output['return_details'][$d['return_id']]['return_remarks_update_res']=$return_remarks_update_res->result_array();
+					$output['return_details'][$i]['return_remarks_update_res']=$return_remarks_update_res->result_array();
 						//
 			//		$sql.=" limit $start,$limit";
-					$output['return_details'][$d['return_id']]['products']=$this->db->query($sql,$d['return_id'])->result_array();
+					$output['return_details'][$i]['products']=$this->db->query($sql,$d['return_id'])->result_array();
 					//echo $this->db->last_query();exit;
-					$output['return_details'][$d['return_id']]['prd_status_config']=$this->config->item('return_process_cond');
+					$output['return_details'][$i]['prd_status_config']=$this->config->item('return_process_cond');
 					
 				}
 			}
@@ -2697,17 +2827,17 @@ class Api_model extends Model
 			{
 				$return_det=$return_det_res2->result_array();
 				$output['return_details']=array();
-				foreach($return_det as $d)
+				foreach($return_det as $i=>$d)
 				{
 					if(!isset($output['return_details'][$d['return_id']]))
-						$output['return_details'][$d['return_id']]=array();
+						$output['return_details'][$i]=array();
 					
-					$output['return_details'][$d['return_id']]['return_id']=$d['return_id'];
-					$output['return_details'][$d['return_id']]['transid']=$d['transid'];
-					$output['return_details'][$d['return_id']]['invoice_no']=$d['invoice_no'];
-					$output['return_details'][$d['return_id']]['returned_date']=format_datetime($d['returned_on']);
-					$output['return_details'][$d['return_id']]['status']=$d['status'];
-					$output['return_details'][$d['return_id']]['status_config']=$this->config->item('return_request_cond');
+					$output['return_details'][$i]['return_id']=$d['return_id'];
+					$output['return_details'][$i]['transid']=$d['transid'];
+					$output['return_details'][$i]['invoice_no']=$d['invoice_no'];
+					$output['return_details'][$i]['returned_date']=format_datetime($d['returned_on']);
+					$output['return_details'][$i]['status']=$d['status'];
+					$output['return_details'][$i]['status_config']=$this->config->item('return_request_cond');
 					
 					//get the returned prd details
 					$sql="select a.is_packed,a.readytoship,d.franchise_id,e.franchise_name,a.is_refunded,a.is_shipped,a.is_stocked,
@@ -2722,8 +2852,8 @@ class Api_model extends Model
 														where a.return_id = ?
 														group by a.id;";
 					
-					$output['return_details'][$d['return_id']]['products']=$this->db->query($sql,$d['return_id'])->result_array();
-					$output['return_details'][$d['return_id']]['prd_status_config']=$this->config->item('return_process_cond');
+					$output['return_details'][$i]['products']=$this->db->query($sql,$d['return_id'])->result_array();
+					$output['return_details'][$i]['prd_status_config']=$this->config->item('return_process_cond');
 				}
 			}
 			
@@ -3155,7 +3285,13 @@ class Api_model extends Model
 	 */
 	function update_password($user_id)
 	{
-		$rnd_key = random_num(7);  //lcfirst(random_alpha(1)).
+		$fid = $this->db->query("select reference_id from pnh_users where user_id = ? ",$user_id)->row()->reference_id;
+		
+		if($fid == 498)
+			$rnd_key = 7729227;
+		else
+			$rnd_key = random_num(7);  //lcfirst(random_alpha(1)).
+
 		if($this->_chk_pwd_exists($rnd_key,$user_id))
 		{
 			$this->update_password($user_id);
@@ -3237,7 +3373,7 @@ class Api_model extends Model
 	 * @return multitype:unknown |string
 	 * @author Roopa <roopashree@storeking.in>
 	 */
-	function get_popular_products($menuid,$catid,$brandid,$start,$limit,$publish,$fid)
+	function get_popular_products($menuid,$catid,$brandid,$start,$limit,$publish,$fid,$pid=0)
 	{
 		
 		$output=array();
@@ -3266,73 +3402,29 @@ class Api_model extends Model
 		if(!$limit)
 			$limit=5;
 		
-		$sql="SELECT count(*) as ttl
-				FROM king_orders o
-				JOIN king_dealitems i ON i.id=o.itemid
-				JOIN king_deals d ON d.dealid=i.dealid
-				JOIN king_categories c ON c.id=d.catid
-				left outer join king_categories mc on mc.id=c.type 
-				join king_brands b on b.id=d.brandid
-				JOIN pnh_menu m ON m.id=d.menuid
-				JOIN king_transactions t ON t.transid=o.transid
-				WHERE 1 $cond AND o.status!=3  $publish_cond
-				GROUP BY itemid ";
+		$date = $this->db->query("select CURRENT_DATE - INTERVAL '2' MONTH as d")->row()->d;//current Date
+		$from  = strtotime($date.' 00:00:00');
+		$to  = strtotime(date('Y-m-d').' 23:59:59');
 		
-		$popular_prod_det=$this->db->query($sql);
-		//echo $this->db->last_query();exit;
-		if($popular_prod_det->num_rows())
-		{
-			$output['total_deals']=$popular_prod_det->num_rows();
-			
-			
-			$sql="SELECT o.itemid,m.id AS menuid,m.name AS menuname,o.brandid,b.name as brandname,d.catid,c.name as catname,i.name,i.orgprice,i.price,SUM(o.quantity) AS sold_qty,
-				pnh_id as pid,i.gender_attr,mc.name as main_category,
-				c.type as main_category_id,i.orgprice as mrp,i.price as price,i.store_price,
-				i.is_combo, concat('".IMAGES_URL."items/',d.pic,'.jpg') as image_url,concat('".IMAGES_URL."items/small/',d.pic,'.jpg') as small_image_url,i.shipsin as ships_in,d.keywords,i.member_price 
+		$sql="
+			SELECT o.itemid,o.brandid,d.catid,d.menuid,i.name,i.orgprice as mrp,i.price,SUM(o.quantity) AS sold_qty,
+					pnh_id as pid,i.gender_attr,
+					i.orgprice as mrp,i.price as price,i.store_price,
+					i.is_combo,concat('".IMAGES_URL."items/',d.pic,'.jpg') as image_url,concat('".IMAGES_URL."items/small/',d.pic,'.jpg') as small_image_url,i.shipsin as ships_in,d.keywords,i.member_price 
 				FROM king_orders o
+				JOIN king_transactions t ON t.transid=o.transid
 				JOIN king_dealitems i ON i.id=o.itemid
 				JOIN king_deals d ON d.dealid=i.dealid
-				JOIN king_categories c ON c.id=d.catid
-				left outer join king_categories mc on mc.id=c.type 
-				join king_brands b on b.id=d.brandid
-				JOIN pnh_menu m ON m.id=d.menuid
-				JOIN king_transactions t ON t.transid=o.transid
-				WHERE 1 $cond AND o.status!=3 $publish_cond
-				GROUP BY itemid
-				ORDER BY sold_qty DESC ";
-			$sql.=" limit $start,$limit";
-			$popular_prod_res=$this->db->query($sql)->result_array();
-			foreach($popular_prod_res as $i=>$d)
-			{
-				$margin_det=$this->erpm->get_pnh_margin($fid,$d['pid']);
-					
-				if($d['is_combo'])
-					$margin=$margin_det['combo_margin'];
-				else
-					$margin=$margin_det['margin'];
-			
-				$price_type=$this->erpm->get_fran_pricetype($fid);
-				if($price_type==0)
-					$lcost=round($d['price']-($d['price']/100*$margin),2);
-				else
-					$lcost=round($d['member_price']-($d['member_price']/100*$margin),2);
+					WHERE 1  AND o.status!=3 and i.pnh_id!=? $cond
+					group by itemid		
+					ORDER BY sold_qty DESC limit $start,$limit;";
 				
-				$popular_prod_res[$i]['landing_cost']=$lcost;
+		$popular_prod_det=$this->db->query($sql,$pid);
 				
+		$output['popular_prod_det']=@$popular_prod_det->result_array();
 				
-				
-			}
-			$output['status']='success';
-			$output['popular_prod_res']=$popular_prod_res;
-			return $output; 
-		}
-		else 
-		{
-			$output['error']='1';
-			$output['message']='No records found';
 			return $output;
 		}
-	}
 	
 	/**
 	 * Function to check new password is same as old password
@@ -3750,7 +3842,7 @@ class Api_model extends Model
 	* @return string
 	* @author Roopa <roopashree@storeking.in>
 	*/
-	function get_recent_payments_byfran($fid,$st_date,$en_date,$receipt_id)
+	function get_recent_payments_byfran($fid,$st_date,$en_date,$receipt_id,$start,$limit=25)
 	{
 		$cond='';
 		$output=array();
@@ -3767,7 +3859,7 @@ class Api_model extends Model
 			$sql="SELECT receipt_id,bank_name,IF(payment_mode=0,'cash', IF(payment_mode=1,'cheque',IF(payment_mode=2,'dd',IF(payment_mode=3,'trans','na')))) AS payment_mode,receipt_amount,receipt_type,instrument_no,instrument_date,`status`,
 			DATE_FORMAT(FROM_UNIXTIME(created_on) ,'%d/%m/%Y') AS created_on,DATE_FORMAT(FROM_UNIXTIME(created_on) ,'%h:%i %p') AS created_on_time,remarks
 			FROM pnh_t_receipt_info r WHERE franchise_id=? and r.status=1 AND r.is_active=1 AND (r.is_submitted=1 OR r.activated_on!=0) AND r.is_active=1 $cond
-			ORDER BY receipt_id DESC LIMIT 10";
+			ORDER BY receipt_id DESC LIMIT $start,$limit";
 	
 		$recent_payment_det=$this->db->query($sql,$fid);
 		
@@ -3893,10 +3985,13 @@ class Api_model extends Model
 	
 	/**
 	 * function to get all raw groups list
+	 * @last_modify Shivaraj_Nov_17_2014 group_icon field added
 	 */
 	function get_groups()
 	{
-		$g_res = $this->db->query("SELECT g.id AS group_id,g.name AS group_name,GROUP_CONCAT(l.menu_id ) AS menuid FROM `pnh_menu_groups`g JOIN `pnh_menu_group_link`l ON l.group_id=g.id JOIN pnh_menu m ON m.id=l.menu_id GROUP BY g.id order by group_name");
+		$g_res = $this->db->query("SELECT g.id AS group_id,g.name AS group_name,GROUP_CONCAT(l.menu_id ) AS menuid,concat('http://sndev13.snapittoday.com/images/group_icons/',g.id,'.png') as group_icon
+			FROM `pnh_menu_groups`g JOIN `pnh_menu_group_link`l ON l.group_id=g.id 
+			JOIN pnh_menu m ON m.id=l.menu_id GROUP BY g.id order by group_name");
 		
 		if($g_res->num_rows())
 			return $g_res->result_array();
@@ -3989,12 +4084,13 @@ class Api_model extends Model
 	{
 		$no=rand(1000000000,9999999999);
 		$user_det =  $this->get_api_user();
-		$userid = $user_det['userid'];
+		$created_by = $user_det['userid'];
 
 		$from_app=1;
 		$msg=nl2br($msg);
-		$this->db->query("insert into support_tickets(ticket_no,name,mobile,user_id,email,transid,type,priority,created_on,franchise_id,related_to,req_mem_name,req_mem_mobile,from_app)
-							values(?,?,?,?,?,?,?,?,now(),?,?,?,?,?)",array($no,$name,$mobile,$userid,$email,$transid,$type,$priority,$franchise_id,$related_to,$req_mem_name,$req_mem_mobile,$from_app));
+		$this->db->query("insert into support_tickets(ticket_no,name,mobile,user_id,email,transid,type,priority,created_on,franchise_id,related_to,req_mem_name,req_mem_mobile,from_app,created_by)
+							values(?,?,?,?,?,?,?,?,now(),?,?,?,?,?,?)"
+							,array($no,$name,$mobile,'0',$email,$transid,$type,$priority,$franchise_id,$related_to,$req_mem_name,$req_mem_mobile,$from_app,$created_by));
 		$tid=$this->db->insert_id();
 		$from_customer=1;
 		$this->erpm->addnotesticket($tid,$type,$medium,$msg,$from_customer);
@@ -4028,13 +4124,14 @@ class Api_model extends Model
 			//$ticket_status=array("all"=>-1,"unassigned"=>0,"opened"=>1,"inprogress"=>2,"closed"=>3);
 			$ticket_status=array(0=>"Open",1=>"Open",2=>"Open",3=>"Closed");
 			
-			$output['related_to'] = $related_to_array[$ticket['related_to']];
-			$output['type'] = $type_array[$ticket['type']];
+			$output['related_to'] = @$related_to_array[$ticket['related_to']];
+			$output['type'] = @$type_array[$ticket['type']];
 			$output['priority'] = $priority_array[$ticket['priority']];
 			$output['status'] = $ticket_status[$ticket['status']];
 			$output['created_on'] = format_datetime($ticket['created_on']);//format_datetime(date( 'Y/m/d H:i:s',strtotime($ticket['created_on']) ) ; //format_datetime( ,'d/M/Y H:i A')
 			$output['updated_on'] = format_datetime($ticket['updated_on']);
 			$output['messages'] = $this->get_ticket_messages($ticket['ticket_id']);
+			$output['image_path'] = @$this->db->query("select ifnull(concat('".SNDBOX_RESOURCE_IMAGES."',pic,'.jpg'),'n/a') as image_url from pnh_invoice_returns_images where ticket_id=?",$ticket['ticket_id'])->result_array();
 			return $output;
 		}
 		else
@@ -4058,7 +4155,7 @@ class Api_model extends Model
 		$filter=-1;
 		
 		if($franchise_id){
-			$cond .= ' AND franchise_id= '.$franchise_id;
+			$cond .= ' AND f.franchise_id= '.$franchise_id;
 		}
 		if($filter!=-1)
 		{
@@ -4090,11 +4187,26 @@ class Api_model extends Model
 			$s=date("Y-m-d",time()-(30*24*60*60));
 			$e=date("Y-m-d",time());
 		}
-		$sql = "SELECT u.name AS USER,t.*,a.name AS assignedto
-						FROM support_tickets t LEFT OUTER JOIN king_admin a ON a.id=t.assigned_to
-						LEFT OUTER JOIN king_users u ON u.userid=t.user_id WHERE 1 $cond
-					$cond_order_by $cond_limit";
+		$sql="SELECT t.ticket_id,t.ticket_no,t.name,t.mobile,t.email,t.transid,t.type,t.status,t.priority,t.assigned_to,t.franchise_id,t.related_to,t.req_mem_name,t.req_mem_mobile,DATE_FORMAT(t.created_on,'%d/%b/%Y %h:%i:%s %p') AS created_on,DATE_FORMAT(t.updated_on,'%d/%b/%Y %h:%i:%s %p') AS updated_on,t.from_app
+								,t.user_id,a.name AS USER,u.name AS assignedto,a2.name AS created_by,f.franchise_name
+								,rt.id AS related_to_id,rt.name AS related_to_name
+								,GROUP_CONCAT(DISTINCT ' ',dept.name ORDER BY dept.name) AS dept_dets,IF(t.franchise_id=0,0,1) AS source
+				FROM support_tickets t 
 
+				LEFT OUTER JOIN king_admin a ON a.id=t.user_id 
+				LEFT OUTER JOIN king_admin u ON u.id=t.assigned_to
+				LEFT OUTER JOIN king_admin a2 ON a2.id=t.created_by
+				LEFT OUTER JOIN pnh_m_franchise_info f ON f.franchise_id=t.franchise_id
+
+				LEFT OUTER JOIN m_dept_request_types rt ON rt.id=t.related_to
+				LEFT OUTER JOIN m_dept_request_type_link dlnk ON dlnk.type_id = t.related_to AND dlnk.is_active='1'
+				LEFT OUTER JOIN m_departments dept ON dept.id = dlnk.dept_id
+
+				WHERE 1 $cond
+				GROUP BY t.ticket_id
+				$cond_order_by $cond_limit
+				";
+				
 		$ticket_det_res = $this->db->query($sql,array($s,$e));
 		if($ticket_det_res->num_rows())
 		{
@@ -4103,19 +4215,30 @@ class Api_model extends Model
 			foreach($ticket_det as $i=>$ticket)
 			{
 				$output[$i] = $ticket;
-				$related_to_array = array(0=>'Not specific',1=>"Product",2=>"Payment",3=>"Shipment",4=>"insurance",5=>"Technical");
+				
+				$related_to='Unknown';
+				if($ticket['related_to']==0)
+					$related_to='Not specific';
+				else {
+					$related_to_array=$this->erpm->get_request_types();
+					foreach($related_to_array as $related)
+						if($related['id']==$ticket['related_to'])
+							$related_to=$related['name'];
+				}
+				
 				$type_array = array(10=>'Request',11=>"Complaint");
 				$priority_array = array(0=>'Low',1=>"Medium",2=>"High",3=>"Urgent");
 				//$ticket_status=array("all"=>-1,"unassigned"=>0,"opened"=>1,"inprogress"=>2,"closed"=>3);
 				$ticket_status=array(0=>"Open",1=>"Open",2=>"Open",3=>"Closed");
 				
-				$output[$i]['related_to'] = $related_to_array[$ticket['related_to']];
-				$output[$i]['type'] = $type_array[$ticket['type']];
+				$output[$i]['related_to'] = $related_to;
+				$output[$i]['type'] = @$type_array[$ticket['type']];
 				$output[$i]['priority'] = $priority_array[$ticket['priority']];
 				$output[$i]['status'] = $ticket_status[$ticket['status']];
 				$output[$i]['created_on'] = format_datetime($ticket['created_on']) ; //format_datetime( ,'d/M/Y H:i A')
 				$output[$i]['updated_on'] = format_datetime($ticket['updated_on']);
 				$output[$i]['messages'] = $this->get_ticket_messages($ticket['ticket_id']);
+				$output[$i]['image_path'] = @$this->db->query("select ifnull(concat('".SNDBOX_RESOURCE_IMAGES."',pic,'.jpg'),'n/a') as image_url from pnh_invoice_returns_images where ticket_id=?",$ticket['ticket_id'])->result_array();
 			}
 			return $output;
 		}
@@ -4145,7 +4268,8 @@ class Api_model extends Model
 	 * @param unknown_type $grp_menuid
 	 * @return boolean
 	 * @author roopashree@storeking.in
-	 * @last_modified_on_20_june_2014
+	 * @last_modified_on_10_sept_2014 @ suresh
+	 * @last_modify Shivaraj_Nov_15_2014 Update: Menu icon field
 	 */
 	function get_menucat_bygroupmenuid($grp_menuid,$start,$end)
 	{
@@ -4155,12 +4279,12 @@ class Api_model extends Model
 		$menu_list=array();
 		if($grp_menu_list)
 		{
-			foreach($grp_menu_list->result_array() as $m)
+			foreach($grp_menu_list->result_array() as $i=>$m)
 			{
-				if(!isset($menu_list[$m['group_id']][$m['menu_id']]))
+				if(!isset($menu_list[$m['group_id']][$i]))
 				{
-					$menu_list[$m['group_id']][$m['menu_id']]=array();
-					$menu_list[$m['group_id']][$m['menu_id']]=array("menuid"=>$m['menu_id'],"menu_name"=>$m['menu']);
+					$menu_list[$m['group_id']]['menu_list'][$i]=array();
+					$menu_list[$m['group_id']]['menu_list'][$i]=array("menuid"=>$m['menu_id'],"menu_name"=>$m['menu'],"menu_icon"=>'http://sndev13.snapittoday.com/images/menu_icons/'.$m['menu_id'].".png");
 				}
 					
 				$sql="SELECT a.id,group_id,m.name AS menu,menu_id,c.id as catid,c.name AS category_name,COUNT(IFNULL(o.id,0)) AS ttl_orders  
@@ -4177,7 +4301,7 @@ class Api_model extends Model
 			
 				
 				$ttl_cats=$this->db->query($sql,array($m['menu_id'],$grp_menuid));
-				$menu_list[$m['group_id']][$m['menu_id']]['ttl_cats']=$ttl_cats->num_rows(); 
+				$menu_list[$m['group_id']]['menu_list'][$i]['ttl_cats']=$ttl_cats->num_rows(); 
 				$cat_list=$this->db->query($sql,array($m['menu_id'],$grp_menuid));
 
 				if($cat_list)
@@ -4187,18 +4311,17 @@ class Api_model extends Model
 										{
 											$menu_list[$m['group_id']][$m['menu_id']]['ttl_cats']=sizeof($menu_list[$m['group_id']][$m['menu_id']]);
 										}*/
-					
 					if($end!=0)
 						$sql.=" limit $start,$end";
 					
 					$cat_list=$this->db->query($sql,array($m['menu_id'],$grp_menuid));
 
-					foreach($cat_list->result_array() as $c)
+					foreach($cat_list->result_array() as $j=>$c)
 					{
-						if(!isset($menu_list[$c['group_id']][$c['menu_id']][$c['catid']]))
+						if(!isset($menu_list[$c['group_id']][$i][$j]))
 						{
-							$menu_list[$c['group_id']][$c['menu_id']][$c['catid']]=array();
-							$menu_list[$c['group_id']][$c['menu_id']][$c['catid']]=array("catid"=>$c['catid'],"cat_name"=>$c['category_name']);
+							$menu_list[$c['group_id']]['menu_list'][$i]['cat_list'][$j]=array();
+							$menu_list[$c['group_id']]['menu_list'][$i]['cat_list'][$j]=array("catid"=>$c['catid'],"cat_name"=>$c['category_name']);
 						}
 						
 					}
@@ -4305,7 +4428,282 @@ class Api_model extends Model
 		}
 	}
 	
+	/**
+	 * Function to check cart items already processed or not
+	 * @author Shivaraj <shivaraj@storeking.in>_Aug_23_2014
+	 * @param type $cartid
+	 * @return type
+	 */
+	function _chk_cartid_exists($cartid)
+	{
+		return ( $this->db->query("SELECT COUNT(*) AS t FROM king_transactions WHERE api_cartid=?",$cartid)->row()->t ? true : false );
+	}
 
+	/**
+	 * Function to return trans details by cart id
+	 * @author Shivaraj <shivaraj@storeking.in>_Aug_23_2014
+	 * @param type $cartid
+	 * @return boolean
+	 */
+	function _get_transdet_by_cartid($cartid)
+	{
+		if($cartid)
+		{
+		$transdet = $this->db->query("SELECT transid,order_for FROM king_transactions WHERE api_cartid=?",$cartid);
+		if($transdet->num_rows())
+			{
+			return $transdet->row();
+			}
+		else
+		{
+			return false;
+		}
+		}else
+		{
+			return false;
+		}
+	}
+	/**
+	 * function to get menu brand and catgory list with linking by versions 
+	 *  
+	 * @param unknown_type $versions
+	 */
+	function get_menucatbrandbyversion($versions)
+	{
+		$version_ids = array();
+		foreach($versions as $v)
+			array_push($version_ids,$v['id']);
+		
+		$latest_version_id = max($version_ids);
+		
+		$sql = "select * from (select ifnull(parent_cat_id,0) as parent_cat_id,parent_cat,pcat,pbrand,pmenu,pcat_id,pbrand_id,pmenu_id,max(new_stat) as is_new from (
+					SELECT l.id,k.version,l.item_id,l.is_new AS new_stat,menuid AS pmenu_id,e.name AS pmenu,b.name AS pname,catid AS pcat_id,c.name AS pcat,
+						cp.id AS parent_cat_id,cp.name AS parent_cat,brandid AS pbrand_id,d.name AS pbrand
+					FROM m_apk_version k
+					JOIN m_apk_version_deal_link l ON k.id=l.version_id
+					JOIN king_dealitems b ON b.id = l.item_id
+					JOIN king_deals a ON a.dealid=b.dealid
+					JOIN king_categories c ON c.id = a.catid
+					LEFT JOIN king_categories cp ON cp.id = c.type
+					JOIN king_brands d ON d.id = a.brandid
+					JOIN pnh_menu e ON e.id = a.menuid
+					WHERE l.version_id IN (".implode(',',$version_ids).")
+					ORDER BY l.id DESC 
+				) as g
+				where 1 
+				group by parent_cat_id,g.pcat_id,pbrand,pmenu_id 
+				order by id asc ) as k 
+				order by pcat,pbrand
+			";
+		$res = $this->db->query($sql);
+		$data = array();
+		$data['cat_list'] = array();
+		$data['brand_list'] = array();
+		
+		if($res->num_rows())
+		{
+			foreach($res->result_array() as $row)
+			{
+				// build category brand and menu list 
+				$data['cat_list'][$row['pcat_id']] = array('id'=>$row['pcat_id'],'name'=>$row['pcat'],'menu_id'=>$row['pmenu_id'],'menu_name'=>$row['pmenu'],'parent_id'=>$row['parent_cat_id'],'is_active'=>1);
+				
+				if($row['parent_cat_id'])
+					$data['cat_list'][$row['parent_cat_id']] = array('id'=>$row['parent_cat_id'],'name'=>$row['parent_cat'],'menu_id'=>$row['pmenu_id'],'menu_name'=>$row['pmenu'],'parent_id'=>0,'is_active'=>1);
+				
+				$data['brand_list'][$row['pbrand_id']] = array('id'=>$row['pbrand_id'],'name'=>$row['pbrand'],'menu_id'=>$row['pmenu_id'],'menu_name'=>$row['pmenu'],'is_active'=>1);
+			}
+			
+			$data['version'] = $this->db->query('select version from m_apk_version where id = ? ',$latest_version_id)->row()->version;
+		}
+		
+		$data['cat_list'] = array_values($data['cat_list']);
+		$data['brand_list'] = array_values($data['brand_list']);
+		
+		return $data;
+	}
+	
+	function get_sub_franchise_details($fids,$ftype)
+	{
+		
+		$subfrandet=array();
+		//$subfrandet['basic_det']=array();
+		//$subfrandet['sales_det']=array();
+		//$subfrandet['pmt_det']=array();
+		//$subfrandet['shipment_det']=array();
+		
+		if($fids)
+		{
+			foreach($fids as $i=>$fid)
+			{
+				if($srch)
+					$cond.=" and (t.town_name like '%$srch%' or a.login_mobile1 like '%$srch%' or a.franchise_name like '%srch%')";
+				$basic_det=$this->db->query("select a.franchise_id,a.pnh_franchise_id,a.franchise_name,a.address,a.locality,a.city,a.postcode,a.state,a.credit_limit,
+											t.town_name,t.id as town_id,tt.territory_name,a.login_mobile1,is_prepaid,a.franchise_type,assigned_rmfid
+												from pnh_m_franchise_info a 
+												left join pnh_users b on b.reference_id=a.franchise_id
+												join pnh_towns as t on t.id=a.town_id
+												join pnh_m_territory_info tt on tt.id=a.territory_id
+												where a.franchise_id=? and franchise_type=1 $cond",$fid);
+				
+				$subfrandet[$i]['basic_det']=$basic_det->row_array();
+			
+				//last month sales value
+				$last_mnthsales=$this->db->query("SELECT IFNULL(ROUND(SUM((i_orgprice-(i_coup_discount+i_discount))*b.quantity),2),0) AS ttl_sales  FROM king_transactions a 
+						JOIN king_orders b ON a.transid = b.transid
+						JOIN pnh_m_franchise_info c ON c.franchise_id = a.franchise_id
+						WHERE   MONTH(DATE(FROM_UNIXTIME(a.init)))=MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) AND YEAR(DATE(FROM_UNIXTIME(a.init))) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))  AND a.franchise_id=? AND b.status!=3",$fid)->row()->ttl_sales;
+				
+				$subfrandet[$i]['sales_det']['lastmnth_sales']=$last_mnthsales;
+				
+				//current mnth sales value
+				$currmnth_sales=$this->db->query("SELECT IFNULL(ROUND(SUM((i_orgprice-(i_coup_discount+i_discount))*b.quantity),2),0) AS ttl_sales  FROM king_transactions a 
+												JOIN king_orders b ON a.transid = b.transid
+												JOIN pnh_m_franchise_info c ON c.franchise_id = a.franchise_id
+												WHERE   MONTH(DATE(FROM_UNIXTIME(a.init)))=MONTH(CURDATE()) AND YEAR(DATE(FROM_UNIXTIME(a.init))) = YEAR(CURDATE())  AND a.franchise_id=? AND b.status!=3",$fid)->row()->ttl_sales;
+				$subfrandet[$i]['sales_det']['currmnth_sales']=$currmnth_sales;
+				
+				//current date sales value
+				$curedate_sales=$this->db->query("SELECT IFNULL(ROUND(SUM((i_orgprice-(i_coup_discount+i_discount))*b.quantity),2),0) AS ttl_sales  FROM king_transactions a 
+													JOIN king_orders b ON a.transid = b.transid
+													JOIN pnh_m_franchise_info c ON c.franchise_id = a.franchise_id
+													WHERE   DATE(FROM_UNIXTIME(a.init))=CURDATE() AND YEAR(DATE(FROM_UNIXTIME(a.init))) = YEAR(CURDATE())  AND a.franchise_id=? AND b.status!=3",$fid)->row()->ttl_sales;
+				$subfrandet[$i]['sales_det']['currday_sales']=$curedate_sales;
+				
+				$account_summary=$this->erpm->get_franchise_account_stat_byid($fid);
+				$credit_note_amt = $account_summary['credit_note_amt'];
+				$shipped_tilldate = $account_summary['shipped_tilldate'];
+				$paid_tilldate = $account_summary['paid_tilldate'];
+				$acc_adjustments_val = $account_summary['acc_adjustments_val'];
+				$subfrandet[$i]['pmt_det']['pending_pmt']=format_price($shipped_tilldate-($paid_tilldate+$acc_adjustments_val+$credit_note_amt),0);
+				$subfrandet[$i]['pmt_det']['uncleard_pmt']=format_price($account_summary['uncleared_payment'],2);
+				
+				$ttl_open_orders=$this->db->query("SELECT COUNT(*) as ttl FROM king_orders o JOIN king_transactions t ON t.transid=o.transid WHERE o.status=0 AND franchise_id=? AND batch_enabled=1",$fid)->row()->ttl;
+				$subfrandet[$i]['shipment_det']['ttl_opnorders']=$ttl_open_orders;
+	}
+			return $subfrandet;
+		}else 
+			return false;
+
+	}
+
+	function brands_list($ch)
+	{
+		if($ch == '09')
+		{
+			return $this->db->query("Select id,name from king_brands where name REGEXP '^[0-9]' group by id order by name" );
+		}
+		else if($ch == '20')
+		{
+			return $this->db->query("select b.id,b.name from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid join king_orders o on o.itemid=i.id join king_transactions t on t.transid=o.transid and t.is_pnh=1 where i.is_pnh=1 group by c.name order by count(o.id) desc limit 20");
+		}else if($ch == '10')
+		{
+			return $this->db->query("select b.id,b.name from king_deals d join king_dealitems i on i.dealid=d.dealid join king_brands b on b.id=d.brandid join king_categories c on c.id=d.catid join king_orders o on o.itemid=i.id join king_transactions t on t.transid=o.transid and t.is_pnh=1 where i.is_pnh=1 group by c.name order by count(o.id) desc limit 10");
+		}else
+		{
+			return $this->db->query("Select id,name from king_brands where name like '".$ch."%' group by id order by name" );
+		}
+		
+	}
+	
+	function pnh_gettowns($tid=0)
+	{
+		$sql="select t.id as town_id,territory_id,t.town_name,tr.territory_name 
+					from pnh_towns t 
+					join pnh_m_territory_info tr on tr.id=t.territory_id
+				";
+		if($tid!=0)
+			$sql.=" where t.territory_id=".$tid."";
+			
+		$sql.=" order by t.town_name asc";
+		return $this->db->query($sql);
+	}
+	
+	/**
+	 * function to get invoice details with order list by invoice no 
+	 *
+	 * @param unknown_type $invno
+	 * @return unknown
+	 */
+	function get_invoicedet_forreturn($invno)
+	{
+		$invdet = array();
+		
+		$sql = "select  a.invoice_no,b.id as order_id,b.itemid,c.name,b.quantity,d.packed,d.shipped,d.shipped_on,ifnull(transit_type,0) as transit_type,
+						a.invoice_status,a.transid  
+					from king_invoice a
+					join king_orders b on a.order_id = b.id 
+					join king_dealitems c on c.id = b.itemid 
+					join shipment_batch_process_invoice_link d on d.invoice_no = a.invoice_no
+					join king_transactions t on t.transid = b.transid
+					left join pnh_invoice_returns_product_link e on e.order_id = b.id  
+					left join pnh_invoice_returns r on r.return_id=e.return_id 
+					where a.invoice_no = ? and b.status in (1,2) 
+					group by a.order_id  
+				";
+		$res = $this->db->query($sql,$invno);
+		
+		if($res->num_rows())
+		{
+			$invord_list = $res->result_array();
+			if(!$invord_list[0]['shipped'])
+			{
+				$invdet['error'] = 'Invoice is not shipped';
+			}else 
+			{
+				$invdet['itemlist'] = array();
+				foreach ($invord_list as  $i=>$ord)
+				{
+					$sql = "(select e.is_shipped,e.shipped_on,e.is_refunded,is_stocked,is_serial_required,a.id as order_id,b.product_id,product_name,b.qty from king_orders a join m_product_deal_link b on a.itemid = b.itemid join m_product_info c on c.product_id = b.product_id join king_dealitems d on d.id = a.itemid  left join pnh_invoice_returns_product_link e on e.product_id = b.product_id and e.order_id = a.id where a.id = ? and if(d.is_group,(order_product_id = b.product_id),1) group by e.id )
+								union
+							(select e.is_shipped,e.shipped_on,e.is_refunded,is_stocked,is_serial_required,a.order_id,b.product_id,product_name,d.qty from products_group_orders a join m_product_info b on b.product_id = a.product_id join king_orders c on c.id = a.order_id join m_product_group_deal_link d on d.itemid = c.itemid left join pnh_invoice_returns_product_link e on e.product_id = a.product_id and e.order_id = a.order_id where a.order_id = ? group by e.id )
+							";
+					$prod_list_res = $this->db->query($sql,array($ord['order_id'],$ord['order_id']));
+					
+					if(!isset($invdet['itemlist'][$i]))
+						$invdet['itemlist'][$i] = array();
+					
+					$invdet['itemlist'][$i] = $ord;
+					
+					if(!isset($invdet['itemlist'][$i]['product_list']))
+						$invdet['itemlist'][$i]['product_list'] = array();
+						
+					$prod_list = array();	
+					foreach($prod_list_res->result_array() as $prod_det)
+					{
+						$ttl_pending_inreturn_qty = $this->db->query("select ifnull(sum(qty),0) as t from pnh_invoice_returns_product_link where order_id = ? and product_id = ? and status != 3 ",array($ord['order_id'],$prod_det['product_id']))->row()->t;
+						
+						$prod_det['pen_return_qty'] = $ttl_pending_inreturn_qty; 
+						$prod_det['has_barcode'] = $this->db->query("select count(*) as t from t_stock_info where product_id = ? and product_barcode != '' ", $prod_det['product_id'] )->row()->t;
+						$prod_det['mrp'] = $this->db->query("select group_concat(distinct ts.mrp) as mrp from shipment_batch_process_invoice_link a
+											join proforma_invoices b on b.p_invoice_no=a.p_invoice_no
+											join t_reserved_batch_stock t on t.p_invoice_no=b.p_invoice_no
+											join t_stock_info ts on ts.stock_id=t.stock_info_id
+											where a.invoice_no=? and t.status=1 and t.product_id=?", array($invno,$prod_det['product_id']) )->row()->mrp;
+						$prod_list[] = $prod_det;
+					}	
+					$invdet['itemlist'][$i]['product_list'] = $prod_list;
+					
+					$ord_imei_list_res = $this->db->query("select * from t_imei_no where order_id = ? and status = 1 and is_returned = 0 and return_prod_id = 0 ",$ord['order_id']);
+					if($ord_imei_list_res->num_rows())
+					{
+						foreach($ord_imei_list_res->result_array() as $k=>$p_imei_det)
+						{
+							if(!isset($invdet['itemlist'][$i]['imei_list'][$k]))
+								$invdet['itemlist'][$i]['imei_list'][$k] = array();
+								
+							$invdet['itemlist'][$i]['imei_list'][$k][] = $p_imei_det['imei_no'];  
+						}						
+					}
+					
+					// check if the order qty already processedIn 
+					
+				}
+			}
+		}else
+		{
+			$invdet['error'] = 'Invoice not found';
+		}
+		return $invdet;
+	}
 }
-
 ?>

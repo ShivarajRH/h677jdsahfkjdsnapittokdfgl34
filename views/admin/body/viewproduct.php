@@ -1,14 +1,42 @@
 <?php 
 $only_superadmin = $this->erpm->auth(true,true);
 $p=$product;
-
+// get damage qty
 $dmg_qty = @($this->db->query("select sum(available_qty)  as t     
 													from t_stock_info  a 
 													join m_storage_location_info b on b.location_id = a.location_id 
 													join m_rack_bin_info c on c.id = a.rack_bin_id  
 													where product_id=? and c.is_damaged=1 
 													having sum(available_qty)>=0 ",$p['product_id'])->row()->t)*1;
+// Partner transfer reserved
+$part_reserv_res=$this->db->query("SELECT si.stock_id,SUM(pstk.qty) AS reserv_qty,si.mrp,si.location_id,si.rack_bin_id,CONCAT(ri.rack_name,ri.bin_name) AS rbname,ri.is_damaged,IFNULL(si.product_barcode,'') AS pbarcode
+										FROM t_partner_reserved_batch_stock pstk
+										JOIN t_stock_info si ON si.stock_id=pstk.stock_info_id
+										JOIN m_rack_bin_info ri ON ri.id = si.rack_bin_id
+										WHERE pstk.`status`=0 AND pstk.transfer_option=1 AND pstk.product_id=?",$p['product_id']);
 
+$part_reserv_qty=0;
+if($part_reserv_res->num_rows())
+{
+	$part_reserv=$part_reserv_res->row_array();
+	$part_reserv_qty=$part_reserv['reserv_qty'];
+	$part_pbarcode=$part_reserv['pbarcode'];
+	$part_rbname=$part_reserv['rbname'];
+}
+// Partner return reserved
+$part_return_reserv_res=$this->db->query("SELECT si.stock_id,SUM(pstk.qty) AS reserv_qty,si.mrp,si.location_id,si.rack_bin_id,CONCAT(ri.rack_name,ri.bin_name) AS rbname,ri.is_damaged,IFNULL(si.product_barcode,'') AS pbarcode
+										FROM t_partner_reserved_batch_stock pstk
+										JOIN t_stock_info si ON si.stock_id=pstk.stock_info_id
+										JOIN m_rack_bin_info ri ON ri.id = si.rack_bin_id
+										WHERE pstk.`status`=0 AND pstk.transfer_option=2 AND pstk.product_id=?",$p['product_id']);
+$part_return_reserv_qty=0;
+if($part_return_reserv_res->num_rows())
+{
+	$part_reserv=$part_return_reserv_res->row_array();
+	$part_return_reserv_qty=$part_reserv['reserv_qty'];
+	$part_pbarcode=$part_reserv['pbarcode'];
+	$part_rbname=$part_reserv['rbname'];
+}
 $ttl_stk = @($this->db->query("select sum(available_qty)  as t
 		from t_stock_info  a
 		join m_storage_location_info b on b.location_id = a.location_id
@@ -341,6 +369,10 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 <div class="container">
 	<div class="fl_left" style="width: 100%">
 		<div class="prd_active_wrap">
+			
+			<?php if($p['end_of_life'] == 1){ ?>
+				<span class="notifications red">Product Closed</span>
+			<?php }else{?>
 			<?php if($p['is_active']){ ?>
 				<span class="notifications green">Active</span>
 			<?php }else{ ?>	
@@ -353,6 +385,7 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 				<span class="notifications green">Sourceble</span>
 			<?php }else{ ?>	
 				<span class="notifications red">Not Sourceble</span>
+			<?php } ?>
 			<?php } ?>
 		</div>
 		<h2 class="prd_title_wrap">
@@ -394,17 +427,30 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 					
 					<div class="clear" style="padding:5px;background: #f1f1f1;overflow: hidden;">
 						<span class="fl_left" style="margin-left:2px">Total Stock : <?php echo $ttl_stk;?></span>
-						<?php 
+<?php 
 							if($dmg_qty)
 							{
-						?>
-								<span  class="addrow_tooltip fl_left" title="Damaged Quantity" style="color:red;margin-left:6px;font-size: 10px;">(<?php echo $dmg_qty;?>)</span>
-						<?php } ?>
-						<?php if($this->erpm->auth(STOCK_CORRECTION,true)){?>
-							<div class="fl_right"><button class="button button-action button-tiny fl_right btn_correction">Correction</button></div>
+?>
+								<span  class="addrow_tooltip fl_left" title="Damaged Quantity" style="color:red;margin-left:6px;font-size: 10px;">Damaged:(<?php echo $dmg_qty;?>)</span>
+<?php
+							}
+							if($part_reserv_qty>0)
+							{
+?>
+								<span  class="addrow_tooltip fl_left" title="Partner Stock Transfer Reserved,Rackbin:<?=$part_rbname;?>,Barcode:<?=$part_pbarcode;?>" style="color:#E72CC2;margin-left:6px;font-size: 11px;">Reserved:(<?php echo $part_reserv_qty;?>)</span>
+<?php 
+							}
+							if($part_return_reserv_qty>0)
+							{
+?>
+								<span  class="addrow_tooltip fl_left" title="Partner Return Stock Reserved,Rackbin:<?=$part_rbname;?>,Barcode:<?=$part_pbarcode;?>" style="color:#03D70E;margin-left:6px;font-size: 11px;">Return Reserved:(<?php echo $part_return_reserv_qty;?>)</span>
+<?php 
+							}
+							if($this->erpm->auth(STOCK_CORRECTION,true)){?>
+								<div class="fl_right"><button class="button button-action button-tiny fl_right btn_correction">Correction</button></div>
 						<?php } ?>
 					</div>
-					<div class="vendor_prd_wrap" style="max-height: 140px !important;">
+					<div class="vendor_prd_wrap" style="max-height: 200px !important;">
 						<table class="datagrid fl_left" width="100%">
 							<thead>
 								<th><b>Barcode</b></th>
@@ -412,7 +458,6 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 								<th><b>Rackbin</b></th>
 								<th><b>Stock</b></th>
 								<th><b>Expiry</b></th>
-								<th><b>Offer</b></th>
 							</thead>
 							<tbody>
 								<?php 
@@ -420,25 +465,20 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 													a.location_id,a.rack_bin_id,
 													concat(c.rack_name,bin_name) as rbname,c.is_damaged,
 													ifnull(product_barcode,'') as pbarcode,
-													a.stock_id,a.expiry_on,offer_note     
+													a.stock_id,date_format(a.expiry_on, '%d-%m-%Y') as expiry_on,offer_note     
 													from t_stock_info  a 
 													join m_storage_location_info b on b.location_id = a.location_id 
 													join m_rack_bin_info c on c.id = a.rack_bin_id  
 													where product_id=? 
-													group by mrp,pbarcode,a.location_id,a.rack_bin_id 
-													having sum(available_qty)>=0 
-													order by mrp asc ";
+													group by a.stock_id,mrp,pbarcode,a.location_id,a.rack_bin_id,a.expiry_on,a.offer_note  
+													order by s desc,mrp asc ";
 								?>
 								
 								<?php foreach($this->db->query($sql,$p['product_id'])->result_array() as $s){
 								if(($s['is_damaged'] !=1)  || ($s['is_damaged'] ==1 && round($s['s']) > 0))
 								{	
-									if($s['is_damaged'] != '1')
-								{?>
-									<tr>
-								<?php } else {?>
-										<tr style="background:rgb(248, 143, 143)">
-								<?php }?>			
+									?>
+									<tr <?php ($s['is_damaged'] != '1')?'':'style="background:rgb(248, 143, 143)"'?> >
 										<td>
 											<?php echo $s['pbarcode']?$s['pbarcode']:'--na--';?> 
 												<?php if($this->erpm->auth(UPDATE_PRODUCT_BARCODE,true)){?>
@@ -450,9 +490,24 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 										<td width="40" align="left"><span><?php echo round((float)$s['mrp'],2);?></span></td>
 										<td><?php echo $s['rbname'];?></td>
 										<td><?php echo round($s['s']);?></td>
-										<td><?php if($s['expiry_on'] == '0000-00-00 00:00:00' || empty($s['expiry_on'])){echo '-na-';} else { echo $s['expiry_on'];} ?></td>
-										<td><?php echo (empty($s['offer_note'])?'-na-':$s['offer_note']);?><br /></td>
+										<td width="90">
+											<?php if($s['expiry_on'] == '00-00-0000' || empty($s['expiry_on'])){echo '-na-';} else { echo $s['expiry_on'];} ?>
+											<?php if($this->erpm->auth(UPDATE_PRODUCT_BARCODE,true)){?>	
+												<a href="javascript:void(0)" class="upd_expiry" stk_id="<?php echo $s['stock_id'] ?>" >
+													<img src="<?php echo base_url().'images/pencil.png'?>">
+												</a>
+											<?php } ?>	
+										</td>
 									</tr>
+									<?php 
+										if(!empty($s['offer_note']))
+										{
+									?>
+										<tr><td colspan="10"><?php echo $s['offer_note'];?></td></tr>	
+									<?php 		
+										}
+									?>
+									
 								<?php } }?>
 							</tbody>
 						</table>
@@ -478,8 +533,51 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 		</div>
 		
 		<div class="prd_outer_wrap1">
+		
 			<div class="prd_inner_wrap1">
-				<div class="prd_inner_sub_wrap2" style="width:100%">
+				<div class="prd_inner_sub_wrap1">
+					<div class="ttl_wrap1">Sourceble Vendors</div>
+					<div class="vendor_prd_wrap">
+						<table class="datagrid fl_left" width="100%">
+							<thead>
+								<tr><th>Sno</th><th>Vendor Name</th></tr>
+							</thead>
+							<tbody>
+								<?php
+									$list_vendors_res = $this->db->query("select a.brand_id,c.vendor_name,b.vendor_id from m_product_info a 
+									join m_vendor_brand_link b on b.brand_id=a.brand_id
+									join m_vendor_info c on c.vendor_id=b.vendor_id
+									join m_product_info p on p.brand_id=b.brand_id
+									where p.product_id=?
+									group by b.vendor_id
+									order by vendor_name",$p['product_id']); 
+									$j=1;
+								?>
+								
+								<?php  
+									if($list_vendors_res->num_rows())
+									{
+									foreach($list_vendors_res->result_array() as $v){
+								?>
+									<tr>
+										<td><?=$j++?></td>
+										<td><a href="<?=site_url("admin/vendor/{$v['vendor_id']}")?>" target="_blank"><?=$v['vendor_name']?></a></td>
+									</tr>
+								<?php } }else { ?>
+									<tr>
+										<td>
+											No Vendors Found
+										</td>
+									</tr>
+								<?php } ?>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			
+			<div class="prd_inner_wrap3">
+				<div class="prd_inner_sub_wrap1" style="width:100%">
 					<div class="ttl_wrap1" >Linked Deals</div>
 					<div class="vendor_prd_wrap">
 						<table class="datagrid fl_left" width="100%">
@@ -497,7 +595,7 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 									{
 								?>
 									<thead>
-										<tr><th>Sno</th><th>Deal</th><th>Qty</th><th>OfferPrice</th><th>MemberPrice</th><th>Type</th></tr>
+										<tr><th>Deal For</th><th>Sno</th><th>Deal</th><th>Qty</th><th>OfferPrice</th><th>MemberPrice</th></tr>
 									</thead>
 									<tbody>
 								<?php 		
@@ -506,11 +604,11 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 								?>
 									<tr>
 										<td><?=$i++?></td>
+										<td><?=$d['is_pnh']?"PNH":"SNP"?></td>
 										<td><a href="<?=site_url("admin/deal/{$d['id']}")?>" target="_blank"><?=$d['name']?></a></td>
 										<td><?=$d['qty']?></td>
 										<td><?=  formatInIndianStyle($d['price']);?> <small>(Rs)</small></td>
 										<td><?=  formatInIndianStyle($d['member_price']);?> <small>(Rs)</small></td>
-										<td><?=$d['is_pnh']?"PNH":"SNP"?></td>
 									</tr>
 								<?php 
 										} 
@@ -560,47 +658,7 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 				</div>
 			</div>
 			
-			<div class="prd_inner_wrap3">	
-				<div class="prd_inner_sub_wrap1">
-					<div class="ttl_wrap1">Sourceble Vendors</div>
-					<div class="vendor_prd_wrap">
-						<table class="datagrid fl_left" width="100%">
-							<thead>
-								<tr><th>Sno</th><th>Vendor Name</th></tr>
-							</thead>
-							<tbody>
-								<?php
-									$list_vendors_res = $this->db->query("select a.brand_id,c.vendor_name,b.vendor_id from m_product_info a 
-									join m_vendor_brand_link b on b.brand_id=a.brand_id
-									join m_vendor_info c on c.vendor_id=b.vendor_id
-									join m_product_info p on p.brand_id=b.brand_id
-									where p.product_id=?
-									group by b.vendor_id
-									order by vendor_name",$p['product_id']); 
-									$j=1;
-								?>
 								
-								<?php  
-									if($list_vendors_res->num_rows())
-									{
-									foreach($list_vendors_res->result_array() as $v){
-								?>
-									<tr>
-										<td><?=$j++?></td>
-										<td><a href="<?=site_url("admin/vendor/{$v['vendor_id']}")?>" target="_blank"><?=$v['vendor_name']?></a></td>
-									</tr>
-								<?php } }else { ?>
-									<tr>
-										<td>
-											No Vendors Found
-										</td>
-									</tr>
-								<?php } ?>
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
 			
 			<div class="prd_inner_wrap2">	
 				<div class="prd_inner_sub_wrap2"  style="width:100%">
@@ -729,7 +787,7 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 							<button class="button button-rounded button-action button-tiny p_imei_filter_submit">Go</button>
 						</div>
 						<table id="stock_imei_processed_list" class="datagrid" width="100%">
-							<thead><tr><th>#</th><th>Serialno</th><th>GRNID</th><th>Status</th><th>Date</th></tr></thead>
+							<thead><tr><th>#</th><th>Serialno</th><th>MRP</th><th>Rack Name</th><th>GRNID</th><th>Status</th><th>Date</th></tr></thead>
 							<tbody>
 							
 							</tbody>
@@ -747,7 +805,7 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 							<button class="button button-rounded button-action button-tiny p_imei_filter_submit">Go</button>
 						</div>
 						<table id="stock_imei_reserved_list" class="datagrid" width="100%">
-							<thead><tr><th>#</th><th>Serialno</th><th>GRNID</th><th>Batch</th><th>Transaction</th><th>Status</th><th>Date</th></tr></thead>
+							<thead><tr><th>#</th><th>Serialno</th><th>MRP</th><th>Rack Name</th><th>GRNID</th><th>Batch</th><th>Transaction</th><th>Status</th><th>Date</th></tr></thead>
 							<tbody>
 							
 							</tbody>
@@ -767,7 +825,7 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 							<button class="button button-rounded button-action button-tiny a_imei_filter_submit">Go</button>
 						</div>
 						<table id="stock_imei_available_list" class="datagrid" width="100%">
-							<thead><tr><th>#</th><th>Serialno</th><th>GRNID</th><th>Status</th><th>Date</th></tr></thead>
+							<thead><tr><th>#</th><th>Serialno</th><th>MRP</th><th>Rack Name</th><th>GRNID</th><th>Status</th><th>Date</th></tr></thead>
 							<tbody>
 							
 							</tbody>
@@ -802,11 +860,11 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 						<option value="">Choose</option>
 						<option id="new_stock_prod" value="new">New</option>
 						<?php 
-							$sql_stkmrpprod = "select  a.stock_id,a.location_id,a.rack_bin_id,concat(rack_name,bin_name) as rb_name,a.product_barcode,a.mrp,sum(a.available_qty) as available_qty,concat('Rs',ifnull(a.mrp,0),' - ',rack_name,bin_name,' - ',a.product_barcode) as stk_prod 
+							$sql_stkmrpprod = "select  a.stock_id,a.location_id,a.rack_bin_id,concat(rack_name,bin_name) as rb_name,a.product_barcode,a.mrp,sum(a.available_qty) as available_qty,concat('Rs',ifnull(a.mrp,0),' - ',rack_name,bin_name,' - ',if(length(a.product_barcode),a.product_barcode,'NO BARCODE'),' - ',IFNULL(a.expiry_on,'')) as stk_prod,expiry_on 
 												from t_stock_info a
 												join m_rack_bin_info b on a.rack_bin_id = b.id 
 												where a.product_id = ? 
-												group by a.mrp,a.location_id,a.rack_bin_id,a.product_barcode 
+												group by a.mrp,a.location_id,a.rack_bin_id,a.product_barcode,a.stock_id  
 												order by a.mrp asc 
 											";
 							$stkmrpprod_res = $this->db->query($sql_stkmrpprod,$p['product_id']);
@@ -815,7 +873,7 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 								foreach($stkmrpprod_res->result_array() as $stkmrppro)
 								{
 						?>
-								<option stk_id="<?php echo $stkmrppro['stock_id'];?>" avail_qty="<?php echo $stkmrppro['available_qty'];?>" value="<?php echo $stkmrppro['product_barcode'].'_'.$stkmrppro['mrp'].'_'.$stkmrppro['location_id'].'_'.$stkmrppro['rack_bin_id'] ?>"><?php echo $stkmrppro['stk_prod']?></option>
+								<option stk_id="<?php echo $stkmrppro['stock_id'];?>" avail_qty="<?php echo $stkmrppro['available_qty'];?>" value="<?php echo $stkmrppro['product_barcode'].'_'.$stkmrppro['mrp'].'_'.$stkmrppro['location_id'].'_'.$stkmrppro['rack_bin_id'].'_'.$stkmrppro['expiry_on'].'_'.$stkmrppro['stock_id'] ?>"><?php echo $stkmrppro['stk_prod']?></option>
 						<?php
 								} 				
 							}else
@@ -959,6 +1017,8 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 								<tr><td><b>Barcode</b></td><td><input type="text" size="24" name="dest_prod_newstk_bc"></td></tr>
 								<tr><td><b>MRP</b></td><td><input type="text" size="13" name="dest_prod_newstk_mrp" value="0"></td></tr>
 								<tr><td><b>Location</b></td><td><select name="dest_prod_newstk_rbid" style="width:200px"></select></td></tr>
+								<tr><td><b>Expiry</b></td><td><input type="text" name="dest_prod_newstk_expiry" id="exp_dates"></td></tr>
+								<!--<tr><td><b>Offer Note</b></td><td><input type="text" name="dest_prod_newstk_offer"></td></tr>-->
 							</table>
 						</div>
 						
@@ -1003,6 +1063,15 @@ $attr_det=$this->db->query("select a.attr_name,pa.attr_value from m_product_attr
 			<table>
 				<tr><td><b>Old Barcode</b></td><td><input id="upd_old_bc" class="inp" type="text" disabled="disabled"></td></tr>
 				<tr><td><b>New Barcode</b></td><td><input id="upd_new_bc" class="inp" autocomplete="off" type="text" value=""><input type="submit" value="Submit" style="visibility: hidden;" ></td></tr>
+			</table>
+		</form>	
+	</div>
+	
+	<div id="upd_stk_expiry_dlg" title="Update Product Expiry">
+		<form id="upd_stk_expiry_frm" method="post">
+			<table>
+				<tr><td><b>Old Expiry</b></td><td><input id="upd_old_expiry" class="inp" type="text" disabled="disabled"></td></tr>
+				<tr><td><b>New Expiry</b></td><td><input id="upd_new_expiry" class="inp" ><input type="submit" value="Submit" style="visibility: hidden;" ></td></tr>
 			</table>
 		</form>	
 	</div>

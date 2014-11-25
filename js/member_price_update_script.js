@@ -71,7 +71,7 @@
 			});
 		}
 		
-		$(".updt_brand_margin").html('<a href="javascript:void(0)" onclick="mp_percentage_bulkupdate();" class="button button-tiny button-primary">Update Percentage Margin for Brand</a>');
+		$(".updt_brand_margin").html('<a href="javascript:void(0)" onclick="mp_percentage_bulkupdate();" class="button button-tiny button-primary">Bulk Update</a>');
 		$(".mp_end_deep_discount").html('<a href="javascript:void(0)" onclick="mp_end_deep_dicount();" class="button button-tiny button-caution">End Active Deep Discount</a>');
 		
 	}).trigger('change');
@@ -108,7 +108,6 @@
 				});
 				
 		}
-
 	});
 	
 	
@@ -303,6 +302,18 @@
 									mp_offer_to='';
 									msg_update_offer_dt='';
 								}
+								var mp_offer_price='';
+								var msg_mp_offer_price='';
+								if(b.mp_offer_price!='0.00' && b.mp_offer_price!='null') {
+									msg_mp_offer_price='<span class="highlight_price">Rs. '+b.mp_offer_price+"</span>";
+									mp_offer_price=b.mp_offer_price;
+								}
+								var msg_mp_is_big_offer='';
+								if(b.mp_is_big_offer==1)
+								{
+									msg_mp_is_big_offer='<span class="big_offer">Big Offer</span>';
+								}
+								
 								var mp_notemsg_action='';var mp_offer_note = '';
 								if(b.mp_offer_note !='' && b.mp_offer_note !== null && b.mp_offer_note!=0)
 								{
@@ -333,11 +344,13 @@
 																	<td><input type="text" size="2" tabindex="mpmaxallowqty'+a+'" class="chg_mp_max_allow_qty" value="'+mp_max_allow_qty+'" '+disabled+'> <span class="small">(Qty)</span></td>\n\
 																	<td><input type="text" size="2" tabindex="mpmaxfrnqty'+a+'" class="chg_mp_frn_max_qty" value="'+mp_frn_max_qty+'" '+disabled+'> <span class="small">(Qty)</span></td>\n\
 																	<td><input type="text" size="2" tabindex="mpmaxmemqty'+a+'" class="chg_mp_mem_max_qty" value="'+mp_mem_max_qty+'" '+disabled+'> <span class="small">(Qty)</span></td>\n\
-																	<td><select tabindex="shipsin'+a+'" class="mp_offer_shipsin" style="width:76px;" value="" '+disabled+'>\n\
-																				<option value="24-48 Hrs" '+((shipsin=="24-48 Hrs")?'selected':'')+'>24-48</option>\n\
-																				<option value="48-72 Hrs" '+((shipsin=="48-72 Hrs")?'selected':'')+'>48-72</option>\n\
-																				<option value="72-96 Hrs" '+((shipsin=="72-96 Hrs")?'selected':'')+'>72-96</option></select> <span class="small">(Hrs)</span></td>\n\
-																	<input type="hidden" class="chg_mp_offer_from" value="'+mp_offer_from+'"/><input type="hidden" class="chg_mp_offer_to" value="'+mp_offer_to+'"/>\n\
+																	<td><select tabindex="shipsin'+a+'" class="mp_offer_shipsin" style="width:100px;" value="" '+disabled+'>\n\
+																				<option value="24-48 Hrs" '+((shipsin=="24-48 Hrs")?'selected':'')+'>24-48 Hrs</option>\n\
+																				<option value="48-72 Hrs" '+((shipsin=="48-72 Hrs")?'selected':'')+'>48-72 Hrs</option>\n\
+																				<option value="72-96 Hrs" '+((shipsin=="72-96 Hrs")?'selected':'')+'>72-96 Hrs</option>\n\
+																				<option value="4-5 Days" '+((shipsin=="4-5 Days")?'selected':'')+'>4-5 Days</option>\n\
+																				</select></td>\n\
+																	<input type="hidden" class="chg_mp_offer_from" value="'+mp_offer_from+'"/><input type="hidden" class="chg_mp_offer_to" value="'+mp_offer_to+'"/> <input type="hidden" class="chg_mp_offer_price" value="'+mp_offer_price+'"/><input type="hidden" class="chg_mp_is_big_offer" value="'+b.mp_is_big_offer+'"/>\n\
 																	<td>\n\
 																		<input type="submit" value="Go" style="width:30px;" '+disabled+'>\n\
 																	</td>\n\
@@ -356,9 +369,9 @@
 								
 								//<span class="lbl_memberprice_note_'+b.id+'">'+mp_offer_note+'</span>
 								deallist_html += '	<td><div style="margin-top:10px;">'+mp_notemsg_action+'</div><input type="hidden" class="memberprice_note_'+b.id+'" value="'+mp_offer_note+'"/></td>\n\
-													<td><input type="checkbox" tabindex="isoffer'+a+'" class="chg_mp_is_offer_'+b.id+'" '+is_offer_msg+' value="1" onchange="return fn_chg_isoffer(this);" itemid="'+b.id+'"></td>\n\
-													<td><div class="show_dates_blk_'+b.id+' fl_left"><span class="small lbl_mp_offer_from_'+b.id+'">'+mp_offer_from+'</span> <br>- <span class="small lbl_mp_offer_to_'+b.id+'">'+mp_offer_to+'</span></div>\n\
-														'+msg_update_offer_dt+'\n\
+													<td><input type="checkbox" tabindex="isoffer'+a+'" class="chg_mp_is_offer_'+b.id+'" '+is_offer_msg+' value="1" onchange="return fn_chg_isoffer(this);" itemid="'+b.id+'">\n\
+													'+msg_update_offer_dt+'</td>\n\
+													<td><div class="show_dates_blk_'+b.id+' fl_left"><span class="small lbl_mp_offer_from_'+b.id+'">'+mp_offer_from+'</span> <br>- <span class="small lbl_mp_offer_to_'+b.id+'">'+mp_offer_to+'</span> <br> <span class="small lbl_mp_offer_price_'+b.id+'">'+msg_mp_offer_price+'</span> <br> <span class="small lbl_mp_is_big_offer_'+b.id+'">'+msg_mp_is_big_offer+'</span></div>\n\
 													</td>';
 								/*deallist_html += '	<td><span class="deal_status">'+(b.publish==1?'Published':'Not Published')+'</span><br><a class="upd_deal_pub button button-tiny button-flat-action"  item_id="'+b.id+'" publish="'+b.publish+'" href="javascript:void(0)" style="font-size:10px;color:blue">Change</a> </td>';*/
 								
@@ -377,7 +390,9 @@
 								deallist_html += '	<td>'+show_in_tab_msg+'</td>';
 								deallist_html += '	<td><span class="p_src_status">'+sourceablemsg+'</span>\n\
 														<br><a class="upd_prodstatus button button-tiny button-flat-action" href="javascript:void(0);" style="font-size:9px;" onclick="return sourceable_status_cngfn(this);">Change</a>\n\
-														<input type="hidden" class="product_id" value="'+b.product_id+'" />';
+														<input type="hidden" class="product_nm" value="'+product_nm+'" />\n\
+														<input type="hidden" class="product_id" value="'+b.product_id+'" />\n\
+														<input type="hidden" class="itemid" value="'+b.id+'" />';
 								deallist_html += '	</td>';
 								deallist_html += '</tr>';
 							});
@@ -462,6 +477,7 @@
 				$.post(site_url+'/admin/pnh_upd_prod_status/'+product_id,{remarks:cng_reason},function(resp){
 					$('.p_src_status',trelt).text(resp.pstatus);
 					dlg.dialog("close");
+					load_dealsbybrandcat('');
 				},'json');
 			}
 			,Cancel:function(d,k) {
@@ -472,11 +488,13 @@
 	});
 	
 	function sourceable_status_cngfn(e) {
-		if(confirm("Are you sure want to change the product status?"))
+		var trElt = $(e).closest('tr');
+		var product_id = $(".product_id",trElt).val();
+		var itemid = $(".itemid",trElt).val();
+		var product_nm = $(".product_nm",trElt).val();
+		
+		if(confirm("Are you sure want to change sourceable status? \n #"+itemid+" "+product_nm+""))
 		{
-			var trElt = $(e).closest('tr');
-			var product_id = $(".product_id",trElt).val();
-	
 			$("#dlg_sourceable_status_cng").data("product_id",product_id).data("trelt",trElt).dialog("open").dialog('option', 'title', 'Sourceable Status Change');
 
 		}
@@ -508,6 +526,8 @@
 		var	el_mp_is_offer = $(".chg_mp_is_offer_"+itemid);
 		var	el_mp_offer_from = $(".chg_mp_offer_from",elt);
 		var	el_mp_offer_to = $(".chg_mp_offer_to",elt);
+		var	el_mp_offer_price = $(".chg_mp_offer_price",elt);
+		var	el_mp_is_big_offer = $(".chg_mp_is_big_offer",elt);
 		var	mp_offer_note = $(".memberprice_note_"+itemid);
 		var	el_offer_shipin = $(".mp_offer_shipsin",elt);
 		var el_percent_block = $(".mp_percent_snip",elt);
@@ -520,6 +540,8 @@
 		var mp_is_offer = el_mp_is_offer.attr("checked") ? 1 : 0;
 		var mp_offer_from = ( el_mp_offer_from.val() != '') ? $.trim(el_mp_offer_from.val()) : 0;
 		var mp_offer_to = (el_mp_offer_to.val() != '' ) ? $.trim(el_mp_offer_to.val()) : 0;
+		var mp_offer_price = (el_mp_offer_price.val() != '' ) ? $.trim(el_mp_offer_price.val()) : 0;
+		var mp_is_big_offer = (el_mp_is_big_offer.val() != '' ) ? $.trim(el_mp_is_big_offer.val()) : 0;
 		var mp_offer_note = (mp_offer_note.val() != '' ) ? $.trim(mp_offer_note.val()) : '';
 		var mp_offer_shipsin  = el_offer_shipin.val();
 		
@@ -528,10 +550,12 @@
 		 		alert("Invalid Price entered,please check");
 		 		return false;
 		 	}
-		 	if(member_price == 0) {
-		 		alert("Price cannot be 0, Re-Check once");
+		 	if(member_price == 0 || member_price==1) {
+		 		alert("Price cannot be 0 OR 1, Re-Check once");
+				el_mp.val(oprc);
 		 		return false;
 		 	}
+		 	
 		 	if(mp_frn_max_qty == 0 || mp_frn_max_qty == '') {
 		 		alert("MP Fran Max quantity can not be 0 or empty, Re-Check once");
 		 		return false;
@@ -570,7 +594,7 @@
 				alert("Please Choose ShipsIn Hours Range");return false;
 			}*/
 			var getURL = {price:price,member_price:member_price,id:itemid,is_perc:0,mp_frn_max_qty:mp_frn_max_qty,mp_mem_max_qty:mp_mem_max_qty,mp_max_allow_qty:mp_max_allow_qty,mp_is_offer:mp_is_offer,mp_offer_from:mp_offer_from
-				,mp_offer_to:mp_offer_to,mp_offer_note:mp_offer_note,mp_offer_shipsin:mp_offer_shipsin};
+				,mp_offer_to:mp_offer_to,mp_offer_price:mp_offer_price,mp_is_big_offer:mp_is_big_offer,mp_offer_note:mp_offer_note,mp_offer_shipsin:mp_offer_shipsin};
 			//print(getURL); return false;
 			// jx_upd_deal_memberprice => deal_memberprice_upd_jx
 			$.post(site_url+'/admin/deal_memberprice_upd_jx',getURL,function(resp){
@@ -580,7 +604,14 @@
 					el_mp_max_allow_qty.css('border','2px solid green');
 					el_mp_frn_max_qty.css('border','2px solid green');
 					el_mp_mem_max_qty.css('border','2px solid green');
-					$(".show_dates_blk_"+itemid,elt).html('<span class="small lbl_mp_offer_from">'+mp_offer_from+'</span> <br>- <span class="small lbl_mp_offer_to">'+mp_offer_to+'</span>');
+					
+					var msg_mp_is_big_offer='';
+					if(mp_is_big_offer==1)
+					{
+						msg_mp_is_big_offer='<span class="big_offer">Big Offer</span>';
+					}
+					
+					$(".show_dates_blk_"+itemid,elt).html('<span class="small lbl_mp_offer_from_">'+mp_offer_from+'</span> <br>- <span class="small lbl_mp_offer_to_">'+mp_offer_to+'</span> <br> <span class="small highlight_price lbl_mp_offer_price_ "> Rs.'+mp_offer_price+'</span> <br> <span class="small lbl_mp_is_big_offer_ ">'+msg_mp_is_big_offer+'</span>');
 					el_percent_block.html(mp_percent);
 					$(".resp_disp_block",elt).html(""+resp.message);
 				}else
@@ -673,9 +704,14 @@ $("#dlg_offer_details_blk").dialog({
 		var form = dlg.data("form");
 		var offer_from=$(".chg_mp_offer_from",$(form) ).val();
 		var offer_to=$(".chg_mp_offer_to",$(form) ).val();
+		var offer_price=$(".chg_mp_offer_price",$(form) ).val();
+		var mp_is_big_offer=$(".chg_mp_is_big_offer",$(form) ).val();
 		//alert(offer_from+""+offer_to);
 		$(".offer_from",dlg ).val(offer_from);
 		$(".offer_to",dlg ).val(offer_to);
+		$(".offer_price",dlg ).val(offer_price);
+		if(mp_is_big_offer==1)
+			$(".mp_is_big_offer",dlg ).prop("checked",true);
 	}
 	,buttons:{
 		Submit:function(e,j) {
@@ -686,13 +722,38 @@ $("#dlg_offer_details_blk").dialog({
 			
 			var offer_from=$(".offer_from",dlg ).val();
 			var offer_to=$(".offer_to",dlg ).val();
-			//alert(offer_from+""+offer_to);
-
+			var offer_price=$(".offer_price",dlg ).val();
+			var mp_is_big_offer=0;
+			if($(".mp_is_big_offer",dlg ).is(":checked"))
+				mp_is_big_offer=1;
+			
+			if(offer_from=='') {
+				alert("Please select offer from date");
+				return false;
+			}
+			if(offer_to=='') {
+				alert("Please select offer to date");
+				return false;
+			}
+			if(offer_price=='') {
+				alert("Please enter offer discount price");
+				return false;
+			}
+			var msg_mp_is_big_offer='';
+			if(mp_is_big_offer==1)
+			{
+				msg_mp_is_big_offer='<span class="big_offer">Big Offer</span>';
+			}
+			
 			$(".chg_mp_offer_from",$(form)).val(offer_from);
 			$(".chg_mp_offer_to",$(form)).val(offer_to);
+			$(".chg_mp_offer_price",$(form)).val(offer_price);
+			$(".chg_mp_is_big_offer",$(form)).val(mp_is_big_offer);
 			
 			$(".lbl_mp_offer_from_"+itemid).html(offer_from);
 			$(".lbl_mp_offer_to_"+itemid).html(offer_to);
+			$(".lbl_mp_offer_price_"+itemid).html("<span class='highlight_price'>Rs. "+offer_price+"</span>");
+			$(".lbl_mp_is_big_offer_"+itemid).html("<span>"+msg_mp_is_big_offer+"</span>");
 			
 			dlg.dialog("close");
 			$(form).submit();
@@ -735,6 +796,8 @@ function fn_chg_isoffer(elt)
 		
 		$(".chg_mp_offer_from",$(form)).val("");
 		$(".chg_mp_offer_to",$(form)).val("");
+		$(".chg_mp_offer_price",$(form)).val("");
+		$(".chg_mp_is_big_offer",$(form)).val(0);
 		form.submit();
 	}
 	return false;
@@ -1042,15 +1105,50 @@ $("#mp_bulkupdate_percentage_block").dialog({
 			
 			
 			var mp_update_percent=$(".mp_update_percent",dlg ).val();
+			var bulk_mp_max_allow_qty=parseInt($(".bulk_mp_max_allow_qty",dlg ).val());
+			var bulk_mp_frn_max_qty=parseInt($(".bulk_mp_frn_max_qty",dlg ).val());
+			var bulk_mp_mem_max_qty=parseInt($(".bulk_mp_mem_max_qty",dlg ).val());
 			var mp_offer_shipsin=$(".mp_offer_shipsin",dlg ).val();
-			if(mp_update_percent == '')
+			if(mp_update_percent == '' || isNaN(mp_update_percent) )
 			{
-				alert("Please enter member price percentage");
+				alert("Error: Please enter valid member price percentage value");
 				return false;
 			}
-			
+			if(mp_update_percent > 20 )
+			{
+				alert("Error-#1: Member price percentage value cannot be greated than 20%");
+				return false;
+			}
+			if(bulk_mp_max_allow_qty=='' || isNaN(bulk_mp_max_allow_qty) || bulk_mp_max_allow_qty==0 )
+			{
+				alert("Error-#2: Please enter valid all franchise max to sell quantity");
+				return false;
+			}
+			if(bulk_mp_frn_max_qty=='' || isNaN(bulk_mp_frn_max_qty) || bulk_mp_frn_max_qty==0 )
+			{
+				alert("Error#3: Please enter valid all franchise max to sell quantity");
+				return false;
+			}
+			if(bulk_mp_mem_max_qty=='' || isNaN(bulk_mp_mem_max_qty) || bulk_mp_mem_max_qty==0 )
+			{
+				alert("Error-#4: Please enter valid all member max to sell quantity");
+				return false;
+			}
+			//==== logic validations ====
+			if(bulk_mp_max_allow_qty < bulk_mp_frn_max_qty )
+			{
+				alert("Error-#5: b should be less than or equal to a quantity.");
+				return false;
+			}
+			if( bulk_mp_mem_max_qty > bulk_mp_frn_max_qty || bulk_mp_mem_max_qty > bulk_mp_max_allow_qty)
+			{
+				alert("Error-#6: c should be less than or equal to b and a quantities.");
+				return false;
+			}
+
 			$(".show_update_sts",dlg).html("<small class='loading'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Updating...</small>");
-			$.post(site_url+"/admin/deal_memberprice_percent_bulkupdt_jx",{mp_update_percent:mp_update_percent,menuid:menuid,bid:bid,catid:catid,mp_offer_shipsin:mp_offer_shipsin},function(resp) {
+			$.post(site_url+"/admin/deal_memberprice_percent_bulkupdt_jx",{mp_update_percent:mp_update_percent,menuid:menuid,bid:bid,catid:catid,mp_offer_shipsin:mp_offer_shipsin
+																			,mp_max_allow_qty:bulk_mp_max_allow_qty,mp_frn_max_qty:bulk_mp_frn_max_qty,mp_mem_max_qty:bulk_mp_mem_max_qty},function(resp) {
 				if(resp.status == 'success')
 				{
 					alert(""+resp.message);
@@ -1149,7 +1247,7 @@ function mp_end_deep_dicount()//menuid,bid,catid
 function change_deep_discount(elt) {
 	
 	if($(elt).is(":checked")) {
-		$(".updt_brand_margin").html('<a href="javascript:void(0)" onclick="mp_percentage_bulkupdate();" class="button button-tiny button-primary">Update Percentage Margin for Brand</a>');
+		$(".updt_brand_margin").html('<a href="javascript:void(0)" onclick="mp_percentage_bulkupdate();" class="button button-tiny button-primary">Bulk Update</a>');
 		$(".mp_end_deep_discount").html('<a href="javascript:void(0)" onclick="mp_end_deep_dicount();" class="button button-tiny button-caution">End Active Deep Discount</a>');
 	}
 	return false;

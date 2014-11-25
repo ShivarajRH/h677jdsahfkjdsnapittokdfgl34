@@ -24,6 +24,9 @@ FROM king_transactions tr
 SELECT * FROM shipment_batch_process WHERE batch_id='5000'
 SELECT * FROM shipment_batch_process_invoice_link WHERE batch_id='5000';
 
+SELECT * FROM user_access_roles;
+
+
 SELECT o.*,tr.transid,tr.amount,tr.paid,tr.init,tr.is_pnh,tr.franchise_id,di.name
                                 ,o.status,pi.p_invoice_no,o.quantity
                                 ,f.franchise_id,pi.p_invoice_no
@@ -61,6 +64,27 @@ ALTER TABLE `snapittoday_db_nov`.`shipment_batch_process_invoice_link` DROP COLU
 
 
 SELECT * FROM m_batch_config;
+#Aug_19_2014
+
+/*[12:00:26 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,NULL,NULL,NULL,'4cecb21b44628b17c436739bf6301af2','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'0','1',NULL,NULL); 
+/*[12:01:17 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,NULL,'SMS','SMS','4cecb21b44628b17c436739bf6301af2','','0','0','0','','franchise@storeking.in',NULL,NULL,NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+/*[12:02:52 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,NULL,NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+/*[12:03:03 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,'',NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+/*[12:03:11 PM][90 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,'',NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52','2014-08-18 12:03:08'); 
+ CREATE TABLE `pnh_t_max_credit_info` (
+  `id` BIGINT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `franchise_id` INT(11) DEFAULT NULL,
+  `credit_added` DOUBLE DEFAULT NULL,
+  `new_credit_limit` DOUBLE DEFAULT NULL,
+  `credit_given_by` INT(11) DEFAULT NULL COMMENT 'executive id',
+  `reason` VARCHAR(200) NOT NULL,
+  `created_by` INT(11) DEFAULT NULL,
+  `modified_by` INT(11) DEFAULT NULL,
+  `created_on` BIGINT(20) DEFAULT NULL,
+  `modified_on` BIGINT(20) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+ 
 
 SELECT o.status,o.shipped,o.id,o.itemid,o.brandid,o.quantity,o.time,o.bill_person,o.ship_phone,o.i_orgprice,o.i_price,o.i_tax,o.i_discount,o.i_coup_discount,o.redeem_value,o.member_id,o.is_ordqty_splitd
                     ,di.name
@@ -7900,3 +7924,857 @@ WHERE pnh_member_id='21111111'
 ORDER BY id DESC;
 
 SELECT UNIX_TIMESTAMP('2013-01-01'); =>1356978600
+
+#Aug_13_2014
+
+SELECT free_frame,b.id AS itemid,lens_type,a.menuid,b.is_combo,b.pnh_id AS pid,orgprice,price,publish,has_insurance,IFNULL(insurance_value,0) AS inv_val,IFNULL(insurance_margin,0) AS inv_marg,has_power 
+	FROM king_deals a 
+	JOIN king_dealitems b ON a.dealid = b.dealid 
+	LEFT JOIN pnh_member_insurance_menu c ON c.menu_id = a.menuid AND b.price BETWEEN greater_than AND less_than AND c.is_active = 1;
+	
+#==========================
+#Aug_13_2014
+ALTER TABLE `partner_info` ADD COLUMN `partner_rackbinid` VARCHAR(20) NULL AFTER `partner_sku_text`;
+#==========================
+SELECT * FROM king_orders WHERE transid='PNHIYR69167'
+
+SELECT COUNT(*) AS t FROM king_orders o WHERE 1 AND o.status != 3 AND o.member_id='211111113'
+
+SELECT COUNT(*) AS is_rechrge_gv FROM pnh_member_offers mo
+	LEFT JOIN king_orders o ON o.id=mo.order_id AND o.status!=3
+	WHERE mo.offer_type=1 AND mo.offer_type NOT IN (0,2,3) AND mo.process_status!=1 AND mo.member_id='21111111'
+	HAVING is_rechrge_gv IS NOT NULL
+	
+SELECT * FROM pnh_users;
+
+#==========================================
+SELECT GROUP_CONCAT(DISTINCT rlink.dept_id) AS dept_ids,rlink.type_id,rtype.name AS request_name FROM m_dept_request_type_link rlink
+											LEFT JOIN `m_dept_request_types` rtype ON rtype.id = rlink.type_id
+											WHERE rlink.is_active=1 AND rlink.type_id = '7'
+											HAVING dept_ids IS NOT NULL
+
+SELECT emp.employee_id,emp.name,emp.email,emp.contact_no
+			FROM m_departments dt
+			JOIN m_employee_dept_link edl ON edl.dept_id = dt.id
+			JOIN m_employee_info emp ON emp.employee_id = edl.employee_id
+			WHERE dt.id IN ('3','7') AND job_title=9 AND emp.email !='' 
+			HAVING emp.employee_id IS NOT NULL
+#==========================================
+#==========================Confirm orders on credit Limit approval==============================================================#
+#author roopa #11_august_2014
+/*[4:07:43 PM][84 ms]*/ ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `max_credit_limit` DOUBLE DEFAULT 0 NULL AFTER `is_consolidated_payment`;
+/*[5:18:44 PM][385 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `redeem_value` DOUBLE DEFAULT 0 NULL AFTER `partner_reference_no`; 
+ /*[5:21:56 PM][310 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `is_memberprice` TINYINT DEFAULT 0 NULL AFTER `redeem_value`, ADD COLUMN `other_price` DOUBLE DEFAULT 0 NULL AFTER `is_memberprice`, ADD COLUMN `mp_logid` BIGINT(11) NULL AFTER `other_price`, ADD COLUMN `mp_loyalty_points` BIGINT(11) NULL AFTER `mp_logid`, ADD COLUMN `s_consolidated_payment` TINYINT(1) DEFAULT 0 NULL AFTER `mp_loyalty_points`, ADD COLUMN `is_ordqty_splitd` TINYINT(1) DEFAULT 0 NULL AFTER `s_consolidated_payment`, ADD COLUMN `pnh_member_fee` DOUBLE DEFAULT 0 NULL AFTER `is_ordqty_splitd`, ADD COLUMN `insurance_amount` DOUBLE DEFAULT 0 NULL AFTER `pnh_member_fee`; 
+ /*[5:23:13 PM][417 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `billon_orderprice` TINYINT DEFAULT 0 NULL AFTER `insurance_amount`; 
+ /*[5:23:40 PM][341 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `member_id` BIGINT(11) NULL AFTER `billon_orderprice`; 
+ /*[5:24:31 PM][58 ms]*/ ALTER TABLE `king_tmp_orders` CHANGE `s_consolidated_payment` `is_consolidated_payment` TINYINT(1) DEFAULT 0 NULL; 
+ /*[12:38:42 PM][44 ms]*/ 
+
+CREATE TABLE `king_tmp_transactions` (
+  `id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `transid` CHAR(18) NOT NULL,
+  `orderid` BIGINT(20) UNSIGNED NOT NULL,
+  `amount` DOUBLE UNSIGNED NOT NULL,
+  `paid` DOUBLE UNSIGNED NOT NULL,
+  `mode` TINYINT(3) UNSIGNED NOT NULL,
+  `voucher_payment` TINYINT(3) DEFAULT '0',
+  `cod` DOUBLE UNSIGNED NOT NULL,
+  `ship` DOUBLE UNSIGNED NOT NULL,
+  `giftwrap_charge` DOUBLE DEFAULT '0',
+  `response_code` INT(10) UNSIGNED NOT NULL,
+  `msg` TEXT NOT NULL,
+  `payment_id` VARCHAR(50) NOT NULL,
+  `pg_transaction_id` VARCHAR(50) NOT NULL,
+  `is_flagged` VARCHAR(10) NOT NULL,
+  `init` BIGINT(20) UNSIGNED NOT NULL,
+  `actiontime` INT(10) UNSIGNED NOT NULL,
+  `status` TINYINT(3) UNSIGNED NOT NULL,
+  `is_pnh` TINYINT(1) NOT NULL,
+  `franchise_id` INT(10) UNSIGNED NOT NULL,
+  `credit_days` INT(11) DEFAULT '0',
+  `order_for` INT(11) NOT NULL DEFAULT '0',
+  `pnh_member_fee` DOUBLE DEFAULT '0',
+  `credit_remarks` VARCHAR(255) DEFAULT NULL,
+  `batch_enabled` TINYINT(1) NOT NULL DEFAULT '1',
+  `admin_trans_status` TINYINT(3) DEFAULT '0',
+  `priority` TINYINT(1) NOT NULL,
+  `priority_note` VARCHAR(200) NOT NULL,
+  `note` TEXT NOT NULL,
+  `offline` TINYINT(1) NOT NULL,
+  `status_backup` TINYINT(1) DEFAULT NULL,
+  `partner_reference_no` VARCHAR(100) NOT NULL,
+  `partner_id` INT(10) UNSIGNED NOT NULL,
+  `trans_created_by` INT(11) DEFAULT '0',
+  `trans_grp_ref_no` BIGINT(11) DEFAULT '0',
+  `is_memberprice` TINYINT(1) DEFAULT '0',
+  `approval_status` TINYINT(1) DEFAULT '0' COMMENT '0: Waiting FOR approval,1: Approved,2: Rejected',
+  `approved_by` INT(11) DEFAULT '0',
+  `approved_on` BIGINT(20) DEFAULT '0',
+  `rejected_by` INT(11) DEFAULT '0',
+  `rejected_on` BIGINT(20) DEFAULT '0',
+  `remarks` TEXT,
+  PRIMARY KEY (`id`),
+  KEY `transid` (`transid`),
+  KEY `franchise_id` (`franchise_id`),
+  KEY `trans_created_by` (`trans_created_by`)
+); 
+ /*[7:15:31 PM][680 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `has_insurance` TINYINT(1) DEFAULT 0 NULL AFTER `pnh_member_fee`;
+ 
+ ===============
+ #============ PO IS_DOA,Return_id column structure  =========================
+#Aug_08_2014-Suresh
+ALTER TABLE `t_po_info` ADD COLUMN `is_doa_po` TINYINT (1) DEFAULT '0' NULL  AFTER `paf_id`;
+ALTER TABLE `t_po_info` ADD COLUMN `return_id` BIGINT (11)  NULL  AFTER `is_doa_po`;
+#============ PO IS_DOA,Return_id column structure  =========================
+
+ALTER TABLE `pnh_invoice_returns_product_service` ADD COLUMN `job_sheet_no` BIGINT (11)  NULL  AFTER `sent_to`;
+ALTER TABLE `pnh_invoice_returns_product_service` ADD COLUMN `sent_with` VARCHAR (255)  NULL  AFTER `sent_on`;
+ALTER TABLE `pnh_invoice_returns_product_service` ADD COLUMN `doa_copy_no` BIGINT (11)  NULL  AFTER `service_return_on`;
+ALTER TABLE `pnh_invoice_returns_product_service` ADD COLUMN doa_copy_filepath VARCHAR (255)  NULL  AFTER doa_copy_no;
+
+
+ALTER TABLE `t_imei_no` ADD COLUMN `is_doa` TINYINT (1) DEFAULT '0' NULL  AFTER `is_imei_activated`;
+ALTER TABLE `pnh_invoice_returns_product_link` ADD COLUMN `doa_po_id` BIGINT (11)  NULL  AFTER `condition_type`;
+#============ PO IS_DOA,Return_id column structure  =========================
+ SELECT * FROM shipment_batch_process;
+ 
+ #Aug_18_2014
+ SELECT * FROM king_transactions WHERE partner_id='7';
+ 
+ 
+#===================================================
+ALTER TABLE `king_tmp_orders` ADD COLUMN `has_insurance` TINYINT(1) DEFAULT 0 NULL AFTER `pnh_member_fee`;
+ ALTER TABLE `king_tmp_orders` ADD COLUMN `approval_status` TINYINT(1) DEFAULT 0 NULL AFTER `member_id`; 
+
+ /*[12:00:26 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,NULL,NULL,NULL,'4cecb21b44628b17c436739bf6301af2','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'0','1',NULL,NULL); 
+/*[12:01:17 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,NULL,'SMS','SMS','4cecb21b44628b17c436739bf6301af2','','0','0','0','','franchise@storeking.in',NULL,NULL,NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+/*[12:02:52 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,NULL,NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+/*[12:03:03 PM][0 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,'',NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+/*[12:03:11 PM][90 ms]*/ INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,'',NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52','2014-08-18 12:03:08'); 
+ 
+// Partner FBA ORDER IMPORT CHANGES
+ALTER TABLE `t_trans_invoice_marker` ADD COLUMN `partner_id` INT (5) DEFAULT '0' NULL  AFTER `id`;
+INSERT INTO `t_trans_invoice_marker`(`id`,`partner_id`,`transid`,`invoice_no`,`is_pnh`,`created_on`)VALUES(NULL,'7','','10700000000','0',NOW());
+#================================================
+
+SELECT * FROM `partner_info`;
+#==============================================================
+#new
+/*[3:27:22 PM][905 ms]*/ UPDATE `partner_info` SET `partner_sku_text` = 'ASIN' , `partner_rackbinid` = '120' , `modified_by` = '37' WHERE `id` = '7'; 
+INSERT INTO `snapitto_erpsndx`.`m_rack_bin_info` (`location_id`, `rack_name`, `bin_name`, `is_damaged`, `created_on`, `created_by`) VALUES ('1', 'FBA', '-Stock', '1', '2014-08-18 15:38:51', '37'); 
+UPDATE `snapitto_erpsndx`.`partner_info` SET `partner_rackbinid` = '119' WHERE `id` = '7'; 
+#==============================================================
+SELECT * FROM `m_rack_bin_info`
+
+SELECT * FROM partner_deal_prices WHERE #itemid = '' and 
+partner_id = '7' AND partner_price != 0
+
+SELECT * FROM partner_deal_prices;
+
+SELECT * FROM partner_info WHERE id='7';
+#221269404736
+#894282793001
+#684261232759
+# 859923133717
+#9873386848
+SELECT * FROM partner_deal_prices WHERE itemid = '9873386848' AND partner_id = '7' AND partner_price != 0;
+SELECT * FROM partner_deal_prices WHERE itemid = '9873386848' AND partner_id = '7' AND partner_price != 0
+
+/*[7:24:35 PM][2436 ms]*/ ALTER TABLE `snapitto_erpsndx`.`king_transactions` ADD COLUMN `is_memberprice` TINYINT(11) DEFAULT 0 NULL AFTER `trans_grp_ref_no`; 
+
+SELECT * FROM king_transactions ORDER BY id DESC LIMIT 10;
+AMZTIB64176
+AMZEXG81778
+AMZSCE13122
+
+====
+
+
+#==========================Service Center Brand link table structure==============================================================#
+ 
+ #author Suresh #18_august_2014
+ CREATE TABLE `m_service_center_brand_link` (  `id` INT (11) NOT NULL AUTO_INCREMENT , `service_center_id` INT (11) , `brand_id` BIGINT (11) , `created_by` INT (11) , `created_on` DATE , PRIMARY KEY ( `id`));
+ 
+#==========================Service Center Brand link table structure==============================================================#
+
+#==========================Service Center table structure==============================================================#
+ 
+ #author Suresh #18_august_2014
+ CREATE TABLE `m_service_center_link` (  `id` INT (11) NOT NULL AUTO_INCREMENT , `name` VARCHAR (250) , `address` VARCHAR (250) , `contact_no` VARCHAR (250) , `created_by` INT (11) , `created_on` DATE , PRIMARY KEY ( `id`)) 
+ 
+#==========================Service Center Brand link table structure==============================================================#
+
+#Aug_20_2014
+ /*[4:23:27 PM][463 ms]*/ ALTER TABLE `pnh_member_info` ADD COLUMN `mem_image_url` VARCHAR(255) NULL AFTER `voucher_bal_validity`; 
+#Franchise OTP TABLE
+CREATE TABLE `t_franchise_otp` (
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `fid` BIGINT(20) DEFAULT NULL,
+  `otp_no` BIGINT(20) DEFAULT NULL,
+  `logged_on` BIGINT(20) DEFAULT NULL,
+  `valid_till` BIGINT(20) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+SELECT * FROM pnh_users;
+
+INSERT INTO `pnh_users` (`reference_id`, `username`) VALUES ('532', '9035615789'); 
+
+UPDATE `pnh_users` SET `password` = '3ac7531fe7e66bc7c008f90d32530f3c',`created_by` = '32' , `created_on` = '2014-08-21 16:29:17'  WHERE `user_id` = '10'; 
+
+
+
+/*[6:51:45 PM][648 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `insurance_id` BIGINT(20) DEFAULT 0 NULL AFTER `approval_status`; 
+/*[6:52:17 PM][585 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `imei_scheme_id` BIGINT(20) DEFAULT 0 NULL AFTER `insurance_id`; 
+/*[6:52:47 PM][600 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `imei_reimbursement_value_perunit` DOUBLE NULL AFTER `imei_scheme_id`; 
+/*[6:53:18 PM][575 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `loyality_point_value` DOUBLE NULL AFTER `imei_reimbursement_value_perunit`; 
+
+
+UPDATE `shipment_batch_process_invoice_link` SET shipped = 0 WHERE shipped = 1 AND shipped_on = '0000-00-00 00:00:00' AND packed = 0 AND invoice_no='20141025503';
+
+SELECT * FROM `shipment_batch_process_invoice_link` WHERE shipped = 1 AND shipped_on = '0000-00-00 00:00:00' AND packed = 0 AND invoice_no='20141025503';#limit 10
+
+#====================================
+#Aug_23_2014-Shivaraj-Api cartid update
+ALTER TABLE `king_transactions` ADD COLUMN `api_cartid` VARCHAR(100) DEFAULT '0' NULL AFTER `trans_grp_ref_no`;
+
+ALTER TABLE king_orders ADD COLUMN lens_package_id INT(11) DEFAULT 0 AFTER is_consolidated_payment;
+ALTER TABLE king_orders ADD COLUMN lens_package_price DOUBLE DEFAULT 0 AFTER lens_package_id;
+#====================================
+
+SELECT * FROM king_transactions WHERE transid='PNHVXT52924'
+#=================
+SELECT * FROM king_transactions WHERE transid='PNHPIS53292'
+SELECT * FROM king_invoice WHERE transid='PNHPIS53292'
+
+SELECT fas.invoice_no, SUM( fas.`debit_amt`-fas.credit_amt ) AS amount,SUM(fas.`debit_amt`) AS ttl_invoice,SUM(fas.`credit_amt`) AS ttl_credit
+                                    FROM pnh_franchise_account_summary fas
+                                        WHERE fas.status=1 AND fas.invoice_no= '20141025508' AND fas.`franchise_id` = '51'
+                                        GROUP BY fas.invoice_no
+                                        
+
+=>145.5+14348.40425
+SELECT 145.5+14348.40425
+SELECT (14798 - 14348 );
+
+SELECT * FROM 
+pnh_franchise_account_summary fcs
+JOIN king_invoice i ON i.invoice_no = fcs.invoice_no AND i.invoice_status=1
+#where i.transid='PNHPIS53292';
+WHERE i.invoice_no = '20141025508'
+SELECT (15162.1 - 813.69575);
+
+SELECT amount AS t,cod,ship FROM king_transactions WHERE transid='PNHPIS53292';
+
+SELECT (15612.07 - 15162.1);
+
+#suresh Aug 25 2014
+ALTER TABLE `king_dealitems` ADD COLUMN `powered_by` VARCHAR (100)  NULL  AFTER `has_insurance`;
+#author Suresh #21_august_2014
+CREATE TABLE `pnh_invoice_returns_images` (  `id` INT (11) NOT NULL AUTO_INCREMENT , `return_id` BIGINT (20) , `invoice_no` BIGINT (20) , `pic` CHAR (50) , `created_on` DATETIME , PRIMARY KEY ( `id`))  
+
+#Aug_28_2014
+
+SELECT * FROM `m_partner_deal_link` WHERE partner_id=7;
+SELECT * FROM partner_info p ORDER BY p.name ASC;
+SELECT * FROM m_rack_bin_info
+Transfer:
+B00791FF2Q
+B006G83SKY
+
+B006TS9CDS
+B00791CORK
+B007E9LK68
+B006LXC8KU
+B002LFLPV0
+
+SELECT * FROM king_transactions 
+#where partner_id=7 
+ORDER BY id DESC
+
+SELECT FROM_UNIXTIME(1409222988);
+
+SELECT  COUNT(*) AS t FROM king_transactions WHERE partner_reference_no = '12256200000000' AND partner_id = '7';
+
+SELECT * FROM partner_deal_prices WHERE itemid = '928149683772' AND partner_id = '7' AND partner_price != 0;
+
+SELECT * FROM king_dealitems ORDER BY sno DESC
+
+#==================================================
+SELECT c.id,pnh_id AS pid,a.name,orgprice AS mrp,member_price AS price,ROUND(((orgprice-member_price)/orgprice)*100) AS disc,CONCAT('http://static.snapittoday.com/items/small/',b.pic,'.jpg') AS pimg_link,a.mp_offer_to
+													FROM king_dealitems a 
+													JOIN king_deals b ON a.dealid = b.dealid
+														JOIN pnh_menu_group_link c ON c.menu_id = b.menuid  
+														WHERE is_pnh=1 AND group_id = '112' AND publish = 1 AND live = 1 AND a.mp_is_offer=1  AND UNIX_TIMESTAMP() BETWEEN UNIX_TIMESTAMP(a.mp_offer_from) AND UNIX_TIMESTAMP(a.mp_offer_to)
+													GROUP BY a.id
+													LIMIT 30
+#==================================================
+SELECT banner_name,banner_link FROM m_apk_store_banners WHERE store_id = '112' AND is_active = 1;
+
+#=====================================================
+SELECT * FROM m_apk_store_menu_link;
+SELECT * FROM m_apk_store_banners;
+SELECT * FROM pnh_menu_group_link;
+#=====================================================
+store_id=3
+group_id=
+
+ALTER TABLE king_tmp_orders ADD COLUMN `order_product_id` BIGINT(11) DEFAULT '0' AFTER `itemid`;
+ALTER TABLE king_tmp_orders ADD COLUMN `order_from_vendor` INT(11) DEFAULT NULL AFTER order_product_id;
+ALTER TABLE king_tmp_orders ADD COLUMN `vendor_order_ref_id` INT(11) DEFAULT NULL AFTER order_from_vendor;
+ALTER TABLE king_tmp_orders ADD COLUMN `lens_item_orderdet` TEXT DEFAULT NULL AFTER vendor_order_ref_id;
+ALTER TABLE king_tmp_orders ADD COLUMN `lens_package_id` INT(11) DEFAULT '0' AFTER lens_item_orderdet;
+ALTER TABLE king_tmp_orders ADD COLUMN `customer_prescrption` TEXT DEFAULT NULL AFTER lens_package_id;
+ALTER TABLE king_tmp_orders ADD COLUMN `lens_package_price` DOUBLE DEFAULT '0' AFTER customer_prescrption; 
+
+
+SELECT  COUNT(*) AS t FROM king_transactions WHERE partner_reference_no = '171-0078995-0129955' AND partner_id = '7'
+
+SELECT  * FROM king_transactions WHERE partner_reference_no = '171-0078995-0129955' AND partner_id = '7';
+SELECT  * FROM king_transactions WHERE partner_reference_no = '402-6522048-8174718' AND partner_id = '7';
+
+#-==============================
+#Sep_02_2014
+-- -- ALTER TABLE `king_orders` ADD COLUMN `partner_price` DOUBLE DEFAULT 0 NULL AFTER `partner_order_id`;
+-- -- ALTER TABLE `king_orders` DROP COLUMN `partner_price`;
+#-==============================
+
+SELECT * FROM king_orders WHERE transid='AMZEDI89545';
+SELECT * FROM king_transactions  WHERE transid='AMZEDI89545';
+SELECT * FROM king_invoice WHERE transid='AMZEDI89545';
+=>10700000032
+SELECT * FROM shipment_batch_process_invoice_link WHERE invoice_no=10700000032
+
+SELECT * FROM partner_info;
+SELECT * FROM m_courier_info
+
+
+SELECT * FROM king_orders WHERE transid='AMZMQA91519';
+SELECT * FROM king_transactions  WHERE transid='AMZMQA91519';
+SELECT * FROM king_invoice WHERE transid='AMZDCD42768';
+10700000053
+SELECT * FROM shipment_batch_process_invoice_link WHERE invoice_no=10700000053
+
+SELECT * FROM m_courier_info WHERE courier_name='AMZ-ATS';
+
+#-==============================
+#Sep_03_2014
+ALTER TABLE `t_partner_stock_transfer` CHANGE `transfer_id` `transfer_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT 'unique transferid', ADD PRIMARY KEY (`transfer_id`);
+ALTER TABLE `t_partner_stock_transfer` ADD COLUMN `is_active` INT(10) DEFAULT 1 NULL AFTER `transfer_status`;
+#-==============================
+
+SELECT c.transid,e.franchise_id,e.franchise_name,a.return_id,a.invoice_no,return_by,a.returned_on,IF(r.return_id,1,0) AS in_transit,r.courier,r.awb, FROM_UNIXTIME(r.logged_on) AS logged_on,b.name AS handled_by_name,a.status,r.status AS transit_status,r.ticket_id,IFNULL(s.ticket_no,'n/a') AS ticket_no,r.emp_phno,r.emp_name,r.transit_mode
+FROM pnh_invoice_returns a
+LEFT JOIN king_admin b ON a.handled_by = b.id
+JOIN king_invoice c ON c.invoice_no = a.invoice_no
+JOIN king_transactions d ON d.transid = c.transid
+JOIN pnh_m_franchise_info e ON e.franchise_id = d.franchise_id
+LEFT JOIN pnh_t_returns_transit_log r ON r.return_id=a.return_id 
+#LEFT JOIN m_employee_info em ON em.employee_id=r.empid 
+#LEFT JOIN m_courier_info cr ON cr.courier_id=r.courier_id 
+LEFT JOIN support_tickets s ON s.ticket_id=r.ticket_id 
+WHERE a.return_id= '593';
+
+
+ALTER TABLE `pnh_t_receipt_info` ADD COLUMN `courier_name` VARCHAR(255) NULL AFTER `unreconciled_status`;
+ALTER TABLE `pnh_t_receipt_info` ADD COLUMN `awb` VARCHAR(255) NULL AFTER `courier_name`;
+ALTER TABLE `pnh_t_receipt_info` ADD COLUMN `emp_name` VARCHAR(255) NULL AFTER `awb`;
+
+ALTER TABLE `pnh_t_receipt_info` ADD COLUMN `contact_no` INT(11) NULL AFTER `emp_name`; 
+
+/*[4:08:58 PM][121 ms]*/ ALTER TABLE `t_invoice_credit_notes` CHANGE `is_credit_processed` `is_credit_processed` TINYINT(1) DEFAULT 0 NULL COMMENT '1:processed 0:processed'; 
+
+SELECT  a.stock_id,a.location_id,a.rack_bin_id,CONCAT(rack_name,bin_name) AS rb_name,a.product_barcode,a.mrp
+	,SUM(a.available_qty) AS available_qty
+	,CONCAT('Rs',IFNULL(a.mrp,0),' - ',rack_name,bin_name,' - ',IF(LENGTH(a.product_barcode),a.product_barcode,'NO BARCODE'),' - ',IFNULL(a.expiry_on,'') ) AS stk_prod,expiry_on 
+	FROM t_stock_info a
+	JOIN m_rack_bin_info b ON a.rack_bin_id = b.id 
+	WHERE a.product_id = '1350'
+	GROUP BY a.mrp,a.location_id,a.rack_bin_id,a.product_barcode,a.stock_id  
+	ORDER BY a.mrp ASC 
+
+SELECT * FROM t_partner_stock_transfer;
+SELECT * FROM t_partner_stock_transfer_product_link;
+
+SELECT * FROM `pnh_api_franchise_cart_info` WHERE partner_id=7 AND STATUS=1 AND user_id=37;
+
+SELECT st.transfer_id,st.partner_id,st.partner_transfer_no,st.transfer_remarks,st.transfer_status,st.transfer_by,st.scheduled_transfer_date,st.transfer_date
+										,a.username,p.name AS partner_name
+										FROM t_partner_stock_transfer st
+										JOIN king_admin a ON a.id=st.transfer_by
+										JOIN partner_info p ON p.id=st.partner_id
+										WHERE 1  AND st.transfer_date BETWEEN "2014-09-15 00:00:00  00:00:00" AND "2014-09-15 00:00:00 23:00:00"
+										ORDER BY transfer_id DESC;
+										
+										
+SELECT rstk.product_id,SUM(rstk.qty) AS qty,stk.mrp,rstk.stock_info_id,REPLACE(GROUP_CONCAT(DISTINCT stk.product_barcode),',','_') AS barcodes
+											,di.name AS deal_name,p.product_name,rstk.itemid
+											#,CONCAT('".IMAGES_URL."items/small/',di.pic,'.jpg') as image_url
+										FROM t_partner_reserved_batch_stock rstk
+										JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+										JOIN king_dealitems di ON di.id=rstk.itemid
+										JOIN m_product_info p ON p.product_id=rstk.product_id
+										WHERE rstk.transfer_id='27'
+										GROUP BY rstk.itemid
+										
+										
+SELECT rstk.itemid,rstk.stock_info_id,stk.rack_bin_id,stk.location_id
+													,stk.product_barcode,stk.mrp,rstk.qty,CONCAT(rb.rack_name,'-',rb.bin_name) AS rbname,di.name AS deal
+												 FROM t_partner_reserved_batch_stock rstk
+												 JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+												 JOIN m_rack_bin_info rb ON rb.id = stk.rack_bin_id
+												 JOIN king_dealitems di ON di.id=rstk.itemid
+												WHERE rstk.transfer_id=? AND rstk.itemid=? AND rstk.product_id=? GROUP BY rstk.id
+												
+												
+SELECT rstk.product_id,p.product_name,SUM(rstk.qty) AS qty,CONCAT(rb.rack_name,rb.bin_name) AS rbname,stk.mrp,GROUP_CONCAT(DISTINCT stk.product_barcode) AS barcodes
+											FROM t_partner_reserved_batch_stock rstk
+											JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+											JOIN m_product_info p ON p.product_id=rstk.product_id
+											JOIN m_rack_bin_info rb ON rb.id = stk.rack_bin_id 
+											WHERE 1  AND rstk.transfer_id = '27'
+											GROUP BY rstk.product_id,stk.mrp,stk.rack_bin_id,stk.location_id;
+											
+											
+SELECT st.transfer_id,st.partner_id,st.partner_transfer_no,st.transfer_remarks,st.transfer_status,st.scheduled_transfer_date,st.transfer_date,st.transfer_by
+										,a.username,p.name AS partner_name
+										FROM t_partner_stock_transfer st
+										JOIN king_admin a ON a.id=st.transfer_by
+										JOIN partner_info p ON p.id=st.partner_id
+										WHERE transfer_id='26' AND st.transfer_status IN (1,4);
+										
+										
+										
+SELECT mi.*,a.username,mo.transid_ref AS transid,mo.process_status,mo.delivery_status,o.id AS orderid,f.franchise_name,i.invoice_no,IFNULL(imei.imei_no,nonsk_imei.nonsk_imei_no) AS imei_no
+				FROM pnh_member_insurance mi
+				JOIN pnh_member_offers mo ON mo.insurance_id = mi.sno
+				JOIN king_admin a ON a.id = mi.created_by
+				JOIN pnh_m_franchise_info f ON f.franchise_id = mi.fid
+				JOIN king_orders o ON o.id = mi.order_id AND o.status != 3
+				JOIN king_invoice i ON i.order_id = mi.order_id 
+				LEFT JOIN t_imei_no imei ON imei.order_id = o.id
+				LEFT JOIN non_sk_imei_insurance_orders nonsk_imei ON nonsk_imei.order_id=o.id
+				WHERE mi.sno IN (2442) 
+				GROUP BY mi.sno
+				
+SELECT u.name AS username,l.*,pi.p_invoice_no,ci.invoice_no AS c_invoice_no,i.invoice_no
+FROM t_stock_update_log l
+ LEFT OUTER JOIN king_invoice i ON i.id=l.invoice_id 
+ LEFT OUTER JOIN t_client_invoice_info ci ON ci.invoice_id=l.corp_invoice_id 
+ LEFT OUTER JOIN proforma_invoices PI ON pi.id=l.p_invoice_id 
+ LEFT OUTER JOIN t_partner_reserved_batch_stock ptrbs ON ptrbs.id=l.transfer_id 
+LEFT OUTER JOIN king_admin u ON u.id=l.created_by
+ WHERE l.product_id='8078' ORDER BY l.id DESC
+ 
+ SELECT * FROM `t_stock_update_log`
+ DESC king_dealitems
+ DESC king_deals
+ #====Get imei product deals====
+ SELECT d.dealid,di.id FROM king_deals d
+ JOIN king_dealitems di ON di.dealid=d.dealid
+ WHERE d.catid IN (1030,1028) AND di.is_pnh=0 AND d.publish=1;
+9619444487
+1243768586
+ 
+ SELECT * FROM king_dealitems WHERE is_pnh=0;
+ 
+ 575221935264
+ 475451762869
+ 654346495938
+ 888634462482
+ 985663972551
+ 
+ UPDATE king_dealitems SET is_pnh=
+ 
+ SELECT * FROM m_partner_deal_link;
+ 
+ #====================
+#SEP_24_2014
+ALTER TABLE `partner_info` ADD INDEX (`partner_rackbinid`);
+#====================
+ALTER TABLE king_dealitems DROP COLUMN mp_discount_price;
+ALTER TABLE deal_member_price_changelog DROP COLUMN mp_discount_price;
+#SEP_25_2014-Shivaraj
+ALTER TABLE `king_dealitems` ADD COLUMN `mp_discount_price` DECIMAL(10,2) DEFAULT 0 NOT NULL AFTER `mp_offer_to`;
+ALTER TABLE `deal_member_price_changelog` ADD COLUMN `mp_discount_price` DECIMAL(10,2) DEFAULT 0 NOT NULL AFTER `mp_offer_to`;
+
+/**************************Market Place Seller DB changes--Start**************************************/
+
+/*[11:47:15 AM][913 ms]*/ ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `billing_type` TINYINT(1) DEFAULT 0 NOT NULL COMMENT '1:B2C 0:B2B' AFTER `max_credit_limit`; 
+
+/*[12:51:24 PM][3604 ms]*/ ALTER TABLE `king_orders` ADD COLUMN `billing_type` TINYINT(1) DEFAULT 0 NOT NULL AFTER `member_price`; 
+
+/*[12:51:24 PM][3604 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `billing_type` TINYINT(1) DEFAULT 0 NOT NULL AFTER `lens_package_price`; 
+
+SELECT * FROM pnh_member_info WHERE pnh_member_id='22029047';
+
+SELECT DISTINCT o.userid,o.*, p.name AS deal,p.dealid,p.url,u.name AS username,r.offer_text,r.immediate_payment,b.name AS brand,c.name AS cat_name,r.is_active,kv.invoice_no
+				FROM king_orders o 
+				JOIN king_dealitems p ON p.id=o.itemid
+				LEFT OUTER JOIN king_users u ON u.userid=o.userid
+				LEFT OUTER JOIN pnh_member_info i ON i.pnh_member_id=o.member_id
+				LEFT OUTER JOIN pnh_m_offers r ON r.id=o.offer_refid
+				LEFT OUTER JOIN king_brands b ON b.id=r.brand_id
+				LEFT OUTER JOIN king_categories c ON c.id=r.cat_id
+				LEFT OUTER JOIN king_invoice kv ON kv.order_id=o.id AND kv.invoice_status = 1 
+				WHERE o.transid='PNHGCA53777' GROUP BY o.id;
+				
+SELECT * FROM pnh_member_info WHERE pnh_member_id=? OR userid=
+
+SELECT * FROM pnh_member_info WHERE pnh_member_id='0' OR user_id=61539;
+
+	
+SELECT COUNT(*) AS offers FROM pnh_member_offers mo
+	JOIN pnh_member_info mif ON mif.pnh_member_id=mo.member_id
+	WHERE mif.user_id='61539'# AND mo.transid_ref!='PNHSPC61324'
+	GROUP BY mif.user_id
+	
+	
+	
+SELECT di.dealid,di.live,di.is_combo,di.is_group,dl.publish,dl.brandid,dl.catid,di.orgprice
+		,di.price,di.name,di.pic,di.pnh_id,di.id AS itemid,di.member_price,di.live AS allow_order,
+		b.name AS brand,c.name AS category,p.name AS partner_name,pdl.partner_id,GROUP_CONCAT(plnk.product_id) AS product_ids
+	FROM m_partner_deal_link pdl
+	JOIN king_dealitems di ON di.id=pdl.itemid
+	JOIN king_deals dl ON dl.dealid=di.dealid
+	JOIN king_brands b ON b.id=dl.brandid 
+	JOIN king_categories c ON c.id=dl.catid 
+	JOIN partner_info p ON p.id=pdl.partner_id
+	JOIN m_product_deal_link plnk ON plnk.itemid=di.id AND plnk.is_active=1
+	WHERE 1  AND di.is_pnh=0
+	 GROUP BY di.id ORDER BY dl.publish DESC ;
+
+Oct_10_2014
+	 
+	3g mobile world: 8861790645=>9590932088
+	
+	 SELECT MD5('admin');
+	 
+	 
+
+SELECT * FROM m_town_territory_link WHERE employee_id=88;
+SELECT * FROM m_employee_info WHERE employee_id=88;
+
+SELECT GROUP_CONCAT(imei.imei_no) AS imei_nos
+	FROM t_imei_update_log imei 
+	WHERE imei.transfer_prod_link_id=239
+	AND imei.transfer_prod_link_id!=0
+
+SELECT * FROM `t_partner_reserved_batch_stock` WHERE transfer_id=66
+
+SELECT * FROM t_imei_update_log
+
+SELECT * FROM `t_partner_reserved_batch_stock` WHERE transfer_id=72;
+
+SELECT * FROM king_admin
+SELECT MD5('shivaraj');//b343ef440fded01538c145094a034cea
+
+
+SELECT SUM(pstk.qty) AS partner_pending_stk,SUM(rs.qty) AS pnh_pending_stk
+FROM t_partner_reserved_batch_stock pstk
+LEFT JOIN t_reserved_batch_stock rs ON rs.product_id=pstk.product_id AND rs.status=0
+WHERE pstk.status=0  AND a.partner_id != 0 AND pstk.itemid=367511493147;
+
+DESC t_partner_reserved_batch_stock;
+DESC t_reserved_batch_stock;
+
+
+SELECT rstk.itemid,rstk.stock_info_id,stk.rack_bin_id,stk.location_id
+	,stk.product_barcode,stk.mrp,rstk.qty,CONCAT(rb.rack_name,'-',rb.bin_name) AS rbname,di.name AS deal
+	FROM t_partner_reserved_batch_stock rstk
+	JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+	JOIN m_rack_bin_info rb ON rb.id = stk.rack_bin_id
+	JOIN king_dealitems di ON di.id=rstk.itemid
+	WHERE rstk.transfer_id='60' AND rstk.itemid='5398916139' AND rstk.product_id='145603' GROUP BY rstk.id;
+	
+#==================================================
+#Oct_18_2014
+ALTER TABLE `m_product_info` ADD COLUMN `end_of_life` TINYINT(1) DEFAULT 0 NULL COMMENT '1:end of life,0: normal product' AFTER `sync_product_src`;
+#==================================================
+
+SELECT * FROM `pnh_users`;
+
+SELECT IFNULL(SUM(g.pqty),0) AS ttl_sum FROM (
+	(
+		SELECT SUM(o.quantity) AS pqty 
+		FROM king_orders o
+		LEFT JOIN king_invoice i ON i.id = o.id AND i.invoice_status = 1 
+		WHERE o.status=1 AND i.id IS NULL AND o.itemid='1225164959'
+		GROUP BY o.itemid
+	)
+	UNION
+	(
+		SELECT SUM(stp.item_transfer_qty) AS pqty 
+		FROM t_partner_reserved_batch_stock rs
+		JOIN t_partner_stock_transfer_product_link stp ON stp.id=rs.tp_id
+		WHERE  rs.status=0 AND rs.itemid='1225164959'
+		GROUP BY rs.itemid
+	)
+) AS g
+
+
+
+Oct_27_2014
+
+SELECT IFNULL(SUM(g.pqty),0) AS ttl_sum FROM (
+	(
+		SELECT SUM(o.quantity) AS pqty 
+		FROM king_orders o
+		WHERE o.status=0 AND o.itemid=506900173239
+		GROUP BY o.itemid
+	)
+	UNION
+	(
+		SELECT IFNULL(SUM(stp.item_transfer_qty),0) AS pqty FROM `t_partner_stock_transfer_product_link` stp 
+		JOIN t_partner_stock_transfer st ON st.transfer_id=stp.transfer_id
+		WHERE stp.is_active=1 AND st.transfer_status=0 AND stp.itemid=506900173239
+		GROUP BY stp.itemid
+	)
+) AS g;
+
+#============================
+
+SELECT stk.stock_id,stk.rack_bin_id,stk.location_id,stk.product_barcode,stk.mrp,stk.expiry_on
+		,rstk.itemid,rstk.qty,CONCAT(rb.rack_name,'-',rb.bin_name) AS rbname,di.name AS deal
+	 FROM t_partner_reserved_batch_stock rstk
+	 LEFT JOIN t_stock_info stk ON stk.stock_id=rstk.stock_info_id
+	 LEFT JOIN m_rack_bin_info rb ON rb.id = stk.rack_bin_id
+	 JOIN king_dealitems di ON di.id=rstk.itemid
+	WHERE rstk.transfer_id=72
+	 AND rstk.itemid=? AND rstk.product_id=? GROUP BY rstk.id
+	 
+#===========================
+SELECT * FROM t_stock_info;
+
+
+#INSERT INTO `m_config_params`(`name`,`value`) VALUES ( 'MARKET_PLACE_SELLER_PROFIT_VAL','10'); 
+
+SELECT * FROM king_dealitems WHERE is_combo=1 AND is_pnh=0 AND pnh_id=''
+
+SELECT di.id,COUNT(pdl.id) AS ttl_lnk_items
+FROM king_dealitems di
+JOIN m_product_deal_link pdl ON pdl.itemid=di.id AND is_active=1
+WHERE di.is_pnh=0
+GROUP BY di.id
+HAVING ttl_lnk_items>1
+
+SELECT * FROM king_dealitems WHERE id=788255323468
+
+UPDATE king_dealitems WHERE is_combo=1 AND id IN 
+	(SELECT di.id
+			FROM king_dealitems di
+			JOIN m_product_deal_link pdl ON pdl.itemid=di.id AND is_active=1
+			WHERE di.is_pnh=0 AND di.is_combo=0
+			GROUP BY di.id
+			HAVING COUNT(pdl.id)>1
+	) LIMIT 1;
+	
+	#==========< Get Un combo deals >========
+	SELECT GROUP_CONCAT(DISTINCT di.id) AS ids
+			FROM king_dealitems di
+			JOIN m_product_deal_link pdl ON pdl.itemid=di.id AND is_active=1
+			WHERE di.is_pnh=0 AND di.is_combo=0
+			GROUP BY di.id
+			HAVING COUNT(pdl.id)>1;
+			
+	UPDATE king_dealitems SET is_combo=1 WHERE id IN ("71285566","92582258","147558652386","158776324557","176277296278","176885419757","183887657973","246689223143","263193342979","281927371834","334885286949","362154297753","365247235342","415724242474","475833627568","478898394577","494278777366","535544455512","538579337458","548147443639","613272623146","643972438356","777465364296","843817188145","846346952192","876661682894","911617958266","951198426659");
+	
+
+
+#==================================================
+#oct_27_2014
+#==================================================
+
+DROP TABLE m_member_subscription_plan_schemes,m_member_subscription_plans,m_member_plan_link,m_franchise_combo_preference_link,m_franchise_combo_preference,m_combo_categories
+	,m_member_family_list,m_member_feedback_link,m_member_subscription_plan_orderlist;
+	
+/******************* Member Subscription Plan********************/
+			CREATE TABLE `m_member_subscription_plans` (            
+                               `id` INT(11) NOT NULL AUTO_INCREMENT,                 
+                               `plan_name` VARCHAR(255) DEFAULT NULL,                
+                               `plan_desc` TEXT,                                     
+                               `created_on` DATETIME DEFAULT NULL,                   
+                               `created_by` INT(11) DEFAULT '0',                     
+                               PRIMARY KEY (`id`)                                    
+                             );
+
+INSERT INTO `m_member_subscription_plans`(`plan_name`,`plan_desc`,`created_on`,`created_by`) VALUES ( 'Plan 1','Pay Rs 2,500/ - Get a Family BOX every month for 5 months delivered + Extra Box in second month',NULL,'0');
+INSERT INTO `m_member_subscription_plans`(`plan_name`,`plan_desc`,`created_on`,`created_by`) VALUES ( 'Plan 2','Pay Rs 2,500/- Get a Family BOX every month Delivered worth Rs 600  For 5 Months',NULL,'0'); 
+INSERT INTO `m_member_subscription_plans`(`plan_name`,`plan_desc`,`created_on`,`created_by`) VALUES ( 'Plan 3','i.Try Family Combos by Paying Rs 999/- for the 1st TWO months 
+ii.Continue the subscription by Paying Rs 999/- for the following two months (3rd & 4th)
+iii.Pay Just Rs 500/- & get subscription for the following Two Months (5th & 6th)',NULL,'0'); 
+
+				CREATE TABLE `m_member_subscription_plan_schemes` (      
+                                      `id` INT(11) NOT NULL AUTO_INCREMENT,                  
+                                      `plan_id` INT(11) DEFAULT '0',                         
+                                      `itemid` BIGINT(20) DEFAULT '0',                       
+                                      `plan_amount` DOUBLE DEFAULT NULL,                     
+                                      `allow_installment` TINYINT(1) DEFAULT '0',            
+                                      `installment_month` TINYINT(1) DEFAULT '0',            
+                                      `installment_max_amount` DOUBLE DEFAULT NULL,          
+                                      `reward_part_bymon` INT(4) DEFAULT '0',                
+                                      `extra_subscription` INT(4) DEFAULT '0',               
+                                      `reward_part_amount` DOUBLE DEFAULT '0',               
+                                      `plan_amount_part` DOUBLE DEFAULT '0',                 
+                                      `total_months` INT(4) DEFAULT '0',                     
+                                      `created_on` DATETIME DEFAULT NULL,                    
+                                      `created_by` INT(11) DEFAULT '0',                      
+                                      `modified_on` DATETIME DEFAULT NULL,                   
+                                      `modified_by` INT(11) DEFAULT '0',                     
+                                      PRIMARY KEY (`id`)                                     
+                                    );
+INSERT  INTO `m_member_subscription_plan_schemes`(`id`,`plan_id`,`itemid`,`plan_amount`,`allow_installment`,`reward_part_bymon`,`reward_part_amount`,`plan_amount_part`,`total_months`,`created_on`,`created_by`,`modified_on`,`modified_by`)
+ VALUES (1,1,533429885753,1500,0,2,300,1500,5,NULL,0,NULL,0),
+(2,1,105148805811,2500,0,2,500,2500,5,NULL,0,NULL,0),
+(3,1,498456097020,3750,0,2,750,3750,5,NULL,0,NULL,0),
+(4,1,681521167402,5000,0,2,1000,5000,5,NULL,0,NULL,0),
+(5,2,764002408891,1500,0,0,400,1500,5,NULL,0,NULL,0),
+(6,2,418901413789,2500,0,0,600,2500,5,NULL,0,NULL,0),
+(7,2,678782841184,3750,0,0,900,3750,5,NULL,0,NULL,0),
+(8,2,403615238350,5000,0,0,1200,5000,5,NULL,0,NULL,0),
+(9,3,105148805811,2500,1,6,500,2500,6,NULL,0,NULL,0),
+(10,3,677142092378,5000,1,6,1000,5000,6,NULL,0,NULL,0);
+
+
+		CREATE TABLE `m_member_plan_link` (                     
+                      `id` INT(11) NOT NULL AUTO_INCREMENT,                 
+                      `member_id` INT(11) DEFAULT '0',                      
+                      `sub_franchise_id` INT(11) DEFAULT '0',               
+                      `sub_plan_id` INT(11) DEFAULT '0',                    
+                      `member_family_count` INT(11) DEFAULT '0',            
+                      `is_paid` INT(11) DEFAULT '0',                        
+                      `receipt_id` INT(11) DEFAULT '0',                     
+                      `paid_amount` DOUBLE DEFAULT '0',                     
+                      `is_active` INT(11) DEFAULT '0',                      
+                      `start_date` DATE DEFAULT NULL,                       
+                      `end_date` DATE DEFAULT NULL,                         
+                      `created_on` DATETIME DEFAULT NULL,                   
+                      `created_by` INT(11) DEFAULT '0',                     
+                      `modified_on` DATETIME DEFAULT NULL,                  
+                      `modified_by` INT(11) DEFAULT '0',                    
+                      PRIMARY KEY (`id`)                                    
+                    );
+
+		CREATE TABLE `m_member_subscription_plan_orderlist` (   
+                                        `id` INT(11) NOT NULL AUTO_INCREMENT,                 
+                                        `member_id` INT(11) DEFAULT '0',                      
+                                        `sub_franchise_id` INT(11) DEFAULT '0',               
+                                        `itemid` BIGINT(20) DEFAULT '0',                      
+                                        `order_id` INT(11) DEFAULT '0',                       
+                                        `order_qty` INT(11) DEFAULT '0',                      
+                                        `order_amount` DOUBLE DEFAULT '0',                    
+                                        `order_date` DATE DEFAULT NULL,                       
+                                        `is_active` INT(11) DEFAULT '0',                      
+                                        `created_on` DATETIME DEFAULT NULL,                   
+                                        `created_by` INT(11) DEFAULT '0',                     
+                                        PRIMARY KEY (`id`)                                    
+                                      );
+
+
+			CREATE TABLE `m_member_feedback_link` (                 
+                          `id` INT(11) NOT NULL AUTO_INCREMENT,                 
+                          `member_id` INT(11) DEFAULT '0',                      
+                          `feedback_id` INT(11) DEFAULT '0',                    
+                          `product_name` VARCHAR(255) DEFAULT NULL,             
+                          `price_range` VARCHAR(255) DEFAULT NULL,              
+                          `brand_name` VARCHAR(255) DEFAULT NULL,               
+                          `color` VARCHAR(255) DEFAULT NULL,                    
+                          `created_on` DATETIME DEFAULT NULL,                   
+                          `created_by` INT(11) DEFAULT '0',                     
+                          `modified_on` DATETIME DEFAULT NULL,                  
+                          `modified_by` INT(11) DEFAULT '0',                    
+                          PRIMARY KEY (`id`)                                    
+                        );
+
+			CREATE TABLE `m_member_family_list` (         
+                        `id` INT(10) NOT NULL AUTO_INCREMENT,       
+                        `member_id` INT(10) NOT NULL,               
+                        `family_member_name` VARCHAR(70) NOT NULL,  
+                        `relationship` VARCHAR(70) NOT NULL,        
+                        `age` INT(11) NOT NULL,                     
+                        `created_on` DATETIME DEFAULT NULL,         
+                        `created_by` INT(11) DEFAULT '0',           
+                        `modified_on` DATETIME DEFAULT NULL,        
+                        `modified_by` INT(11) DEFAULT '0',          
+                        PRIMARY KEY (`id`)                          
+                      );
+
+		CREATE TABLE `m_combo_categories` (                      
+                      `id` INT(11) NOT NULL AUTO_INCREMENT,                  
+                      `gender_attr` VARCHAR(20) DEFAULT NULL,                
+                      `catid` INT(11) DEFAULT NULL,                          
+                      `created_on` DATETIME DEFAULT NULL,                    
+                      `created_by` INT(11) DEFAULT '0',                      
+                      `modified_on` DATETIME DEFAULT NULL,                   
+                      `modified_by` INT(11) DEFAULT '0',                     
+                      PRIMARY KEY (`id`)                                     
+                    );
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'MEN','119',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'MEN','94',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'MEN','89',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'MEN','170',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'MEN','91',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'MEN','155',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'MEN','116',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'BABY','296',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'BABY','1300',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'BABY','295',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'WOMEN','98',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'WOMEN','216',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'WOMEN','101',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'WOMEN','159',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'WOMEN','1117',NULL,'0',NULL,'0');
+
+				CREATE TABLE `m_franchise_combo_preference` (           
+                                `id` INT(11) NOT NULL AUTO_INCREMENT,                 
+                                `franchise_id` INT(11) DEFAULT '0',                   
+                                `franchise_name` VARCHAR(100) DEFAULT NULL,           
+                                `name` VARCHAR(100) DEFAULT NULL,                     
+                                `mobile` BIGINT(11) DEFAULT '0',                      
+                                `created_by` INT(11) DEFAULT '0',                     
+                                `created_on` DATETIME DEFAULT NULL,                   
+                                PRIMARY KEY (`id`)                                    
+                              );
+
+
+				CREATE TABLE `m_franchise_combo_preference_link` (       
+                                     `id` INT(11) NOT NULL AUTO_INCREMENT,                  
+                                     `cp_id` INT(11) DEFAULT '0',                           
+                                     `combo_gender` VARCHAR(11) DEFAULT NULL,               
+                                     `catid` INT(11) DEFAULT '0',                           
+                                     `preference_no` INT(11) DEFAULT '0',                   
+                                     `pref_brandid` INT(11) DEFAULT '0',                    
+                                     `created_on` DATETIME DEFAULT NULL,                    
+                                     `created_by` INT(11) DEFAULT '0',                      
+                                     `modified_on` DATETIME DEFAULT NULL,                   
+                                     `modified_by` INT(11) DEFAULT '0',                     
+                                     PRIMARY KEY (`id`)                                     
+                                   );
+                                   
+
+SELECT * FROM king_admin WHERE id=70;
+SELECT MD5('mallamalla')8098847a0faa3884792ad7e7379e8427
+238386b2c8575ebf9592ead7dc16c5ab;
+#UPDATE `king_admin` SET `password` = '8098847a0faa3884792ad7e7379e8427' WHERE `id` = '70' LIMIT 1;
+
+SELECT FROM_UNIXTIME(tr.actiontime) AS d,tr.* FROM king_transactions tr ORDER BY tr.id DESC LIMIT 10;
+PNHYUJ17948
+
+SELECT FROM_UNIXTIME(tr.actiontime) AS d,tr.* FROM king_tmp_transactions tr WHERE 1 
+#and transid='PNHHWX52829' 
+ORDER BY tr.id DESC LIMIT 10;
+
+DESC user_order_transactions;
+
+SELECT * FROM king_orders WHERE transid='PNHQSR32748';
+
+SELECT * FROM king_dealitems WHERE is_combo=1 AND is_pnh=0 AND pnh_id='';
+
+http://sndev13.snapittoday.com/admin/deal/147558652386
+415724242474
+846346952192
+843817188145
+
+SELECT imei.* FROM t_imei_no imei
+	JOIN t_stock_info stk ON stk.stock_id=imei.stock_id
+	JOIN m_rack_bin_info rb ON rb.id=stk.rack_bin_id $j_cond
+	WHERE imei.stock_id !=0 AND imei_no = 999999999999999

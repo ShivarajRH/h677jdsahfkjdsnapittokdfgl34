@@ -113,7 +113,7 @@
 					</table>
 				<?php }
 		}
-		else if($type="fran_prodpricequote")
+		else if($type=="fran_prodpricequote")
 		{
 			$fran_pricequote_res="SELECT p.*,d.name,d.id as itemid FROM pnh_franchise_price_quote p JOIN king_dealitems d ON d.pnh_id=p.pid WHERE franchise_id=$fid AND UNIX_TIMESTAMP(p.created_on) BETWEEN $st_ts and $en_ts";
 			$fran_pricequotes=$this->db->query($fran_pricequote_res)->result_array();
@@ -131,7 +131,49 @@
 				<?php }?>
 				</tbody>
 			</table>
-		<?php } }?>
+		<?php } }
+	  if($type =='confrmd_crdtorders'){	
+			
+			$sql = " select distinct c.transid,c.batch_enabled,sum(o.i_coup_discount) as com,c.amount,o.transid,o.status,o.time,o.actiontime,pu.user_id as userid,pu.pnh_member_id 
+						from king_tmp_orders o 
+						join king_tmp_transactions c on o.transid = c.transid 
+						join pnh_member_info pu on pu.user_id=o.userid 
+						where c.franchise_id = ? and c.init between $st_ts and $en_ts  and o.approval_status=1
+						group by c.transid  
+						order by c.init desc";
+				
+				$order_cond = " and 1 ";
+				
+			?>
+	<?php } if($type =='unconfrmd_crdtorders'){
+	
+		
+			$sql = " select distinct c.transid,c.batch_enabled,sum(o.i_coup_discount) as com,c.amount,o.transid,o.status,o.time,o.actiontime,pu.user_id as userid,pu.pnh_member_id 
+						from king_tmp_orders o 
+						join king_tmp_transactions c on o.transid = c.transid 
+						join pnh_member_info pu on pu.user_id=o.userid 
+						where c.franchise_id = ? and c.init between $st_ts and $en_ts  and o.approval_status=0
+						group by c.transid  
+						order by c.init desc";
+				
+				$order_cond = " and 1 ";
+	
+	
+	} if($type == 'rejected_crdtorders'){
+			
+			$sql = " select distinct c.transid,c.batch_enabled,sum(o.i_coup_discount) as com,c.amount,o.transid,o.status,o.time,o.actiontime,pu.user_id as userid,pu.pnh_member_id 
+						from king_tmp_orders o 
+						join king_tmp_transactions c on o.transid = c.transid 
+						join pnh_member_info pu on pu.user_id=o.userid 
+						join king_admin a on a.id=c.rejected_by
+						where c.franchise_id = ? and c.init between $st_ts and $en_ts  and o.approval_status=2
+						group by c.transid  
+						order by c.init desc";
+				
+				$order_cond = " and 1 ";
+	
+	
+	 }?>
 	<?php if($type!='product_enquired' && $type!='fran_prodpricequote')
 		{
 		$res = $this->db->query($sql,array($fid));
@@ -146,15 +188,33 @@
 			echo '<div align="left"><h3 id="ttl_orders_listed">Showing <b></b> Orders from '.format_date(date('Y-m-d',$st_ts)).' to '.format_date(date('Y-m-d',$en_ts)).' </h3></div>';
 				
 ?>		<table class="datagrid" width="100%" style="clear:both">
-	<thead><tr><th>Time</th><th>Order</th><th>Amount</th><th>Commission</th><th>Deal/Product details</th><th>Status</th><th>Last action</th></tr></thead>
+	<thead><tr><th>Time</th><th>Order</th><th>Amount</th><th>Commission</th><th>Deal/Product details</th><?php if($type!='rejected_crdtorders'){?><th>Status</th><th>Last action</th><?php }else{?><th>Remarks</th><th>Rejected Details</th><?php }?></tr></thead>
 	<tbody>
 	
 	<?php 
 		 $k = 0;
 		foreach($res->result_array() as $o)
 		{
+			
 			$ship_dets = array(); 
 			$trans_ttl_orders = 0;
+			if($type =='rejected_crdtorders' || $type =='unconfrmd_crdtorders')
+			{
+				//echo $type;die();exit;
+				
+				$o_item_list = $this->db->query("select a.member_id,a.status as ord_status,a.transid,a.status,a.id,a.itemid,b.name,a.quantity,i_orgprice,i_price,i_discount,i_coup_discount,d.name as rejected_by,t.rejected_on,t.remarks
+						from king_tmp_orders a
+						join king_dealitems b on a.itemid = b.id
+						join king_tmp_transactions t on t.transid = a.transid
+						left join king_admin d on d.id=t.rejected_by
+						where a.transid = ? $order_cond
+						order by a.status,b.name
+						",$o['transid'])->result_array();
+
+				
+			}
+			else 
+			{ 
 			$o_item_list = $this->db->query("select a.member_id,a.status as ord_status,a.transid,e.invoice_no,d.packed,d.shipped,e.invoice_status,d.shipped_on,a.status,a.id,a.itemid,b.name,a.quantity,i_orgprice,i_price,i_discount,i_coup_discount 
 														from king_orders a
 														join king_dealitems b on a.itemid = b.id
@@ -162,10 +222,12 @@
 														left join proforma_invoices c on c.order_id = a.id 
 														left join shipment_batch_process_invoice_link d on d.p_invoice_no = c.p_invoice_no 
 														left join king_invoice e on e.invoice_no = d.invoice_no and d.packed = 1 and d.shipped = 1
-														 
-													where a.transid = ? $order_cond 
-													order by a.status,b.name  
-											",$o['transid'])->result_array();
+														where a.transid = ? $order_cond 
+														order by a.status,b.name  
+														",$o['transid'])->result_array();
+			
+			}
+
 			if(!$o_item_list)
 				continue;
 			
@@ -193,7 +255,7 @@
 									FROM ( SELECT b.status,SUM((mrp-(discount+credit_note_amt))*a.invoice_qty) AS amt1,SUM(i_orgprice-(i_coup_discount+i_discount)*b.quantity) AS amt2,
 									COUNT(b.id) AS totals,a.invoice_no
 									FROM king_orders b
-									LEFT JOIN king_invoice a ON a.order_id = b.id
+									LEFT JOIN king_invoice a ON a.order_id = b.id and invoice_status = 1 
 									WHERE b.transid = ? GROUP BY b.status ) AS g';
 				
 			$trans_order_status_amt = $this->db->query($sql_trans_ttls,$o['transid']);
@@ -253,7 +315,7 @@
 								select count(*) as stat from (
 								select a.id,status,ifnull(c.shipped ,0) as shipped 
 									from king_orders a 
-									left join proforma_invoices b on a.id = b.order_id 
+									left join proforma_invoices b on a.id = b.order_id and b.invoice_status = 1 
 									left join shipment_batch_process_invoice_link c on c.p_invoice_no = b.p_invoice_no 
 									where a.transid = ? and a.status != 3 
 								group by shipped ) as g ",$o_item['transid'])->row()->stat;
@@ -330,6 +392,7 @@
 		</br>
 		
 	</td>
+	<?php if($type!='rejected_crdtorders'){?>
 	<td>
 		<?php 	
 			$show_part_shipment = 0;
@@ -356,6 +419,10 @@
 		?>
 	</td>
 	<td class="<?php echo $show_part_shipment?'part_shipment':'';?>"><?=$o['actiontime']==0?"na":format_datetime(date('Y-m-d H:i:s',$o['actiontime']))?></td>
+	<?php } else{?>
+	<td><?php echo $o_item['remarks'] ?></td>
+	<td><b>By : </b> <?php echo $o_item['rejected_by'] ?><p><b>On : </b><?php echo format_datetime(date('Y-m-d H:i:s', $o_item['rejected_on']))?></p></td>
+	<?php }?>
 	</tr>
 	<?php }?>
 	

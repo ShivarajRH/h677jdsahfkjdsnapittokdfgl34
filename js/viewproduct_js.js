@@ -12,10 +12,24 @@ $(function(){
 			opacity: .5,
 			hideAfter: 200,
 		});
+		$('#upd_new_expiry',this).datepicker( {
+	        changeMonth: true,
+	        changeYear: true,
+	        showButtonPanel: true,
+	        dateFormat: 'yy-mm',
+	        onClose: function(dateText, inst) { 
+	            var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
+	            var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
+	            $(this).datepicker('setDate', new Date(year, month, 1));
+	        }
+	    });
 });
 $('.btn_correction').live('click',function(){
 	
 	$('#stock_correction_form').dialog('open');
+	$('#exp_dates').datepicker({
+	      dateFormat: 'yy-mm-dd'
+	});
 	//$('.mrp_prod').chosen();
 	//$('.loc_wrap').chosen();
 	//$('.dest_prodid').chosen();
@@ -57,7 +71,7 @@ $("#to_date").datepicker();
 					
 					var dest_stklist = '<option available_qty="0" value="">Choose</option>';
 						$.each(resp.stk_list,function(a,b){
-							dest_stklist += '<option available_qty="'+(b.available_qty)+'" value="'+b.product_barcode+'_'+b.mrp+'_'+b.location_id+'_'+b.rack_bin_id+'">'+b.stk_prod+'</option>';
+							dest_stklist += '<option available_qty="'+(b.available_qty)+'" value="'+b.product_barcode+'_'+b.mrp+'_'+b.location_id+'_'+b.rack_bin_id+'_'+b.expiry_on+'_'+b.stock_id+'">'+b.stk_prod+'</option>';
 						});
 						dest_stklist += '<option available_qty="0" value="new">New</option>';
 						$('select[name="dest_prod_stockdet"]').html(dest_stklist);
@@ -141,6 +155,59 @@ $("#to_date").datepicker();
 			return false;
 		});
 	
+		$('.upd_expiry').click(function(){
+			$('#upd_stk_expiry_dlg').data('stk_id',$(this).attr("stk_id")).dialog('open');
+		});
+
+		$('#upd_stk_expiry_frm').submit(function(){
+			$(".ui-dialog-buttonpane button:contains('Update')").button().trigger('click');
+			return false;
+		});
+		
+		$('#upd_stk_expiry_dlg').dialog({
+						autoOpen:false,
+						width:400,
+						height:200,
+						modal:true,
+						open:function(){
+							stk_id = $(this).data('stk_id');
+							
+							$.getJSON(site_url+'/admin/jx_get_stkprobyid/'+stk_id,'',function(resp){
+								if(resp.status == 'error')
+								{
+									alert(resp.error);
+								}else
+								{
+									$('#upd_old_expiry').val(resp.stkdet.expiry_on);
+									$('#upd_new_expiry').val('');
+								}
+							});
+						},
+						buttons:{
+							'Cancel':function(){
+								$('#upd_stk_expiry_dlg').dialog('close');
+							},
+							'Update':function(){
+								$('#upd_stk_expiry_dlg').dialog('close');
+								$(".ui-dialog-buttonpane button:contains('Update')").button().button("disable");
+								var new_exp = $('#upd_new_expiry').val();
+								
+									$.post(site_url+'/admin/jx_upd_stkexpiry','stk_id='+stk_id+'&new_exp='+new_exp,function(resp){
+										if(resp.status == 'error')
+										{
+											$(".ui-dialog-buttonpane button:contains('Update')").button().button("enable");
+											alert(resp.error);
+										}else
+										{
+											alert("Expiry date updated successfully");
+											location.href = location.href;
+										}
+									},'json');
+								 
+							}
+						}
+				});
+				
 	$('select[name="mrp_prod"]').change(function(){
 
 		$('.new_mrp_bc_block input').val('');
@@ -322,12 +389,12 @@ $("#to_date").datepicker();
 					error_msg.push("-Please Choose Destination Product To Transfer ");
 				if($('select[name="dest_prod_stockdet"]').val() == "")
 					error_msg.push("-Please Choose Destination Product Stock Details ");
-					
+				/*
 				if($('.imei_stat_chk').length != 0 || $('.imei_stat_error').length !=0 )
 				{
 					error_msg.push("-Please Check entered Serialno Details ");
 				}	
-				
+				*/
 				if($('select[name="dest_prod_stockdet"]').val() == "new")
 				{
 					if($('select[name="dest_prod_newstk_bc"]').val() == "")

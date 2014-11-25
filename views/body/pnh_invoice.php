@@ -4,11 +4,16 @@ $this->load->plugin('barcode');
 $transid = $trans['transid'];
 $partner_id=$this->db->query("select partner_id from king_transactions where transid=?",$transid)->row()->partner_id;
 $is_pnh=$this->db->query("select is_pnh as p from king_transactions where transid=?",$transid)->row()->p;
+$billing_type=$this->db->query("select billing_type from king_orders where transid=?",$transid)->row()->billing_type;
+if($billing_type==1)
+{
+	$seller_details=$this->db->query("SELECT s.seller_id,m.name AS seller_name,m.address AS seller_address,city,pincode FROM t_mps_po_info s  JOIN m_seller_info m ON m.id=s.seller_id WHERE transid=?",$transid)->row_array();
+}
 $ttl_inv_amt = 0;
 $ttl_inv_list = array();
 // check if the invoice is split invoice 	
 $mem_det = array();	
-$invoice_credit_note_res = $this->db->query("select group_concat(id) as id,sum(amount) as amount from t_invoice_credit_notes a where invoice_no in (select invoice_no from king_invoice where split_inv_grpno = ? or invoice_no = ? and payment_id!=0) ",array($invoice_no,$invoice_no));
+$invoice_credit_note_res = $this->db->query("select group_concat(id) as id,sum(amount) as amount from t_invoice_credit_notes a where invoice_no in (select invoice_no from king_invoice where split_inv_grpno = ? or invoice_no = ? and is_credit_processed=1) ",array($invoice_no,$invoice_no));
 $credit_days=$this->db->query("select credit_days from king_transactions where transid=?",$transid)->row()->credit_days;
 
 $inv_total_prints = $this->db->query("select total_prints from king_invoice where invoice_no = ? ",$invoice_no)->row()->total_prints;
@@ -236,16 +241,31 @@ table{
 			<table width="100%" style="margin-top:10px">
 				<tr>
 					<td valign="top">
+						
 					<?php 
+						echo '<b>Sold By</b><br>'; 
 						$cin_no = '';
 						$service_no = '';
 						$tin_no = '';
-						if($is_pnh){
+						if($is_pnh)
+						{
+							if($billing_type==0)
+							{
 								$cin_no = 'U51909KA2012PTC063576';
 								$tin_no = '29230678061';
 								$service_no = 'AACCL2418ASD001';	
 								echo 'LocalCube Commerce Pvt Ltd<br>Plot 3B1,KIADB Industrial Area,Kumbalagudu 1st Phase,Mysore Road,Bangalore -560074';
-						}else{					
+							}
+							else
+							{
+								$cin_no = 'U72200KA2012PTC064800';
+								$tin_no = '29180691717';
+								$service_no = 'AADCE1297KSD001';
+								echo $seller_details['seller_name'].'<br>'.$seller_details['seller_address'].','.$seller_details['city'].':'.$seller_details['pincode'].'<br>';
+							}
+						}
+						else
+						{					
 								if($inv_createdon >= strtotime('2013-04-01'))
 								{
 									$cin_no = 'U72200KA2012PTC064800';
@@ -300,7 +320,7 @@ table{
 									{
 								?>
 									<th width="400"><?=$order['bill_person']?></th>
-									<th width="80">Customer</th>
+									<th width="80"><?='Customer'?></th>
 									<th><?php echo $mem_det['mem_name'].' ('.$mem_det['mid'].')' ?></th>
 								<?php	
 									}else
@@ -402,18 +422,9 @@ table{
 					continue;
 			}
 			
-			$ordertime_mp=$order['is_memberprice']==1?$order['i_price']:$order['other_price'];
+			$ordertime_mp=$order['is_memberprice']==1?'(<b>MP : '.$order['i_price'].')</b>':'';
 			
-	 		if($order['is_memberprice']==1)
-	 		{
-				$order['i_price']=$order['other_price'];
-				$order['nlc']=$order['other_price'];
-	 		}
-			else
-			{
-				$order['i_price']=$order['i_price'];
-				$order['nlc']=$order['nlc'];
-			}
+
 			$consider_item_total = 1;
 		
 			$ptax=$order['tax']/100;
@@ -457,18 +468,6 @@ table{
 				$returned_item_amt += $item_total_amount;
 			
 			//PNH Member Fee --->Order Considerd
-			/*$mem_reg_fee=0;$ttlinsurance_amount=0;
-			$num_recharge_offer = $this->db->query("select * from pnh_member_offers where mem_fee_applicable = 1 and process_status='0' and transid_ref = ? ",$order['transid'])->num_rows();
-			if($num_recharge_offer)
-			{
-				$mem_reg_fee = PNH_MEMBER_FEE;
-			}else
-			{
-				$pnh_memfee=$this->db->query("select pnh_member_fee from king_orders where transid=?",$order['transid'])->row()->pnh_member_fee;
-				if($pnh_memfee!=null)
-					$mem_reg_fee+=$pnh_memfee;
-			}*/
-			
 			//Insurance Cost  --->Order Considerd
 			
 			$ttlinsurance_amount=$this->db->query("select  insurance_amount from king_orders where transid=?",$order['transid'])->row()->insurance_amount;
@@ -482,7 +481,7 @@ table{
 					<?php if($inv_type !='original'){ ?>
 						<span class="hideinprint">
 							<?php
-								$product_name= $order['name'].'-'.$order['pnh_id'] .' '.'(<b>Rs.</b>'.$ordertime_mp .')';
+								$product_name= $order['name'].'-'.$order['pnh_id'] .' '.$ordertime_mp;
 								if($order['status'] == 4)
 								{
 									echo '<strike>'.$product_name.'</strike> - Product Returned';
@@ -491,6 +490,18 @@ table{
 									
 									echo $order['has_nonsk_imei_insurance']==1 ?'<b>Insurance For : </b>'.$product_name : $product_name;
 								}
+								
+								if(!empty($order['order_product_id']))
+								{
+									echo '<span style="margin-left:10px;padding:3px;">'.($this->db->query("select group_concat(concat('<b>',attr_name,'</b> : ',attr_value) order by attr_id desc SEPARATOR ' ' ) as p_attr_det 
+														from m_product_info a 
+														join m_product_deal_link b on a.product_id = b.product_id  
+														join m_product_attributes c on c.pid = b.product_id 
+														join m_attributes d on d.id = c.attr_id 
+														where b.itemid = ?  and a.product_id = ? 
+														group by a.product_id ",array($order['itemid'],$order['order_product_id']))->row()->p_attr_det).'</span>';
+								}
+								
 							?>
 							<?php  
 								$imei=$this->db->query("select imei_no from t_imei_no where order_id=? and is_returned=0",$order['id'])->result_array(); $inos=array(); foreach($imei as $im) $inos[]=$im['imei_no'];
@@ -521,10 +532,10 @@ table{
 							<?php
 								if($order['status'] == 4)
 								{
-									echo '<strike>'.$order['print_name'].'-'.$order['pnh_id'].'</strike> - Product Returned';
+									echo '<strike>'.$order['print_name'].'-'.$order['pnh_id'].' '.$ordertime_mp.'</strike> - Product Returned';
 								}else
 								{
-									echo $order['print_name'].'-'.$order['pnh_id'];
+									echo $order['print_name'].'-'.$order['pnh_id'].' '.$ordertime_mp;
 								}
 								
 								if(!empty($order['order_product_id']))
@@ -562,7 +573,7 @@ table{
 							<?php
 								if($order['status'] == 4)
 								{
-									echo '<strike>'.$order['name'].'-'.$order['pnh_id'].' '.'(<b>Rs.</b>'.$ordertime_mp .')</strike> - Product Returned';
+									echo '<strike>'.$order['name'].'-'.$order['pnh_id'].' '.$ordertime_mp.'</strike> - Product Returned';
 								}else
 								{
 									echo $order['name'].'-'.$order['pnh_id'];
@@ -683,7 +694,6 @@ table{
 			$stax_tot = ($sship+$ccod+$sgc); 
 		 	$s_tax_apl = ($stax_tot*$pstax/100);
 		 		 	
-                        
 		 	$ttlinsurance_amount=@$this->db->query("select ifnull(sum(insurance_amount),0)  as amt from king_orders a join king_invoice b on a.id = b.order_id where b.invoice_no = ? ",$order['invoice_no'] )->row()->amt;
 		 	$ttlinsurance_amount = $ttlinsurance_amount*1;
 		 	
@@ -736,7 +746,7 @@ table{
 		<table width="100%" class="tax_block_content" cellspacing=0 cellpadding=0 style="margin:0px;">
 			<tr>
 				<td valign="top" style="padding:10px 0px;">
-				Payment Mode : <b><?=$order['mode']==0?"Credit card/Net Banking":"Cash On Delivery"?></b> 
+				Payment Terms : <?php if($billing_type==0){?><b><?=$order['mode']==0?"Credit card/Net Banking":"Cash On Delivery"?></b><?php }else{?><b>Immediate Payment against Delivery.</b><?php }?>
 				<?php 
 					if($giftwrap_charge){
 						echo ' | Package Type : <b>Gift Wrap</b>';
@@ -855,6 +865,12 @@ table{
 							</b> 
 						</div>
 					<?php }?>
+					<?php if($is_pnh && $billing_type){?>
+						<div style="margin-left:10px;border:1px solid #000;padding:2px;font-size:15px;">
+							<b>Purchase Powered by StoreKing</b>
+						</div><br>
+					<?php }?>
+					
 					<div style="margin-left:10px;border:1px solid #000;padding:2px;font-size:80%;">
 						This is a electronically generated document and doesn't require signature
 					</div>
@@ -869,7 +885,8 @@ table{
 				<li>Guarantee / Warranty should be claimed from the Brand Only</li>
 				<li>Prices Mentioned above are After Discount/Offer if any</li>
 				<?php if($is_pnh){?>
-				<li>Cheque to be issued in the name of 'Local Cube Commerce Pvt Ltd'</li>
+				<li>Payment to be made in the name of 'Local Cube Commerce Pvt Ltd'</li>
+				<li>Same day 100% payment against delivery.</li>
 				<?php }?>
 			</ol>
 			<div class="eoe_txt" style="padding-top:5px;padding-left:200px;">E &amp; O.E.</div>
@@ -1058,10 +1075,20 @@ table{
 					<?php 
 						$service_no = '';
 						$tin_no = '';
-						if($is_pnh){
+						if($is_pnh)
+						{
+							if($billing_type==0)
+							{
 								$tin_no = '29230678061';
 								$service_no = 'AACCL2418ASD001';	
 								echo 'LocalCube Commerce Pvt Ltd<br>Plot 3B1,KIADB Industrial Area,Kumbalagudu 1st Phase,Mysore Road,Bangalore -560074';
+							}
+							else 
+								{
+									$tin_no = '29180691717';
+									$service_no = 'AADCE1297KSD001';
+									echo 'Eleven feet technologies<br>#1751, 18th B main,Jayanagar 4th T block,  Bangalore : 560 041<br>';
+								}
 						}else{					
 								if($inv_createdon >= strtotime('2013-04-01'))
 								{
@@ -1210,11 +1237,24 @@ table{
 					<?php 
 						$service_no = '';
 						$tin_no = '';
-						if($is_pnh){
+						if($is_pnh)
+						{
+							if($billing_type==0)
+							{
 								$tin_no = '29230678061';
 								$service_no = 'AACCL2418ASD001';	
 								echo 'LocalCube Commerce Pvt Ltd<br>Plot 3B1,KIADB Industrial Area,Kumbalagudu 1st Phase,Mysore Road,Bangalore -560074';
-						}else{					
+							}
+							else
+							{
+								$tin_no = '29180691717';
+								$service_no = 'AADCE1297KSD001';
+								echo $seller_details['seller_name'].'<br>'.$seller_details['seller_address'].','.$seller_details['city'].':'.$seller_details['pincode'].'<br>';
+							}
+								
+						}
+						else
+						{					
 								if($inv_createdon >= strtotime('2013-04-01'))
 								{
 									$tin_no = '29180691717';
@@ -1396,11 +1436,24 @@ table{
 					<?php 
 						$service_no = '';
 						$tin_no = '';
-						if($is_pnh){
+						if($is_pnh)
+						{
+							if($billing_type==0)
+							{
 								$tin_no = '29230678061';
 								$service_no = 'AACCL2418ASD001';	
 								echo 'LocalCube Commerce Pvt Ltd<br>Plot 3B1,KIADB Industrial Area,Kumbalagudu 1st Phase,Mysore Road,Bangalore -560074';
-						}else{					
+							}
+							else 
+							{
+								$tin_no = '29180691717';
+								$service_no = 'AADCE1297KSD001';
+								echo $seller_details['seller_name'].'<br>'.$seller_details['seller_address'].','.$seller_details['city'].':'.$seller_details['pincode'].'<br>';
+							}	
+								
+						}
+						else
+						{					
 								if($inv_createdon >= strtotime('2013-04-01'))
 								{
 									$tin_no = '29180691717';
@@ -1712,12 +1765,20 @@ table{
 			</style>
 			<div align="center">
 					
+				<?php if($billing_type==0){?>	
 					<b style="font-size: 140%">LocalCube Commerce Pvt Ltd</b><br>
 					Plot 3B1,KIADB Industrial Area,Kumbalagudu 1st Phase,Mysore Road  
 					<br>Bangalore -560074
 					<br>
 					<br>
 					<b style="font-size: 140%">Credit Note</b>
+				<?php  } else {?>
+				<b style="font-size: 140%"><?php echo $seller_details['seller_name']?></b><br>
+					<?php echo  $seller_details['address'].','.$seller_details['city'].'<br>'.$seller_details['pincode'];?>
+				<?php }?>
+				<br>
+				<br>
+				<br>
 			</div>
 			<div align="center">
 				<table width="100%" style="font-size: 120%" border=0 cellpadding="5" cellspacing="0">

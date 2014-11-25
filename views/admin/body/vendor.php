@@ -309,8 +309,23 @@
 </div>
 
 <div id="v_api_info">
-	
-	
+	<?php 
+		if($this->erpm->auth(true,true))
+		{
+	?>
+	<div class="module">
+		<h3 class="module_title">Import Stock file</h3>
+		<div class="module_content">
+			<form action="<?php echo site_url('admin/imp_vendor_prod_stock')?>" method="post" enctype="multipart/form-data">
+				<input type="hidden" name="vendor_id" value="<?php echo $v['vendor_id']?>">
+				<input type="file" name="vendor_stk_file" >
+				<input type="submit" value="import" >
+			</form>
+		</div>
+	</div>
+	<?php 
+		} 
+	?>
 </div>
 
 <div id="v_brands">

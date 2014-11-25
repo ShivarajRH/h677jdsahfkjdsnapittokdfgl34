@@ -1,0 +1,58 @@
+/*
+ * Manage Deal inner styles
+ */
+.dataTables_wrapper .dataTables_processing
+{
+    overflow: hidden;
+    display: none;
+  /*  position: fixed;
+    z-index: 1000; */
+    top: 100px;
+    left: 0;
+    height: 100%;
+    width: 200%;
+    background: rgba(255, 255, 255, .8) 50% 50% no-repeat;
+}
+td.details-control 
+{
+    background: url('../images/details_open.png') no-repeat center center;
+    cursor: pointer;
+}
+tr.shown td.details-control 
+{
+    background: url('../images/details_close.png') no-repeat center center;
+}
+
+div.DTTT_container {
+	float:right;
+	margin-bottom:0px !important;
+	padding:7px;
+}
+div.toolbar {
+	float:right;
+	margin-bottom:0px !important;
+	padding:7px;
+}
+.dataTables_wrapper .dataTables_filter {
+   padding-top: 10px;
+}	
+.form-filter{
+width: 300px;
+ height: 20px;
+}
+.dataTables_info
+{
+font-size: 18px;
+}
+
+div.FixedHeader_Cloned th,
+div.FixedHeader_Cloned td {
+	background-color: white !important;
+}
+.dataTables_wrapper input[type="text"],.dataTables_wrapper select,.dataTables_wrapper textarea
+	{
+	width: 100px;
+}
+div.FixedHeader_Cloned input[type="text"],.FixedHeader_Cloned select,.FixedHeader_Cloned textarea {
+	width: 100px;
+}

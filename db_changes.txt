@@ -261,6 +261,7 @@ CREATE TABLE `nonskimei_mem_fee_insu_amt` (
 # Apr_25_2014
 INSERT INTO `m_config_params` (`name`, `value`) VALUES ('FRAN_TYPE_ELECTRONIC', '112,102');
 #======================================================
+
 #Apr_25_4_2014
 ALTER TABLE `m_vendor_api_info` ADD COLUMN `file_format` ENUM ('CSV','XML','TXT') DEFAULT 'CSV' NULL  AFTER `type`, ADD COLUMN `mapping_tmpl_id` INT (11)  NULL  AFTER `file_format`;
 CREATE TABLE `m_vendor_api_templates` (                  
@@ -355,6 +356,7 @@ ALTER TABLE m_storage_location_info DROP COLUMN is_damaged;
 ALTER TABLE `pnh_member_offers` DROP COLUMN `mob_serv_provider`;
 ALTER TABLE `pnh_member_info` ADD COLUMN `mobile_network` VARCHAR(100) NULL AFTER `mobile`; 
 #==========================
+
 ALTER TABLE t_vendor_po_order_link ADD COLUMN order_status TINYINT(1) DEFAULT 0 AFTER order_qty; 
 ALTER TABLE m_vendor_product_link ADD COLUMN `ven_stock_qty` INT(5) DEFAULT '0' AFTER is_active;
 
@@ -1254,3 +1256,781 @@ ALTER TABLE king_dealitems ADD COLUMN has_power TINYINT(1) DEFAULT 0;
 #Aug_09_2014-Shivaraj
 ALTER TABLE `king_orders` ADD COLUMN `mp_loyalty_points` DOUBLE(10,2) DEFAULT 0 NULL AFTER `mp_logid`;
 #===============================================
+#============ PO IS_DOA,Return_id column structure  =========================
+#Aug_08_2014-Suresh
+ALTER TABLE `t_po_info` ADD COLUMN `is_doa_po` TINYINT (1) DEFAULT '0' NULL  AFTER `paf_id`;
+ALTER TABLE `t_po_info` ADD COLUMN `return_id` BIGINT (11)  NULL  AFTER `is_doa_po`;
+#============ PO IS_DOA,Return_id column structure  =========================
+
+ALTER TABLE `pnh_invoice_returns_product_service` ADD COLUMN `job_sheet_no` BIGINT (11)  NULL  AFTER `sent_to`;
+ALTER TABLE `pnh_invoice_returns_product_service` ADD COLUMN `sent_with` VARCHAR (255)  NULL  AFTER `sent_on`;
+ALTER TABLE `pnh_invoice_returns_product_service` ADD COLUMN `doa_copy_no` BIGINT (11)  NULL  AFTER `service_return_on`;
+ALTER TABLE `pnh_invoice_returns_product_service` ADD COLUMN doa_copy_filepath VARCHAR (255)  NULL  AFTER doa_copy_no;
+
+
+ALTER TABLE `t_imei_no` ADD COLUMN `is_doa` TINYINT (1) DEFAULT '0' NULL  AFTER `is_imei_activated`;
+ALTER TABLE `pnh_invoice_returns_product_link` ADD COLUMN `doa_po_id` BIGINT (11)  NULL  AFTER `condition_type`
+#Aug_12_2014-Shivaraj
+#partner deal link table update
+DROP TABLE `m_partner_deal_link`;
+CREATE TABLE `m_partner_deal_link` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `itemid` BIGINT(20) DEFAULT NULL,
+  `partner_ref_no` VARCHAR(255) DEFAULT NULL,
+  `partner_id` INT(11) DEFAULT NULL,
+  `created_by` INT(11) DEFAULT NULL,
+  `created_on` DATETIME DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+#id	itemid		partner_ref_no	partner_id	created_by	created_on
+#1	2616472368	az111		7		37		2014-08-12 20:10:26
+#partner info table update
+ALTER TABLE `partner_info` ADD COLUMN `partner_sku_text` VARCHAR(20) NULL AFTER `trans_mode`;
+#===============================================
+#Aug_13_2014
+ALTER TABLE `partner_info` ADD COLUMN `partner_rackbinid` VARCHAR(20) NULL AFTER `partner_sku_text`;
+#Aug_14_2014
+ALTER TABLE king_orders ADD COLUMN lens_item_orderdet VARCHAR(255) DEFAULT '';
+ALTER TABLE king_dealitems ADD COLUMN lens_type VARCHAR(255) DEFAULT '' AFTER has_power;
+#==========================
+
+#==========================Confirm orders on credit Limit approval==============================================================#
+#author roopa #11_august_2014
+ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `max_credit_limit` DOUBLE DEFAULT 0 NULL AFTER `is_consolidated_payment`;
+ALTER TABLE `king_tmp_orders` ADD COLUMN `redeem_value` DOUBLE DEFAULT 0 NULL AFTER `partner_reference_no`; 
+ALTER TABLE `king_tmp_orders` ADD COLUMN `is_memberprice` TINYINT DEFAULT 0 NULL AFTER `redeem_value`, ADD COLUMN `other_price` DOUBLE DEFAULT 0 NULL AFTER `is_memberprice`, ADD COLUMN `mp_logid` BIGINT(11) NULL AFTER `other_price`, ADD COLUMN `mp_loyalty_points` BIGINT(11) NULL AFTER `mp_logid`, ADD COLUMN `s_consolidated_payment` TINYINT(1) DEFAULT 0 NULL AFTER `mp_loyalty_points`, ADD COLUMN `is_ordqty_splitd` TINYINT(1) DEFAULT 0 NULL AFTER `s_consolidated_payment`, ADD COLUMN `pnh_member_fee` DOUBLE DEFAULT 0 NULL AFTER `is_ordqty_splitd`, ADD COLUMN `insurance_amount` DOUBLE DEFAULT 0 NULL AFTER `pnh_member_fee`; 
+ALTER TABLE `king_tmp_orders` ADD COLUMN `billon_orderprice` TINYINT DEFAULT 0 NULL AFTER `insurance_amount`; 
+ALTER TABLE `king_tmp_orders` ADD COLUMN `member_id` BIGINT(11) NULL AFTER `billon_orderprice`; 
+ALTER TABLE `king_tmp_orders` CHANGE `s_consolidated_payment` `is_consolidated_payment` TINYINT(1) DEFAULT 0 NULL;
+
+CREATE TABLE `king_tmp_transactions` (
+  `id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `transid` CHAR(18) NOT NULL,
+  `orderid` BIGINT(20) UNSIGNED NOT NULL,
+  `amount` DOUBLE UNSIGNED NOT NULL,
+  `paid` DOUBLE UNSIGNED NOT NULL,
+  `mode` TINYINT(3) UNSIGNED NOT NULL,
+  `voucher_payment` TINYINT(3) DEFAULT '0',
+  `cod` DOUBLE UNSIGNED NOT NULL,
+  `ship` DOUBLE UNSIGNED NOT NULL,
+  `giftwrap_charge` DOUBLE DEFAULT '0',
+  `response_code` INT(10) UNSIGNED NOT NULL,
+  `msg` TEXT NOT NULL,
+  `payment_id` VARCHAR(50) NOT NULL,
+  `pg_transaction_id` VARCHAR(50) NOT NULL,
+  `is_flagged` VARCHAR(10) NOT NULL,
+  `init` BIGINT(20) UNSIGNED NOT NULL,
+  `actiontime` INT(10) UNSIGNED NOT NULL,
+  `status` TINYINT(3) UNSIGNED NOT NULL,
+  `is_pnh` TINYINT(1) NOT NULL,
+  `franchise_id` INT(10) UNSIGNED NOT NULL,
+  `credit_days` INT(11) DEFAULT '0',
+  `order_for` INT(11) NOT NULL DEFAULT '0',
+  `pnh_member_fee` DOUBLE DEFAULT '0',
+  `credit_remarks` VARCHAR(255) DEFAULT NULL,
+  `batch_enabled` TINYINT(1) NOT NULL DEFAULT '1',
+  `admin_trans_status` TINYINT(3) DEFAULT '0',
+  `priority` TINYINT(1) NOT NULL,
+  `priority_note` VARCHAR(200) NOT NULL,
+  `note` TEXT NOT NULL,
+  `offline` TINYINT(1) NOT NULL,
+  `status_backup` TINYINT(1) DEFAULT NULL,
+  `partner_reference_no` VARCHAR(100) NOT NULL,
+  `partner_id` INT(10) UNSIGNED NOT NULL,
+  `trans_created_by` INT(11) DEFAULT '0',
+  `trans_grp_ref_no` BIGINT(11) DEFAULT '0',
+  `is_memberprice` TINYINT(1) DEFAULT '0',
+  `approval_status` TINYINT(1) DEFAULT '0' COMMENT '0: Waiting FOR approval,1: Approved,2: Rejected',
+  `approved_by` INT(11) DEFAULT '0',
+  `approved_on` BIGINT(20) DEFAULT '0',
+  `rejected_by` INT(11) DEFAULT '0',
+  `rejected_on` BIGINT(20) DEFAULT '0',
+  `remarks` TEXT,
+  PRIMARY KEY (`id`),
+  KEY `transid` (`transid`),
+  KEY `franchise_id` (`franchise_id`),
+  KEY `trans_created_by` (`trans_created_by`)
+); 
+ALTER TABLE `king_tmp_orders` ADD COLUMN `has_insurance` TINYINT(1) DEFAULT 0 NULL AFTER `pnh_member_fee`;
+ALTER TABLE `king_tmp_orders` ADD COLUMN `approval_status` TINYINT(1) DEFAULT 0 NULL AFTER `member_id`; 
+ 
+INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,NULL,NULL,NULL,'4cecb21b44628b17c436739bf6301af2','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'0','1',NULL,NULL); 
+INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,NULL,'SMS','SMS','4cecb21b44628b17c436739bf6301af2','','0','0','0','','franchise@storeking.in',NULL,NULL,NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,NULL,NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,'',NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,'',NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52','2014-08-18 12:03:08'); 
+
+
+#==========================Service Center Brand link table structure==============================================================#
+ 
+ #author Suresh #18_august_2014
+ CREATE TABLE `m_service_center_brand_link` (  `id` INT (11) NOT NULL AUTO_INCREMENT , `service_center_id` INT (11) , `brand_id` BIGINT (11) , `created_by` INT (11) , `created_on` DATE , PRIMARY KEY ( `id`))  
+ 
+#==========================Service Center Brand link table structure==============================================================#
+
+#==========================Service Center table structure==============================================================#
+ 
+ #author Suresh #18_august_2014
+ CREATE TABLE `m_service_center_link` (  `id` INT (11) NOT NULL AUTO_INCREMENT , `name` VARCHAR (250) , `address` VARCHAR (250) , `contact_no` VARCHAR (250) , `created_by` INT (11) , `created_on` DATE , PRIMARY KEY ( `id`)) 
+ 
+#==========================Service Center Brand link table structure==============================================================#
+
+#author Suresh #21_august_2014
+CREATE TABLE `pnh_invoice_returns_images` (  `id` INT (11) NOT NULL AUTO_INCREMENT , `return_id` BIGINT (20) , `invoice_no` BIGINT (20) , `pic` CHAR (50) , `created_on` DATETIME , PRIMARY KEY ( `id`)) ;
+
+#==========================Service Center Brand link table structure==============================================================#
+ 
+// Partner FBA ORDER IMPORT CHANGES
+ALTER TABLE `t_trans_invoice_marker` ADD COLUMN `partner_id` INT (5) DEFAULT '0' NULL  AFTER `id`;
+INSERT INTO `t_trans_invoice_marker`(`id`,`partner_id`,`transid`,`invoice_no`,`is_pnh`,`created_on`)VALUES(NULL,'7','','10700000000','0',NOW());
+
+#==========================Return Shipment Track table structure==============================================================#
+CREATE TABLE `t_shipment_tracking_info` (  `id` INT (11) NOT NULL AUTO_INCREMENT , `invoice_no` BIGINT (20) , `product_id` INT (11) , `return_id` BIGINT (20) ,`return_prod_id` BIGINT (20) , `status` TINYINT (1) DEFAULT '0', `transit_type` TINYINT (1) DEFAULT '1', `courier_name` VARCHAR (255) , `courier_awb` VARCHAR (255) , `emp_name` VARCHAR (255) , `emp_phno` VARCHAR (255) , `remarks` VARCHAR (255) , PRIMARY KEY ( `id`));  
+ALTER TABLE `t_shipment_tracking_info` ADD COLUMN `order_id` BIGINT (20)  NULL  AFTER `invoice_no`;
+#==========================Return Shipment Track table structure==============================================================#
+
+#==========================PO table structure==============================================================#
+ALTER TABLE `t_po_info` ADD COLUMN `credit_days` INT (11) DEFAULT '0' NULL  AFTER `payment_status`;
+#==========================PO table structure==============================================================#
+
+ 
+
+INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,NULL,NULL,NULL,'4cecb21b44628b17c436739bf6301af2','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'0','1',NULL,NULL); 
+INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,NULL,'SMS','SMS','4cecb21b44628b17c436739bf6301af2','','0','0','0','','franchise@storeking.in',NULL,NULL,NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,NULL,NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,'',NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52',NULL); 
+INSERT INTO `king_admin`(`id`,`user_id`,`name`,`username`,`password`,`usertype`,`role_id`,`access`,`brandid`,`fullname`,`email`,`mobile`,`phone`,`gender`,`address`,`city`,`img_url`,`account_blocked`,`block_ip_addr`,`createdon`,`modifiedon`) VALUES ( NULL,'4cecb21b44628b17c436739bf6301af2','SMS','SMS','4cecb21b44628b17c436739bf6301af2','1','0','0','0','','franchise@storeking.in',NULL,'',NULL,NULL,NULL,NULL,'0','1','2014-08-18 12:00:52','2014-08-18 12:03:08'); 
+ CREATE TABLE `pnh_t_max_credit_info` (
+  `id` BIGINT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `franchise_id` INT(11) DEFAULT NULL,
+  `credit_added` DOUBLE DEFAULT NULL,
+  `new_credit_limit` DOUBLE DEFAULT NULL,
+  `credit_given_by` INT(11) DEFAULT NULL COMMENT 'executive id',
+  `reason` VARCHAR(200) NOT NULL,
+  `created_by` INT(11) DEFAULT NULL,
+  `modified_by` INT(11) DEFAULT NULL,
+  `created_on` BIGINT(20) DEFAULT NULL,
+  `modified_on` BIGINT(20) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
+/*[4:23:27 PM][463 ms]*/ ALTER TABLE `pnh_member_info` ADD COLUMN `mem_image_url` VARCHAR(255) NULL AFTER `voucher_bal_validity`; 
+//Franchise OTP TABLE
+CREATE TABLE `t_franchise_otp` (
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `fid` BIGINT(20) DEFAULT NULL,
+  `otp_no` BIGINT(20) DEFAULT NULL,
+  `logged_on` BIGINT(20) DEFAULT NULL,
+  `valid_till` BIGINT(20) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+#====================================
+#Aug_22_2014-Shivaraj
+UPDATE `user_access_roles` SET `user_role` = 'UPDATE_PRODUCT_DEAL_ROLE' , `const_name` = 'UPDATE_PRODUCT_DEAL_ROLE' WHERE `id` = '18';
+#====================================
+ALTER TABLE `king_tmp_orders` ADD COLUMN `insurance_id` BIGINT(20) DEFAULT 0 NULL AFTER `approval_status`; 
+ALTER TABLE `king_tmp_orders` ADD COLUMN `imei_scheme_id` BIGINT(20) DEFAULT 0 NULL AFTER `insurance_id`; 
+ALTER TABLE `king_tmp_orders` ADD COLUMN `imei_reimbursement_value_perunit` DOUBLE NULL AFTER `imei_scheme_id`; 
+ALTER TABLE `king_tmp_orders` ADD COLUMN `loyality_point_value` DOUBLE NULL AFTER `imei_reimbursement_value_perunit`; 
+#====================================
+#Aug_23_2014-Shivaraj-Api cartid update
+ALTER TABLE `king_transactions` ADD COLUMN `api_cartid` VARCHAR(100) DEFAULT '0' NULL AFTER `trans_grp_ref_no`;
+
+#==========================King dealitems==============================================================#
+#suresh Aug 25 2014
+ALTER TABLE `king_dealitems` ADD COLUMN `powered_by` VARCHAR (100)  NULL  AFTER `has_insurance`;
+#==========================King dealitems =============================================================#
+
+ALTER TABLE king_orders ADD COLUMN lens_package_id INT(11) DEFAULT 0 AFTER is_consolidated_payment;
+ALTER TABLE king_orders ADD COLUMN lens_package_price DOUBLE DEFAULT 0 AFTER lens_package_id;
+#====================================
+#Aug_27_2014 - Shivaraj
+ALTER TABLE king_invoice ADD COLUMN partner_invno VARCHAR(50) DEFAULT '';
+ALTER TABLE king_invoice ADD COLUMN partner_invdate VARCHAR(50) DEFAULT '';
+
+# Coupans table
+CREATE TABLE `king_coupons` (                                
+`id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,          
+`code` CHAR(12) NOT NULL,                                  
+`type` TINYINT(3) UNSIGNED NOT NULL,                       
+`value` INT(10) UNSIGNED NOT NULL,                         
+`brandid` VARCHAR(200) NOT NULL,                           
+`catid` VARCHAR(200) NOT NULL,                             
+`mode` TINYINT(3) UNSIGNED NOT NULL,                       
+`userid` BIGINT(20) UNSIGNED NOT NULL,                     
+`itemid` BIGINT(20) UNSIGNED NOT NULL,                     
+`status` TINYINT(3) UNSIGNED NOT NULL,                     
+`min` INT(10) UNSIGNED NOT NULL,                           
+`used` INT(10) UNSIGNED NOT NULL,                          
+`unlimited` TINYINT(1) NOT NULL,                           
+`referral` BIGINT(20) UNSIGNED NOT NULL,                   
+`created` BIGINT(20) UNSIGNED NOT NULL,                    
+`expires` BIGINT(20) UNSIGNED NOT NULL,                    
+`lastused` BIGINT(20) UNSIGNED NOT NULL,                   
+`gift_voucher` TINYINT(1) NOT NULL,                        
+`remarks` VARCHAR(255) DEFAULT NULL,                       
+PRIMARY KEY (`id`),                                        
+UNIQUE KEY `code` (`code`),                                
+KEY `brandid` (`brandid`),                                 
+KEY `catid` (`catid`),                                     
+KEY `itemid` (`itemid`)                                    
+);
+#Partner stk transfer log table-Shivaraj
+CREATE TABLE `t_partner_transfer_request`( `id` BIGINT(20) NOT NULL AUTO_INCREMENT, `transfer_id` VARCHAR(50), `reference_no` VARCHAR(50), `itemid` VARCHAR(50), `product_id` INT(50), `stock_id` INT(50), `transfer_qty` INT(11), `from_loc` VARCHAR(20), `to_loc` VARCHAR(20), `from_rackbin` VARCHAR(20), `to_rackbin` VARCHAR(20), `barcode` VARCHAR(20), `mrp` DOUBLE(10,2), `transfer_remarks` TEXT, `transfer_exp_date` DATETIME, `type` INT(5), `created_by` INT(11), `created_on` DATETIME, PRIMARY KEY (`id`) );
+#===============================
+
+/*[4:20:48 PM][85 ms]*/ ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `opt_maxcreditlimit` TINYINT(1) DEFAULT 0 NULL AFTER `tab_simno`; 
+
+#==========================Franchise allow sms==============================================================#
+#suresh Aug 25 2014
+ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `allow_sms` TINYINT (1) DEFAULT '1' NULL  AFTER `opt_maxcreditlimit`
+#==========================Franchise allow sms=============================================================#
+
+/*[6:51:45 PM][648 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `insurance_id` BIGINT(20) DEFAULT 0 NULL AFTER `approval_status`; 
+/*[6:52:17 PM][585 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `imei_scheme_id` BIGINT(20) DEFAULT 0 NULL AFTER `insurance_id`; 
+/*[6:52:47 PM][600 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `imei_reimbursement_value_perunit` DOUBLE NULL AFTER `imei_scheme_id`; 
+/*[6:53:18 PM][575 ms]*/ ALTER TABLE `king_tmp_orders` ADD COLUMN `loyality_point_value` DOUBLE NULL AFTER `imei_reimbursement_value_perunit`; 
+
+
+/*[4:20:48 PM][85 ms]*/ ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `opt_maxcreditlimit` TINYINT(1) DEFAULT 0 NULL AFTER `tab_simno`; 
+
+CREATE TABLE `pnh_max_credit_update_log` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `franchise_id` BIGINT(11) DEFAULT NULL,
+  `status` TINYINT(1) DEFAULT NULL,
+  `reason` VARCHAR(255) DEFAULT NULL,
+  `created_on` DATETIME DEFAULT NULL,
+  `created_by` INT(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
+
+/*[4:08:58 PM][121 ms]*/ ALTER TABLE `t_invoice_credit_notes` CHANGE `is_credit_processed` `is_credit_processed` TINYINT(1) DEFAULT 0 NULL COMMENT '1:processed 0:processed'; 
+
+#-==============================
+#Sep_13_2014 - Shivaraj Partner Stock Transfer DB changes
+ DROP TABLE t_partner_transfer_request;
+# Transfer table
+CREATE TABLE `t_partner_stock_transfer`( `transfer_id` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'unique transfer_id', `partner_id` INT(11) COMMENT 'related partner id', `partner_transfer_no` VARCHAR(50) COMMENT 'partner unique ref no'
+, `transfer_remarks` TEXT, `is_active` INT(10) DEFAULT 1 NULL, `scheduled_transfer_date` DATETIME COMMENT 'for more info', `transfer_status` INT(10) DEFAULT 0, `transfer_date` DATETIME
+, `transfer_by` INT(10) COMMENT 'created by userid'
+, `modified_by` INT(10) NULL
+, `modified_on` DATETIME NULL 
+, PRIMARY KEY (`transfer_id`) );
+
+#Transfer deal link table
+CREATE TABLE `t_partner_stock_transfer_product_link`( `id` BIGINT NOT NULL AUTO_INCREMENT, `transfer_id` BIGINT(10) COMMENT 'reference transfer_id', `itemid` BIGINT(10), `product_id` INT(100)
+, `from_stock_info_id` INT(100) COMMENT 'old stock id', `to_stock_info_id` INT(100) COMMENT 'new stock id', `product_transfer_qty` INT(10) COMMENT 'each product qty'
+, `item_transfer_qty` INT(10) COMMENT 'overall transfer qty'
+, `transfer_status` TINYINT(1) DEFAULT 0 COMMENT '0:pending,1:reserved,2:packed,3:cancelled,4:shipped'
+,`is_active` TINYINT(1) DEFAULT 1 NULL
+,`modified_by` INT(10) NULL
+,`modified_on` DATETIME NULL COMMENT 'status updated on'
+, batched_on DATETIME NULL
+, batched_by INT(11) DEFAULT 0
+, packed_on DATETIME NULL
+, packed_by INT(11) NULL
+, batch_qty INT(10) DEFAULT 0 NULL COMMENT 'batch qty'
+, scanned_qty INT(10) DEFAULT 0 NULL COMMENT 'how many quantity scanned'
+, PRIMARY KEY (`id`) );
+
+# Reserve stock transfer log
+CREATE TABLE `t_partner_reserved_batch_stock` (
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT,
+  `transfer_id` BIGINT(11) DEFAULT '0',
+  `product_id` BIGINT(11) DEFAULT '0',
+  `stock_info_id` BIGINT(11) DEFAULT '0',
+  `itemid` BIGINT(11) DEFAULT '0',
+  `qty` DOUBLE DEFAULT '0',
+  `extra_qty` DOUBLE DEFAULT '0',
+  `release_qty` DOUBLE DEFAULT '0',
+  `reserved_on` DATETIME NULL,
+  `released_on` DATETIME NULL,
+  `status` TINYINT(1) DEFAULT '0',
+  PRIMARY KEY (`id`)
+);
+
+#Stock log table updated with transfer id field
+ALTER TABLE t_stock_update_log ADD COLUMN transfer_id BIGINT(11) DEFAULT 0;
+
+#return page fix
+ALTER TABLE `pnh_t_returns_transit_log` ADD COLUMN `emp_name` VARCHAR(255) NULL AFTER `awb`;
+#-==============================
+
+#Sep_13_2014-Shivaraj
+# Franchise_type feature updates
+ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `franchise_type` INT(1) DEFAULT 0 NULL COMMENT '0:Normal,1:RF(rural),2:RMF(rural_master)' AFTER `pnh_franchise_id`;
+
+#Sep_14_2014-Shivaraj
+# Cart table update with cart id
+ALTER TABLE `pnh_api_franchise_cart_info` ADD COLUMN `cartid` BIGINT(20) NULL AFTER `updated_on`;
+ALTER TABLE `pnh_api_franchise_cart_info` ADD COLUMN `partner_id` INT(11) NULL AFTER `cartid`, ADD COLUMN `ref_itemid` BIGINT(20) NULL AFTER `pid`;
+
+#partner stk reserve table rename
+#RENAME TABLE `partner_t_reserved_batch_stock` TO `t_partner_reserved_batch_stock`;
+
+# date field default value removed
+#ALTER TABLE `t_partner_stock_transfer_product_link` CHANGE `batched_on` `batched_on` DATETIME NULL;
+#ALTER TABLE `t_partner_reserved_batch_stock` CHANGE `reserved_on` `reserved_on` DATETIME NULL, CHANGE `released_on` `released_on` DATETIME NULL;
+
+#Add Indexes for stk transfer table
+ALTER TABLE `t_partner_reserved_batch_stock` ADD INDEX (`transfer_id`), ADD INDEX (`product_id`), ADD INDEX (`stock_info_id`), ADD INDEX (`itemid`), ADD INDEX (`status`);
+ALTER TABLE `t_partner_stock_transfer` ADD INDEX (`partner_id`), ADD INDEX (`transfer_status`), ADD INDEX (`partner_transfer_no`), ADD INDEX (`is_active`);
+ALTER TABLE `t_partner_stock_transfer_product_link` ADD INDEX (`transfer_id`), ADD INDEX (`itemid`), ADD INDEX (`product_id`), ADD INDEX (`transfer_status`), ADD INDEX (`is_active`);
+ALTER TABLE `m_partner_deal_link` ADD INDEX (`itemid`), ADD INDEX (`partner_ref_no`), ADD INDEX (`partner_id`);
+#-==============================
+#Sep_14_2014-Shivaraj - bug fix(_discount cannot be null)
+ALTER TABLE `king_invoice` CHANGE `discount` `discount` DECIMAL(10,2) UNSIGNED DEFAULT 0.00 NULL;
+ALTER TABLE `t_invoice_credit_notes` ADD COLUMN `is_credit_processed` TINYINT(1) DEFAULT 0 NULL COMMENT '1:processed 0:processed';
+#-==============================
+
+#-------------Promo code Management Database updates -----------------
+CREATE TABLE `pnh_m_coupons` (                                                                     
+                 `id` BIGINT(11) NOT NULL AUTO_INCREMENT,                                                         
+                 `coupon_slno` BIGINT(12) NOT NULL,                                                               
+                 `coupon_code` BIGINT(14) NOT NULL,                                                               
+                 `value` DOUBLE NOT NULL DEFAULT '0',                                                             
+                 `value_type` TINYINT(1) DEFAULT '0' COMMENT '0:Rupees ,1:Percentage',                            
+                 `min_cart_value` DOUBLE DEFAULT '0',                                                             
+                 `franchise_id` BIGINT(11) DEFAULT '0',                                                           
+                 `member_id` BIGINT(8) DEFAULT '0',                                                               
+                 `menu_id` INT(11) DEFAULT '0',                                                                   
+                 `cat_id` INT(11) DEFAULT '0',                                                                    
+                 `brand_id` INT(11) DEFAULT '0',                                                                  
+                 `pnh_id` BIGINT(20) DEFAULT '0',                                                                 
+                 `status` TINYINT(1) DEFAULT '0' COMMENT '0:pending,1:assigned to franchse,2:alloted to member',  
+                 `assigned_by` INT(11) DEFAULT '0',                                                               
+                 `assigned_on` BIGINT(20) DEFAULT '0',                                                            
+                 `alloted_on` BIGINT(20) DEFAULT '0',                                                             
+                 `alloted_by` INT(11) DEFAULT '0',                                                                
+                 `redeemed_on` BIGINT(20) DEFAULT '0',                                                            
+                 `redeemed_by` INT(11) DEFAULT '0',                                                               
+                 PRIMARY KEY (`id`,`coupon_slno`,`coupon_code`),                                                  
+                 KEY `franchise_id` (`franchise_id`),                                                             
+                 KEY `member_id` (`member_id`)                                                                    
+               ) ; 
+
+/**************************Market Place Seller DB changes--Start**************************************/
+
+/*[11:47:15 AM][913 ms]*/ ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `billing_type` TINYINT(1) DEFAULT 0 NOT NULL COMMENT '1:B2C 0:B2B' AFTER `max_credit_limit`; 
+
+/*[12:51:24 PM][3604 ms]*/ ALTER TABLE `king_orders` ADD COLUMN `billing_type` TINYINT(1) DEFAULT 0 NOT NULL AFTER `member_price`; 
+
+/*[11:33:37 AM][357 ms]*/ INSERT INTO `m_config_params`(`name`,`value`)VALUES('LAST_B2CINVOICENO','50000000105'); 
+
+ALTER TABLE `user_order_transactions` ADD COLUMN `billing_type` TINYINT(1) DEFAULT 0 NULL AFTER `trans_created_by`, ADD COLUMN `is_consolidated_payment` TINYINT(1) DEFAULT 0 NULL AFTER `billing_type`; 
+
+ALTER TABLE `king_tmp_transactions` ADD COLUMN `billing_type` TINYINT(1) DEFAULT 0 NULL AFTER `is_memberprice`, ADD COLUMN `is_consolidated_payment` TINYINT(1) DEFAULT 0 NULL AFTER `billing_type`; 
+
+ALTER TABLE `king_transactions` ADD COLUMN `billing_type` TINYINT(1) DEFAULT 0 NULL AFTER `is_memberprice`, ADD COLUMN `is_consolidated_payment` TINYINT(1) DEFAULT 0 NULL AFTER `billing_type`; 
+  
+/*[12:45:58 PM][61 ms]*/ ALTER TABLE `m_seller_info` ADD COLUMN `city` VARCHAR(255) NULL AFTER `address`; 
+
+/*[1:38:41 PM][0 ms]*/ INSERT INTO `m_config_params`(`name`,`value`) VALUES ( 'MARKET_PLACE_SELLER_PROFIT_VAL','10'); 
+
+
+/*[12:36:52 PM][334 ms]*/ ALTER TABLE `pnh_payment_info` ADD COLUMN `processed_on` DATETIME NULL AFTER `cleared_on`, ADD COLUMN `processed_by` INT(11) NULL AFTER `processed_on`, ADD COLUMN `status` TINYINT(0) NULL AFTER `processed_by`, ADD COLUMN `reference_txt` VARCHAR(2500) NULL AFTER `status`; 
+/*[12:40:57 PM][311 ms]*/ ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `payment_mode` INT(11) DEFAULT 0 NULL AFTER `allow_sms`, ADD COLUMN `payment_cycle` INT(11) DEFAULT 0 NULL AFTER `payment_mode`; 
+
+CREATE TABLE `m_seller_info` (
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(255) DEFAULT NULL,
+  `state_id` INT(11) DEFAULT NULL,
+  `territory_id` BIGINT(20) DEFAULT NULL,
+  `town_id` BIGINT(20) DEFAULT NULL,
+  `address` VARCHAR(255) DEFAULT NULL,
+  `pincode` BIGINT(20) DEFAULT NULL,
+  `contact_no` BIGINT(10) DEFAULT NULL,
+  `enable_billing` TINYINT(1) DEFAULT '1',
+  `is_active` TINYINT(1) DEFAULT '1',
+  `created_on` BIGINT(20) DEFAULT NULL,
+  `created_by` INT(11) DEFAULT NULL,
+  `modified_on` BIGINT(20) DEFAULT NULL,
+  `modified_by` INT(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `t_mps_po_info` (
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT,
+  `seller_id` BIGINT(20) DEFAULT NULL,
+  `transid` VARCHAR(25) DEFAULT NULL,
+  `invoice_no` BIGINT(20) DEFAULT NULL,
+  `total_value` DOUBLE DEFAULT NULL,
+  `status` TINYINT(1) DEFAULT '1' COMMENT '0:cancelled,1:active,2:partial',
+  `created_on` BIGINT(20) DEFAULT NULL,
+  `created_by` INT(20) DEFAULT NULL,
+  `modified_on` BIGINT(20) DEFAULT NULL,
+  `modified_by` INT(11) DEFAULT NULL,
+  `invoiced_on` BIGINT(20) DEFAULT NULL,
+  `invoiced_by` INT(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `t_mps_po_product_link` (
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT,
+  `po_id` BIGINT(11) DEFAULT NULL,
+  `seller_id` BIGINT(11) DEFAULT NULL,
+  `order_id` BIGINT(20) DEFAULT NULL,
+  `dealid` BIGINT(20) DEFAULT NULL,
+  `mrp` DOUBLE DEFAULT NULL,
+  `dp_price` DOUBLE DEFAULT NULL,
+  `margin` DOUBLE DEFAULT NULL,
+  `order_qty` BIGINT(20) DEFAULT NULL,
+  `received_qty` BIGINT(20) DEFAULT NULL,
+  `is_active` TINYINT(1) DEFAULT '1',
+  `status` TINYINT(1) DEFAULT '0' COMMENT '0:not invoiced,1:invoiced,2:canceled',
+  `created_on` BIGINT(20) DEFAULT NULL,
+  `created_by` INT(11) DEFAULT NULL,
+  `modified_on` BIGINT(20) DEFAULT NULL,
+  `modified_by` INT(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+/**************************Market Place Seller DB changes--End**************************************/
+
+/*[6:31:10 PM][438 ms]*/ ALTER TABLE `pnh_menu_margin_track` ADD COLUMN `rf_mp_margin` DOUBLE DEFAULT 0 NULL AFTER `loyality_pntvalue`, ADD COLUMN `rf_commission` DOUBLE DEFAULT 0 NULL AFTER `rf_mp_margin`, ADD COLUMN `rmf_commssion` DOUBLE DEFAULT 0 NULL AFTER `rf_commission`; 
+
+/*[6:30:21 PM][402 ms]*/ ALTER TABLE `pnh_menu` ADD COLUMN `rf_mp_margin` DOUBLE DEFAULT 0 NULL AFTER `default_mp_margin`, ADD COLUMN `rf_commission` DOUBLE DEFAULT 0 NULL AFTER `rf_mp_margin`, ADD COLUMN `rmf_commission` DOUBLE DEFAULT 0 NULL AFTER `rf_commission`; 
+
+/*[10:36:29 AM][40 ms]*/ ALTER TABLE `t_mps_po_product_link` ADD COLUMN `invoice_no` BIGINT(25) DEFAULT 0 NULL AFTER `status`; 
+
+/*[10:36:49 AM][43 ms]*/ ALTER TABLE `t_mps_po_product_link` ADD COLUMN `invoiced_on` BIGINT(20) NULL AFTER `invoice_no`; 
+
+
+/************************ Partner Order Import Database updates *****************************/
+ALTER TABLE king_orders ADD COLUMN order_imei_nos VARCHAR(255) DEFAULT '';
+ALTER TABLE king_tmp_orders ADD COLUMN order_imei_nos VARCHAR(255) DEFAULT '';
+/************************ Partner Order Import Database updates *****************************/
+#Sep_23_2014
+ALTER TABLE m_vendor_product_link ADD COLUMN vendor_site_link VARCHAR(1024) DEFAULT '';
+#===============================
+#SEP_24_2014
+ALTER TABLE `partner_info` ADD INDEX (`partner_rackbinid`);
+#====================
+
+****************************Assigning RF TO RMF**************************************/
+/*[11:30:21 AM][85 ms]*/ ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `assigned_rmfid` BIGINT(20) DEFAULT 0 NULL AFTER `opt_maxcreditlimit`; 
+
+/*[2:07:53 PM][37 ms]*/ CREATE TABLE `m_rf_rmf_link`( `id` BIGINT(11) NOT NULL AUTO_INCREMENT, `rmf_fid` BIGINT(20), `rf_fid` BIGINT(20), `is_active` TINYINT(1) DEFAULT 1, `created_on` BIGINT(20), `created_by` INT(20), `modified_on` BIGINT(20), `modified_by` INT(20), PRIMARY KEY (`id`) ); 
+
+#===============================
+#SEP_25_2014-Shivaraj--MP discount price feature update
+ALTER TABLE `king_dealitems` ADD COLUMN `mp_discount_price` DECIMAL(10,2) DEFAULT 0 NOT NULL AFTER `mp_offer_to`;
+ALTER TABLE `deal_member_price_changelog` ADD COLUMN `mp_discount_price` DECIMAL(10,2) DEFAULT 0 NOT NULL AFTER `mp_offer_to`;
+#==============================
+#SEP_26_2014-Shivaraj-PSTK-IMEI table product link id update
+ALTER TABLE `t_imei_update_log` ADD COLUMN `transfer_prod_link_id` BIGINT(11) DEFAULT 0 NULL AFTER `cancelled_on`; 
+ALTER TABLE `t_partner_reserved_batch_stock` ADD COLUMN `tp_id` BIGINT(11) DEFAULT 0 NULL AFTER `itemid`;
+#===========================================
+#SEP_27_2014
+ALTER TABLE `deal_member_price_changelog` CHANGE `mp_discount_price` `mp_offer_price` DECIMAL(10,2) DEFAULT 0.00 NOT NULL, ADD COLUMN `mp_is_big_offer` TINYINT(1) DEFAULT 0 NOT NULL AFTER `mp_offer_price`;
+ALTER TABLE `king_dealitems` CHANGE `mp_discount_price` `mp_offer_price` DECIMAL(10,2) DEFAULT 0.00 NOT NULL, ADD COLUMN `mp_is_big_offer` TINYINT(1) DEFAULT 0 NOT NULL AFTER `mp_offer_price`;
+
+#==================================================
+#Oct_13_2014
+#===================================================
+
+ALTER TABLE pnh_m_franchise_info ADD COLUMN taluk VARCHAR(255) AFTER locality;
+ALTER TABLE pnh_m_franchise_info ADD COLUMN hobli VARCHAR(255) AFTER taluk;
+#==================================================
+#Oct_18_2014
+ALTER TABLE `m_product_info` ADD COLUMN `end_of_life` TINYINT(1) DEFAULT 0 NULL COMMENT '1:end of life,0: normal product' AFTER `sync_product_src`;
+#==================================================
+
+#=======================================Alter statement to update courier toll free number============================
+/*[12:18:54 PM][1517 ms]*/ ALTER TABLE `m_courier_info` ADD COLUMN `courier_no` BIGINT(12) DEFAULT 0 NULL AFTER `courier_name`; 
+#=======================================
+# Oct_20_2014-Shivaraj
+ALTER TABLE `pnh_users` CHANGE `franchise_id` `reference_id` BIGINT(20) NULL COMMENT 'franchise_id,m_fid';
+#===========================
+# Oct_21_2014 - Shivaraj temp order table billing type added
+ALTER TABLE `king_tmp_orders` ADD COLUMN `billing_type` TINYINT(1) DEFAULT 0 NOT NULL AFTER `order_imei_nos`; 
+#===========================
+/*[1:38:41 PM][0 ms]*/ INSERT INTO `m_config_params`(`name`,`value`) VALUES ( 'MARKET_PLACE_SELLER_PROFIT_VAL','10'); 
+
+#==================================================
+#oct_27_2014
+#==================================================
+
+/******************* Member Subscription Plan********************/
+			CREATE TABLE `m_member_subscription_plans` (            
+                               `id` INT(11) NOT NULL AUTO_INCREMENT,                 
+                               `plan_name` VARCHAR(255) DEFAULT NULL,                
+                               `plan_desc` TEXT,                                     
+                               `created_on` DATETIME DEFAULT NULL,                   
+                               `created_by` INT(11) DEFAULT '0',                     
+                               PRIMARY KEY (`id`)                                    
+                             );
+
+INSERT INTO `m_member_subscription_plans`(`plan_name`,`plan_desc`,`created_on`,`created_by`) VALUES ( 'Plan 1','Pay Rs 2,500/ - Get a Family BOX every month for 5 months delivered + Extra Box in second month',NULL,'0');
+INSERT INTO `m_member_subscription_plans`(`plan_name`,`plan_desc`,`created_on`,`created_by`) VALUES ( 'Plan 2','Pay Rs 2,500/- Get a Family BOX every month Delivered worth Rs 600  For 5 Months',NULL,'0'); 
+INSERT INTO `m_member_subscription_plans`(`plan_name`,`plan_desc`,`created_on`,`created_by`) VALUES ( 'Plan 3','i.Try Family Combos by Paying Rs 999/- for the 1st TWO months 
+ii.Continue the subscription by Paying Rs 999/- for the following two months (3rd & 4th)
+iii.Pay Just Rs 500/- & get subscription for the following Two Months (5th & 6th)',NULL,'0'); 
+
+				CREATE TABLE `m_member_subscription_plan_schemes` (      
+                                      `id` INT(11) NOT NULL AUTO_INCREMENT,                  
+                                      `plan_id` INT(11) DEFAULT '0',                         
+                                      `itemid` BIGINT(20) DEFAULT '0',                       
+                                      `plan_amount` DOUBLE DEFAULT NULL,                     
+                                      `allow_installment` TINYINT(1) DEFAULT '0',            
+                                      `installment_month` TINYINT(1) DEFAULT '0',            
+                                      `installment_max_amount` DOUBLE DEFAULT NULL,          
+                                      `reward_part_bymon` INT(4) DEFAULT '0',                
+                                      `extra_subscription` INT(4) DEFAULT '0',               
+                                      `reward_part_amount` DOUBLE DEFAULT '0',               
+                                      `plan_amount_part` DOUBLE DEFAULT '0',                 
+                                      `total_months` INT(4) DEFAULT '0',                     
+                                      `created_on` DATETIME DEFAULT NULL,                    
+                                      `created_by` INT(11) DEFAULT '0',                      
+                                      `modified_on` DATETIME DEFAULT NULL,                   
+                                      `modified_by` INT(11) DEFAULT '0',                     
+                                      PRIMARY KEY (`id`)                                     
+                                    );
+INSERT  INTO `m_member_subscription_plan_schemes`(`id`,`plan_id`,`itemid`,`plan_amount`,`allow_installment`,`reward_part_bymon`,`reward_part_amount`,`plan_amount_part`,`total_months`,`created_on`,`created_by`,`modified_on`,`modified_by`)
+ VALUES (1,1,533429885753,1500,0,2,300,1500,5,NULL,0,NULL,0),
+(2,1,105148805811,2500,0,2,500,2500,5,NULL,0,NULL,0),
+(3,1,498456097020,3750,0,2,750,3750,5,NULL,0,NULL,0),
+(4,1,681521167402,5000,0,2,1000,5000,5,NULL,0,NULL,0),
+(5,2,764002408891,1500,0,0,400,1500,5,NULL,0,NULL,0),
+(6,2,418901413789,2500,0,0,600,2500,5,NULL,0,NULL,0),
+(7,2,678782841184,3750,0,0,900,3750,5,NULL,0,NULL,0),
+(8,2,403615238350,5000,0,0,1200,5000,5,NULL,0,NULL,0),
+(9,3,105148805811,2500,1,6,500,2500,6,NULL,0,NULL,0),
+(10,3,677142092378,5000,1,6,1000,5000,6,NULL,0,NULL,0);
+
+
+		CREATE TABLE `m_member_plan_link` (                     
+                      `id` INT(11) NOT NULL AUTO_INCREMENT,                 
+                      `member_id` INT(11) DEFAULT '0',                      
+                      `sub_franchise_id` INT(11) DEFAULT '0',               
+                      `sub_plan_id` INT(11) DEFAULT '0',                    
+                      `member_family_count` INT(11) DEFAULT '0',            
+                      `is_paid` INT(11) DEFAULT '0',                        
+                      `receipt_id` INT(11) DEFAULT '0',                     
+                      `paid_amount` DOUBLE DEFAULT '0',                     
+                      `is_active` INT(11) DEFAULT '0',                      
+                      `start_date` DATE DEFAULT NULL,                       
+                      `end_date` DATE DEFAULT NULL,                         
+                      `created_on` DATETIME DEFAULT NULL,                   
+                      `created_by` INT(11) DEFAULT '0',                     
+                      `modified_on` DATETIME DEFAULT NULL,                  
+                      `modified_by` INT(11) DEFAULT '0',                    
+                      PRIMARY KEY (`id`)                                    
+                    );
+
+		CREATE TABLE `m_member_subscription_plan_orderlist` (   
+                                        `id` INT(11) NOT NULL AUTO_INCREMENT,                 
+                                        `member_id` INT(11) DEFAULT '0',                      
+                                        `sub_franchise_id` INT(11) DEFAULT '0',               
+                                        `itemid` BIGINT(20) DEFAULT '0',                      
+                                        `order_id` INT(11) DEFAULT '0',                       
+                                        `order_qty` INT(11) DEFAULT '0',                      
+                                        `order_amount` DOUBLE DEFAULT '0',                    
+                                        `order_date` DATE DEFAULT NULL,                       
+                                        `is_active` INT(11) DEFAULT '0',                      
+                                        `created_on` DATETIME DEFAULT NULL,                   
+                                        `created_by` INT(11) DEFAULT '0',                     
+                                        PRIMARY KEY (`id`)                                    
+                                      );
+
+
+			CREATE TABLE `m_member_feedback_link` (                 
+                          `id` INT(11) NOT NULL AUTO_INCREMENT,                 
+                          `member_id` INT(11) DEFAULT '0',                      
+                          `feedback_id` INT(11) DEFAULT '0',                    
+                          `product_name` VARCHAR(255) DEFAULT NULL,             
+                          `price_range` VARCHAR(255) DEFAULT NULL,              
+                          `brand_name` VARCHAR(255) DEFAULT NULL,               
+                          `color` VARCHAR(255) DEFAULT NULL,                    
+                          `created_on` DATETIME DEFAULT NULL,                   
+                          `created_by` INT(11) DEFAULT '0',                     
+                          `modified_on` DATETIME DEFAULT NULL,                  
+                          `modified_by` INT(11) DEFAULT '0',                    
+                          PRIMARY KEY (`id`)                                    
+                        );
+
+			CREATE TABLE `m_member_family_list` (         
+                        `id` INT(10) NOT NULL AUTO_INCREMENT,       
+                        `member_id` INT(10) NOT NULL,               
+                        `family_member_name` VARCHAR(70) NOT NULL,  
+                        `relationship` VARCHAR(70) NOT NULL,        
+                        `age` INT(11) NOT NULL,                     
+                        `created_on` DATETIME DEFAULT NULL,         
+                        `created_by` INT(11) DEFAULT '0',           
+                        `modified_on` DATETIME DEFAULT NULL,        
+                        `modified_by` INT(11) DEFAULT '0',          
+                        PRIMARY KEY (`id`)                          
+                      );
+
+		CREATE TABLE `m_combo_categories` (                      
+                      `id` INT(11) NOT NULL AUTO_INCREMENT,                  
+                      `gender_attr` VARCHAR(20) DEFAULT NULL,                
+                      `catid` INT(11) DEFAULT NULL,                          
+                      `created_on` DATETIME DEFAULT NULL,                    
+                      `created_by` INT(11) DEFAULT '0',                      
+                      `modified_on` DATETIME DEFAULT NULL,                   
+                      `modified_by` INT(11) DEFAULT '0',                     
+                      PRIMARY KEY (`id`)                                     
+                    );
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'MEN','119',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'MEN','94',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'MEN','89',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'MEN','170',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'MEN','91',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'MEN','155',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'MEN','116',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'BABY','296',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'BABY','1300',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'BABY','295',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'WOMEN','98',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'WOMEN','216',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'WOMEN','101',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'WOMEN','159',NULL,'0',NULL,'0');
+INSERT INTO `m_combo_categories`(`gender_attr`,`catid`,`created_on`,`created_by`,`modified_on`,`modified_by`) VALUES ( 'WOMEN','1117',NULL,'0',NULL,'0');
+
+			
+#==================================================
+#oct_29_2014
+#==================================================
+
+CREATE TABLE `m_category_plan_type_list` (              
+                             `id` INT(11) NOT NULL AUTO_INCREMENT,                 
+                             `gender_attr` VARCHAR(20) DEFAULT NULL,               
+                             `cat_plan_name` VARCHAR(100) DEFAULT NULL,            
+                                PRIMARY KEY (`id`)                                    
+                              );
+
+
+/*Data for the table `m_category_plan_type_list` */
+
+INSERT  INTO `m_category_plan_type_list`(`gender_attr`,`cat_plan_name`) VALUES ('MEN','Top 3 Brand Preference for MEN Products'),('BABY','Top 3 Brand Preference for BABY care Products'),('WOMEN','Top 3 Brand Preference for Women  Products');
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+
+				CREATE TABLE `m_member_subscription_plan_orderlist` (   
+                                        `id` INT(11) NOT NULL AUTO_INCREMENT,                 
+                                        `member_id` INT(11) DEFAULT '0',                      
+                                        `sub_franchise_id` INT(11) DEFAULT '0',               
+                                        `itemid` BIGINT(20) DEFAULT '0',                      
+                                        `order_id` INT(11) DEFAULT '0',                       
+                                        `order_qty` INT(11) DEFAULT '0',                      
+                                        `order_amount` DOUBLE DEFAULT '0',                    
+                                        `order_date` DATE DEFAULT NULL,                       
+                                        `is_active` INT(11) DEFAULT '0',                      
+                                        `created_on` DATETIME DEFAULT NULL,                   
+                                        `created_by` INT(11) DEFAULT '0',                     
+                                        PRIMARY KEY (`id`)                                    
+                                      );
+
+			CREATE TABLE `m_franchise_combo_preference` (           
+                                `id` INT(11) NOT NULL AUTO_INCREMENT,                 
+                                `franchise_id` INT(11) DEFAULT '0',                   
+                                `franchise_name` VARCHAR(100) DEFAULT NULL,           
+                                `name` VARCHAR(100) DEFAULT NULL,                     
+                                `mobile` BIGINT(11) DEFAULT '0',                      
+                                `created_by` INT(11) DEFAULT '0',                     
+                                `created_on` DATETIME DEFAULT NULL,                   
+                                PRIMARY KEY (`id`)                                    
+                              );
+				CREATE TABLE `m_franchise_combo_preference_link` (       
+                                     `id` INT(11) NOT NULL AUTO_INCREMENT,                  
+                                     `cp_id` INT(11) DEFAULT '0',                           
+                                     `combo_gender` VARCHAR(11) DEFAULT NULL,               
+                                     `catid` INT(11) DEFAULT '0',                           
+                                     `preference_no` INT(11) DEFAULT '0',                   
+                                     `pref_brandid` INT(11) DEFAULT '0',                    
+                                     `created_on` DATETIME DEFAULT NULL,                    
+                                     `created_by` INT(11) DEFAULT '0',                      
+                                     `modified_on` DATETIME DEFAULT NULL,                   
+                                     `modified_by` INT(11) DEFAULT '0',                     
+                                     PRIMARY KEY (`id`)                                     
+                                   );
+			CREATE TABLE `m_member_plan_receipt_list` (              
+                              `id` INT(11) NOT NULL AUTO_INCREMENT,                  
+                              `member_id` INT(11) DEFAULT '0',                       
+                              `ord_planid` INT(11) DEFAULT '0',                      
+                              `is_paid` INT(11) DEFAULT '0',                         
+                              `receipt_id` INT(11) DEFAULT '0',                      
+                              `receipt_amount` DOUBLE DEFAULT NULL,                  
+                              `paid_date` DATE DEFAULT NULL,                         
+                              `created_on` DATETIME DEFAULT NULL,                    
+                              `created_by` INT(11) DEFAULT '0',                      
+                              PRIMARY KEY (`id`)                                     
+                            );
+
+
+ALTER TABLE m_member_plan_link ADD COLUMN allow_installment  INT(11) DEFAULT 0 NOT NULL AFTER sub_plan_id;
+ALTER TABLE m_member_subscription_plan_schemes ADD COLUMN `total_installment` TINYINT(1) DEFAULT '0' AFTER allow_installment;
+ALTER TABLE `king_orders` ADD COLUMN `expected_ship_date` DATE NULL AFTER `billing_type`;  
+#==================================================
+#Nov_03_2014
+#==================================================
+ALTER TABLE `m_member_subscription_plan_orderlist` CHANGE `order_id` `order_id` CHAR( 18 ) NOT NULL DEFAULT '0'
+ALTER TABLE `m_member_subscription_plan_orderlist` CHANGE `order_id` `order_id` BIGINT( 20 ) NOT NULL DEFAULT '0'
+ALTER TABLE m_member_subscription_plan_orderlist ADD COLUMN transid  CHAR( 18 ) NOT NULL DEFAULT '0' AFTER order_id;
+                                   
+#=======================================================
+#Nov_03_2014-Shivaraj - Return partner stock changes
+ALTER TABLE `t_partner_stock_transfer` ADD COLUMN `transfer_option` TINYINT(11) DEFAULT 1 NULL COMMENT '1:to partner,2:from partner' AFTER `partner_id`;
+ALTER TABLE `t_partner_reserved_batch_stock` ADD COLUMN `transfer_option` TINYINT(11) DEFAULT 1 NULL COMMENT '1:to partner,2:from partner' AFTER `transfer_id`;
+#=======================================================
+#Nov_04_2014-Shivaraj - Partner Transfer page search changes
+ALTER TABLE `t_stock_info` ADD INDEX (`product_barcode`); 
+#==================================
+#Nov_06_2014 - Shivaraj - Missing billing type & consolidated payment fields
+ALTER TABLE `king_tmp_transactions` ADD COLUMN `billing_type` TINYINT(1) DEFAULT 0 NULL AFTER `pnh_member_fee`;
+ALTER TABLE `king_tmp_transactions` ADD COLUMN `is_consolidated_payment` TINYINT(1) DEFAULT 0 NULL AFTER `billing_type`;
+
+ALTER TABLE `king_transactions` ADD COLUMN `billing_type` TINYINT(1) DEFAULT 0 NULL AFTER `pnh_member_fee`;
+ALTER TABLE `king_transactions` ADD COLUMN `is_consolidated_payment` TINYINT(1) DEFAULT 0 NULL AFTER `billing_type`;
+#==================================
+
+#Nov_08_2014 - Shivaraj - Missing billing type & consolidated payment fields
+ALTER TABLE `user_order_transactions` ADD COLUMN `billing_type` TINYINT(1) DEFAULT 0 NULL AFTER `pnh_member_fee`;
+ALTER TABLE `user_order_transactions` ADD COLUMN `is_consolidated_payment` TINYINT(1) DEFAULT 0 NULL AFTER `billing_type`;
+#===============================
+
+ALTER TABLE `king_orders` ADD COLUMN `expected_ship_date` DATE   NULL  AFTER `customer_prescrption`
+#===============================
+# Nov_10_2014-Shivaraj-created_by field added
+ALTER TABLE `support_tickets` ADD COLUMN `created_by` INT(20) NULL AFTER `from_app`;
+# Nov_10_2014-Shivaraj-updated created_by field with userid
+UPDATE support_tickets t 
+JOIN king_admin a ON a.id=t.user_id
+SET t.created_by=t.user_id WHERE a.id=t.user_id;
+#===============================
+#==================================================
+#Nov_11_2014
+#==================================================
+ALTER TABLE `pnh_menu` ADD COLUMN `order_notify_to` VARCHAR(255)  AFTER `status`; 
+#==================================================
+#Nov_12_2014
+#==================================================
+ALTER TABLE `pnh_towns` CHANGE `created_on` `created_on` DATETIME DEFAULT NULL
+ALTER TABLE `pnh_towns` ADD COLUMN `created_by` INT(20) DEFAULT '0'  AFTER `created_on`; 
+
+/*[12:36:52 PM][334 ms]*/ ALTER TABLE `pnh_payment_info` ADD COLUMN `processed_on` DATETIME NULL AFTER `cleared_on`, ADD COLUMN `processed_by` INT(11) NULL AFTER `processed_on`, ADD COLUMN `status` TINYINT(0) NULL AFTER `processed_by`, ADD COLUMN `reference_txt` VARCHAR(2500) NULL AFTER `status`; 
+/*[12:40:57 PM][311 ms]*/ ALTER TABLE `pnh_m_franchise_info` ADD COLUMN `payment_mode` INT(11) DEFAULT 0 NULL AFTER `allow_sms`, ADD COLUMN `payment_cycle` INT(11) DEFAULT 0 NULL AFTER `payment_mode`; 
+
+
+#Nov_20_2014 - Shivaraj
+ALTER TABLE `pnh_payment_info` ADD COLUMN `payment_mode` INT(11) DEFAULT 0 NULL AFTER `reference_txt`; 
+#===============================
+
+/*[12:05:50 PM][762 ms]*/ ALTER TABLE `pnh_franchise_account_summary` ADD COLUMN `payment_id` INT(11) DEFAULT 0 NULL AFTER `unreconciled_status`; 
+
+/*[11:31:58 AM][66 ms]*/ ALTER TABLE `pnh_payment_info` ADD COLUMN `payment_cycle` TINYINT(1) DEFAULT 0 NULL AFTER `payment_mode`; 
+
+#===============================
+#Nov 24 2014 --- Suresh
+CREATE TABLE `m_employee_franchise_territory_link` (  `sno` INT (11) , `employee_franchise_id` BIGINT (20) , `territory_id` BIGINT (20) , `is_active` TINYINT (1) DEFAULT '1', `created_on` DATE , `created_by` VARCHAR (255) )  
+#----------------------------------
+#===============================
+#Nov_20_2014 - Shivaraj - Member type -free or paid, collect member fee flag in member table
+ALTER TABLE `pnh_member_info` ADD COLUMN `member_type` TINYINT(1) DEFAULT 0 NULL COMMENT '0:free,1:paid' AFTER `voucher_bal_validity`; 
+ALTER TABLE `pnh_member_info` ADD COLUMN `member_fee_collected` TINYINT(1) DEFAULT 0 NULL AFTER `member_type`;
+ALTER TABLE `pnh_member_info` ADD COLUMN `member_fee` FLOAT NULL AFTER `member_fee_collected`, ADD COLUMN `member_fee_invoice` VARCHAR(50) NULL AFTER `member_fee`;
+
+#Nov_22_2014 - Member fee changes
+ALTER TABLE `user_order_transactions` ADD COLUMN `pnh_member_fee` FLOAT NULL AFTER `trans_created_by`;
+#===============================

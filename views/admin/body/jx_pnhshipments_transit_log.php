@@ -155,11 +155,6 @@ $inv_transit_status = array('','In-Transit','Handed-over','Delivered','Return','
 										?>
 									</div>
 								<?php }?>
-								
-								<span style="float: left;font-size: 11px;text-align: right;margin-top: 5px; clear: both;">
-									<a href="javascript:void(0)" onclick="add_transit_remarks(this,<?php echo $inv; ?>)" class="btn">Add Remarks</a>
-								</span>
-								
 							</div>
 						</div>
 					<?php 		

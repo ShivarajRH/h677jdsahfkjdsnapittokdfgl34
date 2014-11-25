@@ -16,7 +16,7 @@ class order_model extends Model
 		$this->load->model('erpmodel','erpm');
 		$this->load->model('franchise_model');
 		$this->load->model('member_model');
-		
+				
 		$this->login_userid = 6;
 		
 	}
@@ -100,7 +100,9 @@ class order_model extends Model
 		}
 	
 		$key_member=($order_for==2)?1:0;
-	
+		
+		$member_type=$this->member_model->member_type($mid);
+		
 		$pids=array();
 		$pids['available']=array();
 		$pids['not_available']=array();
@@ -241,7 +243,7 @@ class order_model extends Model
 		$transid=strtoupper("PNH".random_string("alpha",3).$this->erpm->p_genid(5));
 	
 		$pnh_member_fee=0;
-		if($is_new_member == 1 && $key_member == 0 )
+		if($is_new_member == 1 && $key_member == 0 && $member_type==1)
 		{
 			$pnh_member_fee=PNH_MEMBER_FEE;
 			$fee_det = array($mid,$transid,'',$pnh_member_fee,1,$updated_by);
@@ -582,7 +584,7 @@ class order_model extends Model
 		$insurance['created_by'] = $updated_by;
 	
 		// check is member fee paid?
-		$insurance['pnh_member_fee'] = PNH_MEMBER_FEE;
+		$insurance['pnh_member_fee'] = $pnh_member_fee;
 	
 		// =================< Check total member orders >======================
 		$orders=$this->db->query("SELECT COUNT(DISTINCT(a.transid)) AS l FROM king_orders a
@@ -595,17 +597,18 @@ class order_model extends Model
 	
 		$insurance['new_member']=$new_member;
 	
-		if($offr_sel_type == 2 && $insurance['opted_insurance'] == 1 && $new_member == 1)
+		//==============< DEPRICATED CODE DONT USE ~~~~ >======================
+		if($offr_sel_type == 2 && $insurance['opted_insurance'] == 1 && $new_member == 1 && $member_type==1)
 		{
 			//process insurance document and address details & get insurance process id
 			$insu_id = $this->erpm->process_insurance_details($insurance);
 			//echo '<pre>';print_r($insurance);die();
-		}elseif($offr_sel_type == 3 && $new_member == 1)
+		}elseif($offr_sel_type == 3 && $new_member == 1 && $member_type==1)
 		{
 			$insurance['offer_type'] = 3;
 			$insu_id = $this->erpm->process_insurance_details($insurance);
 		}
-		elseif($offr_sel_type == 2  && $new_member == 1)
+		elseif($offr_sel_type == 2  && $new_member == 1 && $member_type==1)
 		{
 			$insurance['offer_type'] = 3;
 			$offer_ret = $this->erpm->pnh_member_fee($d_total,$insurance);
@@ -618,13 +621,13 @@ class order_model extends Model
 			$insu_id = $this->erpm->process_insurance_details($insurance);
 	
 		}
-	
-		elseif($offr_sel_type == 1 && $o_total >= MEM_MIN_ORDER_VAL && $new_member == 1)
+		elseif($offr_sel_type == 1 && $o_total >= MEM_MIN_ORDER_VAL && $new_member == 1 && $member_type==1)
 		{
 	
 			$offer_ret = $this->erpm->pnh_member_recharge($o_total,$insurance);
 		}
-	
+		//==============< DEPRICATED CODE DONT USE ~~~~ >======================
+		
 		//===================< Implement the member offers END>============================
 		$ttl_insurance_amt=$this->db->query("select ifnull(sum(insurance_amount),0) as insurance_amount from king_orders where transid=?",$transid)->row()->insurance_amount;
 	
@@ -720,4 +723,236 @@ class order_model extends Model
 				 return false;
 			 }
 	}
+	
+	/**
+	 * Function to generate invoice for given details
+	 * @author Shivaraj <shivaraj@storeking.in>_Aug_27_2014
+	 * @support support function for partner order import
+	 * @param type $inv_param_arr
+	 * @return type
+	 */
+	function process_transid_for_invoice($inv_param_arr)
+	{
+		// Process to batch this transaction
+		$num_orders=$inv_param_arr["num_orders"];
+		$transid=$inv_param_arr["transid"];
+		$prefix=$inv_param_arr["prefix"];
+		$partner_rackbin_id = $inv_param_arr["partner_rackbin_id"];
+		$userid = $inv_param_arr['userid'];
+		$partner_invno = $inv_param_arr["partner_invno"];
+		$partner_invdate = $inv_param_arr["partner_invdate"];
+		$awbno=$inv_param_arr["awbno"];
+		$courier_name=$inv_param_arr["courier_name"];
+		$shipped_on = $inv_param_arr["shipped_on"];
+		$snp_pnh_part = $inv_param_arr["snp_pnh_part"];//optional
+		//echo "".$num_orders; die();
+		
+		$batch_id = $inv_param_arr["batch_id"];//optional
+		if($num_orders)
+		{
+			//============<< Create Batch >>================
+			$params["transid"]=$transid;
+			$params["num_orders"]=$num_orders;
+			$params["process_partial"]=0;
+			$params['batch_remarks']='Created by pnh Order Import File';
+			$params["snp_pnh"]='others';
+			$params["en_date"]=date('Y-m-d');
+			$params['process_orderby']=2;
+			$params['by_brandid']='';
+			$params['p_oids']='';
+			//$params['by_p_oids']='';
+			$params['by_menu']='';
+			$params['pmenu_id']='';
+			$params['stock_rackbin_id']=$partner_rackbin_id;
+			$params['snp_pnh_part']=array($snp_pnh_part);
+			$params['batch_id']=$batch_id;
+
+			//$params['stock_loc']='fba';
+
+			$batch_id=$this->erpm->do_shipment_batch_process($params);
+			//=================================
+		
+			// processs invoice for geneated batch 
+			// get batch proforma invoices 
+			$res_bp = $this->db->query("select distinct p_invoice_no from shipment_batch_process_invoice_link a	where batch_id = ? and invoice_no = 0 ",$batch_id);
+
+			//echo $this->db->last_query();	
+
+			if($res_bp->num_rows())
+			{
+				foreach($res_bp->result_array() as $proforma_det)
+				{
+					$p_invoice_no = $proforma_det['p_invoice_no'];
+					
+					// get orders in proforma invoice 
+					$p_inv_oids_arr = $this->db->query("select transid,order_id from proforma_invoices where p_invoice_no = ? ",$p_invoice_no)->result_array();
+					$transid = $p_inv_oids_arr[0]['transid'];
+
+					$ref_transid = $this->db->query("select partner_reference_no from king_transactions where transid = ? ",$transid)->row()->partner_reference_no;
+
+					$p_oid_list = array();		
+					foreach($p_inv_oids_arr as $p_inv_oid) 
+						$p_oid_list[] = $p_inv_oid['order_id'];
+
+					//print_r($p_oid_list);
+
+					//auto packing is updated by marked reserved batch stock status to 1 by proforma 
+
+					$this->db->query("update t_reserved_batch_stock set  status = 1,reserved_on=? where status = 0 and p_invoice_no = ? ",array(time(),$p_invoice_no) );
+
+
+					// call do_invoice to make invoice on proforma
+					$invoice_no_arr = $this->erpm->do_invoice($p_oid_list,true);
+					//print_r($invoice_no_arr);
+					$invoice_no = $invoice_no_arr[0];
+					
+					// allot imei nos by orderid
+					$res_inv_odet = $this->db->query("select * from king_orders a join king_invoice b on a.id = b.order_id where b.invoice_no = ? and invoice_status = 1 ",$invoice_no);
+					if($res_inv_odet->num_rows())
+					{
+						foreach($res_inv_odet->result_array() as $row_odet)
+						{
+							$order_imei_nos = $row_odet['order_imei_nos'];
+							$order_id = $row_odet['order_id'];
+							
+							// check if imei_no exists in our system.
+							
+							$order_imei_nos_arr = explode(',',$order_imei_nos);
+							if(count($order_imei_nos_arr))
+							{
+								foreach($order_imei_nos_arr as $imei_no)
+								{
+									
+									if(!$imei_no)
+										continue;
+									
+									$this->db->query("update t_imei_no set order_id = ?,status = 1 where imei_no = ? and status = 0 limit 1 ",array($order_id,$imei_no));
+									// get order imeinos for partner table.
+									// check if imei entry is in log
+									$imei_log_res = $this->db->query('select * from t_imei_update_log where imei_no = ? and is_active = 1 ',array($imei_no));
+									if(!$imei_log_res->num_rows())
+									{
+									
+										$imei_det = $this->db->query('select * from t_imei_no where imei_no = ? and order_id = ? ',array($imei_no,$order_id))->row_array();
+									
+										$imei_upd_det = array();
+										$imei_upd_det['imei_no'] = $imei_det['imei_no'];
+										$imei_upd_det['product_id'] = $imei_det['product_id'];
+										$imei_upd_det['stock_id'] = $imei_det['stock_id'];
+										$imei_upd_det['grn_id'] = $imei_det['grn_id'];
+										$imei_upd_det['is_active'] = 1;
+										$imei_upd_det['logged_by'] = $user['userid'];
+										$imei_upd_det['logged_on'] = date('Y-m-d H:i:s',$imei_det['created_on']);
+										$this->db->insert('t_imei_update_log',$imei_upd_det);
+									}
+									
+									$imei_upd_det = array();
+									$imei_upd_det['imei_no'] = $imei_no;
+									$imei_upd_det['alloted_order_id'] = $o['id'];
+									$imei_upd_det['alloted_on'] = cur_datetime();
+									
+									$this->db->where(array('imei_no'=>$imei_no,'is_active'=>1));
+									$this->db->update('t_imei_update_log',$imei_upd_det);
+									
+								}
+							}
+							
+						}
+					}
+					
+					
+					//print_r($out);
+					
+					$shipment_arr[]=array();
+					$shipment_arr['prefix'] = $prefix;
+					$shipment_arr['partner_id'] = $snp_pnh_part;
+					$shipment_arr['partner_invno'] = $partner_invno;
+					$shipment_arr['partner_invdate'] = $partner_invdate;
+					$shipment_arr['invoice_no'] = $invoice_no;
+					$shipment_arr['p_invoice_no'] = $p_invoice_no;
+					$shipment_arr['p_oid_list']=$p_oid_list;
+					$shipment_arr['awbno']=$awbno;
+					$shipment_arr['courier_name']=$courier_name;
+					$shipment_arr['shipped_on'] = $shipped_on;
+					$shipment_arr['userid'] = $userid;
+					
+					$this->process_inv_for_shipment($shipment_arr);
+					
+					$batchid=$this->db->query("select batch_id from shipment_batch_process_invoice_link where p_invoice_no=?",$p_invoice_no)->row()->batch_id;
+
+					foreach($this->db->query("select distinct product_id from t_reserved_batch_stock where p_invoice_no = ? ",$p_invoice_no)->result_array() as $pinv_prd)
+					{
+						$this->erpm->_upd_product_deal_statusbyproduct($pinv_prd['product_id'],$userid,'updated on invoice');
+					} 
+
+					// update batch status 
+					$this->erpm->update_batch_status($batchid);
+
+				}
+			}
+			return array($invoice_no,$batch_id);
+		}else
+		{
+			return array(0,$batch_id);
+		}
+
+	}
+
+	/**
+	 * Function to update shipment details for given invoice details
+	 * @author Shivaraj <shivaraj@storeking.in>_Aug_27_2014
+	 * @support support function for partner order import
+	 * @param type $shipment_arr
+	 */
+	function process_inv_for_shipment($shipment_arr)
+	{
+		$prefix = $shipment_arr['prefix'];
+		$partner_id = $shipment_arr['partner_id'];
+		$partner_invno = $shipment_arr['partner_invno'];
+		$partner_invdate = $shipment_arr['partner_invdate'];
+		$invoice_no = $shipment_arr['invoice_no'];
+		$p_invoice_no = $shipment_arr['p_invoice_no'];
+		$userid = $shipment_arr['userid'];
+		$p_oid_list = $shipment_arr['p_oid_list'];
+		$awbno=$shipment_arr['awbno'];
+		$courier_name=$shipment_arr['courier_name'];
+		$shipped_on = $shipment_arr['shipped_on'];
+		// ===============================
+		//$this->db->query("update proforma_invoices set invoice_status = 0 where p_invoice_no = ? ",$proforma_det['p_invoice_no']);
+		$this->db->query("update king_invoice set partner_invno = ?,partner_invdate = ? where invoice_no = ? ",array($partner_invno,$partner_invdate,$invoice_no));
+
+		//$this->db->query("update t_reserved_batch_stock set  status = 2,reserved_on=? where status = 1 and p_invoice_no = ? ",array(time(),$p_invoice_no));
+		$this->db->query("update king_orders set status = 2 where id in (".implode(',',$p_oid_list).") ");
+
+		$cour_name=$prefix.'-'.$courier_name; // AMZ-ATS
+		$qry_rslt=$this->db->query("SELECT * FROM m_courier_info WHERE courier_name=?",$cour_name);
+		if( $qry_rslt->num_rows()) {
+			$courier_id=$qry_rslt->row()->courier_id;
+		}
+		else {
+			$this->db->insert("m_courier_info",array('courier_name'=>$cour_name,'ref_partner_id'=>$partner_id,'is_active'=>0,'created_on'=>date('Y-m-d H:i:s',time()),'created_by'=> $userid) );
+			$courier_id= $this->db->insert_id();
+		}
+		
+		
+		// update invoice as shipped by ship date and tracking/awbno
+		if($invoice_no)
+		{
+			$inv_sdet = array();
+			$inv_sdet[] = $userid;
+			$inv_sdet[] = $userid;
+			$inv_sdet[] = $awbno;
+			$inv_sdet[] = $courier_id;
+			$inv_sdet[] = $shipped_on;
+			$inv_sdet[] = $userid;
+			$inv_sdet[] = $invoice_no;
+			$inv_sdet[] = $p_invoice_no;
+
+			$this->db->query("update shipment_batch_process_invoice_link set packed=1,packed_on=now(),packed_by=?,outscanned=1,outscanned_on=now(),outscanned_by=?,awb = ?,courier_id=?,shipped=1,shipped_on=?,shipped_by=?,invoice_no = ? where p_invoice_no = ? ",$inv_sdet);
+
+		}
+		// ===============================
+		
+	}
+	
 }
